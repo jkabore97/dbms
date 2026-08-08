@@ -1,0 +1,45 @@
+{
+  "name": "Kaj App Development",
+
+  // Plain Ubuntu base. Tooling is installed by setup.sh below rather than
+  // through devcontainer "features", which change identifiers over time and
+  // fail in ways that are hard to debug from a browser.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    // Android builds need a JDK.
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installGradle": false
+    },
+    // Node is needed for Claude Code and for wrangler (Cloudflare CLI).
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Dart-Code.dart-code",
+        "Dart-Code.flutter",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // 4 cores keeps Flutter builds tolerable. A 2-core machine works but is
+  // slow, and burns the same free-tier hours per hour of use.
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+
+  "remoteUser": "vscode"
+}

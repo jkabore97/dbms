@@ -38,16 +38,36 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
 ## Status
 
 - KV namespace `kaj-tenant-routing` — created, id in `workers/tenant-router/wrangler.toml`.
-- R2 — pending the one-time dashboard toggle.
+- R2 — enabled; bucket `kaj-app-uploads` created (region ENAM).
 - `workers/tenant-router` — written, not yet deployed (`wrangler deploy`).
 - Church module (`002_church_profile.sql`) — built and tested. Contributions,
   expenses, undo-by-reversal, offline idempotency, pastor's weekly summary,
   member giving statements.
 - Sync support (`003_sync_support.sql`) — reversal by client_uuid, tested.
+- RLS policies (`004_rls_policies.sql`) — every table protected, 22 policies.
+  Cross-tenant isolation proven in `database/tests/test_rls.sql`: Israel cannot
+  see Ignace's books, observers cannot write, and ledger history cannot be
+  edited or deleted by anyone.
 - Flutter shell (`app/`) — local SQLite with outbox, sync service, church home
   screen, contribution capture. Analyzed clean in CI (`flutter-analyze` job).
 - Next: login + org resolution (the orgId in main.dart is currently hardcoded),
   then the farm profile for Ignace.
+
+## Cloud development (recommended)
+
+This repo is configured for GitHub Codespaces, so nothing needs installing
+locally. On the repo page: **Code -> Codespaces -> Create codespace on main**.
+
+The first build takes about 5 minutes and installs Flutter, the Postgres
+client, wrangler, and Claude Code. After that it starts in seconds and the
+machine persists between sessions.
+
+Free tier is roughly 60 core-hours/month on a personal account — about 15
+hours on the 4-core machine configured here. Stop the Codespace when you
+are done; it does not bill while stopped.
+
+Secrets go in Codespaces secrets (github.com/settings/codespaces), never in
+files. They appear as environment variables inside the Codespace.
 
 ## Running the app
 
