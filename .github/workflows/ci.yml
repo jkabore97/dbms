@@ -39,21 +39,19 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
 
-  # Uncomment once the Flutter app lands in /app
-  # flutter-build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: subosito/flutter-action@v2
-  #       with:
-  #         flutter-version: '3.x'
-  #         channel: 'stable'
-  #     - run: flutter pub get
-  #       working-directory: app
-  #     - run: flutter analyze
-  #       working-directory: app
-  #     - run: flutter test
-  #       working-directory: app
+  flutter-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
 
 # Secrets this workflow will need later — set under Settings > Secrets and variables > Actions.
 # Never write real values here or paste them in chat:

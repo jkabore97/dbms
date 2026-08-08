@@ -1,0 +1,12 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Missing an await on a Future is a real bug in offline sync code —
+    # treat it as an error, not a hint.
+    unawaited_futures: error
+
+linter:
+  rules:
+    - prefer_const_constructors
+    - avoid_print
