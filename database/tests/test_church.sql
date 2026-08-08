@@ -56,3 +56,16 @@ select * from member_giving_statement(:marie);
 select record_contribution(:org, -500, 'tithe', :israel);
 select record_contribution(:org, 500, 'bitcoin', :israel);
 select reverse_entry(:'mistake_id', :israel, 'double reversal');
+
+\echo ''
+\echo '--- TEST 11: OFFLINE UNDO (app knows only the client_uuid it generated) ---'
+\set ON_ERROR_STOP on
+select record_contribution(:org, 7500, 'offering', :israel, 'cash', null, null,
+    '66666666-6666-6666-6666-666666666666') as recorded_offline;
+select reverse_entry_by_client_uuid(:org, '66666666-6666-6666-6666-666666666666', :israel,
+    'Undo tapped on the phone') as reversal_id;
+select sum(debit) - sum(credit) as still_balanced from journal_lines;
+
+\echo '--- TEST 12: reversing an entry that has not synced yet must fail loudly ---'
+\set ON_ERROR_STOP off
+select reverse_entry_by_client_uuid(:org, '99999999-9999-9999-9999-999999999999', :israel, 'not synced');

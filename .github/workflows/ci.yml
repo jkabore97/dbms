@@ -36,6 +36,7 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/schema.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
 
   # Uncomment once the Flutter app lands in /app
