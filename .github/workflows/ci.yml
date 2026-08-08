@@ -14,6 +14,30 @@ jobs:
       - name: Confirm schema.sql exists and isn't empty
         run: test -s database/schema.sql
 
+
+  test-church-module:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations and run tests
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/schema.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
+
   # Uncomment once the Flutter app lands in /app
   # flutter-build:
   #   runs-on: ubuntu-latest

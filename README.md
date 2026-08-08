@@ -8,6 +8,8 @@ optional custom domain, roles, and modules switched on — same engine underneat
 
 ```
 database/schema.sql             Postgres schema: tenancy, scoped roles, ledger, RLS
+database/migrations/            Profile modules layered on the core schema
+database/tests/                 SQL test suite — run by CI on every push
 workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via KV
 .github/workflows/ci.yml        Runs on every push; validates schema, builds the app once it exists
 .env.example                    Required environment variables — copy to .env, never commit .env
@@ -37,7 +39,25 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
 - KV namespace `kaj-tenant-routing` — created, id in `workers/tenant-router/wrangler.toml`.
 - R2 — pending the one-time dashboard toggle.
 - `workers/tenant-router` — written, not yet deployed (`wrangler deploy`).
-- Flutter app — not started. Next slice: church profile (Israel) end-to-end.
+- Church module (`002_church_profile.sql`) — built and tested. Contributions,
+  expenses, undo-by-reversal, offline idempotency, pastor's weekly summary,
+  member giving statements.
+- Flutter app — not started. Next slice: farm profile (Ignace), or the Flutter
+  shell against the church module.
+
+## Running the tests locally
+
+```
+createdb kajtest
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/schema.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
+```
+
+`supabase_stub.sql` fakes the `auth.users` table and `auth.uid()` that Supabase
+provides, so the schema can be tested on plain Postgres. Never run it against
+a real Supabase database.
 
 ## Security
 
