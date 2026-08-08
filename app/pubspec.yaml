@@ -1,0 +1,37 @@
+name: kaj_app
+description: Kaj-consulting multi-tenant business management app.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Local-first storage. The device is the source of truth; the server is
+  # a replica it catches up with when there's signal.
+  sqflite: ^2.3.3
+  path: ^1.9.0
+
+  # Client-generated ids so records can be created with no connection and
+  # still be uniquely identified when they finally sync.
+  uuid: ^4.4.0
+
+  # Backend (Postgres + auth). Only touched by SyncService.
+  supabase_flutter: ^2.5.6
+
+  # Currency and date formatting for fr / XOF.
+  intl: ^0.19.0
+
+  # Detects when the connection comes back so sync can fire automatically.
+  connectivity_plus: ^6.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

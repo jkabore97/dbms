@@ -10,6 +10,7 @@ optional custom domain, roles, and modules switched on — same engine underneat
 database/schema.sql             Postgres schema: tenancy, scoped roles, ledger, RLS
 database/migrations/            Profile modules layered on the core schema
 database/tests/                 SQL test suite — run by CI on every push
+app/                            Flutter app (offline-first, Android/desktop/web)
 workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via KV
 .github/workflows/ci.yml        Runs on every push; validates schema, builds the app once it exists
 .env.example                    Required environment variables — copy to .env, never commit .env
@@ -42,8 +43,25 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
 - Church module (`002_church_profile.sql`) — built and tested. Contributions,
   expenses, undo-by-reversal, offline idempotency, pastor's weekly summary,
   member giving statements.
-- Flutter app — not started. Next slice: farm profile (Ignace), or the Flutter
-  shell against the church module.
+- Sync support (`003_sync_support.sql`) — reversal by client_uuid, tested.
+- Flutter shell (`app/`) — local SQLite with outbox, sync service, church home
+  screen, contribution capture. **Not yet compiled** — needs `flutter pub get`
+  and `flutter analyze` on a machine with the Flutter SDK.
+- Next: login + org resolution (the orgId in main.dart is currently hardcoded),
+  then the farm profile for Ignace.
+
+## Running the app
+
+```
+cd app
+flutter pub get
+flutter run \
+  --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+```
+
+Credentials are passed at build time, never committed. With no `--dart-define`
+values the app still runs fully offline against local SQLite.
 
 ## Running the tests locally
 
