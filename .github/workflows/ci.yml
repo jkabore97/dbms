@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm schema.sql exists and isn't empty
+        run: test -s database/schema.sql
+
+  # Uncomment once the Flutter app lands in /app
+  # flutter-build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.x'
+  #         channel: 'stable'
+  #     - run: flutter pub get
+  #       working-directory: app
+  #     - run: flutter analyze
+  #       working-directory: app
+  #     - run: flutter test
+  #       working-directory: app
+
+# Secrets this workflow will need later — set under Settings > Secrets and variables > Actions.
+# Never write real values here or paste them in chat:
+#   SUPABASE_URL, SUPABASE_ANON_KEY        (service_role key stays server-side only, never here)
+#   CLOUDFLARE_API_TOKEN                    (scoped to Workers + R2 deploy, nothing else)

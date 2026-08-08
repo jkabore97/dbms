@@ -1,0 +1,11 @@
+name = "kaj-tenant-router"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Real namespace, created 2026-08-08 — not a placeholder.
+kv_namespaces = [
+  { binding = "TENANT_ROUTES", id = "87160dd3344245959ab7ca4532cfe169" }
+]
+
+# Deploy with: wrangler deploy
+# Needs CLOUDFLARE_API_TOKEN in your environment or wrangler login locally.
