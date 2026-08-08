@@ -7,9 +7,13 @@ import 'core/sync/sync_service.dart';
 import 'features/church/church_home_screen.dart';
 
 /// Supplied at build time so no credentials live in the source:
-///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
+///
+/// Supabase renamed the anon key to the publishable key. Both the legacy
+/// `eyJ...` anon key and a new `sb_publishable_...` key work here.
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+const supabasePublishableKey =
+    String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +24,11 @@ Future<void> main() async {
   final db = await LocalDb.open();
 
   SyncService? sync;
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  if (supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabasePublishableKey,
+    );
     sync = SyncService(db, Supabase.instance.client)..start();
   }
 

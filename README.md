@@ -45,8 +45,7 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   member giving statements.
 - Sync support (`003_sync_support.sql`) — reversal by client_uuid, tested.
 - Flutter shell (`app/`) — local SQLite with outbox, sync service, church home
-  screen, contribution capture. **Not yet compiled** — needs `flutter pub get`
-  and `flutter analyze` on a machine with the Flutter SDK.
+  screen, contribution capture. Analyzed clean in CI (`flutter-analyze` job).
 - Next: login + org resolution (the orgId in main.dart is currently hardcoded),
   then the farm profile for Ignace.
 
@@ -57,7 +56,7 @@ cd app
 flutter pub get
 flutter run \
   --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
 Credentials are passed at build time, never committed. With no `--dart-define`

@@ -207,7 +207,7 @@ class _TodayCard extends StatelessWidget {
             Text(
               DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
               style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.7),
+                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 12),
@@ -229,7 +229,7 @@ class _TodayCard extends StatelessWidget {
               Text(
                 '${currency.format(moneyOut)} dépensé',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                  color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                 ),
               ),
             ],
