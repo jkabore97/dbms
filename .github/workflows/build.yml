@@ -36,12 +36,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check the Supabase secrets are set
+        env:
+          # Only the names are ever printed, and only when something is
+          # missing. Values cannot leak: GitHub masks every registered secret
+          # in log output, and jq drops them here anyway.
+          VISIBLE_SECRETS: ${{ toJSON(secrets) }}
+          VISIBLE_VARS: ${{ toJSON(vars) }}
         run: |
           missing=""
           [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
           [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
           if [ -n "$missing" ]; then
             echo "Empty at build time:$missing" >&2
+            echo >&2
+            echo "Secret names this job can see:" >&2
+            printf '%s' "$VISIBLE_SECRETS" | jq -r 'keys[] | "  " + .' >&2
+            echo "Variable names this job can see:" >&2
+            printf '%s' "$VISIBLE_VARS" | jq -r 'keys[] | "  " + .' >&2
             echo >&2
             echo "These must live under the repository's ACTIONS secrets:" >&2
             echo "  Settings > Secrets and variables > Actions > Repository secrets" >&2
@@ -102,12 +113,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check the Supabase secrets are set
+        env:
+          # Only the names are ever printed, and only when something is
+          # missing. Values cannot leak: GitHub masks every registered secret
+          # in log output, and jq drops them here anyway.
+          VISIBLE_SECRETS: ${{ toJSON(secrets) }}
+          VISIBLE_VARS: ${{ toJSON(vars) }}
         run: |
           missing=""
           [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
           [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
           if [ -n "$missing" ]; then
             echo "Empty at build time:$missing" >&2
+            echo >&2
+            echo "Secret names this job can see:" >&2
+            printf '%s' "$VISIBLE_SECRETS" | jq -r 'keys[] | "  " + .' >&2
+            echo "Variable names this job can see:" >&2
+            printf '%s' "$VISIBLE_VARS" | jq -r 'keys[] | "  " + .' >&2
             echo >&2
             echo "These must live under the repository's ACTIONS secrets:" >&2
             echo "  Settings > Secrets and variables > Actions > Repository secrets" >&2
