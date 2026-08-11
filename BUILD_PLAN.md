@@ -20,12 +20,22 @@ Each milestone ends with something demonstrable.
 | Church contributions + expenses | built |
 | Pastor's weekly summary, member giving statements | SQL built, no screen |
 | Flutter app running on web and Android | built |
+| Login by phone/OTP, org resolution, profile routing (M1) | built, tested offline |
+| Offline session + device PIN | built, tested |
 
 **Not built**
 
-Login. Org switching. Admin screens. Farm module. Store module. Photos and OCR.
-Invoices. Report screens. Custom domains. Employee/payroll. The `orgId` in
-`main.dart` is hardcoded, which is why only one church appears.
+Org switching beyond the picker. Admin screens. Farm module. Store module.
+Photos and OCR. Invoices. Report screens. Custom domains. Employee/payroll.
+Inviting people from inside the app — a membership row still has to be
+inserted by hand.
+
+**Not yet verified**
+
+M1 has not been exercised against a real Supabase project: no credentials, and
+phone sign-in additionally needs an SMS provider enabled under Authentication →
+Providers → Phone. Everything below the network — routing, org resolution, the
+offline path — is covered by tests; the SMS round trip is not.
 
 ---
 
