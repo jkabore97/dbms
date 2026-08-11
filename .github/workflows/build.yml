@@ -5,6 +5,16 @@ name: Build App
 # from the run's Artifacts section.
 #
 # Run manually from the Actions tab ("Run workflow"), or on a push to main.
+#
+# The Supabase address and publishable key are compiled in here from repository
+# secrets. Without them the app builds fine and then tells whoever opens it
+# that the server is not configured, so both jobs refuse to build rather than
+# hand out an installable that cannot sign anybody in. Set them under
+# Settings > Secrets and variables > Actions:
+#   SUPABASE_URL                 https://YOUR-PROJECT.supabase.co
+#   SUPABASE_PUBLISHABLE_KEY     the publishable (formerly anon) key
+# The publishable key is meant to ship in clients — RLS is what protects the
+# data. The service_role key never belongs in a build.
 
 on:
   workflow_dispatch:
@@ -17,8 +27,24 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the Supabase secrets are set
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secret(s):$missing" >&2
+            echo "Add them under Settings > Secrets and variables > Actions," >&2
+            echo "then re-run this workflow. Building without them produces an" >&2
+            echo "app whose login screen only says 'Serveur non configuré'." >&2
+            exit 1
+          fi
 
       - uses: actions/setup-java@v4
         with:
@@ -44,7 +70,10 @@ jobs:
       # A Play Store release needs an upload keystore, which comes later.
       - name: Build APK
         working-directory: app
-        run: flutter build apk --debug
+        run: |
+          flutter build apk --debug \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -54,8 +83,24 @@ jobs:
 
   build-web:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the Supabase secrets are set
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secret(s):$missing" >&2
+            echo "Add them under Settings > Secrets and variables > Actions," >&2
+            echo "then re-run this workflow. Building without them produces an" >&2
+            echo "app whose login screen only says 'Serveur non configuré'." >&2
+            exit 1
+          fi
 
       - uses: subosito/flutter-action@v2
         with:
@@ -79,7 +124,10 @@ jobs:
 
       - name: Build web
         working-directory: app
-        run: flutter build web --release
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
 
       - uses: actions/upload-artifact@v4
         with:

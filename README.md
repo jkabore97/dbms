@@ -96,6 +96,25 @@ flutter run \
 
 Credentials are passed at build time, never committed.
 
+### Builds from GitHub Actions
+
+The **Build App** workflow compiles the same two `--dart-define` values into the
+APK and the web bundle, reading them from repository secrets. Set them once
+under **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `SUPABASE_URL` | `https://YOUR-PROJECT.supabase.co` |
+| `SUPABASE_PUBLISHABLE_KEY` | the project's publishable (formerly anon) key |
+
+Both jobs stop with a "missing repository secret" error rather than upload an
+installable that cannot sign anyone in. If a build you downloaded shows
+*Serveur non configuré* on the login screen, the secrets were not set when it
+ran — add them and re-run the workflow, then reinstall the artifact.
+
+The publishable key is designed to ship inside clients; RLS is what protects
+the data. The service_role key never goes into a build.
+
 Signing in needs those values: without them there is no server to authenticate
 against and the login screen says so. Once a user has signed in on a device and
 chosen a PIN, that device keeps working with no connection at all — that is
