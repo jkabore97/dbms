@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
+
+import '../auth/models.dart';
 
 /// The device's own database. This is the source of truth while Ignace is out
 /// at the farm with no signal, and while Israel is counting an offering in a
@@ -21,15 +24,33 @@ class LocalDb {
   final Database _db;
   static const _uuid = Uuid();
 
-  static Future<LocalDb> open() async {
-    final dir = await getDatabasesPath();
+  /// [path] overrides where the file lives. Tests pass
+  /// `inMemoryDatabasePath`; the app never passes anything.
+  static Future<LocalDb> open({String? path}) async {
+    // On web there is no filesystem: the wasm factory treats the path as an
+    // opaque IndexedDB key, and asking it for a databases directory throws.
+    // Everywhere else the file belongs in the platform's databases directory.
+    path ??= kIsWeb ? 'kaj.db' : p.join(await getDatabasesPath(), 'kaj.db');
+
     final db = await openDatabase(
-      p.join(dir, 'kaj.db'),
-      version: 1,
-      onCreate: _createSchema,
+      path,
+      version: 2,
+      onCreate: (db, version) async {
+        await _createSchema(db, version);
+        await _createIdentitySchema(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // v1 -> v2: who this device belongs to, and which businesses they can
+        // open while offline. Nothing already recorded is touched.
+        if (oldVersion < 2) await _createIdentitySchema(db);
+      },
     );
     return LocalDb._(db);
   }
+
+  /// Releases the file. The app never calls this — the database lives as long
+  /// as the process — but tests need each case to start from nothing.
+  Future<void> close() => _db.close();
 
   static Future<void> _createSchema(Database db, int version) async {
     // Actions the device has taken that the server hasn't confirmed yet.
@@ -68,6 +89,86 @@ class LocalDb {
     ''');
 
     await db.execute('CREATE INDEX entries_by_date ON entries (org_id, occurred_at)');
+  }
+
+  /// Who is signed in, and what they can open with no signal.
+  ///
+  /// This is the offline half of authentication. The access token expires
+  /// within the hour and cannot be refreshed at the farm, so without a local
+  /// record of the user and their orgs the app would lock its own user out of
+  /// data that is sitting on their own phone.
+  static Future<void> _createIdentitySchema(Database db) async {
+    // Exactly one row, ever. Two identities on one device would mean one
+    // person's outbox draining under another person's token.
+    await db.execute('''
+      CREATE TABLE identity (
+        id                INTEGER PRIMARY KEY CHECK (id = 1),
+        user_id           TEXT NOT NULL,
+        display_name      TEXT,
+        phone             TEXT,
+        email             TEXT,
+        pin_salt          TEXT,
+        pin_hash          TEXT,
+        orgs_refreshed_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_orgs (
+        org_id     TEXT PRIMARY KEY,
+        name       TEXT NOT NULL,
+        slug       TEXT,
+        profile    TEXT NOT NULL,
+        currency   TEXT,
+        roles      TEXT,
+        visibility TEXT
+      )
+    ''');
+  }
+
+  // ----------------------------------------------------------------
+  // Identity
+  // ----------------------------------------------------------------
+
+  Future<LocalIdentity?> loadIdentity() async {
+    final rows = await _db.query('identity', limit: 1);
+    if (rows.isEmpty) return null;
+    return LocalIdentity.fromRow(rows.first);
+  }
+
+  Future<void> saveIdentity(LocalIdentity identity) async {
+    await _db.insert(
+      'identity',
+      identity.toRow(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Signing out forgets the person and their orgs. It deliberately does not
+  /// touch `entries` or `outbox`: work already recorded belongs to the org it
+  /// was recorded against, and deleting it here would destroy the one copy
+  /// that exists when the phone has never had signal.
+  Future<void> clearIdentity() async {
+    await _db.transaction((txn) async {
+      await txn.delete('identity');
+      await txn.delete('cached_orgs');
+    });
+  }
+
+  /// Replaces the cached org list wholesale — a membership that was revoked
+  /// server-side has to disappear from the picker, not linger.
+  Future<void> cacheOrgs(List<OrgSummary> orgs) async {
+    await _db.transaction((txn) async {
+      await txn.delete('cached_orgs');
+      for (final org in orgs) {
+        await txn.insert('cached_orgs', org.toCache());
+      }
+    });
+  }
+
+  Future<List<OrgSummary>> cachedOrgs() async {
+    final rows = await _db.query('cached_orgs', orderBy: 'name ASC');
+    return rows.map(OrgSummary.fromCache).toList();
   }
 
   /// Records a contribution locally and queues it for sync.

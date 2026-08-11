@@ -21,11 +21,16 @@ class ChurchHomeScreen extends StatefulWidget {
     required this.db,
     required this.orgId,
     required this.orgName,
+    this.accountAction,
   });
 
   final LocalDb db;
   final String orgId;
   final String orgName;
+
+  /// The account menu, supplied by whatever resolved the org — sign out and
+  /// switch business live there.
+  final Widget? accountAction;
 
   @override
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
@@ -129,6 +134,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                 ),
               ),
             ),
+          if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
       body: _loading
