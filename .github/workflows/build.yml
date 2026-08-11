@@ -28,8 +28,10 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      # Secrets first, then Actions variables: the project URL is not sensitive
+      # and is a reasonable thing to have stored as a plain variable.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,10 +41,18 @@ jobs:
           [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
           [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
           if [ -n "$missing" ]; then
-            echo "Missing repository secret(s):$missing" >&2
-            echo "Add them under Settings > Secrets and variables > Actions," >&2
-            echo "then re-run this workflow. Building without them produces an" >&2
-            echo "app whose login screen only says 'Serveur non configuré'." >&2
+            echo "Empty at build time:$missing" >&2
+            echo >&2
+            echo "These must live under the repository's ACTIONS secrets:" >&2
+            echo "  Settings > Secrets and variables > Actions > Repository secrets" >&2
+            echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions" >&2
+            echo >&2
+            echo "Secrets stored under Codespaces, Dependabot, or an Actions" >&2
+            echo "environment are NOT visible here, and the names must match" >&2
+            echo "exactly (they are case-sensitive)." >&2
+            echo >&2
+            echo "Building without them produces an app whose login screen" >&2
+            echo "only says 'Serveur non configuré'." >&2
             exit 1
           fi
 
@@ -84,8 +94,10 @@ jobs:
   build-web:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      # Secrets first, then Actions variables: the project URL is not sensitive
+      # and is a reasonable thing to have stored as a plain variable.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,10 +107,18 @@ jobs:
           [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
           [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
           if [ -n "$missing" ]; then
-            echo "Missing repository secret(s):$missing" >&2
-            echo "Add them under Settings > Secrets and variables > Actions," >&2
-            echo "then re-run this workflow. Building without them produces an" >&2
-            echo "app whose login screen only says 'Serveur non configuré'." >&2
+            echo "Empty at build time:$missing" >&2
+            echo >&2
+            echo "These must live under the repository's ACTIONS secrets:" >&2
+            echo "  Settings > Secrets and variables > Actions > Repository secrets" >&2
+            echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions" >&2
+            echo >&2
+            echo "Secrets stored under Codespaces, Dependabot, or an Actions" >&2
+            echo "environment are NOT visible here, and the names must match" >&2
+            echo "exactly (they are case-sensitive)." >&2
+            echo >&2
+            echo "Building without them produces an app whose login screen" >&2
+            echo "only says 'Serveur non configuré'." >&2
             exit 1
           fi
 
