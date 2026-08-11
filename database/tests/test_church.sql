@@ -4,7 +4,11 @@
 \set marie '''33333333-3333-3333-3333-333333333333'''
 
 insert into auth.users (id) values (:israel);
-insert into profiles (id, full_name) values (:israel, 'Israel');
+-- 004 mirrors new auth users into profiles automatically. When this file runs
+-- after that migration the row is already there; naming it is still worth it,
+-- because the tests below read like the person is called Israel.
+insert into profiles (id, full_name) values (:israel, 'Israel')
+    on conflict (id) do update set full_name = excluded.full_name;
 insert into orgs (id, name, slug, profile) values (:org, 'Grace Chapel', 'grace', 'church');
 select seed_church_accounts(:org);
 insert into church_members (id, org_id, full_name) values (:marie, :org, 'Marie Ouedraogo');

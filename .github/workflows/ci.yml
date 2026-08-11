@@ -37,7 +37,15 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/schema.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/004_rls_policies.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
+
+      # Runs as the `authenticated` role, never as postgres: a superuser
+      # bypasses RLS, so this suite would pass against no policies at all.
+      - name: Prove cross-tenant isolation
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_rls.sql
 
   flutter-analyze:
     runs-on: ubuntu-latest
@@ -52,6 +60,10 @@ jobs:
       - name: Analyze
         working-directory: app
         run: flutter analyze
+
+      - name: Test
+        working-directory: app
+        run: flutter test
 
 # Secrets this workflow will need later — set under Settings > Secrets and variables > Actions.
 # Never write real values here or paste them in chat:
