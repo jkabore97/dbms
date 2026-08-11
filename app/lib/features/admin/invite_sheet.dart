@@ -304,15 +304,24 @@ class _InviteSheetState extends State<InviteSheet> {
             color: theme.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: SelectableText(
-            invitation.code,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
-              letterSpacing: 3,
-              color: theme.colorScheme.onPrimaryContainer,
+          // SelectableText puts nothing in the semantics tree, so the one
+          // thing on this screen that has to be read out — and read out
+          // character by character, since it is dictated down a phone line —
+          // would be silent to a screen reader. The label spells it out with
+          // spaces so it is not run together as a word.
+          child: Semantics(
+            label: "Code d'invitation : ${invitation.code.split('').join(' ')}",
+            excludeSemantics: true,
+            child: SelectableText(
+              invitation.code,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+                letterSpacing: 3,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
             ),
           ),
         ),

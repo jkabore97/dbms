@@ -152,15 +152,22 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'ABCD-2345',
+                    // Without this the field's accessible name is the example
+                    // code, so a screen reader announces "ABCD-2345" as the
+                    // name of the box rather than as a sample of what goes in.
+                    labelText: "Code d'invitation",
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
                   onChanged: (_) {
-                    // Any edit invalidates the business shown below it.
-                    if (_orgName != null || _error != null) {
-                      setState(() {
-                        _orgName = null;
-                        _error = null;
-                      });
-                    }
+                    // Unconditionally: the Verify button is enabled off
+                    // _looksComplete, which is recomputed on build, so a
+                    // conditional setState here leaves it greyed out no matter
+                    // how much is typed. Any edit also invalidates the
+                    // business named below it.
+                    setState(() {
+                      _orgName = null;
+                      _error = null;
+                    });
                   },
                   onSubmitted: (_) {
                     if (_looksComplete && !busy) _preview();
