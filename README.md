@@ -64,9 +64,23 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
 - Offline re-entry — the identity and org list are cached on the device, and a
   4-digit PIN unlocks the app when the access token has expired and there is no
   signal to refresh it. The PIN is stored only as a salted, stretched hash.
+- Invitations (`005_invitations.sql`) — a membership no longer has to be
+  inserted by hand. An invitation is a promise of a membership, never a
+  membership: `claim_invitation()` is the only path from one to the other, and
+  it runs SECURITY DEFINER because the claimer is by definition not yet a
+  member and every policy in 004 would deny them. Claiming twice yields one
+  membership. Codes are eight characters with `0/O` and `1/I` removed, matched
+  through `normalize_invitation_code()` so `chor 2468` and `CHOR-2468` are one
+  code. Only an org's admins may read or issue its invitations; a stranger
+  holding a code gets `invitation_preview()`, which returns the business name
+  and nothing else. 15 assertions in `database/tests/test_invitations.sql`.
+- Admin screens — people and their roles, invite by short code or QR, sites and
+  departments, and the business's name and currency. None of it is
+  offline-first, deliberately: only the server may decide who can see a
+  business's books.
 - Next: the farm profile for Ignace ('farm' orgs currently land on a
-  "module coming" screen), then inviting people from inside the app — today a
-  membership row has to be inserted by hand.
+  "module coming" screen), and a camera scanner so a QR can be read as well as
+  shown — today the invitee types the code.
 
 ## Cloud development (recommended)
 
