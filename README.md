@@ -44,14 +44,29 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   expenses, undo-by-reversal, offline idempotency, pastor's weekly summary,
   member giving statements.
 - Sync support (`003_sync_support.sql`) — reversal by client_uuid, tested.
-- RLS policies (`004_rls_policies.sql`) — every table protected, 22 policies.
-  Cross-tenant isolation proven in `database/tests/test_rls.sql`: Israel cannot
-  see Ignace's books, observers cannot write, and ledger history cannot be
-  edited or deleted by anyone.
+- RLS policies (`004_rls_policies.sql`) — every table protected, 22 policies
+  here and 26 across the project. Also adds the `my_orgs()` RPC the app calls
+  after sign-in, and a trigger that mirrors a new `auth.users` row into
+  `profiles` so an invitation has something to point at.
+  Cross-tenant isolation proven in `database/tests/test_rls.sql`, which runs as
+  the `authenticated` role rather than as postgres — a superuser bypasses RLS,
+  so a suite run as postgres would pass against no policies at all. Israel
+  cannot see Ignace's books, observers cannot write, and ledger history cannot
+  be edited or deleted by anyone.
 - Flutter shell (`app/`) — local SQLite with outbox, sync service, church home
   screen, contribution capture. Analyzed clean in CI (`flutter-analyze` job).
-- Next: login + org resolution (the orgId in main.dart is currently hardcoded),
-  then the farm profile for Ignace.
+- Login and org resolution (M1) — phone + SMS code as the primary sign-in,
+  email and password as the fallback. After sign-in the app calls `my_orgs()`:
+  one org opens straight into it, several show a picker, none shows a waiting
+  screen. The home screen is chosen by the org's `profile` column, so the same
+  build shows Israel a church and Ignace a farm. No org id appears anywhere in
+  the source.
+- Offline re-entry — the identity and org list are cached on the device, and a
+  4-digit PIN unlocks the app when the access token has expired and there is no
+  signal to refresh it. The PIN is stored only as a salted, stretched hash.
+- Next: the farm profile for Ignace ('farm' orgs currently land on a
+  "module coming" screen), then inviting people from inside the app — today a
+  membership row has to be inserted by hand.
 
 ## Cloud development (recommended)
 
@@ -79,8 +94,24 @@ flutter run \
   --dart-define=SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-Credentials are passed at build time, never committed. With no `--dart-define`
-values the app still runs fully offline against local SQLite.
+Credentials are passed at build time, never committed.
+
+Signing in needs those values: without them there is no server to authenticate
+against and the login screen says so. Once a user has signed in on a device and
+chosen a PIN, that device keeps working with no connection at all — that is
+what the offline path is for.
+
+Phone sign-in also needs an SMS provider configured under Authentication →
+Providers → Phone in the Supabase dashboard. Until that is set up, use the
+email and password fallback on the login screen.
+
+A person who signs in but belongs to no org sees the waiting screen. To let
+them in, insert a membership:
+
+```sql
+insert into memberships (org_id, user_id, role, scope_kind, scope_id)
+values ('<org id>', '<their auth.users id>', 'admin', 'org', '<org id>');
+```
 
 ## Running the tests locally
 
@@ -89,7 +120,19 @@ createdb kajtest
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/schema.sql
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/004_rls_policies.sql
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
+psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/test_rls.sql
+```
+
+Both suites seed their own rows and neither is idempotent — drop and recreate
+`kajtest` between runs.
+
+The Flutter tests need no database or network:
+
+```
+cd app && flutter test
 ```
 
 `supabase_stub.sql` fakes the `auth.users` table and `auth.uid()` that Supabase

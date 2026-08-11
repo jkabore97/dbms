@@ -1,0 +1,151 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'models.dart';
+
+/// Everything the app does with Supabase auth, behind one door.
+///
+/// Phone + OTP is the primary route on purpose: most of the people this app is
+/// for have a phone number and no email address. Email and password exist for
+/// the accountant on a laptop and for anyone whose SMS never arrives.
+///
+/// The client is nullable. A build made with no `--dart-define` values has no
+/// backend at all, and the app is still expected to run against the local
+/// database; every method here fails politely rather than throwing a null.
+class AuthRepository {
+  AuthRepository(this._client);
+
+  final SupabaseClient? _client;
+
+  bool get isConfigured => _client != null;
+
+  User? get currentUser => _client?.auth.currentUser;
+
+  Session? get currentSession => _client?.auth.currentSession;
+
+  /// True when the stored token is still good. False when it has expired and
+  /// the refresh could not happen — which, out at the farm, is most of the
+  /// time. That is what the PIN is for.
+  bool get hasLiveSession {
+    final session = currentSession;
+    return session != null && !session.isExpired;
+  }
+
+  Stream<AuthState>? get onAuthStateChange => _client?.auth.onAuthStateChange;
+
+  // ----------------------------------------------------------------
+  // Phone + OTP — the primary route
+  // ----------------------------------------------------------------
+
+  /// Sends the six-digit code. [phone] must already be in E.164 form
+  /// (+22670000000); [normalizePhone] does that.
+  Future<void> sendPhoneOtp(String phone) async {
+    final client = _requireClient();
+    await client.auth.signInWithOtp(phone: phone);
+  }
+
+  Future<AuthResponse> verifyPhoneOtp({
+    required String phone,
+    required String token,
+  }) {
+    final client = _requireClient();
+    return client.auth.verifyOTP(
+      phone: phone,
+      token: token,
+      type: OtpType.sms,
+    );
+  }
+
+  // ----------------------------------------------------------------
+  // Email + password — the secondary route
+  // ----------------------------------------------------------------
+
+  Future<AuthResponse> signInWithEmail({
+    required String email,
+    required String password,
+  }) {
+    final client = _requireClient();
+    return client.auth.signInWithPassword(email: email, password: password);
+  }
+
+  Future<void> signOut() async {
+    // A failure here means the token could not be revoked server-side. The
+    // local session is dropped either way; the alternative is a user who
+    // cannot sign out until they have signal.
+    try {
+      await _client?.auth.signOut();
+    } on AuthException {
+      // Already gone as far as this device is concerned.
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Which businesses does this person belong to?
+  // ----------------------------------------------------------------
+
+  /// Calls `my_orgs()` (004_rls_policies.sql). One row per org, already
+  /// filtered server-side to this user — the client never asks for someone
+  /// else's memberships, and would be refused if it did.
+  Future<List<OrgSummary>> fetchOrgs() async {
+    final client = _requireClient();
+    final rows = await client.rpc('my_orgs') as List<dynamic>;
+    return rows
+        .map((r) => OrgSummary.fromRpc(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  SupabaseClient _requireClient() {
+    final client = _client;
+    if (client == null) {
+      throw StateError(
+        "Cette version de l'application a été compilée sans serveur. "
+        'Reconstruisez-la avec SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY.',
+      );
+    }
+    return client;
+  }
+
+  /// Turns what someone types into E.164.
+  ///
+  /// Burkina Faso numbers are eight digits and are written locally with spaces
+  /// and no country code — "70 12 34 56". A number typed that way is assumed
+  /// to be local; anything starting with + is left alone.
+  static String normalizePhone(String input, {String defaultCode = '+226'}) {
+    var cleaned = input.replaceAll(RegExp(r'[\s\-().]'), '');
+    if (cleaned.startsWith('00')) cleaned = '+${cleaned.substring(2)}';
+    if (cleaned.startsWith('+')) return cleaned;
+    // A leading 0 is a national trunk prefix and is dropped before the code.
+    if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+    return '$defaultCode$cleaned';
+  }
+
+  /// Turns a Supabase failure into something worth showing a person. The raw
+  /// messages are English and mention tokens and grants.
+  static String describeError(Object error) {
+    if (error is AuthException) {
+      final message = error.message.toLowerCase();
+      if (message.contains('invalid') && message.contains('otp') ||
+          message.contains('token has expired') ||
+          message.contains('expired')) {
+        return 'Code incorrect ou expiré. Demandez-en un nouveau.';
+      }
+      if (message.contains('invalid login credentials')) {
+        return 'E-mail ou mot de passe incorrect.';
+      }
+      if (message.contains('rate limit') ||
+          message.contains('too many requests')) {
+        return 'Trop de tentatives. Attendez une minute avant de réessayer.';
+      }
+      if (message.contains('sms') || message.contains('phone')) {
+        return "L'envoi du SMS a échoué. Vérifiez le numéro.";
+      }
+      return error.message;
+    }
+    if (error is PostgrestException) {
+      return 'Le serveur a refusé la demande : ${error.message}';
+    }
+    if (error is StateError) {
+      return error.message;
+    }
+    return 'Pas de connexion. Réessayez quand le réseau revient.';
+  }
+}

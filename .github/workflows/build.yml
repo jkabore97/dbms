@@ -69,6 +69,14 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      # sqflite runs on SQLite compiled to wasm in the browser. The wasm binary
+      # and its worker are generated, not checked in, and the scaffold step
+      # above recreates web/ from scratch — without this the bundle builds fine
+      # and then fails to open its database at runtime.
+      - name: Install sqflite web assets
+        working-directory: app
+        run: dart run sqflite_common_ffi_web:setup
+
       - name: Build web
         working-directory: app
         run: flutter build web --release

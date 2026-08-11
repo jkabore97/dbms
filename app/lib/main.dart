@@ -1,10 +1,14 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sqflite/sqflite.dart' show databaseFactory;
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_root.dart';
+import 'core/auth/auth_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/sync/sync_service.dart';
-import 'features/church/church_home_screen.dart';
 
 /// Supplied at build time so no credentials live in the source:
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
@@ -16,29 +20,120 @@ const supabasePublishableKey =
     String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
 Future<void> main() async {
+  // Anything thrown before `runApp` leaves the browser showing a blank white
+  // page with the reason buried in the console. Catch it and put it on screen.
+  try {
+    await _startup();
+  } catch (error, stack) {
+    runApp(StartupErrorApp(error: error, stack: stack));
+  }
+}
+
+Future<void> _startup() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // sqflite talks to a native plugin that does not exist in a browser. On web
+  // the factory is swapped for the wasm/IndexedDB one before anything opens a
+  // database; every call in LocalDb goes through the global factory, so this
+  // single line is all the platform difference there is.
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
+
   await initializeDateFormatting('fr_FR', null);
 
   // The local database opens first and the UI runs from it. If Supabase is
   // unreachable, the app still works completely — that is the whole point.
   final db = await LocalDb.open();
 
+  SupabaseClient? client;
   SyncService? sync;
   if (supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty) {
     await Supabase.initialize(
       url: supabaseUrl,
       publishableKey: supabasePublishableKey,
+      // The session is written to device storage and reloaded on launch, so a
+      // phone that has been out of range for a fortnight still knows who its
+      // owner is. Refreshing that session needs signal; the device PIN covers
+      // the stretch where there is none.
+      authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
     );
-    sync = SyncService(db, Supabase.instance.client)..start();
+    client = Supabase.instance.client;
+    // Started by AppRoot once someone is actually signed in — draining the
+    // outbox before then would post entries with no author.
+    sync = SyncService(db, client);
   }
 
-  runApp(KajApp(db: db, sync: sync));
+  runApp(KajApp(db: db, auth: AuthRepository(client), sync: sync));
+}
+
+/// Shown instead of a white page when the app cannot start. It is deliberately
+/// plain — it must not depend on anything that could itself have failed.
+class StartupErrorApp extends StatelessWidget {
+  const StartupErrorApp({super.key, required this.error, this.stack});
+
+  final Object error;
+  final StackTrace? stack;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFFFDECEA),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "L'application n'a pas pu démarrer",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF8C1D18),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SelectableText(
+                  '$error',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    color: Color(0xFF410E0B),
+                  ),
+                ),
+                if (stack != null) ...[
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    '$stack',
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      color: Color(0xFF5F3A38),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class KajApp extends StatelessWidget {
-  const KajApp({super.key, required this.db, this.sync});
+  const KajApp({
+    super.key,
+    required this.db,
+    required this.auth,
+    this.sync,
+  });
 
   final LocalDb db;
+  final AuthRepository auth;
   final SyncService? sync;
 
   @override
@@ -56,13 +151,9 @@ class KajApp extends StatelessWidget {
           bodyLarge: TextStyle(fontSize: 18),
         ),
       ),
-      home: ChurchHomeScreen(
-        db: db,
-        // TODO: replace with the org resolved from the signed-in user's
-        // membership once the login flow lands.
-        orgId: '22222222-2222-2222-2222-222222222222',
-        orgName: 'Grace Chapel',
-      ),
+      // No org is named anywhere in this file, and none ever should be. Which
+      // business opens is decided by the signed-in user's memberships.
+      home: AppRoot(db: db, auth: auth, sync: sync),
     );
   }
 }

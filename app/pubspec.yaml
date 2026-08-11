@@ -15,9 +15,26 @@ dependencies:
   sqflite: ^2.3.3
   path: ^1.9.0
 
+  # sqflite's native implementation doesn't exist in a browser. On web the
+  # database factory is swapped for this one, which runs SQLite compiled to
+  # wasm against IndexedDB. Without it the app throws on the first query and
+  # renders nothing at all.
+  #
+  # Requires the wasm binary and worker in web/ — regenerate with:
+  #   dart run sqflite_common_ffi_web:setup
+  #
+  # Keep this major version in step with the `sqlite3` package it resolves
+  # against: setup downloads a sqlite3.wasm pinned to a matching release, and a
+  # mismatch fails at WebAssembly.instantiate with a missing "env" import.
+  sqflite_common_ffi_web: ^1.1.2
+
   # Client-generated ids so records can be created with no connection and
   # still be uniquely identified when they finally sync.
   uuid: ^4.4.0
+
+  # Hashing for the device PIN that guards offline re-entry. The PIN itself is
+  # never stored — see core/auth/pin_codec.dart.
+  crypto: ^3.0.3
 
   # Backend (Postgres + auth). Only touched by SyncService.
   supabase_flutter: ^2.5.6
@@ -32,6 +49,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+
+  # Runs the real SQLite engine inside `flutter test`, so the auth and org
+  # tests exercise the same schema and queries the phone does rather than a
+  # mock that agrees with whatever the code happens to do.
+  sqflite_common_ffi: ^2.3.3
 
 flutter:
   uses-material-design: true
