@@ -140,7 +140,7 @@ void main() {
     // No picker: straight to the church module, named after the org the
     // membership resolved to — not after anything compiled into the build.
     expect(find.text('Grace Chapel'), findsOneWidget);
-    expect(find.text('Enregistrer'), findsOneWidget);
+    expect(find.text('Recette'), findsOneWidget);
     expect(find.text("Aujourd'hui"), findsOneWidget);
   });
 
@@ -157,7 +157,8 @@ void main() {
     // screen built for counting offerings.
     expect(find.text('Ferme Ignace'), findsWidgets);
     expect(find.text('Ferme'), findsOneWidget);
-    expect(find.text('Enregistrer'), findsNothing);
+    expect(find.text('Recette'), findsNothing);
+    expect(find.text('Dépense'), findsNothing);
   });
 
   testWidgets('two businesses show a picker, and picking one opens it',

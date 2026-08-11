@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
 import 'record_contribution_sheet.dart';
+import 'record_expense_sheet.dart';
 
 /// Israel's home screen.
 ///
@@ -76,6 +77,19 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       context: context,
       isScrollControlled: true,
       builder: (_) => RecordContributionSheet(
+        db: widget.db,
+        orgId: widget.orgId,
+      ),
+    );
+
+    if (recorded == true) await _refresh();
+  }
+
+  Future<void> _openExpenseSheet() async {
+    final recorded = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => RecordExpenseSheet(
         db: widget.db,
         orgId: widget.orgId,
       ),
@@ -174,14 +188,41 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                 ],
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openRecordSheet,
-        icon: const Icon(Icons.add, size: 28),
-        label: const Text(
-          'Enregistrer',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        extendedPadding: const EdgeInsets.symmetric(horizontal: 32),
+      // Two buttons, not one with a mode. Money in and money out are different
+      // acts with different consequences, and a toggle at the top of a sheet is
+      // exactly the control someone taps past while concentrating on the
+      // number. They differ in colour, in icon, in wording and in size — the
+      // arrows match the ones on the rows each button produces.
+      //
+      // Recording money in stays the larger and louder of the two: it is the
+      // reason the app exists and it happens many times for every expense.
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'record-expense',
+            onPressed: _openExpenseSheet,
+            backgroundColor: Colors.orange.shade100,
+            foregroundColor: Colors.orange.shade900,
+            icon: const Icon(Icons.arrow_upward, size: 20),
+            label: const Text(
+              'Dépense',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'record-income',
+            onPressed: _openRecordSheet,
+            icon: const Icon(Icons.arrow_downward, size: 28),
+            label: const Text(
+              'Recette',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            extendedPadding: const EdgeInsets.symmetric(horizontal: 32),
+          ),
+        ],
       ),
     );
   }
