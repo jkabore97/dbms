@@ -15,6 +15,8 @@ class AccountMenu extends StatelessWidget {
     required this.userLabel,
     required this.onSignOut,
     this.onSwitchOrg,
+    this.onAdminister,
+    this.onJoinByCode,
   });
 
   final LocalDb db;
@@ -23,6 +25,13 @@ class AccountMenu extends StatelessWidget {
 
   /// Null when the user belongs to only one business.
   final VoidCallback? onSwitchOrg;
+
+  /// Null unless this person administers the org they are currently in.
+  final VoidCallback? onAdminister;
+
+  /// Joining a second business from inside the first — the case where someone
+  /// already using the app is handed a code for somewhere else.
+  final VoidCallback? onJoinByCode;
 
   Future<void> _confirmSignOut(BuildContext context) async {
     final pending = await db.pendingCount();
@@ -67,6 +76,10 @@ class AccountMenu extends StatelessWidget {
       tooltip: 'Compte',
       onSelected: (value) {
         switch (value) {
+          case 'admin':
+            onAdminister?.call();
+          case 'join':
+            onJoinByCode?.call();
           case 'switch':
             onSwitchOrg?.call();
           case 'signout':
@@ -82,6 +95,24 @@ class AccountMenu extends StatelessWidget {
           ),
         ),
         const PopupMenuDivider(),
+        if (onAdminister != null)
+          const PopupMenuItem<String>(
+            value: 'admin',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.admin_panel_settings_outlined),
+              title: Text('Administration'),
+            ),
+          ),
+        if (onJoinByCode != null)
+          const PopupMenuItem<String>(
+            value: 'join',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.confirmation_number_outlined),
+              title: Text("J'ai un code"),
+            ),
+          ),
         if (onSwitchOrg != null)
           const PopupMenuItem<String>(
             value: 'switch',

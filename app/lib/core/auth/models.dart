@@ -36,6 +36,15 @@ class OrgSummary {
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
 
+  /// Whether to offer this person the administration screens.
+  ///
+  /// Deliberately the same role list as `is_org_admin()` in 004. This decides
+  /// whether a menu entry is drawn and nothing more — every admin action is
+  /// refused server-side by that function regardless of what the client
+  /// believes, so a stale cached role list cannot become a privilege.
+  bool get isAdmin =>
+      roles.any((r) => r == 'owner' || r == 'super_admin' || r == 'admin');
+
   /// The row shape returned by the `my_orgs()` RPC in 004_rls_policies.sql.
   factory OrgSummary.fromRpc(Map<String, dynamic> row) {
     return OrgSummary(

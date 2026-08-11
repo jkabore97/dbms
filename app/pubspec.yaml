@@ -45,6 +45,12 @@ dependencies:
   # Detects when the connection comes back so sync can fire automatically.
   connectivity_plus: ^6.0.3
 
+  # Renders an invitation code as a QR. Most of the people being invited are
+  # standing next to the person inviting them, so the fastest handover is one
+  # phone pointed at another — and it removes the chance of mistyping a code
+  # read aloud in a noisy room.
+  qr_flutter: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

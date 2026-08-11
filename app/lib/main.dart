@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_root.dart';
+import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/sync/sync_service.dart';
@@ -64,7 +65,12 @@ Future<void> _startup() async {
     sync = SyncService(db, client);
   }
 
-  runApp(KajApp(db: db, auth: AuthRepository(client), sync: sync));
+  runApp(KajApp(
+    db: db,
+    auth: AuthRepository(client),
+    admin: AdminRepository(client),
+    sync: sync,
+  ));
 }
 
 /// Shown instead of a white page when the app cannot start. It is deliberately
@@ -129,11 +135,13 @@ class KajApp extends StatelessWidget {
     super.key,
     required this.db,
     required this.auth,
+    required this.admin,
     this.sync,
   });
 
   final LocalDb db;
   final AuthRepository auth;
+  final AdminRepository admin;
   final SyncService? sync;
 
   @override
@@ -153,7 +161,7 @@ class KajApp extends StatelessWidget {
       ),
       // No org is named anywhere in this file, and none ever should be. Which
       // business opens is decided by the signed-in user's memberships.
-      home: AppRoot(db: db, auth: auth, sync: sync),
+      home: AppRoot(db: db, auth: auth, admin: admin, sync: sync),
     );
   }
 }

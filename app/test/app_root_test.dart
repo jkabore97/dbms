@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/app_root.dart';
+import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/auth/pin_codec.dart';
@@ -24,6 +25,10 @@ void main() {
 
   late LocalDb db;
   final auth = AuthRepository(null);
+
+  // Same null client, for the same reason: with no connection there is nothing
+  // to claim an invitation against, and the admin entry points stay hidden.
+  final admin = AdminRepository(null);
 
   setUp(() async {
     db = await LocalDb.open(path: inMemoryDatabasePath);
@@ -51,7 +56,7 @@ void main() {
 
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: AppRoot(db: db, auth: auth)),
+      MaterialApp(home: AppRoot(db: db, auth: auth, admin: admin)),
     );
     await flush(tester);
   }
