@@ -15,12 +15,18 @@ class NoOrgScreen extends StatelessWidget {
     required this.identity,
     required this.onRetry,
     required this.onSignOut,
+    this.onJoinByCode,
     this.checking = false,
   });
 
   final LocalIdentity identity;
   final Future<void> Function() onRetry;
   final VoidCallback onSignOut;
+
+  /// Entering an invitation code by hand. Null only in a build with no server,
+  /// where there is nothing to check a code against.
+  final VoidCallback? onJoinByCode;
+
   final bool checking;
 
   @override
@@ -61,8 +67,8 @@ class NoOrgScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   "Vous n'êtes encore rattaché à aucune activité. "
-                  "Demandez au responsable de vous ajouter, puis appuyez sur "
-                  'Vérifier.',
+                  'Si le responsable vous a remis un code, entrez-le. '
+                  'Sinon, communiquez-lui le numéro ci-dessous.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -98,10 +104,31 @@ class NoOrgScreen extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 32),
+
+                // Entering a code is the primary action now: an invitation
+                // pinned to this person's number lets them straight in without
+                // it, but a code handed over in person is the common case and
+                // the one that needs a button.
+                if (onJoinByCode != null) ...[
+                  SizedBox(
+                    height: 52,
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: checking ? null : onJoinByCode,
+                      icon: const Icon(Icons.confirmation_number_outlined),
+                      label: const Text(
+                        "J'ai un code",
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 SizedBox(
                   height: 52,
                   width: double.infinity,
-                  child: FilledButton.icon(
+                  child: OutlinedButton.icon(
                     onPressed: checking ? null : () => onRetry(),
                     icon: checking
                         ? const SizedBox(

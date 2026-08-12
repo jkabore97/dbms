@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
+import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/auth/models.dart';
 import 'core/auth/pin_codec.dart';
 import 'core/db/local_db.dart';
 import 'core/sync/sync_service.dart';
+import 'features/admin/admin_home_screen.dart';
+import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/no_org_screen.dart';
 import 'features/auth/org_picker_screen.dart';
@@ -32,11 +35,13 @@ class AppRoot extends StatefulWidget {
     super.key,
     required this.db,
     required this.auth,
+    required this.admin,
     this.sync,
   });
 
   final LocalDb db;
   final AuthRepository auth;
+  final AdminRepository admin;
   final SyncService? sync;
 
   @override
@@ -196,6 +201,13 @@ class _AppRootState extends State<AppRoot> {
 
     if (widget.auth.hasLiveSession) {
       try {
+        // Anything addressed to this person's phone or email becomes a
+        // membership before we ask what they belong to — otherwise an invited
+        // user would land on the waiting screen with an invitation sitting
+        // unclaimed on the server. Never throws; a missed sweep is picked up
+        // on the next launch or by typing the code.
+        await widget.admin.claimMyInvitations();
+
         orgs = await widget.auth.fetchOrgs();
         await widget.db.cacheOrgs(orgs);
 
@@ -242,6 +254,33 @@ class _AppRootState extends State<AppRoot> {
     });
   }
 
+  // ----------------------------------------------------------------
+  // Joining, and administering
+  // ----------------------------------------------------------------
+
+  /// Opens the code screen. A successful claim re-resolves the org list, which
+  /// is what moves the user off the waiting screen and into the business.
+  Future<void> _joinByCode() async {
+    final joined = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => JoinByCodeScreen(admin: widget.admin)),
+    );
+    if (joined == true) await _resolveOrgs();
+  }
+
+  Future<void> _administer(OrgSummary org) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdminHomeScreen(
+          admin: widget.admin,
+          org: org,
+          // Renaming the business changes what my_orgs() returns, and the name
+          // in the app bar comes from there rather than from the settings form.
+          onOrgChanged: _resolveOrgs,
+        ),
+      ),
+    );
+  }
+
   void _startSync() {
     final sync = widget.sync;
     if (sync != null && !_syncStarted) {
@@ -285,6 +324,9 @@ class _AppRootState extends State<AppRoot> {
           identity: _identity!,
           onRetry: _resolveOrgs,
           onSignOut: _signOut,
+          // A build with no server has nothing to check a code against, and
+          // an expired token cannot claim one either.
+          onJoinByCode: widget.auth.hasLiveSession ? _joinByCode : null,
         );
 
       case _Phase.picking:
@@ -308,6 +350,13 @@ class _AppRootState extends State<AppRoot> {
               db: widget.db,
               userLabel: _identity?.label ?? '',
               onSignOut: _signOut,
+              // Both of these need the server, so both disappear once the
+              // token has expired — the rest of the app keeps working offline.
+              onAdminister: org.isAdmin && widget.auth.hasLiveSession
+                  ? () => _administer(org)
+                  : null,
+              onJoinByCode:
+                  widget.auth.hasLiveSession ? _joinByCode : null,
               onSwitchOrg: _orgs.length > 1
                   ? () => setState(() {
                         _org = null;

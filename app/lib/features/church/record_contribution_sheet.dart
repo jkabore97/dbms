@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
+import 'entry_controls.dart';
 
 /// The recording flow.
 ///
@@ -102,7 +103,7 @@ class _RecordContributionSheetState extends State<RecordContributionSheet> {
           ),
           const SizedBox(height: 20),
 
-          _ChoiceRow(
+          ChoiceChipRow(
             values: const {
               'offering': 'Offrande',
               'tithe': 'Dîme',
@@ -113,7 +114,7 @@ class _RecordContributionSheetState extends State<RecordContributionSheet> {
             onSelect: (v) => setState(() => _kind = v),
           ),
           const SizedBox(height: 8),
-          _ChoiceRow(
+          ChoiceChipRow(
             values: const {
               'cash': 'Espèces',
               'mobile_money': 'Mobile Money',
@@ -124,7 +125,7 @@ class _RecordContributionSheetState extends State<RecordContributionSheet> {
           ),
           const SizedBox(height: 16),
 
-          _Keypad(onDigit: _tapDigit, onBackspace: _backspace),
+          AmountKeypad(onDigit: _tapDigit, onBackspace: _backspace),
           const SizedBox(height: 16),
 
           SizedBox(
@@ -152,78 +153,6 @@ class _RecordContributionSheetState extends State<RecordContributionSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ChoiceRow extends StatelessWidget {
-  const _ChoiceRow({
-    required this.values,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final Map<String, String> values;
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: values.entries.map((e) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(e.value),
-              selected: selected == e.key,
-              onSelected: (_) => onSelect(e.key),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _Keypad extends StatelessWidget {
-  const _Keypad({required this.onDigit, required this.onBackspace});
-
-  final ValueChanged<String> onDigit;
-  final VoidCallback onBackspace;
-
-  @override
-  Widget build(BuildContext context) {
-    const keys = [
-      '1', '2', '3',
-      '4', '5', '6',
-      '7', '8', '9',
-      '000', '0', '<',
-    ];
-
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 2.0,
-      children: keys.map((k) {
-        return InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => k == '<' ? onBackspace() : onDigit(k),
-          child: Center(
-            child: k == '<'
-                ? const Icon(Icons.backspace_outlined, size: 24)
-                : Text(
-                    k,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-          ),
-        );
-      }).toList(),
     );
   }
 }

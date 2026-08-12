@@ -1,0 +1,155 @@
+import 'package:flutter/material.dart';
+
+import '../../core/admin/admin_repository.dart';
+import '../../core/auth/models.dart';
+import 'org_settings_screen.dart';
+import 'people_screen.dart';
+import 'structure_screen.dart';
+
+/// The administration hub.
+///
+/// Reached only by someone who administers this org — the entry point is
+/// hidden otherwise — but hiding it is a courtesy, not the protection. Every
+/// screen behind here is protected by the policies in 004 and 005, so an
+/// admin-only action attempted by a non-admin fails at the server whether or
+/// not the button was ever on screen.
+class AdminHomeScreen extends StatelessWidget {
+  const AdminHomeScreen({
+    super.key,
+    required this.admin,
+    required this.org,
+    this.onOrgChanged,
+  });
+
+  final AdminRepository admin;
+  final OrgSummary org;
+
+  /// Called when something here changes what `my_orgs()` would return — the
+  /// business's name, most obviously.
+  final VoidCallback? onOrgChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Administration')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            elevation: 0,
+            color: theme.colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    org.name,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    org.roles.map(_roleWord).join(' · '),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _AdminTile(
+            icon: Icons.group_outlined,
+            title: 'Personnes',
+            subtitle: 'Membres, rôles et invitations',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PeopleScreen(
+                  admin: admin,
+                  orgId: org.id,
+                  orgName: org.name,
+                ),
+              ),
+            ),
+          ),
+          _AdminTile(
+            icon: Icons.account_tree_outlined,
+            title: 'Sites et départements',
+            subtitle: "La structure de l'activité",
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StructureScreen(
+                  admin: admin,
+                  orgId: org.id,
+                  profile: org.profile,
+                ),
+              ),
+            ),
+          ),
+          _AdminTile(
+            icon: Icons.settings_outlined,
+            title: "Paramètres de l'activité",
+            subtitle: 'Nom et monnaie',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OrgSettingsScreen(
+                  admin: admin,
+                  orgId: org.id,
+                  onSaved: onOrgChanged,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _roleWord(String role) => switch (role) {
+        'owner' => 'Propriétaire',
+        'super_admin' => 'Super administrateur',
+        'admin' => 'Administrateur',
+        _ => role,
+      };
+}
+
+class _AdminTile extends StatelessWidget {
+  const _AdminTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Icon(icon, size: 28),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+}
