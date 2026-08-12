@@ -5,6 +5,18 @@ name: Build App
 # from the run's Artifacts section.
 #
 # Run manually from the Actions tab ("Run workflow"), or on a push to main.
+#
+# The Supabase address and publishable key are compiled in here from repository
+# secrets. Without them the app builds fine and then tells whoever opens it
+# that the server is not configured, so both jobs refuse to build rather than
+# hand out an installable that cannot sign anybody in. Set them under
+# Settings > Secrets and variables > Actions > Repository secrets:
+#   SUPABASE_URL                 https://YOUR-PROJECT.supabase.co
+#   SUPABASE_PUBLISHABLE_KEY     the publishable (formerly anon) key
+# SUPABASE_ANON_KEY is accepted for the key, since that is what Supabase's
+# dashboard still calls it and what ci.yml's own comment asks for.
+# The publishable key is meant to ship in clients — RLS is what protects the
+# data. The service_role key never belongs in a build.
 
 on:
   workflow_dispatch:
@@ -17,8 +29,53 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    env:
+      # Secrets first, then Actions variables, then the older names. The
+      # project URL is not sensitive, so a plain variable is a fair place for
+      # it. Empty values are falsy to `||`, so the first one actually set wins.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+      # Probed one by one so a failure can say which name carries a value.
+      # Only "set"/"empty" is ever printed, never a value.
+      PROBE_URL: ${{ secrets.SUPABASE_URL }}
+      PROBE_URL_VAR: ${{ vars.SUPABASE_URL }}
+      PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+      PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the Supabase secrets are set
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          if [ -n "$missing" ]; then
+            state() { [ -n "$1" ] && echo set || echo empty; }
+            {
+              echo "Empty at build time:$missing"
+              echo
+              echo "What this job can actually read:"
+              echo "  secrets.SUPABASE_URL              $(state "$PROBE_URL")"
+              echo "  vars.SUPABASE_URL                 $(state "$PROBE_URL_VAR")"
+              echo "  secrets.SUPABASE_PUBLISHABLE_KEY  $(state "$PROBE_PUBLISHABLE")"
+              echo "  secrets.SUPABASE_ANON_KEY         $(state "$PROBE_ANON")"
+              echo "  secrets.SUPABASE_KEY              $(state "$PROBE_KEY")"
+              echo
+              echo "All empty means the values are not repository Actions secrets."
+              echo "They must be at:"
+              echo "  Settings > Secrets and variables > Actions > Repository secrets"
+              echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions"
+              echo
+              echo "Secrets under Codespaces, Dependabot, or an Actions"
+              echo "environment are invisible here, as are secrets on a"
+              echo "different repository."
+              echo
+              echo "Building without them produces an app whose login screen"
+              echo "only says 'Serveur non configuré'."
+            } >&2
+            exit 1
+          fi
 
       - uses: actions/setup-java@v4
         with:
@@ -44,7 +101,10 @@ jobs:
       # A Play Store release needs an upload keystore, which comes later.
       - name: Build APK
         working-directory: app
-        run: flutter build apk --debug
+        run: |
+          flutter build apk --debug \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -54,8 +114,48 @@ jobs:
 
   build-web:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+      PROBE_URL: ${{ secrets.SUPABASE_URL }}
+      PROBE_URL_VAR: ${{ vars.SUPABASE_URL }}
+      PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+      PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the Supabase secrets are set
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          if [ -n "$missing" ]; then
+            state() { [ -n "$1" ] && echo set || echo empty; }
+            {
+              echo "Empty at build time:$missing"
+              echo
+              echo "What this job can actually read:"
+              echo "  secrets.SUPABASE_URL              $(state "$PROBE_URL")"
+              echo "  vars.SUPABASE_URL                 $(state "$PROBE_URL_VAR")"
+              echo "  secrets.SUPABASE_PUBLISHABLE_KEY  $(state "$PROBE_PUBLISHABLE")"
+              echo "  secrets.SUPABASE_ANON_KEY         $(state "$PROBE_ANON")"
+              echo "  secrets.SUPABASE_KEY              $(state "$PROBE_KEY")"
+              echo
+              echo "All empty means the values are not repository Actions secrets."
+              echo "They must be at:"
+              echo "  Settings > Secrets and variables > Actions > Repository secrets"
+              echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions"
+              echo
+              echo "Secrets under Codespaces, Dependabot, or an Actions"
+              echo "environment are invisible here, as are secrets on a"
+              echo "different repository."
+              echo
+              echo "Building without them produces an app whose login screen"
+              echo "only says 'Serveur non configuré'."
+            } >&2
+            exit 1
+          fi
 
       - uses: subosito/flutter-action@v2
         with:
@@ -79,7 +179,10 @@ jobs:
 
       - name: Build web
         working-directory: app
-        run: flutter build web --release
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
 
       - uses: actions/upload-artifact@v4
         with:
