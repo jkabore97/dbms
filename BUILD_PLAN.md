@@ -12,6 +12,11 @@ Each milestone ends with something demonstrable.
 | Piece | Status |
 |---|---|
 | orgs → entities → departments | schema built |
+| Invitations by short code, no email required (M2) | built, tested — 585-line suite |
+| Admin screens: org settings, entities/departments, people, invites | built (M2) |
+| Expense entry alongside contributions | built |
+| Public web build via GitHub Pages, redeploys on push to main | live, deploy bug fixed |
+| Codespace serve.sh — local dev serving with real credentials | built |
 | 8 scoped roles (owner…employee, observer, approver) | built |
 | Double-entry ledger, hidden behind plain-language actions | built, tested |
 | Offline outbox + idempotent sync | built, tested |
