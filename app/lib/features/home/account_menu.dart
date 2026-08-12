@@ -17,6 +17,7 @@ class AccountMenu extends StatelessWidget {
     this.onSwitchOrg,
     this.onAdminister,
     this.onJoinByCode,
+    this.onAccounting,
   });
 
   final LocalDb db;
@@ -28,6 +29,15 @@ class AccountMenu extends StatelessWidget {
 
   /// Null unless this person administers the org they are currently in.
   final VoidCallback? onAdminister;
+
+  /// The books: journal, résultat, bilan, plan comptable, balance. Offered to
+  /// every member rather than to admins only — a summary observer opening
+  /// these is shown the totals and no line items, which is decided by the
+  /// server in 006 and 007 and not by whether a menu entry was drawn.
+  ///
+  /// Null in a build with no server, since every one of those screens is a
+  /// query the device cannot answer.
+  final VoidCallback? onAccounting;
 
   /// Joining a second business from inside the first — the case where someone
   /// already using the app is handed a code for somewhere else.
@@ -76,6 +86,8 @@ class AccountMenu extends StatelessWidget {
       tooltip: 'Compte',
       onSelected: (value) {
         switch (value) {
+          case 'accounting':
+            onAccounting?.call();
           case 'admin':
             onAdminister?.call();
           case 'join':
@@ -95,6 +107,15 @@ class AccountMenu extends StatelessWidget {
           ),
         ),
         const PopupMenuDivider(),
+        if (onAccounting != null)
+          const PopupMenuItem<String>(
+            value: 'accounting',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.menu_book_outlined),
+              title: Text('Comptabilité'),
+            ),
+          ),
         if (onAdminister != null)
           const PopupMenuItem<String>(
             value: 'admin',

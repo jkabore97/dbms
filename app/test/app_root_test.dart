@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/app_root.dart';
+import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/auth/pin_codec.dart';
+import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/farm/farm_repository.dart';
+import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The M1 flow, exercised the way it will actually be used: on a phone with no
@@ -29,6 +33,14 @@ void main() {
   // Same null client, for the same reason: with no connection there is nothing
   // to claim an invitation against, and the admin entry points stay hidden.
   final admin = AdminRepository(null);
+  final reports = ReportsRepository(null);
+
+  // Same null client as the others: these two exist so AppRoot can be built,
+  // and every screen behind them is a server query that a build with no
+  // backend never reaches.
+  final accounting = AccountingRepository(null);
+  final console = ConsoleRepository(null);
+  final farm = FarmRepository(null);
 
   setUp(() async {
     db = await LocalDb.open(path: inMemoryDatabasePath);
@@ -56,7 +68,17 @@ void main() {
 
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: AppRoot(db: db, auth: auth, admin: admin)),
+      MaterialApp(
+        home: AppRoot(
+          db: db,
+          auth: auth,
+          admin: admin,
+          reports: reports,
+          accounting: accounting,
+          console: console,
+          farm: farm,
+        ),
+      ),
     );
     await flush(tester);
   }
@@ -155,8 +177,15 @@ void main() {
 
     // Same binary, same PIN, different business: the farm does not land in a
     // screen built for counting offerings.
+    //
+    // Until M4 this asserted the word "Ferme" — the label on the placeholder
+    // screen a farm used to fall through to. The farm has its own module now,
+    // so the claim is made against what that module actually puts on screen:
+    // the morning collection, and the two things a church home screen has
+    // that a farm one must not.
     expect(find.text('Ferme Ignace'), findsWidgets);
-    expect(find.text('Ferme'), findsOneWidget);
+    expect(find.text('Ramassage'), findsOneWidget);
+    expect(find.text('Bandes'), findsOneWidget);
     expect(find.text('Recette'), findsNothing);
     expect(find.text('Dépense'), findsNothing);
   });
@@ -178,7 +207,7 @@ void main() {
     await tester.tap(find.text('Ferme Ignace'));
     await flush(tester);
 
-    expect(find.text('Ferme'), findsOneWidget);
+    expect(find.text('Ramassage'), findsOneWidget);
     expect(find.text('Choisissez une activité'), findsNothing);
   });
 

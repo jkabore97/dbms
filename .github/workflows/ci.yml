@@ -39,6 +39,10 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/004_rls_policies.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/005_invitations.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/006_report_access.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/007_accounting.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/008_audit_log.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/009_farm_profile.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
 
       # Runs as the `authenticated` role, never as postgres: a superuser
@@ -54,6 +58,38 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_invitations.sql
+
+      # Covers what test_rls.sql structurally could not: church_account_activity
+      # is a view, and a view runs as its owner unless told otherwise, so every
+      # policy underneath it was being skipped.
+      - name: Prove a report shows only what its reader is entitled to
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_reports.sql
+
+      # Letting people type their own category names is only safe if what is
+      # underneath is still double-entry. The trial balance assertion is the
+      # one that would catch a free-text name having quietly broken it.
+      - name: Prove the books still balance when people name their own entries
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_accounting.sql
+
+      # An audit log an administrator can clear is decoration, so most of this
+      # suite is the owner of a business trying to erase their own history.
+      - name: Prove the activity log cannot be edited by the people it watches
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_audit.sql
+
+      # The farm counts sacks and birds as well as money, and every way that
+      # goes wrong makes the farm look more profitable than it is: feed
+      # expensed twice, eggs booked as income before anyone pays, an invoice
+      # earned once when raised and again when settled.
+      - name: Prove the farm module keeps the ledger balanced
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm.sql
 
   flutter-analyze:
     runs-on: ubuntu-latest

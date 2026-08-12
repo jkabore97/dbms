@@ -42,6 +42,16 @@ select reverse_entry(:'mistake_id', :israel, 'Entered wrong amount') as correcti
 select count(*) as entries_still_on_record from journal_entries where id = :'mistake_id';
 select sum(debit) - sum(credit) as still_balanced from journal_lines;
 
+-- 006 made the three report functions SECURITY DEFINER and gated them on
+-- membership, so they now answer a person rather than a connection. These run
+-- as Israel, inside a transaction that rolls the grant back — test_rls.sql
+-- grants him the same role at the same scope later in the same database, and
+-- two of those rows would collide.
+begin;
+insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+values (:org, :israel, 'owner', 'org', :org, 'full');
+set local "request.jwt.claim.sub" = '11111111-1111-1111-1111-111111111111';
+
 \echo ''
 \echo '--- TEST 7: CASH BALANCES ---'
 select * from church_balances(:org);
@@ -53,6 +63,8 @@ select * from church_weekly_summary(:org);
 \echo ''
 \echo '--- TEST 9: MARIE GIVING STATEMENT ---'
 select * from member_giving_statement(:marie);
+
+rollback;
 
 \echo ''
 \echo '--- TEST 10: GUARDRAILS (each should raise an error) ---'

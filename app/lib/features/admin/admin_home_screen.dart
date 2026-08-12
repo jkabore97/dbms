@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
+import '../../core/console/console_repository.dart';
+import '../../core/db/local_db.dart';
+import '../console/console_screen.dart';
 import 'org_settings_screen.dart';
 import 'people_screen.dart';
 import 'structure_screen.dart';
@@ -18,11 +21,20 @@ class AdminHomeScreen extends StatelessWidget {
     super.key,
     required this.admin,
     required this.org,
+    this.console,
+    this.db,
     this.onOrgChanged,
   });
 
   final AdminRepository admin;
   final OrgSummary org;
+
+  /// The activity log and the database view. Null in a build with no server,
+  /// where there is nothing to read.
+  final ConsoleRepository? console;
+
+  /// Needed by the console's device tab, which reads this phone's outbox.
+  final LocalDb? db;
 
   /// Called when something here changes what `my_orgs()` would return — the
   /// business's name, most obviously.
@@ -110,6 +122,29 @@ class AdminHomeScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // Last, and behind the narrower role test. Everything above is
+          // running the business; this is looking at the machinery underneath
+          // it, and it is the only screen in the app that says what every
+          // colleague has been doing.
+          if (org.isSuperAdmin && console != null && db != null) ...[
+            const SizedBox(height: 8),
+            _AdminTile(
+              icon: Icons.terminal,
+              title: 'Console',
+              subtitle: "Journal d'activité, données, état de l'appareil",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ConsoleScreen(
+                    console: console!,
+                    db: db!,
+                    org: org,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

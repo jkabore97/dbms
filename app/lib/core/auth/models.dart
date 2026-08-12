@@ -45,6 +45,19 @@ class OrgSummary {
   bool get isAdmin =>
       roles.any((r) => r == 'owner' || r == 'super_admin' || r == 'admin');
 
+  /// Whether to offer this person the console — the activity log and the shape
+  /// of the database.
+  ///
+  /// Narrower than [isAdmin] on purpose, and narrower than the server, which
+  /// gates the console's functions on `is_org_admin()` and so admits a plain
+  /// admin too. The log says what every colleague has been doing and the
+  /// database view says what the business is made of; neither is something to
+  /// put one tap from a home screen for everybody who can invite an employee.
+  /// Widening it is a one-line change here; a rule that started wide is not
+  /// one that can be narrowed later without taking something away.
+  bool get isSuperAdmin =>
+      roles.any((r) => r == 'owner' || r == 'super_admin');
+
   /// The row shape returned by the `my_orgs()` RPC in 004_rls_policies.sql.
   factory OrgSummary.fromRpc(Map<String, dynamic> row) {
     return OrgSummary(
