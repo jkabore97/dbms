@@ -21,6 +21,7 @@ Widget homeScreenFor({
   ReportsRepository? reports,
   FarmRepository? farm,
   Widget? accountAction,
+  VoidCallback? onHistory,
 }) {
   return switch (org.profile) {
     'church' => ChurchHomeScreen(
@@ -30,6 +31,7 @@ Widget homeScreenFor({
         reports: reports,
         org: org,
         accountAction: accountAction,
+        onHistory: onHistory,
       ),
     'farm' => FarmHomeScreen(
         db: db,

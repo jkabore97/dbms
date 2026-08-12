@@ -30,6 +30,7 @@ class ChurchHomeScreen extends StatefulWidget {
     this.reports,
     this.org,
     this.accountAction,
+    this.onHistory,
   });
 
   final LocalDb db;
@@ -47,6 +48,11 @@ class ChurchHomeScreen extends StatefulWidget {
   /// The account menu, supplied by whatever resolved the org — sign out and
   /// switch business live there.
   final Widget? accountAction;
+
+  /// Opens the history of every entry ever recorded. Null in a build with no
+  /// server, and null once the token has expired: the list is paginated by the
+  /// database and there is nothing offline to page through.
+  final VoidCallback? onHistory;
 
   @override
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
@@ -202,6 +208,18 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                   ),
                 ),
               ),
+            ),
+          // A peer of Rapports rather than something to be found three taps
+          // down inside Comptabilité: "when did we record that" is a question
+          // any member asks, not an accounting exercise. Absent for an
+          // observer on 'summary' visibility, whose grant is the totals and
+          // for whom this screen would only ever be an empty list with an
+          // explanation — see journal_page, which returns them no rows.
+          if (widget.onHistory != null && widget.org?.visibility != 'summary')
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Historique',
+              onPressed: widget.onHistory,
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],

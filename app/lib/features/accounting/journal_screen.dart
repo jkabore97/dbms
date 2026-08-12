@@ -33,7 +33,11 @@ class JournalScreen extends StatefulWidget {
 class _JournalScreenState extends State<JournalScreen> {
   static const _pageSize = 50;
 
-  Period _period = Period.thisMonth;
+  // Everything, not this month: the question this screen answers is "when did
+  // we record that", and the entry being looked for is usually older than the
+  // period a month-bounded default would have hidden it inside. The page size
+  // makes that affordable — 50 rows arrive whatever the range.
+  Period _period = Period.everything;
   List<JournalRow> _rows = const [];
   bool _loading = true;
   bool _loadingMore = false;

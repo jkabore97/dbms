@@ -14,6 +14,7 @@ import 'core/farm/farm_repository.dart';
 import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
 import 'features/accounting/accounting_hub_screen.dart';
+import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
 import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -301,6 +302,21 @@ class _AppRootState extends State<AppRoot> {
     );
   }
 
+  /// The same screen the accounting hub opens on, reached directly from the
+  /// home screen. One screen rather than two: an entry's history is the
+  /// journal, and a second list that showed the same rows differently would be
+  /// a second thing to keep true.
+  Future<void> _openHistory(OrgSummary org) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => JournalScreen(
+          accounting: widget.accounting,
+          org: org,
+        ),
+      ),
+    );
+  }
+
   Future<void> _openAccounting(OrgSummary org) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -402,6 +418,12 @@ class _AppRootState extends State<AppRoot> {
             org: org,
             reports: widget.reports,
             farm: widget.farm,
+            // Same live-session rule as the reports: the history is paged by
+            // the database, so it is offered only while there is a session to
+            // page with.
+            onHistory: widget.auth.hasLiveSession
+                ? () => _openHistory(org)
+                : null,
             accountAction: AccountMenu(
               db: widget.db,
               userLabel: _identity?.label ?? '',
