@@ -34,12 +34,13 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
         await _createClosureSchema(db);
         await _createNamingSchema(db);
+        await _createFarmSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // v1 -> v2: who this device belongs to, and which businesses they can
@@ -51,6 +52,9 @@ class LocalDb {
         // typed, and the chart of accounts is cached so the categories are
         // still offerable with no signal.
         if (oldVersion < 4) await _upgradeToNaming(db);
+        // v4 -> v5: sacks and birds, which are counted on a device that has
+        // been out of range since Tuesday.
+        if (oldVersion < 5) await _createFarmSchema(db);
       },
     );
     return LocalDb._(db);
@@ -199,6 +203,62 @@ class LocalDb {
         money_in   REAL NOT NULL,
         money_out  REAL NOT NULL,
         PRIMARY KEY (org_id, closed_on)
+      )
+    ''');
+  }
+
+  /// What Ignace counts, on a device that has been out of range since Tuesday.
+  ///
+  /// The farm's problem is not the church's problem. A church records money
+  /// and the money is the record; a farm records sacks and birds and eggs, and
+  /// those counts are what the farm is actually run on — the money follows
+  /// weeks later. So the counts need the same offline guarantee the ledger
+  /// has, and they need it more, because the farm is the place with no signal.
+  static Future<void> _createFarmSchema(Database db) async {
+    // The physical half of what happened, mirroring the outbox row that will
+    // eventually carry it to the server. Money, when there is any, still goes
+    // in `entries` under the same client_uuid — one delivery is one thing that
+    // happened, and it should be one id whichever ledger you look at it from.
+    await db.execute('''
+      CREATE TABLE farm_events (
+        client_uuid TEXT PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        kind        TEXT NOT NULL,
+        subject     TEXT NOT NULL,
+        quantity    REAL NOT NULL,
+        unit        TEXT,
+        note        TEXT,
+        occurred_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX farm_events_by_date ON farm_events (org_id, occurred_at)',
+    );
+
+    // The names and counts the server last reported, so the recording sheets
+    // can offer real items and real flocks with no signal — the same bargain
+    // `cached_accounts` makes, and for the same reason. A stale count is a
+    // small inaccuracy; an empty picker at the farm gate is a notebook.
+    await db.execute('''
+      CREATE TABLE cached_farm_items (
+        item_id       TEXT PRIMARY KEY,
+        org_id        TEXT NOT NULL,
+        name          TEXT NOT NULL,
+        unit          TEXT NOT NULL,
+        on_hand       REAL NOT NULL DEFAULT 0,
+        reorder_level REAL,
+        below_reorder INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_flocks (
+        flock_id   TEXT PRIMARY KEY,
+        org_id     TEXT NOT NULL,
+        batch_code TEXT NOT NULL,
+        alive      INTEGER NOT NULL DEFAULT 0,
+        closed     INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -577,6 +637,394 @@ class LocalDb {
     }
 
     return (moneyIn: moneyIn, moneyOut: moneyOut);
+  }
+
+  // ----------------------------------------------------------------
+  // The farm
+  // ----------------------------------------------------------------
+
+  /// Feed, medicine or supplies arriving.
+  ///
+  /// The one recording call in the app that writes to both ledgers at once, so
+  /// it writes three rows in one transaction: the outbox action, the money in
+  /// `entries` (only when somebody said what it cost), and the count in
+  /// `farm_events`. All three carry the same client_uuid, which is what
+  /// `receive_stock()` in 009 uses to make a retried sync return the original
+  /// delivery instead of doubling twenty sacks of feed.
+  Future<String> receiveStock({
+    required String orgId,
+    required String itemName,
+    required double quantity,
+    double? unitCost,
+    String unit = 'sac',
+    String category = 'Aliment',
+    String method = 'cash',
+    String? memo,
+    DateTime? occurredAt,
+  }) async {
+    final clientUuid = _uuid.v4();
+    final when = (occurredAt ?? DateTime.now()).toUtc().toIso8601String();
+    final name = itemName.trim();
+    final total = quantity * (unitCost ?? 0);
+
+    final payload = {
+      'p_org_id': orgId,
+      'p_item_name': name,
+      'p_quantity': quantity,
+      'p_unit_cost': unitCost,
+      'p_unit': unit,
+      'p_category': category,
+      'p_method': method,
+      'p_memo': memo,
+      'p_client_uuid': clientUuid,
+      'p_occurred_at': when,
+    };
+
+    await _db.transaction((txn) async {
+      await txn.insert('outbox', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'action': 'receive_stock',
+        'payload': jsonEncode(payload),
+        'created_at': when,
+      });
+
+      await txn.insert('farm_events', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'kind': 'stock_in',
+        'subject': name,
+        'quantity': quantity,
+        'unit': unit,
+        'note': memo,
+        'occurred_at': when,
+      });
+
+      // A delivery logged without a price is still a delivery — the invoice is
+      // often in the truck — and 009 posts no journal entry for it, so neither
+      // does the device.
+      if (total > 0) {
+        await txn.insert('entries', {
+          'client_uuid': clientUuid,
+          'org_id': orgId,
+          'kind': 'expense',
+          'label': '$name — ${_trim(quantity)} $unit',
+          'category': category,
+          'amount': total,
+          'direction': 'out',
+          'method': method,
+          'memo': memo,
+          'details': jsonEncode({
+            'quantité': _trim(quantity),
+            'unité': unit,
+            if (unitCost != null) 'prix unitaire': '$unitCost',
+          }),
+          'occurred_at': when,
+        });
+      }
+    });
+
+    return clientUuid;
+  }
+
+  /// Feed eaten, medicine given, something spoiled, or a physical count that
+  /// disagreed with the running total.
+  ///
+  /// No money and no `entries` row: the money left when the sacks arrived, and
+  /// expensing them again as they are eaten would double the single largest
+  /// cost on the farm. What this moves is the count.
+  Future<String> moveStock({
+    required String orgId,
+    required String itemName,
+    required double quantity,
+    String kind = 'consumed', // consumed | wasted | adjusted
+    String unit = 'sac',
+    String? memo,
+    DateTime? occurredAt,
+  }) async {
+    final clientUuid = _uuid.v4();
+    final when = (occurredAt ?? DateTime.now()).toUtc().toIso8601String();
+    final name = itemName.trim();
+
+    final payload = {
+      'p_org_id': orgId,
+      'p_item_name': name,
+      'p_quantity': quantity,
+      'p_kind': kind,
+      'p_unit': unit,
+      'p_memo': memo,
+      'p_client_uuid': clientUuid,
+      'p_occurred_at': when,
+    };
+
+    await _db.transaction((txn) async {
+      await txn.insert('outbox', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'action': 'move_stock',
+        'payload': jsonEncode(payload),
+        'created_at': when,
+      });
+
+      await txn.insert('farm_events', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'kind': kind == 'consumed' ? 'stock_out' : kind,
+        'subject': name,
+        'quantity': quantity,
+        'unit': unit,
+        'note': memo,
+        'occurred_at': when,
+      });
+    });
+
+    return clientUuid;
+  }
+
+  /// Birds died, were weighed, were vaccinated, or left alive.
+  ///
+  /// [flockId] is a server id, which means a flock has to have been seen at
+  /// least once before its events can be recorded — unlike stock, where the
+  /// item is found or created from the name. That asymmetry is deliberate:
+  /// creating an item by typing "Aliment ponte" is harmless, and creating a
+  /// flock by typing a batch code would let one mistyped code split a batch of
+  /// 500 birds into two flocks that no report could add back together.
+  Future<String> recordFlockEvent({
+    required String orgId,
+    required String flockId,
+    required String batchCode,
+    required String kind, // mortality | weight | vaccination | sold
+    required double quantity,
+    String? note,
+    DateTime? occurredAt,
+  }) async {
+    final clientUuid = _uuid.v4();
+    final when = (occurredAt ?? DateTime.now()).toUtc().toIso8601String();
+
+    final payload = {
+      'p_flock_id': flockId,
+      'p_kind': kind,
+      'p_quantity': quantity,
+      'p_note': note,
+      'p_client_uuid': clientUuid,
+      'p_occurred_at': when,
+    };
+
+    await _db.transaction((txn) async {
+      await txn.insert('outbox', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'action': 'record_flock_event',
+        'payload': jsonEncode(payload),
+        'created_at': when,
+      });
+
+      await txn.insert('farm_events', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'kind': kind,
+        'subject': batchCode,
+        'quantity': quantity,
+        'note': note,
+        'occurred_at': when,
+      });
+    });
+
+    return clientUuid;
+  }
+
+  /// The morning collection. Production, not income — plenty of these are
+  /// eaten, given away or broken before anyone pays for one.
+  Future<String> recordEggs({
+    required String orgId,
+    required int eggCount,
+    String? flockId,
+    String? batchCode,
+    String grade = 'normal',
+    DateTime? producedOn,
+  }) async {
+    final clientUuid = _uuid.v4();
+    final day = producedOn ?? DateTime.now();
+    final when = day.toUtc().toIso8601String();
+
+    final payload = {
+      'p_org_id': orgId,
+      'p_egg_count': eggCount,
+      'p_flock_id': flockId,
+      'p_grade': grade,
+      'p_produced_on': _dayKey(day),
+      'p_client_uuid': clientUuid,
+    };
+
+    await _db.transaction((txn) async {
+      await txn.insert('outbox', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'action': 'record_eggs',
+        'payload': jsonEncode(payload),
+        'created_at': when,
+      });
+
+      await txn.insert('farm_events', {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'kind': 'eggs',
+        'subject': batchCode ?? 'Ponte',
+        'quantity': eggCount.toDouble(),
+        'note': grade == 'normal' ? null : grade,
+        'occurred_at': when,
+      });
+    });
+
+    return clientUuid;
+  }
+
+  /// The day as this device knows it: eggs collected, birds lost, feed used.
+  ///
+  /// Computed from what is on the phone, which during a fortnight at the farm
+  /// is everything there is. The server's `farm_daily_summary()` says the same
+  /// thing once the outbox has drained.
+  Future<({int eggs, double deaths, double feedUsed})> farmDay(
+    String orgId,
+    DateTime day,
+  ) async {
+    final start = DateTime.utc(day.year, day.month, day.day).toIso8601String();
+    final end = DateTime.utc(day.year, day.month, day.day)
+        .add(const Duration(days: 1))
+        .toIso8601String();
+
+    final rows = await _db.query(
+      'farm_events',
+      where: 'org_id = ? AND occurred_at >= ? AND occurred_at < ?',
+      whereArgs: [orgId, start, end],
+    );
+
+    var eggs = 0;
+    var deaths = 0.0;
+    var feed = 0.0;
+    for (final row in rows) {
+      final q = (row['quantity'] as num).toDouble();
+      switch (row['kind']) {
+        case 'eggs':
+          eggs += q.round();
+        case 'mortality':
+          deaths += q;
+        case 'stock_out':
+          feed += q;
+      }
+    }
+
+    return (eggs: eggs, deaths: deaths, feedUsed: feed);
+  }
+
+  /// Everything counted on a given day, newest first.
+  Future<List<Map<String, Object?>>> farmEventsForDay(
+    String orgId,
+    DateTime day,
+  ) async {
+    final start = DateTime.utc(day.year, day.month, day.day).toIso8601String();
+    final end = DateTime.utc(day.year, day.month, day.day)
+        .add(const Duration(days: 1))
+        .toIso8601String();
+
+    return _db.query(
+      'farm_events',
+      where: 'org_id = ? AND occurred_at >= ? AND occurred_at < ?',
+      whereArgs: [orgId, start, end],
+      orderBy: 'occurred_at DESC',
+    );
+  }
+
+  /// Replaces this org's cached item list wholesale, the way [cacheOrgs] and
+  /// [cacheAccounts] do: an item retired on the server has to stop being
+  /// offered here, not linger.
+  Future<void> cacheFarmItems(
+    String orgId,
+    List<Map<String, Object?>> items,
+  ) async {
+    await _db.transaction((txn) async {
+      await txn.delete('cached_farm_items', where: 'org_id = ?', whereArgs: [orgId]);
+      for (final item in items) {
+        await txn.insert('cached_farm_items', {
+          'item_id': item['item_id'],
+          'org_id': orgId,
+          'name': item['name'],
+          'unit': item['unit'] ?? 'sac',
+          'on_hand': item['on_hand'] ?? 0,
+          'reorder_level': item['reorder_level'],
+          'below_reorder': (item['below_reorder'] as bool? ?? false) ? 1 : 0,
+        });
+      }
+    });
+  }
+
+  Future<List<Map<String, Object?>>> cachedFarmItems(String orgId) {
+    return _db.query(
+      'cached_farm_items',
+      where: 'org_id = ?',
+      whereArgs: [orgId],
+      orderBy: 'below_reorder DESC, name ASC',
+    );
+  }
+
+  Future<void> cacheFlocks(
+    String orgId,
+    List<Map<String, Object?>> flocks,
+  ) async {
+    await _db.transaction((txn) async {
+      await txn.delete('cached_flocks', where: 'org_id = ?', whereArgs: [orgId]);
+      for (final flock in flocks) {
+        await txn.insert('cached_flocks', {
+          'flock_id': flock['flock_id'],
+          'org_id': orgId,
+          'batch_code': flock['batch_code'],
+          'alive': flock['alive'] ?? 0,
+          'closed': (flock['closed'] as bool? ?? false) ? 1 : 0,
+        });
+      }
+    });
+  }
+
+  Future<List<Map<String, Object?>>> cachedFlocks(String orgId) {
+    return _db.query(
+      'cached_flocks',
+      where: 'org_id = ? AND closed = 0',
+      whereArgs: [orgId],
+      orderBy: 'batch_code ASC',
+    );
+  }
+
+  /// The item names to offer, best first.
+  ///
+  /// Same three-source fallback as [categoriesFor]: what the server last said,
+  /// then what this device has actually recorded against, then nothing — and
+  /// nothing is survivable because the field these are chips for is a text
+  /// field.
+  Future<List<String>> farmItemNames(String orgId) async {
+    final cached = await _db.query(
+      'cached_farm_items',
+      columns: ['name'],
+      where: 'org_id = ?',
+      whereArgs: [orgId],
+      orderBy: 'below_reorder DESC, name ASC',
+    );
+    if (cached.isNotEmpty) {
+      return cached.map((r) => r['name'] as String).toList();
+    }
+
+    final used = await _db.rawQuery(
+      'SELECT subject, COUNT(*) AS n FROM farm_events '
+      "WHERE org_id = ? AND kind IN ('stock_in', 'stock_out', 'wasted') "
+      'GROUP BY subject ORDER BY n DESC, subject ASC LIMIT 12',
+      [orgId],
+    );
+    return used.map((r) => r['subject'] as String).toList();
+  }
+
+  /// Trims a count for display: 20 rather than 20.0, 2.5 rather than 2.500.
+  static String _trim(double value) {
+    if (value == value.roundToDouble()) return value.round().toString();
+    return value.toString();
   }
 
   // ----------------------------------------------------------------

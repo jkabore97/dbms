@@ -9,6 +9,7 @@ import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/auth/pin_codec.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -39,6 +40,7 @@ void main() {
   // backend never reaches.
   final accounting = AccountingRepository(null);
   final console = ConsoleRepository(null);
+  final farm = FarmRepository(null);
 
   setUp(() async {
     db = await LocalDb.open(path: inMemoryDatabasePath);
@@ -74,6 +76,7 @@ void main() {
           reports: reports,
           accounting: accounting,
           console: console,
+          farm: farm,
         ),
       ),
     );
@@ -175,11 +178,14 @@ void main() {
     // Same binary, same PIN, different business: the farm does not land in a
     // screen built for counting offerings.
     //
-    // A farm has no module on this branch, so it falls through to the
-    // placeholder and the claim is made against that. M4 replaces these three
-    // lines with what the farm module actually draws.
+    // Until M4 this asserted the word "Ferme" — the label on the placeholder
+    // screen a farm used to fall through to. The farm has its own module now,
+    // so the claim is made against what that module actually puts on screen:
+    // the morning collection, and the two things a church home screen has
+    // that a farm one must not.
     expect(find.text('Ferme Ignace'), findsWidgets);
-    expect(find.text('Ferme'), findsOneWidget);
+    expect(find.text('Ramassage'), findsOneWidget);
+    expect(find.text('Bandes'), findsOneWidget);
     expect(find.text('Recette'), findsNothing);
     expect(find.text('Dépense'), findsNothing);
   });
@@ -201,7 +207,7 @@ void main() {
     await tester.tap(find.text('Ferme Ignace'));
     await flush(tester);
 
-    expect(find.text('Ferme'), findsOneWidget);
+    expect(find.text('Ramassage'), findsOneWidget);
     expect(find.text('Choisissez une activité'), findsNothing);
   });
 

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
+import '../../core/farm/farm_repository.dart';
 import '../../core/reports/reports_repository.dart';
 import '../church/church_home_screen.dart';
+import '../farm/farm_home_screen.dart';
 import 'profile_pending_screen.dart';
 
 /// Which screen a business opens on.
@@ -17,6 +19,7 @@ Widget homeScreenFor({
   required LocalDb db,
   required OrgSummary org,
   ReportsRepository? reports,
+  FarmRepository? farm,
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
@@ -30,7 +33,13 @@ Widget homeScreenFor({
         accountAction: accountAction,
         onHistory: onHistory,
       ),
-    // 'farm' and 'retail' are real profiles with no module yet.
+    'farm' => FarmHomeScreen(
+        db: db,
+        org: org,
+        farm: farm,
+        accountAction: accountAction,
+      ),
+    // 'retail' is a real profile with no module yet.
     _ => ProfilePendingScreen(org: org, accountAction: accountAction),
   };
 }
