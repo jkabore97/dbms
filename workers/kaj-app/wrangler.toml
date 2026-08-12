@@ -1,0 +1,32 @@
+# Serves the Flutter web build as a static site on Cloudflare.
+#
+# There is no `main` here on purpose: this is an assets-only Worker. The app
+# needs no server-side logic to decide which business it is showing — the org
+# comes from the signed-in user's memberships (see app/lib/main.dart), never
+# from the hostname. So every tenant hostname can serve this same bundle.
+#
+# `kaj-tenant-router` (../tenant-router) is a separate concern: it attaches
+# tenant headers for server-side callers. Deploying this does not need it.
+
+# Deploys over the existing `dbms` Worker, which is the hostname already in
+# use: dbms.kabore-boss.workers.dev. A different name here would leave that
+# URL serving whatever it serves today and publish the app somewhere nobody
+# is looking.
+name = "dbms"
+compatibility_date = "2026-01-01"
+
+# Gives kaj-app.<your-subdomain>.workers.dev straight after deploy, which is
+# what you test on before any DNS exists.
+workers_dev = true
+
+[assets]
+# Written by `scripts/build-web.sh`. Not committed — build/ is gitignored, so
+# the bundle is always built fresh at deploy time from the current source.
+directory = "../../app/build/web"
+
+# A Flutter web app is one page: every route is resolved by Dart after
+# index.html has loaded. Without this, a reload on any deep link 404s.
+not_found_handling = "single-page-application"
+
+# Deploy with:  wrangler deploy --config workers/kaj-app/wrangler.toml
+# Needs `wrangler login` once, or CLOUDFLARE_API_TOKEN in the environment.

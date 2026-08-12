@@ -1,0 +1,106 @@
+name: Deploy to Cloudflare
+
+# Publishes the web build over the `dbms` Worker:
+#
+#   https://dbms.kabore-boss.workers.dev/
+#
+# That Worker existed before this workflow and answered "Hello world" — the
+# default scaffold, because nothing ever deployed the app onto it. This is the
+# thing that does.
+#
+# Needs one repository secret, under Settings > Secrets and variables >
+# Actions:
+#
+#   CLOUDFLARE_API_TOKEN   a token with the "Edit Cloudflare Workers"
+#                          permission on this account
+#
+# plus the two Supabase values the app is compiled with, which are already
+# set. CLOUDFLARE_ACCOUNT_ID is only needed when the token can see more than
+# one account.
+#
+# Unlike GitHub Pages, nothing here has to be switched on in a settings page
+# first: the token is the whole authorisation.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'workers/kaj-app/**'
+      - '.github/workflows/deploy-cloudflare.yml'
+
+concurrency:
+  group: cloudflare-dbms
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check what this needs is present
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          if [ -n "$missing" ]; then
+            {
+              echo "Empty at deploy time:$missing"
+              echo
+              echo "All three are repository secrets:"
+              echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions"
+              echo
+              echo "CLOUDFLARE_API_TOKEN needs the 'Edit Cloudflare Workers'"
+              echo "permission. Create one at:"
+              echo "  https://dash.cloudflare.com/profile/api-tokens"
+              echo
+              echo "Deploying without the Supabase values would put a login"
+              echo "screen online that only says 'Serveur non configuré' —"
+              echo "which is the failure this whole workflow exists to avoid."
+            } >&2
+            exit 1
+          fi
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      # SQLite compiled to wasm, plus its worker. Generated rather than
+      # committed — without this the site loads and then fails the moment it
+      # opens its local database.
+      - name: Install sqflite web assets
+        working-directory: app
+        run: dart run sqflite_common_ffi_web:setup
+
+      # No --base-href: the Worker serves the app at the root of its hostname,
+      # unlike a GitHub Pages project site living under a repository path.
+      - name: Build web
+        working-directory: app
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+
+      - name: Deploy
+        run: npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml
+
+      - name: Say where it went
+        run: |
+          echo "### Deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://dbms.kabore-boss.workers.dev/" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Hard-reload it: a Flutter web build registers a service worker" >> "$GITHUB_STEP_SUMMARY"
+          echo "that serves the previous bundle from cache." >> "$GITHUB_STEP_SUMMARY"

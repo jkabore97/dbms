@@ -151,6 +151,31 @@ ran — add them and re-run the workflow, then reinstall the artifact.
 The publishable key is designed to ship inside clients; RLS is what protects
 the data. The service_role key never goes into a build.
 
+### The live site
+
+The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`
+Worker:
+
+```
+https://dbms.kabore-boss.workers.dev/
+```
+
+It needs one repository secret, `CLOUDFLARE_API_TOKEN`, with the *Edit
+Cloudflare Workers* permission ([create one
+here](https://dash.cloudflare.com/profile/api-tokens)). Nothing has to be
+switched on in a settings page — the token is the whole authorisation, which
+is the practical difference from Pages below.
+
+`workers/kaj-app/wrangler.toml` is assets-only: there is no `main`, because
+the app needs no server-side logic to decide which business it shows — the org
+comes from the signed-in user's memberships, never from the hostname. The
+Worker's name is `dbms` deliberately, matching the hostname already in use; a
+different name would publish to a URL nobody is looking at and leave that one
+serving whatever it served before.
+
+After a deploy, hard-reload. A Flutter web build registers a service worker
+that will otherwise serve you the previous bundle from cache.
+
 ### Testing it in a browser
 
 The **Deploy Web** workflow publishes the web build to GitHub Pages:
