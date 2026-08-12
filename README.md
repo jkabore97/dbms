@@ -115,26 +115,6 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   "waiting for signal" apart from "the server refused this". 10 assertions in
   `database/tests/test_audit.sql`, most of them an owner trying to erase their
   own history.
-- Ignace's farm (`009_farm_profile.sql`, M4) — the farm counts things as well
-  as money, and they are not the same ledger. Items and append-only stock
-  movements with a reorder threshold; flocks whose arrival count is never
-  edited, so mortality stays visible instead of being overwritten by a running
-  total; egg production, which is production and not revenue; customers,
-  invoices and part-payments, which need a receivable — the first thing in
-  this project that is neither cash nor an expense.
-
-  Recording is offline-first, because Ignace is the user the whole offline
-  architecture was built for: feed arriving, feed eaten, birds dying and eggs
-  collected all write to the device and drain later. Opening a flock and
-  raising an invoice are the two things that need signal, and both for the
-  same reason — a batch code and an invoice number have to be unique across
-  the business, and two disconnected phones inventing the same one would split
-  a cycle's figures in half.
-
-  17 assertions in `database/tests/test_farm.sql`. Most of them test the four
-  specific ways a module like this inflates profit: feed expensed twice,
-  eggs booked as income before anyone pays, an invoice earned once when raised
-  and again when settled, and a dead bird expensed on top of the feed it ate.
 - Next: Esperance's store (M5) — capture-first, photo to R2, on-device OCR —
   and a camera scanner so a QR can be read as well as shown; today the invitee
   types the code.
@@ -277,7 +257,7 @@ psql -d kajtest -v ON_ERROR_STOP=1 -f database/schema.sql
 for f in database/migrations/*.sql; do
   psql -d kajtest -v ON_ERROR_STOP=1 -f "$f"
 done
-for t in church rls invitations reports accounting audit farm; do
+for t in church rls invitations reports accounting audit; do
   psql -d kajtest -v ON_ERROR_STOP=1 -f "database/tests/test_$t.sql"
 done
 ```

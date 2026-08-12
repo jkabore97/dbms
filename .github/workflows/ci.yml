@@ -42,7 +42,6 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/006_report_access.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/007_accounting.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/008_audit_log.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/009_farm_profile.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
 
       # Runs as the `authenticated` role, never as postgres: a superuser
@@ -81,15 +80,6 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_audit.sql
-
-      # The farm counts sacks and birds as well as money, and every way that
-      # goes wrong makes the farm look more profitable than it is: feed
-      # expensed twice, eggs booked as income before anyone pays, an invoice
-      # earned once when raised and again when settled.
-      - name: Prove the farm module keeps the ledger balanced
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm.sql
 
   flutter-analyze:
     runs-on: ubuntu-latest

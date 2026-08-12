@@ -211,30 +211,6 @@ income statement and sees it — then opens the log and sees who recorded it.
 **Demo after M4:** Ignace records a feed delivery with no signal; his investor
 sees the summary the next time either device syncs.
 
-**Built.** `009_farm_profile.sql` (the plan numbered it 005; that slot went to
-invitations while the farm waited). Two departures from the text above, both
-deliberate:
-
-- **Feed is expensed when bought, not when eaten.** The plan says "feed
-  purchased is both a stock movement and an expense" and that is what was
-  built. The strictly correct treatment capitalises it as inventory and
-  expenses it on consumption, which would smooth the income statement and give
-  the stock account a value. It is not done, because it matches how the money
-  actually feels to the person paying for it — the day twenty sacks arrive is
-  the day the money is gone — and because a real inventory valuation is a
-  conversation with an accountant rather than something to guess at. Noted at
-  the top of the migration.
-- **Two writes need the server.** Opening a flock and raising an invoice are
-  not offline-first, unlike the four things Ignace does every day. A batch code
-  and an invoice number both have to be unique across the business, and two
-  disconnected phones inventing the same one would split a cycle's figures in
-  half with nothing to say so. Everything he does standing in a poultry house
-  works with no signal; the two things he does sitting down do not.
-
-The suite tests the four specific ways this module inflates profit: feed
-expensed twice, eggs booked as income before anyone pays, an invoice earned
-once when raised and again when settled, and a dead bird expensed on top of
-the feed it already ate.
 
 ---
 
