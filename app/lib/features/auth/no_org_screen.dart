@@ -50,14 +50,24 @@ class NoOrgScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+      // Scrollable, and centred only while there is room to centre in. A
+      // plain Column here overflowed by 63 pixels on a 600-tall screen with
+      // nothing but the code button on it, which clips the buttons off the
+      // bottom on a short phone — the one screen where losing the button
+      // means the user cannot get any further at all.
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                 Icon(
                   Icons.mark_email_unread_outlined,
                   size: 56,
@@ -178,7 +188,11 @@ class NoOrgScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),

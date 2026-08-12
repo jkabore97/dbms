@@ -54,6 +54,15 @@ void main() {
 
   group('the screen', () {
     Future<void> pump(WidgetTester tester) async {
+      // A viewport tall enough to build the whole form. The default 800x600
+      // test window leaves the button below the fold of a lazy ListView, where
+      // it is never built — and scrolling to it instead unmounts the name
+      // field at the top, so `find.byType(TextField).first` then lands on a
+      // different field and the text goes somewhere nobody asked for.
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(
         MaterialApp(home: CreateBusinessScreen(admin: AdminRepository(null))),
       );
