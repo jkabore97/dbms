@@ -115,6 +115,18 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   "waiting for signal" apart from "the server refused this". 10 assertions in
   `database/tests/test_audit.sql`, most of them an owner trying to erase their
   own history.
+- Platform admin (`006_platform_admin.sql`) — one boolean on `profiles`,
+  `is_platform_admin`, added as a single extra OR clause to each scope helper
+  in 004. It answers two things at once: seeing every business without a manual
+  membership grant per org, and being able to create one at all. `orgs` has no
+  INSERT policy and cannot have a useful one — you cannot be an admin of an org
+  that does not exist yet — so `create_org()` runs SECURITY DEFINER and its
+  `is_platform_admin` test *is* the authorization, not a backstop. It also
+  makes the creator a visible `owner` of the new org and seeds a chart of
+  accounts: the church one for `profile = 'church'`, a six-account generic one
+  otherwise. 7 assertions in `database/tests/test_platform_admin.sql`, which
+  runs as `authenticated` — under postgres, SECURITY DEFINER would hide a
+  check that does nothing.
 - Next: Esperance's store (M5) — capture-first, photo to R2, on-device OCR —
   and a camera scanner so a QR can be read as well as shown; today the invitee
   types the code.

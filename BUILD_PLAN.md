@@ -13,6 +13,7 @@ Each milestone ends with something demonstrable.
 |---|---|
 | orgs → entities → departments | schema built |
 | Invitations by short code, no email required (M2) | built, tested — 585-line suite |
+| Platform admin flag + create_org (006) | built, tested — no screen yet |
 | Admin screens: org settings, entities/departments, people, invites | built (M2) |
 | Expense entry alongside contributions | built |
 | Public web build via GitHub Pages, redeploys on push to main | live, deploy bug fixed |
