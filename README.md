@@ -107,6 +107,11 @@ under **Settings → Secrets and variables → Actions**:
 | `SUPABASE_URL` | `https://YOUR-PROJECT.supabase.co` |
 | `SUPABASE_PUBLISHABLE_KEY` | the project's publishable (formerly anon) key |
 
+They must be **repository** secrets under the **Actions** tab. Secrets stored
+under Codespaces, Dependabot, or a named Actions environment are invisible to
+these jobs. `SUPABASE_ANON_KEY` is accepted for the key as well, since that is
+what the Supabase dashboard still labels it.
+
 Both jobs stop with a "missing repository secret" error rather than upload an
 installable that cannot sign anyone in. If a build you downloaded shows
 *Serveur non configuré* on the login screen, the secrets were not set when it
