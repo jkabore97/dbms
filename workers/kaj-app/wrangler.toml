@@ -8,7 +8,11 @@
 # `kaj-tenant-router` (../tenant-router) is a separate concern: it attaches
 # tenant headers for server-side callers. Deploying this does not need it.
 
-name = "kaj-app"
+# Deploys over the existing `dbms` Worker, which is the hostname already in
+# use: dbms.kabore-boss.workers.dev. A different name here would leave that
+# URL serving whatever it serves today and publish the app somewhere nobody
+# is looking.
+name = "dbms"
 compatibility_date = "2026-01-01"
 
 # Gives kaj-app.<your-subdomain>.workers.dev straight after deploy, which is
