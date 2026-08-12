@@ -35,13 +35,14 @@ jobs:
         run: |
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/schema.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/004_rls_policies.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/005_invitations.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/006_report_access.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/007_accounting.sql
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/migrations/008_audit_log.sql
+          # Every migration, in number order, rather than a hand-kept list.
+          # Two branches have each appended their own line here and produced a
+          # run that applied 010 before 006 — the numbers are the contract, so
+          # let the shell read them instead of trusting the list to be sorted.
+          for migration in database/migrations/*.sql; do
+            echo "==> $migration"
+            psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f "$migration"
+          done
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
 
       # Runs as the `authenticated` role, never as postgres: a superuser

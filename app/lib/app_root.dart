@@ -15,6 +15,7 @@ import 'core/sync/sync_service.dart';
 import 'features/accounting/accounting_hub_screen.dart';
 import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
+import 'features/admin/create_business_screen.dart';
 import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/no_org_screen.dart';
@@ -73,6 +74,12 @@ class _AppRootState extends State<AppRoot> {
   /// Set when the org list came from the device instead of the server. The
   /// home screen still works; the user simply has not been re-checked.
   bool _orgsFromCache = false;
+
+  /// Whether this person may create businesses. Re-read from the server on
+  /// every resolve and never cached on the device: it decides whether a menu
+  /// entry is drawn, and a stale `true` would draw a button whose action the
+  /// server refuses anyway.
+  bool _isPlatformAdmin = false;
   String? _notice;
   bool _syncStarted = false;
 
@@ -210,9 +217,15 @@ class _AppRootState extends State<AppRoot> {
 
     var orgs = <OrgSummary>[];
     var fromCache = false;
+    var platformAdmin = false;
     String? notice;
 
     if (widget.auth.hasLiveSession) {
+      // Asked first and separately: it never throws, and a platform admin with
+      // no businesses yet needs it precisely when the org list comes back
+      // empty.
+      platformAdmin = await widget.admin.isPlatformAdmin();
+
       try {
         // Anything addressed to this person's phone or email becomes a
         // membership before we ask what they belong to — otherwise an invited
@@ -249,6 +262,7 @@ class _AppRootState extends State<AppRoot> {
     setState(() {
       _orgs = orgs;
       _orgsFromCache = fromCache;
+      _isPlatformAdmin = platformAdmin;
       _notice = notice;
 
       if (orgs.isEmpty) {
@@ -281,6 +295,38 @@ class _AppRootState extends State<AppRoot> {
       MaterialPageRoute(builder: (_) => JoinByCodeScreen(admin: widget.admin)),
     );
     if (joined == true) await _resolveOrgs();
+  }
+
+  /// Creating a business, then opening it.
+  ///
+  /// The new org is opened directly rather than left to the usual count-based
+  /// routing: a platform admin's list is every business there is, so making
+  /// one would otherwise drop them on the picker to hunt for what they just
+  /// made.
+  Future<void> _createBusiness() async {
+    final orgId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => CreateBusinessScreen(admin: widget.admin),
+      ),
+    );
+    if (orgId == null) return;
+
+    await _resolveOrgs();
+    if (!mounted) return;
+
+    OrgSummary? created;
+    for (final org in _orgs) {
+      if (org.id == orgId) {
+        created = org;
+        break;
+      }
+    }
+    if (created != null) {
+      setState(() {
+        _org = created;
+        _phase = _Phase.ready;
+      });
+    }
   }
 
   Future<void> _administer(OrgSummary org) async {
@@ -394,6 +440,12 @@ class _AppRootState extends State<AppRoot> {
           // A build with no server has nothing to check a code against, and
           // an expired token cannot claim one either.
           onJoinByCode: widget.auth.hasLiveSession ? _joinByCode : null,
+          // The bootstrap case: the person who runs the platform, before any
+          // business exists. Without this the only way to make the first one
+          // is an INSERT by hand.
+          onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
+              ? _createBusiness
+              : null,
         );
 
       case _Phase.picking:
@@ -404,6 +456,9 @@ class _AppRootState extends State<AppRoot> {
             _phase = _Phase.ready;
           }),
           onSignOut: _signOut,
+          onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
+              ? _createBusiness
+              : null,
         );
 
       case _Phase.ready:
@@ -436,6 +491,9 @@ class _AppRootState extends State<AppRoot> {
                   : null,
               onJoinByCode:
                   widget.auth.hasLiveSession ? _joinByCode : null,
+              onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
+                  ? _createBusiness
+                  : null,
               onSwitchOrg: _orgs.length > 1
                   ? () => setState(() {
                         _org = null;

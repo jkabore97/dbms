@@ -16,6 +16,7 @@ class NoOrgScreen extends StatelessWidget {
     required this.onRetry,
     required this.onSignOut,
     this.onJoinByCode,
+    this.onCreateBusiness,
     this.checking = false,
   });
 
@@ -26,6 +27,10 @@ class NoOrgScreen extends StatelessWidget {
   /// Entering an invitation code by hand. Null only in a build with no server,
   /// where there is nothing to check a code against.
   final VoidCallback? onJoinByCode;
+
+  /// Null for everyone except a platform admin, for whom this screen is not a
+  /// waiting room at all — it is where the first business gets made.
+  final VoidCallback? onCreateBusiness;
 
   final bool checking;
 
@@ -105,6 +110,24 @@ class NoOrgScreen extends StatelessWidget {
                 ],
                 const SizedBox(height: 32),
 
+                // A platform admin is not waiting for anybody, so their action
+                // comes first and the text above it is beside the point.
+                if (onCreateBusiness != null) ...[
+                  SizedBox(
+                    height: 52,
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: checking ? null : onCreateBusiness,
+                      icon: const Icon(Icons.add_business_outlined),
+                      label: const Text(
+                        'Créer une activité',
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 // Entering a code is the primary action now: an invitation
                 // pinned to this person's number lets them straight in without
                 // it, but a code handed over in person is the common case and
@@ -113,14 +136,26 @@ class NoOrgScreen extends StatelessWidget {
                   SizedBox(
                     height: 52,
                     width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: checking ? null : onJoinByCode,
-                      icon: const Icon(Icons.confirmation_number_outlined),
-                      label: const Text(
-                        "J'ai un code",
-                        style: TextStyle(fontSize: 17),
-                      ),
-                    ),
+                    // Demoted to an outline when Create sits above it: two
+                    // filled buttons stacked would give a platform admin no
+                    // indication which one is theirs.
+                    child: onCreateBusiness != null
+                        ? OutlinedButton.icon(
+                            onPressed: checking ? null : onJoinByCode,
+                            icon: const Icon(Icons.confirmation_number_outlined),
+                            label: const Text(
+                              "J'ai un code",
+                              style: TextStyle(fontSize: 17),
+                            ),
+                          )
+                        : FilledButton.icon(
+                            onPressed: checking ? null : onJoinByCode,
+                            icon: const Icon(Icons.confirmation_number_outlined),
+                            label: const Text(
+                              "J'ai un code",
+                              style: TextStyle(fontSize: 17),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 12),
                 ],

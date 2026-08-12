@@ -1,5 +1,11 @@
 -- ============================================================
--- 006_platform_admin.sql
+-- 010_platform_admin.sql
+--
+-- Numbered 010, after 009_farm_profile.sql, because this was written as 006
+-- on a branch while 006_report_access.sql was being written on another. The
+-- order matters beyond avoiding a name collision: the four helpers replaced
+-- below are the ones 006's policies call, so this has to be the last word on
+-- them. Applied before 006 it would be silently undone.
 --
 -- Two problems, one column. Right now:
 --   1. Seeing every business takes a manual membership grant per org —

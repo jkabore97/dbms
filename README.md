@@ -115,7 +115,7 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   "waiting for signal" apart from "the server refused this". 10 assertions in
   `database/tests/test_audit.sql`, most of them an owner trying to erase their
   own history.
-- Platform admin (`006_platform_admin.sql`) — one boolean on `profiles`,
+- Platform admin (`010_platform_admin.sql`) — one boolean on `profiles`,
   `is_platform_admin`, added as a single extra OR clause to each scope helper
   in 004. It answers two things at once: seeing every business without a manual
   membership grant per org, and being able to create one at all. `orgs` has no

@@ -21,6 +21,13 @@
 -- ============================================================
 \set ON_ERROR_STOP on
 
+-- Every suite in this directory owns a block of phone numbers, because they
+-- all commit into one database in CI: 70 for test_rls, 71 for invitations,
+-- 72 for reports, 73 for accounting, 74 for audit, 75 and 76 for farm. This
+-- one holds 77. It was written as 72 on a branch where reports did not exist
+-- yet, and the two suites collided on +22672000001 the first time they ran
+-- together.
+--
 -- Deliberately outside the cccccccc-… range: test_invitations.sql commits
 -- users on those ids into the same database earlier in the CI run.
 \set jairus '''12121212-0000-0000-0000-000000000001'''
@@ -45,8 +52,8 @@ grant execute on all functions in schema public to authenticated;
 -- who belongs to nothing at all.
 -- ------------------------------------------------------------
 insert into auth.users (id, phone, raw_user_meta_data) values
-    (:jairus, '+22672000001', '{"full_name": "Jairus"}'),
-    (:israel, '+22672000002', '{"full_name": "Israel"}');
+    (:jairus, '+22677000001', '{"full_name": "Jairus"}'),
+    (:israel, '+22677000002', '{"full_name": "Israel"}');
 
 -- The on_auth_user_created trigger already wrote both profile rows; only the
 -- flag needs setting, and only on one of them.
