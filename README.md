@@ -120,6 +120,22 @@ ran — add them and re-run the workflow, then reinstall the artifact.
 The publishable key is designed to ship inside clients; RLS is what protects
 the data. The service_role key never goes into a build.
 
+### Testing it in a browser
+
+The **Deploy Web** workflow publishes the web build to GitHub Pages:
+
+```
+https://jkabore97.github.io/dbms/
+```
+
+It needs Pages switched on once: **Settings → Pages → Build and deployment →
+Source: GitHub Actions**. After that it republishes on every push to `main`
+that touches `app/`, and can be run by hand from the Actions tab.
+
+That page is public, like any hosted app. The publishable key is compiled into
+it by design and RLS is what protects the data; signing in still requires a
+Supabase user with a membership row.
+
 Signing in needs those values: without them there is no server to authenticate
 against and the login screen says so. Once a user has signed in on a device and
 chosen a PIN, that device keeps working with no connection at all — that is
