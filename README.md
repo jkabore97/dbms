@@ -98,6 +98,23 @@ are done; it does not bill while stopped.
 Secrets go in Codespaces secrets (github.com/settings/codespaces), never in
 files. They appear as environment variables inside the Codespace.
 
+Codespaces secrets and Actions secrets are two separate stores: setting one
+does not set the other. The Codespace reads `SUPABASE_URL` and
+`SUPABASE_PUBLISHABLE_KEY` (or `SUPABASE_ANON_KEY`) from the first, the build
+workflows read them from the second.
+
+To run the app from a Codespace:
+
+```
+cd app && ./scripts/serve.sh
+```
+
+It compiles the credentials in and serves on port 8080, which Codespaces
+forwards — VS Code offers the https URL, and setting that port to **Public**
+makes it reachable from a phone. Run `flutter run -d web-server` directly and
+you get a build with no server address in it, which opens on *Serveur non
+configuré*; the credentials are compiled in, never read at runtime.
+
 ## Running the app
 
 ```

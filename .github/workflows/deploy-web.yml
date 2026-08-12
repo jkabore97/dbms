@@ -86,7 +86,13 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
 
+      # enablement turns Pages on via the API rather than requiring someone to
+      # find the setting first. It needs the repository to allow it; if it
+      # cannot, the step fails saying so and the switch has to be flipped by
+      # hand at Settings > Pages > Source: GitHub Actions.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

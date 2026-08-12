@@ -65,13 +65,19 @@ cat <<'BANNER'
  Useful commands:
 
    cd app && flutter analyze      check the code
-   cd app && flutter run -d web-server --web-port 8080
-                                  run the app in a browser tab
+   cd app && ./scripts/serve.sh   run the app on port 8080
    claude                         start Claude Code in this repo
    psql "$SUPABASE_DB_URL"        connect to the database
 
+ Use serve.sh rather than `flutter run` directly: it compiles in the
+ Supabase address and key. A build made without them opens on
+ "Serveur non configuré" and cannot sign anyone in.
+
  Secrets belong in Codespaces secrets, not in files:
    github.com/settings/codespaces
+ SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or SUPABASE_ANON_KEY) are the
+ ones serve.sh reads. Codespaces secrets are separate from Actions secrets —
+ setting one does not set the other.
 
 ==============================================
 
