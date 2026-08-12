@@ -20,6 +20,16 @@
 
   "postCreateCommand": "bash .devcontainer/setup.sh",
 
+  // app/scripts/serve.sh serves here. Codespaces forwards it and offers an
+  // https URL; set the port to Public to open it on a phone.
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Kaj app",
+      "onAutoForward": "notify"
+    }
+  },
+
   "customizations": {
     "vscode": {
       "extensions": [
