@@ -16,12 +16,13 @@ class AccountMenu extends StatelessWidget {
     required this.onSignOut,
     this.onSwitchOrg,
     this.onAdminister,
-    this.onJoinByCode,
     this.onAccounting,
     this.onCreateBusiness,
     this.onBusinesses,
     this.onApplications,
     this.onInvite,
+    this.onMyProfile,
+    this.onApplyForOrg,
   });
 
   final LocalDb db;
@@ -57,7 +58,20 @@ class AccountMenu extends StatelessWidget {
 
   /// Joining a second business from inside the first — the case where someone
   /// already using the app is handed a code for somewhere else.
-  final VoidCallback? onJoinByCode;
+  /// Who this person is: names, date of birth, job title, phone. Offered to
+  /// everyone, always.
+  ///
+  /// It used to be reachable only from the screen somebody sees before they
+  /// belong to any business — which meant that once you were in, there was no
+  /// way to fill it in or fix a typo in your own name, and anybody who
+  /// already had a business never saw the form at all.
+  final VoidCallback? onMyProfile;
+
+  /// Asking for another business. Not the same as creating one: this files a
+  /// request for a platform admin to approve, and it is here because the
+  /// person who wants a second shop is by definition somebody who already has
+  /// a first one and never sees the welcome screen again.
+  final VoidCallback? onApplyForOrg;
 
   /// Null for everyone except a platform admin.
   final VoidCallback? onCreateBusiness;
@@ -109,14 +123,16 @@ class AccountMenu extends StatelessWidget {
             onAccounting?.call();
           case 'admin':
             onAdminister?.call();
-          case 'join':
-            onJoinByCode?.call();
           case 'businesses':
             onBusinesses?.call();
           case 'applications':
             onApplications?.call();
           case 'invite':
             onInvite?.call();
+          case 'profile':
+            onMyProfile?.call();
+          case 'apply':
+            onApplyForOrg?.call();
           case 'create':
             onCreateBusiness?.call();
           case 'switch':
@@ -134,6 +150,15 @@ class AccountMenu extends StatelessWidget {
           ),
         ),
         const PopupMenuDivider(),
+        if (onMyProfile != null)
+          const PopupMenuItem<String>(
+            value: 'profile',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.badge_outlined),
+              title: Text('Mes informations'),
+            ),
+          ),
         if (onAccounting != null)
           const PopupMenuItem<String>(
             value: 'accounting',
@@ -170,15 +195,6 @@ class AccountMenu extends StatelessWidget {
               title: Text('Demandes'),
             ),
           ),
-        if (onJoinByCode != null)
-          const PopupMenuItem<String>(
-            value: 'join',
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.confirmation_number_outlined),
-              title: Text("J'ai un code"),
-            ),
-          ),
         if (onBusinesses != null)
           const PopupMenuItem<String>(
             value: 'businesses',
@@ -186,6 +202,15 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.business_outlined),
               title: Text('Entreprises'),
+            ),
+          ),
+        if (onApplyForOrg != null)
+          const PopupMenuItem<String>(
+            value: 'apply',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.business_center_outlined),
+              title: Text('Demander une entreprise'),
             ),
           ),
         if (onCreateBusiness != null)
