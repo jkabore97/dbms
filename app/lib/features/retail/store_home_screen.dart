@@ -204,6 +204,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                         builder: (_) => ProductsScreen(
                           org: widget.org,
                           retail: widget.retail!,
+                          capture: widget.capture,
                         ),
                       ),
                     );

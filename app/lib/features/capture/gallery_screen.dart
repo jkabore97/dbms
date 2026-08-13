@@ -5,11 +5,13 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/capture/invoice_reading.dart';
 import '../../core/capture/models.dart';
 import '../../core/capture/text_reader.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import 'capture_action.dart';
+import 'confirm_products_screen.dart';
 
 /// Everything this business has photographed.
 ///
@@ -104,6 +106,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           org: widget.org,
           document: document,
           capture: widget.capture,
+          retail: widget.retail,
           products: _products,
         ),
       ),
@@ -341,12 +344,18 @@ class DocumentScreen extends StatefulWidget {
     required this.org,
     required this.document,
     required this.capture,
+    this.retail,
     this.products = const [],
   });
 
   final OrgSummary org;
   final CapturedDocument document;
   final CaptureRepository capture;
+
+  /// Needed to turn a read delivery note into stock. Null outside a shop,
+  /// where there are no products for an invoice to be about.
+  final RetailRepository? retail;
+
   final List<Product> products;
 
   @override
@@ -366,6 +375,12 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
   late final ReadingSuggestions _suggestions =
       ReadingSuggestions.parse(widget.document.ocrText);
+
+  /// The same text read a second way: as a delivery note with many lines
+  /// rather than one label. A photograph is usually one or the other, and
+  /// which one it is is obvious from whether this comes back empty.
+  late final List<InvoiceLine> _invoiceLines =
+      InvoiceReading.parse(widget.document.ocrText);
 
   @override
   void initState() {
@@ -421,10 +436,29 @@ class _DocumentScreenState extends State<DocumentScreen> {
     }
   }
 
+  Future<void> _addToStock() async {
+    final retail = widget.retail;
+    if (retail == null) return;
+
+    final added = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ConfirmProductsScreen(
+          org: widget.org,
+          retail: retail,
+          lines: _invoiceLines,
+          capture: widget.capture,
+          documentId: widget.document.id,
+        ),
+      ),
+    );
+    if (added == true && mounted) Navigator.of(context).pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final document = widget.document;
+    final canReadInvoice = widget.retail != null && _invoiceLines.isNotEmpty;
 
     return PopScope(
       canPop: true,
@@ -498,6 +532,49 @@ class _DocumentScreenState extends State<DocumentScreen> {
                         ))
                     .toList(),
                 onChanged: (value) => setState(() => _productId = value),
+              ),
+            ],
+
+            // The one thing M5's demo is about, and so the first thing
+            // offered: a photographed delivery note becoming stock. Above the
+            // single-label suggestions because a picture that has lines on it
+            // is a delivery, and naming it is not what she wants to do next.
+            if (canReadInvoice) ...[
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_invoiceLines.length} article'
+                      '${_invoiceLines.length > 1 ? 's' : ''} '
+                      'lu${_invoiceLines.length > 1 ? 's' : ''} sur cette photo',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _invoiceLines
+                          .take(3)
+                          .map((l) => l.name)
+                          .join(' · '),
+                      style: theme.textTheme.bodySmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _addToStock,
+                      icon: const Icon(Icons.add_shopping_cart),
+                      label: const Text('Vérifier et ajouter au stock'),
+                    ),
+                  ],
+                ),
               ),
             ],
 

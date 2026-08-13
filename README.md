@@ -220,6 +220,20 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   in `database/tests/test_org_lifecycle.sql`, plus 6 in
   `app/test/delete_business_test.dart` about the dialog being hard enough to
   press.
+- A photographed delivery becoming stock (`015`, `016`, M5's demo) — the
+  invoice reader turns a delivery note into lines, and one button turns those
+  into products, stock and a purchase in the books. Arithmetic decides what
+  each number is: `Savon 12 500` is ambiguous until a total is present to
+  multiply into, so both readings are tried and the one that checks wins.
+  Nothing is written before the button, and a line that did not check out is
+  marked rather than hidden.
+
+  Building it caught a real defect in 011. `receive_products()` deduplicated
+  its ledger entry by `client_uuid` and still added to `products.quantity`
+  unconditionally, so a retried delivery counted the goods twice and the money
+  once — the shelf and the books disagreeing by one delivery, silently.
+  `016_stock_receipts.sql` fixes it and gives deliveries the append-only
+  history that 011's own header claimed they already had.
 - Next: M6 — custom domains, the tenant router, and a Play Store release. Also
   still open: reading an invitation QR with the camera, rather than the
   invitee typing the code.
@@ -427,9 +441,9 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `014` up to date, paste
-`database/apply_006_to_014.sql` into the Supabase SQL editor and run it once.
-It is `006` through `014` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `016` up to date, paste
+`database/apply_006_to_016.sql` into the Supabase SQL editor and run it once.
+It is `006` through `016` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -439,7 +453,7 @@ answering from a stale cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 014
+scripts/build-migration-bundle.sh 006 016
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

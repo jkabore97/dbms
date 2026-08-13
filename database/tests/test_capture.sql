@@ -395,4 +395,77 @@ end $$;
 rollback;
 
 \echo ''
+\echo '--- TEST 9: a serial number, and a product''s photographs ---'
+begin;
+set local "request.jwt.claim.sub" = '80808080-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare
+    v_product uuid;
+    v_found   uuid;
+    v_photos  int;
+    v_serial  text;
+begin
+    select id into v_product from products
+    where org_id = '80000000-0000-0000-0000-000000000001' and name = 'Lait concentré';
+
+    -- 015. A serial identifies one physical unit, which matters for exactly
+    -- the goods at the top of a shop's range: a phone, a radio, a panel.
+    perform set_product_serial(v_product, '  SN-4471-A  ');
+
+    select serial into v_serial from products where id = v_product;
+    if v_serial <> 'SN-4471-A' then
+        raise exception 'FAIL: serial stored as "%"', v_serial;
+    end if;
+
+    -- Found the way a warranty claim arrives: somebody at the counter
+    -- reading the number off the back of the thing.
+    select id into v_found
+    from product_by_serial('80000000-0000-0000-0000-000000000001', 'sn-4471');
+    if v_found is distinct from v_product then
+        raise exception 'FAIL: the serial found % instead of the product', v_found;
+    end if;
+
+    -- And not from the shop next door.
+    if exists (select 1 from product_by_serial(
+                   '80000000-0000-0000-0000-000000000002', 'sn-4471')) then
+        raise exception 'FAIL: a serial search reached into another business';
+    end if;
+
+    -- The photograph filed against this product in TEST 4 is reachable from
+    -- the product, not only from the gallery. That is the "photos" the plan
+    -- asks for in the product list.
+    select count(*) into v_photos from product_photos(v_product);
+    if v_photos <> 1 then
+        raise exception 'FAIL: the product has % photographs, expected 1', v_photos;
+    end if;
+
+    raise notice 'PASS: serial % found, and its photograph with it', v_serial;
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 10: an employee cannot rewrite a serial ---'
+begin;
+set local "request.jwt.claim.sub" = '80808080-0000-0000-0000-000000000003';
+set local role authenticated;
+do $$
+declare
+    v_product uuid;
+begin
+    select id into v_product from products
+    where org_id = '80000000-0000-0000-0000-000000000001' and name = 'Lait concentré';
+
+    begin
+        perform set_product_serial(v_product, 'SN-VOLE');
+        raise exception 'FAIL: somebody outside the business set a serial';
+    exception
+        when raise_exception then
+            if sqlerrm like 'FAIL:%' then raise; end if;
+            raise notice 'PASS: refused — %', sqlerrm;
+    end;
+end $$;
+rollback;
+
+\echo ''
 \echo 'test_capture.sql: all assertions held.'

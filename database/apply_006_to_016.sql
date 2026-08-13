@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_014.sql — applies migrations 006 through 014 in order.
+-- apply_006_to_016.sql — applies migrations 006 through 016 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -5557,6 +5557,385 @@ begin
         grant execute on function all_orgs(boolean) to authenticated;
         grant execute on function org_slug_problem(text) to authenticated;
         grant select on deleted_orgs to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 015_product_serial.sql
+-- ============================================================
+-- ============================================================
+-- 015_product_serial.sql — the field M5 asked for and 011 did not build.
+--
+-- The plan's product list is "name, serial, barcode, expiry, cost, price,
+-- quantity, photos". 011 built `sku` and called that close enough. It is not:
+-- a SKU is the shop's own code for a *kind* of thing and there is one per
+-- product, while a serial number identifies *one physical unit* and matters
+-- for exactly the goods Esperance sells at the top of her range — a phone, a
+-- radio, a solar panel. It is what a customer's warranty claim is looked up
+-- by, and what a theft is reported with.
+--
+-- Kept as a nullable column beside `sku` rather than replacing it, because
+-- most of what a shop sells has neither and both are already true of the rows
+-- that exist.
+--
+-- Not made unique. Two units of the same model can arrive with the same
+-- number printed badly, OCR reads a 0 as an 8, and a shopkeeper typing at a
+-- counter should not be stopped by a constraint over a field nobody is
+-- required to fill in. The index exists so it can be searched, which is the
+-- thing it is actually for.
+-- ============================================================
+
+alter table products add column if not exists serial text;
+
+comment on column products.serial is
+    'The serial number of one physical unit — a phone, a radio, a panel. Not unique on purpose: a mistyped duplicate must not block a sale.';
+
+create index if not exists products_by_serial
+    on products (org_id, serial) where serial is not null;
+
+-- Finding a unit by the number on its back, which is how a warranty claim
+-- arrives: somebody at the counter holding the thing. Matches on a trimmed,
+-- case-insensitive prefix, the same way a person reads one out.
+create or replace function product_by_serial(p_org_id uuid, p_serial text)
+returns table (
+    id         uuid,
+    name       text,
+    serial     text,
+    sale_price numeric,
+    quantity   numeric
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select p.id, p.name, p.serial, p.sale_price, p.quantity
+    from products p
+    where p.org_id = p_org_id
+      and p.serial is not null
+      and lower(btrim(p.serial)) like lower(btrim(coalesce(p_serial, ''))) || '%'
+    order by p.name
+    limit 20;
+$$;
+
+-- ------------------------------------------------------------
+-- The photographs of a product
+-- ------------------------------------------------------------
+-- `documents.product_id` has existed since 013 and nothing read it back the
+-- other way round. The plan's product list ends with "photos", and this is
+-- what makes that true: the delivery note a thing arrived on, and the picture
+-- of the thing itself, reachable from the product rather than only from the
+-- gallery.
+--
+-- Security invoker, like every other read here: 006 decides who may see a
+-- document, and an observer entitled to totals is not entitled to the
+-- paperwork behind them. A definer would hand it to them.
+create or replace function product_photos(p_product_id uuid, p_limit int default 20)
+returns table (
+    id           uuid,
+    r2_key       text,
+    kind         text,
+    caption      text,
+    content_type text,
+    captured_at  timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select d.id, d.r2_key, d.kind, d.caption, d.content_type,
+           coalesce(d.captured_at, d.created_at)
+    from documents d
+    where d.product_id = p_product_id
+    order by coalesce(d.captured_at, d.created_at) desc
+    limit greatest(coalesce(p_limit, 20), 1);
+$$;
+
+-- ------------------------------------------------------------
+-- Setting it
+-- ------------------------------------------------------------
+-- `update_product` in the app writes sale_price, cost_price, expiry and the
+-- reorder point straight through RLS. The serial goes the same way and needs
+-- no function of its own — the update policy from 011 already says who may
+-- change a product. This exists only so `ensure_product` can carry one in
+-- from a scan or a reading, which is the moment it is actually known.
+create or replace function set_product_serial(
+    p_product_id uuid,
+    p_serial     text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor  uuid := auth.uid();
+    v_org_id uuid;
+begin
+    if v_actor is null then
+        raise exception 'set_product_serial() needs a signed-in caller';
+    end if;
+
+    select org_id into v_org_id from products where id = p_product_id;
+    if not found then
+        raise exception 'No such product';
+    end if;
+
+    if not can_write_org(v_org_id) then
+        raise exception 'You cannot change products in this business';
+    end if;
+
+    update products
+       set serial = nullif(btrim(coalesce(p_serial, '')), '')
+     where id = p_product_id;
+
+    return p_product_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- GRANTS
+-- ------------------------------------------------------------
+revoke execute on function set_product_serial(uuid, text) from public;
+
+-- `authenticated` is a Supabase role and does not exist on a bare Postgres.
+-- Roles are cluster-wide, so a developer whose cluster has ever run a suite
+-- already has it and cannot reproduce the failure by making a fresh database
+-- — which is how 013 shipped this wrong once.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function set_product_serial(uuid, text) to authenticated;
+        grant execute on function product_by_serial(uuid, text) to authenticated;
+        grant execute on function product_photos(uuid, int) to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 016_stock_receipts.sql
+-- ============================================================
+-- ============================================================
+-- 016_stock_receipts.sql — a delivery, recorded once.
+--
+-- Found by test_delivery.sql while building the photograph-to-stock flow, and
+-- it is worse than an ordinary duplicate.
+--
+-- `receive_products()` already passed its `client_uuid` down to
+-- `record_entry()`, so a retried delivery posted its money exactly once. But
+-- the line above it —
+--
+--     update products set quantity = quantity + p_quantity
+--
+-- ran unconditionally. So pressing "add to stock" a second time after a
+-- connection dropped added the goods again and the money not at all. The
+-- count and the books then disagree by exactly one delivery, in the direction
+-- that makes the shop look like it has stock it does not have, and nothing on
+-- any screen says so. A plain double-entry would at least have been visible
+-- in the ledger.
+--
+-- The confirm screen mints one client_uuid per line and keeps it across
+-- retries precisely so this is safe. It was not.
+--
+-- The fix also closes something 011 claimed and did not do. Its own header
+-- says of `products.quantity`: "Every movement is still recorded in
+-- `sale_lines`, so the column can be rebuilt from history if it ever drifts."
+-- That is true of sales and returns and was never true of deliveries — stock
+-- arriving was recorded nowhere except as an expense in the ledger, which
+-- does not carry a count. `stock_receipts` is what makes the sentence true.
+-- ============================================================
+
+create table if not exists stock_receipts (
+    id           uuid primary key default gen_random_uuid(),
+    org_id       uuid not null references orgs(id) on delete cascade,
+    product_id   uuid not null references products(id) on delete cascade,
+    quantity     numeric(14,3) not null check (quantity > 0),
+    unit_cost    numeric(14,2) not null default 0 check (unit_cost >= 0),
+    expires_on   date,
+    -- The purchase this delivery posted, when it posted one. Null for stock
+    -- received on credit or with no cost recorded, which still moves goods.
+    entry_id     uuid references journal_entries(id),
+    client_uuid  uuid,
+    device_id    text,
+    received_at  timestamptz not null default now(),
+    received_by  uuid references profiles(id)
+);
+
+-- The whole point. One delivery per client_uuid per shop, however many times
+-- the phone sends it.
+create unique index if not exists stock_receipts_by_client_uuid
+    on stock_receipts (org_id, client_uuid) where client_uuid is not null;
+
+create index if not exists stock_receipts_by_product
+    on stock_receipts (product_id, received_at desc);
+
+comment on table stock_receipts is
+    'Stock arriving, append-only. Makes products.quantity rebuildable and makes a retried delivery count once.';
+
+-- ------------------------------------------------------------
+-- receive_products, made re-runnable
+-- ------------------------------------------------------------
+-- Same signature and same behaviour for a first call. The only difference is
+-- that a second call carrying a client_uuid this shop has already seen
+-- returns the original entry and touches nothing.
+create or replace function receive_products(
+    p_org_id      uuid,
+    p_product_id  uuid,
+    p_quantity    numeric,
+    p_unit_cost   numeric     default null,
+    p_expires_on  date        default null,
+    p_method      text        default 'cash',
+    p_client_uuid uuid        default null,
+    p_device_id   text        default null,
+    p_occurred_at timestamptz default now()
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor    uuid := auth.uid();
+    v_name     text;
+    v_cost     numeric;
+    v_entry    uuid;
+    v_existing stock_receipts%rowtype;
+begin
+    if p_quantity is null or p_quantity <= 0 then
+        raise exception 'A delivery needs a quantity';
+    end if;
+
+    -- Before anything is moved. Checked against stock_receipts rather than
+    -- journal_entries because a delivery with no cost posts no entry, and
+    -- half an idempotency guarantee is the kind of thing that is discovered
+    -- by a shopkeeper rather than by a test.
+    if p_client_uuid is not null then
+        select * into v_existing from stock_receipts
+        where org_id = p_org_id and client_uuid = p_client_uuid;
+        if found then
+            return v_existing.entry_id;
+        end if;
+    end if;
+
+    select name, cost_price into v_name, v_cost
+    from products where id = p_product_id and org_id = p_org_id;
+
+    if v_name is null then
+        raise exception 'No such product in this business';
+    end if;
+
+    v_cost := coalesce(p_unit_cost, v_cost, 0);
+
+    update products set
+        quantity   = quantity + p_quantity,
+        cost_price = case when p_unit_cost is not null then p_unit_cost
+                          else cost_price end,
+        expires_on = coalesce(p_expires_on, expires_on)
+    where id = p_product_id;
+
+    -- Only money that actually moved gets a ledger entry. Stock received on
+    -- credit, or with no cost recorded, still updates the count.
+    if v_cost > 0 then
+        v_entry := record_entry(
+            p_org_id      => p_org_id,
+            p_amount      => v_cost * p_quantity,
+            p_direction   => 'out',
+            p_label       => 'Achat de marchandise',
+            p_recorded_by => v_actor,
+            p_category    => 'Achats de marchandises',
+            p_method      => p_method,
+            p_memo        => v_name,
+            p_details     => jsonb_build_object('product', v_name,
+                                                'quantity', p_quantity),
+            p_client_uuid => p_client_uuid,
+            p_device_id   => p_device_id,
+            p_occurred_at => p_occurred_at
+        );
+    end if;
+
+    insert into stock_receipts (
+        org_id, product_id, quantity, unit_cost, expires_on,
+        entry_id, client_uuid, device_id, received_at, received_by
+    )
+    values (
+        p_org_id, p_product_id, p_quantity, v_cost, p_expires_on,
+        v_entry, p_client_uuid, p_device_id, p_occurred_at, v_actor
+    );
+
+    return v_entry;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- What arrived, and when
+-- ------------------------------------------------------------
+-- Security invoker: a delivery is a purchase, and 006 already decided that an
+-- observer entitled to totals is not entitled to the line items behind them.
+create or replace function recent_deliveries(
+    p_org_id uuid,
+    p_limit  int default 50
+)
+returns table (
+    id           uuid,
+    product_id   uuid,
+    product_name text,
+    quantity     numeric,
+    unit_cost    numeric,
+    line_total   numeric,
+    received_at  timestamptz,
+    received_by  text
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select r.id, r.product_id, p.name, r.quantity, r.unit_cost,
+           r.quantity * r.unit_cost, r.received_at, pr.full_name
+    from stock_receipts r
+    join products p on p.id = r.product_id
+    left join profiles pr on pr.id = r.received_by
+    where r.org_id = p_org_id
+    order by r.received_at desc, r.id desc
+    limit greatest(coalesce(p_limit, 50), 1);
+$$;
+
+-- ------------------------------------------------------------
+-- RLS
+-- ------------------------------------------------------------
+alter table stock_receipts enable row level security;
+
+-- Readable by anyone entitled to the entries behind it, written by anyone who
+-- may record — the same pair as `sales` in 011. No update and no delete
+-- policy at all: a delivery that can be edited is a count nobody can trust,
+-- and correcting one is another movement rather than a rewrite.
+drop policy if exists "deliveries readable with full visibility" on stock_receipts;
+create policy "deliveries readable with full visibility"
+on stock_receipts for select
+using (has_full_visibility(org_id));
+
+drop policy if exists "deliveries written by staff" on stock_receipts;
+create policy "deliveries written by staff"
+on stock_receipts for insert
+with check (can_write_org(org_id));
+
+-- ------------------------------------------------------------
+-- GRANTS
+-- ------------------------------------------------------------
+revoke execute on function receive_products(uuid, uuid, numeric, numeric, date, text, uuid, text, timestamptz) from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function receive_products(uuid, uuid, numeric, numeric, date, text, uuid, text, timestamptz) to authenticated;
+        grant execute on function recent_deliveries(uuid, int) to authenticated;
+        grant select, insert on stock_receipts to authenticated;
     end if;
 end $$;
 

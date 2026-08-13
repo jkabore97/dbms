@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
+import '../capture/barcode_sheet.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -14,10 +16,19 @@ import '../../core/retail/retail_repository.dart';
 /// the server does `ensure_product()` then `receive_products()` — the second of
 /// which books the money as a purchase.
 class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key, required this.org, required this.retail});
+  const ProductsScreen({
+    super.key,
+    required this.org,
+    required this.retail,
+    this.capture,
+  });
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// Needed for `product_by_barcode()`. Null hides the scan button: scanning
+  /// a code and being told nothing is worse than not offering it.
+  final CaptureRepository? capture;
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
@@ -70,6 +81,54 @@ class _ProductsScreenState extends State<ProductsScreen> {
     if (added == true) await _load();
   }
 
+  /// Scan a code and go to what it is. A code this shop has never seen opens
+  /// the stock-entry sheet with the barcode already in it, which is the whole
+  /// point: the number is read once, by the camera, and never typed.
+  Future<void> _scan() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+
+    final code = await BarcodeSheet.scan(context, title: 'Scanner un article');
+    if (code == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    for (final product in _products) {
+      if (product.barcode == code) {
+        messenger.showSnackBar(SnackBar(
+          content: Text('${product.name} — ${product.quantity.toStringAsFixed(0)} '
+              'en stock'),
+        ));
+        return;
+      }
+    }
+
+    try {
+      final row = await capture.productByBarcode(widget.org.id, code);
+      if (!mounted) return;
+
+      if (row != null) {
+        messenger.showSnackBar(
+            SnackBar(content: Text('${row['name']} — déjà en stock')));
+        return;
+      }
+
+      final added = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => _ReceiveSheet(
+          org: widget.org,
+          retail: widget.retail,
+          barcode: code,
+        ),
+      );
+      if (added == true) await _load();
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -77,7 +136,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
         0, (sum, p) => sum + p.quantity * p.costPrice);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Articles')),
+      appBar: AppBar(
+        title: const Text('Articles'),
+        actions: [
+          if (widget.capture != null)
+            IconButton(
+              onPressed: _scan,
+              icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'Scanner un code-barres',
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addStock,
         icon: const Icon(Icons.add),
@@ -149,10 +218,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
 /// A delivery arriving. Creates the product if it is new.
 class _ReceiveSheet extends StatefulWidget {
-  const _ReceiveSheet({required this.org, required this.retail});
+  const _ReceiveSheet({
+    required this.org,
+    required this.retail,
+    this.barcode,
+  });
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// Carried in from a scan. The number is read once, by the camera, and
+  /// never typed — which is the only reason scanning an unknown code is
+  /// better than not scanning at all.
+  final String? barcode;
 
   @override
   State<_ReceiveSheet> createState() => _ReceiveSheetState();
@@ -163,6 +241,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
   final _quantity = TextEditingController(text: '1');
   final _cost = TextEditingController();
   final _price = TextEditingController();
+  final _serial = TextEditingController();
   DateTime? _expiresOn;
 
   bool _busy = false;
@@ -174,6 +253,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
     _quantity.dispose();
     _cost.dispose();
     _price.dispose();
+    _serial.dispose();
     super.dispose();
   }
 
@@ -196,8 +276,14 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
         name: _name.text.trim(),
         costPrice: cost,
         salePrice: price,
+        barcode: widget.barcode,
         expiresOn: _expiresOn,
       );
+
+      final serial = _serial.text.trim();
+      if (serial.isNotEmpty) {
+        await widget.retail.setSerial(productId, serial);
+      }
       await widget.retail.receive(
         orgId: widget.org.id,
         productId: productId,
@@ -281,6 +367,29 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                 border: OutlineInputBorder(),
               ),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _serial,
+              enabled: !_busy,
+              decoration: const InputDecoration(
+                labelText: 'Numéro de série (facultatif)',
+                // Only matters for the goods where it matters: a phone, a
+                // radio, a panel. It is what a warranty claim is looked up by.
+                helperText: 'Pour un téléphone, une radio, un panneau…',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (widget.barcode != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.qr_code_2, size: 16),
+                  const SizedBox(width: 6),
+                  Text('Code-barres scanné : ${widget.barcode}',
+                      style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _busy

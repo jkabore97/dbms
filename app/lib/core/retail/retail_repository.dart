@@ -34,7 +34,7 @@ class RetailRepository {
     final client = _requireClient();
     var query = client
         .from('products')
-        .select('id, name, barcode, cost_price, sale_price, quantity, '
+        .select('id, name, barcode, serial, cost_price, sale_price, quantity, '
             'expires_on, low_stock_at')
         .eq('org_id', orgId);
     if (activeOnly) query = query.eq('is_active', true);
@@ -171,6 +171,28 @@ class RetailRepository {
       'p_method': method,
       if (clientUuid != null) 'p_client_uuid': clientUuid,
     });
+  }
+
+  /// The serial number of one physical unit — a phone, a radio, a panel.
+  /// Deliberately not unique server-side: a mistyped duplicate must not stop
+  /// a sale at the counter.
+  Future<void> setSerial(String productId, String serial) async {
+    final client = _requireClient();
+    await client.rpc('set_product_serial', params: {
+      'p_product_id': productId,
+      'p_serial': serial,
+    });
+  }
+
+  /// The photographs of a product — the delivery note it arrived on, the
+  /// picture of the thing itself. `documents.product_id` has existed since
+  /// 013; this is what reads it back the other way round.
+  Future<List<Map<String, dynamic>>> photos(String productId) async {
+    final client = _requireClient();
+    final rows = await client.rpc('product_photos', params: {
+      'p_product_id': productId,
+    }) as List<dynamic>;
+    return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
   }
 
   /// Shelf price, cost, expiry and reorder point. Everything a shopkeeper is

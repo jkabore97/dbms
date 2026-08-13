@@ -13,6 +13,7 @@ class Product {
     required this.id,
     required this.name,
     this.barcode,
+    this.serial,
     this.costPrice = 0,
     this.salePrice = 0,
     this.quantity = 0,
@@ -23,6 +24,10 @@ class Product {
   final String id;
   final String name;
   final String? barcode;
+
+  /// One physical unit's number, for the goods where that matters: a phone,
+  /// a radio, a panel. Null for nearly everything a shop sells.
+  final String? serial;
   final double costPrice;
   final double salePrice;
   final double quantity;
@@ -46,6 +51,7 @@ class Product {
       id: row['id'] as String,
       name: row['name'] as String,
       barcode: row['barcode'] as String?,
+      serial: row['serial'] as String?,
       costPrice: parse(row['cost_price']),
       salePrice: parse(row['sale_price']),
       quantity: parse(row['quantity']),

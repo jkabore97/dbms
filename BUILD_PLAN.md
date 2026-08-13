@@ -41,6 +41,8 @@ Each milestone ends with something demonstrable.
 | Employees, shifts and payroll (M5) | built, 8 assertions |
 | Camera capture with zero required fields, R2 upload (M5) | built, 10 assertions |
 | Barcode scanning and on-device OCR (M5) | built, 22 assertions, unproven on a device |
+| A photographed delivery note becoming stock (M5) | built, 17 + 5 assertions |
+| Serial numbers and a product's photographs (M5) | built, 2 assertions |
 | Renaming, archiving and deleting a business | built, 25 assertions |
 
 **Not built**
@@ -78,8 +80,8 @@ reaching for another's pictures — but the HTTP path itself has not run.
 
 Everything below the network — routing, org resolution, the offline path, the
 ledger, the policies, the reports, the log, the farm's two ledgers, the shop's
-counter, the payroll and the capture queue — is covered by 130 Flutter tests
-and twelve SQL suites (134 assertions).
+counter, the payroll and the capture queue — is covered by 147 Flutter tests
+and thirteen SQL suites (141 assertions).
 
 ---
 
@@ -310,8 +312,36 @@ Two departures from the text above, both deliberate:
   is orphaned objects when the app dies in between, which is a bucket
   lifecycle rule's problem rather than a schema's.
 
-**Complete.** The last two pieces are the accelerators: barcode scanning at
-the counter, and on-device OCR.
+**Complete**, including the demo — *she photographs a delivery invoice and the
+products are in the system without typing.*
+
+`InvoiceReading` turns a photographed delivery note into lines, and the
+confirm screen turns those into stock and a purchase in the books with one
+button. Nothing is written before that button. **Arithmetic is what makes it
+safe**: a line is `Savon 12 500`, which is either twelve at five hundred or
+one at twelve thousand five hundred, and no amount of staring at it settles
+that — but a line carrying a total does, because only one reading multiplies
+out. Both tokenisations are tried and the checked one wins; where neither
+checks, the French reading is used and the line is marked as unverified so it
+is the one a person looks at.
+
+Building it caught a real defect in 011, fixed in `016_stock_receipts.sql`:
+`receive_products()` passed its `client_uuid` to the ledger and still added to
+`products.quantity` unconditionally. A retried delivery counted the goods
+twice and the money once, so the shelf and the books disagreed by exactly one
+delivery with nothing on any screen to say so. It also closes something 011
+claimed and did not do — its header says the quantity column can be rebuilt
+from history, which was true of sales and never of deliveries, because stock
+arriving was recorded nowhere. `stock_receipts` is what makes that sentence
+true.
+
+`015_product_serial.sql` adds the `serial` the plan's product list asks for —
+011 built `sku` and called it close enough, which it is not: a SKU names a
+kind of thing, a serial identifies one phone — and `product_photos()`, which
+reads `documents.product_id` back the other way round so the "photos" in that
+same list are reachable from the product.
+
+The two accelerators: barcode scanning at the counter, and on-device OCR.
 
 Scanning finds a product by its code in one tap through `product_by_barcode()`
 and, when the shop has never seen the code, says so rather than inventing a
