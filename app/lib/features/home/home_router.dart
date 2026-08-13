@@ -5,6 +5,7 @@ import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/reports/reports_repository.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/retail/staff.dart';
 import '../church/church_home_screen.dart';
 import '../farm/farm_home_screen.dart';
 import '../retail/store_home_screen.dart';
@@ -23,6 +24,7 @@ Widget homeScreenFor({
   ReportsRepository? reports,
   FarmRepository? farm,
   RetailRepository? retail,
+  StaffRepository? staff,
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
@@ -45,6 +47,7 @@ Widget homeScreenFor({
     'retail' => StoreHomeScreen(
         org: org,
         retail: retail,
+        staff: staff,
         accountAction: accountAction,
       ),
     // Anything else — a profile added server-side that this build has never

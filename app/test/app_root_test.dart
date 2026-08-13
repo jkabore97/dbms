@@ -12,6 +12,7 @@ import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
+import 'package:kaj_app/core/retail/staff.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The M1 flow, exercised the way it will actually be used: on a phone with no
@@ -43,6 +44,7 @@ void main() {
   final console = ConsoleRepository(null);
   final farm = FarmRepository(null);
   final retail = RetailRepository(null);
+  final staff = StaffRepository(null);
 
   setUp(() async {
     db = await LocalDb.open(path: inMemoryDatabasePath);
@@ -80,6 +82,7 @@ void main() {
           console: console,
           farm: farm,
           retail: retail,
+          staff: staff,
         ),
       ),
     );

@@ -280,7 +280,8 @@ Still open, and the harder half: the camera button with zero required fields,
 the R2 upload, the on-device OCR, and barcode scanning. Those need a device
 and R2 credentials to build against, and none of them can be proven by a test
 suite on a runner. `products.barcode` and `documents` are the seams.
-Employees, shifts and payroll are also still open.
+Employees, shifts and payroll are built — `012_employees.sql`, and the
+Personnel screen behind the store's home screen.
 
 ---
 
