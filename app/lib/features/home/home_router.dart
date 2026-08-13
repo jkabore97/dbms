@@ -38,6 +38,7 @@ Widget homeScreenFor({
         reports: reports,
         org: org,
         capture: capture,
+        staff: staff,
         accountAction: accountAction,
         onHistory: onHistory,
       ),
@@ -46,6 +47,7 @@ Widget homeScreenFor({
         org: org,
         farm: farm,
         capture: capture,
+        staff: staff,
         accountAction: accountAction,
       ),
     'retail' => StoreHomeScreen(

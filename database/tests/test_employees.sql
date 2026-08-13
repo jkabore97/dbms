@@ -296,4 +296,194 @@ begin
 end $$;
 
 \echo ''
+\echo '--- TEST 9: a volunteer is not a casual on zero francs ---'
+begin;
+set local "request.jwt.claim.sub" = '79797979-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare
+    v_person uuid;
+    v_row    employees%rowtype;
+begin
+    -- 018. A church's caretaker who is not paid is a volunteer. Recorded as
+    -- a casual on a zero rate, the payroll would say the church owes them
+    -- nothing per hour — which is true and is not the same statement.
+    v_person := add_employee('79000000-0000-0000-0000-000000000001',
+                             'Bénévole du dimanche', 'casual', 0);
+    perform update_employee(v_person, p_employment => 'volunteer',
+                            p_role_title => 'Accueil');
+
+    select * into v_row from employees where id = v_person;
+    if v_row.employment <> 'volunteer' then
+        raise exception 'FAIL: engagement recorded as %', v_row.employment;
+    end if;
+
+    -- An engagement this schema has never heard of is refused rather than
+    -- stored and discovered later by a report that cannot group it.
+    begin
+        perform update_employee(v_person, p_employment => 'stagiaire-payé');
+        raise exception 'FAIL: an unknown engagement was accepted';
+    exception
+        when check_violation then
+            raise notice 'PASS: refused an engagement nobody defined';
+    end;
+
+    raise notice 'PASS: a volunteer is recorded as one';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 10: somebody owed money cannot be quietly closed ---'
+begin;
+set local "request.jwt.claim.sub" = '79797979-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare
+    v_person uuid;
+    v_active boolean;
+begin
+    v_person := add_employee('79000000-0000-0000-0000-000000000001',
+                             'Manœuvre de la semaine', 'casual', 750);
+    perform record_shift('79000000-0000-0000-0000-000000000001', v_person, 8);
+
+    -- Marking somebody inactive takes them off the payroll screen. Unpaid
+    -- hours that leave the screen are unpaid hours nobody pays.
+    begin
+        perform end_employment(v_person, 'resigned');
+        raise exception 'FAIL: closed an engagement with wages outstanding';
+    exception
+        when raise_exception then
+            if sqlerrm like 'FAIL:%' then raise; end if;
+            raise notice 'PASS: refused — %', sqlerrm;
+    end;
+
+    select is_active into v_active from employees where id = v_person;
+    if not v_active then
+        raise exception 'FAIL: the refusal still deactivated them';
+    end if;
+
+    -- Paid, then closed.
+    perform pay_employee('79000000-0000-0000-0000-000000000001', v_person);
+    perform end_employment(v_person, 'resigned', current_date, 'Retour au village');
+
+    select is_active into v_active from employees where id = v_person;
+    if v_active then
+        raise exception 'FAIL: they are still on the payroll';
+    end if;
+    if (select end_reason from employees where id = v_person) <> 'resigned' then
+        raise exception 'FAIL: no reason recorded';
+    end if;
+
+    raise notice 'PASS: paid first, then closed, with a reason';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 11: a stranger''s account cannot be attached to the payroll ---'
+begin;
+set local "request.jwt.claim.sub" = '79797979-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare
+    v_person uuid;
+begin
+    select id into v_person from employees
+    where org_id = '79000000-0000-0000-0000-000000000001' limit 1;
+
+    -- Linking is "the Awa on the payroll is the Awa holding this phone". An
+    -- arbitrary account would let an admin pull a stranger's name and number
+    -- into their own directory.
+    begin
+        perform link_employee_account(v_person,
+                                      '79797979-0000-0000-0000-000000000009');
+        raise exception 'FAIL: a non-member was linked to the payroll';
+    exception
+        when raise_exception then
+            if sqlerrm like 'FAIL:%' then raise; end if;
+            raise notice 'PASS: refused — %', sqlerrm;
+        when foreign_key_violation then
+            raise notice 'PASS: refused — no such profile';
+    end;
+
+    -- A colleague who is a member links fine, and it grants nothing: the
+    -- directory is not the permission system.
+    perform link_employee_account(v_person,
+                                  '79797979-0000-0000-0000-000000000002');
+    if (select user_id from employees where id = v_person)
+        is distinct from '79797979-0000-0000-0000-000000000002' then
+        raise exception 'FAIL: the link did not take';
+    end if;
+
+    raise notice 'PASS: linked to a colleague, and only a colleague';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 12: the directory and the register need an admin ---'
+begin;
+set local "request.jwt.claim.sub" = '79797979-0000-0000-0000-000000000003';
+set local role authenticated;
+do $$
+declare
+    v_rows int;
+begin
+    begin
+        select count(*) into v_rows
+        from staff_directory('79000000-0000-0000-0000-000000000001');
+        raise exception 'FAIL: an employee read the staff directory';
+    exception
+        when raise_exception then
+            if sqlerrm like 'FAIL:%' then raise; end if;
+            raise notice 'PASS: refused — %', sqlerrm;
+    end;
+
+    begin
+        select count(*) into v_rows
+        from payroll_summary('79000000-0000-0000-0000-000000000001');
+        raise exception 'FAIL: an employee read the payroll register';
+    exception
+        when raise_exception then
+            if sqlerrm like 'FAIL:%' then raise; end if;
+            raise notice 'PASS: refused — %', sqlerrm;
+    end;
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 13: the directory shows what is owed, per person ---'
+begin;
+set local "request.jwt.claim.sub" = '79797979-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare
+    v_person uuid;
+    v_owed   numeric;
+    v_hours  numeric;
+    v_paid   numeric;
+begin
+    v_person := add_employee('79000000-0000-0000-0000-000000000001',
+                             'Gardien de nuit', 'casual', 600);
+    perform record_shift('79000000-0000-0000-0000-000000000001', v_person, 12);
+
+    select unpaid_hours, owed into v_hours, v_owed
+    from staff_directory('79000000-0000-0000-0000-000000000001')
+    where id = v_person;
+
+    if v_hours <> 12 or v_owed <> 7200 then
+        raise exception 'FAIL: directory shows % hours and % owed', v_hours, v_owed;
+    end if;
+
+    perform pay_employee('79000000-0000-0000-0000-000000000001', v_person);
+
+    select paid into v_paid from payroll_summary('79000000-0000-0000-0000-000000000001')
+    where employee_id = v_person;
+    if v_paid <> 7200 then
+        raise exception 'FAIL: the register says % was paid', v_paid;
+    end if;
+
+    raise notice 'PASS: 12 hours, 7 200 owed, then 7 200 on the register';
+end $$;
+rollback;
+
+\echo ''
 \echo 'test_employees.sql: all assertions held.'

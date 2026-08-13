@@ -3,12 +3,15 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../capture/gallery_screen.dart';
+import '../retail/staff_screen.dart';
 import 'farm_sheets.dart';
 import 'flocks_screen.dart';
+import 'livestock_screen.dart';
 import 'invoices_screen.dart';
 import 'stock_screen.dart';
 
@@ -33,6 +36,7 @@ class FarmHomeScreen extends StatefulWidget {
     required this.org,
     this.farm,
     this.capture,
+    this.staff,
     this.accountAction,
   });
 
@@ -46,6 +50,13 @@ class FarmHomeScreen extends StatefulWidget {
   /// Photographs — a feed delivery note, a vet's prescription. Null in a
   /// build with no server or no upload Worker.
   final CaptureRepository? capture;
+
+  /// Staff. Every business has people; 012 built the payroll behind a shop's
+  /// home screen and 018 made the records general enough for a church's
+  /// volunteers and a farm's seasonal hands. Null in a build with no server,
+  /// and every screen behind it is refused by RLS for anyone who is not an
+  /// org admin.
+  final StaffRepository? staff;
 
   final Widget? accountAction;
 
@@ -76,6 +87,26 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   /// this device's share of the truth, which is worth saying out loud rather
   /// than presenting as the whole of it.
   bool _stale = false;
+
+  /// What kind of farm this is. Read before the panels are drawn so a goat
+  /// farmer is not shown an empty poultry section, and a poultry farm still
+  /// opens on birds and eggs exactly as it did.
+  FarmShape _shape = const FarmShape();
+
+  Future<void> _openLivestock({int tab = 0}) async {
+    final farm = widget.farm;
+    if (farm == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LivestockScreen(
+          org: widget.org,
+          farm: farm,
+          initialTab: tab,
+        ),
+      ),
+    );
+    await _refresh();
+  }
 
   @override
   void initState() {
@@ -125,6 +156,13 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
     try {
       final items = await farm.stockOnHand(widget.org.id);
       final flocks = await farm.flocks(widget.org.id);
+      // 019: what this farm actually keeps and grows. Best-effort — a
+      // database without it yet leaves the shape empty, and the screen then
+      // behaves exactly as it did before.
+      try {
+        final shape = await farm.shape(widget.org.id);
+        if (mounted) setState(() => _shape = shape);
+      } catch (_) {}
       await widget.db.cacheFarmItems(
         widget.org.id,
         items.map((i) => i.toCache()).toList(),
@@ -214,6 +252,20 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                 ),
               ),
             ),
+          if (widget.staff != null && widget.org.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.groups_outlined),
+              tooltip: 'Personnel',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StaffScreen(
+                    org: widget.org,
+                    staff: widget.staff!,
+                  ),
+                ),
+              ),
+            ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
@@ -234,6 +286,19 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                   if (_lowStock.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _LowStockBanner(items: _lowStock),
+                  ],
+
+                  // What this farm keeps and grows, shown only where there is
+                  // something to show. 009 assumed poultry; a farm with goats
+                  // and onions was expected to record its animals as a flock
+                  // and its harvest as "other income".
+                  if (widget.farm != null) ...[
+                    const SizedBox(height: 12),
+                    _FarmShapeCard(
+                      shape: _shape,
+                      onAnimals: () => _openLivestock(),
+                      onCrops: () => _openLivestock(tab: 1),
+                    ),
                   ],
 
                   if (_stale) ...[
@@ -682,6 +747,81 @@ class _FlockPicker extends StatelessWidget {
             ),
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+}
+
+/// Livestock and crops, offered in proportion to what this farm has.
+///
+/// An empty farm gets both as invitations; a farm that keeps goats and grows
+/// nothing sees its animals and a quiet way in to crops. The one thing this
+/// avoids is showing a market gardener a poultry panel with zeros in it,
+/// which is what a fixed layout does to everybody who is not Ignace.
+class _FarmShapeCard extends StatelessWidget {
+  const _FarmShapeCard({
+    required this.shape,
+    required this.onAnimals,
+    required this.onCrops,
+  });
+
+  final FarmShape shape;
+  final VoidCallback onAnimals;
+  final VoidCallback onCrops;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Élevage et cultures', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+              shape.isEmpty
+                  ? 'Enregistrez vos animaux et vos parcelles.'
+                  : [
+                      if (shape.hasLivestock)
+                        '${shape.animals} animaux en ${shape.herds} groupe'
+                            '${shape.herds > 1 ? 's' : ''}',
+                      if (shape.hasCrops)
+                        '${shape.cropCycles} culture'
+                            '${shape.cropCycles > 1 ? 's' : ''} en cours',
+                      if (shape.harvestWeek > 0)
+                        '${shape.harvestWeek.toStringAsFixed(0)} kg récoltés cette semaine',
+                    ].join(' · '),
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onAnimals,
+                    icon: const Icon(Icons.pets, size: 18),
+                    label: Text(shape.hasLivestock
+                        ? '${shape.animals} animaux'
+                        : 'Animaux'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onCrops,
+                    icon: const Icon(Icons.grass, size: 18),
+                    label: Text(shape.hasCrops
+                        ? '${shape.cropCycles} cultures'
+                        : 'Cultures'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

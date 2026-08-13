@@ -284,3 +284,170 @@ double _num(Object? value) {
   if (value is num) return value.toDouble();
   return double.tryParse(value.toString()) ?? 0;
 }
+
+/// A group of animals of any species — goats, cattle, guinea fowl.
+///
+/// Distinct from `Flock` on purpose. 009 built flocks for Ignace's poultry
+/// and his history is in that table; 019 adds this beside it rather than
+/// migrating, because rewriting a working module to tidy a name is how live
+/// data gets lost. A farm shows whichever it has.
+class Herd {
+  const Herd({
+    required this.id,
+    required this.species,
+    required this.label,
+    required this.headCount,
+    this.breed,
+    this.purpose,
+    this.arrivedOn,
+    this.closedOn,
+    this.losses = 0,
+    this.births = 0,
+    this.lastEvent,
+  });
+
+  final String id;
+  final String species;
+  final String label;
+  final int headCount;
+  final String? breed;
+
+  /// What the group is for — dairy, fattening for Tabaski. Drives nothing and
+  /// is worth recording: the farmer manages them differently.
+  final String? purpose;
+
+  final DateTime? arrivedOn;
+  final DateTime? closedOn;
+  final double losses;
+  final double births;
+  final DateTime? lastEvent;
+
+  bool get isOpen => closedOn == null;
+
+  factory Herd.fromRow(Map<String, dynamic> row) {
+    double number(Object? v) =>
+        v == null ? 0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0);
+    DateTime? when(Object? v) => v == null ? null : DateTime.tryParse('$v');
+
+    return Herd(
+      id: row['id'] as String,
+      species: (row['species'] as String?) ?? '',
+      label: (row['label'] as String?) ?? '',
+      headCount: (row['head_count'] as num?)?.toInt() ?? 0,
+      breed: row['breed'] as String?,
+      purpose: row['purpose'] as String?,
+      arrivedOn: when(row['arrived_on']),
+      closedOn: when(row['closed_on']),
+      losses: number(row['losses']),
+      births: number(row['births']),
+      lastEvent: when(row['last_event']),
+    );
+  }
+}
+
+/// One planting: a crop, on a plot, between two dates.
+///
+/// The unit of record is the period rather than the field, because the same
+/// field grows onions from October and maize from June — and "what did this
+/// field produce" has no answer without a when.
+class CropCycle {
+  const CropCycle({
+    required this.id,
+    required this.crop,
+    this.variety,
+    this.plotName,
+    this.plantedOn,
+    this.expectedOn,
+    this.closedOn,
+    this.expectedYield,
+    this.unit = 'kg',
+    this.harvested = 0,
+    this.daysToHarvest,
+  });
+
+  final String id;
+  final String crop;
+  final String? variety;
+  final String? plotName;
+  final DateTime? plantedOn;
+  final DateTime? expectedOn;
+  final DateTime? closedOn;
+  final double? expectedYield;
+  final String unit;
+
+  /// What has actually come off it so far, in [unit].
+  final double harvested;
+
+  /// Negative once the expected date has passed, which is the interesting
+  /// case: a crop that should have been lifted a fortnight ago.
+  final int? daysToHarvest;
+
+  bool get isOpen => closedOn == null;
+  bool get isOverdue => (daysToHarvest ?? 1) < 0 && isOpen;
+
+  factory CropCycle.fromRow(Map<String, dynamic> row) {
+    double? number(Object? v) =>
+        v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+    DateTime? when(Object? v) => v == null ? null : DateTime.tryParse('$v');
+
+    return CropCycle(
+      id: row['id'] as String,
+      crop: (row['crop'] as String?) ?? '',
+      variety: row['variety'] as String?,
+      plotName: row['plot_name'] as String?,
+      plantedOn: when(row['planted_on']),
+      expectedOn: when(row['expected_on']),
+      closedOn: when(row['closed_on']),
+      expectedYield: number(row['expected_yield']),
+      unit: (row['unit'] as String?) ?? 'kg',
+      harvested: number(row['harvested']) ?? 0,
+      daysToHarvest: (row['days_to_harvest'] as num?)?.toInt(),
+    );
+  }
+}
+
+/// What a farm actually is, counted. The home screen asks this first so a
+/// goat farmer is not shown an empty poultry panel.
+class FarmShape {
+  const FarmShape({
+    this.flocks = 0,
+    this.birds = 0,
+    this.herds = 0,
+    this.animals = 0,
+    this.cropCycles = 0,
+    this.plots = 0,
+    this.eggsToday = 0,
+    this.harvestWeek = 0,
+  });
+
+  final int flocks;
+  final int birds;
+  final int herds;
+  final int animals;
+  final int cropCycles;
+  final int plots;
+  final int eggsToday;
+  final double harvestWeek;
+
+  bool get hasPoultry => flocks > 0;
+  bool get hasLivestock => herds > 0;
+  bool get hasCrops => cropCycles > 0;
+
+  /// True for a farm that has recorded nothing yet, where the screen should
+  /// offer all three rather than guessing.
+  bool get isEmpty => !hasPoultry && !hasLivestock && !hasCrops;
+
+  factory FarmShape.fromRow(Map<String, dynamic> row) {
+    int count(Object? v) => (v as num?)?.toInt() ?? 0;
+    return FarmShape(
+      flocks: count(row['flocks']),
+      birds: count(row['birds']),
+      herds: count(row['herds']),
+      animals: count(row['animals']),
+      cropCycles: count(row['crop_cycles']),
+      plots: count(row['plots']),
+      eggsToday: count(row['eggs_today']),
+      harvestWeek: (row['harvest_7days'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}

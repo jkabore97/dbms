@@ -10,6 +10,7 @@ import 'package:kaj_app/core/auth/pin_codec.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
@@ -46,6 +47,7 @@ void main() {
   final farm = FarmRepository(null);
   final retail = RetailRepository(null);
   final staff = StaffRepository(null);
+  final onboarding = OnboardingRepository(null);
 
   late CaptureRepository capture;
 
@@ -90,6 +92,7 @@ void main() {
           retail: retail,
           staff: staff,
           capture: capture,
+          onboarding: onboarding,
         ),
       ),
     );

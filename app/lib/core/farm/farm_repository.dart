@@ -198,6 +198,143 @@ class FarmRepository {
       '${when.month.toString().padLeft(2, '0')}-'
       '${when.day.toString().padLeft(2, '0')}';
 
+  // ----------------------------------------------------------------
+  // Animals that are not birds, and things that grow (019)
+  // ----------------------------------------------------------------
+
+  /// What kind of farm this is, counted. Read before anything else so the
+  /// home screen leads with what this farm actually does rather than showing
+  /// a goat farmer an empty poultry panel.
+  Future<FarmShape> shape(String orgId) async {
+    final client = _requireClient();
+    final rows = await client.rpc('farm_profile_summary', params: {
+      'p_org_id': orgId,
+    }) as List<dynamic>;
+    if (rows.isEmpty) return const FarmShape();
+    return FarmShape.fromRow(Map<String, dynamic>.from(rows.first as Map));
+  }
+
+  Future<List<Herd>> herds(String orgId, {bool includeClosed = false}) async {
+    final client = _requireClient();
+    final rows = await client.rpc('herd_status', params: {
+      'p_org_id': orgId,
+      'p_include_closed': includeClosed,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => Herd.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  Future<String> openHerd({
+    required String orgId,
+    required String species,
+    required String label,
+    required int headCount,
+    String? breed,
+    String? purpose,
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('open_herd', params: {
+      'p_org_id': orgId,
+      'p_species': species,
+      'p_label': label,
+      'p_head_count': headCount,
+      if (breed != null && breed.isNotEmpty) 'p_breed': breed,
+      if (purpose != null && purpose.isNotEmpty) 'p_purpose': purpose,
+    });
+    return id as String;
+  }
+
+  /// A death, a birth, a weighing, a vaccination. Idempotent by
+  /// [clientUuid]: a phone at the far end of a field retries.
+  Future<String> recordHerdEvent({
+    required String orgId,
+    required String herdId,
+    required String kind,
+    double quantity = 0,
+    DateTime? occurredOn,
+    String? note,
+    String? clientUuid,
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('record_herd_event', params: {
+      'p_org_id': orgId,
+      'p_herd_id': herdId,
+      'p_kind': kind,
+      'p_quantity': quantity,
+      if (occurredOn != null) 'p_occurred_on': _date(occurredOn),
+      if (note != null && note.isNotEmpty) 'p_note': note,
+      if (clientUuid != null) 'p_client_uuid': clientUuid,
+    });
+    return id as String;
+  }
+
+  Future<List<CropCycle>> cropCycles(String orgId,
+      {bool includeClosed = false}) async {
+    final client = _requireClient();
+    final rows = await client.rpc('crop_status', params: {
+      'p_org_id': orgId,
+      'p_include_closed': includeClosed,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => CropCycle.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// The plot is found or created from its name, so nobody has to define a
+  /// field before recording on it — the same bargain `ensure_account()`
+  /// makes with an account name.
+  Future<String> openCropCycle({
+    required String orgId,
+    required String crop,
+    String? plotName,
+    String? variety,
+    DateTime? plantedOn,
+    DateTime? expectedOn,
+    double? expectedYield,
+    String unit = 'kg',
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('open_crop_cycle', params: {
+      'p_org_id': orgId,
+      'p_crop': crop,
+      if (plotName != null && plotName.isNotEmpty) 'p_plot_name': plotName,
+      if (variety != null && variety.isNotEmpty) 'p_variety': variety,
+      if (plantedOn != null) 'p_planted_on': _date(plantedOn),
+      if (expectedOn != null) 'p_expected_on': _date(expectedOn),
+      if (expectedYield != null) 'p_expected_yield': expectedYield,
+      'p_unit': unit,
+    });
+    return id as String;
+  }
+
+  /// What came off the field. Posts nothing to the ledger on purpose:
+  /// harvesting is not earning money, it is earning it later — or eating it.
+  /// Selling goes through `record_farm_sale()` as it always did.
+  Future<String> recordHarvest({
+    required String orgId,
+    required String cropCycleId,
+    required double quantity,
+    String? unit,
+    String grade = 'first',
+    DateTime? harvestedOn,
+    String? note,
+    String? clientUuid,
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('record_harvest', params: {
+      'p_org_id': orgId,
+      'p_crop_cycle_id': cropCycleId,
+      'p_quantity': quantity,
+      if (unit != null && unit.isNotEmpty) 'p_unit': unit,
+      'p_grade': grade,
+      if (harvestedOn != null) 'p_harvested_on': _date(harvestedOn),
+      if (note != null && note.isNotEmpty) 'p_note': note,
+      if (clientUuid != null) 'p_client_uuid': clientUuid,
+    });
+    return id as String;
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {

@@ -20,6 +20,8 @@ class AccountMenu extends StatelessWidget {
     this.onAccounting,
     this.onCreateBusiness,
     this.onBusinesses,
+    this.onApplications,
+    this.onInvite,
   });
 
   final LocalDb db;
@@ -35,6 +37,14 @@ class AccountMenu extends StatelessWidget {
   /// The platform's own list of businesses. Null for everyone who is not a
   /// platform admin, and `all_orgs()` refuses them server-side anyway.
   final VoidCallback? onBusinesses;
+
+  /// The platform's queue of businesses being asked for. Platform admin only.
+  final VoidCallback? onApplications;
+
+  /// Generating a code to send somebody. This is what replaced "J'ai un
+  /// code": that entry sat with the invitee, who by definition does not have
+  /// the app yet.
+  final VoidCallback? onInvite;
 
   /// The books: journal, résultat, bilan, plan comptable, balance. Offered to
   /// every member rather than to admins only — a summary observer opening
@@ -103,6 +113,10 @@ class AccountMenu extends StatelessWidget {
             onJoinByCode?.call();
           case 'businesses':
             onBusinesses?.call();
+          case 'applications':
+            onApplications?.call();
+          case 'invite':
+            onInvite?.call();
           case 'create':
             onCreateBusiness?.call();
           case 'switch':
@@ -136,6 +150,24 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.admin_panel_settings_outlined),
               title: Text('Administration'),
+            ),
+          ),
+        if (onInvite != null)
+          const PopupMenuItem<String>(
+            value: 'invite',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.person_add_alt),
+              title: Text('Inviter quelqu’un'),
+            ),
+          ),
+        if (onApplications != null)
+          const PopupMenuItem<String>(
+            value: 'applications',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.inbox_outlined),
+              title: Text('Demandes'),
             ),
           ),
         if (onJoinByCode != null)

@@ -140,6 +140,23 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_delivery.sql
 
+      # The two ways into the app. Most of this suite is what filling in a
+      # form does not grant: a complete profile with no code belongs to no
+      # business, and an application is not a business until somebody decides
+      # it is.
+      - name: Prove a form grants nothing and an application is not a business
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_onboarding.sql
+
+      # 009 built one farm and it was poultry. This is a farm with goats and
+      # onions: a count that cannot go negative, a harvest that is not income,
+      # and `flocks` left untouched because Ignace's history is in it.
+      - name: Prove a farm can be more than chickens
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm_general.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
