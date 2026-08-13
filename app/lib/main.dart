@@ -12,6 +12,7 @@ import 'core/auth/auth_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
+import 'core/retail/retail_repository.dart';
 import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
 
@@ -77,6 +78,7 @@ Future<void> _startup() async {
     accounting: AccountingRepository(client),
     console: ConsoleRepository(client),
     farm: FarmRepository(client),
+    retail: RetailRepository(client),
     sync: sync,
   ));
 }
@@ -148,6 +150,7 @@ class KajApp extends StatelessWidget {
     required this.accounting,
     required this.console,
     required this.farm,
+    required this.retail,
     this.sync,
   });
 
@@ -158,6 +161,7 @@ class KajApp extends StatelessWidget {
   final AccountingRepository accounting;
   final ConsoleRepository console;
   final FarmRepository farm;
+  final RetailRepository retail;
   final SyncService? sync;
 
   @override
@@ -185,6 +189,7 @@ class KajApp extends StatelessWidget {
         accounting: accounting,
         console: console,
         farm: farm,
+        retail: retail,
         sync: sync,
       ),
     );
