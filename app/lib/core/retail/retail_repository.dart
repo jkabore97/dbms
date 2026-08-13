@@ -46,7 +46,8 @@ class RetailRepository {
   }
 
   /// Stock that dies soon, most urgent first.
-  Future<List<ExpiringProduct>> expiring(String orgId, {int within = 14}) async {
+  Future<List<ExpiringProduct>> expiring(String orgId,
+      {int within = 14}) async {
     final client = _requireClient();
     final rows = await client.rpc('expiring_products', params: {
       'p_org_id': orgId,
@@ -54,7 +55,8 @@ class RetailRepository {
     }) as List<dynamic>;
 
     return rows
-        .map((r) => ExpiringProduct.fromRow(Map<String, dynamic>.from(r as Map)))
+        .map(
+            (r) => ExpiringProduct.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
   }
 
@@ -215,8 +217,7 @@ class RetailRepository {
     }).eq('id', productId);
   }
 
-  static String _date(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
+  static String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 

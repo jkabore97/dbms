@@ -167,12 +167,39 @@ class InvoiceReading {
   /// they arrive as products called "TOTAL" and "Merci de votre confiance".
   static bool _isHeaderOrFooter(String line) {
     const words = [
-      'total', 'sous-total', 'sous total', 'montant', 'net à payer',
-      'net a payer', 'tva', 'facture', 'bon de livraison', 'client',
-      'fournisseur', 'date', 'merci', 'signature', 'reference', 'référence',
-      'designation', 'désignation', 'qte', 'qté', 'quantite', 'quantité',
-      'prix unitaire', 'p.u', 'pu ', 'remise', 'acompte', 'solde',
-      'telephone', 'téléphone', 'adresse', 'nif', 'rccm',
+      'total',
+      'sous-total',
+      'sous total',
+      'montant',
+      'net à payer',
+      'net a payer',
+      'tva',
+      'facture',
+      'bon de livraison',
+      'client',
+      'fournisseur',
+      'date',
+      'merci',
+      'signature',
+      'reference',
+      'référence',
+      'designation',
+      'désignation',
+      'qte',
+      'qté',
+      'quantite',
+      'quantité',
+      'prix unitaire',
+      'p.u',
+      'pu ',
+      'remise',
+      'acompte',
+      'solde',
+      'telephone',
+      'téléphone',
+      'adresse',
+      'nif',
+      'rccm',
     ];
     final lower = line.toLowerCase();
     return words.any((w) => lower.startsWith(w) || lower == w.trim());
@@ -185,8 +212,8 @@ class InvoiceReading {
   /// at a price of eight is exactly the kind of nonsense that arithmetic
   /// checking cannot catch because it very nearly works.
   static List<double> _numbersIn(String line, {required bool groupThousands}) {
-    var cleaned = line.replaceAll(
-        RegExp(r'\b\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\b'), ' ');
+    var cleaned =
+        line.replaceAll(RegExp(r'\b\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\b'), ' ');
 
     // "25kg" is a size, not a price or a count. Left in, it becomes the unit
     // cost of a sack of rice and the arithmetic never checks out again.
@@ -215,18 +242,21 @@ class InvoiceReading {
 
   /// The words on the line, with the numbers and the units taken out.
   static String? _nameIn(String line) {
-    var text = line.replaceAll(
-        RegExp(r'\b\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\b'), ' ');
+    var text =
+        line.replaceAll(RegExp(r'\b\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\b'), ' ');
 
     // Units first, so "25kg" does not leave a bare "kg" behind.
     text = text.replaceAll(
-        RegExp(r'\d+(?:[.,]\d+)?\s*(kg|g|l|ml|cl|pcs?|pi[eè]ces?|cartons?|sacs?)\b',
+        RegExp(
+            r'\d+(?:[.,]\d+)?\s*(kg|g|l|ml|cl|pcs?|pi[eè]ces?|cartons?|sacs?)\b',
             caseSensitive: false),
         ' ');
-    text = text.replaceAll(RegExp(r'\d{1,3}(?:[  .]\d{3})+|\d+(?:[.,]\d{1,2})?'), ' ');
+    text = text.replaceAll(
+        RegExp(r'\d{1,3}(?:[  .]\d{3})+|\d+(?:[.,]\d{1,2})?'), ' ');
     text = text.replaceAll(RegExp(r'\b[x×*]\b', caseSensitive: false), ' ');
-    text = text.replaceAll(RegExp(r'\b(f\s?cfa|fcfa|xof|frs?|€|eur)\b',
-        caseSensitive: false), ' ');
+    text = text.replaceAll(
+        RegExp(r'\b(f\s?cfa|fcfa|xof|frs?|€|eur)\b', caseSensitive: false),
+        ' ');
     text = text.replaceAll(RegExp(r'[|:;=]+'), ' ');
     text = text.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
 

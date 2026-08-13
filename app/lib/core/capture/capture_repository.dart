@@ -120,9 +120,8 @@ class CaptureRepository {
           kind: row['kind'] as String?,
           caption: row['caption'] as String?,
           ocrText: row['ocr_text'] as String?,
-          capturedAt:
-              DateTime.tryParse('${row['captured_at']}')?.toLocal() ??
-                  DateTime.now(),
+          capturedAt: DateTime.tryParse('${row['captured_at']}')?.toLocal() ??
+              DateTime.now(),
         );
         sent++;
       } catch (error) {
@@ -208,7 +207,8 @@ class CaptureRepository {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final key = body['key'] as String?;
     if (key == null || key.isEmpty) {
-      throw const CaptureException("Le serveur n'a pas dit où la photo a été rangée.");
+      throw const CaptureException(
+          "Le serveur n'a pas dit où la photo a été rangée.");
     }
     return key;
   }

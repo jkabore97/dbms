@@ -41,13 +41,41 @@ void main() {
     });
   });
 
-  test('any other refusal still says what the server said', () {
-    final described = AuthRepository.describeError(
-      const PostgrestException(
-          message: 'new row violates row-level security policy'),
-    );
+  group('a refusal is not reported as an out-of-date database', () {
+    test('a permission refusal is stated as one, in French', () {
+      // Changed deliberately. This used to pass the raw text through, so a
+      // shopkeeper saw "new row violates row-level security policy for table
+      // \"invoices\"" — which names an internal table and reads as a crash,
+      // when it is in fact the tenant boundary working exactly as designed.
+      final described = AuthRepository.describeError(
+        const PostgrestException(
+            message: 'new row violates row-level security policy'),
+      );
 
-    expect(described, contains('row-level security'));
-    expect(described, isNot(contains("n'est pas à jour")));
+      expect(described, contains('droit'));
+      expect(described, isNot(contains('row-level security')));
+      expect(described, isNot(contains("n'est pas à jour")));
+    });
+
+    test('a message this app has never seen is passed through, not swallowed',
+        () {
+      // The guarantee that matters: an unrecognised failure must still say
+      // something specific, because a generic "erreur" is unreportable and
+      // whoever is debugging it has nothing to go on.
+      final described = AuthRepository.describeError(
+        const PostgrestException(message: 'deadlock detected'),
+      );
+
+      expect(described, contains('deadlock detected'));
+      expect(described, isNot(contains("n'est pas à jour")));
+    });
+
+    test('no signal is not reported as a refusal at all', () {
+      final described = AuthRepository.describeError(
+        Exception('SocketException: Failed host lookup'),
+      );
+
+      expect(described, contains('connexion'));
+    });
   });
 }

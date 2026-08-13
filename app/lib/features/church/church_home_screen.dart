@@ -8,6 +8,8 @@ import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
+import '../../core/invoicing/invoicing_repository.dart';
+import '../invoicing/invoices_screen.dart';
 import '../capture/gallery_screen.dart';
 import '../retail/staff_screen.dart';
 import 'close_day_sheet.dart';
@@ -29,6 +31,7 @@ import 'reports/reports_hub_screen.dart';
 class ChurchHomeScreen extends StatefulWidget {
   const ChurchHomeScreen({
     super.key,
+    this.invoicing,
     required this.db,
     required this.orgId,
     required this.orgName,
@@ -65,6 +68,12 @@ class ChurchHomeScreen extends StatefulWidget {
   /// and every screen behind it is refused by RLS for anyone who is not an
   /// org admin.
   final StaffRepository? staff;
+
+  /// Invoicing. Every business bills somebody — a shop bills a
+  /// wholesaler, a church bills a hall hire — and until 020 this was
+  /// reachable from the farm alone. Null in a build with no server:
+  /// invoicing is the one thing here that cannot work offline.
+  final InvoicingRepository? invoicing;
 
   final Widget? accountAction;
 
@@ -214,6 +223,20 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                 ),
               ),
             ),
+          if (widget.invoicing != null && widget.org != null)
+            IconButton(
+              icon: const Icon(Icons.receipt_long_outlined),
+              tooltip: 'Factures',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvoicesScreen(
+                    org: widget.org!,
+                    invoicing: widget.invoicing!,
+                  ),
+                ),
+              ),
+            ),
           if (widget.reports != null && widget.org != null)
             IconButton(
               icon: const Icon(Icons.assessment_outlined),
@@ -315,12 +338,12 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _openCloseDay,
                       icon: Icon(
-                        _dayClosed ? Icons.check_circle : Icons.check_circle_outline,
+                        _dayClosed
+                            ? Icons.check_circle
+                            : Icons.check_circle_outline,
                       ),
                       label: Text(
-                        _dayClosed
-                            ? 'Journée clôturée'
-                            : 'Clôturer la journée',
+                        _dayClosed ? 'Journée clôturée' : 'Clôturer la journée',
                         style: const TextStyle(fontSize: 16),
                       ),
                     ),
@@ -468,9 +491,21 @@ class _EntryTile extends StatelessWidget {
     final hasDetails = (entry['details'] as String?)?.isNotEmpty ?? false;
 
     final (icon, tint, wash) = switch (direction) {
-      'in' => (Icons.arrow_downward, Colors.green.shade800, Colors.green.shade100),
-      'out' => (Icons.arrow_upward, Colors.orange.shade800, Colors.orange.shade100),
-      _ => (Icons.swap_horiz, Colors.blueGrey.shade700, Colors.blueGrey.shade100),
+      'in' => (
+          Icons.arrow_downward,
+          Colors.green.shade800,
+          Colors.green.shade100
+        ),
+      'out' => (
+          Icons.arrow_upward,
+          Colors.orange.shade800,
+          Colors.orange.shade100
+        ),
+      _ => (
+          Icons.swap_horiz,
+          Colors.blueGrey.shade700,
+          Colors.blueGrey.shade100
+        ),
     };
 
     // The category, but only when it says something the name did not. Most

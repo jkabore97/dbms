@@ -6,6 +6,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
+import '../../core/errors.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -66,7 +67,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '$error';
+        _error = describeError(error);
         _loading = false;
       });
     }
@@ -96,8 +97,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     for (final product in _products) {
       if (product.barcode == code) {
         messenger.showSnackBar(SnackBar(
-          content: Text('${product.name} — ${product.quantity.toStringAsFixed(0)} '
-              'en stock'),
+          content:
+              Text('${product.name} — ${product.quantity.toStringAsFixed(0)} '
+                  'en stock'),
         ));
         return;
       }
@@ -125,15 +127,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
       if (added == true) await _load();
     } catch (error) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final stockValue = _products.fold<double>(
-        0, (sum, p) => sum + p.quantity * p.costPrice);
+    final stockValue =
+        _products.fold<double>(0, (sum, p) => sum + p.quantity * p.costPrice);
 
     return Scaffold(
       appBar: AppBar(
@@ -160,13 +162,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
             if (_loading) const LinearProgressIndicator(),
             if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-
             if (_products.isNotEmpty) ...[
               Text('Valeur du stock : ${_money.format(stockValue)}',
                   style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
             ],
-
             if (!_loading && _products.isEmpty && _error == null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -184,7 +184,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   ],
                 ),
               ),
-
             ..._products.map((p) => Card(
                   elevation: 0,
                   color: theme.colorScheme.surfaceContainerHighest,
@@ -204,7 +203,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         : null,
                   ),
                 )),
-
             const SizedBox(height: 80),
           ],
         ),
@@ -293,7 +291,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -397,9 +395,10 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                   : () async {
                       final picked = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now().add(const Duration(days: 30)),
-                        firstDate: DateTime.now()
-                            .subtract(const Duration(days: 365)),
+                        initialDate:
+                            DateTime.now().add(const Duration(days: 30)),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
                         lastDate:
                             DateTime.now().add(const Duration(days: 365 * 5)),
                       );
@@ -411,12 +410,10 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                   : 'Expire le '
                       '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
             ),
-
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-
             const SizedBox(height: 20),
             SizedBox(
               height: 52,

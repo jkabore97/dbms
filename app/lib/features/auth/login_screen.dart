@@ -377,7 +377,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 if (widget.auth.isConfigured) ...[
                   _IntentSwitch(
                     intent: _intent,
@@ -386,7 +385,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                 ],
-
                 if (!widget.auth.isConfigured)
                   _NoBackendNotice(theme: theme)
                 else if (_awaitingEmailConfirmation)
@@ -397,7 +395,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ..._phoneStep(theme)
                 else
                   ..._emailStep(theme),
-
                 if (_error != null) ...[
                   const SizedBox(height: 20),
                   _ErrorBanner(message: _error!),

@@ -13,6 +13,7 @@ import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
+import 'core/invoicing/invoicing_repository.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
@@ -90,6 +91,7 @@ Future<void> _startup() async {
     accounting: AccountingRepository(client),
     console: ConsoleRepository(client),
     farm: FarmRepository(client),
+    invoicing: InvoicingRepository(client),
     retail: RetailRepository(client),
     staff: StaffRepository(client),
     capture: CaptureRepository(client, db: db, uploadsUrl: uploadsUrl),
@@ -165,6 +167,7 @@ class KajApp extends StatelessWidget {
     required this.accounting,
     required this.console,
     required this.farm,
+    required this.invoicing,
     required this.retail,
     required this.staff,
     required this.capture,
@@ -179,6 +182,7 @@ class KajApp extends StatelessWidget {
   final AccountingRepository accounting;
   final ConsoleRepository console;
   final FarmRepository farm;
+  final InvoicingRepository invoicing;
   final RetailRepository retail;
   final StaffRepository staff;
   final CaptureRepository capture;
@@ -204,6 +208,7 @@ class KajApp extends StatelessWidget {
         accounting: accounting,
         console: console,
         farm: farm,
+        invoicing: invoicing,
         retail: retail,
         staff: staff,
         capture: capture,

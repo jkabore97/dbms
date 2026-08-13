@@ -145,7 +145,6 @@ class _InviteSheetState extends State<InviteSheet> {
           ),
         ),
         const SizedBox(height: 24),
-
         Text('Rôle', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -157,7 +156,6 @@ class _InviteSheetState extends State<InviteSheet> {
           ],
           onChanged: _working ? null : (v) => setState(() => _role = v!),
         ),
-
         if (_role == 'observer') ...[
           const SizedBox(height: 12),
           SegmentedButton<String>(
@@ -166,9 +164,8 @@ class _InviteSheetState extends State<InviteSheet> {
               ButtonSegment(value: 'summary', label: Text('Totaux seulement')),
             ],
             selected: {_visibility},
-            onSelectionChanged: _working
-                ? null
-                : (s) => setState(() => _visibility = s.first),
+            onSelectionChanged:
+                _working ? null : (s) => setState(() => _visibility = s.first),
           ),
           const SizedBox(height: 4),
           Text(
@@ -178,7 +175,6 @@ class _InviteSheetState extends State<InviteSheet> {
             ),
           ),
         ],
-
         const SizedBox(height: 20),
         Text('Portée', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
@@ -211,7 +207,6 @@ class _InviteSheetState extends State<InviteSheet> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-
         const SizedBox(height: 20),
         Text('Numéro de téléphone (optionnel)',
             style: theme.textTheme.labelLarge),
@@ -233,7 +228,6 @@ class _InviteSheetState extends State<InviteSheet> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-
         const SizedBox(height: 20),
         Text('Valable', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
@@ -247,12 +241,10 @@ class _InviteSheetState extends State<InviteSheet> {
           onSelectionChanged:
               _working ? null : (s) => setState(() => _validDays = s.first),
         ),
-
         if (_error != null) ...[
           const SizedBox(height: 16),
           _ErrorBanner(message: _error!),
         ],
-
         const SizedBox(height: 24),
         SizedBox(
           height: 52,

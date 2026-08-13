@@ -8,12 +8,13 @@ import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/theme/kaj_theme.dart';
+import '../../core/invoicing/invoicing_repository.dart';
+import '../invoicing/invoices_screen.dart';
 import '../capture/gallery_screen.dart';
 import '../retail/staff_screen.dart';
 import 'farm_sheets.dart';
 import 'flocks_screen.dart';
 import 'livestock_screen.dart';
-import 'invoices_screen.dart';
 import 'stock_screen.dart';
 
 /// Ignace's home screen.
@@ -33,6 +34,7 @@ import 'stock_screen.dart';
 class FarmHomeScreen extends StatefulWidget {
   const FarmHomeScreen({
     super.key,
+    this.invoicing,
     required this.db,
     required this.org,
     this.farm,
@@ -58,6 +60,12 @@ class FarmHomeScreen extends StatefulWidget {
   /// and every screen behind it is refused by RLS for anyone who is not an
   /// org admin.
   final StaffRepository? staff;
+
+  /// Invoicing. Every business bills somebody — a shop bills a
+  /// wholesaler, a church bills a hall hire — and until 020 this was
+  /// reachable from the farm alone. Null in a build with no server:
+  /// invoicing is the one thing here that cannot work offline.
+  final InvoicingRepository? invoicing;
 
   final Widget? accountAction;
 
@@ -342,10 +350,16 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                           tint: 2,
                           icon: Icons.receipt_long_outlined,
                           label: 'Factures',
-                          onTap: () => _push(InvoicesScreen(
-                            org: widget.org,
-                            farm: widget.farm,
-                          )),
+                          // The shared screen since 020. The farm-only one was
+                          // built on outstanding_invoices(), so an invoice
+                          // vanished from the app the moment it was paid and
+                          // nobody could re-send a copy.
+                          onTap: widget.invoicing == null
+                              ? () {}
+                              : () => _push(InvoicesScreen(
+                                    org: widget.org,
+                                    invoicing: widget.invoicing!,
+                                  )),
                         ),
                       ),
                     ],

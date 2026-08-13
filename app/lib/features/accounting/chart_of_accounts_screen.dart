@@ -91,7 +91,8 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   Future<void> _create() async {
-    final result = await showModalBottomSheet<({String name, String type, String? note})>(
+    final result =
+        await showModalBottomSheet<({String name, String type, String? note})>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const _NewAccountSheet(),
@@ -160,9 +161,8 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     final theme = Theme.of(context);
     final money = moneyFormat(widget.org.currency);
 
-    final visible = _showRetired
-        ? _accounts
-        : _accounts.where((a) => a.isActive).toList();
+    final visible =
+        _showRetired ? _accounts : _accounts.where((a) => a.isActive).toList();
     final retiredCount = _accounts.where((a) => !a.isActive).length;
 
     return Scaffold(

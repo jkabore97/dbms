@@ -4,6 +4,7 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
+import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/reports/reports_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
@@ -25,6 +26,7 @@ Widget homeScreenFor({
   required OrgSummary org,
   ReportsRepository? reports,
   FarmRepository? farm,
+  InvoicingRepository? invoicing,
   RetailRepository? retail,
   StaffRepository? staff,
   CaptureRepository? capture,
@@ -37,6 +39,7 @@ Widget homeScreenFor({
     profile: org.profile,
     child: switch (org.profile) {
       'church' => ChurchHomeScreen(
+          invoicing: invoicing,
           db: db,
           orgId: org.id,
           orgName: org.name,
@@ -48,6 +51,7 @@ Widget homeScreenFor({
           onHistory: onHistory,
         ),
       'farm' => FarmHomeScreen(
+          invoicing: invoicing,
           db: db,
           org: org,
           farm: farm,
@@ -56,6 +60,7 @@ Widget homeScreenFor({
           accountAction: accountAction,
         ),
       'retail' => StoreHomeScreen(
+          invoicing: invoicing,
           org: org,
           retail: retail,
           staff: staff,

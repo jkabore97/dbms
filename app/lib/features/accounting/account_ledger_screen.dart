@@ -207,7 +207,8 @@ class _MovementTile extends StatelessWidget {
         [
           DateFormat('d MMM y', 'fr_FR').format(movement.occurredAt),
           movement.recordedBy,
-          if (movement.memo != null && movement.memo!.isNotEmpty) movement.memo!,
+          if (movement.memo != null && movement.memo!.isNotEmpty)
+            movement.memo!,
           if (movement.reversed) 'corrigé',
         ].join(' · '),
         maxLines: 2,

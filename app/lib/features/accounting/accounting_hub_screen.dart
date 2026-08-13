@@ -108,7 +108,6 @@ class AccountingHubScreen extends StatelessWidget {
               TrialBalanceScreen(accounting: accounting, org: org),
             ),
           ),
-
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),

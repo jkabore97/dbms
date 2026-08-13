@@ -126,7 +126,8 @@ class LocalDb {
       )
     ''');
 
-    await db.execute('CREATE INDEX entries_by_date ON entries (org_id, occurred_at)');
+    await db.execute(
+        'CREATE INDEX entries_by_date ON entries (org_id, occurred_at)');
   }
 
   /// The categories a person can be offered while offline.
@@ -340,8 +341,7 @@ class LocalDb {
         'kind': kind,
         'caption': caption,
         'ocr_text': ocrText,
-        'captured_at':
-            (capturedAt ?? DateTime.now()).toUtc().toIso8601String(),
+        'captured_at': (capturedAt ?? DateTime.now()).toUtc().toIso8601String(),
         'attempts': 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -1078,7 +1078,8 @@ class LocalDb {
     List<Map<String, Object?>> items,
   ) async {
     await _db.transaction((txn) async {
-      await txn.delete('cached_farm_items', where: 'org_id = ?', whereArgs: [orgId]);
+      await txn
+          .delete('cached_farm_items', where: 'org_id = ?', whereArgs: [orgId]);
       for (final item in items) {
         await txn.insert('cached_farm_items', {
           'item_id': item['item_id'],
@@ -1107,7 +1108,8 @@ class LocalDb {
     List<Map<String, Object?>> flocks,
   ) async {
     await _db.transaction((txn) async {
-      await txn.delete('cached_flocks', where: 'org_id = ?', whereArgs: [orgId]);
+      await txn
+          .delete('cached_flocks', where: 'org_id = ?', whereArgs: [orgId]);
       for (final flock in flocks) {
         await txn.insert('cached_flocks', {
           'flock_id': flock['flock_id'],
@@ -1173,7 +1175,8 @@ class LocalDb {
     List<Map<String, Object?>> accounts,
   ) async {
     await _db.transaction((txn) async {
-      await txn.delete('cached_accounts', where: 'org_id = ?', whereArgs: [orgId]);
+      await txn
+          .delete('cached_accounts', where: 'org_id = ?', whereArgs: [orgId]);
       for (final account in accounts) {
         await txn.insert('cached_accounts', {
           'account_id': account['account_id'],

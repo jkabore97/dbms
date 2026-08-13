@@ -69,7 +69,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
     });
 
     try {
-      final flocks = await farm.flocks(widget.org.id, includeClosed: _showClosed);
+      final flocks =
+          await farm.flocks(widget.org.id, includeClosed: _showClosed);
       await widget.db.cacheFlocks(
         widget.org.id,
         flocks.map((f) => f.toCache()).toList(),
@@ -96,8 +97,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
   /// signal once, when a batch arrives, than to let a whole cycle's figures
   /// split in half.
   Future<void> _openFlock() async {
-    final result = await showModalBottomSheet<
-        ({String code, int count, String? breed})>(
+    final result =
+        await showModalBottomSheet<({String code, int count, String? breed})>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const _NewFlockSheet(),
@@ -407,7 +408,8 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
     // naming batches by hand will invent a scheme; somebody who does not want
     // to should not have to.
     final now = DateTime.now();
-    _codeController.text = 'B-${now.year}-${now.month.toString().padLeft(2, '0')}';
+    _codeController.text =
+        'B-${now.year}-${now.month.toString().padLeft(2, '0')}';
   }
 
   @override

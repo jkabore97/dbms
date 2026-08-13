@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
+import '../../core/errors.dart';
 
 /// The manager's side of getting somebody into the business.
 ///
@@ -50,7 +51,8 @@ class InviteGeneratorSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => InviteGeneratorSheet(orgId: orgId, onboarding: onboarding),
+      builder: (_) =>
+          InviteGeneratorSheet(orgId: orgId, onboarding: onboarding),
     );
   }
 
@@ -91,9 +93,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
         role: _role,
         fullName: _name.text.trim(),
         title: _title.text.trim(),
-        phone: _phone.text.trim().isEmpty
-            ? ''
-            : _country.toE164(_phone.text),
+        phone: _phone.text.trim().isEmpty ? '' : _country.toE164(_phone.text),
       );
       if (!mounted) return;
       setState(() {
@@ -104,7 +104,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -117,9 +117,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 20, 20, inset + 20),
       child: SingleChildScrollView(
-        child: _invitation == null
-            ? _form(theme)
-            : _ready(theme, _invitation!),
+        child: _invitation == null ? _form(theme) : _ready(theme, _invitation!),
       ),
     );
   }
@@ -137,7 +135,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 20),
-
         TextField(
           controller: _name,
           textCapitalization: TextCapitalization.words,
@@ -169,7 +166,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           helperText: 'Avec un numéro, le code ne marche que pour lui.',
         ),
         const SizedBox(height: 16),
-
         DropdownButtonFormField<String>(
           initialValue: _role,
           decoration: const InputDecoration(
@@ -184,7 +180,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           ],
           onChanged: _busy ? null : (v) => setState(() => _role = v ?? _role),
         ),
-
         if (_error != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -196,7 +191,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
             child: Text(_error!),
           ),
         ],
-
         const SizedBox(height: 20),
         FilledButton.icon(
           onPressed: _busy ? null : _generate,

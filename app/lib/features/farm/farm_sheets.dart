@@ -152,7 +152,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
             onAddNew: _addItem,
           ),
         const SizedBox(height: 16),
-
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -166,7 +165,8 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 decoration: const InputDecoration(
                   labelText: 'Quantité',
                   border: OutlineInputBorder(),
@@ -195,7 +195,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           ],
         ),
         const SizedBox(height: 16),
-
         Text('Prix par $_unit', style: theme.textTheme.labelLarge),
         const SizedBox(height: 6),
         Center(
@@ -227,7 +226,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
             ),
           ),
         const SizedBox(height: 12),
-
         AmountKeypad(
           onDigit: (d) => setState(() {
             if (_costDigits.length < 12) {
@@ -241,7 +239,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           }),
         ),
         const SizedBox(height: 12),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -253,7 +250,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           ),
         ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: 'Enregistrer la réception',
           accent: accent,
@@ -384,7 +380,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
             onAddNew: _addItem,
           ),
         const SizedBox(height: 16),
-
         Row(
           children: [
             Expanded(
@@ -398,7 +393,8 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 decoration: const InputDecoration(
                   labelText: 'Quantité',
                   border: OutlineInputBorder(),
@@ -427,7 +423,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
           ],
         ),
         const SizedBox(height: 16),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -446,7 +441,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: _isWaste ? 'Enregistrer la perte' : 'Enregistrer',
           accent: accent,
@@ -676,7 +670,6 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
       subtitle: "Production, pas recette : l'argent vient à la vente.",
       children: [
         ..._subjectPicker(theme, accent),
-
         if (subject != null) ...[
           Center(
             child: Text(
@@ -998,7 +991,6 @@ class _NewCropDialogState extends State<_NewCropDialog> {
       ],
     );
   }
-
 }
 
 /// Birds died, were weighed, vaccinated, or left alive.
@@ -1103,7 +1095,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           wrap: true,
         ),
         const SizedBox(height: 16),
-
         Center(
           child: Text(
             _digits.isEmpty ? '0' : _digits,
@@ -1115,7 +1106,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
         ),
         Center(child: Text(unit, style: theme.textTheme.bodyMedium)),
         const SizedBox(height: 8),
-
         if (_suspicious)
           Container(
             padding: const EdgeInsets.all(12),
@@ -1139,7 +1129,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
             ),
           ),
         const SizedBox(height: 12),
-
         AmountKeypad(
           onDigit: (d) => setState(() {
             if (_digits.length < 6) {
@@ -1153,7 +1142,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           }),
         ),
         const SizedBox(height: 12),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -1165,7 +1153,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           ),
         ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: 'Enregistrer',
           accent: accent,

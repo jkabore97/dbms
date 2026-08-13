@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
+import '../../core/errors.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -156,7 +157,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -190,7 +191,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   Text(widget.intro!, style: theme.textTheme.bodyMedium),
                   const SizedBox(height: 20),
                 ],
-
                 TextField(
                   controller: _first,
                   textCapitalization: TextCapitalization.words,
@@ -218,7 +218,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 OutlinedButton.icon(
                   onPressed: _saving ? null : _pickBirth,
                   icon: const Icon(Icons.cake_outlined),
@@ -227,7 +226,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                       : DateFormat('d MMMM y', 'fr_FR').format(_birth!)),
                 ),
                 const SizedBox(height: 12),
-
                 TextField(
                   controller: _title,
                   textCapitalization: TextCapitalization.sentences,
@@ -238,7 +236,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 PhoneField(
                   controller: _phone,
                   country: _country,
@@ -261,7 +258,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                       ? "C'est ce numéro que votre responsable utilisera."
                       : null,
                 ),
-
                 if (_error != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -273,7 +269,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     child: Text(_error!),
                   ),
                 ],
-
                 const SizedBox(height: 24),
                 FilledButton.icon(
                   onPressed: _ready ? _save : null,

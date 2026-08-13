@@ -131,7 +131,9 @@ class FarmRepository {
   /// feed runs out early is the person feeding the birds, not an admin.
   Future<void> setReorderLevel(String itemId, double? level) async {
     final client = _requireClient();
-    await client.from('items').update({'reorder_level': level}).eq('id', itemId);
+    await client
+        .from('items')
+        .update({'reorder_level': level}).eq('id', itemId);
   }
 
   Future<void> renameItem(String itemId, String name, {String? unit}) async {

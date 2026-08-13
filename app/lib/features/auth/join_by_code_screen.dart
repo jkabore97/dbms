@@ -62,7 +62,8 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
     });
 
     try {
-      final name = await widget.admin.previewInvitation(_controller.text.trim());
+      final name =
+          await widget.admin.previewInvitation(_controller.text.trim());
       if (!mounted) return;
       setState(() {
         _orgName = name;
@@ -136,7 +137,6 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-
                 TextField(
                   controller: _controller,
                   enabled: !busy,
@@ -173,7 +173,6 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                     if (_looksComplete && !busy) _preview();
                   },
                 ),
-
                 if (_error != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -191,7 +190,6 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                     ),
                   ),
                 ],
-
                 if (_orgName != null) ...[
                   const SizedBox(height: 24),
                   Container(
@@ -221,7 +219,6 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                     ),
                   ),
                 ],
-
                 const SizedBox(height: 28),
                 SizedBox(
                   height: 52,

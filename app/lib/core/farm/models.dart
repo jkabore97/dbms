@@ -56,9 +56,8 @@ class StockItem {
       name: row['name'] as String,
       unit: (row['unit'] as String?) ?? 'sac',
       onHand: _num(row['on_hand']),
-      reorderLevel: row['reorder_level'] == null
-          ? null
-          : _num(row['reorder_level']),
+      reorderLevel:
+          row['reorder_level'] == null ? null : _num(row['reorder_level']),
       belowReorder: row['below_reorder'] as bool? ?? false,
       lastMovement: last == null ? null : DateTime.parse(last).toLocal(),
     );

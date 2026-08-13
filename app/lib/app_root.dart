@@ -12,6 +12,7 @@ import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
+import 'core/invoicing/invoicing_repository.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
@@ -57,6 +58,7 @@ class AppRoot extends StatefulWidget {
     required this.accounting,
     required this.console,
     required this.farm,
+    required this.invoicing,
     required this.retail,
     required this.staff,
     required this.capture,
@@ -71,6 +73,7 @@ class AppRoot extends StatefulWidget {
   final AccountingRepository accounting;
   final ConsoleRepository console;
   final FarmRepository farm;
+  final InvoicingRepository invoicing;
   final RetailRepository retail;
   final StaffRepository staff;
   final CaptureRepository capture;
@@ -81,7 +84,16 @@ class AppRoot extends StatefulWidget {
   State<AppRoot> createState() => _AppRootState();
 }
 
-enum _Phase { booting, signedOut, locked, choosingPin, resolving, noOrg, picking, ready }
+enum _Phase {
+  booting,
+  signedOut,
+  locked,
+  choosingPin,
+  resolving,
+  noOrg,
+  picking,
+  ready
+}
 
 class _AppRootState extends State<AppRoot> {
   _Phase _phase = _Phase.booting;
@@ -561,15 +573,15 @@ class _AppRootState extends State<AppRoot> {
             org: org,
             reports: widget.reports,
             farm: widget.farm,
+            invoicing: widget.invoicing,
             retail: widget.retail,
             staff: widget.staff,
             capture: widget.capture,
             // Same live-session rule as the reports: the history is paged by
             // the database, so it is offered only while there is a session to
             // page with.
-            onHistory: widget.auth.hasLiveSession
-                ? () => _openHistory(org)
-                : null,
+            onHistory:
+                widget.auth.hasLiveSession ? () => _openHistory(org) : null,
             accountAction: AccountMenu(
               db: widget.db,
               userLabel: _identity?.label ?? '',
@@ -595,12 +607,10 @@ class _AppRootState extends State<AppRoot> {
                   : null,
               // Replaces "J'ai un code": the person holding the app is the
               // manager, and the person who needs reaching does not have it.
-              onMyProfile:
-                  widget.auth.hasLiveSession ? _openMyProfile : null,
-              onApplyForOrg:
-                  !_isPlatformAdmin && widget.auth.hasLiveSession
-                      ? _applyForOrg
-                      : null,
+              onMyProfile: widget.auth.hasLiveSession ? _openMyProfile : null,
+              onApplyForOrg: !_isPlatformAdmin && widget.auth.hasLiveSession
+                  ? _applyForOrg
+                  : null,
               onInvite: org.isAdmin && widget.auth.hasLiveSession
                   ? () => InviteGeneratorSheet.open(context,
                       orgId: org.id, onboarding: widget.onboarding)

@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models.dart';
+import '../errors.dart' as errors;
 
 /// Everything the app does with Supabase auth, behind one door.
 ///
@@ -137,7 +138,9 @@ class AuthRepository {
 
     try {
       await client.auth.updateUser(UserAttributes(data: {'full_name': name}));
-      await client.from('profiles').update({'full_name': name}).eq('id', userId);
+      await client
+          .from('profiles')
+          .update({'full_name': name}).eq('id', userId);
     } catch (_) {
       // Offline, or the profile row has not been mirrored across yet. The
       // account is what matters and the account is already made.
@@ -195,64 +198,11 @@ class AuthRepository {
     return '$defaultCode$cleaned';
   }
 
-  /// Turns a Supabase failure into something worth showing a person. The raw
-  /// messages are English and mention tokens and grants.
-  static String describeError(Object error) {
-    if (error is AuthException) {
-      final message = error.message.toLowerCase();
-      // What Supabase says when signInWithOtp is called with
-      // shouldCreateUser: false and the number has never been seen. The raw
-      // text — "signups not allowed for otp" — reads as a policy refusal, and
-      // sends the user to look for a setting instead of a button.
-      if (message.contains('signups not allowed') ||
-          message.contains('user not found') ||
-          message.contains('should_create_user')) {
-        return "Ce numéro n'a pas encore de compte. "
-            'Choisissez « Créer un compte ».';
-      }
-      if (message.contains('already registered') ||
-          message.contains('already exists')) {
-        return 'Un compte existe déjà pour ces informations. '
-            'Choisissez « Se connecter ».';
-      }
-      if (message.contains('password') && message.contains('least')) {
-        return 'Le mot de passe doit contenir au moins 6 caractères.';
-      }
-      if (message.contains('invalid') && message.contains('otp') ||
-          message.contains('token has expired') ||
-          message.contains('expired')) {
-        return 'Code incorrect ou expiré. Demandez-en un nouveau.';
-      }
-      if (message.contains('invalid login credentials')) {
-        return 'E-mail ou mot de passe incorrect.';
-      }
-      if (message.contains('rate limit') ||
-          message.contains('too many requests')) {
-        return 'Trop de tentatives. Attendez une minute avant de réessayer.';
-      }
-      if (message.contains('sms') || message.contains('phone')) {
-        return "L'envoi du SMS a échoué. Vérifiez le numéro.";
-      }
-      return error.message;
-    }
-    if (error is PostgrestException) {
-      // PGRST202 is PostgREST saying a function is not in its schema cache.
-      // It reads like a server fault and is almost always one thing: a
-      // migration that has not been applied to this database yet. The raw
-      // text names an argument list — "public.trial_balance(p_from, p_org_id,
-      // p_to)" — which tells whoever is holding the phone nothing at all.
-      if (error.code == 'PGRST202' ||
-          error.message.contains('schema cache')) {
-        final name = RegExp(r'public\.(\w+)').firstMatch(error.message)?.group(1);
-        return "Cette base de données n'est pas à jour"
-            '${name == null ? '' : ' : « $name » est absent'}. '
-            'Appliquez les migrations manquantes, puis réessayez.';
-      }
-      return 'Le serveur a refusé la demande : ${error.message}';
-    }
-    if (error is StateError) {
-      return error.message;
-    }
-    return 'Pas de connexion. Réessayez quand le réseau revient.';
-  }
+  /// Kept as the name most screens call, now delegating.
+  ///
+  /// It used to hold the whole translation table, which meant auth failures
+  /// were humanised and database failures were not: a screen that caught a
+  /// `PostgrestException` printed the raw object, tables and error codes and
+  /// all. See `core/errors.dart` for what replaced it and why.
+  static String describeError(Object error) => errors.describeError(error);
 }

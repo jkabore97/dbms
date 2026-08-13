@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/auth/models.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
+import '../../core/errors.dart';
 
 /// Animals that are not chickens, and things that grow in the ground.
 ///
@@ -78,7 +79,7 @@ class _LivestockScreenState extends State<LivestockScreen>
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -128,7 +129,8 @@ class _LivestockScreenState extends State<LivestockScreen>
       isScrollControlled: true,
       builder: (_) => _QuantitySheet(
         title: 'Récolte',
-        subtitle: '${cycle.crop}${cycle.plotName == null ? '' : ' — ${cycle.plotName}'}',
+        subtitle:
+            '${cycle.crop}${cycle.plotName == null ? '' : ' — ${cycle.plotName}'}',
         label: 'Quantité (${cycle.unit})',
       ),
     );
@@ -148,7 +150,7 @@ class _LivestockScreenState extends State<LivestockScreen>
       await action();
       await _load();
     } catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
@@ -193,7 +195,6 @@ class _LivestockScreenState extends State<LivestockScreen>
         children: [
           if (_loading) const LinearProgressIndicator(),
           if (_error != null) _errorBox(theme),
-
           for (final herd in _herds)
             Card(
               margin: const EdgeInsets.only(bottom: 12),
@@ -218,7 +219,10 @@ class _LivestockScreenState extends State<LivestockScreen>
                         herd.species,
                         herd.breed,
                         herd.purpose,
-                      ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
+                      ]
+                          .whereType<String>()
+                          .where((s) => s.isNotEmpty)
+                          .join(' · '),
                       style: theme.textTheme.bodySmall,
                     ),
                     if (herd.losses > 0 || herd.births > 0) ...[
@@ -242,7 +246,8 @@ class _LivestockScreenState extends State<LivestockScreen>
                         OutlinedButton.icon(
                           onPressed: () =>
                               _herdEvent(herd, 'mortality', 'Pertes'),
-                          icon: const Icon(Icons.remove_circle_outline, size: 18),
+                          icon:
+                              const Icon(Icons.remove_circle_outline, size: 18),
                           label: const Text('Perte'),
                         ),
                         OutlinedButton.icon(
@@ -257,12 +262,13 @@ class _LivestockScreenState extends State<LivestockScreen>
                 ),
               ),
             ),
-
           if (!_loading && _herds.isEmpty && _error == null)
-            _empty(theme, Icons.pets,
+            _empty(
+                theme,
+                Icons.pets,
                 'Aucun groupe d’animaux.',
                 'Chèvres, bovins, pintades — tout ce qui n’est pas une bande '
-                'de volailles suivie séparément.'),
+                    'de volailles suivie séparément.'),
         ],
       ),
     );
@@ -276,13 +282,13 @@ class _LivestockScreenState extends State<LivestockScreen>
         children: [
           if (_loading) const LinearProgressIndicator(),
           if (_error != null) _errorBox(theme),
-
           for (final cycle in _crops)
             Card(
               margin: const EdgeInsets.only(bottom: 12),
               // A crop that should have been lifted a fortnight ago is the
               // one thing on this screen worth interrupting somebody for.
-              color: cycle.isOverdue ? theme.colorScheme.tertiaryContainer : null,
+              color:
+                  cycle.isOverdue ? theme.colorScheme.tertiaryContainer : null,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -337,12 +343,13 @@ class _LivestockScreenState extends State<LivestockScreen>
                 ),
               ),
             ),
-
           if (!_loading && _crops.isEmpty && _error == null)
-            _empty(theme, Icons.grass,
+            _empty(
+                theme,
+                Icons.grass,
                 'Aucune culture en cours.',
                 'Une culture, c’est ce qui est semé sur une parcelle et à '
-                'quelle date. La parcelle est créée à partir de son nom.'),
+                    'quelle date. La parcelle est créée à partir de son nom.'),
         ],
       ),
     );
@@ -367,8 +374,8 @@ class _LivestockScreenState extends State<LivestockScreen>
             const SizedBox(height: 12),
             Text(title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
-            Text(body, textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall),
+            Text(body,
+                textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
           ],
         ),
       );
@@ -437,7 +444,7 @@ class _NewHerdSheetState extends State<_NewHerdSheet> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = '$error';
+          _error = describeError(error);
         });
       }
     }
@@ -565,15 +572,14 @@ class _NewCropSheetState extends State<_NewCropSheet> {
         variety: _variety.text.trim(),
         plantedOn: _planted,
         expectedOn: _expected,
-        expectedYield:
-            double.tryParse(_yield.text.trim().replaceAll(',', '.')),
+        expectedYield: double.tryParse(_yield.text.trim().replaceAll(',', '.')),
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = '$error';
+          _error = describeError(error);
         });
       }
     }

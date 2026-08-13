@@ -1,5 +1,5 @@
-import 'text_reader_stub.dart'
-    if (dart.library.io) 'text_reader_mobile.dart' as impl;
+import 'text_reader_stub.dart' if (dart.library.io) 'text_reader_mobile.dart'
+    as impl;
 
 /// Reading the words off a photograph, on the device, with no connection.
 ///
@@ -106,8 +106,19 @@ class ReadingSuggestions {
 
   static bool _isNoise(String line) {
     const noise = [
-      'prix', 'price', 'exp', 'expire', 'peremption', 'péremption',
-      'fabrication', 'lot', 'net', 'poids', 'made in', 'total', 'tva',
+      'prix',
+      'price',
+      'exp',
+      'expire',
+      'peremption',
+      'péremption',
+      'fabrication',
+      'lot',
+      'net',
+      'poids',
+      'made in',
+      'total',
+      'tva',
     ];
     final lower = line.toLowerCase();
     return noise.any((n) => lower.startsWith(n));
@@ -170,8 +181,8 @@ class ReadingSuggestions {
       final lower = line.toLowerCase();
 
       // dd/mm/yyyy, dd-mm-yy, dd.mm.yyyy
-      final full = RegExp(r'(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})')
-          .firstMatch(lower);
+      final full =
+          RegExp(r'(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})').firstMatch(lower);
       if (full != null) {
         final date = _build(
           int.parse(full.group(1)!),

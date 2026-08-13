@@ -169,7 +169,6 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-
                 Text('Membre', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 if (_members.isEmpty)
@@ -200,7 +199,6 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                       _loadStatement();
                     },
                   ),
-
                 const SizedBox(height: 16),
                 Text('Année', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
@@ -218,7 +216,6 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                     _loadStatement();
                   },
                 ),
-
                 const SizedBox(height: 24),
                 if (_loadingLines)
                   const Center(child: CircularProgressIndicator())
@@ -321,7 +318,6 @@ class _StatementCard extends StatelessWidget {
           const SizedBox(height: 16),
           Container(height: 1, color: const Color(0xFFE8EEEB)),
           const SizedBox(height: 12),
-
           if (lines.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
@@ -361,7 +357,6 @@ class _StatementCard extends StatelessWidget {
                 ),
               ),
             ),
-
           const SizedBox(height: 12),
           Container(height: 1, color: const Color(0xFFE8EEEB)),
           const SizedBox(height: 12),

@@ -165,8 +165,7 @@ class AdminRepository {
           'visibility': visibility,
           'phone': (phone != null && phone.isNotEmpty) ? phone : null,
           'email': (email != null && email.isNotEmpty) ? email : null,
-          'expires_at':
-              DateTime.now().toUtc().add(validFor).toIso8601String(),
+          'expires_at': DateTime.now().toUtc().add(validFor).toIso8601String(),
           // The policy in 005 requires this to be the caller; sending it
           // explicitly keeps the failure a clear one rather than a null.
           'created_by': userId,
@@ -196,7 +195,8 @@ class AdminRepository {
   /// and it returns the name and nothing else.
   Future<String?> previewInvitation(String code) async {
     final client = _requireClient();
-    final name = await client.rpc('invitation_preview', params: {'p_code': code});
+    final name =
+        await client.rpc('invitation_preview', params: {'p_code': code});
     return name as String?;
   }
 
@@ -206,7 +206,8 @@ class AdminRepository {
   /// Returns the org id that was joined.
   Future<String> claimInvitation(String code) async {
     final client = _requireClient();
-    final orgId = await client.rpc('claim_invitation', params: {'p_code': code});
+    final orgId =
+        await client.rpc('claim_invitation', params: {'p_code': code});
     return orgId as String;
   }
 

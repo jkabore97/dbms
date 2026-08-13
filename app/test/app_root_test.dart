@@ -12,6 +12,7 @@ import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
+import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
@@ -45,6 +46,7 @@ void main() {
   final accounting = AccountingRepository(null);
   final console = ConsoleRepository(null);
   final farm = FarmRepository(null);
+  final invoicing = InvoicingRepository(null);
   final retail = RetailRepository(null);
   final staff = StaffRepository(null);
   final onboarding = OnboardingRepository(null);
@@ -89,6 +91,7 @@ void main() {
           accounting: accounting,
           console: console,
           farm: farm,
+          invoicing: invoicing,
           retail: retail,
           staff: staff,
           capture: capture,

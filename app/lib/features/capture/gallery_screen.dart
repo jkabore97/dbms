@@ -12,6 +12,7 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import 'capture_action.dart';
 import 'confirm_products_screen.dart';
+import '../../core/errors.dart';
 
 /// Everything this business has photographed.
 ///
@@ -85,7 +86,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -398,7 +399,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
   Future<void> _fetch() async {
     if (widget.document.isPdf) {
-      setState(() => _imageError = 'PDF — ouvrez-le depuis le lien de partage.');
+      setState(
+          () => _imageError = 'PDF — ouvrez-le depuis le lien de partage.');
       return;
     }
     try {
@@ -407,7 +409,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
       setState(() => _bytes = bytes);
     } catch (error) {
       if (!mounted) return;
-      setState(() => _imageError = '$error');
+      setState(() => _imageError = describeError(error));
     }
   }
 
@@ -432,7 +434,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$error')));
+          .showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
@@ -466,7 +468,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(document.title),
-          leading: BackButton(onPressed: () => Navigator.of(context).pop(_changed)),
+          leading:
+              BackButton(onPressed: () => Navigator.of(context).pop(_changed)),
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -559,10 +562,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _invoiceLines
-                          .take(3)
-                          .map((l) => l.name)
-                          .join(' · '),
+                      _invoiceLines.take(3).map((l) => l.name).join(' · '),
                       style: theme.textTheme.bodySmall,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -595,8 +595,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       ActionChip(
                         avatar: const Icon(Icons.label_outline, size: 16),
                         label: Text(_suggestions.name!),
-                        onPressed: () => setState(
-                            () => _caption.text = _suggestions.name!),
+                        onPressed: () =>
+                            setState(() => _caption.text = _suggestions.name!),
                       ),
                     if (_suggestions.price != null)
                       Chip(
@@ -625,7 +625,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              Text('Ce que le téléphone a lu', style: theme.textTheme.titleSmall),
+              Text('Ce que le téléphone a lu',
+                  style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               // Shown, never applied. A misread date that silently became a
               // product's expiry is the exact loss this module exists to

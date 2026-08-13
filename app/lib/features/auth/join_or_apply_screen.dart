@@ -6,6 +6,7 @@ import '../../core/auth/models.dart';
 import '../../core/onboarding/onboarding_repository.dart';
 import '../admin/create_business_screen.dart';
 import 'profile_form_screen.dart';
+import '../../core/errors.dart';
 
 /// What somebody sees when they have an account and belong to nothing.
 ///
@@ -125,7 +126,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
         // The server's refusals are sentences a person can act on — expired,
         // already used, issued for another number — and are better than
         // anything this screen could invent.
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -248,9 +249,8 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: _busy || _code.text.trim().length < 4
-                        ? null
-                        : _claim,
+                    onPressed:
+                        _busy || _code.text.trim().length < 4 ? null : _claim,
                     icon: _busy
                         ? const SizedBox(
                             width: 16,

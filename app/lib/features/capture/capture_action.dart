@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/text_reader.dart';
+import '../../core/errors.dart';
 
 /// Taking the photograph.
 ///
@@ -100,7 +101,7 @@ class CaptureAction {
       messenger.showSnackBar(SnackBar(content: Text(error.message)));
       return false;
     } catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
       return false;
     }
   }
@@ -137,7 +138,8 @@ class CaptureAction {
     );
 
     if (source == null || !context.mounted) return false;
-    return take(context, orgId: orgId, capture: capture, source: source, kind: kind);
+    return take(context,
+        orgId: orgId, capture: capture, source: source, kind: kind);
   }
 
   /// What the upload Worker will accept. `XFile.mimeType` is filled in on the

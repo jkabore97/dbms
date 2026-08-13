@@ -157,6 +157,17 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm_general.sql
 
+      # Invoicing was built inside the farm migration and defaulted its income
+      # category to "Ventes d'œufs", so a shop using it kept a wrong set of
+      # books. The numbering also read count(*) and added one, which collides
+      # the first time two people invoice in the same second — this suite is
+      # what asserts both, plus that one business cannot read another's
+      # invoices through the new document functions.
+      - name: Prove every business can invoice, and only its own
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_invoicing.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

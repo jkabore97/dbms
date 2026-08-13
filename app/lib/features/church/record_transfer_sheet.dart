@@ -144,7 +144,6 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               ),
             ),
             const SizedBox(height: 16),
-
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -172,7 +171,6 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               ),
             ),
             const SizedBox(height: 12),
-
             Center(
               child: Text(
                 _digits.isEmpty
@@ -185,17 +183,14 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               ),
             ),
             const SizedBox(height: 20),
-
             Text('De', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             ChoiceChipRow(values: _places, selected: _from, onSelect: _setFrom),
             const SizedBox(height: 16),
-
             Text('Vers', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             ChoiceChipRow(values: _places, selected: _to, onSelect: _setTo),
             const SizedBox(height: 16),
-
             TextField(
               controller: _labelController,
               enabled: !_saving,
@@ -211,10 +206,8 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
-
             AmountKeypad(onDigit: _tapDigit, onBackspace: _backspace),
             const SizedBox(height: 16),
-
             SizedBox(
               height: 56,
               child: FilledButton(

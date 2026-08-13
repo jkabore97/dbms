@@ -79,7 +79,8 @@ class CreateBusinessScreen extends StatefulWidget {
 
 /// The profiles the app has a home screen for. 'generic' is last because it is
 /// the fallback, not a choice anybody makes first.
-const _profiles = <({String value, String label, String detail, IconData icon})>[
+const _profiles =
+    <({String value, String label, String detail, IconData icon})>[
   (
     value: 'church',
     label: 'Église',
@@ -244,9 +245,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               ],
               decoration: InputDecoration(
                 labelText: 'Adresse',
-                helperText: slugProblem == null
-                    ? '$_slug.kajapp.com'
-                    : null,
+                helperText: slugProblem == null ? '$_slug.kajapp.com' : null,
                 errorText: slugProblem,
                 border: const OutlineInputBorder(),
               ),
@@ -274,7 +273,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                       ? Icon(Icons.check_circle,
                           color: theme.colorScheme.primary)
                       : null,
-                  onTap: _busy ? null : () => setState(() => _profile = p.value),
+                  onTap:
+                      _busy ? null : () => setState(() => _profile = p.value),
                 ),
               );
             }),

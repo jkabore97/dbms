@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
 import 'create_business_screen.dart';
+import '../../core/errors.dart';
 
 /// Every business on the platform, and the three things that can be done to
 /// one: changed, put away, destroyed.
@@ -55,7 +56,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -139,7 +140,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
       // Server-side refusals arrive here with their own sentence — "Archivez
       // d'abord", "Tapez le nom exactement" — and those are better than
       // anything this screen could invent, so they are shown as they are.
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
@@ -162,7 +163,6 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
           children: [
             if (_loading) const LinearProgressIndicator(),
-
             if (_error != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -185,14 +185,12 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
               ),
               const SizedBox(height: 16),
             ],
-
             for (final org in live)
               _BusinessCard(
                 org: org,
                 onEdit: () => _edit(org),
                 onArchive: () => _archive(org),
               ),
-
             if (archived.isNotEmpty) ...[
               const SizedBox(height: 24),
               Text('Archivées', style: theme.textTheme.titleMedium),
@@ -210,7 +208,6 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
                   onDelete: () => _delete(org),
                 ),
             ],
-
             if (!_loading && _orgs.isEmpty && _error == null)
               Padding(
                 padding: const EdgeInsets.only(top: 48),
@@ -501,7 +498,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
