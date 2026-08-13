@@ -71,6 +71,7 @@ class CaptureRepository {
     required String contentType,
     String? kind,
     String? caption,
+    String? ocrText,
     DateTime? capturedAt,
   }) async {
     final clientUuid = await _db.queueCapture(
@@ -79,6 +80,7 @@ class CaptureRepository {
       contentType: contentType,
       kind: kind,
       caption: caption,
+      ocrText: ocrText,
       capturedAt: capturedAt,
     );
 
@@ -90,6 +92,7 @@ class CaptureRepository {
         contentType: contentType,
         kind: kind,
         caption: caption,
+        ocrText: ocrText,
         capturedAt: capturedAt ?? DateTime.now(),
       );
     } catch (error) {
@@ -116,6 +119,7 @@ class CaptureRepository {
           contentType: row['content_type'] as String,
           kind: row['kind'] as String?,
           caption: row['caption'] as String?,
+          ocrText: row['ocr_text'] as String?,
           capturedAt:
               DateTime.tryParse('${row['captured_at']}')?.toLocal() ??
                   DateTime.now(),
@@ -145,6 +149,7 @@ class CaptureRepository {
     required DateTime capturedAt,
     String? kind,
     String? caption,
+    String? ocrText,
   }) async {
     final key = await _upload(
       orgId: orgId,
@@ -164,8 +169,22 @@ class CaptureRepository {
       'p_client_uuid': clientUuid,
     });
 
+    final documentId = id as String;
+
+    // The reading was taken on the device, possibly days ago and with no
+    // signal. Attaching it is best-effort on purpose: the photograph is the
+    // record, and a failed OCR write must not undo a successful capture or
+    // send the bytes a second time.
+    if (ocrText != null && ocrText.trim().isNotEmpty) {
+      try {
+        await saveReading(documentId: documentId, text: ocrText);
+      } catch (_) {
+        // Left as it was: ocr_status stays 'pending', which is true.
+      }
+    }
+
     await _db.captureSent(clientUuid);
-    return id as String;
+    return documentId;
   }
 
   Future<String> _upload({

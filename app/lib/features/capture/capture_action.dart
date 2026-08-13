@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/capture/capture_repository.dart';
+import '../../core/capture/text_reader.dart';
 
 /// Taking the photograph.
 ///
@@ -61,12 +62,28 @@ class CaptureAction {
       return false;
     }
 
+    // On a device that can, read the label before sending. It happens here
+    // rather than server-side for three reasons: it works with no signal, no
+    // photograph of anybody's invoice leaves the phone to be read, and the
+    // answer is available while the person is still standing in front of the
+    // thing they photographed.
+    //
+    // Best-effort throughout. `TextReader.read` never throws and returns null
+    // on web, in tests, and whenever the reading fails — all of which are the
+    // ordinary case, not an error, because capture works completely without
+    // it.
+    String? reading;
+    if (TextReader.isAvailable && contentType.startsWith('image/')) {
+      reading = await TextReader.read(file.path);
+    }
+
     try {
       final id = await capture.capture(
         orgId: orgId,
         bytes: bytes,
         contentType: contentType,
         kind: kind,
+        ocrText: reading,
       );
 
       messenger.showSnackBar(SnackBar(

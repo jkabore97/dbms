@@ -14,6 +14,7 @@ class OrgPickerScreen extends StatelessWidget {
     required this.onSelected,
     this.onSignOut,
     this.onCreateBusiness,
+    this.onBusinesses,
     this.title = 'Choisissez une activité',
   });
 
@@ -25,6 +26,11 @@ class OrgPickerScreen extends StatelessWidget {
   /// business there is rather than the ones they were invited to.
   final VoidCallback? onCreateBusiness;
 
+  /// Also platform-admin only: the list here is already every business, so
+  /// this is the natural place to reach the one screen that can rename,
+  /// archive or delete one.
+  final VoidCallback? onBusinesses;
+
   final String title;
 
   @override
@@ -35,6 +41,12 @@ class OrgPickerScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          if (onBusinesses != null)
+            IconButton(
+              onPressed: onBusinesses,
+              icon: const Icon(Icons.business_outlined),
+              tooltip: 'Gérer les entreprises',
+            ),
           if (onCreateBusiness != null)
             IconButton(
               onPressed: onCreateBusiness,

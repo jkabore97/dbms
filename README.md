@@ -190,11 +190,39 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
 
   The camera button is drawn only in a build compiled with `UPLOADS_URL`. A
   button that does nothing teaches people the app is broken.
-- Next: the two accelerators that close M5 — reading a barcode with the camera
-  so a known product is one scan rather than a search, and on-device OCR so a
-  delivery note pre-fills a product form. Both need a phone in a hand to
-  verify. Also still open: reading an invitation QR with the camera, rather
-  than the invitee typing the code.
+- Barcode and OCR (M5, complete) — scanning a code at the counter finds the
+  product in one tap, and says the shop has never seen it rather than
+  inventing one from a number. On Android the photograph is also read on the
+  device, with no connection and without the picture leaving the phone, and
+  what it read is offered as **suggestions that are never applied**: nothing
+  in the schema reads `ocr_text`, and a misread expiry date that silently
+  became `products.expires_on` is the exact loss this module exists to
+  prevent. 22 assertions in `app/test/reading_suggestions_test.dart`, most of
+  them about offering nothing rather than guessing — an ambiguous label leaves
+  the box empty.
+
+  ML Kit has no web implementation and will not get one, so it is reached
+  through a conditional import: the browser build compiles a stub and never
+  resolves the package. The barcode scanner needs no such split — it works on
+  both ship targets.
+- The lifecycle of a business (`014_org_lifecycle.sql`, `Entreprises`) — a
+  platform admin can now rename one, change its address, its type or its
+  currency, put it away, and destroy it. Archiving is the ordinary way to make
+  a business go away: reversible, keeps every entry, and off every member's
+  home screen. Deleting is the one act in this schema that loses data on
+  purpose, and it is fenced four ways — platform admin only, archived first,
+  the name typed back, and a second explicit act when the books are not empty.
+
+  A deleted business leaves a tombstone in `deleted_orgs`, which is not
+  org-scoped and which nothing may write to or delete from. That table exists
+  because `audit_log.org_id` cascades: without it, the one event in this
+  system that erases a business would also erase its own record. 19 assertions
+  in `database/tests/test_org_lifecycle.sql`, plus 6 in
+  `app/test/delete_business_test.dart` about the dialog being hard enough to
+  press.
+- Next: M6 — custom domains, the tenant router, and a Play Store release. Also
+  still open: reading an invitation QR with the camera, rather than the
+  invitee typing the code.
 
 ## Cloud development (recommended)
 
@@ -399,9 +427,9 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `013` up to date, paste
-`database/apply_006_to_013.sql` into the Supabase SQL editor and run it once.
-It is `006` through `013` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `014` up to date, paste
+`database/apply_006_to_014.sql` into the Supabase SQL editor and run it once.
+It is `006` through `014` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -411,7 +439,7 @@ answering from a stale cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 013
+scripts/build-migration-bundle.sh 006 014
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

@@ -98,7 +98,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
     try {
       await widget.admin.updateOrg(
-        widget.orgId,
+        orgId: widget.orgId,
         name: name,
         currency: _currency,
       );

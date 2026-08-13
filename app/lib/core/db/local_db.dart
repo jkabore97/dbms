@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -61,6 +61,19 @@ class LocalDb {
         // them with. The bytes wait here rather than in memory, because the
         // app being closed is the normal end of a market day.
         if (oldVersion < 6) await _createCaptureSchema(db);
+        // v6 -> v7: what the phone read off a photograph before it had any
+        // signal to send it with. Kept beside the bytes so a picture that
+        // waits three days in a pocket does not lose its reading.
+        //
+        // `>= 6` and not just `< 7`: a device coming from v5 or below has just
+        // been given the whole capture schema by the line above, and that
+        // already has the column. Adding it again is a duplicate-column error
+        // that fails the open — which is every older phone in the field, on
+        // the update that ships this.
+        if (oldVersion >= 6 && oldVersion < 7) {
+          await db
+              .execute('ALTER TABLE pending_captures ADD COLUMN ocr_text TEXT');
+        }
       },
     );
     return LocalDb._(db);
@@ -293,6 +306,7 @@ class LocalDb {
         kind         TEXT,
         caption      TEXT,
         captured_at  TEXT NOT NULL,
+        ocr_text     TEXT,
         attempts     INTEGER NOT NULL DEFAULT 0,
         last_error   TEXT
       )
@@ -311,6 +325,7 @@ class LocalDb {
     required String contentType,
     String? kind,
     String? caption,
+    String? ocrText,
     DateTime? capturedAt,
     String? clientUuid,
   }) async {
@@ -324,6 +339,7 @@ class LocalDb {
         'content_type': contentType,
         'kind': kind,
         'caption': caption,
+        'ocr_text': ocrText,
         'captured_at':
             (capturedAt ?? DateTime.now()).toUtc().toIso8601String(),
         'attempts': 0,

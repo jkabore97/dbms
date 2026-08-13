@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/models.dart';
+import '../../core/capture/text_reader.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import 'capture_action.dart';
@@ -363,6 +364,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
   bool _saving = false;
   bool _changed = false;
 
+  late final ReadingSuggestions _suggestions =
+      ReadingSuggestions.parse(widget.document.ocrText);
+
   @override
   void initState() {
     super.initState();
@@ -499,6 +503,51 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
             if (document.ocrText != null) ...[
               const SizedBox(height: 20),
+              // What the reading suggests, offered as buttons that fill the
+              // form above. Suggestions, never applied: the person taps one
+              // and can then edit it, which is the difference between an
+              // accelerator and the app inventing an expiry date.
+              if (!_suggestions.isEmpty) ...[
+                Text('Suggestions', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    if (_suggestions.name != null)
+                      ActionChip(
+                        avatar: const Icon(Icons.label_outline, size: 16),
+                        label: Text(_suggestions.name!),
+                        onPressed: () => setState(
+                            () => _caption.text = _suggestions.name!),
+                      ),
+                    if (_suggestions.price != null)
+                      Chip(
+                        avatar: const Icon(Icons.sell_outlined, size: 16),
+                        label: Text('Prix lu : '
+                            '${_suggestions.price!.toStringAsFixed(0)}'),
+                      ),
+                    if (_suggestions.expiresOn != null)
+                      Chip(
+                        avatar: const Icon(Icons.event_outlined, size: 16),
+                        label: Text('Péremption lue : '
+                            '${DateFormat('d MMM y', 'fr_FR').format(_suggestions.expiresOn!)}'),
+                      ),
+                    if (_suggestions.barcode != null)
+                      Chip(
+                        avatar: const Icon(Icons.qr_code_2, size: 16),
+                        label: Text(_suggestions.barcode!),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Lecture automatique. Rien n’est appliqué : touchez un nom '
+                  'pour le reprendre, vérifiez le reste vous-même.',
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+              ],
               Text('Ce que le téléphone a lu', style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               // Shown, never applied. A misread date that silently became a

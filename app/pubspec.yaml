@@ -69,6 +69,17 @@ dependencies:
   # bytes and rendered from memory.
   http: ^1.2.2
 
+  # Reading a barcode with the camera. Works on both ship targets — a native
+  # detector on Android, the browser's own on web — which is why the scan
+  # button is offered everywhere rather than hidden behind a platform check.
+  mobile_scanner: ^7.4.0
+
+  # On-device text recognition, Android only. There is no web implementation
+  # and there is not going to be one, so nothing outside
+  # core/capture/text_reader_mobile.dart may import this: the web build must
+  # never see it. See text_reader.dart for how that is arranged.
+  google_mlkit_text_recognition: ^0.16.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
