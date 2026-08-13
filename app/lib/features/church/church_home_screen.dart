@@ -3,10 +3,12 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../capture/gallery_screen.dart';
+import '../retail/staff_screen.dart';
 import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
@@ -32,6 +34,7 @@ class ChurchHomeScreen extends StatefulWidget {
     this.reports,
     this.org,
     this.capture,
+    this.staff,
     this.accountAction,
     this.onHistory,
   });
@@ -54,6 +57,13 @@ class ChurchHomeScreen extends StatefulWidget {
   /// roof is the same object as a shop's delivery note. Null in a build with
   /// no server or no upload Worker, and the button is then not shown.
   final CaptureRepository? capture;
+
+  /// Staff. Every business has people; 012 built the payroll behind a shop's
+  /// home screen and 018 made the records general enough for a church's
+  /// volunteers and a farm's seasonal hands. Null in a build with no server,
+  /// and every screen behind it is refused by RLS for anyone who is not an
+  /// org admin.
+  final StaffRepository? staff;
 
   final Widget? accountAction;
 
@@ -241,6 +251,20 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                   builder: (_) => GalleryScreen(
                     org: widget.org!,
                     capture: widget.capture!,
+                  ),
+                ),
+              ),
+            ),
+          if (widget.staff != null && widget.org != null && widget.org!.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.groups_outlined),
+              tooltip: 'Personnel',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StaffScreen(
+                    org: widget.org!,
+                    staff: widget.staff!,
                   ),
                 ),
               ),

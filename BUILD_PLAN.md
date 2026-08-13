@@ -44,6 +44,10 @@ Each milestone ends with something demonstrable.
 | A photographed delivery note becoming stock (M5) | built, 17 + 5 assertions |
 | Serial numbers and a product's photographs (M5) | built, 2 assertions |
 | Renaming, archiving and deleting a business | built, 25 assertions |
+| Employee sign-up: profile, then a code from their manager | built, 17 assertions |
+| Manager sign-up: apply, be approved, own the business | built, in the same suite |
+| Staff records for every business, volunteers included | built, 17 assertions |
+| A farm with livestock and crops, not only poultry | built, 11 assertions |
 
 **Not built**
 
@@ -81,7 +85,7 @@ reaching for another's pictures — but the HTTP path itself has not run.
 Everything below the network — routing, org resolution, the offline path, the
 ledger, the policies, the reports, the log, the farm's two ledgers, the shop's
 counter, the payroll and the capture queue — is covered by 147 Flutter tests
-and thirteen SQL suites (141 assertions).
+and fifteen SQL suites (178 assertions).
 
 ---
 

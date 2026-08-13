@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_016.sql — applies migrations 006 through 016 in order.
+-- apply_006_to_019.sql — applies migrations 006 through 019 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -5936,6 +5936,1921 @@ begin
         grant execute on function receive_products(uuid, uuid, numeric, numeric, date, text, uuid, text, timestamptz) to authenticated;
         grant execute on function recent_deliveries(uuid, int) to authenticated;
         grant select, insert on stock_receipts to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 017_people_and_onboarding.sql
+-- ============================================================
+-- ============================================================
+-- 017_people_and_onboarding.sql — who a person is, and the two ways in.
+--
+-- Until now a `profiles` row held a `full_name` and a phone number, and both
+-- came from whatever the auth provider happened to have. That is enough to
+-- greet somebody by name and not enough for anything a business does with a
+-- person: a payslip needs a legal name, a contract needs a date of birth, and
+-- a directory that cannot tell two Ouédraogos apart is a directory nobody
+-- uses twice.
+--
+-- Two routes in, and they are deliberately different shapes.
+--
+-- **An employee joins a business that already exists.** They make an account,
+-- say who they are, and enter a code their manager sent them. The code is
+-- what grants access — nothing about filling in a form does — so a stranger
+-- who completes the whole profile still belongs to no business.
+--
+-- **A manager asks for a business to exist.** They make an account, say who
+-- they are, describe the business, and wait. `create_org()` has been platform
+-- admin only since 010 and stays that way: the thing that decides whether a
+-- new tenant appears on this platform is a person at Kaj-consulting, not a
+-- sign-up form. What changes is that there is now a queue for them to look
+-- at instead of an email nobody sent.
+--
+-- Three decisions worth knowing.
+--
+-- 1. **A profile is never half-written by the server.** Everything added here
+--    is nullable, and `profile_is_complete()` is a question rather than a
+--    constraint. Somebody signed up before this migration existed and must
+--    keep working; somebody who abandons the form halfway must not be locked
+--    out of an account they already have.
+--
+-- 2. **The phone typed twice is checked in the app, not here.** Two identical
+--    strings arriving in one call prove nothing about what was typed. The
+--    confirmation exists to catch a mistyped digit at the keyboard, which is
+--    where it has to be caught.
+--
+-- 3. **An application is not a business.** `org_applications` holds what
+--    somebody asked for. Approving one calls `create_org()` and makes the
+--    applicant its owner in the same transaction; until then there is no org,
+--    no slug reserved, and nothing for them to sign into.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. WHO SOMEBODY IS
+-- ------------------------------------------------------------
+-- Split names rather than one field, because the parts get used separately:
+-- a payslip wants "OUÉDRAOGO Awa", a greeting wants "Awa", and a directory
+-- sorts on the family name. `full_name` stays and stays authoritative for
+-- display — every screen in the app already reads it — and is kept in step by
+-- the function below rather than by a trigger, so importing a row never
+-- silently rewrites what somebody typed.
+
+alter table profiles add column if not exists first_name    text;
+alter table profiles add column if not exists middle_name   text;
+alter table profiles add column if not exists last_name     text;
+alter table profiles add column if not exists date_of_birth date;
+alter table profiles add column if not exists title         text;
+alter table profiles add column if not exists profile_completed_at timestamptz;
+
+comment on column profiles.title is
+    'What they do — "Vendeuse", "Gérant", "Comptable". Their own words, not a role in the permission sense.';
+comment on column profiles.date_of_birth is
+    'Needed by a contract and a payslip. Nullable: an account that predates this must keep working.';
+
+-- A date of birth that is in the future or implies a 12-year-old is a typo,
+-- and a typo in this field ends up on a contract. Checked as a constraint
+-- because unlike the rest of the form there is a right answer.
+do $$
+begin
+    if not exists (
+        select 1 from pg_constraint where conname = 'profiles_dob_is_plausible'
+    ) then
+        alter table profiles add constraint profiles_dob_is_plausible
+            check (
+                date_of_birth is null
+                or (date_of_birth > current_date - interval '120 years'
+                    and date_of_birth < current_date - interval '14 years')
+            );
+    end if;
+end $$;
+
+-- Sorting a directory by family name, which is how a list of people is read.
+create index if not exists profiles_by_last_name
+    on profiles (lower(last_name)) where last_name is not null;
+
+-- Whether there is enough here to put on a contract. A question, never a gate
+-- on signing in: an incomplete profile is a prompt, not a lockout.
+create or replace function profile_is_complete(p_user_id uuid default null)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select coalesce(
+        (select first_name is not null and btrim(first_name) <> ''
+            and last_name is not null and btrim(last_name) <> ''
+            and date_of_birth is not null
+            and phone is not null and btrim(phone) <> ''
+         from profiles
+         where id = coalesce(p_user_id, auth.uid())),
+        false);
+$$;
+
+-- What somebody tells us about themselves, in one call.
+--
+-- Security definer and self-only: the 004 policy already lets a person edit
+-- their own profile, and this adds the name assembly and the refusal to write
+-- somebody else's. A manager correcting a colleague's spelling is a different
+-- act and is not this one.
+create or replace function save_my_profile(
+    p_first_name    text,
+    p_last_name     text,
+    p_middle_name   text default null,
+    p_date_of_birth date default null,
+    p_title         text default null,
+    p_phone         text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_first text := nullif(btrim(coalesce(p_first_name, '')), '');
+    v_last  text := nullif(btrim(coalesce(p_last_name, '')), '');
+    v_mid   text := nullif(btrim(coalesce(p_middle_name, '')), '');
+    v_phone text := nullif(btrim(coalesce(p_phone, '')), '');
+    v_full  text;
+begin
+    if v_actor is null then
+        raise exception 'save_my_profile() needs a signed-in caller';
+    end if;
+
+    if v_first is null or v_last is null then
+        raise exception 'A first name and a family name are needed';
+    end if;
+
+    -- The family name last, which is how a name is written on screen here.
+    -- `full_name` stays the one field every existing screen reads, so it is
+    -- assembled rather than left to drift out of step with its parts.
+    v_full := btrim(concat_ws(' ', v_first, v_mid, v_last));
+
+    -- A number already on somebody else's account is a mistyped digit far
+    -- more often than it is a genuine collision, and the unique index would
+    -- otherwise answer with a constraint name.
+    if v_phone is not null and exists (
+        select 1 from profiles where phone = v_phone and id <> v_actor
+    ) then
+        raise exception 'Ce numéro est déjà utilisé par un autre compte.';
+    end if;
+
+    update profiles set
+        first_name    = v_first,
+        middle_name   = v_mid,
+        last_name     = v_last,
+        full_name     = v_full,
+        date_of_birth = coalesce(p_date_of_birth, date_of_birth),
+        title         = coalesce(nullif(btrim(coalesce(p_title, '')), ''), title),
+        phone         = coalesce(v_phone, phone)
+    where id = v_actor;
+
+    update profiles
+       set profile_completed_at = coalesce(profile_completed_at, now())
+     where id = v_actor and profile_is_complete(v_actor);
+
+    return v_actor;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2. THE CODE A MANAGER SENDS
+-- ------------------------------------------------------------
+-- 005 built invitations and the app made the *invitee* find them: a menu
+-- entry called "J'ai un code" that assumed somebody had already been given
+-- one, by some means the app knew nothing about. That is backwards. The
+-- person with the app open is the manager, and the person without it is the
+-- one who needs to be reached.
+--
+-- So the generating side gets a function that returns everything needed to
+-- send an invitation over WhatsApp — which is where these conversations
+-- actually happen — and the app builds a message around it.
+
+alter table pending_invitations add column if not exists title text;
+alter table pending_invitations add column if not exists full_name text;
+alter table pending_invitations add column if not exists note text;
+
+comment on column pending_invitations.full_name is
+    'Who the manager thinks they are inviting. Pre-fills the sign-up form; never overrides what the person then types about themselves.';
+
+-- Issues an invitation and hands back the code plus the name of the business,
+-- so the app can compose the message without a second round trip.
+--
+-- Security definer because it writes on behalf of the caller and checks the
+-- same thing 005's insert policy checks. The refusal is a sentence rather
+-- than a policy violation, which is what the sharing sheet shows.
+create or replace function invite_employee(
+    p_org_id     uuid,
+    p_role       role_name default 'employee',
+    p_full_name  text default null,
+    p_title      text default null,
+    p_phone      text default null,
+    p_visibility text default 'full',
+    p_valid_days int  default 14,
+    p_note       text default null
+)
+returns table (
+    invitation_id uuid,
+    code          text,
+    org_name      text,
+    expires_at    timestamptz
+)
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_id    uuid;
+begin
+    if v_actor is null then
+        raise exception 'invite_employee() needs a signed-in caller';
+    end if;
+
+    if not is_org_admin(p_org_id) then
+        raise exception 'You cannot invite people to this business';
+    end if;
+
+    insert into pending_invitations (
+        org_id, role, scope_kind, scope_id, visibility,
+        code, phone, full_name, title, note, expires_at, created_by
+    )
+    values (
+        p_org_id, p_role, 'org', p_org_id, coalesce(p_visibility, 'full'),
+        new_invitation_code(),
+        nullif(btrim(coalesce(p_phone, '')), ''),
+        nullif(btrim(coalesce(p_full_name, '')), ''),
+        nullif(btrim(coalesce(p_title, '')), ''),
+        nullif(btrim(coalesce(p_note, '')), ''),
+        now() + make_interval(days => greatest(coalesce(p_valid_days, 14), 1)),
+        v_actor
+    )
+    returning id into v_id;
+
+    return query
+    select i.id, i.code, o.name, i.expires_at
+    from pending_invitations i
+    join orgs o on o.id = i.org_id
+    where i.id = v_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2b. THE NUMBER SOMEBODY GAVE, AND THE NUMBER THEY SIGNED IN WITH
+-- ------------------------------------------------------------
+-- 005 pins an invitation to `auth.users.phone` — the number the account was
+-- created with. That was the only number there was.
+--
+-- It is not any more. `save_my_profile()` above lets somebody set the number
+-- they actually want to be reached on, and those two legitimately differ: an
+-- account made with an email has no auth phone at all, and a second SIM is
+-- normal here. A manager types the number their new employee gave them,
+-- which is the profile one, and 005 then refuses the claim with "ce code a
+-- été émis pour un autre numéro" — an error the employee cannot act on and
+-- the manager cannot see.
+--
+-- So the check widens by exactly one number: an invitation pinned to a phone
+-- is claimable by somebody for whom that is *either* their sign-in number or
+-- the number on their profile. It stays a pin — a stranger holding the code
+-- is still refused — and the only thing that changes is which of a person's
+-- own numbers counts as theirs.
+--
+-- Everything else in both functions is 005's, unchanged.
+create or replace function claim_invitation(p_code text)
+returns uuid
+language plpgsql
+volatile
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_uid    uuid := auth.uid();
+    v_phone  text;
+    v_email  text;
+    v_alt    text;
+    v_inv    pending_invitations%rowtype;
+    v_code   text := normalize_invitation_code(p_code);
+begin
+    if v_uid is null then
+        raise exception 'Connectez-vous avant d''utiliser un code d''invitation.'
+            using errcode = 'invalid_authorization_specification';
+    end if;
+
+    if not exists (select 1 from profiles where id = v_uid) then
+        raise exception 'Ce compte n''est pas encore prêt. Réessayez dans un instant.';
+    end if;
+
+    select u.phone, u.email into v_phone, v_email from auth.users u where u.id = v_uid;
+    select p.phone into v_alt from profiles p where p.id = v_uid;
+
+    select * into v_inv
+    from pending_invitations i
+    where normalize_invitation_code(i.code) = v_code
+    for update;
+
+    if not found then
+        raise exception 'Code inconnu. Vérifiez les caractères saisis.'
+            using errcode = 'no_data_found';
+    end if;
+
+    if v_inv.claimed_at is not null then
+        if v_inv.claimed_by = v_uid then
+            return v_inv.org_id;
+        end if;
+        raise exception 'Ce code a déjà été utilisé.'
+            using errcode = 'no_data_found';
+    end if;
+
+    if v_inv.expires_at <= now() then
+        raise exception 'Ce code a expiré. Demandez-en un nouveau.'
+            using errcode = 'no_data_found';
+    end if;
+
+    -- Either of their own numbers. See the note above.
+    if v_inv.phone is not null
+       and v_inv.phone is distinct from v_phone
+       and v_inv.phone is distinct from v_alt then
+        raise exception 'Ce code a été émis pour un autre numéro de téléphone.'
+            using errcode = 'insufficient_privilege';
+    end if;
+
+    if v_inv.email is not null and lower(v_inv.email) is distinct from lower(v_email) then
+        raise exception 'Ce code a été émis pour une autre adresse e-mail.'
+            using errcode = 'insufficient_privilege';
+    end if;
+
+    insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+    values (v_inv.org_id, v_uid, v_inv.role, v_inv.scope_kind, v_inv.scope_id, v_inv.visibility)
+    on conflict (user_id, scope_kind, scope_id, role) do nothing;
+
+    update pending_invitations
+    set claimed_at = now(), claimed_by = v_uid
+    where id = v_inv.id and claimed_at is null;
+
+    return v_inv.org_id;
+end;
+$$;
+
+-- The sign-in sweep, widened the same way and for the same reason: an
+-- invitation written to the number somebody gave their manager should find
+-- them when they appear, with nothing to type.
+create or replace function claim_my_invitations()
+returns int
+language plpgsql
+volatile
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_uid   uuid := auth.uid();
+    v_phone text;
+    v_email text;
+    v_alt   text;
+    v_count int := 0;
+    v_inv   pending_invitations%rowtype;
+begin
+    if v_uid is null then
+        return 0;
+    end if;
+
+    if not exists (select 1 from profiles where id = v_uid) then
+        return 0;
+    end if;
+
+    select u.phone, u.email into v_phone, v_email from auth.users u where u.id = v_uid;
+    select p.phone into v_alt from profiles p where p.id = v_uid;
+
+    for v_inv in
+        select * from pending_invitations i
+        where i.claimed_at is null
+          and i.expires_at > now()
+          and (
+              (v_phone is not null and i.phone = v_phone)
+              or (v_alt is not null and i.phone = v_alt)
+              or (v_email is not null and lower(i.email) = lower(v_email))
+          )
+        for update
+    loop
+        insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+        values (v_inv.org_id, v_uid, v_inv.role, v_inv.scope_kind,
+                v_inv.scope_id, v_inv.visibility)
+        on conflict (user_id, scope_kind, scope_id, role) do nothing;
+
+        update pending_invitations
+        set claimed_at = now(), claimed_by = v_uid
+        where id = v_inv.id and claimed_at is null;
+
+        v_count := v_count + 1;
+    end loop;
+
+    return v_count;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 3. A MANAGER ASKING FOR A BUSINESS
+-- ------------------------------------------------------------
+-- The other route in. `create_org()` stays platform admin only — whether a
+-- new tenant appears on this platform is a decision, not a form submission —
+-- and this is the queue that decision is made from.
+
+create table if not exists org_applications (
+    id            uuid primary key default gen_random_uuid(),
+    applicant_id  uuid not null references profiles(id) on delete cascade,
+
+    -- What they are asking for. Held here rather than in `orgs`, because
+    -- until somebody approves it there is no business: no slug reserved, no
+    -- books, nothing to sign into.
+    name          text not null,
+    slug          text not null,
+    profile       text not null default 'generic',
+    currency      text not null default 'XOF',
+
+    -- Who they are and how to reach them, as they told it. Kept on the
+    -- application rather than read from the profile at review time, so the
+    -- reviewer sees what was actually submitted.
+    contact_name  text,
+    contact_phone text,
+    contact_email text,
+    description   text,
+
+    status        text not null default 'pending'
+                  check (status in ('pending', 'approved', 'rejected')),
+    -- Filled by the reviewer. A rejection with no reason is one the applicant
+    -- cannot act on, and they will simply apply again.
+    decision_note text,
+    reviewed_by   uuid references profiles(id) on delete set null,
+    reviewed_at   timestamptz,
+
+    -- Set on approval. The one link between an application and the business
+    -- it became.
+    org_id        uuid references orgs(id) on delete set null,
+
+    created_at    timestamptz not null default now()
+);
+
+comment on table org_applications is
+    'Somebody asking for a business to exist. Approving one calls create_org() and makes the applicant its owner.';
+
+-- One open application per person. Somebody who applies four times while
+-- waiting produces four things to review and one business.
+create unique index if not exists org_applications_one_pending
+    on org_applications (applicant_id) where status = 'pending';
+
+create index if not exists org_applications_pending
+    on org_applications (created_at desc) where status = 'pending';
+
+alter table org_applications enable row level security;
+
+-- An applicant sees their own; a platform admin sees all. Nobody else sees
+-- anything: what businesses are being asked for is not a tenant's business.
+drop policy if exists "applications readable by applicant and platform" on org_applications;
+create policy "applications readable by applicant and platform"
+on org_applications for select
+using (
+    applicant_id = auth.uid()
+    or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+);
+
+-- Written through apply_for_org() only, which is definer — but the policy is
+-- what holds if somebody posts to the table directly, and it must not let
+-- them file an application in somebody else's name or pre-approve it.
+drop policy if exists "applications written by their applicant" on org_applications;
+create policy "applications written by their applicant"
+on org_applications for insert
+with check (applicant_id = auth.uid() and status = 'pending');
+
+-- Deciding is a platform act. No delete policy at all: a rejected
+-- application is the record of a decision somebody made.
+drop policy if exists "applications decided by platform admins" on org_applications;
+create policy "applications decided by platform admins"
+on org_applications for update
+using (exists (select 1 from profiles where id = auth.uid() and is_platform_admin))
+with check (exists (select 1 from profiles where id = auth.uid() and is_platform_admin));
+
+create or replace function apply_for_org(
+    p_name        text,
+    p_slug        text,
+    p_profile     text default 'generic',
+    p_currency    text default 'XOF',
+    p_description text default null,
+    p_phone       text default null,
+    p_email       text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor   uuid := auth.uid();
+    v_name    text := nullif(btrim(coalesce(p_name, '')), '');
+    v_slug    text := nullif(lower(btrim(coalesce(p_slug, ''))), '');
+    v_problem text;
+    v_id      uuid;
+    v_full    text;
+    v_phone   text;
+begin
+    if v_actor is null then
+        raise exception 'apply_for_org() needs a signed-in caller';
+    end if;
+
+    if v_name is null then
+        raise exception 'A business needs a name';
+    end if;
+
+    v_problem := org_slug_problem(v_slug);
+    if v_problem is not null then
+        raise exception '%', v_problem;
+    end if;
+
+    -- Checked now as well as at approval. Telling somebody their address is
+    -- taken while they are filling the form in is worth far more than telling
+    -- them a week later.
+    if exists (select 1 from orgs where slug = v_slug) then
+        raise exception 'That address is already taken.';
+    end if;
+
+    -- Who this is, as the platform will see it in the queue.
+    select full_name, phone into v_full, v_phone from profiles where id = v_actor;
+
+    insert into org_applications (
+        applicant_id, name, slug, profile, currency,
+        contact_name, contact_phone, contact_email, description
+    )
+    values (
+        v_actor, v_name, v_slug,
+        coalesce(nullif(btrim(coalesce(p_profile, '')), ''), 'generic'),
+        coalesce(nullif(btrim(coalesce(p_currency, '')), ''), 'XOF'),
+        v_full,
+        coalesce(nullif(btrim(coalesce(p_phone, '')), ''), v_phone),
+        nullif(btrim(coalesce(p_email, '')), ''),
+        nullif(btrim(coalesce(p_description, '')), '')
+    )
+    -- Applying twice while waiting is a person pressing a button again, not a
+    -- second business. The partial unique index makes it one row; this makes
+    -- it one row without an error.
+    on conflict (applicant_id) where status = 'pending'
+    do update set
+        name        = excluded.name,
+        slug        = excluded.slug,
+        profile     = excluded.profile,
+        currency    = excluded.currency,
+        description = excluded.description,
+        created_at  = now()
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- Approving one: the business is created and the applicant owns it, in one
+-- transaction. Nothing here trusts the application's own status column —
+-- `for update` takes the row so two admins pressing approve at the same
+-- moment cannot make two businesses.
+create or replace function approve_org_application(
+    p_application_id uuid,
+    p_note           text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_app   org_applications%rowtype;
+    v_org   uuid;
+begin
+    if v_actor is null then
+        raise exception 'approve_org_application() needs a signed-in caller';
+    end if;
+
+    if not exists (select 1 from profiles where id = v_actor and is_platform_admin) then
+        raise exception 'Only a platform admin can approve a business';
+    end if;
+
+    select * into v_app from org_applications
+    where id = p_application_id for update;
+    if not found then
+        raise exception 'No such application';
+    end if;
+    if v_app.status <> 'pending' then
+        raise exception 'This application has already been %', v_app.status;
+    end if;
+
+    if exists (select 1 from orgs where slug = v_app.slug) then
+        raise exception
+            'The address % was taken while this was waiting. Ask them for another.',
+            v_app.slug;
+    end if;
+
+    insert into orgs (name, slug, profile, default_currency)
+    values (v_app.name, v_app.slug, v_app.profile, v_app.currency)
+    returning id into v_org;
+
+    -- The applicant owns it. This is the whole point of approving rather than
+    -- creating: the business exists because they asked for it, so it is
+    -- theirs and not the reviewer's.
+    insert into memberships (org_id, user_id, role, scope_kind, scope_id)
+    values (v_org, v_app.applicant_id, 'owner', 'org', v_org)
+    on conflict do nothing;
+
+    -- The same starter chart create_org() lays down, chosen by profile.
+    if v_app.profile = 'church' then
+        perform seed_church_accounts(v_org);
+    elsif v_app.profile = 'retail' then
+        perform seed_retail_accounts(v_org);
+    elsif v_app.profile = 'farm' then
+        perform seed_farm_accounts(v_org);
+    else
+        insert into accounts (org_id, code, name, type) values
+            (v_org, '1000', 'Cash on Hand',      'asset'),
+            (v_org, '1010', 'Bank Account',      'asset'),
+            (v_org, '1020', 'Mobile Money',      'asset'),
+            (v_org, '4000', 'Sales',             'income'),
+            (v_org, '5000', 'Purchases',         'expense'),
+            (v_org, '5010', 'Operating Expenses','expense')
+        on conflict (org_id, code) do nothing;
+    end if;
+
+    update org_applications set
+        status        = 'approved',
+        decision_note = nullif(btrim(coalesce(p_note, '')), ''),
+        reviewed_by   = v_actor,
+        reviewed_at   = now(),
+        org_id        = v_org
+    where id = p_application_id;
+
+    return v_org;
+end;
+$$;
+
+create or replace function reject_org_application(
+    p_application_id uuid,
+    p_note           text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+begin
+    if v_actor is null then
+        raise exception 'reject_org_application() needs a signed-in caller';
+    end if;
+
+    if not exists (select 1 from profiles where id = v_actor and is_platform_admin) then
+        raise exception 'Only a platform admin can decide an application';
+    end if;
+
+    -- A rejection with no reason is one the applicant cannot act on, so they
+    -- apply again with the same details and the queue grows.
+    if nullif(btrim(coalesce(p_note, '')), '') is null then
+        raise exception 'Say why, so they can fix it and apply again';
+    end if;
+
+    update org_applications set
+        status        = 'rejected',
+        decision_note = btrim(p_note),
+        reviewed_by   = v_actor,
+        reviewed_at   = now()
+    where id = p_application_id and status = 'pending';
+
+    if not found then
+        raise exception 'No pending application with that id';
+    end if;
+
+    return p_application_id;
+end;
+$$;
+
+-- The queue, and one person's own application. Security definer with an
+-- explicit check, because a summary observer of some unrelated business must
+-- not be able to read the platform's pipeline through a policy gap.
+create or replace function pending_org_applications()
+returns table (
+    id            uuid,
+    applicant_id  uuid,
+    applicant     text,
+    name          text,
+    slug          text,
+    profile       text,
+    currency      text,
+    contact_phone text,
+    contact_email text,
+    description   text,
+    created_at    timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    -- `pr.id`, not `id`: this function has an OUT column called `id`, and an
+    -- unqualified one inside the body is the variable rather than the column.
+    -- Postgres says so — "It could refer to either a PL/pgSQL variable or a
+    -- table column" — but only at call time, so an unqualified reference here
+    -- ships and fails in front of somebody.
+    if not exists (
+        select 1 from profiles pr where pr.id = auth.uid() and pr.is_platform_admin
+    ) then
+        raise exception 'Only a platform admin can read the applications';
+    end if;
+
+    return query
+    select a.id, a.applicant_id, coalesce(a.contact_name, p.full_name),
+           a.name, a.slug, a.profile, a.currency,
+           a.contact_phone, a.contact_email, a.description, a.created_at
+    from org_applications a
+    left join profiles p on p.id = a.applicant_id
+    where a.status = 'pending'
+    order by a.created_at;
+end;
+$$;
+
+-- What the applicant sees while they wait, and after. Their own row only.
+--
+-- Security definer, and not for reach: the `authenticated` role has no rights
+-- in the auth schema, so an invoker function calling `auth.uid()` in its own
+-- body fails with "permission denied for schema auth". (A policy may do it —
+-- the quals are evaluated differently — which is why the select policy above
+-- can.) The filter is the same one the policy makes, so definer grants
+-- nothing the policy would not.
+create or replace function my_org_application()
+returns table (
+    id            uuid,
+    name          text,
+    slug          text,
+    profile       text,
+    status        text,
+    decision_note text,
+    created_at    timestamptz,
+    reviewed_at   timestamptz,
+    org_id        uuid
+)
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select a.id, a.name, a.slug, a.profile, a.status, a.decision_note,
+           a.created_at, a.reviewed_at, a.org_id
+    from org_applications a
+    where a.applicant_id = auth.uid()
+    order by a.created_at desc
+    limit 1;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. GRANTS
+-- ------------------------------------------------------------
+revoke execute on function save_my_profile(text, text, text, date, text, text) from public;
+revoke execute on function invite_employee(uuid, role_name, text, text, text, text, int, text) from public;
+revoke execute on function apply_for_org(text, text, text, text, text, text, text) from public;
+revoke execute on function approve_org_application(uuid, text) from public;
+revoke execute on function reject_org_application(uuid, text) from public;
+revoke execute on function pending_org_applications() from public;
+
+-- `authenticated` is a Supabase role and does not exist on a bare Postgres,
+-- which is what CI starts from. Roles are cluster-wide, so a developer whose
+-- cluster has ever run a suite already has it and cannot reproduce the
+-- failure by making a fresh database — which is how 013 shipped this wrong.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function save_my_profile(text, text, text, date, text, text) to authenticated;
+        grant execute on function profile_is_complete(uuid) to authenticated;
+        grant execute on function invite_employee(uuid, role_name, text, text, text, text, int, text) to authenticated;
+        grant execute on function apply_for_org(text, text, text, text, text, text, text) to authenticated;
+        grant execute on function approve_org_application(uuid, text) to authenticated;
+        grant execute on function reject_org_application(uuid, text) to authenticated;
+        grant execute on function pending_org_applications() to authenticated;
+        grant execute on function my_org_application() to authenticated;
+        grant select, insert on org_applications to authenticated;
+        grant update on org_applications to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 018_employment.sql
+-- ============================================================
+-- ============================================================
+-- 018_employment.sql — staff management that a church and a farm can use too.
+--
+-- 012 built a payroll for a shop: a name, a rate, hours worked, money paid.
+-- That is the right core and it is not staff management. Four things were
+-- missing that any business with more than two people needs, and none of them
+-- are shop things:
+--
+--   1. **Where somebody works.** A church with three campuses and a farm with
+--      two sites both need to know which one a person belongs to. The scope
+--      machinery for this has existed since 004 — entities and departments —
+--      and `employees` did not use it.
+--   2. **What kind of engagement it is.** 012 has `permanent | casual`, which
+--      is a pay model rather than a contract. A volunteer at a church is
+--      neither, and recording them as a casual on zero francs an hour makes
+--      the payroll say something untrue about what the church owes.
+--   3. **Why somebody left.** `ended_on` said when and never why, so a person
+--      who resigned and a person who was dismissed read the same a year
+--      later, which is exactly when it matters.
+--   4. **The link to their account.** `user_id` existed and nothing ever set
+--      it, so the person on the payroll and the person holding the phone were
+--      two unconnected records with the same name.
+--
+-- One decision worth stating: **the directory is not the permission system.**
+-- Adding somebody as an employee still grants nothing — that is `memberships`
+-- and an invitation code, as it has always been — and linking an employee to
+-- an account does not change what the account may do. A payroll that could
+-- hand out access would make every bookkeeper an administrator.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. THE ENGAGEMENT
+-- ------------------------------------------------------------
+
+alter table employees add column if not exists entity_id     uuid;
+alter table employees add column if not exists department_id uuid;
+alter table employees add column if not exists employment    text;
+alter table employees add column if not exists end_reason    text;
+alter table employees add column if not exists national_id   text;
+alter table employees add column if not exists emergency_contact text;
+alter table employees add column if not exists emergency_phone   text;
+alter table employees add column if not exists notes         text;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'employees_entity_fkey') then
+        alter table employees add constraint employees_entity_fkey
+            foreign key (entity_id) references entities(id) on delete set null;
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'employees_department_fkey') then
+        alter table employees add constraint employees_department_fkey
+            foreign key (department_id) references departments(id) on delete set null;
+    end if;
+
+    -- The kinds of engagement a business here actually has. `volunteer` is
+    -- the one that matters most for a church: somebody who works and is not
+    -- paid is not a casual on zero francs, and the payroll must not imply a
+    -- debt to them.
+    if not exists (select 1 from pg_constraint where conname = 'employees_employment_kind') then
+        alter table employees add constraint employees_employment_kind
+            check (employment is null or employment in
+                ('permanent', 'fixed_term', 'daily', 'apprentice', 'volunteer'));
+    end if;
+
+    if not exists (select 1 from pg_constraint where conname = 'employees_end_reason_kind') then
+        alter table employees add constraint employees_end_reason_kind
+            check (end_reason is null or end_reason in
+                ('resigned', 'dismissed', 'contract_ended', 'retired', 'other'));
+    end if;
+end $$;
+
+comment on column employees.employment is
+    'The engagement: permanent, fixed_term, daily, apprentice, volunteer. Distinct from `kind`, which is how they are paid.';
+comment on column employees.end_reason is
+    'Why they left. ended_on alone makes a resignation and a dismissal read identically a year later.';
+comment on column employees.national_id is
+    'CNIB or passport number. Needed on a contract; nullable because most casual work here has no paperwork.';
+
+-- Everything already recorded is a paid engagement of one of the two 012
+-- shapes, so it can be filled in rather than left null.
+update employees
+   set employment = case when kind = 'permanent' then 'permanent' else 'daily' end
+ where employment is null;
+
+create index if not exists employees_by_entity
+    on employees (org_id, entity_id) where entity_id is not null;
+
+-- One account is one person. Without this, two employee rows can point at the
+-- same profile and "who am I on this payroll" has two answers.
+create unique index if not exists employees_one_per_account
+    on employees (org_id, user_id) where user_id is not null;
+
+-- ------------------------------------------------------------
+-- 2. HIRING, MOVING, AND LEAVING
+-- ------------------------------------------------------------
+
+-- Everything about somebody that an admin may change. Null leaves a field
+-- alone: a screen that saves one field must not blank the other ten.
+create or replace function update_employee(
+    p_employee_id  uuid,
+    p_full_name    text default null,
+    p_phone        text default null,
+    p_role_title   text default null,
+    p_employment   text default null,
+    p_kind         text default null,
+    p_salary       numeric default null,
+    p_hourly_rate  numeric default null,
+    p_entity_id    uuid default null,
+    p_department_id uuid default null,
+    p_national_id  text default null,
+    p_emergency_contact text default null,
+    p_emergency_phone   text default null,
+    p_notes        text default null,
+    p_started_on   date default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor  uuid := auth.uid();
+    v_org_id uuid;
+begin
+    if v_actor is null then
+        raise exception 'update_employee() needs a signed-in caller';
+    end if;
+
+    select org_id into v_org_id from employees where id = p_employee_id;
+    if not found then
+        raise exception 'No such employee';
+    end if;
+
+    -- Org admin, like everything else about wages: what a colleague earns is
+    -- the most sensitive number in a small business.
+    if not is_org_admin(v_org_id) then
+        raise exception 'You cannot change staff records in this business';
+    end if;
+
+    -- A site or a department belonging to another business would put somebody
+    -- on a payroll in one org and a location in another.
+    if p_entity_id is not null and not exists (
+        select 1 from entities where id = p_entity_id and org_id = v_org_id
+    ) then
+        raise exception 'That site belongs to another business';
+    end if;
+
+    if p_department_id is not null and not exists (
+        select 1 from departments d
+        join entities e on e.id = d.entity_id
+        where d.id = p_department_id and e.org_id = v_org_id
+    ) then
+        raise exception 'That department belongs to another business';
+    end if;
+
+    update employees set
+        full_name     = coalesce(nullif(btrim(coalesce(p_full_name, '')), ''), full_name),
+        phone         = coalesce(nullif(btrim(coalesce(p_phone, '')), ''), phone),
+        role_title    = coalesce(nullif(btrim(coalesce(p_role_title, '')), ''), role_title),
+        employment    = coalesce(nullif(btrim(coalesce(p_employment, '')), ''), employment),
+        kind          = coalesce(nullif(btrim(coalesce(p_kind, '')), ''), kind),
+        salary        = coalesce(p_salary, salary),
+        hourly_rate   = coalesce(p_hourly_rate, hourly_rate),
+        entity_id     = coalesce(p_entity_id, entity_id),
+        department_id = coalesce(p_department_id, department_id),
+        national_id   = coalesce(nullif(btrim(coalesce(p_national_id, '')), ''), national_id),
+        emergency_contact = coalesce(nullif(btrim(coalesce(p_emergency_contact, '')), ''), emergency_contact),
+        emergency_phone   = coalesce(nullif(btrim(coalesce(p_emergency_phone, '')), ''), emergency_phone),
+        notes         = coalesce(nullif(btrim(coalesce(p_notes, '')), ''), notes),
+        started_on    = coalesce(p_started_on, started_on)
+    where id = p_employee_id;
+
+    return p_employee_id;
+end;
+$$;
+
+-- Somebody leaving. Not a deletion: they worked here, they were paid, and
+-- both of those are history. `unpaid_shifts` still owes them what it owed
+-- them, which is the point of ending an engagement rather than removing it.
+create or replace function end_employment(
+    p_employee_id uuid,
+    p_reason      text,
+    p_ended_on    date default current_date,
+    p_note        text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor  uuid := auth.uid();
+    v_org_id uuid;
+    v_owed   numeric;
+begin
+    if v_actor is null then
+        raise exception 'end_employment() needs a signed-in caller';
+    end if;
+
+    select org_id into v_org_id from employees where id = p_employee_id;
+    if not found then
+        raise exception 'No such employee';
+    end if;
+
+    if not is_org_admin(v_org_id) then
+        raise exception 'You cannot change staff records in this business';
+    end if;
+
+    if p_reason is null or p_reason not in
+       ('resigned', 'dismissed', 'contract_ended', 'retired', 'other') then
+        raise exception 'Say why they left: resigned, dismissed, contract_ended, retired or other';
+    end if;
+
+    -- Refused while money is owed, and this is the assertion that earns the
+    -- function. Marking somebody inactive takes them off the payroll screen,
+    -- and unpaid hours that vanish from the screen are unpaid hours nobody
+    -- pays. Pay them, then close it.
+    select coalesce(sum(owed), 0) into v_owed
+    from unpaid_shifts(v_org_id) where employee_id = p_employee_id;
+
+    if v_owed > 0 then
+        raise exception
+            'Pay what is owed first: % remains unpaid', v_owed;
+    end if;
+
+    update employees set
+        ended_on   = coalesce(p_ended_on, current_date),
+        end_reason = p_reason,
+        is_active  = false,
+        notes      = coalesce(nullif(btrim(coalesce(p_note, '')), ''), notes)
+    where id = p_employee_id;
+
+    return p_employee_id;
+end;
+$$;
+
+-- Connecting somebody on the payroll to the account they sign in with.
+--
+-- Deliberately one-directional and deliberately grants nothing: this says
+-- "the Awa on the payroll is the Awa holding this phone", and says nothing
+-- about what she may do. Access is `memberships`, and it comes from an
+-- invitation code as it always has.
+create or replace function link_employee_account(
+    p_employee_id uuid,
+    p_user_id     uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor  uuid := auth.uid();
+    v_org_id uuid;
+begin
+    if v_actor is null then
+        raise exception 'link_employee_account() needs a signed-in caller';
+    end if;
+
+    select org_id into v_org_id from employees where id = p_employee_id;
+    if not found then
+        raise exception 'No such employee';
+    end if;
+
+    if not is_org_admin(v_org_id) then
+        raise exception 'You cannot change staff records in this business';
+    end if;
+
+    -- Only somebody who is already a member. Linking an arbitrary account
+    -- would let an admin attach a stranger's profile to their payroll and
+    -- read their name and number out of it.
+    if p_user_id is not null and not exists (
+        select 1 from memberships where org_id = v_org_id and user_id = p_user_id
+    ) then
+        raise exception 'That person is not a member of this business';
+    end if;
+
+    update employees set user_id = p_user_id where id = p_employee_id;
+    return p_employee_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 3. THE DIRECTORY
+-- ------------------------------------------------------------
+-- One read for the staff screen: who is here, where they work, what they are
+-- owed, and whether they hold an account.
+--
+-- Security definer with an explicit admin check, matching 012's policies:
+-- reading a payroll needs an org admin, not mere membership.
+create or replace function staff_directory(
+    p_org_id      uuid,
+    p_include_past boolean default false
+)
+returns table (
+    id            uuid,
+    full_name     text,
+    phone         text,
+    role_title    text,
+    employment    text,
+    kind          text,
+    salary        numeric,
+    hourly_rate   numeric,
+    entity_id     uuid,
+    entity_name   text,
+    department_id uuid,
+    department_name text,
+    started_on    date,
+    ended_on      date,
+    end_reason    text,
+    is_active     boolean,
+    user_id       uuid,
+    account_name  text,
+    unpaid_hours  numeric,
+    owed          numeric
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not is_org_admin(p_org_id) then
+        raise exception 'You cannot read the staff of this business';
+    end if;
+
+    return query
+    select e.id, e.full_name, e.phone, e.role_title, e.employment, e.kind,
+           e.salary, e.hourly_rate,
+           e.entity_id, en.name, e.department_id, d.name,
+           e.started_on, e.ended_on, e.end_reason, e.is_active,
+           e.user_id, pr.full_name,
+           coalesce(u.hours, 0), coalesce(u.owed, 0)
+    from employees e
+    left join entities    en on en.id = e.entity_id
+    left join departments d  on d.id  = e.department_id
+    left join profiles    pr on pr.id = e.user_id
+    left join (
+        select s.employee_id,
+               sum(s.hours) as hours,
+               sum(s.hours * emp.hourly_rate) as owed
+        from shifts s
+        join employees emp on emp.id = s.employee_id
+        where s.org_id = p_org_id and s.payment_id is null
+        group by s.employee_id
+    ) u on u.employee_id = e.id
+    where e.org_id = p_org_id
+      and (coalesce(p_include_past, false) or e.is_active)
+    order by e.is_active desc, e.full_name;
+end;
+$$;
+
+-- What the business owes and pays, per month, for a payroll register — the
+-- one report an accountant asks for and 012 had no answer to.
+create or replace function payroll_summary(
+    p_org_id uuid,
+    p_from   date default null,
+    p_to     date default null
+)
+returns table (
+    employee_id  uuid,
+    full_name    text,
+    employment   text,
+    payments     int,
+    paid         numeric,
+    hours        numeric
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not is_org_admin(p_org_id) then
+        raise exception 'You cannot read the payroll of this business';
+    end if;
+
+    return query
+    select e.id, e.full_name, e.employment,
+           count(sp.id)::int,
+           coalesce(sum(sp.amount), 0),
+           coalesce((
+               select sum(s.hours) from shifts s
+               where s.employee_id = e.id
+                 and (p_from is null or s.worked_on >= p_from)
+                 and (p_to   is null or s.worked_on <= p_to)
+           ), 0)
+    from employees e
+    left join staff_payments sp
+           on sp.employee_id = e.id
+          and (p_from is null or sp.paid_on >= p_from)
+          and (p_to   is null or sp.paid_on <= p_to)
+    where e.org_id = p_org_id
+    group by e.id, e.full_name, e.employment
+    order by e.full_name;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. GRANTS
+-- ------------------------------------------------------------
+revoke execute on function update_employee(uuid, text, text, text, text, text, numeric, numeric, uuid, uuid, text, text, text, text, date) from public;
+revoke execute on function end_employment(uuid, text, date, text) from public;
+revoke execute on function link_employee_account(uuid, uuid) from public;
+revoke execute on function staff_directory(uuid, boolean) from public;
+revoke execute on function payroll_summary(uuid, date, date) from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function update_employee(uuid, text, text, text, text, text, numeric, numeric, uuid, uuid, text, text, text, text, date) to authenticated;
+        grant execute on function end_employment(uuid, text, date, text) to authenticated;
+        grant execute on function link_employee_account(uuid, uuid) to authenticated;
+        grant execute on function staff_directory(uuid, boolean) to authenticated;
+        grant execute on function payroll_summary(uuid, date, date) to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 019_farm_general.sql
+-- ============================================================
+-- ============================================================
+-- 019_farm_general.sql — a farm that is not only chickens.
+--
+-- 009 built one farm: Ignace's, which is poultry. `flocks` counts birds,
+-- `egg_production` counts eggs, and the home screen leads with both. Every
+-- other farm in the country is at best half-served — a herd of goats has no
+-- table, a field of onions has no table, and a farmer with both is expected
+-- to record their harvest as "other income" and their animals as a flock with
+-- a batch code.
+--
+-- What is added, and what is deliberately not.
+--
+-- **Herds, not just flocks.** `herds` is what `flocks` should have been: a
+-- group of animals of any species, counted, with the same arrival and closing
+-- shape. `flocks` is not touched and not migrated — Ignace's history is in
+-- it, `flock_status()` reads it, and rewriting a working module to make a
+-- name tidier is how live data gets lost. A poultry farm keeps using flocks;
+-- everyone else uses herds; the home screen shows whichever a farm has.
+--
+-- **Crop cycles, because a field is a period and not a thing.** The same plot
+-- grows onions from October and maize from June, and asking what a plot
+-- produced without asking when is a question with no answer. So the unit of
+-- record is one planting: a crop, a plot, a date in, a date expected out.
+--
+-- **Harvests, weighed and then sold separately.** Bringing a crop in and
+-- selling it are two events that happen days apart, and a module that
+-- conflates them either books income the farmer has not received or loses the
+-- harvest entirely when it is eaten at home. So `harvests` records what came
+-- off the field, and selling is `record_farm_sale()` from 009 as it already
+-- was.
+--
+-- **Animal events, reusing the shape that works.** 009's `flock_events`
+-- handles mortality, weight and vaccination for birds. `herd_events` is the
+-- same three things for anything else, plus births — which poultry does not
+-- have and every other animal does.
+--
+-- What is not here: feed rations per species, milk yields per animal,
+-- veterinary schedules, and anything that needs a farmer to tell us how they
+-- actually work. Those are the next conversation, not a guess.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. ANIMALS OF ANY KIND
+-- ------------------------------------------------------------
+
+create table if not exists herds (
+    id          uuid primary key default gen_random_uuid(),
+    org_id      uuid not null references orgs(id) on delete cascade,
+    entity_id   uuid references entities(id) on delete set null,
+
+    -- Free text, on purpose. A list of species compiled into this file is a
+    -- list that is wrong for the first farmer with guinea fowl, and the same
+    -- argument that opened up account names in 007 applies here.
+    species     text not null,
+    label       text not null,
+    breed       text,
+
+    head_count  int not null check (head_count >= 0),
+    arrived_on  date not null default current_date,
+    closed_on   date,
+
+    -- What this group is for. Drives nothing in the schema and is worth
+    -- recording anyway: a dairy herd and a herd being fattened for Tabaski
+    -- are managed differently and the farmer knows which is which.
+    purpose     text,
+
+    created_at  timestamptz not null default now(),
+    created_by  uuid references profiles(id),
+    unique (org_id, label)
+);
+
+comment on table herds is
+    'A group of animals of any species. `flocks` (009) is the poultry-specific ancestor and is left alone: Ignace''s history is in it.';
+
+create index if not exists herds_open on herds (org_id) where closed_on is null;
+
+create table if not exists herd_events (
+    id          uuid primary key default gen_random_uuid(),
+    org_id      uuid not null references orgs(id) on delete cascade,
+    herd_id     uuid not null references herds(id) on delete cascade,
+
+    -- birth is the one 009 has no equivalent for: a flock arrives and never
+    -- grows by itself, and a herd does.
+    kind        text not null check (kind in
+                ('mortality', 'birth', 'weight', 'vaccination', 'treatment', 'sold')),
+    occurred_on date not null default current_date,
+
+    -- Head for mortality, birth and sold; kilograms for a weight sample;
+    -- ignored for a vaccination.
+    quantity    numeric(14,3) not null default 0 check (quantity >= 0),
+    note        text,
+
+    created_at  timestamptz not null default now(),
+    created_by  uuid references profiles(id),
+    device_id   text,
+    client_uuid uuid
+);
+
+create unique index if not exists herd_events_by_client_uuid
+    on herd_events (org_id, client_uuid) where client_uuid is not null;
+
+create index if not exists herd_events_by_date
+    on herd_events (org_id, occurred_on desc);
+
+-- ------------------------------------------------------------
+-- 2. WHAT GROWS IN THE GROUND
+-- ------------------------------------------------------------
+
+create table if not exists plots (
+    id         uuid primary key default gen_random_uuid(),
+    org_id     uuid not null references orgs(id) on delete cascade,
+    entity_id  uuid references entities(id) on delete set null,
+    name       text not null,
+    area       numeric(12,3),
+    -- 'ha' | 'm2' — recorded rather than assumed, because a market gardener
+    -- thinks in square metres and a maize farmer in hectares.
+    area_unit  text not null default 'ha',
+    note       text,
+    created_at timestamptz not null default now(),
+    created_by uuid references profiles(id),
+    unique (org_id, name)
+);
+
+-- One planting. The unit of record is a period on a plot, not the plot
+-- itself: the same field grows onions from October and maize from June, and
+-- "what did this field produce" is unanswerable without a when.
+create table if not exists crop_cycles (
+    id            uuid primary key default gen_random_uuid(),
+    org_id        uuid not null references orgs(id) on delete cascade,
+    plot_id       uuid references plots(id) on delete set null,
+
+    crop          text not null,
+    variety       text,
+    planted_on    date not null default current_date,
+    expected_on   date,
+    closed_on     date,
+
+    -- What the farmer hopes for, in the unit they will actually harvest in.
+    expected_yield numeric(14,3),
+    unit          text not null default 'kg',
+
+    note          text,
+    created_at    timestamptz not null default now(),
+    created_by    uuid references profiles(id)
+);
+
+create index if not exists crop_cycles_open
+    on crop_cycles (org_id, expected_on) where closed_on is null;
+
+-- What actually came off the field. Separate from selling it, which happens
+-- days later and sometimes never — a sack eaten at home is still a harvest,
+-- and a module that only counts what was sold cannot tell a farmer their
+-- yield.
+create table if not exists harvests (
+    id            uuid primary key default gen_random_uuid(),
+    org_id        uuid not null references orgs(id) on delete cascade,
+    crop_cycle_id uuid references crop_cycles(id) on delete set null,
+
+    harvested_on  date not null default current_date,
+    quantity      numeric(14,3) not null check (quantity > 0),
+    unit          text not null default 'kg',
+    -- 'first' | 'second' | 'damaged' — the same grading idea as eggs, and for
+    -- the same reason: what is sold at full price and what is not.
+    grade         text not null default 'first',
+    note          text,
+
+    created_at    timestamptz not null default now(),
+    created_by    uuid references profiles(id),
+    device_id     text,
+    client_uuid   uuid
+);
+
+create unique index if not exists harvests_by_client_uuid
+    on harvests (org_id, client_uuid) where client_uuid is not null;
+
+create index if not exists harvests_by_date
+    on harvests (org_id, harvested_on desc);
+
+-- ------------------------------------------------------------
+-- 3. RECORDING
+-- ------------------------------------------------------------
+-- All idempotent by client_uuid, like every other field-recorded thing in
+-- this project: a phone at the far end of a field retries.
+
+create or replace function open_herd(
+    p_org_id     uuid,
+    p_species    text,
+    p_label      text,
+    p_head_count int,
+    p_breed      text default null,
+    p_purpose    text default null,
+    p_entity_id  uuid default null,
+    p_arrived_on date default current_date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_id    uuid;
+    v_label text := nullif(btrim(coalesce(p_label, '')), '');
+begin
+    if v_actor is null then
+        raise exception 'open_herd() needs a signed-in caller';
+    end if;
+    if not can_write_org(p_org_id) then
+        raise exception 'You cannot record for this business';
+    end if;
+    if v_label is null then
+        raise exception 'A group of animals needs a name';
+    end if;
+    if p_head_count is null or p_head_count <= 0 then
+        raise exception 'How many animals?';
+    end if;
+
+    -- Same rule as a flock's batch code: opening a group is one of the two
+    -- things on a farm that needs the server, because two phones inventing
+    -- the same name would split a season's figures in half.
+    select id into v_id from herds
+    where org_id = p_org_id and lower(btrim(label)) = lower(v_label);
+    if found then
+        raise exception 'A group called % already exists', v_label;
+    end if;
+
+    insert into herds (org_id, entity_id, species, label, breed, head_count,
+                       purpose, arrived_on, created_by)
+    values (p_org_id, p_entity_id,
+            coalesce(nullif(btrim(coalesce(p_species, '')), ''), 'autre'),
+            v_label,
+            nullif(btrim(coalesce(p_breed, '')), ''),
+            p_head_count,
+            nullif(btrim(coalesce(p_purpose, '')), ''),
+            coalesce(p_arrived_on, current_date), v_actor)
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- A death, a birth, a weighing, a vaccination. The head count moves for the
+-- first two and stays put for the rest.
+create or replace function record_herd_event(
+    p_org_id      uuid,
+    p_herd_id     uuid,
+    p_kind        text,
+    p_quantity    numeric default 0,
+    p_occurred_on date default current_date,
+    p_note        text default null,
+    p_client_uuid uuid default null,
+    p_device_id   text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor    uuid := auth.uid();
+    v_org      uuid;
+    v_head     int;
+    v_existing uuid;
+    v_id       uuid;
+begin
+    if v_actor is null then
+        raise exception 'record_herd_event() needs a signed-in caller';
+    end if;
+    if not can_write_org(p_org_id) then
+        raise exception 'You cannot record for this business';
+    end if;
+
+    if p_kind not in ('mortality', 'birth', 'weight', 'vaccination',
+                      'treatment', 'sold') then
+        raise exception 'Unknown event: %', p_kind;
+    end if;
+
+    if p_client_uuid is not null then
+        select id into v_existing from herd_events
+        where org_id = p_org_id and client_uuid = p_client_uuid;
+        if found then
+            return v_existing;
+        end if;
+    end if;
+
+    select org_id, head_count into v_org, v_head from herds where id = p_herd_id;
+    if v_org is null or v_org <> p_org_id then
+        raise exception 'No such group in this business';
+    end if;
+
+    -- More animals dead or sold than there are is a typo, and left in it
+    -- makes a herd's count negative and every figure after it wrong.
+    if p_kind in ('mortality', 'sold') and coalesce(p_quantity, 0) > v_head then
+        raise exception
+            'There are only % animals in this group', v_head;
+    end if;
+
+    insert into herd_events (org_id, herd_id, kind, occurred_on, quantity,
+                             note, created_by, device_id, client_uuid)
+    values (p_org_id, p_herd_id, p_kind,
+            coalesce(p_occurred_on, current_date),
+            greatest(coalesce(p_quantity, 0), 0),
+            nullif(btrim(coalesce(p_note, '')), ''),
+            v_actor, p_device_id, p_client_uuid)
+    returning id into v_id;
+
+    if p_kind in ('mortality', 'sold') then
+        update herds set head_count = head_count - coalesce(p_quantity, 0)
+        where id = p_herd_id;
+    elsif p_kind = 'birth' then
+        update herds set head_count = head_count + coalesce(p_quantity, 0)
+        where id = p_herd_id;
+    end if;
+
+    return v_id;
+end;
+$$;
+
+create or replace function open_crop_cycle(
+    p_org_id      uuid,
+    p_crop        text,
+    p_plot_name   text default null,
+    p_variety     text default null,
+    p_planted_on  date default current_date,
+    p_expected_on date default null,
+    p_expected_yield numeric default null,
+    p_unit        text default 'kg',
+    p_entity_id   uuid default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_crop  text := nullif(btrim(coalesce(p_crop, '')), '');
+    v_plot  text := nullif(btrim(coalesce(p_plot_name, '')), '');
+    v_plot_id uuid;
+    v_id    uuid;
+begin
+    if v_actor is null then
+        raise exception 'open_crop_cycle() needs a signed-in caller';
+    end if;
+    if not can_write_org(p_org_id) then
+        raise exception 'You cannot record for this business';
+    end if;
+    if v_crop is null then
+        raise exception 'What is being planted?';
+    end if;
+
+    -- The plot is found or made from its name, the same bargain
+    -- `ensure_account()` makes: a farmer types "Bas-fond 2" and gets the same
+    -- plot every time without having had to define it first.
+    if v_plot is not null then
+        select id into v_plot_id from plots
+        where org_id = p_org_id and lower(btrim(name)) = lower(v_plot);
+        if v_plot_id is null then
+            insert into plots (org_id, entity_id, name, created_by)
+            values (p_org_id, p_entity_id, v_plot, v_actor)
+            returning id into v_plot_id;
+        end if;
+    end if;
+
+    insert into crop_cycles (org_id, plot_id, crop, variety, planted_on,
+                             expected_on, expected_yield, unit, created_by)
+    values (p_org_id, v_plot_id, v_crop,
+            nullif(btrim(coalesce(p_variety, '')), ''),
+            coalesce(p_planted_on, current_date),
+            p_expected_on, p_expected_yield,
+            coalesce(nullif(btrim(coalesce(p_unit, '')), ''), 'kg'),
+            v_actor)
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+create or replace function record_harvest(
+    p_org_id      uuid,
+    p_crop_cycle_id uuid,
+    p_quantity    numeric,
+    p_unit        text default null,
+    p_grade       text default 'first',
+    p_harvested_on date default current_date,
+    p_note        text default null,
+    p_client_uuid uuid default null,
+    p_device_id   text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor    uuid := auth.uid();
+    v_org      uuid;
+    v_unit     text;
+    v_existing uuid;
+    v_id       uuid;
+begin
+    if v_actor is null then
+        raise exception 'record_harvest() needs a signed-in caller';
+    end if;
+    if not can_write_org(p_org_id) then
+        raise exception 'You cannot record for this business';
+    end if;
+    if p_quantity is null or p_quantity <= 0 then
+        raise exception 'How much was harvested?';
+    end if;
+
+    if p_client_uuid is not null then
+        select id into v_existing from harvests
+        where org_id = p_org_id and client_uuid = p_client_uuid;
+        if found then
+            return v_existing;
+        end if;
+    end if;
+
+    select org_id, unit into v_org, v_unit from crop_cycles
+    where id = p_crop_cycle_id;
+    if v_org is null or v_org <> p_org_id then
+        raise exception 'No such planting in this business';
+    end if;
+
+    -- No ledger entry. Bringing a crop in is not earning money — it is earning
+    -- money later, or eating it — and booking income here would inflate the
+    -- income statement by every sack that never reached a market. Selling it
+    -- goes through record_farm_sale() as it already did.
+    insert into harvests (org_id, crop_cycle_id, harvested_on, quantity, unit,
+                          grade, note, created_by, device_id, client_uuid)
+    values (p_org_id, p_crop_cycle_id,
+            coalesce(p_harvested_on, current_date),
+            p_quantity,
+            coalesce(nullif(btrim(coalesce(p_unit, '')), ''), v_unit, 'kg'),
+            coalesce(nullif(btrim(coalesce(p_grade, '')), ''), 'first'),
+            nullif(btrim(coalesce(p_note, '')), ''),
+            v_actor, p_device_id, p_client_uuid)
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. READING IT BACK
+-- ------------------------------------------------------------
+
+create or replace function herd_status(p_org_id uuid, p_include_closed boolean default false)
+returns table (
+    id          uuid,
+    species     text,
+    label       text,
+    breed       text,
+    purpose     text,
+    head_count  int,
+    arrived_on  date,
+    closed_on   date,
+    losses      numeric,
+    births      numeric,
+    last_event  date
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select h.id, h.species, h.label, h.breed, h.purpose, h.head_count,
+           h.arrived_on, h.closed_on,
+           coalesce((select sum(e.quantity) from herd_events e
+                     where e.herd_id = h.id and e.kind = 'mortality'), 0),
+           coalesce((select sum(e.quantity) from herd_events e
+                     where e.herd_id = h.id and e.kind = 'birth'), 0),
+           (select max(e.occurred_on) from herd_events e where e.herd_id = h.id)
+    from herds h
+    where h.org_id = p_org_id
+      and (coalesce(p_include_closed, false) or h.closed_on is null)
+    order by h.closed_on nulls first, h.label;
+$$;
+
+create or replace function crop_status(p_org_id uuid, p_include_closed boolean default false)
+returns table (
+    id             uuid,
+    crop           text,
+    variety        text,
+    plot_name      text,
+    planted_on     date,
+    expected_on    date,
+    closed_on      date,
+    expected_yield numeric,
+    unit           text,
+    harvested      numeric,
+    days_to_harvest int
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select c.id, c.crop, c.variety, p.name, c.planted_on, c.expected_on,
+           c.closed_on, c.expected_yield, c.unit,
+           coalesce((select sum(h.quantity) from harvests h
+                     where h.crop_cycle_id = c.id), 0),
+           case when c.expected_on is null then null
+                else (c.expected_on - current_date) end
+    from crop_cycles c
+    left join plots p on p.id = c.plot_id
+    where c.org_id = p_org_id
+      and (coalesce(p_include_closed, false) or c.closed_on is null)
+    order by c.closed_on nulls first, c.expected_on nulls last, c.crop;
+$$;
+
+-- What this farm is, as a farm rather than as a set of tables. The home
+-- screen asks this first and shows whichever sections have anything in them,
+-- so a poultry farm still opens on birds and eggs and a market gardener does
+-- not have to look at an empty flock panel.
+create or replace function farm_profile_summary(p_org_id uuid)
+returns table (
+    flocks        int,
+    birds         int,
+    herds         int,
+    animals       int,
+    crop_cycles   int,
+    plots         int,
+    eggs_today    int,
+    harvest_7days numeric
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select
+        (select count(*)::int from flocks f
+          where f.org_id = p_org_id and f.closed_on is null),
+        (select coalesce(sum(f.bird_count), 0)::int from flocks f
+          where f.org_id = p_org_id and f.closed_on is null),
+        (select count(*)::int from herds h
+          where h.org_id = p_org_id and h.closed_on is null),
+        (select coalesce(sum(h.head_count), 0)::int from herds h
+          where h.org_id = p_org_id and h.closed_on is null),
+        (select count(*)::int from crop_cycles c
+          where c.org_id = p_org_id and c.closed_on is null),
+        (select count(*)::int from plots p where p.org_id = p_org_id),
+        (select coalesce(sum(e.egg_count), 0)::int from egg_production e
+          where e.org_id = p_org_id and e.produced_on = current_date),
+        (select coalesce(sum(h.quantity), 0) from harvests h
+          where h.org_id = p_org_id
+            and h.harvested_on >= current_date - 7);
+$$;
+
+-- ------------------------------------------------------------
+-- 5. RLS
+-- ------------------------------------------------------------
+-- The same shape 009 gives its own tables: counts are readable to members,
+-- the events behind them need full visibility, and writing needs a
+-- non-observer.
+
+alter table herds        enable row level security;
+alter table herd_events  enable row level security;
+alter table plots        enable row level security;
+alter table crop_cycles  enable row level security;
+alter table harvests     enable row level security;
+
+drop policy if exists "herds readable within org" on herds;
+create policy "herds readable within org"
+on herds for select using (is_org_member(org_id));
+
+drop policy if exists "herds managed by non-observers" on herds;
+create policy "herds managed by non-observers"
+on herds for insert with check (can_write_org(org_id));
+
+drop policy if exists "herds amended by non-observers" on herds;
+create policy "herds amended by non-observers"
+on herds for update using (can_write_org(org_id)) with check (can_write_org(org_id));
+
+drop policy if exists "herd events readable with full visibility" on herd_events;
+create policy "herd events readable with full visibility"
+on herd_events for select using (has_full_visibility(org_id));
+
+drop policy if exists "herd events written by non-observers" on herd_events;
+create policy "herd events written by non-observers"
+on herd_events for insert with check (can_write_org(org_id));
+
+drop policy if exists "plots readable within org" on plots;
+create policy "plots readable within org"
+on plots for select using (is_org_member(org_id));
+
+drop policy if exists "plots managed by non-observers" on plots;
+create policy "plots managed by non-observers"
+on plots for insert with check (can_write_org(org_id));
+
+drop policy if exists "plots amended by non-observers" on plots;
+create policy "plots amended by non-observers"
+on plots for update using (can_write_org(org_id)) with check (can_write_org(org_id));
+
+drop policy if exists "crop cycles readable within org" on crop_cycles;
+create policy "crop cycles readable within org"
+on crop_cycles for select using (is_org_member(org_id));
+
+drop policy if exists "crop cycles managed by non-observers" on crop_cycles;
+create policy "crop cycles managed by non-observers"
+on crop_cycles for insert with check (can_write_org(org_id));
+
+drop policy if exists "crop cycles amended by non-observers" on crop_cycles;
+create policy "crop cycles amended by non-observers"
+on crop_cycles for update using (can_write_org(org_id)) with check (can_write_org(org_id));
+
+drop policy if exists "harvests readable with full visibility" on harvests;
+create policy "harvests readable with full visibility"
+on harvests for select using (has_full_visibility(org_id));
+
+drop policy if exists "harvests written by non-observers" on harvests;
+create policy "harvests written by non-observers"
+on harvests for insert with check (can_write_org(org_id));
+
+-- ------------------------------------------------------------
+-- 6. A FARM'S CHART, WIDENED
+-- ------------------------------------------------------------
+-- 009 seeds "Ventes d'œufs" and "Ventes de volailles" and stops. A farm with
+-- goats and onions has nowhere sensible to post either, so it posts to
+-- "Autres ventes" and the income statement says nothing useful.
+create or replace function seed_farm_accounts(p_org_id uuid)
+returns void
+language plpgsql
+as $$
+begin
+    insert into accounts (org_id, code, name, type) values
+        (p_org_id, '1000', 'Cash on Hand',        'asset'),
+        (p_org_id, '1010', 'Bank Account',        'asset'),
+        (p_org_id, '1020', 'Mobile Money',        'asset'),
+        (p_org_id, '1300', 'Créances clients',    'asset'),
+        (p_org_id, '4100', 'Ventes d''œufs',      'income'),
+        (p_org_id, '4110', 'Ventes de volailles', 'income'),
+        (p_org_id, '4130', 'Ventes de bétail',    'income'),
+        (p_org_id, '4140', 'Ventes de récoltes',  'income'),
+        (p_org_id, '4150', 'Ventes de lait',      'income'),
+        (p_org_id, '4120', 'Autres ventes',       'income'),
+        (p_org_id, '5100', 'Aliment',             'expense'),
+        (p_org_id, '5110', 'Vétérinaire',         'expense'),
+        (p_org_id, '5120', 'Main-d''œuvre',       'expense'),
+        (p_org_id, '5140', 'Semences',            'expense'),
+        (p_org_id, '5150', 'Engrais et traitements', 'expense'),
+        (p_org_id, '5130', 'Fournitures ferme',   'expense')
+    on conflict (org_id, code) do nothing;
+end;
+$$;
+
+-- Existing farms get the new accounts too, rather than only farms created
+-- from now on. Idempotent, so a farm that already has them is untouched.
+do $$
+declare
+    v_org uuid;
+begin
+    for v_org in select id from orgs where profile = 'farm' loop
+        perform seed_farm_accounts(v_org);
+    end loop;
+end $$;
+
+-- ------------------------------------------------------------
+-- 7. GRANTS
+-- ------------------------------------------------------------
+revoke execute on function open_herd(uuid, text, text, int, text, text, uuid, date) from public;
+revoke execute on function record_herd_event(uuid, uuid, text, numeric, date, text, uuid, text) from public;
+revoke execute on function open_crop_cycle(uuid, text, text, text, date, date, numeric, text, uuid) from public;
+revoke execute on function record_harvest(uuid, uuid, numeric, text, text, date, text, uuid, text) from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function open_herd(uuid, text, text, int, text, text, uuid, date) to authenticated;
+        grant execute on function record_herd_event(uuid, uuid, text, numeric, date, text, uuid, text) to authenticated;
+        grant execute on function open_crop_cycle(uuid, text, text, text, date, date, numeric, text, uuid) to authenticated;
+        grant execute on function record_harvest(uuid, uuid, numeric, text, text, date, text, uuid, text) to authenticated;
+        grant execute on function herd_status(uuid, boolean) to authenticated;
+        grant execute on function crop_status(uuid, boolean) to authenticated;
+        grant execute on function farm_profile_summary(uuid) to authenticated;
+        grant select, insert, update on herds to authenticated;
+        grant select, insert on herd_events to authenticated;
+        grant select, insert, update on plots to authenticated;
+        grant select, insert, update on crop_cycles to authenticated;
+        grant select, insert on harvests to authenticated;
     end if;
 end $$;
 

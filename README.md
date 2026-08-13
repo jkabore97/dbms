@@ -234,6 +234,44 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   once — the shelf and the books disagreeing by one delivery, silently.
   `016_stock_receipts.sql` fixes it and gives deliveries the append-only
   history that 011's own header claimed they already had.
+- Two ways into the app (`017`, M6) — an employee makes an account, says who
+  they are (first, middle and family name, date of birth, job title, phone
+  typed twice), and enters the code their manager sent. **Filling in the form
+  grants nothing**; the code does, and the suite asserts it. A manager does
+  the same and then *asks* for a business: `create_org()` stays platform-admin
+  only, `org_applications` is the queue that decision is made from, and
+  approving creates the business and makes the applicant its **owner** in one
+  transaction.
+
+  "J'ai un code" is gone. It sat with the invitee, who by definition does not
+  have the app yet. In its place is a generator on the manager's side that
+  composes the message and sends it to WhatsApp, with a QR for the case where
+  the new employee is standing right there. 17 assertions in
+  `database/tests/test_onboarding.sql`.
+
+  This surfaced a collision: 005 pinned invitations to `auth.users.phone`, and
+  017 lets somebody set a different profile number — which is the one they
+  give their manager. A manager typing it would have produced a code that
+  could never be claimed. Both matchers now accept either of a person's own
+  numbers; it is still a pin.
+- Staff records every business can use (`018`) — where somebody works, what
+  kind of engagement it is, and why they left. `volunteer` is the one that
+  matters most: recording a church's unpaid caretaker as a casual on zero
+  francs makes the payroll say something untrue about what the church owes.
+  `end_employment()` refuses while wages are outstanding, because unpaid hours
+  that leave the screen are unpaid hours nobody pays. The Personnel screen is
+  now reachable from the church and the farm, not only the shop.
+- A farm that is not only chickens (`019`) — herds of any species, crop cycles
+  on plots, and harvests. 009 built Ignace's poultry farm and nothing else had
+  a table; a farmer with goats and onions was expected to record animals as a
+  flock with a batch code and a harvest as "other income". `flocks` is
+  untouched and unmigrated — his history is in it — and the home screen leads
+  with whichever a farm actually has.
+
+  A harvest posts nothing to the ledger. Bringing a crop in is not earning
+  money, it is earning it later or eating it, and booking income there
+  inflates the income statement by every sack that never reached a market.
+  11 assertions in `database/tests/test_farm_general.sql`.
 - Next: M6 — custom domains, the tenant router, and a Play Store release. Also
   still open: reading an invitation QR with the camera, rather than the
   invitee typing the code.
@@ -441,9 +479,9 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `016` up to date, paste
-`database/apply_006_to_016.sql` into the Supabase SQL editor and run it once.
-It is `006` through `016` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `019` up to date, paste
+`database/apply_006_to_019.sql` into the Supabase SQL editor and run it once.
+It is `006` through `019` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -453,7 +491,7 @@ answering from a stale cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 016
+scripts/build-migration-bundle.sh 006 019
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running
