@@ -90,6 +90,15 @@ jobs:
         working-directory: app
         run: dart run sqflite_common_ffi_web:setup
 
+      # The gate. This workflow fires on push to main independently of CI, so
+      # without this a merge whose tests were red deployed anyway — the build
+      # only had to compile, and a passing compile has already shipped a
+      # regression in this project once. Cheaper here than as a workflow_run
+      # dependency, which would deploy the wrong commit on a re-run.
+      - name: Test before shipping
+        working-directory: app
+        run: flutter test
+
       # No --base-href: the Worker serves the app at the root of its hostname,
       # unlike a GitHub Pages project site living under a repository path.
       - name: Build web
