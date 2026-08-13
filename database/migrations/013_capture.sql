@@ -461,12 +461,21 @@ revoke execute on function record_document(uuid, text, text, text, text, bigint,
 revoke execute on function file_document(uuid, text, text, uuid, uuid) from public;
 revoke execute on function set_document_ocr(uuid, text, text, text) from public;
 
-grant execute on function record_document(uuid, text, text, text, text, bigint, timestamptz, uuid, text, uuid, uuid) to authenticated;
-grant execute on function file_document(uuid, text, text, uuid, uuid) to authenticated;
-grant execute on function set_document_ocr(uuid, text, text, text) to authenticated;
-grant execute on function org_documents(uuid, text, int, int) to authenticated;
-grant execute on function unfiled_documents(uuid, int) to authenticated;
-grant execute on function product_by_barcode(uuid, text) to authenticated;
+-- Guarded, the same way 005, 006 and 007 guard theirs: `authenticated` is a
+-- Supabase role and does not exist on a bare Postgres, which is what CI
+-- starts from. Roles are cluster-wide, so a developer whose cluster has run
+-- a test suite before already has it and would never see this fail.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function record_document(uuid, text, text, text, text, bigint, timestamptz, uuid, text, uuid, uuid) to authenticated;
+        grant execute on function file_document(uuid, text, text, uuid, uuid) to authenticated;
+        grant execute on function set_document_ocr(uuid, text, text, text) to authenticated;
+        grant execute on function org_documents(uuid, text, int, int) to authenticated;
+        grant execute on function unfiled_documents(uuid, int) to authenticated;
+        grant execute on function product_by_barcode(uuid, text) to authenticated;
+    end if;
+end $$;
 
 -- PostgREST caches the functions it exposes; without this the app gets
 -- "Could not find the function public.record_document in the schema cache"
