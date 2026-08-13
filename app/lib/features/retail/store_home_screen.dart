@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import '../../core/auth/models.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/retail/staff.dart';
 import 'products_screen.dart';
+import 'staff_screen.dart';
 import 'sale_sheet.dart';
 
 /// Esperance's home screen.
@@ -30,6 +32,7 @@ class StoreHomeScreen extends StatefulWidget {
     super.key,
     required this.org,
     this.retail,
+    this.staff,
     this.accountAction,
   });
 
@@ -37,6 +40,10 @@ class StoreHomeScreen extends StatefulWidget {
 
   /// Null in a build with no server.
   final RetailRepository? retail;
+
+  /// Wages. Null in a build with no server, and every screen behind it is
+  /// refused by RLS for anyone who is not an org admin.
+  final StaffRepository? staff;
 
   final Widget? accountAction;
 
@@ -146,6 +153,22 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     await _load();
                   },
           ),
+          if (widget.staff != null)
+            IconButton(
+              icon: const Icon(Icons.groups_outlined),
+              tooltip: 'Personnel',
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StaffScreen(
+                      org: widget.org,
+                      staff: widget.staff!,
+                    ),
+                  ),
+                );
+                await _load();
+              },
+            ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),

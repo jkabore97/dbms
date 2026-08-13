@@ -162,7 +162,17 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   the R2 photo upload, the on-device OCR and the barcode scanner that M5 also
   asks for. `products.barcode` and the `documents` table are the seams they
   attach to. None of them can be written or tested without a device in a hand.
-- Next: the rest of M5 (capture, OCR, barcode), employees and payroll — capture-first, photo to R2, on-device OCR —
+- The payroll (`012_employees.sql`, M5) — permanent and casual staff, shifts,
+  and payments that post to the ledger beside rent and stock. Being paid and
+  being able to open the books are different things: `employees.user_id` is
+  null for most people on a payroll, and adding somebody grants them no access
+  at all. Paying a casual settles the shifts it covers in the same
+  transaction, which is what stops the same afternoon being paid for twice.
+  Reading any of it needs an org admin rather than mere membership — what a
+  colleague earns is more sensitive than the takings. 8 assertions in
+  `database/tests/test_employees.sql`.
+- Next: the rest of M5 — the camera with zero required fields, the R2 upload,
+  on-device OCR and barcode scanning — capture-first, photo to R2, on-device OCR —
   and a camera scanner so a QR can be read as well as shown; today the invitee
   types the code.
 
@@ -330,8 +340,8 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database that is at `005` up to `011`, paste
-`database/apply_006_to_011.sql` into the Supabase SQL editor and run it once.
+To bring a database that is at `005` up to `012`, paste
+`database/apply_006_to_012.sql` into the Supabase SQL editor and run it once.
 It is `006` through `010` concatenated inside one transaction, so it either all
 lands or none of it does — which matters because several migrations are *not*
 re-runnable (`006` fails on a policy that already exists), and a file that
@@ -342,7 +352,7 @@ cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 011
+scripts/build-migration-bundle.sh 006 012
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running
