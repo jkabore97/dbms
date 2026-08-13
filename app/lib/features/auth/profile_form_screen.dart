@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -51,6 +53,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   final _phone = TextEditingController();
   final _phoneAgain = TextEditingController();
 
+  CountryCode _country = defaultCountry;
+
   DateTime? _birth;
   bool _loading = true;
   bool _saving = false;
@@ -85,11 +89,17 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       _middle.text = (row['middle_name'] as String?) ?? '';
       _last.text = (row['last_name'] as String?) ?? '';
       _title.text = (row['title'] as String?) ?? '';
+      // What comes back is E.164. Showing it whole behind a picker that also
+      // says "+226" would read as the code twice, so the stored number is
+      // split back into the country it names and the part typed locally.
       final phone = (row['phone'] as String?) ?? '';
-      _phone.text = phone;
+      final stored = countryOfNumber(phone);
+      if (stored != null) _country = stored;
+      final local = stored == null ? phone : stored.localPart(phone);
+      _phone.text = local;
       // Pre-filled on both sides: it was already confirmed once, and asking
       // somebody to retype a number they did not just type is nagging.
-      _phoneAgain.text = phone;
+      _phoneAgain.text = local;
       final dob = row['date_of_birth'];
       if (dob != null) _birth = DateTime.tryParse('$dob');
     });
@@ -98,10 +108,20 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   String get _phoneText => _phone.text.trim();
   String get _phoneAgainText => _phoneAgain.text.trim();
 
+  /// What the number becomes once the chosen country is applied. This screen
+  /// used to save `_phoneText` exactly as typed while the sign-up screen saved
+  /// E.164 — so the same person's number was stored two different ways
+  /// depending on which screen they last used, and `claim_invitation()`
+  /// matches `profiles.phone` literally. An invitation pinned to
+  /// `+22670123456` simply did not match a profile reading `70 12 34 56`.
+  String get _e164 => _country.toE164(_phoneText);
+
   String? get _phoneProblem {
     if (_phoneText.isEmpty) return null;
     if (_phoneAgainText.isEmpty) return null;
-    if (_phoneText != _phoneAgainText) {
+    // Compared normalised, so "70 12 34 56" and "70123456" are the agreement
+    // they look like rather than a mismatch over a space.
+    if (_e164 != _country.toE164(_phoneAgainText)) {
       return 'Les deux numéros ne sont pas identiques.';
     }
     return null;
@@ -113,7 +133,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       _last.text.trim().isNotEmpty &&
       _birth != null &&
       _phoneText.isNotEmpty &&
-      _phoneText == _phoneAgainText;
+      _phoneAgainText.isNotEmpty &&
+      _phoneProblem == null;
 
   Future<void> _save() async {
     setState(() {
@@ -127,7 +148,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         middleName: _middle.text.trim(),
         dateOfBirth: _birth,
         title: _title.text.trim(),
-        phone: _phoneText,
+        phone: _e164,
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -218,28 +239,27 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                TextField(
+                PhoneField(
                   controller: _phone,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Numéro de téléphone',
-                    border: OutlineInputBorder(),
-                  ),
+                  country: _country,
+                  onCountry: (c) => setState(() => _country = c),
+                  labelText: 'Numéro de téléphone',
+                  hintText: '70 12 34 56',
+                  enabled: !_saving,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                PhoneField(
                   controller: _phoneAgain,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Confirmez le numéro',
-                    border: const OutlineInputBorder(),
-                    errorText: _phoneProblem,
-                    // Said plainly, because retyping something feels like
-                    // pointless work unless the reason is on screen.
-                    helperText: _phoneProblem == null
-                        ? "C'est ce numéro que votre responsable utilisera."
-                        : null,
-                  ),
+                  country: _country,
+                  onCountry: (c) => setState(() => _country = c),
+                  labelText: 'Confirmez le numéro',
+                  enabled: !_saving,
+                  errorText: _phoneProblem,
+                  // Said plainly, because retyping something feels like
+                  // pointless work unless the reason is on screen.
+                  helperText: _phoneProblem == null
+                      ? "C'est ce numéro que votre responsable utilisera."
+                      : null,
                 ),
 
                 if (_error != null) ...[

@@ -5,6 +5,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
 
 /// Inviting somebody, in one sheet.
 ///
@@ -42,6 +44,10 @@ class InviteSheet extends StatefulWidget {
 
 class _InviteSheetState extends State<InviteSheet> {
   final _phoneController = TextEditingController();
+
+  /// Not always a local number: an accountant or a supplier's contact gets
+  /// invited the same way as the vendeuse standing at the counter.
+  CountryCode _country = defaultCountry;
 
   String _role = 'employee';
 
@@ -83,7 +89,7 @@ class _InviteSheetState extends State<InviteSheet> {
         role: _role,
         scopeKind: kind,
         scopeId: id,
-        phone: typed.isEmpty ? null : AuthRepository.normalizePhone(typed),
+        phone: typed.isEmpty ? null : _country.toE164(typed),
         visibility: _role == 'observer' ? _visibility : 'full',
         validFor: Duration(days: _validDays),
       );
@@ -210,14 +216,13 @@ class _InviteSheetState extends State<InviteSheet> {
         Text('Numéro de téléphone (optionnel)',
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
-        TextField(
+        PhoneField(
           controller: _phoneController,
+          country: _country,
+          onCountry: (c) => setState(() => _country = c),
+          labelText: 'Numéro',
+          hintText: '70 12 34 56',
           enabled: !_working,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: '70 12 34 56',
-          ),
         ),
         const SizedBox(height: 4),
         Text(

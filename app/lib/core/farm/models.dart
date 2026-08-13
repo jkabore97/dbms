@@ -270,6 +270,15 @@ const eggGrades = <String, String>{
   'fêlé': 'Fêlé',
 };
 
+/// The same idea for what comes off a field, and the same reason: first-grade
+/// tomatoes and bruised ones do not fetch the same price, and a harvest that
+/// counts them together hides where the money went.
+const harvestGrades = <String, String>{
+  'first': 'Premier choix',
+  'second': 'Deuxième choix',
+  'damaged': 'Abîmé',
+};
+
 String _trimNumber(double value) {
   if (value == value.roundToDouble()) return value.round().toString();
   return value.toString();

@@ -200,7 +200,7 @@ void main() {
     // the morning collection, and the two things a church home screen has
     // that a farm one must not.
     expect(find.text('Ferme Ignace'), findsWidgets);
-    expect(find.text('Ramassage'), findsOneWidget);
+    expect(find.text('Récolte'), findsOneWidget);
     expect(find.text('Bandes'), findsOneWidget);
     expect(find.text('Recette'), findsNothing);
     expect(find.text('Dépense'), findsNothing);
@@ -223,7 +223,7 @@ void main() {
     await tester.tap(find.text('Ferme Ignace'));
     await flush(tester);
 
-    expect(find.text('Ramassage'), findsOneWidget);
+    expect(find.text('Récolte'), findsOneWidget);
     expect(find.text('Choisissez une activité'), findsNothing);
   });
 

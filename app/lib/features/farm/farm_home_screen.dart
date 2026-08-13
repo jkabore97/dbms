@@ -355,7 +355,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                       child: Center(
                         child: Text(
                           "Rien compté aujourd'hui.\n"
-                          'Commencez par le ramassage.',
+                          'Commencez par la récolte.',
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -368,7 +368,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               ),
             ),
 
-      // Ramassage is the large one: it happens every morning, it is the thing
+      // Récolte is the large one: it happens every morning, it is the thing
       // that has to become a habit, and it is the number that warns earliest.
       // The rest are smaller because they happen when they happen.
       floatingActionButton: Column(
@@ -417,17 +417,22 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           ),
           const SizedBox(height: 12),
           FloatingActionButton.extended(
-            heroTag: 'farm-eggs',
-            onPressed: () => _open(RecordEggsSheet(
+            heroTag: 'farm-harvest',
+            onPressed: () => _open(RecordHarvestSheet(
               db: widget.db,
               orgId: widget.org.id,
               flocks: _flocks,
+              farm: widget.farm,
+              // A farm that has never recorded a bird still gets the egg
+              // option — the shape is empty on day one and guessing "no
+              // poultry" from that would be worse than offering both.
+              hasPoultry: _shape.hasPoultry || _shape.isEmpty,
             )),
             backgroundColor: Colors.amber.shade700,
             foregroundColor: Colors.white,
-            icon: const Icon(Icons.egg_outlined, size: 28),
+            icon: const Icon(Icons.agriculture_outlined, size: 28),
             label: const Text(
-              'Ramassage',
+              'Récolte',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             extendedPadding: const EdgeInsets.symmetric(horizontal: 28),
@@ -681,7 +686,7 @@ class _EventTile extends StatelessWidget {
     final time = DateTime.parse(event['occurred_at'] as String).toLocal();
 
     final (icon, tint, label) = switch (kind) {
-      'eggs' => (Icons.egg_outlined, Colors.amber.shade800, 'Ramassage'),
+      'eggs' => (Icons.egg_outlined, Colors.amber.shade800, 'Récolte'),
       'stock_in' => (
           Icons.local_shipping_outlined,
           Colors.orange.shade800,

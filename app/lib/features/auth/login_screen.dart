@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
 
 /// The way in — and, now, the way to get an account in the first place.
 ///
@@ -70,6 +72,20 @@ class _LoginScreenState extends State<LoginScreen> {
   /// but for the keyboard: this is the number a manager sends an invitation
   /// to, and a wrong digit here is somebody who never gets in.
   final _phoneConfirmController = TextEditingController();
+
+  /// Which country the number belongs to. One value for both fields on
+  /// purpose: a person confirming their own number is not confirming a
+  /// different country, and two pickers would let them disagree silently.
+  ///
+  /// This used to be the string `'+226'` painted in front of the field and
+  /// pasted on by `normalizePhone`'s default — which meant a number from
+  /// Abidjan became a Burkinabè number belonging to somebody else, and the
+  /// SMS went there.
+  CountryCode _country = defaultCountry;
+
+  /// The number as the server will see it, built from what was typed and the
+  /// country actually chosen.
+  String get _e164 => _country.toE164(_phoneController.text);
 
   DateTime? _birthDate;
   final _otpController = TextEditingController();
@@ -155,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final a = _phoneController.text.trim();
     final b = _phoneConfirmController.text.trim();
     if (a.isEmpty || b.isEmpty) return null;
-    if (AuthRepository.normalizePhone(a) != AuthRepository.normalizePhone(b)) {
+    if (_country.toE164(a) != _country.toE164(b)) {
       return 'Les deux numéros ne sont pas identiques.';
     }
     return null;
@@ -201,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return Future.value();
     }
 
-    final phone = AuthRepository.normalizePhone(_phoneController.text);
+    final phone = _e164;
     if (phone.length < 8) {
       setState(() => _error = 'Entrez un numéro de téléphone valide.');
       return Future.value();
@@ -304,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
             middleName: _middleNameController.text.trim(),
             dateOfBirth: _birthDate,
             title: _titleController.text.trim(),
-            phone: AuthRepository.normalizePhone(_phoneController.text),
+            phone: _e164,
           );
         } catch (_) {
           // A database that has not run 017 yet. The account is real and the
@@ -483,21 +499,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_isSignUp) return const [];
     return [
       const SizedBox(height: 12),
-      TextField(
+      PhoneField(
         controller: _phoneConfirmController,
+        country: _country,
+        // The picker is shown on both fields but sets the one value, so
+        // correcting the country on the second corrects the first too.
+        onCountry: (c) => setState(() => _country = c),
+        labelText: 'Confirmez le numéro',
         enabled: !_busy,
-        keyboardType: TextInputType.phone,
-        style: const TextStyle(fontSize: 20, letterSpacing: 1.2),
+        large: true,
         onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(
-          labelText: 'Confirmez le numéro',
-          prefixText: '+226  ',
-          border: const OutlineInputBorder(),
-          errorText: _phoneMismatch,
-          helperText: _phoneMismatch == null
-              ? "C'est ce numéro que votre responsable utilisera."
-              : null,
-        ),
+        errorText: _phoneMismatch,
+        helperText: _phoneMismatch == null
+            ? "C'est ce numéro que votre responsable utilisera."
+            : null,
       ),
     ];
   }
@@ -508,18 +523,16 @@ class _LoginScreenState extends State<LoginScreen> {
   List<Widget> _phoneStep(ThemeData theme) {
     return [
       ..._nameField(theme),
-      TextField(
+      PhoneField(
         controller: _phoneController,
+        country: _country,
+        onCountry: (c) => setState(() => _country = c),
+        labelText: 'Numéro de téléphone',
+        hintText: '70 12 34 56',
         enabled: !_busy,
-        keyboardType: TextInputType.phone,
+        large: true,
         autofillHints: const [AutofillHints.telephoneNumber],
-        style: const TextStyle(fontSize: 20, letterSpacing: 1.2),
-        decoration: const InputDecoration(
-          labelText: 'Numéro de téléphone',
-          hintText: '70 12 34 56',
-          prefixText: '+226  ',
-          border: OutlineInputBorder(),
-        ),
+        onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _busy ? null : _sendCode(),
       ),
       ..._phoneConfirmField(theme),
@@ -645,18 +658,15 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       if (_isSignUp) ...[
         const SizedBox(height: 12),
-        TextField(
+        PhoneField(
           controller: _phoneController,
+          country: _country,
+          onCountry: (c) => setState(() => _country = c),
+          labelText: 'Numéro de téléphone',
+          hintText: '70 12 34 56',
           enabled: !_busy,
-          keyboardType: TextInputType.phone,
-          style: const TextStyle(fontSize: 20, letterSpacing: 1.2),
+          large: true,
           onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-            labelText: 'Numéro de téléphone',
-            hintText: '70 12 34 56',
-            prefixText: '+226  ',
-            border: OutlineInputBorder(),
-          ),
         ),
         ..._phoneConfirmField(theme),
       ],

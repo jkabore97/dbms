@@ -74,7 +74,7 @@ void main() {
       expect(find.text('œufs ramassés'), findsOneWidget);
       expect(find.text('Mortalité'), findsOneWidget);
       expect(find.text('Aliment sorti'), findsOneWidget);
-      expect(find.text('Ramassage'), findsOneWidget);
+      expect(find.text('Récolte'), findsOneWidget);
     });
 
     testWidgets('works with no repository at all', (tester) async {
@@ -227,11 +227,11 @@ void main() {
       (tester) async {
     await pumpHome(tester);
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Ramassage'));
+    await tester.tap(find.widgetWithText(FloatingActionButton, 'Récolte'));
     await flush(tester);
 
     await tapKeys(tester, ['4', '0', '4']);
-    await tester.tap(find.text('Enregistrer le ramassage'));
+    await tester.tap(find.text('Enregistrer la récolte'));
     await flush(tester);
 
     final day = await tester.runAsync(() => db.farmDay(org.id, DateTime.now()));
