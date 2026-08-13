@@ -12,6 +12,7 @@ import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
+import 'core/onboarding/onboarding_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
@@ -19,9 +20,12 @@ import 'core/sync/sync_service.dart';
 import 'features/accounting/accounting_hub_screen.dart';
 import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
+import 'features/admin/applications_screen.dart';
 import 'features/admin/businesses_screen.dart';
+import 'features/admin/invite_generator_sheet.dart';
 import 'features/admin/create_business_screen.dart';
 import 'features/auth/join_by_code_screen.dart';
+import 'features/auth/join_or_apply_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/no_org_screen.dart';
 import 'features/auth/org_picker_screen.dart';
@@ -56,6 +60,7 @@ class AppRoot extends StatefulWidget {
     required this.retail,
     required this.staff,
     required this.capture,
+    required this.onboarding,
     this.sync,
   });
 
@@ -69,6 +74,7 @@ class AppRoot extends StatefulWidget {
   final RetailRepository retail;
   final StaffRepository staff;
   final CaptureRepository capture;
+  final OnboardingRepository onboarding;
   final SyncService? sync;
 
   @override
@@ -320,6 +326,19 @@ class _AppRootState extends State<AppRoot> {
   /// the buttons that change, archive and destroy one. Reloads the org list
   /// afterwards, because renaming or archiving from in there changes what this
   /// person can open.
+  /// The platform's queue of people asking for a business. Reloads the org
+  /// list afterwards: approving one makes a business, and a platform admin
+  /// sees every business.
+  Future<void> _openApplications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ApplicationsScreen(onboarding: widget.onboarding),
+      ),
+    );
+    if (!mounted) return;
+    await _resolveOrgs();
+  }
+
   Future<void> _openBusinesses() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -460,19 +479,26 @@ class _AppRootState extends State<AppRoot> {
         );
 
       case _Phase.noOrg:
-        return NoOrgScreen(
+        // A build with no server, or an expired token, has nothing to check a
+        // code against and nothing to file an application with. That case
+        // keeps the old screen, which says so and offers a retry.
+        if (!widget.auth.hasLiveSession) {
+          return NoOrgScreen(
+            identity: _identity!,
+            onRetry: _resolveOrgs,
+            onSignOut: _signOut,
+            // The bootstrap case: the person who runs the platform, before
+            // any business exists.
+            onCreateBusiness: _isPlatformAdmin ? _createBusiness : null,
+          );
+        }
+        return JoinOrApplyScreen(
           identity: _identity!,
+          onboarding: widget.onboarding,
+          admin: widget.admin,
           onRetry: _resolveOrgs,
           onSignOut: _signOut,
-          // A build with no server has nothing to check a code against, and
-          // an expired token cannot claim one either.
-          onJoinByCode: widget.auth.hasLiveSession ? _joinByCode : null,
-          // The bootstrap case: the person who runs the platform, before any
-          // business exists. Without this the only way to make the first one
-          // is an INSERT by hand.
-          onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
-              ? _createBusiness
-              : null,
+          checking: _phase == _Phase.resolving,
         );
 
       case _Phase.picking:
@@ -530,6 +556,15 @@ class _AppRootState extends State<AppRoot> {
                   : null,
               onBusinesses: _isPlatformAdmin && widget.auth.hasLiveSession
                   ? _openBusinesses
+                  : null,
+              onApplications: _isPlatformAdmin && widget.auth.hasLiveSession
+                  ? _openApplications
+                  : null,
+              // Replaces "J'ai un code": the person holding the app is the
+              // manager, and the person who needs reaching does not have it.
+              onInvite: org.isAdmin && widget.auth.hasLiveSession
+                  ? () => InviteGeneratorSheet.open(context,
+                      orgId: org.id, onboarding: widget.onboarding)
                   : null,
               onSwitchOrg: _orgs.length > 1
                   ? () => setState(() {

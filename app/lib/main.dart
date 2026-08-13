@@ -13,6 +13,7 @@ import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
+import 'core/onboarding/onboarding_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
@@ -91,6 +92,7 @@ Future<void> _startup() async {
     retail: RetailRepository(client),
     staff: StaffRepository(client),
     capture: CaptureRepository(client, db: db, uploadsUrl: uploadsUrl),
+    onboarding: OnboardingRepository(client),
     sync: sync,
   ));
 }
@@ -165,6 +167,7 @@ class KajApp extends StatelessWidget {
     required this.retail,
     required this.staff,
     required this.capture,
+    required this.onboarding,
     this.sync,
   });
 
@@ -178,6 +181,7 @@ class KajApp extends StatelessWidget {
   final RetailRepository retail;
   final StaffRepository staff;
   final CaptureRepository capture;
+  final OnboardingRepository onboarding;
   final SyncService? sync;
 
   @override
@@ -208,6 +212,7 @@ class KajApp extends StatelessWidget {
         retail: retail,
         staff: staff,
         capture: capture,
+        onboarding: onboarding,
         sync: sync,
       ),
     );

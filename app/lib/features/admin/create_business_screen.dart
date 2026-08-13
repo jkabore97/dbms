@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/onboarding/onboarding_repository.dart';
 
 /// Making a new business — the one screen only Kaj-consulting sees.
 ///
@@ -16,9 +17,26 @@ import '../../core/admin/admin_repository.dart';
 /// it is a visible list of options here rather than a dropdown default nobody
 /// reads.
 class CreateBusinessScreen extends StatefulWidget {
-  const CreateBusinessScreen({super.key, required this.admin});
+  const CreateBusinessScreen({
+    super.key,
+    required this.admin,
+    this.onboarding,
+    this.asApplication = false,
+  });
 
   final AdminRepository admin;
+
+  /// Only needed when this is an application rather than a creation.
+  final OnboardingRepository? onboarding;
+
+  /// When true this screen files a request instead of making a business.
+  ///
+  /// Same fields either way, and deliberately so: what a platform admin fills
+  /// in to create one and what a manager fills in to ask for one are the same
+  /// facts. What differs is who decides — `create_org()` is platform-admin
+  /// only and always has been — and so what the button says and what comes
+  /// back. A creation pops the new org's id; an application pops true.
+  final bool asApplication;
 
   /// Lowercases, strips accents, and hyphenates — the name as typed turned
   /// into something that can live in a hostname.
@@ -93,6 +111,11 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   final _slugController = TextEditingController();
   final _currencyController = TextEditingController(text: 'XOF');
 
+  /// Only shown on an application: a reviewer deciding whether a business
+  /// should exist needs a sentence about it, and a creation by a platform
+  /// admin is being decided by the person typing.
+  final _descriptionController = TextEditingController();
+
   String _profile = 'church';
 
   /// True once the slug has been edited by hand, after which typing the name
@@ -115,6 +138,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     _nameController.dispose();
     _slugController.dispose();
     _currencyController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -143,13 +167,28 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     });
 
     try {
-      final orgId = await widget.admin.createOrg(
-        name: _name,
-        slug: _slug,
-        profile: _profile,
-        currency: _currency,
-      );
-      if (mounted) Navigator.of(context).pop(orgId);
+      if (widget.asApplication) {
+        final onboarding = widget.onboarding;
+        if (onboarding == null) {
+          throw StateError('Cet écran a été ouvert sans service de demande.');
+        }
+        await onboarding.applyForOrg(
+          name: _name,
+          slug: _slug,
+          profile: _profile,
+          currency: _currency,
+          description: _descriptionController.text.trim(),
+        );
+        if (mounted) Navigator.of(context).pop(true);
+      } else {
+        final orgId = await widget.admin.createOrg(
+          name: _name,
+          slug: _slug,
+          profile: _profile,
+          currency: _currency,
+        );
+        if (mounted) Navigator.of(context).pop(orgId);
+      }
     } catch (error) {
       if (mounted) setState(() => _error = _describe(error));
     } finally {
@@ -259,6 +298,22 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               ),
             ),
 
+            if (widget.asApplication) ...[
+              const SizedBox(height: 20),
+              TextField(
+                controller: _descriptionController,
+                enabled: !_busy,
+                maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Décrivez votre activité',
+                  helperText: 'Ce que vous vendez ou produisez, où, depuis '
+                      'quand. C’est ce que lira la personne qui valide.',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+
             if (_error != null) ...[
               const SizedBox(height: 20),
               Container(
@@ -300,16 +355,21 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        "Créer l'activité",
-                        style: TextStyle(fontSize: 17),
+                    : Text(
+                        widget.asApplication
+                            ? 'Envoyer la demande'
+                            : "Créer l'activité",
+                        style: const TextStyle(fontSize: 17),
                       ),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Vous en serez le propriétaire. Un plan comptable de départ est '
-              'créé automatiquement.',
+              widget.asApplication
+                  ? 'Un administrateur Kaj-consulting examine la demande. '
+                      'Une fois validée, vous en serez le propriétaire.'
+                  : 'Vous en serez le propriétaire. Un plan comptable de '
+                      'départ est créé automatiquement.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
