@@ -305,6 +305,42 @@ hostname. `workers/tenant-router` is a separate Worker for a separate job:
 attaching tenant headers for server-side callers such as a Supabase Edge
 Function. Hosting the app does not depend on it.
 
+## Keeping the live database up to date
+
+Migrations are applied to Supabase by hand — nothing deploys them. The app and
+the database therefore version separately, and the app is the one that moves
+first: a deploy can ship screens calling functions the database does not have
+yet. That failure looks like this on a phone, and it is not a bug in the app:
+
+> Le serveur a refusé la demande : Could not find the function
+> `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
+
+To bring a database that is at `005` up to `010`, paste
+`database/apply_006_to_010.sql` into the Supabase SQL editor and run it once.
+It is `006` through `010` concatenated inside one transaction, so it either all
+lands or none of it does — which matters because several migrations are *not*
+re-runnable (`006` fails on a policy that already exists), and a file that
+stops halfway leaves the schema in neither state. It ends with
+`notify pgrst, 'reload schema'` so PostgREST stops answering from a stale
+cache.
+
+Regenerate it after adding a migration, rather than editing it:
+
+```
+scripts/build-migration-bundle.sh 006 010
+```
+
+Verified by building a database at `005`, running the bundle, and re-running
+every suite in `database/tests/` against the result.
+
+To make an account a platform admin — able to see every business and create
+new ones — after that account has signed up at least once:
+
+```sql
+update profiles set is_platform_admin = true
+where id = (select id from auth.users where email = 'you@example.com');
+```
+
 ## Running the tests locally
 
 ```
