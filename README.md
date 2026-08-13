@@ -147,7 +147,22 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   specific ways a module like this inflates profit: feed expensed twice,
   eggs booked as income before anyone pays, an invoice earned once when raised
   and again when settled, and a dead bird expensed on top of the feed it ate.
-- Next: Esperance's store (M5) — capture-first, photo to R2, on-device OCR —
+- Esperance's store (`011_retail_profile.sql`, M5) — products with a shelf
+  price, a cost price, a count and a date they die; sales that move goods and
+  money in the same call; and returns, which are sales with `kind = 'return'`
+  rather than deletions, so the books show both. Every sale carries a
+  `client_uuid` and `record_sale()` returns the original for a repeat, because
+  a phone in a market retries and a customer is standing there. The home
+  screen leads with what is about to be lost — "3 articles bientôt périmés,
+  82 000 en jeu" — since that, not theft or arithmetic, is where the money
+  actually goes. 11 assertions in `database/tests/test_retail.sql`, most of
+  them the four ways a retail module inflates profit.
+
+  Not built, and named here so nobody assumes otherwise: the camera capture,
+  the R2 photo upload, the on-device OCR and the barcode scanner that M5 also
+  asks for. `products.barcode` and the `documents` table are the seams they
+  attach to. None of them can be written or tested without a device in a hand.
+- Next: the rest of M5 (capture, OCR, barcode), employees and payroll — capture-first, photo to R2, on-device OCR —
   and a camera scanner so a QR can be read as well as shown; today the invitee
   types the code.
 
@@ -315,8 +330,8 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database that is at `005` up to `010`, paste
-`database/apply_006_to_010.sql` into the Supabase SQL editor and run it once.
+To bring a database that is at `005` up to `011`, paste
+`database/apply_006_to_011.sql` into the Supabase SQL editor and run it once.
 It is `006` through `010` concatenated inside one transaction, so it either all
 lands or none of it does — which matters because several migrations are *not*
 re-runnable (`006` fails on a policy that already exists), and a file that
@@ -327,7 +342,7 @@ cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 010
+scripts/build-migration-bundle.sh 006 011
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

@@ -4,8 +4,10 @@ import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/reports/reports_repository.dart';
+import '../../core/retail/retail_repository.dart';
 import '../church/church_home_screen.dart';
 import '../farm/farm_home_screen.dart';
+import '../retail/store_home_screen.dart';
 import 'profile_pending_screen.dart';
 
 /// Which screen a business opens on.
@@ -20,6 +22,7 @@ Widget homeScreenFor({
   required OrgSummary org,
   ReportsRepository? reports,
   FarmRepository? farm,
+  RetailRepository? retail,
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
@@ -39,7 +42,13 @@ Widget homeScreenFor({
         farm: farm,
         accountAction: accountAction,
       ),
-    // 'retail' is a real profile with no module yet.
+    'retail' => StoreHomeScreen(
+        org: org,
+        retail: retail,
+        accountAction: accountAction,
+      ),
+    // Anything else — a profile added server-side that this build has never
+    // heard of — lands here rather than failing.
     _ => ProfilePendingScreen(org: org, accountAction: accountAction),
   };
 }

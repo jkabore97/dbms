@@ -49,7 +49,7 @@ $$;
 -- 2. THE TABLE
 -- ------------------------------------------------------------
 
-create table pending_invitations (
+create table if not exists pending_invitations (
     id uuid primary key default gen_random_uuid(),
     org_id uuid not null references orgs(id) on delete cascade,
 
@@ -92,19 +92,19 @@ create table pending_invitations (
 -- Uniqueness and the by-code lookup, both on the normalized form. Not partial
 -- on claimed_at: a spent code must stay reserved, or it could be minted again
 -- and the audit trail would have two rows claiming to be the same code.
-create unique index pending_invitations_code_key
+create unique index if not exists pending_invitations_code_key
     on pending_invitations (normalize_invitation_code(code));
 
 -- The other lookup that happens on every claim: who the caller turned out to
 -- be. Partial on unclaimed rows — the sweep only ever asks about open ones.
-create index pending_invitations_open_phone_idx
+create index if not exists pending_invitations_open_phone_idx
     on pending_invitations (phone) where claimed_at is null and phone is not null;
 
-create index pending_invitations_open_email_idx
+create index if not exists pending_invitations_open_email_idx
     on pending_invitations (lower(email)) where claimed_at is null and email is not null;
 
 -- What the admin people-screen lists.
-create index pending_invitations_org_idx on pending_invitations (org_id, created_at desc);
+create index if not exists pending_invitations_org_idx on pending_invitations (org_id, created_at desc);
 
 -- ------------------------------------------------------------
 -- 3. MINTING A CODE
@@ -337,12 +337,14 @@ $$;
 
 alter table pending_invitations enable row level security;
 
+drop policy if exists "invitations readable by org admins" on pending_invitations;
 create policy "invitations readable by org admins"
 on pending_invitations for select
 using (is_org_admin(org_id));
 
 -- created_by is forced to the caller: an admin may not write an invitation
 -- that appears to have come from someone else.
+drop policy if exists "invitations issued by org admins" on pending_invitations;
 create policy "invitations issued by org admins"
 on pending_invitations for insert
 with check (is_org_admin(org_id) and created_by = auth.uid());
@@ -350,11 +352,13 @@ with check (is_org_admin(org_id) and created_by = auth.uid());
 -- Revoking. An admin may shorten the life of an unclaimed invitation or
 -- delete it outright; a claimed one is a record of how somebody got in, and
 -- the WHERE clause keeps it.
+drop policy if exists "unclaimed invitations amended by org admins" on pending_invitations;
 create policy "unclaimed invitations amended by org admins"
 on pending_invitations for update
 using (is_org_admin(org_id) and claimed_at is null)
 with check (is_org_admin(org_id));
 
+drop policy if exists "unclaimed invitations withdrawn by org admins" on pending_invitations;
 create policy "unclaimed invitations withdrawn by org admins"
 on pending_invitations for delete
 using (is_org_admin(org_id) and claimed_at is null);

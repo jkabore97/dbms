@@ -270,6 +270,18 @@ The hardest and highest-value module. Her losses come from data never captured.
 **Demo after M5:** she photographs a delivery invoice and the products are in
 the system without typing.
 
+**Partly built.** `011_retail_profile.sql` and the store screens: products
+with prices, counts and expiry dates, sales and returns posting through the
+same `record_entry()` every other module uses, expiry alerts valued in money,
+and a losses-avoided total. Selling is idempotent by `client_uuid`, so the
+phone can retry.
+
+Still open, and the harder half: the camera button with zero required fields,
+the R2 upload, the on-device OCR, and barcode scanning. Those need a device
+and R2 credentials to build against, and none of them can be proven by a test
+suite on a runner. `products.barcode` and `documents` are the seams.
+Employees, shifts and payroll are also still open.
+
 ---
 
 ## M6 — Domains and distribution

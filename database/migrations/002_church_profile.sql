@@ -13,7 +13,7 @@
 -- ------------------------------------------------------------
 -- Church members. Not app users — most will never log in. This exists so
 -- tithes can be attributed and giving statements produced at year end.
-create table church_members (
+create table if not exists church_members (
     id uuid primary key default gen_random_uuid(),
     org_id uuid not null references orgs(id) on delete cascade,
     full_name text not null,
@@ -33,9 +33,9 @@ create index on church_members (org_id) where is_active;
 -- constraint and returns the original entry instead of double-posting.
 -- Without this, a bad connection silently doubles the offering count.
 alter table journal_entries
-    add column client_uuid uuid;
+    add column if not exists client_uuid uuid;
 
-create unique index journal_entries_client_uuid_key
+create unique index if not exists journal_entries_client_uuid_key
     on journal_entries (org_id, client_uuid)
     where client_uuid is not null;
 
@@ -74,7 +74,7 @@ $$;
 
 -- Links a contribution to the member who gave it — kept separate from the
 -- ledger so the ledger stays purely financial and anonymous giving stays easy.
-create table contribution_attributions (
+create table if not exists contribution_attributions (
     journal_entry_id uuid primary key references journal_entries(id) on delete cascade,
     member_id uuid not null references church_members(id) on delete cascade
 );
@@ -399,6 +399,7 @@ $$;
 -- ------------------------------------------------------------
 alter table church_members enable row level security;
 
+drop policy if exists "members readable within org" on church_members;
 create policy "members readable within org"
 on church_members for select
 using (
@@ -408,6 +409,7 @@ using (
     )
 );
 
+drop policy if exists "members writable by non-observers" on church_members;
 create policy "members writable by non-observers"
 on church_members for all
 using (

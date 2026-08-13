@@ -162,10 +162,12 @@ $$;
 
 alter table orgs enable row level security;
 
+drop policy if exists "orgs readable by their members" on orgs;
 create policy "orgs readable by their members"
 on orgs for select
 using (is_org_member(id));
 
+drop policy if exists "orgs editable by their admins" on orgs;
 create policy "orgs editable by their admins"
 on orgs for update
 using (is_org_admin(id))
@@ -173,10 +175,12 @@ with check (is_org_admin(id));
 
 alter table entities enable row level security;
 
+drop policy if exists "entities readable within org" on entities;
 create policy "entities readable within org"
 on entities for select
 using (is_org_member(org_id));
 
+drop policy if exists "entities managed by org admins" on entities;
 create policy "entities managed by org admins"
 on entities for all
 using (is_org_admin(org_id))
@@ -184,6 +188,7 @@ with check (is_org_admin(org_id));
 
 alter table departments enable row level security;
 
+drop policy if exists "departments readable within org" on departments;
 create policy "departments readable within org"
 on departments for select
 using (
@@ -193,6 +198,7 @@ using (
     )
 );
 
+drop policy if exists "departments managed by org admins" on departments;
 create policy "departments managed by org admins"
 on departments for all
 using (
@@ -216,6 +222,7 @@ alter table profiles enable row level security;
 
 -- You can always see yourself. You can also see the people you share an org
 -- with — an entry list that says "recorded by 7f3a…" helps nobody.
+drop policy if exists "profiles readable to self and colleagues" on profiles;
 create policy "profiles readable to self and colleagues"
 on profiles for select
 using (
@@ -227,6 +234,7 @@ using (
     )
 );
 
+drop policy if exists "profiles editable by their owner" on profiles;
 create policy "profiles editable by their owner"
 on profiles for update
 using (id = auth.uid())
@@ -237,19 +245,23 @@ alter table memberships enable row level security;
 -- Your own grants, plus every grant in an org you administer. This is what the
 -- login flow reads, and it is the reason Israel's phone cannot enumerate
 -- Ignace's staff.
+drop policy if exists "memberships readable to holder and org admins" on memberships;
 create policy "memberships readable to holder and org admins"
 on memberships for select
 using (user_id = auth.uid() or is_org_admin(org_id));
 
+drop policy if exists "memberships granted by org admins" on memberships;
 create policy "memberships granted by org admins"
 on memberships for insert
 with check (is_org_admin(org_id));
 
+drop policy if exists "memberships amended by org admins" on memberships;
 create policy "memberships amended by org admins"
 on memberships for update
 using (is_org_admin(org_id))
 with check (is_org_admin(org_id));
 
+drop policy if exists "memberships revoked by org admins" on memberships;
 create policy "memberships revoked by org admins"
 on memberships for delete
 using (is_org_admin(org_id));
@@ -263,15 +275,18 @@ using (is_org_admin(org_id));
 
 alter table accounts enable row level security;
 
+drop policy if exists "accounts readable within org" on accounts;
 create policy "accounts readable within org"
 on accounts for select
 using (is_org_member(org_id));
 
 -- The chart of accounts is seeded server-side; only an admin ever adds to it.
+drop policy if exists "accounts managed by org admins" on accounts;
 create policy "accounts managed by org admins"
 on accounts for insert
 with check (is_org_admin(org_id));
 
+drop policy if exists "accounts renamed by org admins" on accounts;
 create policy "accounts renamed by org admins"
 on accounts for update
 using (is_org_admin(org_id))
@@ -279,6 +294,7 @@ with check (is_org_admin(org_id));
 
 alter table journal_lines enable row level security;
 
+drop policy if exists "lines readable with their entry" on journal_lines;
 create policy "lines readable with their entry"
 on journal_lines for select
 using (
@@ -290,6 +306,7 @@ using (
 );
 
 -- The parent entry is inserted first in the same transaction, so this sees it.
+drop policy if exists "lines writable with their entry" on journal_lines;
 create policy "lines writable with their entry"
 on journal_lines for insert
 with check (
@@ -302,6 +319,7 @@ with check (
 
 alter table contribution_attributions enable row level security;
 
+drop policy if exists "attributions readable with their entry" on contribution_attributions;
 create policy "attributions readable with their entry"
 on contribution_attributions for select
 using (
@@ -312,6 +330,7 @@ using (
     )
 );
 
+drop policy if exists "attributions writable with their entry" on contribution_attributions;
 create policy "attributions writable with their entry"
 on contribution_attributions for insert
 with check (
@@ -328,10 +347,12 @@ with check (
 
 alter table documents enable row level security;
 
+drop policy if exists "documents readable within org" on documents;
 create policy "documents readable within org"
 on documents for select
 using (is_org_member(org_id));
 
+drop policy if exists "documents uploadable by non-observers" on documents;
 create policy "documents uploadable by non-observers"
 on documents for insert
 with check (can_write_org(org_id));
@@ -339,6 +360,7 @@ with check (can_write_org(org_id));
 -- A photo can be re-linked to an entry or re-OCR'd; it cannot be deleted,
 -- because a receipt that vanishes is indistinguishable from one that never
 -- existed.
+drop policy if exists "documents amendable by non-observers" on documents;
 create policy "documents amendable by non-observers"
 on documents for update
 using (can_write_org(org_id))

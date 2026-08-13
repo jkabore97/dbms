@@ -91,6 +91,16 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm.sql
 
+      # A shop's module can inflate profit in four specific ways: a sale
+      # recorded twice by a phone retrying in a market, a return that moves the
+      # money but not the goods, a cost price changed later that rewrites an
+      # old margin, and debits drifting from credits once sales post through a
+      # path contributions do not use.
+      - name: Prove a shop's books survive a shop
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_retail.sql
+
   flutter-analyze:
     runs-on: ubuntu-latest
     steps:
