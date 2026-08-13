@@ -236,6 +236,18 @@ class AuthRepository {
       return error.message;
     }
     if (error is PostgrestException) {
+      // PGRST202 is PostgREST saying a function is not in its schema cache.
+      // It reads like a server fault and is almost always one thing: a
+      // migration that has not been applied to this database yet. The raw
+      // text names an argument list — "public.trial_balance(p_from, p_org_id,
+      // p_to)" — which tells whoever is holding the phone nothing at all.
+      if (error.code == 'PGRST202' ||
+          error.message.contains('schema cache')) {
+        final name = RegExp(r'public\.(\w+)').firstMatch(error.message)?.group(1);
+        return "Cette base de données n'est pas à jour"
+            '${name == null ? '' : ' : « $name » est absent'}. '
+            'Appliquez les migrations manquantes, puis réessayez.';
+      }
       return 'Le serveur a refusé la demande : ${error.message}';
     }
     if (error is StateError) {
