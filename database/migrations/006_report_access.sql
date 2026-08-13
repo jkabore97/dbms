@@ -66,12 +66,14 @@ $$;
 
 drop policy if exists "read within your org" on journal_entries;
 
+drop policy if exists "entries readable with full visibility" on journal_entries;
 create policy "entries readable with full visibility"
 on journal_entries for select
 using (has_full_visibility(org_id));
 
 drop policy if exists "lines readable with their entry" on journal_lines;
 
+drop policy if exists "lines readable with full visibility" on journal_lines;
 create policy "lines readable with full visibility"
 on journal_lines for select
 using (
@@ -86,6 +88,7 @@ drop policy if exists "attributions readable with their entry" on contribution_a
 
 -- Who gave what, by name. If anything in this schema is line-item detail,
 -- it is this.
+drop policy if exists "attributions readable with full visibility" on contribution_attributions;
 create policy "attributions readable with full visibility"
 on contribution_attributions for select
 using (
@@ -99,6 +102,7 @@ using (
 drop policy if exists "documents readable within org" on documents;
 
 -- A receipt is a transaction with a photograph attached.
+drop policy if exists "documents readable with full visibility" on documents;
 create policy "documents readable with full visibility"
 on documents for select
 using (has_full_visibility(org_id));
