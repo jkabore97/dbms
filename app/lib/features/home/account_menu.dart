@@ -18,6 +18,7 @@ class AccountMenu extends StatelessWidget {
     this.onAdminister,
     this.onJoinByCode,
     this.onAccounting,
+    this.onCreateBusiness,
   });
 
   final LocalDb db;
@@ -42,6 +43,9 @@ class AccountMenu extends StatelessWidget {
   /// Joining a second business from inside the first — the case where someone
   /// already using the app is handed a code for somewhere else.
   final VoidCallback? onJoinByCode;
+
+  /// Null for everyone except a platform admin.
+  final VoidCallback? onCreateBusiness;
 
   Future<void> _confirmSignOut(BuildContext context) async {
     final pending = await db.pendingCount();
@@ -92,6 +96,8 @@ class AccountMenu extends StatelessWidget {
             onAdminister?.call();
           case 'join':
             onJoinByCode?.call();
+          case 'create':
+            onCreateBusiness?.call();
           case 'switch':
             onSwitchOrg?.call();
           case 'signout':
@@ -132,6 +138,15 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.confirmation_number_outlined),
               title: Text("J'ai un code"),
+            ),
+          ),
+        if (onCreateBusiness != null)
+          const PopupMenuItem<String>(
+            value: 'create',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.add_business_outlined),
+              title: Text('Nouvelle activité'),
             ),
           ),
         if (onSwitchOrg != null)

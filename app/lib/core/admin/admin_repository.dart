@@ -243,6 +243,59 @@ class AdminRepository {
     }
   }
 
+  // ----------------------------------------------------------------
+  // Running the platform
+  // ----------------------------------------------------------------
+
+  /// Whether the signed-in person carries `is_platform_admin` on their profile.
+  ///
+  /// Asked of the server rather than read from `my_orgs()`: a platform admin
+  /// whose bypass lists every business still lists nothing at all when no
+  /// business exists yet, and that is exactly the moment the Create Business
+  /// screen has to be reachable.
+  ///
+  /// Never cached — see this class's doc comment — and false on any failure,
+  /// including a server that has not run 010 yet, where the column does not
+  /// exist. Being wrong here costs a hidden menu entry; `create_org` refuses
+  /// on its own authority regardless of what the client believes.
+  Future<bool> isPlatformAdmin() async {
+    final client = _client;
+    final userId = currentUserId;
+    if (client == null || userId == null) return false;
+    try {
+      final row = await client
+          .from('profiles')
+          .select('is_platform_admin')
+          .eq('id', userId)
+          .maybeSingle();
+      return row?['is_platform_admin'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Creates a business and returns its id.
+  ///
+  /// `create_org` is SECURITY DEFINER and checks the platform-admin flag
+  /// itself, so this call is refused server-side for everyone else however it
+  /// is reached. It also makes the caller the new org's owner and seeds a
+  /// starter chart of accounts.
+  Future<String> createOrg({
+    required String name,
+    required String slug,
+    required String profile,
+    required String currency,
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('create_org', params: {
+      'p_name': name,
+      'p_slug': slug,
+      'p_profile': profile,
+      'p_currency': currency,
+    });
+    return id as String;
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {
