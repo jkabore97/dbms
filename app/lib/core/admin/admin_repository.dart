@@ -36,22 +36,6 @@ class AdminRepository {
     return Map<String, dynamic>.from(row);
   }
 
-  /// Only the fields an org admin is allowed to change from a phone. `slug`
-  /// and `profile` are absent on purpose: the slug is a live subdomain and the
-  /// profile decides which home screen every member of the org lands on, so
-  /// neither is a thing to fat-finger in a settings form.
-  Future<void> updateOrg(
-    String orgId, {
-    required String name,
-    required String currency,
-  }) async {
-    final client = _requireClient();
-    await client
-        .from('orgs')
-        .update({'name': name, 'default_currency': currency})
-        .eq('id', orgId);
-  }
-
   // ----------------------------------------------------------------
   // Sites and departments
   // ----------------------------------------------------------------
@@ -296,6 +280,89 @@ class AdminRepository {
     return id as String;
   }
 
+  // ----------------------------------------------------------------
+  // The lifecycle of a business (014)
+  // ----------------------------------------------------------------
+
+  /// Every business on the platform, archived ones included.
+  ///
+  /// Refused server-side for anyone who is not a platform admin — `all_orgs()`
+  /// raises rather than returning an empty list, so a caller who is not
+  /// entitled gets an error and not the false impression of an empty
+  /// platform.
+  Future<List<PlatformOrg>> allOrgs({bool includeArchived = true}) async {
+    final client = _requireClient();
+    final rows = await client.rpc('all_orgs', params: {
+      'p_include_archived': includeArchived,
+    }) as List<dynamic>;
+
+    return rows
+        .map((r) => PlatformOrg.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Changes a business. Null leaves a field alone rather than blanking it.
+  ///
+  /// Allowed for an org's own admins as well as a platform admin — renaming
+  /// your own shop is not an escalation, and 004's policy already said so.
+  ///
+  /// This replaced a direct `orgs` UPDATE that took only a name and a
+  /// currency. `slug` and `profile` were left out of that one so they could
+  /// not be fat-fingered in a phone settings form, and the org settings screen
+  /// still passes neither — but the rule now lives in `update_org()`, which
+  /// validates the slug, refuses an unknown profile, and answers a refusal
+  /// with a sentence instead of the silent zero-rows an RLS-blocked UPDATE
+  /// returns.
+  Future<void> updateOrg({
+    required String orgId,
+    String? name,
+    String? slug,
+    String? profile,
+    String? currency,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('update_org', params: {
+      'p_org_id': orgId,
+      if (name != null && name.isNotEmpty) 'p_name': name,
+      if (slug != null && slug.isNotEmpty) 'p_slug': slug,
+      if (profile != null && profile.isNotEmpty) 'p_profile': profile,
+      if (currency != null && currency.isNotEmpty) 'p_currency': currency,
+    });
+  }
+
+  /// Puts a business away. Reversible, keeps every entry, and takes it off
+  /// every member's home screen at once — which is why it is platform-admin
+  /// only even though renaming is not.
+  Future<void> archiveOrg(String orgId) async {
+    final client = _requireClient();
+    await client.rpc('archive_org', params: {'p_org_id': orgId});
+  }
+
+  Future<void> restoreOrg(String orgId) async {
+    final client = _requireClient();
+    await client.rpc('restore_org', params: {'p_org_id': orgId});
+  }
+
+  /// Destroys a business and everything in it. Permanent.
+  ///
+  /// [confirmName] must equal the business's own name; the server checks it
+  /// rather than trusting the dialog, and refuses unless the business has
+  /// already been archived. [force] is the second, deliberate act required
+  /// when the books are not empty — without it the server refuses and says
+  /// how many entries would be destroyed.
+  Future<void> deleteOrg({
+    required String orgId,
+    required String confirmName,
+    bool force = false,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('delete_org', params: {
+      'p_org_id': orgId,
+      'p_confirm_name': confirmName,
+      'p_force': force,
+    });
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {
@@ -305,5 +372,59 @@ class AdminRepository {
       );
     }
     return client;
+  }
+}
+
+/// A business as the platform sees it, rather than as one of its members
+/// does: with its size, and with whether it has been put away.
+class PlatformOrg {
+  const PlatformOrg({
+    required this.id,
+    required this.name,
+    required this.slug,
+    required this.profile,
+    this.currency = 'XOF',
+    this.archivedAt,
+    this.memberCount = 0,
+    this.entryCount = 0,
+    this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final String slug;
+  final String profile;
+  final String currency;
+
+  /// Null for a live business. Set means archived: still complete, still
+  /// restorable, and off every member's home screen.
+  final DateTime? archivedAt;
+
+  final int memberCount;
+  final int entryCount;
+  final DateTime? createdAt;
+
+  bool get isArchived => archivedAt != null;
+
+  /// Whether deleting it would destroy anybody's history. Drives whether the
+  /// delete dialog asks once or twice; the server makes the same test and is
+  /// the one that decides.
+  bool get hasBooks => entryCount > 0;
+
+  factory PlatformOrg.fromRow(Map<String, dynamic> row) {
+    DateTime? when(Object? v) =>
+        v == null ? null : DateTime.tryParse('$v')?.toLocal();
+
+    return PlatformOrg(
+      id: row['org_id'] as String,
+      name: row['name'] as String,
+      slug: (row['slug'] as String?) ?? '',
+      profile: (row['profile'] as String?) ?? 'generic',
+      currency: (row['currency'] as String?) ?? 'XOF',
+      archivedAt: when(row['archived_at']),
+      memberCount: (row['member_count'] as num?)?.toInt() ?? 0,
+      entryCount: (row['entry_count'] as num?)?.toInt() ?? 0,
+      createdAt: when(row['created_at']),
+    );
   }
 }

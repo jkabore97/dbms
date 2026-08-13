@@ -40,11 +40,14 @@ Each milestone ends with something demonstrable.
 | Esperance's store: products, sales, returns, expiry alerts (M5) | built, 11 assertions |
 | Employees, shifts and payroll (M5) | built, 8 assertions |
 | Camera capture with zero required fields, R2 upload (M5) | built, 10 assertions |
+| Barcode scanning and on-device OCR (M5) | built, 22 assertions, unproven on a device |
+| Renaming, archiving and deleting a business | built, 25 assertions |
 
 **Not built**
 
-On-device OCR and barcode scanning. Custom domains. Reading a QR with the
-camera — today the invitee types the code. Attributing a contribution
+Custom domains. Reading an invitation QR with the camera — today the invitee
+types the code, though the scanner built for barcodes is now most of what
+that needs. Attributing a contribution
 to a named church member from the recording sheet (the SQL and the giving
 statement both support it; the sheet has no member picker yet). Sharing an
 invoice as a PDF or an image — the farm can raise one and take payment against
@@ -75,8 +78,8 @@ reaching for another's pictures — but the HTTP path itself has not run.
 
 Everything below the network — routing, org resolution, the offline path, the
 ledger, the policies, the reports, the log, the farm's two ledgers, the shop's
-counter, the payroll and the capture queue — is covered by 102 Flutter tests
-and eleven SQL suites (115 assertions).
+counter, the payroll and the capture queue — is covered by 130 Flutter tests
+and twelve SQL suites (134 assertions).
 
 ---
 
@@ -307,15 +310,29 @@ Two departures from the text above, both deliberate:
   is orphaned objects when the app dies in between, which is a bucket
   lifecycle rule's problem rather than a schema's.
 
-Still open, and the last of M5: **on-device OCR and barcode scanning.** Both
-are accelerators over a capture flow that already works without them, both are
-Android-first, and neither can be proven by a test suite on a runner.
-`products.barcode`, `product_by_barcode()` and `documents.ocr_text` are the
-seams they attach to, and `set_document_ocr()` is already the call that stores
-a reading. The rule they have to keep is stated in `013_capture.sql`: a
-reading is advisory and authoritative over nothing, because a misread expiry
-date that silently became `products.expires_on` is the exact loss this module
-exists to prevent, with the app's name on it.
+**Complete.** The last two pieces are the accelerators: barcode scanning at
+the counter, and on-device OCR.
+
+Scanning finds a product by its code in one tap through `product_by_barcode()`
+and, when the shop has never seen the code, says so rather than inventing a
+product from a number. It works on both ship targets.
+
+OCR is Android only and reached through a conditional import, so the web build
+compiles a stub and never resolves ML Kit. It reads the photograph on the
+device: no connection needed, and no picture of anybody's invoice leaves the
+phone to be read. What it reads is offered as suggestions and **applied to
+nothing** — the rule stated in `013_capture.sql` and asserted from both sides,
+because a misread expiry date that silently became `products.expires_on` is
+the exact loss this module exists to prevent, with the app's name on it. The
+parser errs toward offering nothing: an ambiguous label leaves the box empty,
+which costs one person ten seconds instead of costing a shop money for as long
+as nobody notices.
+
+**Not verified, and cannot be here:** no Android SDK exists in the environment
+this was built in, so the APK has not been compiled and neither the scanner
+nor the reader has run on a device. The web build is verified — built, served
+and rendered — and the parser has 22 assertions over it, but the plugins
+themselves are unproven until somebody installs it on a phone.
 
 ---
 
@@ -339,8 +356,10 @@ M3 before M4: reports are what make people enter data carefully, and they cost
 little once the SQL exists.
 M4 and M5 can run in parallel if you bring in another developer.
 
-M1 through M4 are built. The next thing is M5 — or, better, a week with a
-real user before starting it.
+M1 through M5 are built. What is left is M6 — domains and distribution — and
+it is the wrong thing to do next. A week with one real user will reorder the
+rest of this list more usefully than any amount of planning, and none of it
+has been in anybody's hands yet.
 
 ## What matters more than any of this
 

@@ -1,8 +1,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The barcode scanner opens the camera directly (mobile_scanner), so it
+         needs this. The photo button does not: image_picker hands off to the
+         camera app through an intent, which carries its own permission. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- A phone with no camera can still do everything else in the app: the
+         gallery, the ledger, the reports. Required="false" keeps it
+         installable on one rather than being filtered out of the store. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <application
         android:label="kaj_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Downloads the text-recognition model at install time instead of
+             on first use. Without it the first photograph somebody takes
+             either waits on a download or silently reads nothing — and the
+             one place that happens is a shop with poor signal, which is
+             every shop this is for. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

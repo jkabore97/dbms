@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/retail/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/retail/retail_repository.dart';
+import '../capture/barcode_sheet.dart';
 
 /// Recording a sale, with a customer standing there.
 ///
@@ -25,6 +27,7 @@ class SaleSheet extends StatefulWidget {
     super.key,
     required this.orgId,
     required this.retail,
+    this.capture,
     this.products = const [],
   });
 
@@ -34,6 +37,10 @@ class SaleSheet extends StatefulWidget {
   /// What is on the shelves, for the picker. An empty list is not an error —
   /// a shop with no catalogue yet still sells things.
   final List<Product> products;
+
+  /// Only needed for `product_by_barcode()`. Null hides the scan button —
+  /// scanning a code and being told nothing is worse than not offering it.
+  final CaptureRepository? capture;
 
   @override
   State<SaleSheet> createState() => _SaleSheetState();
@@ -96,6 +103,56 @@ class _SaleSheetState extends State<SaleSheet> {
     });
   }
 
+  /// Scan, look up, and either select the product or say the shop has never
+  /// seen this code. Nothing is created here: a barcode is an identifier, not
+  /// a product, and inventing one from a number is how a shop ends up with
+  /// "6001234567890" on a shelf label.
+  Future<void> _scan() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+
+    final code = await BarcodeSheet.scan(context, title: 'Scanner un article');
+    if (code == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Fast path: this basket's own list is usually the right answer and needs
+    // no round trip, which matters at a counter with two bars of signal.
+    for (final product in widget.products) {
+      if (product.barcode == code) {
+        _pick(product);
+        return;
+      }
+    }
+
+    try {
+      final row = await capture.productByBarcode(widget.orgId, code);
+      if (!mounted) return;
+
+      if (row == null) {
+        messenger.showSnackBar(SnackBar(
+          content: Text('Code $code inconnu dans cette boutique. '
+              'Ajoutez l’article depuis Articles.'),
+        ));
+        return;
+      }
+
+      setState(() {
+        _picked = null;
+        _nameController.text = (row['name'] as String?) ?? '';
+        final price = row['sale_price'];
+        if (price != null) {
+          _priceController.text =
+              (price is num ? price : num.tryParse('$price') ?? 0)
+                  .toStringAsFixed(0);
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+
   void _pick(Product product) {
     setState(() {
       _picked = product;
@@ -148,7 +205,20 @@ class _SaleSheetState extends State<SaleSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Nouvelle vente', style: theme.textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Nouvelle vente',
+                      style: theme.textTheme.titleLarge),
+                ),
+                if (widget.capture != null)
+                  IconButton(
+                    onPressed: _busy ? null : _scan,
+                    icon: const Icon(Icons.qr_code_scanner),
+                    tooltip: 'Scanner un code-barres',
+                  ),
+              ],
+            ),
             const SizedBox(height: 16),
 
             if (widget.products.isNotEmpty) ...[

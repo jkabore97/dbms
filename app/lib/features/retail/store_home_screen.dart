@@ -145,6 +145,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       builder: (_) => SaleSheet(
         orgId: widget.org.id,
         retail: retail,
+        capture: widget.capture,
         products: _products,
       ),
     );

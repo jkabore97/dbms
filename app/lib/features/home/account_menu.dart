@@ -19,6 +19,7 @@ class AccountMenu extends StatelessWidget {
     this.onJoinByCode,
     this.onAccounting,
     this.onCreateBusiness,
+    this.onBusinesses,
   });
 
   final LocalDb db;
@@ -30,6 +31,10 @@ class AccountMenu extends StatelessWidget {
 
   /// Null unless this person administers the org they are currently in.
   final VoidCallback? onAdminister;
+
+  /// The platform's own list of businesses. Null for everyone who is not a
+  /// platform admin, and `all_orgs()` refuses them server-side anyway.
+  final VoidCallback? onBusinesses;
 
   /// The books: journal, résultat, bilan, plan comptable, balance. Offered to
   /// every member rather than to admins only — a summary observer opening
@@ -96,6 +101,8 @@ class AccountMenu extends StatelessWidget {
             onAdminister?.call();
           case 'join':
             onJoinByCode?.call();
+          case 'businesses':
+            onBusinesses?.call();
           case 'create':
             onCreateBusiness?.call();
           case 'switch':
@@ -138,6 +145,15 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.confirmation_number_outlined),
               title: Text("J'ai un code"),
+            ),
+          ),
+        if (onBusinesses != null)
+          const PopupMenuItem<String>(
+            value: 'businesses',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.business_outlined),
+              title: Text('Entreprises'),
             ),
           ),
         if (onCreateBusiness != null)

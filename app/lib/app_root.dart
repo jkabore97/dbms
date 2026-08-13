@@ -19,6 +19,7 @@ import 'core/sync/sync_service.dart';
 import 'features/accounting/accounting_hub_screen.dart';
 import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
+import 'features/admin/businesses_screen.dart';
 import 'features/admin/create_business_screen.dart';
 import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -315,6 +316,20 @@ class _AppRootState extends State<AppRoot> {
   /// routing: a platform admin's list is every business there is, so making
   /// one would otherwise drop them on the picker to hunt for what they just
   /// made.
+  /// The platform's own list: every business, archived ones included, with
+  /// the buttons that change, archive and destroy one. Reloads the org list
+  /// afterwards, because renaming or archiving from in there changes what this
+  /// person can open.
+  Future<void> _openBusinesses() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BusinessesScreen(admin: widget.admin),
+      ),
+    );
+    if (!mounted) return;
+    await _resolveOrgs();
+  }
+
   Future<void> _createBusiness() async {
     final orgId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
@@ -471,6 +486,9 @@ class _AppRootState extends State<AppRoot> {
           onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
               ? _createBusiness
               : null,
+          onBusinesses: _isPlatformAdmin && widget.auth.hasLiveSession
+              ? _openBusinesses
+              : null,
         );
 
       case _Phase.ready:
@@ -509,6 +527,9 @@ class _AppRootState extends State<AppRoot> {
                   widget.auth.hasLiveSession ? _joinByCode : null,
               onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
                   ? _createBusiness
+                  : null,
+              onBusinesses: _isPlatformAdmin && widget.auth.hasLiveSession
+                  ? _openBusinesses
                   : null,
               onSwitchOrg: _orgs.length > 1
                   ? () => setState(() {
