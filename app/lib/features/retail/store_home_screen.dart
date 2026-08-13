@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
+import '../capture/capture_action.dart';
+import '../capture/gallery_screen.dart';
 import 'products_screen.dart';
 import 'staff_screen.dart';
 import 'sale_sheet.dart';
@@ -33,6 +36,7 @@ class StoreHomeScreen extends StatefulWidget {
     required this.org,
     this.retail,
     this.staff,
+    this.capture,
     this.accountAction,
   });
 
@@ -44,6 +48,11 @@ class StoreHomeScreen extends StatefulWidget {
   /// Wages. Null in a build with no server, and every screen behind it is
   /// refused by RLS for anyone who is not an org admin.
   final StaffRepository? staff;
+
+  /// Photographs. Null in a build with no server, and not configured in a
+  /// build made before the upload Worker had a URL — in both cases the camera
+  /// button is hidden rather than shown and failing.
+  final CaptureRepository? capture;
 
   final Widget? accountAction;
 
@@ -62,6 +71,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   List<ExpiringProduct> _expiring = const [];
   List<Product> _products = const [];
   double _lossesAvoided = 0;
+  int _photosWaiting = 0;
 
   bool _loading = true;
   String? _error;
@@ -93,12 +103,27 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       final products = await retail.products(widget.org.id);
       final avoided = await retail.lossesAvoided(widget.org.id);
 
+      // Photographs taken before there was signal go now, quietly. Failing to
+      // send them must not fail the home screen — the bytes are still on the
+      // device and the banner below says so.
+      var waiting = 0;
+      final capture = widget.capture;
+      if (capture != null && capture.isConfigured) {
+        try {
+          await capture.drain();
+        } catch (_) {
+          // Reported by the count, not by an error.
+        }
+        waiting = (await capture.queueHealth(widget.org.id)).waiting;
+      }
+
       if (!mounted) return;
       setState(() {
         _day = day;
         _expiring = expiring;
         _products = products;
         _lossesAvoided = avoided;
+        _photosWaiting = waiting;
         _loading = false;
       });
     } catch (error) {
@@ -126,11 +151,42 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     if (recorded == true) await _load();
   }
 
+  Future<void> _photograph() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+
+    // Straight to the camera. No sheet, no choice, no field: a choice is a
+    // field, and every field at capture time loses a user.
+    final taken = await CaptureAction.take(
+      context,
+      orgId: widget.org.id,
+      capture: capture,
+    );
+    if (taken) await _load();
+  }
+
+  Future<void> _openGallery() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GalleryScreen(
+          org: widget.org,
+          capture: capture,
+          retail: widget.retail,
+        ),
+      ),
+    );
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final atRisk =
-        _expiring.fold<double>(0, (sum, p) => sum + p.valueAtRisk);
+    final canPhotograph =
+        widget.capture != null && widget.capture!.isConfigured;
+    final atRisk = _expiring.fold<double>(0, (sum, p) => sum + p.valueAtRisk);
 
     return Scaffold(
       appBar: AppBar(
@@ -153,6 +209,12 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     await _load();
                   },
           ),
+          if (canPhotograph)
+            IconButton(
+              icon: const Icon(Icons.photo_library_outlined),
+              tooltip: 'Photos',
+              onPressed: _openGallery,
+            ),
           if (widget.staff != null)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
@@ -172,12 +234,33 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
-      floatingActionButton: widget.retail == null
+      // The camera is the primary action and the sale is the small one above
+      // it. That is the wrong way round for a till and the right way round
+      // for this shop: what a sale is worth is already known when it happens,
+      // and what is lost is lost because nobody wrote the delivery down.
+      floatingActionButton: (widget.retail == null && !canPhotograph)
           ? null
-          : FloatingActionButton.extended(
-              onPressed: _sell,
-              icon: const Icon(Icons.point_of_sale),
-              label: const Text('Vente'),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (widget.retail != null)
+                  FloatingActionButton.small(
+                    heroTag: 'sell',
+                    onPressed: _sell,
+                    tooltip: 'Vente',
+                    child: const Icon(Icons.point_of_sale),
+                  ),
+                if (widget.retail != null && canPhotograph)
+                  const SizedBox(height: 12),
+                if (canPhotograph)
+                  FloatingActionButton.extended(
+                    heroTag: 'photo',
+                    onPressed: _photograph,
+                    icon: const Icon(Icons.photo_camera),
+                    label: const Text('Photo'),
+                  ),
+              ],
             ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -200,6 +283,32 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                       onPressed: _load,
                       icon: const Icon(Icons.refresh),
                       label: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Pictures this phone is still holding. Not an error: taking one
+            // with no signal is the module working, and calling it a failure
+            // would teach her to stop taking them exactly when they matter.
+            if (_photosWaiting > 0) ...[
+              _Panel(
+                colour: theme.colorScheme.secondaryContainer,
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_upload_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$_photosWaiting photo${_photosWaiting > 1 ? 's' : ''} '
+                        'sur cet appareil, en attente de réseau.',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _load,
+                      child: const Text('Envoyer'),
                     ),
                   ],
                 ),

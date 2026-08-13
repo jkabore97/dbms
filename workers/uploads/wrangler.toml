@@ -1,0 +1,39 @@
+# The photo bucket's only door. See src/index.js for why it is a Worker
+# rather than pre-signed URLs.
+#
+# Deployed separately from the app (workflows/deploy-uploads.yml) on purpose:
+# this one needs an API token with R2 permission as well as Workers, and if
+# that token is not right the app's own deploy must still go out.
+
+name = "kaj-uploads"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Gives kaj-uploads.<subdomain>.workers.dev, which is what the app is
+# compiled to talk to until there is a domain.
+workers_dev = true
+
+# The bucket was created 2026-08-08 and is named in BUILD_PLAN.md — not a
+# placeholder. Nothing else in this repository may write to it.
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "kaj-app-uploads"
+
+[vars]
+# Public values, both of them: SUPABASE_URL and the anon key are compiled into
+# the Flutter web bundle and readable by anyone who opens it. They are here so
+# the Worker can forward the caller's own token to PostgREST.
+#
+# Set at deploy time from the same repository secrets the app build uses —
+# see deploy-uploads.yml, which writes them over these before deploying.
+SUPABASE_URL = ""
+SUPABASE_PUBLISHABLE_KEY = ""
+
+# Who may call this from a browser. Deliberately not a wildcard: the endpoint
+# answers differently per caller, so any origin allowed here can read the
+# photographs of whoever is signed in when they visit it.
+ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"
+
+# Deploy with:
+#   wrangler deploy --config workers/uploads/wrangler.toml
+# The token needs "Workers Scripts: Edit" and "Workers R2 Storage: Edit".

@@ -49,3 +49,12 @@ app.*.map.json
 # version in pubspec.yaml, so a checked-in copy would silently go stale.
 /web/sqlite3.wasm
 /web/sqflite_sw.js
+
+# Ship targets are web and Android. `flutter create` regenerates these four
+# every time a plugin with a desktop or iOS implementation is added, and
+# every one of those regenerations is a diff nobody reads about a platform
+# nobody builds. They were tracked once and are ignored now.
+/ios/
+/linux/
+/macos/
+/windows/

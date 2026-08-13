@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
@@ -34,13 +35,14 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
         await _createClosureSchema(db);
         await _createNamingSchema(db);
         await _createFarmSchema(db);
+        await _createCaptureSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // v1 -> v2: who this device belongs to, and which businesses they can
@@ -55,6 +57,10 @@ class LocalDb {
         // v4 -> v5: sacks and birds, which are counted on a device that has
         // been out of range since Tuesday.
         if (oldVersion < 5) await _createFarmSchema(db);
+        // v5 -> v6: photographs taken before there was any signal to send
+        // them with. The bytes wait here rather than in memory, because the
+        // app being closed is the normal end of a market day.
+        if (oldVersion < 6) await _createCaptureSchema(db);
       },
     );
     return LocalDb._(db);
@@ -261,6 +267,119 @@ class LocalDb {
         closed     INTEGER NOT NULL DEFAULT 0
       )
     ''');
+  }
+
+  // ----------------------------------------------------------------
+  // Captures waiting for signal
+  // ----------------------------------------------------------------
+
+  /// Photographs the phone has taken and not yet managed to upload.
+  ///
+  /// Kept in its own table rather than as `outbox` rows for one reason: size.
+  /// An outbox row is a few hundred bytes of JSON and the sync loop drains
+  /// dozens at a time; a photograph is two megabytes and has to be sent one
+  /// at a time over a connection that is the reason it is queued at all.
+  ///
+  /// The bytes are on the device and nowhere else until this row is deleted,
+  /// which is why the row is deleted only after the server has confirmed the
+  /// document — not after the upload.
+  static Future<void> _createCaptureSchema(Database db) async {
+    await db.execute('''
+      CREATE TABLE pending_captures (
+        client_uuid  TEXT PRIMARY KEY,
+        org_id       TEXT NOT NULL,
+        bytes        BLOB NOT NULL,
+        content_type TEXT NOT NULL,
+        kind         TEXT,
+        caption      TEXT,
+        captured_at  TEXT NOT NULL,
+        attempts     INTEGER NOT NULL DEFAULT 0,
+        last_error   TEXT
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX pending_captures_by_org ON pending_captures (org_id, captured_at)',
+    );
+  }
+
+  /// Takes custody of a photograph. Returns the client_uuid it was filed
+  /// under, which is also what makes the upload idempotent server-side.
+  Future<String> queueCapture({
+    required String orgId,
+    required Uint8List bytes,
+    required String contentType,
+    String? kind,
+    String? caption,
+    DateTime? capturedAt,
+    String? clientUuid,
+  }) async {
+    final id = clientUuid ?? _uuid.v4();
+    await _db.insert(
+      'pending_captures',
+      {
+        'client_uuid': id,
+        'org_id': orgId,
+        'bytes': bytes,
+        'content_type': contentType,
+        'kind': kind,
+        'caption': caption,
+        'captured_at':
+            (capturedAt ?? DateTime.now()).toUtc().toIso8601String(),
+        'attempts': 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return id;
+  }
+
+  Future<List<Map<String, Object?>>> pendingCaptures({int limit = 5}) {
+    return _db.query(
+      'pending_captures',
+      orderBy: 'captured_at ASC',
+      limit: limit,
+    );
+  }
+
+  /// How many pictures this phone is still holding, and how many of those it
+  /// has tried to send and been refused. Same distinction as `outboxHealth`:
+  /// never-tried is a signal problem and normal, tried-and-failed is
+  /// something a person has to be told about.
+  Future<({int waiting, int stuck})> captureQueueHealth([String? orgId]) async {
+    final rows = await _db.rawQuery(
+      '''
+      SELECT
+        COUNT(*) AS waiting,
+        SUM(CASE WHEN attempts > 0 THEN 1 ELSE 0 END) AS stuck
+      FROM pending_captures
+      ${orgId == null ? '' : 'WHERE org_id = ?'}
+      ''',
+      orgId == null ? const [] : [orgId],
+    );
+    final row = rows.first;
+    return (
+      waiting: (row['waiting'] as int?) ?? 0,
+      stuck: (row['stuck'] as int?) ?? 0,
+    );
+  }
+
+  /// Only ever called once the server has confirmed the document row exists.
+  /// Deleting on a successful upload alone would drop the only copy of a
+  /// photograph whose `record_document` call then failed.
+  Future<void> captureSent(String clientUuid) async {
+    await _db.delete(
+      'pending_captures',
+      where: 'client_uuid = ?',
+      whereArgs: [clientUuid],
+    );
+  }
+
+  Future<void> captureFailed(String clientUuid, String error) async {
+    await _db.rawUpdate(
+      'UPDATE pending_captures SET attempts = attempts + 1, last_error = ? '
+      'WHERE client_uuid = ?',
+      [error, clientUuid],
+    );
   }
 
   // ----------------------------------------------------------------

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/reports/reports_repository.dart';
@@ -25,6 +26,7 @@ Widget homeScreenFor({
   FarmRepository? farm,
   RetailRepository? retail,
   StaffRepository? staff,
+  CaptureRepository? capture,
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
@@ -35,6 +37,7 @@ Widget homeScreenFor({
         orgName: org.name,
         reports: reports,
         org: org,
+        capture: capture,
         accountAction: accountAction,
         onHistory: onHistory,
       ),
@@ -42,12 +45,14 @@ Widget homeScreenFor({
         db: db,
         org: org,
         farm: farm,
+        capture: capture,
         accountAction: accountAction,
       ),
     'retail' => StoreHomeScreen(
         org: org,
         retail: retail,
         staff: staff,
+        capture: capture,
         accountAction: accountAction,
       ),
     // Anything else — a profile added server-side that this build has never

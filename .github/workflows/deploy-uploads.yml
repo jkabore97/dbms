@@ -1,0 +1,90 @@
+name: Deploy the upload Worker
+
+# Publishes workers/uploads — the only thing allowed to write to the
+# kaj-app-uploads R2 bucket.
+#
+# Kept apart from "Deploy to Cloudflare" for one reason: this needs an API
+# token with **Workers R2 Storage: Edit** on top of Workers Scripts: Edit. If
+# the token in CLOUDFLARE_API_TOKEN does not have it, wrangler fails at the
+# binding — and that must not be able to stop the app itself going out.
+#
+# The R2 permission is the only new thing this asks of the account. The bucket
+# already exists (created 2026-08-08).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/uploads/**'
+      - '.github/workflows/deploy-uploads.yml'
+
+concurrency:
+  group: cloudflare-uploads
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check what this needs is present
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          if [ -n "$missing" ]; then
+            echo "Empty at deploy time:$missing" >&2
+            echo "All three are repository secrets:" >&2
+            echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions" >&2
+            exit 1
+          fi
+
+      # Fails in seconds with a readable reason rather than four minutes in
+      # with "Invalid access token [code: 9109]", which is what an expired
+      # token looked like the first time.
+      - name: Check the Cloudflare token is one Cloudflare accepts
+        run: |
+          body=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify) || true
+          case "$body" in
+            *'"success":true'*) echo "Token accepted by Cloudflare." ;;
+            *)
+              echo "Cloudflare rejected CLOUDFLARE_API_TOKEN." >&2
+              echo "$body" >&2
+              echo "Create one at https://dash.cloudflare.com/profile/api-tokens with" >&2
+              echo "  Workers Scripts: Edit   and   Workers R2 Storage: Edit" >&2
+              exit 1
+              ;;
+          esac
+
+      # The two Supabase values are public — they are compiled into the web
+      # bundle already — but they are passed as vars rather than committed so
+      # the project can move without editing a checked-in file.
+      - name: Deploy
+        run: |
+          npx --yes wrangler@4 deploy \
+            --config workers/uploads/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
+            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+
+      - name: Say where it went
+        run: |
+          {
+            echo "### Upload Worker deployed"
+            echo
+            echo "Health check: \`/v1/health\` on the kaj-uploads worker URL above."
+            echo
+            echo "For the app to use it, set the repository variable"
+            echo "\`UPLOADS_URL\` to that origin and re-run *Deploy to Cloudflare*."
+            echo "Until then the camera button stays hidden rather than failing."
+          } >> "$GITHUB_STEP_SUMMARY"

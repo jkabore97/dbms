@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
+import '../capture/gallery_screen.dart';
 import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
@@ -29,6 +31,7 @@ class ChurchHomeScreen extends StatefulWidget {
     required this.orgName,
     this.reports,
     this.org,
+    this.capture,
     this.accountAction,
     this.onHistory,
   });
@@ -47,6 +50,11 @@ class ChurchHomeScreen extends StatefulWidget {
 
   /// The account menu, supplied by whatever resolved the org — sign out and
   /// switch business live there.
+  /// Photographs. A church has receipts too — the mason's invoice for the
+  /// roof is the same object as a shop's delivery note. Null in a build with
+  /// no server or no upload Worker, and the button is then not shown.
+  final CaptureRepository? capture;
+
   final Widget? accountAction;
 
   /// Opens the history of every entry ever recorded. Null in a build with no
@@ -220,6 +228,22 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
               icon: const Icon(Icons.history),
               tooltip: 'Historique',
               onPressed: widget.onHistory,
+            ),
+          if (widget.capture != null &&
+              widget.capture!.isConfigured &&
+              widget.org != null)
+            IconButton(
+              icon: const Icon(Icons.photo_camera_outlined),
+              tooltip: 'Photos',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GalleryScreen(
+                    org: widget.org!,
+                    capture: widget.capture!,
+                  ),
+                ),
+              ),
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
