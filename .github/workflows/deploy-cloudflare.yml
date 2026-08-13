@@ -42,6 +42,12 @@ jobs:
       SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      # Where photographs go. A repository *variable* rather than a secret:
+      # it is a public hostname, and a missing one is not a failure — the app
+      # simply hides the camera button rather than showing one that cannot
+      # work. Set it to the kaj-uploads Worker's origin once
+      # "Deploy the upload Worker" has run.
+      UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -91,7 +97,8 @@ jobs:
         run: |
           flutter build web --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=UPLOADS_URL="$UPLOADS_URL"
 
       - name: Deploy
         run: npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml

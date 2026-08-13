@@ -9,6 +9,7 @@ import 'app_root.dart';
 import 'core/accounting/accounting_repository.dart';
 import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
+import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
@@ -25,6 +26,14 @@ import 'core/sync/sync_service.dart';
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const supabasePublishableKey =
     String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+
+/// Where photographs go: the origin of the upload Worker (workers/uploads),
+/// e.g. `https://kaj-uploads.kabore-boss.workers.dev`.
+///
+/// Empty in a build made before that Worker was deployed, and the camera
+/// button is then hidden rather than shown and failing. A button that does
+/// nothing teaches people the app is broken.
+const uploadsUrl = String.fromEnvironment('UPLOADS_URL');
 
 Future<void> main() async {
   // Anything thrown before `runApp` leaves the browser showing a blank white
@@ -81,6 +90,7 @@ Future<void> _startup() async {
     farm: FarmRepository(client),
     retail: RetailRepository(client),
     staff: StaffRepository(client),
+    capture: CaptureRepository(client, db: db, uploadsUrl: uploadsUrl),
     sync: sync,
   ));
 }
@@ -154,6 +164,7 @@ class KajApp extends StatelessWidget {
     required this.farm,
     required this.retail,
     required this.staff,
+    required this.capture,
     this.sync,
   });
 
@@ -166,6 +177,7 @@ class KajApp extends StatelessWidget {
   final FarmRepository farm;
   final RetailRepository retail;
   final StaffRepository staff;
+  final CaptureRepository capture;
   final SyncService? sync;
 
   @override
@@ -195,6 +207,7 @@ class KajApp extends StatelessWidget {
         farm: farm,
         retail: retail,
         staff: staff,
+        capture: capture,
         sync: sync,
       ),
     );

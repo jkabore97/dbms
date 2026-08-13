@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
+import '../capture/gallery_screen.dart';
 import 'farm_sheets.dart';
 import 'flocks_screen.dart';
 import 'invoices_screen.dart';
@@ -30,6 +32,7 @@ class FarmHomeScreen extends StatefulWidget {
     required this.db,
     required this.org,
     this.farm,
+    this.capture,
     this.accountAction,
   });
 
@@ -39,6 +42,10 @@ class FarmHomeScreen extends StatefulWidget {
   /// Null in a build with no server. The recording sheets still work; the
   /// stock and flock counts cannot be computed from one device.
   final FarmRepository? farm;
+
+  /// Photographs — a feed delivery note, a vet's prescription. Null in a
+  /// build with no server or no upload Worker.
+  final CaptureRepository? capture;
 
   final Widget? accountAction;
 
@@ -190,6 +197,20 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                   avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
                   label: Text('$_pending en attente'),
                   visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          if (widget.capture != null && widget.capture!.isConfigured)
+            IconButton(
+              icon: const Icon(Icons.photo_camera_outlined),
+              tooltip: 'Photos',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GalleryScreen(
+                    org: widget.org,
+                    capture: widget.capture!,
+                  ),
                 ),
               ),
             ),

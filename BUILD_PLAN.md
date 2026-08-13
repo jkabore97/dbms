@@ -37,11 +37,14 @@ Each milestone ends with something demonstrable.
 | Editable chart of accounts, transfers between cash accounts | built |
 | Activity log + super admin console (logs, data, device) | built, 10 assertions |
 | Ignace's farm: stock, flocks, eggs, invoices (M4) | built, 17 assertions |
+| Esperance's store: products, sales, returns, expiry alerts (M5) | built, 11 assertions |
+| Employees, shifts and payroll (M5) | built, 8 assertions |
+| Camera capture with zero required fields, R2 upload (M5) | built, 10 assertions |
 
 **Not built**
 
-Store module. Photos and OCR. Custom domains. Employee/payroll. Reading a QR
-with the camera — today the invitee types the code. Attributing a contribution
+On-device OCR and barcode scanning. Custom domains. Reading a QR with the
+camera — today the invitee types the code. Attributing a contribution
 to a named church member from the recording sheet (the SQL and the giving
 statement both support it; the sheet has no member picker yet). Sharing an
 invoice as a PDF or an image — the farm can raise one and take payment against
@@ -64,9 +67,16 @@ no credentials. Specifically unproven end to end —
   produce on somebody's phone days later, but no request has actually been
   made.
 
+Also unproven: the upload Worker. `workers/uploads/` has never had a real
+photograph put through it, because it needs a deployed Worker with an R2
+binding and a live Supabase token. Its authorisation is delegated entirely to
+RLS, which *is* tested — `database/tests/test_capture.sql` is one shop
+reaching for another's pictures — but the HTTP path itself has not run.
+
 Everything below the network — routing, org resolution, the offline path, the
-ledger, the policies, the reports, the log, the farm's two ledgers — is covered
-by 66 Flutter tests and seven SQL suites (79 assertions).
+ledger, the policies, the reports, the log, the farm's two ledgers, the shop's
+counter, the payroll and the capture queue — is covered by 102 Flutter tests
+and eleven SQL suites (115 assertions).
 
 ---
 
@@ -276,12 +286,36 @@ same `record_entry()` every other module uses, expiry alerts valued in money,
 and a losses-avoided total. Selling is idempotent by `client_uuid`, so the
 phone can retry.
 
-Still open, and the harder half: the camera button with zero required fields,
-the R2 upload, the on-device OCR, and barcode scanning. Those need a device
-and R2 credentials to build against, and none of them can be proven by a test
-suite on a runner. `products.barcode` and `documents` are the seams.
 Employees, shifts and payroll are built — `012_employees.sql`, and the
 Personnel screen behind the store's home screen.
+
+The capture half is built too — `013_capture.sql`, `workers/uploads/`, and the
+camera button that is now the store's primary action. It takes a photograph
+with zero required fields, keeps the bytes on the device until there is
+signal, and files them in R2 under `org/<org_id>/…` through a Worker that
+authorises by forwarding the caller's own token to PostgREST. Naming a picture
+or attaching it to a product is a separate act, done later or never.
+
+Two departures from the text above, both deliberate:
+
+- **The upload is a Worker, not a pre-signed URL.** Pre-signing still needs a
+  server to decide who may have a URL, and once that server exists the signing
+  buys nothing but a second moving part that holds a key.
+- **The photograph is recorded after the bytes land, never before.** A row
+  pointing at an object that does not exist puts a broken thumbnail in a
+  gallery with nothing the person holding the phone can do about it. The cost
+  is orphaned objects when the app dies in between, which is a bucket
+  lifecycle rule's problem rather than a schema's.
+
+Still open, and the last of M5: **on-device OCR and barcode scanning.** Both
+are accelerators over a capture flow that already works without them, both are
+Android-first, and neither can be proven by a test suite on a runner.
+`products.barcode`, `product_by_barcode()` and `documents.ocr_text` are the
+seams they attach to, and `set_document_ocr()` is already the call that stores
+a reading. The rule they have to keep is stated in `013_capture.sql`: a
+reading is advisory and authoritative over nothing, because a misread expiry
+date that silently became `products.expires_on` is the exact loss this module
+exists to prevent, with the app's name on it.
 
 ---
 

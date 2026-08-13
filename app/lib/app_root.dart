@@ -8,6 +8,7 @@ import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/auth/models.dart';
 import 'core/auth/pin_codec.dart';
+import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
@@ -53,6 +54,7 @@ class AppRoot extends StatefulWidget {
     required this.farm,
     required this.retail,
     required this.staff,
+    required this.capture,
     this.sync,
   });
 
@@ -65,6 +67,7 @@ class AppRoot extends StatefulWidget {
   final FarmRepository farm;
   final RetailRepository retail;
   final StaffRepository staff;
+  final CaptureRepository capture;
   final SyncService? sync;
 
   @override
@@ -481,6 +484,7 @@ class _AppRootState extends State<AppRoot> {
             farm: widget.farm,
             retail: widget.retail,
             staff: widget.staff,
+            capture: widget.capture,
             // Same live-session rule as the reports: the history is paged by
             // the database, so it is offered only while there is a session to
             // page with.

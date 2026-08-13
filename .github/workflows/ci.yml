@@ -110,6 +110,27 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_employees.sql
 
+      # The bucket has no row-level security of its own — `org/<org_id>/…` is
+      # the whole of the tenancy model in R2 — so the suite that matters here
+      # is one shop reaching for another's photographs, plus the two things
+      # that would make the module worse than nothing: a capture that requires
+      # a field, and an OCR reading that silently becomes a product's expiry.
+      - name: Prove a photograph costs nothing to take and cannot be taken
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_capture.sql
+
+  # The upload Worker has no test runner in this repository, so this is the
+  # cheapest thing that would have caught the failure it can actually have:
+  # a syntax error published straight to production, where the first symptom
+  # is every photograph in every business failing at once.
+  check-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --check workers/uploads/src/index.js
+      - run: node --check workers/tenant-router/src/index.js
+
   flutter-analyze:
     runs-on: ubuntu-latest
     steps:

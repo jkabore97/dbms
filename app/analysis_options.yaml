@@ -5,6 +5,14 @@ analyzer:
     # Missing an await on a Future is a real bug in offline sync code —
     # treat it as an error, not a hint.
     unawaited_futures: error
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:

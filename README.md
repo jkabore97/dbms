@@ -158,10 +158,9 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   actually goes. 11 assertions in `database/tests/test_retail.sql`, most of
   them the four ways a retail module inflates profit.
 
-  Not built, and named here so nobody assumes otherwise: the camera capture,
-  the R2 photo upload, the on-device OCR and the barcode scanner that M5 also
-  asks for. `products.barcode` and the `documents` table are the seams they
-  attach to. None of them can be written or tested without a device in a hand.
+  The barcode scanner and the on-device OCR that M5 also asks for are not
+  built. `products.barcode`, `documents.ocr_text` and `product_by_barcode()`
+  are the seams they attach to; neither can be proven on a runner.
 - The payroll (`012_employees.sql`, M5) — permanent and casual staff, shifts,
   and payments that post to the ledger beside rent and stock. Being paid and
   being able to open the books are different things: `employees.user_id` is
@@ -171,10 +170,31 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   Reading any of it needs an org admin rather than mere membership — what a
   colleague earns is more sensitive than the takings. 8 assertions in
   `database/tests/test_employees.sql`.
-- Next: the rest of M5 — the camera with zero required fields, the R2 upload,
-  on-device OCR and barcode scanning — capture-first, photo to R2, on-device OCR —
-  and a camera scanner so a QR can be read as well as shown; today the invitee
-  types the code.
+- The camera (`013_capture.sql`, `workers/uploads/`, M5) — the store's primary
+  action is now a photograph with **zero required fields**: no category, no
+  product, no amount, not a name. The bytes go to the device's own database
+  first and to Cloudflare R2 when there is signal, so a picture taken in a
+  market with no bars is not lost and is not reported as a failure. Filing it
+  is a separate act, done later or never, from the gallery — a photograph that
+  stays unfiled forever is the design working.
+
+  `workers/uploads/` is the only thing allowed to write to the bucket and it
+  decides nothing itself: it forwards the caller's own token to PostgREST and
+  lets RLS answer both "may they upload to this business" and "may they read
+  this picture". The bucket has no row-level security of its own, so
+  `org/<org_id>/…` is the whole of the tenancy model there, checked on the way
+  in and on the way out. 10 assertions in `database/tests/test_capture.sql`,
+  most of them one shop reaching for another's photographs; 8 more in
+  `app/test/capture_queue_test.dart`, all of them about a photograph surviving
+  the app being closed.
+
+  The camera button is drawn only in a build compiled with `UPLOADS_URL`. A
+  button that does nothing teaches people the app is broken.
+- Next: the two accelerators that close M5 — reading a barcode with the camera
+  so a known product is one scan rather than a search, and on-device OCR so a
+  delivery note pre-fills a product form. Both need a phone in a hand to
+  verify. Also still open: reading an invitation QR with the camera, rather
+  than the invitee typing the code.
 
 ## Cloud development (recommended)
 
@@ -330,6 +350,45 @@ hostname. `workers/tenant-router` is a separate Worker for a separate job:
 attaching tenant headers for server-side callers such as a Supabase Edge
 Function. Hosting the app does not depend on it.
 
+## The upload Worker
+
+Photographs do not go to Supabase. They go to the R2 bucket `kaj-app-uploads`,
+through `workers/uploads`, which is the only thing in this repository allowed
+to write there.
+
+It is a Worker rather than a pre-signed URL for one reason: signing still needs
+something to decide *who may have a URL*, and once that exists the signing buys
+nothing but a second moving part holding a key. So the Worker holds the R2
+binding and never hands it out.
+
+**It decides nothing itself.** Every authorisation question is forwarded to
+Postgres and answered by the same RLS policies that guard the tables — it asks
+"may this token see this org?" by doing the select *as that token* and looking
+at whether a row comes back, and "may they see this picture?" by selecting the
+`documents` row for that key the same way. It holds no service-role key, so
+there is nothing in it that could answer wrongly and be believed.
+
+The bucket has no row-level security of its own. `org/<org_id>/…` is the whole
+of the tenancy model there, checked on the way in and on the way out.
+
+```
+wrangler deploy --config workers/uploads/wrangler.toml \
+  --var "SUPABASE_URL:$SUPABASE_URL" \
+  --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY"
+```
+
+The API token needs **Workers R2 Storage: Edit** on top of Workers Scripts:
+Edit — which is why *Deploy the upload Worker* is a separate workflow from
+*Deploy to Cloudflare*: a token that cannot bind R2 must not be able to stop
+the app itself going out.
+
+Then set the repository **variable** `UPLOADS_URL` to that Worker's origin and
+re-run *Deploy to Cloudflare*. Until it is set the camera button is not drawn
+at all — a button that does nothing teaches people the app is broken — and
+`ALLOWED_ORIGINS` in `workers/uploads/wrangler.toml` has to name the site
+calling it, because the endpoint answers differently per caller and a wildcard
+there would let any page a signed-in person opens read their photographs.
+
 ## Keeping the live database up to date
 
 Migrations are applied to Supabase by hand — nothing deploys them. The app and
@@ -340,19 +399,19 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database that is at `005` up to `012`, paste
-`database/apply_006_to_012.sql` into the Supabase SQL editor and run it once.
-It is `006` through `010` concatenated inside one transaction, so it either all
-lands or none of it does — which matters because several migrations are *not*
-re-runnable (`006` fails on a policy that already exists), and a file that
-stops halfway leaves the schema in neither state. It ends with
-`notify pgrst, 'reload schema'` so PostgREST stops answering from a stale
-cache.
+To bring a database anywhere between `005` and `013` up to date, paste
+`database/apply_006_to_013.sql` into the Supabase SQL editor and run it once.
+It is `006` through `013` concatenated inside one transaction, so it either
+all lands or none of it does, and every migration in it is re-runnable — each
+drops what it recreates and creates nothing unconditionally — so running it
+against a database that is already part-way through is safe and is the normal
+way to use it. It ends with `notify pgrst, 'reload schema'` so PostgREST stops
+answering from a stale cache.
 
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 012
+scripts/build-migration-bundle.sh 006 013
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

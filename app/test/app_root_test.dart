@@ -7,6 +7,7 @@ import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/auth/pin_codec.dart';
+import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
@@ -46,8 +47,13 @@ void main() {
   final retail = RetailRepository(null);
   final staff = StaffRepository(null);
 
+  late CaptureRepository capture;
+
   setUp(() async {
     db = await LocalDb.open(path: inMemoryDatabasePath);
+    // Null client and no upload URL: the camera button is hidden rather than
+    // shown and failing, which is what a build with no backend must do.
+    capture = CaptureRepository(null, db: db);
   });
 
   // sqflite keys open databases by path, so an in-memory database outlives the
@@ -83,6 +89,7 @@ void main() {
           farm: farm,
           retail: retail,
           staff: staff,
+          capture: capture,
         ),
       ),
     );
