@@ -6,9 +6,12 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_root.dart';
+import 'core/accounting/accounting_repository.dart';
 import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
+import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
+import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -69,6 +72,9 @@ Future<void> _startup() async {
     db: db,
     auth: AuthRepository(client),
     admin: AdminRepository(client),
+    reports: ReportsRepository(client),
+    accounting: AccountingRepository(client),
+    console: ConsoleRepository(client),
     sync: sync,
   ));
 }
@@ -136,12 +142,18 @@ class KajApp extends StatelessWidget {
     required this.db,
     required this.auth,
     required this.admin,
+    required this.reports,
+    required this.accounting,
+    required this.console,
     this.sync,
   });
 
   final LocalDb db;
   final AuthRepository auth;
   final AdminRepository admin;
+  final ReportsRepository reports;
+  final AccountingRepository accounting;
+  final ConsoleRepository console;
   final SyncService? sync;
 
   @override
@@ -161,7 +173,15 @@ class KajApp extends StatelessWidget {
       ),
       // No org is named anywhere in this file, and none ever should be. Which
       // business opens is decided by the signed-in user's memberships.
-      home: AppRoot(db: db, auth: auth, admin: admin, sync: sync),
+      home: AppRoot(
+        db: db,
+        auth: auth,
+        admin: admin,
+        reports: reports,
+        accounting: accounting,
+        console: console,
+        sync: sync,
+      ),
     );
   }
 }

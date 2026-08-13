@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
+import 'core/accounting/accounting_repository.dart';
 import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/auth/models.dart';
 import 'core/auth/pin_codec.dart';
+import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
+import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
+import 'features/accounting/accounting_hub_screen.dart';
+import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
 import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -36,12 +43,18 @@ class AppRoot extends StatefulWidget {
     required this.db,
     required this.auth,
     required this.admin,
+    required this.reports,
+    required this.accounting,
+    required this.console,
     this.sync,
   });
 
   final LocalDb db;
   final AuthRepository auth;
   final AdminRepository admin;
+  final ReportsRepository reports;
+  final AccountingRepository accounting;
+  final ConsoleRepository console;
   final SyncService? sync;
 
   @override
@@ -252,6 +265,9 @@ class _AppRootState extends State<AppRoot> {
         _phase = _Phase.picking;
       }
     });
+
+    final resolved = _org;
+    if (resolved != null) unawaited(_cacheChart(resolved));
   }
 
   // ----------------------------------------------------------------
@@ -273,12 +289,63 @@ class _AppRootState extends State<AppRoot> {
         builder: (_) => AdminHomeScreen(
           admin: widget.admin,
           org: org,
+          console: widget.console,
+          db: widget.db,
           // Renaming the business changes what my_orgs() returns, and the name
           // in the app bar comes from there rather than from the settings form.
           onOrgChanged: _resolveOrgs,
         ),
       ),
     );
+  }
+
+  /// The same screen the accounting hub opens on, reached directly from the
+  /// home screen. One screen rather than two: an entry's history is the
+  /// journal, and a second list that showed the same rows differently would be
+  /// a second thing to keep true.
+  Future<void> _openHistory(OrgSummary org) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => JournalScreen(
+          accounting: widget.accounting,
+          org: org,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAccounting(OrgSummary org) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AccountingHubScreen(
+          accounting: widget.accounting,
+          org: org,
+          // The chart of accounts screen mirrors what it fetches onto the
+          // device, which is what keeps the recording sheets offering real
+          // category names once the signal has gone.
+          db: widget.db,
+        ),
+      ),
+    );
+  }
+
+  /// Pulls the chart of accounts onto the device in the background.
+  ///
+  /// Runs once when a business opens, and never blocks anything: a failure
+  /// here means the recording sheets fall back to the categories this device
+  /// has already used, which is a slightly shorter list and not a broken
+  /// screen.
+  Future<void> _cacheChart(OrgSummary org) async {
+    if (!widget.accounting.isConfigured || !widget.auth.hasLiveSession) return;
+    try {
+      final accounts = await widget.accounting.chartOfAccounts(org.id);
+      await widget.db.cacheAccounts(
+        org.id,
+        accounts.map((a) => a.toCache()).toList(),
+      );
+    } catch (_) {
+      // No signal, or no entitlement. Neither is worth interrupting anyone for.
+    }
   }
 
   void _startSync() {
@@ -346,14 +413,26 @@ class _AppRootState extends State<AppRoot> {
           child: homeScreenFor(
             db: widget.db,
             org: org,
+            reports: widget.reports,
+            // Same live-session rule as the reports: the history is paged by
+            // the database, so it is offered only while there is a session to
+            // page with.
+            onHistory: widget.auth.hasLiveSession
+                ? () => _openHistory(org)
+                : null,
             accountAction: AccountMenu(
               db: widget.db,
               userLabel: _identity?.label ?? '',
               onSignOut: _signOut,
-              // Both of these need the server, so both disappear once the
-              // token has expired — the rest of the app keeps working offline.
+              // All of these need the server, so all of them disappear once
+              // the token has expired — the rest of the app keeps working
+              // offline. A report computed from a device's partial copy of the
+              // books would be a wrong number presented as a right one.
               onAdminister: org.isAdmin && widget.auth.hasLiveSession
                   ? () => _administer(org)
+                  : null,
+              onAccounting: widget.auth.hasLiveSession
+                  ? () => _openAccounting(org)
                   : null,
               onJoinByCode:
                   widget.auth.hasLiveSession ? _joinByCode : null,

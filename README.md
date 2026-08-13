@@ -78,9 +78,46 @@ workers/tenant-router/          Cloudflare Worker: hostname -> tenant lookup via
   departments, and the business's name and currency. None of it is
   offline-first, deliberately: only the server may decide who can see a
   business's books.
-- Next: the farm profile for Ignace ('farm' orgs currently land on a
-  "module coming" screen), and a camera scanner so a QR can be read as well as
-  shown — today the invitee types the code.
+- Reports (M3) — the pastor's weekly summary with a share-as-image button,
+  cash balances, member giving statements, and a "close the day" ritual with a
+  streak. `006_report_access.sql` closed a leak first: `church_account_activity`
+  was a view, and a view runs as its owner unless told otherwise, so every
+  policy under it was being skipped. The same migration made
+  `visibility = 'summary'` mean something for the first time.
+- Accounts, not INSERTs — the login screen has a "Créer un compte" side.
+  Signing in with a number that has no account is refused and says so, rather
+  than silently minting a second account for a mistyped digit. Creating an
+  account grants access to nothing; the invitation code, typed on the waiting
+  screen or swept up automatically, is still the only path to a membership.
+- Everything can be named (`007_accounting.sql`) — `record_entry()` takes the
+  words the person typed, and `ensure_account()` turns a name into a real
+  account the first time it is used and finds that same account every time
+  after. The category chips are now the accounts the books already hold rather
+  than seven names compiled into the app, and "Autre…" is a text field. Each
+  entry also carries a note and any number of typed characteristics (supplier,
+  invoice number, beneficiary) as jsonb. The chart is cached on the device, so
+  the real category names are still offered with no signal.
+- Accounting (`007_accounting.sql`) — the ledger has been double-entry since
+  the first schema and nothing could show it as one. Now: journal, income
+  statement, balance sheet, general ledger with a running balance, trial
+  balance, an editable chart of accounts, and transfers between cash accounts —
+  which stop banking the offering being recorded as earning it twice. 16
+  assertions in `database/tests/test_accounting.sql`, the load-bearing one
+  being that debits still equal credits once people name their own categories.
+- Activity log and console (`008_audit_log.sql`) — the ledger was always its
+  own audit trail, which covers money and nothing else; every decision about
+  *who may touch* the money was silently mutable. One append-only table, one
+  generic trigger over the eight tables that matter, and RLS with a select
+  policy and no insert, update or delete policy at all — so the only writer is
+  the trigger, which runs outside policy. The console adds a database view
+  (every table, its purpose, this org's row count, its columns and foreign
+  keys) and a device tab that finally reads `outbox.last_error`, telling
+  "waiting for signal" apart from "the server refused this". 10 assertions in
+  `database/tests/test_audit.sql`, most of them an owner trying to erase their
+  own history.
+- Next: Esperance's store (M5) — capture-first, photo to R2, on-device OCR —
+  and a camera scanner so a QR can be read as well as shown; today the invitee
+  types the code.
 
 ## Cloud development (recommended)
 
@@ -209,21 +246,60 @@ insert into memberships (org_id, user_id, role, scope_kind, scope_id)
 values ('<org id>', '<their auth.users id>', 'admin', 'org', '<org id>');
 ```
 
+## Publishing the app on Cloudflare
+
+The web build is served as an assets-only Worker — no server code, because the
+app never needs the server to decide which business it is showing. The org
+comes from the signed-in user's memberships, so one bundle serves every tenant.
+
+```
+wrangler login                                          # once, opens a browser
+scripts/build-web.sh                                    # reads .env, compiles credentials in
+wrangler deploy --config workers/kaj-app/wrangler.toml
+```
+
+That publishes to `kaj-app.<your-subdomain>.workers.dev`, which is the URL to
+test on before any DNS exists. `scripts/build-web.sh` refuses to run without
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `.env`, because a bundle built
+without them deploys perfectly and then cannot sign anybody in.
+
+Deep links work on reload: `not_found_handling = "single-page-application"`
+sends unknown paths to `index.html`, where Dart resolves the route.
+
+To put a tenant on its own hostname, add the custom domain to the `kaj-app`
+Worker in the Cloudflare dashboard (Workers → kaj-app → Settings → Domains &
+Routes). Nothing in the bundle changes — the same assets answer on every
+hostname. `workers/tenant-router` is a separate Worker for a separate job:
+attaching tenant headers for server-side callers such as a Supabase Edge
+Function. Hosting the app does not depend on it.
+
 ## Running the tests locally
 
 ```
 createdb kajtest
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/supabase_stub.sql
 psql -d kajtest -v ON_ERROR_STOP=1 -f database/schema.sql
-psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/002_church_profile.sql
-psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/003_sync_support.sql
-psql -d kajtest -v ON_ERROR_STOP=1 -f database/migrations/004_rls_policies.sql
-psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/test_church.sql
-psql -d kajtest -v ON_ERROR_STOP=1 -f database/tests/test_rls.sql
+for f in database/migrations/*.sql; do
+  psql -d kajtest -v ON_ERROR_STOP=1 -f "$f"
+done
+for t in church rls invitations reports accounting audit; do
+  psql -d kajtest -v ON_ERROR_STOP=1 -f "database/tests/test_$t.sql"
+done
 ```
 
-Both suites seed their own rows and neither is idempotent — drop and recreate
-`kajtest` between runs.
+Every suite seeds its own rows and none of them is idempotent — drop and
+recreate `kajtest` between runs. Run them in the order above: the later ones
+read rows the earlier ones committed.
+
+`test_church.sql` prints values and expects several of its statements to fail —
+those `ERROR:` lines are the rejections it is asserting. The other six print
+`PASS:` per assertion and abort on the first failure — 79 assertions in total.
+
+All but `test_church.sql` run as the `authenticated` role with a JWT subject
+set, never as postgres. A superuser bypasses RLS, so a suite run as postgres
+would pass against no policies at all — and every recording function from 007
+onwards additionally refuses a caller with no `auth.uid()`, so a suite run as
+postgres could not even record anything to assert about.
 
 The Flutter tests need no database or network:
 

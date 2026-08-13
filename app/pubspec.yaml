@@ -51,6 +51,11 @@ dependencies:
   # read aloud in a noisy room.
   qr_flutter: ^4.1.0
 
+  # Sends the weekly summary out of the app as an image. The destination is
+  # WhatsApp — that is where a pastor's leadership group already lives, and a
+  # report nobody can forward is a report nobody reads.
+  share_plus: ^13.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

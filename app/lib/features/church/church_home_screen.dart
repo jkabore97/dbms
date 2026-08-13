@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
-import 'record_contribution_sheet.dart';
-import 'record_expense_sheet.dart';
+import '../../core/reports/models.dart' show accountLabel;
+import '../../core/reports/reports_repository.dart';
+import 'close_day_sheet.dart';
+import 'record_entry_sheet.dart';
+import 'record_transfer_sheet.dart';
+import 'reports/reports_hub_screen.dart';
 
 /// Israel's home screen.
 ///
@@ -22,16 +27,32 @@ class ChurchHomeScreen extends StatefulWidget {
     required this.db,
     required this.orgId,
     required this.orgName,
+    this.reports,
+    this.org,
     this.accountAction,
+    this.onHistory,
   });
 
   final LocalDb db;
   final String orgId;
   final String orgName;
 
+  /// Null in a build with no server: the reports are computed by SQL functions
+  /// and there is nothing offline to compute them from.
+  final ReportsRepository? reports;
+
+  /// The membership this screen was opened under — carries the currency and
+  /// the observer's visibility.
+  final OrgSummary? org;
+
   /// The account menu, supplied by whatever resolved the org — sign out and
   /// switch business live there.
   final Widget? accountAction;
+
+  /// Opens the history of every entry ever recorded. Null in a build with no
+  /// server, and null once the token has expired: the list is paginated by the
+  /// database and there is nothing offline to page through.
+  final VoidCallback? onHistory;
 
   @override
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
@@ -49,6 +70,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
   int _pending = 0;
   List<Map<String, Object?>> _entries = const [];
   bool _loading = true;
+  bool _dayClosed = false;
 
   @override
   void initState() {
@@ -61,9 +83,11 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     final totals = await widget.db.dayTotals(widget.orgId, today);
     final entries = await widget.db.entriesForDay(widget.orgId, today);
     final pending = await widget.db.pendingCount();
+    final closed = await widget.db.isDayClosed(widget.orgId, today);
 
     if (!mounted) return;
     setState(() {
+      _dayClosed = closed;
       _moneyIn = totals.moneyIn;
       _moneyOut = totals.moneyOut;
       _entries = entries;
@@ -72,11 +96,27 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     });
   }
 
-  Future<void> _openRecordSheet() async {
+  /// Money in and money out are the same sheet with the direction flipped, so
+  /// the only thing that varies between the two buttons is what they mean.
+  Future<void> _openRecordSheet(String direction) async {
     final recorded = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => RecordContributionSheet(
+      builder: (_) => RecordEntrySheet(
+        db: widget.db,
+        orgId: widget.orgId,
+        direction: direction,
+      ),
+    );
+
+    if (recorded == true) await _refresh();
+  }
+
+  Future<void> _openTransferSheet() async {
+    final recorded = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => RecordTransferSheet(
         db: widget.db,
         orgId: widget.orgId,
       ),
@@ -85,17 +125,24 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     if (recorded == true) await _refresh();
   }
 
-  Future<void> _openExpenseSheet() async {
-    final recorded = await showModalBottomSheet<bool>(
+  Future<void> _openCloseDay() async {
+    final closed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => RecordExpenseSheet(
+      builder: (_) => CloseDaySheet(
         db: widget.db,
         orgId: widget.orgId,
+        currency: widget.org?.currency ?? 'XOF',
       ),
     );
 
-    if (recorded == true) await _refresh();
+    if (closed == true) {
+      await _refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Journée clôturée')),
+      );
+    }
   }
 
   Future<void> _undo(Map<String, Object?> entry) async {
@@ -148,6 +195,32 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                 ),
               ),
             ),
+          if (widget.reports != null && widget.org != null)
+            IconButton(
+              icon: const Icon(Icons.assessment_outlined),
+              tooltip: 'Rapports',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ReportsHubScreen(
+                    reports: widget.reports!,
+                    org: widget.org!,
+                  ),
+                ),
+              ),
+            ),
+          // A peer of Rapports rather than something to be found three taps
+          // down inside Comptabilité: "when did we record that" is a question
+          // any member asks, not an accounting exercise. Absent for an
+          // observer on 'summary' visibility, whose grant is the totals and
+          // for whom this screen would only ever be an empty list with an
+          // explanation — see journal_page, which returns them no rows.
+          if (widget.onHistory != null && widget.org?.visibility != 'summary')
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Historique',
+              onPressed: widget.onHistory,
+            ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
@@ -184,6 +257,25 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                         onUndo: () => _undo(e),
                       ),
                     ),
+                  const SizedBox(height: 24),
+                  // At the foot of the day it closes, rather than in a menu:
+                  // the gesture belongs at the end of the list it is agreeing
+                  // with.
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _openCloseDay,
+                      icon: Icon(
+                        _dayClosed ? Icons.check_circle : Icons.check_circle_outline,
+                      ),
+                      label: Text(
+                        _dayClosed
+                            ? 'Journée clôturée'
+                            : 'Clôturer la journée',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 96),
                 ],
               ),
@@ -200,9 +292,22 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Smaller and unlabelled, unlike the other two. A transfer is a
+          // bookkeeping correctness feature — it stops banking the offering
+          // being recorded as earning it twice — and it happens once a week
+          // where a contribution happens forty times on a Sunday.
+          FloatingActionButton.small(
+            heroTag: 'record-transfer',
+            onPressed: _openTransferSheet,
+            tooltip: 'Transfert entre caisses',
+            backgroundColor: theme.colorScheme.tertiaryContainer,
+            foregroundColor: theme.colorScheme.onTertiaryContainer,
+            child: const Icon(Icons.swap_horiz),
+          ),
+          const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'record-expense',
-            onPressed: _openExpenseSheet,
+            onPressed: () => _openRecordSheet('out'),
             backgroundColor: Colors.orange.shade100,
             foregroundColor: Colors.orange.shade900,
             icon: const Icon(Icons.arrow_upward, size: 20),
@@ -214,7 +319,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'record-income',
-            onPressed: _openRecordSheet,
+            onPressed: () => _openRecordSheet('in'),
             icon: const Icon(Icons.arrow_downward, size: 28),
             label: const Text(
               'Recette',
@@ -301,42 +406,63 @@ class _EntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reversed = (entry['reversed'] as int? ?? 0) == 1;
-    final isIncome = entry['direction'] == 'in';
+    final direction = entry['direction'] as String;
     final amount = (entry['amount'] as num).toDouble();
     final memberName = entry['member_name'] as String?;
     final time = DateTime.parse(entry['occurred_at'] as String).toLocal();
 
+    final label = entry['label'] as String;
+    final category = entry['category'] as String?;
+    final memo = entry['memo'] as String?;
+    final hasDetails = (entry['details'] as String?)?.isNotEmpty ?? false;
+
+    final (icon, tint, wash) = switch (direction) {
+      'in' => (Icons.arrow_downward, Colors.green.shade800, Colors.green.shade100),
+      'out' => (Icons.arrow_upward, Colors.orange.shade800, Colors.orange.shade100),
+      _ => (Icons.swap_horiz, Colors.blueGrey.shade700, Colors.blueGrey.shade100),
+    };
+
+    // The category, but only when it says something the name did not. Most
+    // entries are named after the category they are filed under, and repeating
+    // the word underneath itself is noise on a screen read in poor light.
+    final categoryNote = (category == null ||
+            category.toLowerCase() == label.toLowerCase() ||
+            accountLabel(category).toLowerCase() == label.toLowerCase())
+        ? null
+        : accountLabel(category);
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: reversed
-            ? Colors.grey.shade300
-            : isIncome
-                ? Colors.green.shade100
-                : Colors.orange.shade100,
-        child: Icon(
-          reversed
-              ? Icons.undo
-              : isIncome
-                  ? Icons.arrow_downward
-                  : Icons.arrow_upward,
-          color: reversed
-              ? Colors.grey
-              : isIncome
-                  ? Colors.green.shade800
-                  : Colors.orange.shade800,
-        ),
+        backgroundColor: reversed ? Colors.grey.shade300 : wash,
+        child: Icon(reversed ? Icons.undo : icon,
+            color: reversed ? Colors.grey : tint),
       ),
-      title: Text(
-        entry['label'] as String,
-        style: TextStyle(
-          decoration: reversed ? TextDecoration.lineThrough : null,
-          color: reversed ? Colors.grey : null,
-        ),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                decoration: reversed ? TextDecoration.lineThrough : null,
+                color: reversed ? Colors.grey : null,
+              ),
+            ),
+          ),
+          // A note or a characteristic was typed with this entry. Marked
+          // rather than shown: the row is a list item, not a record card, and
+          // whoever typed it needs to know it was kept.
+          if (hasDetails || (memo != null && memo.isNotEmpty)) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.notes, size: 14, color: Colors.grey.shade500),
+          ],
+        ],
       ),
       subtitle: Text(
         [
           DateFormat.Hm().format(time),
+          if (categoryNote != null) categoryNote,
           if (memberName != null) memberName,
           if (reversed) 'corrigé',
         ].join(' · '),

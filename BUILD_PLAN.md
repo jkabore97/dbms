@@ -18,24 +18,49 @@ Each milestone ends with something demonstrable.
 | Undo by reversal (append-only history) | built, tested |
 | 22 RLS policies, cross-tenant isolation | built, proven by test |
 | Church contributions + expenses | built |
-| Pastor's weekly summary, member giving statements | SQL built, no screen |
 | Flutter app running on web and Android | built |
 | Login by phone/OTP, org resolution, profile routing (M1) | built, tested offline |
 | Offline session + device PIN | built, tested |
+| Admin screens: people, roles, structure, settings (M2) | built |
+| Invitations by short code or QR | built, 15 assertions |
+| Report screens: weekly summary, balances, giving, close-the-day (M3) | built |
+| Visibility ('summary' vs 'full') actually enforced | built, proven by test |
+| Account creation — sign up by phone or email, then join with a code | built, tested |
+| Free-text entry names, notes and characteristics | built, tested |
+| Accounting: journal, résultat, bilan, grand livre, balance | built, 16 assertions |
+| Editable chart of accounts, transfers between cash accounts | built |
+| Activity log + super admin console (logs, data, device) | built, 10 assertions |
+| Ignace's farm: stock, flocks, eggs, invoices (M4) | built, 17 assertions |
 
 **Not built**
 
-Org switching beyond the picker. Admin screens. Farm module. Store module.
-Photos and OCR. Invoices. Report screens. Custom domains. Employee/payroll.
-Inviting people from inside the app — a membership row still has to be
-inserted by hand.
+Store module. Photos and OCR. Custom domains. Employee/payroll. Reading a QR
+with the camera — today the invitee types the code. Attributing a contribution
+to a named church member from the recording sheet (the SQL and the giving
+statement both support it; the sheet has no member picker yet). Sharing an
+invoice as a PDF or an image — the farm can raise one and take payment against
+it, but the customer's copy still has to be written out by hand.
 
 **Not yet verified**
 
-M1 has not been exercised against a real Supabase project: no credentials, and
-phone sign-in additionally needs an SMS provider enabled under Authentication →
-Providers → Phone. Everything below the network — routing, org resolution, the
-offline path — is covered by tests; the SMS round trip is not.
+None of the network paths has been exercised against a real Supabase project:
+no credentials. Specifically unproven end to end —
+
+- The SMS round trip. Phone sign-in needs an SMS provider enabled under
+  Authentication → Providers → Phone.
+- Email sign-up, which behaves differently depending on whether "Confirm email"
+  is on. The app handles both (`response.session == null` means the account
+  exists and nobody is signed in yet), but only one of the two has ever run.
+- `SyncService` posting `record_entry`, `record_transfer`, `receive_stock`,
+  `move_stock`, `record_flock_event` and `record_eggs`. The payload keys are
+  asserted against the SQL signatures in `app/test/record_entry_test.dart` and
+  `app/test/farm_offline_test.dart`, which is the failure this would otherwise
+  produce on somebody's phone days later, but no request has actually been
+  made.
+
+Everything below the network — routing, org resolution, the offline path, the
+ledger, the policies, the reports, the log, the farm's two ledgers — is covered
+by 66 Flutter tests and seven SQL suites (79 assertions).
 
 ---
 
@@ -105,6 +130,61 @@ carefully. Make them visible.
 
 ---
 
+## M3.5 — Accounts, names, books and a console
+
+Three gaps that only became visible once M1–M3 were on screen together.
+
+**1. There was no way to get an account.** The only route in was an invitation
+from somebody who already had the app, and the only way to be first was for
+Kaj-consulting to run an INSERT. Sign-up now sits beside sign-in on the login
+screen, and signing in with an unknown number is refused rather than silently
+creating a second account for a mistyped digit. The order this teaches is
+deliberate: make the account, then join the business with a code. An account on
+its own grants nothing.
+
+**2. Entries could not be named.** Four kinds of contribution and seven expense
+categories, all compiled into the app and into 002. Anything real that was not
+on that list got filed under whichever category was least wrong. That was
+defended as protecting the books from seven spellings of "Loyer", but a
+category list nobody can add to does not produce clean books — it produces
+books where "Fournitures" means eleven things and no report can separate them.
+
+> `record_entry()` takes the words the person typed. `ensure_account()` turns a
+> name into an account the first time and finds the same one every time after,
+> matching case-insensitively and on trimmed text, because that is how a name
+> arrives from a phone keyboard. The chips are now the accounts the books
+> already hold — so choosing one posts the exact stored name and cannot open a
+> duplicate — and "Autre…" is a text field. Each entry also carries a note and
+> any number of typed characteristics as jsonb.
+
+**3. The ledger had been double-entry the whole time and nothing could show it
+as one.** Journal, income statement, balance sheet, general ledger with a
+running balance, trial balance, an editable chart of accounts, and transfers
+between cash accounts — without which banking the Sunday offering is recorded
+as earning it twice.
+
+**4. Nothing recorded who changed what.** The ledger was always its own audit
+trail, which covers money; every decision about *who may touch* the money was
+silently mutable. An admin could grant themselves ownership, act, and revoke it
+with no trace anywhere. `008_audit_log.sql` adds one append-only table, one
+generic trigger, and RLS with a select policy and no insert, update or delete
+policy at all — the only writer is the trigger, which runs outside policy, so
+the owner of a business cannot erase their own history. Most of
+`test_audit.sql` is them trying.
+
+The console that reads it has three tabs because three different questions get
+asked in the same five minutes: what happened (the log), what is actually
+stored (every table, its purpose, this org's row count, its columns and
+foreign keys), and what this phone is still holding — which finally reads
+`outbox.last_error` and tells "waiting for signal" apart from "the server
+refused this".
+
+**Demo after M3.5:** somebody signs themselves up, joins with a code, records
+"Réparation du toit" with the mason's name attached, and the owner opens the
+income statement and sees it — then opens the log and sees who recorded it.
+
+---
+
 ## M4 — Ignace's farm
 
 > Add the farm profile module, following the patterns in
@@ -130,6 +210,7 @@ carefully. Make them visible.
 
 **Demo after M4:** Ignace records a feed delivery with no signal; his investor
 sees the summary the next time either device syncs.
+
 
 ---
 
@@ -181,8 +262,19 @@ M3 before M4: reports are what make people enter data carefully, and they cost
 little once the SQL exists.
 M4 and M5 can run in parallel if you bring in another developer.
 
+M1 through M4 are built. The next thing is M5 — or, better, a week with a
+real user before starting it.
+
 ## What matters more than any of this
 
-Get M1 done, then put the app in Israel's hands and watch him use it. One real
-user for a week will reorder this list more usefully than any amount of
-planning.
+Put the app in Israel's and Ignace's hands and watch them use it. Everything
+through M4 is tested against Postgres and against a fake device; none of it has
+been tested against a person, and none of the network paths has run against a
+real Supabase project at all.
+
+One real user for a week will reorder this list more usefully than any amount
+of planning. The first thing that week will produce is a list of category and
+item names nobody predicted, which is now something the app absorbs rather than
+something that has to be shipped — and the second will be a number somebody
+reads differently than it was meant. M5 is the largest milestone left and the
+worst one to start on a guess.

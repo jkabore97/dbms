@@ -36,11 +36,38 @@ class AuthRepository {
   // Phone + OTP — the primary route
   // ----------------------------------------------------------------
 
-  /// Sends the six-digit code. [phone] must already be in E.164 form
-  /// (+22670000000); [normalizePhone] does that.
+  /// Sends the six-digit code to somebody who already has an account.
+  ///
+  /// `shouldCreateUser: false` is the whole difference between this and
+  /// [signUpWithPhone], and it matters more than it looks. Supabase creates an
+  /// account on the first OTP by default, so a mistyped digit used to become a
+  /// silent second account with an empty waiting screen behind it — and the
+  /// person, who had signed in successfully as far as they could tell, would
+  /// conclude the app was broken rather than that they were now somebody else.
+  /// Refusing an unknown number here is what lets the screen say the true
+  /// thing: this number has no account yet, create one.
+  ///
+  /// [phone] must already be in E.164 form (+22670000000); [normalizePhone]
+  /// does that.
   Future<void> sendPhoneOtp(String phone) async {
     final client = _requireClient();
-    await client.auth.signInWithOtp(phone: phone);
+    await client.auth.signInWithOtp(phone: phone, shouldCreateUser: false);
+  }
+
+  /// The same SMS, for somebody who does not have an account yet.
+  ///
+  /// The name travels in `data`, which Supabase writes to
+  /// `auth.users.raw_user_meta_data`; the trigger in 004 copies it into
+  /// `profiles` the moment the account exists. So the person who invites them
+  /// later sees a name in the members list instead of a phone number.
+  Future<void> sendSignUpOtp(String phone, {String? fullName}) async {
+    final client = _requireClient();
+    final name = fullName?.trim();
+    await client.auth.signInWithOtp(
+      phone: phone,
+      shouldCreateUser: true,
+      data: (name == null || name.isEmpty) ? null : {'full_name': name},
+    );
   }
 
   Future<AuthResponse> verifyPhoneOtp({
@@ -65,6 +92,56 @@ class AuthRepository {
   }) {
     final client = _requireClient();
     return client.auth.signInWithPassword(email: email, password: password);
+  }
+
+  /// Creates an account from an email and a password.
+  ///
+  /// Returns a response whose `session` is null when the project has email
+  /// confirmation switched on — the account exists, but nobody is signed in
+  /// until the link is clicked. The caller has to tell those two outcomes
+  /// apart, because "check your email" and "you're in" are different screens.
+  Future<AuthResponse> signUpWithEmail({
+    required String email,
+    required String password,
+    String? fullName,
+  }) {
+    final client = _requireClient();
+    final name = fullName?.trim();
+    return client.auth.signUp(
+      email: email,
+      password: password,
+      data: (name == null || name.isEmpty) ? null : {'full_name': name},
+    );
+  }
+
+  // ----------------------------------------------------------------
+  // The name people are known by
+  // ----------------------------------------------------------------
+
+  /// Writes the name onto the signed-in person's profile.
+  ///
+  /// The trigger in 004 sets it at sign-up from the metadata, so this is for
+  /// the cases the trigger cannot cover: an account created before the name
+  /// was asked for, or a person correcting a typo. `profiles` has an update
+  /// policy for `id = auth.uid()` and nothing wider, so this can only ever
+  /// rename the caller.
+  ///
+  /// Never throws. It runs on the sign-up path, where failing to save a
+  /// display name must not be the thing that stops somebody getting into the
+  /// app; the name can be set again from the account menu.
+  Future<void> saveMyName(String fullName) async {
+    final client = _client;
+    final userId = client?.auth.currentUser?.id;
+    final name = fullName.trim();
+    if (client == null || userId == null || name.isEmpty) return;
+
+    try {
+      await client.auth.updateUser(UserAttributes(data: {'full_name': name}));
+      await client.from('profiles').update({'full_name': name}).eq('id', userId);
+    } catch (_) {
+      // Offline, or the profile row has not been mirrored across yet. The
+      // account is what matters and the account is already made.
+    }
   }
 
   Future<void> signOut() async {
@@ -123,6 +200,24 @@ class AuthRepository {
   static String describeError(Object error) {
     if (error is AuthException) {
       final message = error.message.toLowerCase();
+      // What Supabase says when signInWithOtp is called with
+      // shouldCreateUser: false and the number has never been seen. The raw
+      // text — "signups not allowed for otp" — reads as a policy refusal, and
+      // sends the user to look for a setting instead of a button.
+      if (message.contains('signups not allowed') ||
+          message.contains('user not found') ||
+          message.contains('should_create_user')) {
+        return "Ce numéro n'a pas encore de compte. "
+            'Choisissez « Créer un compte ».';
+      }
+      if (message.contains('already registered') ||
+          message.contains('already exists')) {
+        return 'Un compte existe déjà pour ces informations. '
+            'Choisissez « Se connecter ».';
+      }
+      if (message.contains('password') && message.contains('least')) {
+        return 'Le mot de passe doit contenir au moins 6 caractères.';
+      }
       if (message.contains('invalid') && message.contains('otp') ||
           message.contains('token has expired') ||
           message.contains('expired')) {

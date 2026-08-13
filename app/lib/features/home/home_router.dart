@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
+import '../../core/reports/reports_repository.dart';
 import '../church/church_home_screen.dart';
 import 'profile_pending_screen.dart';
 
@@ -15,14 +16,19 @@ import 'profile_pending_screen.dart';
 Widget homeScreenFor({
   required LocalDb db,
   required OrgSummary org,
+  ReportsRepository? reports,
   Widget? accountAction,
+  VoidCallback? onHistory,
 }) {
   return switch (org.profile) {
     'church' => ChurchHomeScreen(
         db: db,
         orgId: org.id,
         orgName: org.name,
+        reports: reports,
+        org: org,
         accountAction: accountAction,
+        onHistory: onHistory,
       ),
     // 'farm' and 'retail' are real profiles with no module yet.
     _ => ProfilePendingScreen(org: org, accountAction: accountAction),
