@@ -489,7 +489,13 @@ class _AppRootState extends State<AppRoot> {
         return const _Splash();
 
       case _Phase.signedOut:
-        return LoginScreen(auth: widget.auth, onSignedIn: _handleSignedIn);
+        return LoginScreen(
+          auth: widget.auth,
+          // Lets the sign-up form save the names, date of birth, title and
+          // phone it collects, the moment the account exists.
+          onboarding: widget.onboarding,
+          onSignedIn: _handleSignedIn,
+        );
 
       case _Phase.locked:
         return PinScreen(
