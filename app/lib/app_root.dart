@@ -24,8 +24,8 @@ import 'features/admin/applications_screen.dart';
 import 'features/admin/businesses_screen.dart';
 import 'features/admin/invite_generator_sheet.dart';
 import 'features/admin/create_business_screen.dart';
-import 'features/auth/join_by_code_screen.dart';
 import 'features/auth/join_or_apply_screen.dart';
+import 'features/auth/profile_form_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/no_org_screen.dart';
 import 'features/auth/org_picker_screen.dart';
@@ -307,14 +307,9 @@ class _AppRootState extends State<AppRoot> {
   // Joining, and administering
   // ----------------------------------------------------------------
 
-  /// Opens the code screen. A successful claim re-resolves the org list, which
-  /// is what moves the user off the waiting screen and into the business.
-  Future<void> _joinByCode() async {
-    final joined = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => JoinByCodeScreen(admin: widget.admin)),
-    );
-    if (joined == true) await _resolveOrgs();
-  }
+  // Joining by code used to live in this menu, for somebody who already had
+  // a business — which is nobody. Entering a code is something you do once,
+  // before you belong to anything, and JoinOrApplyScreen has the field now.
 
   /// Creating a business, then opening it.
   ///
@@ -329,6 +324,40 @@ class _AppRootState extends State<AppRoot> {
   /// The platform's queue of people asking for a business. Reloads the org
   /// list afterwards: approving one makes a business, and a platform admin
   /// sees every business.
+  /// The profile form, from anywhere. Reachable by everybody and not only by
+  /// somebody who has just signed up: this is where a person fixes the
+  /// spelling of their own name, and until now there was no way in once you
+  /// belonged to a business.
+  Future<void> _openMyProfile() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ProfileFormScreen(
+          onboarding: widget.onboarding,
+          title: 'Mes informations',
+          nextLabel: 'Enregistrer',
+          intro: 'Ces informations vous suivent dans toutes les entreprises '
+              'que vous rejoignez. Elles figurent sur un contrat ou un '
+              'bulletin de paie.',
+        ),
+      ),
+    );
+  }
+
+  /// Asking for another business, for somebody who already has one. A
+  /// platform admin creates directly instead — they are the person who would
+  /// otherwise be approving their own request.
+  Future<void> _applyForOrg() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => CreateBusinessScreen(
+          admin: widget.admin,
+          onboarding: widget.onboarding,
+          asApplication: true,
+        ),
+      ),
+    );
+  }
+
   Future<void> _openApplications() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -460,7 +489,13 @@ class _AppRootState extends State<AppRoot> {
         return const _Splash();
 
       case _Phase.signedOut:
-        return LoginScreen(auth: widget.auth, onSignedIn: _handleSignedIn);
+        return LoginScreen(
+          auth: widget.auth,
+          // Lets the sign-up form save the names, date of birth, title and
+          // phone it collects, the moment the account exists.
+          onboarding: widget.onboarding,
+          onSignedIn: _handleSignedIn,
+        );
 
       case _Phase.locked:
         return PinScreen(
@@ -549,8 +584,6 @@ class _AppRootState extends State<AppRoot> {
               onAccounting: widget.auth.hasLiveSession
                   ? () => _openAccounting(org)
                   : null,
-              onJoinByCode:
-                  widget.auth.hasLiveSession ? _joinByCode : null,
               onCreateBusiness: _isPlatformAdmin && widget.auth.hasLiveSession
                   ? _createBusiness
                   : null,
@@ -562,6 +595,12 @@ class _AppRootState extends State<AppRoot> {
                   : null,
               // Replaces "J'ai un code": the person holding the app is the
               // manager, and the person who needs reaching does not have it.
+              onMyProfile:
+                  widget.auth.hasLiveSession ? _openMyProfile : null,
+              onApplyForOrg:
+                  !_isPlatformAdmin && widget.auth.hasLiveSession
+                      ? _applyForOrg
+                      : null,
               onInvite: org.isAdmin && widget.auth.hasLiveSession
                   ? () => InviteGeneratorSheet.open(context,
                       orgId: org.id, onboarding: widget.onboarding)

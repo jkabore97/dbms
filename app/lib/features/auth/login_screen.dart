@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
+import 'package:intl/intl.dart';
+
 import '../../core/auth/auth_repository.dart';
+import '../../core/onboarding/onboarding_repository.dart';
 
 /// The way in — and, now, the way to get an account in the first place.
 ///
@@ -28,9 +31,15 @@ class LoginScreen extends StatefulWidget {
     super.key,
     required this.auth,
     required this.onSignedIn,
+    this.onboarding,
   });
 
   final AuthRepository auth;
+
+  /// Saves the details collected on the sign-up form, once the account exists
+  /// and there is a session to save them under. Null in a build with no
+  /// server, where the extra fields are pointless and are not shown.
+  final OnboardingRepository? onboarding;
 
   /// Called once Supabase has confirmed the user. The caller is responsible
   /// for storing the identity and resolving orgs.
@@ -49,8 +58,20 @@ enum _Method { phone, email }
 enum _Intent { signIn, signUp }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _nameController = TextEditingController();
+  // Sign-up asks for who somebody is, not just what to call them: these go
+  // on a contract and a payslip, and "Awa" with no family name is neither.
+  final _firstNameController = TextEditingController();
+  final _middleNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _titleController = TextEditingController();
   final _phoneController = TextEditingController();
+
+  /// Typed twice. Not for the server — two identical strings prove nothing —
+  /// but for the keyboard: this is the number a manager sends an invitation
+  /// to, and a wrong digit here is somebody who never gets in.
+  final _phoneConfirmController = TextEditingController();
+
+  DateTime? _birthDate;
   final _otpController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -75,8 +96,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _middleNameController.dispose();
+    _lastNameController.dispose();
+    _titleController.dispose();
     _phoneController.dispose();
+    _phoneConfirmController.dispose();
     _otpController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -117,7 +142,65 @@ class _LoginScreenState extends State<LoginScreen> {
   // Phone
   // ----------------------------------------------------------------
 
+  /// The family name last, which is how a name is written on screen here.
+  /// Kept in step with `save_my_profile()`, which assembles it the same way.
+  String get _assembledName => [
+        _firstNameController.text.trim(),
+        _middleNameController.text.trim(),
+        _lastNameController.text.trim(),
+      ].where((p) => p.isNotEmpty).join(' ');
+
+  /// Null when the two numbers agree or one is still empty.
+  String? get _phoneMismatch {
+    final a = _phoneController.text.trim();
+    final b = _phoneConfirmController.text.trim();
+    if (a.isEmpty || b.isEmpty) return null;
+    if (AuthRepository.normalizePhone(a) != AuthRepository.normalizePhone(b)) {
+      return 'Les deux numéros ne sont pas identiques.';
+    }
+    return null;
+  }
+
+  /// Everything the sign-up form insists on. Deliberately short: a first
+  /// name, a family name, a date of birth and a number that was typed twice.
+  /// The middle name and the job title are useful and not worth a wall.
+  String? get _signUpProblem {
+    if (!_isSignUp) return null;
+    if (_firstNameController.text.trim().isEmpty) return 'Entrez votre prénom.';
+    if (_lastNameController.text.trim().isEmpty) {
+      return 'Entrez votre nom de famille.';
+    }
+    if (_birthDate == null) return 'Indiquez votre date de naissance.';
+    if (_phoneController.text.trim().isEmpty) {
+      return 'Entrez votre numéro de téléphone.';
+    }
+    if (_phoneMismatch != null) return _phoneMismatch;
+    return null;
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      // Opens on a plausible adult rather than today, which would otherwise
+      // mean scrolling back thirty years on every sign-up.
+      initialDate: _birthDate ?? DateTime(now.year - 30, now.month, now.day),
+      firstDate: DateTime(now.year - 100),
+      // 017 refuses anything under fourteen; refusing it here too means the
+      // form says so before the round trip.
+      lastDate: DateTime(now.year - 14, now.month, now.day),
+      helpText: 'Date de naissance',
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
+
   Future<void> _sendCode() {
+    final problem = _signUpProblem;
+    if (problem != null) {
+      setState(() => _error = problem);
+      return Future.value();
+    }
+
     final phone = AuthRepository.normalizePhone(_phoneController.text);
     if (phone.length < 8) {
       setState(() => _error = 'Entrez un numéro de téléphone valide.');
@@ -126,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return _run(() async {
       if (_isSignUp) {
-        await widget.auth.sendSignUpOtp(phone, fullName: _nameController.text);
+        await widget.auth.sendSignUpOtp(phone, fullName: _assembledName);
       } else {
         await widget.auth.sendPhoneOtp(phone);
       }
@@ -163,6 +246,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _error = 'Entrez une adresse e-mail valide.');
       return Future.value();
     }
+    final problem = _signUpProblem;
+    if (problem != null) {
+      setState(() => _error = problem);
+      return Future.value();
+    }
     if (_isSignUp && password.length < 6) {
       setState(
         () => _error = 'Le mot de passe doit contenir au moins 6 caractères.',
@@ -175,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ? await widget.auth.signUpWithEmail(
               email: email,
               password: password,
-              fullName: _nameController.text,
+              fullName: _assembledName,
             )
           : await widget.auth.signInWithEmail(email: email, password: password);
 
@@ -195,11 +283,38 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  /// The last step of both routes. The name is saved before the caller is
-  /// told, so the members list an admin opens a minute later has a name in it.
+  /// The last step of both routes.
+  ///
+  /// The details are saved before the caller is told, so the members list an
+  /// admin opens a minute later has a real name in it rather than a phone
+  /// number — and so nobody is asked for their own name a second time on the
+  /// next screen.
+  ///
+  /// This can only happen here and not on the form: `save_my_profile()` writes
+  /// to the row belonging to `auth.uid()`, and until the account exists there
+  /// is no such row.
   Future<void> _finish(User user) async {
     if (_isSignUp) {
-      await widget.auth.saveMyName(_nameController.text);
+      final onboarding = widget.onboarding;
+      if (onboarding != null && onboarding.isConfigured) {
+        try {
+          await onboarding.saveProfile(
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
+            middleName: _middleNameController.text.trim(),
+            dateOfBirth: _birthDate,
+            title: _titleController.text.trim(),
+            phone: AuthRepository.normalizePhone(_phoneController.text),
+          );
+        } catch (_) {
+          // A database that has not run 017 yet. The account is real and the
+          // person is signed in; the profile screen in the menu is the second
+          // chance, and refusing the sign-in over it would be worse.
+          await widget.auth.saveMyName(_assembledName);
+        }
+      } else {
+        await widget.auth.saveMyName(_assembledName);
+      }
     }
     await widget.onSignedIn(user);
   }
@@ -289,18 +404,101 @@ class _LoginScreenState extends State<LoginScreen> {
   List<Widget> _nameField(ThemeData theme) {
     if (!_isSignUp) return const [];
     return [
+      // Split, because the parts get used separately: a payslip wants
+      // "OUÉDRAOGO Awa", a greeting wants "Awa", and a staff list sorts on
+      // the family name. One "Votre nom" field cannot produce any of them.
       TextField(
-        controller: _nameController,
+        controller: _firstNameController,
         enabled: !_busy,
         textCapitalization: TextCapitalization.words,
-        autofillHints: const [AutofillHints.name],
+        autofillHints: const [AutofillHints.givenName],
+        onChanged: (_) => setState(() {}),
         decoration: const InputDecoration(
-          labelText: 'Votre nom',
-          hintText: 'Comment on vous appelle',
+          labelText: 'Prénom',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _middleNameController,
+        enabled: !_busy,
+        textCapitalization: TextCapitalization.words,
+        autofillHints: const [AutofillHints.middleName],
+        decoration: const InputDecoration(
+          labelText: 'Deuxième prénom (facultatif)',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _lastNameController,
+        enabled: !_busy,
+        textCapitalization: TextCapitalization.characters,
+        autofillHints: const [AutofillHints.familyName],
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(
+          labelText: 'Nom de famille',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      // A contract needs one, and a date picker is the only way to get one
+      // that is not a typo.
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _busy ? null : _pickBirthDate,
+          icon: const Icon(Icons.cake_outlined),
+          label: Text(
+            _birthDate == null
+                ? 'Date de naissance'
+                : DateFormat('d MMMM y', 'fr_FR').format(_birthDate!),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      TextField(
+        controller: _titleController,
+        enabled: !_busy,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          labelText: 'Fonction (facultatif)',
+          hintText: 'Vendeuse, gérant, comptable…',
           border: OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 16),
+    ];
+  }
+
+  /// The number, twice.
+  ///
+  /// On the phone route the first field is the one the account is created
+  /// with, so the confirmation sits directly under it. On the email route
+  /// there is no sign-in number and both fields are purely the contact
+  /// number — which is still the number a manager will send an invitation to.
+  List<Widget> _phoneConfirmField(ThemeData theme) {
+    if (!_isSignUp) return const [];
+    return [
+      const SizedBox(height: 12),
+      TextField(
+        controller: _phoneConfirmController,
+        enabled: !_busy,
+        keyboardType: TextInputType.phone,
+        style: const TextStyle(fontSize: 20, letterSpacing: 1.2),
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          labelText: 'Confirmez le numéro',
+          prefixText: '+226  ',
+          border: const OutlineInputBorder(),
+          errorText: _phoneMismatch,
+          helperText: _phoneMismatch == null
+              ? "C'est ce numéro que votre responsable utilisera."
+              : null,
+        ),
+      ),
     ];
   }
 
@@ -324,6 +522,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         onSubmitted: (_) => _busy ? null : _sendCode(),
       ),
+      ..._phoneConfirmField(theme),
       const SizedBox(height: 8),
       Text(
         'Vous recevrez un code par SMS.',
@@ -444,6 +643,23 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         onSubmitted: (_) => _busy ? null : _submitEmail(),
       ),
+      if (_isSignUp) ...[
+        const SizedBox(height: 12),
+        TextField(
+          controller: _phoneController,
+          enabled: !_busy,
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(fontSize: 20, letterSpacing: 1.2),
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+            labelText: 'Numéro de téléphone',
+            hintText: '70 12 34 56',
+            prefixText: '+226  ',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        ..._phoneConfirmField(theme),
+      ],
       const SizedBox(height: 20),
       _PrimaryButton(
         label: _isSignUp ? 'Créer mon compte' : 'Se connecter',

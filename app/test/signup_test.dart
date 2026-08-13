@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/features/auth/login_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +23,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// network is left to the SQL suites and to a real project, which is stated in
 /// BUILD_PLAN.md rather than faked here.
 void main() {
+  setUpAll(() async {
+    // The sign-up form prints the chosen birth date in French.
+    await initializeDateFormatting('fr_FR', null);
+  });
+
   late SupabaseClient client;
   late AuthRepository auth;
 
@@ -64,21 +70,37 @@ void main() {
 
     expect(find.widgetWithText(TextField, 'Numéro de téléphone'),
         findsOneWidget);
-    // Somebody who already has an account has already told us their name.
-    expect(find.widgetWithText(TextField, 'Votre nom'), findsNothing);
+    // Somebody who already has an account has already told us all of this.
+    expect(find.widgetWithText(TextField, 'Prénom'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Nom de famille'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Confirmez le numéro'), findsNothing);
     expect(find.text('Recevoir le code'), findsOneWidget);
   });
 
-  testWidgets('creating an account asks for a name first', (tester) async {
+  testWidgets('creating an account asks who somebody is', (tester) async {
     await pumpLogin(tester);
 
     await tester.tap(find.text('Créer un compte'));
     await tester.pumpAndSettle();
 
-    // Above the phone field, and optional: it is the one field here that
-    // nothing technical depends on, and it is asked for so an admin's members
-    // list is not seven phone numbers.
-    expect(find.widgetWithText(TextField, 'Votre nom'), findsOneWidget);
+    // The whole of it, on the form that creates the account — not on a
+    // screen afterwards. These end up on a contract and a payslip, and one
+    // "Votre nom" field cannot produce a family name to sort a staff list by.
+    expect(find.widgetWithText(TextField, 'Prénom'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Deuxième prénom (facultatif)'),
+        findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Nom de famille'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Fonction (facultatif)'),
+        findsOneWidget);
+    expect(find.text('Date de naissance'), findsOneWidget);
+
+    // Twice, for the keyboard rather than the server: this is the number a
+    // manager sends an invitation to.
+    expect(find.widgetWithText(TextField, 'Numéro de téléphone'),
+        findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Confirmez le numéro'),
+        findsOneWidget);
+
     expect(find.text('Créer mon compte'), findsOneWidget);
 
     // And the screen says what happens next, because the account on its own
@@ -97,7 +119,12 @@ void main() {
     await tester.tap(find.text('Utiliser un e-mail et un mot de passe'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(TextField, 'Votre nom'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Prénom'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Nom de famille'), findsOneWidget);
+    // The number is asked for on the email route too: there is no sign-in
+    // number there, and a manager still needs one to invite them.
+    expect(find.widgetWithText(TextField, 'Confirmez le numéro'),
+        findsOneWidget);
     expect(find.widgetWithText(TextField, 'E-mail'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Mot de passe'), findsOneWidget);
     expect(find.text('Au moins 6 caractères'), findsOneWidget);
@@ -112,6 +139,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Utiliser un e-mail et un mot de passe'));
     await tester.pumpAndSettle();
+
+    // The identity fields are above the password on the form, so an empty
+    // form complains about them first. Filled in here so the assertion below
+    // is about the password rule and not about the order of the fields.
+    await tester.enterText(find.widgetWithText(TextField, 'Prénom'), 'Israel');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Nom de famille'), 'SAWADOGO');
+    await tester.tap(find.text('Date de naissance'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Numéro de téléphone'), '70123456');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Confirmez le numéro'), '70123456');
+    await tester.pump();
 
     await tester.enterText(
       find.widgetWithText(TextField, 'E-mail'),

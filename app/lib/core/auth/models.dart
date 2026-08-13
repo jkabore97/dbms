@@ -42,8 +42,20 @@ class OrgSummary {
   /// whether a menu entry is drawn and nothing more — every admin action is
   /// refused server-side by that function regardless of what the client
   /// believes, so a stale cached role list cannot become a privilege.
-  bool get isAdmin =>
-      roles.any((r) => r == 'owner' || r == 'super_admin' || r == 'admin');
+  /// `platform_admin` is in this list and it is not decoration.
+  ///
+  /// `my_orgs()` has returned that single role for a platform admin since
+  /// 010 — they are a member of no business and see all of them — and this
+  /// predicate only ever knew the three membership roles. The result was that
+  /// the person who runs the platform was treated as a non-admin of every
+  /// business on it: no Administration, no Personnel, no way to invite
+  /// anybody. Everything gated on `isAdmin` was invisible to exactly the
+  /// account most likely to need it.
+  bool get isAdmin => roles.any((r) =>
+      r == 'owner' ||
+      r == 'super_admin' ||
+      r == 'admin' ||
+      r == 'platform_admin');
 
   /// Whether to offer this person the console — the activity log and the shape
   /// of the database.
@@ -55,8 +67,8 @@ class OrgSummary {
   /// put one tap from a home screen for everybody who can invite an employee.
   /// Widening it is a one-line change here; a rule that started wide is not
   /// one that can be narrowed later without taking something away.
-  bool get isSuperAdmin =>
-      roles.any((r) => r == 'owner' || r == 'super_admin');
+  bool get isSuperAdmin => roles.any(
+      (r) => r == 'owner' || r == 'super_admin' || r == 'platform_admin');
 
   /// The row shape returned by the `my_orgs()` RPC in 004_rls_policies.sql.
   factory OrgSummary.fromRpc(Map<String, dynamic> row) {
