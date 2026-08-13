@@ -7,6 +7,7 @@ import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
+import '../../core/theme/kaj_theme.dart';
 import '../capture/gallery_screen.dart';
 import '../retail/staff_screen.dart';
 import 'close_day_sheet.dart';
@@ -396,10 +397,12 @@ class _TodayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // The gradient is what makes this read as a screen rather than a printed
+    // form. White on it, because both stops are dark enough to carry it.
     return Card(
       elevation: 0,
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
+      child: Container(
+        decoration: BoxDecoration(gradient: kajGradient(KajTheme.of(context))),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +410,7 @@ class _TodayCard extends StatelessWidget {
             Text(
               DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
               style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                color: Colors.white.withValues(alpha: 0.75),
               ),
             ),
             const SizedBox(height: 12),
@@ -415,13 +418,13 @@ class _TodayCard extends StatelessWidget {
               currency.format(moneyIn),
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onPrimaryContainer,
+                color: Colors.white,
               ),
             ),
             Text(
               'reçu aujourd\'hui',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
+                color: Colors.white,
               ),
             ),
             if (moneyOut > 0) ...[
@@ -429,7 +432,7 @@ class _TodayCard extends StatelessWidget {
               Text(
                 '${currency.format(moneyOut)} dépensé',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                  color: Colors.white.withValues(alpha: 0.85),
                 ),
               ),
             ],

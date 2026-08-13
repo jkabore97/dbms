@@ -7,6 +7,7 @@ import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
+import '../../core/theme/kaj_theme.dart';
 import '../capture/gallery_screen.dart';
 import '../retail/staff_screen.dart';
 import 'farm_sheets.dart';
@@ -142,7 +143,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
     if (!mounted) return;
     setState(() {
       _flocks = flocks;
-      _lowStock = items.where((i) => (i['below_reorder'] as int? ?? 0) == 1).toList();
+      _lowStock =
+          items.where((i) => (i['below_reorder'] as int? ?? 0) == 1).toList();
     });
   }
 
@@ -311,6 +313,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                     children: [
                       Expanded(
                         child: _NavCard(
+                          tint: 0,
                           icon: Icons.inventory_2_outlined,
                           label: 'Stock',
                           onTap: () => _push(StockScreen(
@@ -323,6 +326,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _NavCard(
+                          tint: 1,
                           icon: Icons.pets_outlined,
                           label: 'Bandes',
                           onTap: () => _push(FlocksScreen(
@@ -335,6 +339,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _NavCard(
+                          tint: 2,
                           icon: Icons.receipt_long_outlined,
                           label: 'Factures',
                           onTap: () => _push(InvoicesScreen(
@@ -464,12 +469,15 @@ class _TodayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final on = theme.colorScheme.onPrimaryContainer;
+    // White on the gradient rather than the scheme's onPrimaryContainer: the
+    // card is no longer a flat container colour, and the pale end of the
+    // gradient is still dark enough to carry white text.
+    const on = Colors.white;
 
     return Card(
       elevation: 0,
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
+      child: Container(
+        decoration: BoxDecoration(gradient: kajGradient(KajTheme.of(context))),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,7 +493,8 @@ class _TodayCard extends StatelessWidget {
               style: theme.textTheme.displaySmall
                   ?.copyWith(fontWeight: FontWeight.bold, color: on),
             ),
-            Text('œufs ramassés', style: theme.textTheme.bodyMedium?.copyWith(color: on)),
+            Text('œufs ramassés',
+                style: theme.textTheme.bodyMedium?.copyWith(color: on)),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -635,33 +644,62 @@ class _StaleBanner extends StatelessWidget {
   }
 }
 
+/// One of the square shortcuts under the day's figures.
+///
+/// These were six identical grey rectangles told apart only by a small icon
+/// and a smaller word, which on a cheap screen in daylight means reading all
+/// six. Each carries its own colour now, fixed by its position in the row, so
+/// the one you want is found by where it is and what colour it is before its
+/// label is read at all.
 class _NavCard extends StatelessWidget {
   const _NavCard({
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.tint,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
+  /// Position in the grid, not meaning: the point is that neighbours differ.
+  final int tint;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colour = KajTheme.of(context).tint(tint);
+
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surfaceContainerHighest,
+      // A tint of the colour rather than the colour: six saturated blocks
+      // would shout over the figures above them, which are the point of the
+      // screen.
+      color: colour.withValues(alpha: 0.12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           child: Column(
             children: [
-              Icon(icon, size: 26),
-              const SizedBox(height: 6),
-              Text(label, style: theme.textTheme.bodySmall),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colour,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -698,9 +736,17 @@ class _EventTile extends StatelessWidget {
           'Distribué'
         ),
       'wasted' => (Icons.delete_outline, theme.colorScheme.error, 'Perte'),
-      'mortality' => (Icons.pets_outlined, theme.colorScheme.error, 'Mortalité'),
+      'mortality' => (
+          Icons.pets_outlined,
+          theme.colorScheme.error,
+          'Mortalité'
+        ),
       'adjusted' => (Icons.tune, Colors.blueGrey.shade600, 'Ajustement'),
-      _ => (Icons.check_circle_outline, theme.colorScheme.primary, flockEventLabel(kind)),
+      _ => (
+          Icons.check_circle_outline,
+          theme.colorScheme.primary,
+          flockEventLabel(kind)
+        ),
     };
 
     return ListTile(
@@ -741,7 +787,8 @@ class _FlockPicker extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 16),
-          Text('Quelle bande ?', style: Theme.of(context).textTheme.titleMedium),
+          Text('Quelle bande ?',
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           for (final flock in flocks)
             ListTile(

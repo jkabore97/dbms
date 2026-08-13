@@ -6,6 +6,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
+import '../../core/theme/kaj_theme.dart';
 import '../capture/capture_action.dart';
 import '../capture/gallery_screen.dart';
 import 'products_screen.dart';
@@ -373,23 +374,34 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             ],
 
             // The day.
+            // The day's takings, in the shop's own colours. This is the one
+            // figure Esperance looks for when she opens the app, so it is the
+            // one thing on the screen that is painted rather than filled.
             _Panel(
-              colour: theme.colorScheme.primaryContainer,
+              gradient: kajGradient(KajTheme.of(context)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Aujourd'hui", style: theme.textTheme.titleMedium),
+                  Text(
+                    "Aujourd'hui",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _money.format(_day.netSales),
-                    style: theme.textTheme.displaySmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${_day.saleCount} vente${_day.saleCount > 1 ? 's' : ''}'
                     '${_day.returnsTotal > 0 ? ' · ${_money.format(_day.returnsTotal)} rendus' : ''}',
-                    style: theme.textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: Colors.white),
                   ),
                 ],
               ),
@@ -434,10 +446,17 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.child, required this.colour});
+  const _Panel({required this.child, this.colour, this.gradient})
+      : assert(colour != null || gradient != null,
+            'a panel is either filled or painted');
 
   final Widget child;
-  final Color colour;
+
+  /// A flat fill, for the panels that support the day rather than being it.
+  final Color? colour;
+
+  /// A gradient, for the one panel the screen is opened to read.
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
@@ -445,8 +464,9 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colour,
-        borderRadius: BorderRadius.circular(14),
+        color: gradient == null ? colour : null,
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: child,
     );

@@ -18,6 +18,7 @@ import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
+import 'core/theme/kaj_theme.dart';
 
 /// Supplied at build time so no credentials live in the source:
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
@@ -189,16 +190,10 @@ class KajApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kaj',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E5E4E)),
-        useMaterial3: true,
-        // Larger default text: many users are reading on cheap phones in
-        // poor light, sometimes without reading glasses.
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(fontSize: 16),
-          bodyLarge: TextStyle(fontSize: 18),
-        ),
-      ),
+      // The app's own colours, for everything that belongs to no business:
+      // signing in, the business picker, the platform console. Each business
+      // then repaints itself in its profile's palette — see ProfileTheme.
+      theme: kajTheme(kajPalette),
       // No org is named anywhere in this file, and none ever should be. Which
       // business opens is decided by the signed-in user's memberships.
       home: AppRoot(
