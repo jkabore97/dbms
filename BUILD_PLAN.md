@@ -16,7 +16,7 @@ Each milestone ends with something demonstrable.
 | Platform admin flag + create_org (006) | built, tested — no screen yet |
 | Admin screens: org settings, entities/departments, people, invites | built (M2) |
 | Expense entry alongside contributions | built |
-| Public web build via GitHub Pages, redeploys on push to main | live, deploy bug fixed |
+| Public web build on Cloudflare, redeploys on push to main | live |
 | Codespace serve.sh — local dev serving with real credentials | built |
 | 8 scoped roles (owner…employee, observer, approver) | built |
 | Double-entry ledger, hidden behind plain-language actions | built, tested |

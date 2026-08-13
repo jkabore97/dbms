@@ -357,8 +357,7 @@ https://dbms.kabore-boss.workers.dev/
 It needs one repository secret, `CLOUDFLARE_API_TOKEN`, with the *Edit
 Cloudflare Workers* permission ([create one
 here](https://dash.cloudflare.com/profile/api-tokens)). Nothing has to be
-switched on in a settings page — the token is the whole authorisation, which
-is the practical difference from Pages below.
+switched on in a settings page — the token is the whole authorisation.
 
 `workers/kaj-app/wrangler.toml` is assets-only: there is no `main`, because
 the app needs no server-side logic to decide which business it shows — the org
@@ -372,19 +371,23 @@ that will otherwise serve you the previous bundle from cache.
 
 ### Testing it in a browser
 
-The **Deploy Web** workflow publishes the web build to GitHub Pages:
+Open the Cloudflare URL above. It is public, like any hosted app: the
+publishable key is compiled into it by design and RLS is what protects the
+data, so signing in still requires a Supabase user with a membership row.
 
-```
-https://jkabore97.github.io/dbms/
-```
+There was a second workflow, **Deploy Web**, publishing the same build to
+GitHub Pages at `jkabore97.github.io/dbms/`. It is deleted. It failed on every
+run from the day it was written — `actions/configure-pages` with
+`enablement: true` asks GitHub to switch Pages on through the API, and GitHub
+refuses that to a workflow token ("Resource not accessible by integration").
+Only a repository admin can flip it, at **Settings → Pages → Source: GitHub
+Actions**.
 
-It needs Pages switched on once: **Settings → Pages → Build and deployment →
-Source: GitHub Actions**. After that it republishes on every push to `main`
-that touches `app/`, and can be run by hand from the Actions tab.
-
-That page is public, like any hosted app. The publishable key is compiled into
-it by design and RLS is what protects the data; signing in still requires a
-Supabase user with a membership row.
+Once Cloudflare was serving the app there was nothing left for it to do but
+publish a second copy, to a second URL, and fail loudly on every push. If a
+Pages mirror is ever wanted, turn the setting on by hand first and restore the
+file from git history — the build steps in it were correct, and only the
+enablement was ever the problem.
 
 Signing in needs those values: without them there is no server to authenticate
 against and the login screen says so. Once a user has signed in on a device and
