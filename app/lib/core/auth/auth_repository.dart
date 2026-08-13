@@ -48,45 +48,21 @@ class AuthRepository {
   /// Refusing an unknown number here is what lets the screen say the true
   /// thing: this number has no account yet, create one.
   ///
-  /// [phone] must already be in E.164 form (+22670000000); [normalizePhone]
-  /// does that.
-  Future<void> sendPhoneOtp(String phone) async {
-    final client = _requireClient();
-    await client.auth.signInWithOtp(phone: phone, shouldCreateUser: false);
-  }
-
-  /// The same SMS, for somebody who does not have an account yet.
+  /// Signing in is e-mail and password, and nothing else.
   ///
-  /// The name travels in `data`, which Supabase writes to
-  /// `auth.users.raw_user_meta_data`; the trigger in 004 copies it into
-  /// `profiles` the moment the account exists. So the person who invites them
-  /// later sees a name in the members list instead of a phone number.
-  Future<void> sendSignUpOtp(String phone, {String? fullName}) async {
-    final client = _requireClient();
-    final name = fullName?.trim();
-    await client.auth.signInWithOtp(
-      phone: phone,
-      shouldCreateUser: true,
-      data: (name == null || name.isEmpty) ? null : {'full_name': name},
-    );
-  }
-
-  Future<AuthResponse> verifyPhoneOtp({
-    required String phone,
-    required String token,
-  }) {
-    final client = _requireClient();
-    return client.auth.verifyOTP(
-      phone: phone,
-      token: token,
-      type: OtpType.sms,
-    );
-  }
-
-  // ----------------------------------------------------------------
-  // Email + password — the secondary route
-  // ----------------------------------------------------------------
-
+  /// The phone/OTP methods that used to sit here — `sendPhoneOtp`,
+  /// `sendSignUpOtp`, `verifyPhoneOtp` — are gone by decision, not by
+  /// oversight. SMS to Burkinabè numbers costs money per message, depends on
+  /// a delivery route nobody in this project controls, and fails quietly in
+  /// exactly the places the app is meant to work. They are deleted rather
+  /// than left unused so the route cannot be reintroduced by autocomplete.
+  ///
+  /// Being far from signal is covered by the device PIN, which unlocks the
+  /// session already written to device storage. The network is needed once,
+  /// at sign-in, and not again until the session needs refreshing.
+  ///
+  /// `normalizePhone` stays: a telephone number is still contact information
+  /// and still what an invitation is pinned to. It is no longer a credential.
   Future<AuthResponse> signInWithEmail({
     required String email,
     required String password,

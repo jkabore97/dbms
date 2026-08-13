@@ -65,16 +65,28 @@ void main() {
     expect(find.text('Créer un compte'), findsOneWidget);
   });
 
-  testWidgets('signing in asks for a number and nothing else', (tester) async {
+  testWidgets('signing in asks for an address and a password, and nothing else',
+      (tester) async {
     await pumpLogin(tester);
 
-    expect(find.widgetWithText(TextField, 'Numéro de téléphone'),
-        findsOneWidget);
+    expect(find.widgetWithText(TextField, 'E-mail'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Mot de passe'), findsOneWidget);
     // Somebody who already has an account has already told us all of this.
     expect(find.widgetWithText(TextField, 'Prénom'), findsNothing);
     expect(find.widgetWithText(TextField, 'Nom de famille'), findsNothing);
     expect(find.widgetWithText(TextField, 'Confirmez le numéro'), findsNothing);
-    expect(find.text('Recevoir le code'), findsOneWidget);
+  });
+
+  testWidgets('there is no SMS route left to find', (tester) async {
+    // The removal is the assertion. A screen that still offers "recevoir le
+    // code" is a screen that still spends money on SMS and still fails in the
+    // places this app exists for, whatever the repository no longer exposes.
+    await pumpLogin(tester);
+
+    expect(find.text('Recevoir le code'), findsNothing);
+    expect(find.text('Utiliser mon numéro de téléphone'), findsNothing);
+    expect(find.text('Utiliser un e-mail et un mot de passe'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Numéro de téléphone'), findsNothing);
   });
 
   testWidgets('creating an account asks who somebody is', (tester) async {
@@ -111,18 +123,17 @@ void main() {
     );
   });
 
-  testWidgets('the email route also creates accounts', (tester) async {
+  testWidgets('creating an account asks for an address and a password',
+      (tester) async {
     await pumpLogin(tester);
 
     await tester.tap(find.text('Créer un compte'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Utiliser un e-mail et un mot de passe'));
-    await tester.pumpAndSettle();
 
     expect(find.widgetWithText(TextField, 'Prénom'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Nom de famille'), findsOneWidget);
-    // The number is asked for on the email route too: there is no sign-in
-    // number there, and a manager still needs one to invite them.
+    // The number is still asked for, and is no longer a credential: it is how
+    // a manager reaches somebody, and what an invitation is pinned to.
     expect(find.widgetWithText(TextField, 'Confirmez le numéro'),
         findsOneWidget);
     expect(find.widgetWithText(TextField, 'E-mail'), findsOneWidget);
@@ -136,8 +147,6 @@ void main() {
     await pumpLogin(tester);
 
     await tester.tap(find.text('Créer un compte'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Utiliser un e-mail et un mot de passe'));
     await tester.pumpAndSettle();
 
     // The identity fields are above the password on the form, so an empty
@@ -177,9 +186,6 @@ void main() {
       (tester) async {
     await pumpLogin(tester);
 
-    await tester.tap(find.text('Utiliser un e-mail et un mot de passe'));
-    await tester.pumpAndSettle();
-
     await tester.enterText(
       find.widgetWithText(TextField, 'E-mail'),
       'israel',
@@ -195,7 +201,7 @@ void main() {
   });
 
   group('the error a new user actually hits', () {
-    test('an unknown number is told to create an account, not that signups '
+    test('an unknown address is told to create an account, not that signups '
         'are disabled', () {
       // The literal string Supabase returns when signInWithOtp is called with
       // shouldCreateUser: false and the number has never been seen. Raw, it

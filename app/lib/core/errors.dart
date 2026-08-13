@@ -89,7 +89,11 @@ String _auth(AuthException error) {
   if (message.contains('signups not allowed') ||
       message.contains('user not found') ||
       message.contains('should_create_user')) {
-    return "Ce numéro n'a pas encore de compte. "
+    // Said in terms of the credential the app actually uses. It read "ce
+    // numéro" while sign-in was an SMS code; sending somebody to look at
+    // their phone for an account they made with an e-mail address is how a
+    // correct message still wastes an afternoon.
+    return "Cette adresse n'a pas encore de compte. "
         'Choisissez « Créer un compte ».';
   }
   if (message.contains('already registered') ||
@@ -102,13 +106,15 @@ String _auth(AuthException error) {
   }
   if (message.contains('invalid login') ||
       message.contains('invalid credentials')) {
-    return 'Numéro ou mot de passe incorrect.';
+    return 'Adresse e-mail ou mot de passe incorrect.';
   }
   if (message.contains('token has expired') || message.contains('expired')) {
     return 'Ce code a expiré. Demandez-en un nouveau.';
   }
+  // Still reachable after SMS sign-in was removed: confirming an e-mail
+  // address is also a token, and it also expires.
   if (message.contains('invalid token') || message.contains('otp')) {
-    return 'Ce code est incorrect.';
+    return 'Ce lien est incorrect ou a déjà été utilisé.';
   }
   if (message.contains('email not confirmed')) {
     return "Confirmez votre adresse e-mail avant de vous connecter.";

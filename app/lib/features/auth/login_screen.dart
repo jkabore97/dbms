@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import 'package:intl/intl.dart';
@@ -24,10 +23,22 @@ import '../common/phone_field.dart';
 /// code, typed there or swept up automatically, is what gets you into somebody
 /// else's books. Nothing about creating an account grants access to anything.
 ///
-/// Phone and SMS code stays the default and the first thing on screen. Email
-/// and password is one tap away, folded up, because for most people here it is
-/// the wrong answer — they do not have an email address, and asking for one
-/// first is how an app tells someone it was not built for them.
+/// **E-mail and password is the only way in, by decision.** This screen used
+/// to lead with a phone number and a six-digit SMS code, with email folded up
+/// underneath. That route is gone: SMS to Burkinabè numbers costs money per
+/// message, depends on a delivery route nobody in this project controls, and
+/// fails silently in exactly the places the app is meant to work.
+///
+/// What replaces it for the case SMS was chosen for — somebody far from
+/// signal — is the device PIN, which already existed. The session is written
+/// to device storage and reloaded on launch; the PIN unlocks that stored
+/// session with no network at all. So the network is needed once, to sign in,
+/// and never again until the session needs refreshing.
+///
+/// The telephone number stays on the sign-up form. It is no longer a
+/// credential — it is how a manager reaches somebody, and what an invitation
+/// is pinned to, which `claim_invitation()` matches against `profiles.phone`
+/// precisely so an account created by e-mail can still be invited by number.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     super.key,
@@ -50,8 +61,6 @@ class LoginScreen extends StatefulWidget {
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
-
-enum _Method { phone, email }
 
 /// Signing in and signing up are the same three fields in a different order
 /// with a different meaning, and conflating them is what produced accidental
@@ -88,17 +97,10 @@ class _LoginScreenState extends State<LoginScreen> {
   String get _e164 => _country.toE164(_phoneController.text);
 
   DateTime? _birthDate;
-  final _otpController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   _Intent _intent = _Intent.signIn;
-  _Method _method = _Method.phone;
-
-  /// Set once the code has been sent, and holds the E.164 number the code was
-  /// sent to — the field the user typed is not re-read, so editing it after
-  /// the fact cannot verify a code against the wrong number.
-  String? _awaitingCodeFor;
 
   /// Set when an email sign-up succeeded but the project requires the address
   /// to be confirmed. The account exists and nobody is signed in, which is
@@ -118,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _titleController.dispose();
     _phoneController.dispose();
     _phoneConfirmController.dispose();
-    _otpController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -145,17 +146,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _intent = intent;
       _error = null;
-      // A code sent for one intent must not be verified under the other: an
-      // SMS sent to an existing account is not a sign-up, whatever the toggle
-      // says by the time the six digits arrive.
-      _awaitingCodeFor = null;
       _awaitingEmailConfirmation = false;
-      _otpController.clear();
     });
   }
 
   // ----------------------------------------------------------------
-  // Phone
+  // Who somebody is
   // ----------------------------------------------------------------
 
   /// The family name last, which is how a name is written on screen here.
@@ -208,46 +204,6 @@ class _LoginScreenState extends State<LoginScreen> {
       helpText: 'Date de naissance',
     );
     if (picked != null) setState(() => _birthDate = picked);
-  }
-
-  Future<void> _sendCode() {
-    final problem = _signUpProblem;
-    if (problem != null) {
-      setState(() => _error = problem);
-      return Future.value();
-    }
-
-    final phone = _e164;
-    if (phone.length < 8) {
-      setState(() => _error = 'Entrez un numéro de téléphone valide.');
-      return Future.value();
-    }
-
-    return _run(() async {
-      if (_isSignUp) {
-        await widget.auth.sendSignUpOtp(phone, fullName: _assembledName);
-      } else {
-        await widget.auth.sendPhoneOtp(phone);
-      }
-      if (mounted) setState(() => _awaitingCodeFor = phone);
-    });
-  }
-
-  Future<void> _verifyCode() {
-    final phone = _awaitingCodeFor;
-    if (phone == null) return Future.value();
-
-    return _run(() async {
-      final response = await widget.auth.verifyPhoneOtp(
-        phone: phone,
-        token: _otpController.text.trim(),
-      );
-      final user = response.user;
-      if (user == null) {
-        throw StateError('Connexion refusée. Réessayez.');
-      }
-      await _finish(user);
-    });
   }
 
   // ----------------------------------------------------------------
@@ -389,10 +345,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   _NoBackendNotice(theme: theme)
                 else if (_awaitingEmailConfirmation)
                   ..._confirmEmailStep(theme)
-                else if (_awaitingCodeFor != null)
-                  ..._otpStep(theme)
-                else if (_method == _Method.phone)
-                  ..._phoneStep(theme)
                 else
                   ..._emailStep(theme),
                 if (_error != null) ...[
@@ -514,117 +466,6 @@ class _LoginScreenState extends State<LoginScreen> {
     ];
   }
 
-  // ----------------------------------------------------------------
-  // Step 1a: the phone number
-  // ----------------------------------------------------------------
-  List<Widget> _phoneStep(ThemeData theme) {
-    return [
-      ..._nameField(theme),
-      PhoneField(
-        controller: _phoneController,
-        country: _country,
-        onCountry: (c) => setState(() => _country = c),
-        labelText: 'Numéro de téléphone',
-        hintText: '70 12 34 56',
-        enabled: !_busy,
-        large: true,
-        autofillHints: const [AutofillHints.telephoneNumber],
-        onChanged: (_) => setState(() {}),
-        onSubmitted: (_) => _busy ? null : _sendCode(),
-      ),
-      ..._phoneConfirmField(theme),
-      const SizedBox(height: 8),
-      Text(
-        'Vous recevrez un code par SMS.',
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      const SizedBox(height: 20),
-      _PrimaryButton(
-        label: _isSignUp ? 'Créer mon compte' : 'Recevoir le code',
-        busy: _busy,
-        onPressed: _sendCode,
-      ),
-      const SizedBox(height: 24),
-      TextButton.icon(
-        onPressed: _busy
-            ? null
-            : () => setState(() {
-                  _method = _Method.email;
-                  _error = null;
-                }),
-        icon: const Icon(Icons.alternate_email, size: 18),
-        label: const Text('Utiliser un e-mail et un mot de passe'),
-      ),
-    ];
-  }
-
-  // ----------------------------------------------------------------
-  // Step 1b: the SMS code
-  // ----------------------------------------------------------------
-  List<Widget> _otpStep(ThemeData theme) {
-    return [
-      Text(
-        'Code envoyé au $_awaitingCodeFor',
-        textAlign: TextAlign.center,
-        style: theme.textTheme.bodyMedium,
-      ),
-      const SizedBox(height: 20),
-      TextField(
-        controller: _otpController,
-        enabled: !_busy,
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(6),
-        ],
-        autofillHints: const [AutofillHints.oneTimeCode],
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 32,
-          letterSpacing: 12,
-          fontWeight: FontWeight.bold,
-        ),
-        decoration: const InputDecoration(
-          labelText: 'Code à 6 chiffres',
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => _busy ? null : _verifyCode(),
-      ),
-      const SizedBox(height: 20),
-      _PrimaryButton(
-        label: _isSignUp ? 'Terminer' : 'Se connecter',
-        busy: _busy,
-        onPressed: _verifyCode,
-      ),
-      const SizedBox(height: 12),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          TextButton(
-            onPressed: _busy
-                ? null
-                : () => setState(() {
-                      _awaitingCodeFor = null;
-                      _otpController.clear();
-                      _error = null;
-                    }),
-            child: const Text('Changer de numéro'),
-          ),
-          TextButton(
-            onPressed: _busy ? null : _sendCode,
-            child: const Text('Renvoyer'),
-          ),
-        ],
-      ),
-    ];
-  }
-
-  // ----------------------------------------------------------------
-  // The secondary route
-  // ----------------------------------------------------------------
   List<Widget> _emailStep(ThemeData theme) {
     return [
       ..._nameField(theme),
@@ -672,17 +513,6 @@ class _LoginScreenState extends State<LoginScreen> {
         label: _isSignUp ? 'Créer mon compte' : 'Se connecter',
         busy: _busy,
         onPressed: _submitEmail,
-      ),
-      const SizedBox(height: 24),
-      TextButton.icon(
-        onPressed: _busy
-            ? null
-            : () => setState(() {
-                  _method = _Method.phone;
-                  _error = null;
-                }),
-        icon: const Icon(Icons.sms_outlined, size: 18),
-        label: const Text('Utiliser mon numéro de téléphone'),
       ),
     ];
   }
