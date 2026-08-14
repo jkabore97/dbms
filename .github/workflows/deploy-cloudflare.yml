@@ -37,6 +37,11 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Every job here normally finishes in two to three minutes. The
+    # default is six hours, and a stalled runner spends all of it
+    # looking like a slow build -- which is how a deploy that never
+    # happened goes unnoticed. Fail loudly instead.
+    timeout-minutes: 30
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
