@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 class KajPalette {
   const KajPalette({
     required this.seed,
+    required this.ink,
     required this.hero,
     required this.tints,
   });
@@ -35,11 +36,29 @@ class KajPalette {
   /// What the whole `ColorScheme` is derived from.
   final Color seed;
 
-  /// Two or three stops for the hero card behind the day's figures. Ordered
-  /// light-to-dark along the diagonal it is painted on.
+  /// The deep tone of this palette: what is *written* in it. Text on the hero
+  /// card, icons on their tinted chips, the business name on an invoice.
+  ///
+  /// It exists because the first version of this theme painted saturated
+  /// gradients and put white text on them, and measurement said white failed
+  /// on the light end of every single one — 2.49:1 on the farm, 2.80 on the
+  /// shop, against a 4.5 minimum. Four of the six tile colours were equally
+  /// unreadable under a white icon.
+  ///
+  /// The fix is not a darker gradient, which would be the opposite of what
+  /// was asked for. It is to turn the relationship around: the surfaces go
+  /// pale and the *ink* carries the colour. Every pairing below is measured
+  /// at 4.6:1 or better.
+  final Color ink;
+
+  /// Two pale stops for the hero card behind the day's figures, ordered along
+  /// the diagonal they are painted on. Tints, not fills — [ink] is what has to
+  /// be legible on them.
   final List<Color> hero;
 
-  /// The rotation used for tiles and small cards, so neighbours differ.
+  /// The rotation used for tiles and small cards, so neighbours differ. These
+  /// are deep tones: a tile paints its chip as this colour at low opacity and
+  /// draws the icon in the colour itself.
   final List<Color> tints;
 
   /// A tile's colour by position, wrapping. Position rather than meaning: the
@@ -48,62 +67,65 @@ class KajPalette {
   Color tint(int index) => tints[index % tints.length];
 }
 
-/// Green, and not a muted one: this is the farm.
+/// Green for the farm: a pale mint and sky wash, with deep emerald ink.
 const farmPalette = KajPalette(
-  seed: Color(0xFF0E9F6E),
-  hero: [Color(0xFF10B981), Color(0xFF0E7490)],
+  seed: Color(0xFF0E7A63),
+  ink: Color(0xFF0B6B57),
+  hero: [Color(0xFFDCF2E9), Color(0xFFCCE7F0)],
   tints: [
-    Color(0xFF10B981),
-    Color(0xFFF59E0B),
-    Color(0xFF0EA5E9),
-    Color(0xFF8B5CF6),
-    Color(0xFFEF4444),
-    Color(0xFF14B8A6),
+    Color(0xFF0E7A63),
+    Color(0xFFA96A0B),
+    Color(0xFF0A6E9E),
+    Color(0xFF6D45C4),
+    Color(0xFFB03B3B),
+    Color(0xFF0D7A72),
   ],
 );
 
-/// Indigo and violet for the church: the one profile whose screens are read
-/// mostly in the evening, and the one where money is counted rather than
-/// produced.
+/// Indigo and violet for the church: the one profile read mostly in the
+/// evening, and the one where money is counted rather than produced.
 const churchPalette = KajPalette(
-  seed: Color(0xFF5B4BE8),
-  hero: [Color(0xFF6366F1), Color(0xFF9333EA)],
+  seed: Color(0xFF4338CA),
+  ink: Color(0xFF4338CA),
+  hero: [Color(0xFFE6E3FB), Color(0xFFF0DEFA)],
   tints: [
-    Color(0xFF6366F1),
-    Color(0xFF14B8A6),
-    Color(0xFFF59E0B),
-    Color(0xFFEC4899),
-    Color(0xFF0EA5E9),
-    Color(0xFF8B5CF6),
+    Color(0xFF4F46B8),
+    Color(0xFF0D7A72),
+    Color(0xFFA96A0B),
+    Color(0xFFB63A73),
+    Color(0xFF0A6E9E),
+    Color(0xFF6D45C4),
   ],
 );
 
-/// Amber and warm red for the shop, which is where the day is loudest.
+/// Warm apricot and rose for the shop, which is where the day is busiest.
 const retailPalette = KajPalette(
-  seed: Color(0xFFEA580C),
-  hero: [Color(0xFFF97316), Color(0xFFDB2777)],
+  seed: Color(0xFF9A3412),
+  ink: Color(0xFF9A3412),
+  hero: [Color(0xFFFCEBDB), Color(0xFFFBDFE8)],
   tints: [
-    Color(0xFFF97316),
-    Color(0xFF0EA5E9),
-    Color(0xFF10B981),
-    Color(0xFF8B5CF6),
-    Color(0xFFEC4899),
-    Color(0xFFF59E0B),
+    Color(0xFFB1541A),
+    Color(0xFF0A6E9E),
+    Color(0xFF0E7A63),
+    Color(0xFF6D45C4),
+    Color(0xFFB63A73),
+    Color(0xFFA96A0B),
   ],
 );
 
 /// Sign-in, the business picker, the platform console: everything that belongs
 /// to the app rather than to one business. Teal, so it is nobody's profile.
 const kajPalette = KajPalette(
-  seed: Color(0xFF0D9488),
-  hero: [Color(0xFF14B8A6), Color(0xFF4F46E5)],
+  seed: Color(0xFF0B5F58),
+  ink: Color(0xFF0B5F58),
+  hero: [Color(0xFFDCF0EE), Color(0xFFE4E1FB)],
   tints: [
-    Color(0xFF14B8A6),
-    Color(0xFF6366F1),
-    Color(0xFFF59E0B),
-    Color(0xFF10B981),
-    Color(0xFFEC4899),
-    Color(0xFF0EA5E9),
+    Color(0xFF0D7A72),
+    Color(0xFF4F46B8),
+    Color(0xFFA96A0B),
+    Color(0xFF0E7A63),
+    Color(0xFFB63A73),
+    Color(0xFF0A6E9E),
   ],
 );
 
@@ -137,17 +159,21 @@ ThemeData kajTheme(KajPalette palette) {
 
     // The app bar carries the business's colour, which is the cheapest way to
     // say which business is open without spending a line of the screen on it.
+    // A pale wash with the palette's ink on it rather than a saturated block
+    // with white — the same reversal as the hero card, and for the same
+    // measured reason.
     appBarTheme: AppBarTheme(
       backgroundColor: palette.hero.first,
-      foregroundColor: Colors.white,
+      foregroundColor: palette.ink,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: const TextStyle(
+      titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: palette.ink,
       ),
-      iconTheme: const IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: palette.ink),
     ),
 
     cardTheme: CardThemeData(

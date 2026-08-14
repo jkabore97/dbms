@@ -17,7 +17,9 @@ class InvoicePaper extends StatelessWidget {
   Widget build(BuildContext context) {
     final money = moneyFormat(doc.currency);
     final date = DateFormat('d MMMM y', 'fr_FR');
-    final accent = KajTheme.of(context).hero.first;
+    // The palette's ink, not a hero stop: the hero stops are pale washes for
+    // painting behind text, and the invoice is dark type on white paper.
+    final accent = KajTheme.of(context).ink;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 520),

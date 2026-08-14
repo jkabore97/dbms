@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -108,6 +110,89 @@ void main() {
         })),
       );
       await tester.pump();
+    });
+  });
+
+  group('everything painted on a palette can actually be read', () {
+    // These are measured, not eyeballed. The first version of this theme put
+    // white text on saturated gradients and shipped four tile colours whose
+    // white icon was invisible; nothing caught it because nothing asked.
+    double luminance(Color c) {
+      double channel(double v) =>
+          v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4) as double;
+      return 0.2126 * channel(c.r) +
+          0.7152 * channel(c.g) +
+          0.0722 * channel(c.b);
+    }
+
+    double contrast(Color a, Color b) {
+      final la = luminance(a), lb = luminance(b);
+      final hi = math.max(la, lb), lo = math.min(la, lb);
+      return (hi + 0.05) / (lo + 0.05);
+    }
+
+    /// What a colour at [alpha] over a white card actually looks like.
+    Color over(Color c, double alpha) => Color.alphaBlend(
+        c.withValues(alpha: alpha), const Color(0xFFFFFFFF));
+
+    test('the ink is readable on both ends of its own hero gradient', () {
+      for (final palette in [
+        farmPalette,
+        churchPalette,
+        retailPalette,
+        kajPalette
+      ]) {
+        for (final stop in palette.hero) {
+          final ratio = contrast(palette.ink, stop);
+          expect(ratio, greaterThanOrEqualTo(4.5),
+              reason: 'ink on a hero stop measured '
+                  '\${ratio.toStringAsFixed(2)}:1 — small labels sit here');
+        }
+      }
+    });
+
+    test('every tile icon is readable on its own tinted chip', () {
+      for (final palette in [
+        farmPalette,
+        churchPalette,
+        retailPalette,
+        kajPalette
+      ]) {
+        for (final tint in palette.tints) {
+          final ratio = contrast(tint, over(tint, 0.14));
+          expect(ratio, greaterThanOrEqualTo(3.0),
+              reason: 'an icon on its chip measured '
+                  '\${ratio.toStringAsFixed(2)}:1');
+        }
+      }
+    });
+
+    test('the ink carries the invoice, which is printed on white paper', () {
+      for (final palette in [
+        farmPalette,
+        churchPalette,
+        retailPalette,
+        kajPalette
+      ]) {
+        expect(contrast(palette.ink, const Color(0xFFFFFFFF)),
+            greaterThanOrEqualTo(4.5));
+      }
+    });
+
+    test('the hero stops really are pale, not merely different', () {
+      // Guards the direction of the fix: somebody re-saturating these would
+      // reintroduce the unreadable white text the ink replaced.
+      for (final palette in [
+        farmPalette,
+        churchPalette,
+        retailPalette,
+        kajPalette
+      ]) {
+        for (final stop in palette.hero) {
+          expect(luminance(stop), greaterThan(0.6),
+              reason: 'a hero stop is too dark to be a wash');
+        }
+      }
     });
   });
 

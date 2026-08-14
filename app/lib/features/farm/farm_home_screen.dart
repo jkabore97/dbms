@@ -447,7 +447,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               // poultry" from that would be worse than offering both.
               hasPoultry: _shape.hasPoultry || _shape.isEmpty,
             )),
-            backgroundColor: Colors.amber.shade700,
+            backgroundColor: KajTheme.of(context).ink,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.agriculture_outlined, size: 28),
             label: const Text(
@@ -483,10 +483,10 @@ class _TodayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // White on the gradient rather than the scheme's onPrimaryContainer: the
-    // card is no longer a flat container colour, and the pale end of the
-    // gradient is still dark enough to carry white text.
-    const on = Colors.white;
+    // The palette's ink, not white. The gradient is a pale wash now, and
+    // white measured at 2.54:1 on the light end of it — unreadable. Ink on
+    // the same wash measures 4.99 or better.
+    final on = KajTheme.of(context).ink;
 
     return Card(
       elevation: 0,
@@ -690,7 +690,7 @@ class _NavCard extends StatelessWidget {
       // A tint of the colour rather than the colour: six saturated blocks
       // would shout over the figures above them, which are the point of the
       // screen.
-      color: colour.withValues(alpha: 0.12),
+      color: colour.withValues(alpha: 0.07),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -701,10 +701,13 @@ class _NavCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: colour,
+                  // A tint of the colour with the icon drawn in the colour
+                  // itself. A white icon on a saturated chip failed contrast
+                  // on four of the six tile colours.
+                  color: colour.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 24, color: Colors.white),
+                child: Icon(icon, size: 24, color: colour),
               ),
               const SizedBox(height: 8),
               Text(
