@@ -136,12 +136,11 @@ void main() {
         c.withValues(alpha: alpha), const Color(0xFFFFFFFF));
 
     test('the ink is readable on both ends of its own hero gradient', () {
-      for (final palette in [
-        farmPalette,
-        churchPalette,
-        retailPalette,
-        kajPalette
-      ]) {
+      // `allPalettes`, not a hand-kept list: a palette added to the app is
+      // measured by this the moment it exists. A list repeated here would go
+      // stale silently, and the failure it would miss is an unreadable
+      // screen somebody chose on purpose.
+      for (final palette in allPalettes) {
         for (final stop in palette.hero) {
           final ratio = contrast(palette.ink, stop);
           expect(ratio, greaterThanOrEqualTo(4.5),
@@ -152,12 +151,11 @@ void main() {
     });
 
     test('every tile icon is readable on its own tinted chip', () {
-      for (final palette in [
-        farmPalette,
-        churchPalette,
-        retailPalette,
-        kajPalette
-      ]) {
+      // `allPalettes`, not a hand-kept list: a palette added to the app is
+      // measured by this the moment it exists. A list repeated here would go
+      // stale silently, and the failure it would miss is an unreadable
+      // screen somebody chose on purpose.
+      for (final palette in allPalettes) {
         for (final tint in palette.tints) {
           final ratio = contrast(tint, over(tint, 0.14));
           expect(ratio, greaterThanOrEqualTo(3.0),
@@ -168,12 +166,11 @@ void main() {
     });
 
     test('the ink carries the invoice, which is printed on white paper', () {
-      for (final palette in [
-        farmPalette,
-        churchPalette,
-        retailPalette,
-        kajPalette
-      ]) {
+      // `allPalettes`, not a hand-kept list: a palette added to the app is
+      // measured by this the moment it exists. A list repeated here would go
+      // stale silently, and the failure it would miss is an unreadable
+      // screen somebody chose on purpose.
+      for (final palette in allPalettes) {
         expect(contrast(palette.ink, const Color(0xFFFFFFFF)),
             greaterThanOrEqualTo(4.5));
       }
@@ -182,12 +179,11 @@ void main() {
     test('the hero stops really are pale, not merely different', () {
       // Guards the direction of the fix: somebody re-saturating these would
       // reintroduce the unreadable white text the ink replaced.
-      for (final palette in [
-        farmPalette,
-        churchPalette,
-        retailPalette,
-        kajPalette
-      ]) {
+      // `allPalettes`, not a hand-kept list: a palette added to the app is
+      // measured by this the moment it exists. A list repeated here would go
+      // stale silently, and the failure it would miss is an unreadable
+      // screen somebody chose on purpose.
+      for (final palette in allPalettes) {
         for (final stop in palette.hero) {
           expect(luminance(stop), greaterThan(0.6),
               reason: 'a hero stop is too dark to be a wash');
@@ -198,12 +194,11 @@ void main() {
 
   group('the palettes themselves', () {
     test('every one has a gradient of at least two stops', () {
-      for (final palette in [
-        farmPalette,
-        churchPalette,
-        retailPalette,
-        kajPalette
-      ]) {
+      // `allPalettes`, not a hand-kept list: a palette added to the app is
+      // measured by this the moment it exists. A list repeated here would go
+      // stale silently, and the failure it would miss is an unreadable
+      // screen somebody chose on purpose.
+      for (final palette in allPalettes) {
         expect(palette.hero.length, greaterThanOrEqualTo(2));
         expect(palette.tints, isNotEmpty);
       }
@@ -218,10 +213,69 @@ void main() {
     });
 
     test('adjacent tiles never get the same colour', () {
-      for (final palette in [farmPalette, churchPalette, retailPalette]) {
+      for (final palette in allPalettes) {
         for (var i = 0; i < palette.tints.length - 1; i++) {
           expect(palette.tint(i), isNot(palette.tint(i + 1)));
         }
+      }
+    });
+
+    test('every palette is offerable: named, labelled and unique', () {
+      // The name is what goes in the database and what an old build reads
+      // back years later, so a duplicate or an empty one is not cosmetic —
+      // it is a business that cannot be given back the colour it chose.
+      final names = allPalettes.map((p) => p.name).toSet();
+      expect(names.length, allPalettes.length,
+          reason: 'two palettes share a name');
+      for (final palette in allPalettes) {
+        expect(palette.name, isNotEmpty);
+        expect(palette.label, isNotEmpty);
+        // The same slug rule the database enforces in 022. A name this side
+        // that the server would refuse is a save button that never works.
+        expect(RegExp(r'^[a-z][a-z0-9-]{1,31}$').hasMatch(palette.name), isTrue,
+            reason: '"${palette.name}" would be refused by set_org_theme()');
+      }
+    });
+  });
+
+  group('what a business is painted in', () {
+    test('a chosen palette beats the profile', () {
+      expect(paletteFor('farm', theme: 'ocean'), oceanPalette);
+      expect(paletteFor('church', theme: 'savane'), savanePalette);
+    });
+
+    test('choosing nothing leaves the profile deciding', () {
+      // The old behaviour, and what every business has until somebody opens
+      // the colour screen. Both spellings of "nothing" have to work: the
+      // server stores null, and a cleared picker can send an empty string.
+      expect(paletteFor('farm'), farmPalette);
+      expect(paletteFor('farm', theme: null), farmPalette);
+      expect(paletteFor('farm', theme: ''), farmPalette);
+      expect(paletteFor('retail'), retailPalette);
+    });
+
+    test('a palette this build has never heard of falls back, not fails', () {
+      // The forward-compatibility 022 was written for: the server accepts any
+      // slug so a newer app can offer a new colour, which means an older APK
+      // will meet names it does not know. It must land on the profile's
+      // colour rather than on no colour at all.
+      expect(paletteFor('farm', theme: 'couleur-de-2030'), farmPalette);
+      expect(paletteFor('church', theme: 'nonsense'), churchPalette);
+      // And an unknown palette on an unknown profile still resolves.
+      expect(paletteFor('quarry', theme: 'nonsense'), kajPalette);
+    });
+
+    test('paletteNamed answers null rather than guessing', () {
+      expect(paletteNamed('ocean'), oceanPalette);
+      expect(paletteNamed('nope'), isNull);
+      expect(paletteNamed(null), isNull);
+      expect(paletteNamed(''), isNull);
+    });
+
+    test('every name in the registry round-trips', () {
+      // What the picker writes, the app must be able to read back.
+      for (final palette in allPalettes) {
+        expect(paletteNamed(palette.name), palette);
       }
     });
   });

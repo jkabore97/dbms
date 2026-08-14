@@ -27,11 +27,21 @@ import 'package:flutter/material.dart';
 /// reading glasses, and no amount of colour is worth a smaller font.
 class KajPalette {
   const KajPalette({
+    required this.name,
+    required this.label,
     required this.seed,
     required this.ink,
     required this.hero,
     required this.tints,
   });
+
+  /// The stable identifier stored in `orgs.theme`. Never translated and never
+  /// renamed: a business that chose `ocean` two years ago must still get ocean
+  /// after this file has been rewritten twice.
+  final String name;
+
+  /// What the person choosing it reads. French, like the rest of the app.
+  final String label;
 
   /// What the whole `ColorScheme` is derived from.
   final Color seed;
@@ -69,6 +79,8 @@ class KajPalette {
 
 /// Green for the farm: a pale mint and sky wash, with deep emerald ink.
 const farmPalette = KajPalette(
+  name: 'verdure',
+  label: 'Verdure',
   seed: Color(0xFF0E7A63),
   ink: Color(0xFF0B6B57),
   hero: [Color(0xFFDCF2E9), Color(0xFFCCE7F0)],
@@ -85,6 +97,8 @@ const farmPalette = KajPalette(
 /// Indigo and violet for the church: the one profile read mostly in the
 /// evening, and the one where money is counted rather than produced.
 const churchPalette = KajPalette(
+  name: 'indigo',
+  label: 'Indigo',
   seed: Color(0xFF4338CA),
   ink: Color(0xFF4338CA),
   hero: [Color(0xFFE6E3FB), Color(0xFFF0DEFA)],
@@ -100,6 +114,8 @@ const churchPalette = KajPalette(
 
 /// Warm apricot and rose for the shop, which is where the day is busiest.
 const retailPalette = KajPalette(
+  name: 'terre',
+  label: 'Terre cuite',
   seed: Color(0xFF9A3412),
   ink: Color(0xFF9A3412),
   hero: [Color(0xFFFCEBDB), Color(0xFFFBDFE8)],
@@ -116,6 +132,8 @@ const retailPalette = KajPalette(
 /// Sign-in, the business picker, the platform console: everything that belongs
 /// to the app rather than to one business. Teal, so it is nobody's profile.
 const kajPalette = KajPalette(
+  name: 'lagune',
+  label: 'Lagune',
   seed: Color(0xFF0B5F58),
   ink: Color(0xFF0B5F58),
   hero: [Color(0xFFDCF0EE), Color(0xFFE4E1FB)],
@@ -129,11 +147,129 @@ const kajPalette = KajPalette(
   ],
 );
 
-/// The palette for an org profile. Falls through to the app's own for a
-/// profile this build has never heard of — the same tolerance `homeScreenFor`
-/// shows, and for the same reason: a profile added server-side must not be
-/// able to break an APK already in somebody's hand.
-KajPalette paletteFor(String? profile) => switch (profile) {
+// ---------------------------------------------------------------------------
+// The palettes that exist only because somebody chose them
+// ---------------------------------------------------------------------------
+// The four above are the profile defaults: a farm is green because it is a
+// farm. These four are not tied to any profile — they exist so a business can
+// look like itself rather than like its category. A tailor's shop and a
+// hardware shop are both `retail` and have no reason to be the same colour.
+//
+// Every one of them is measured against the same bar as the defaults, by the
+// same tests, over `allPalettes` below. That list is the point: a palette
+// added here is contrast-checked automatically, so nobody can add a pretty
+// one that cannot be read.
+
+/// Deep sea blue. The most neutral of the choices, and the one that reads
+/// best in the sun — blue ink on a pale blue wash keeps its edge outdoors.
+const oceanPalette = KajPalette(
+  name: 'ocean',
+  label: 'Océan',
+  seed: Color(0xFF0B5A8A),
+  ink: Color(0xFF0B5A8A),
+  hero: [Color(0xFFDCEBF7), Color(0xFFDDE6F7)],
+  tints: [
+    Color(0xFF0A6E9E),
+    Color(0xFF0D7A72),
+    Color(0xFF6D45C4),
+    Color(0xFFA96A0B),
+    Color(0xFFB63A73),
+    Color(0xFF0E7A63),
+  ],
+);
+
+/// Plum and lilac. The deepest ink of the set, at 8.8:1 on white.
+const prunePalette = KajPalette(
+  name: 'prune',
+  label: 'Prune',
+  seed: Color(0xFF7B2D5E),
+  ink: Color(0xFF7B2D5E),
+  hero: [Color(0xFFF7E3EE), Color(0xFFEDE1F7)],
+  tints: [
+    Color(0xFFB63A73),
+    Color(0xFF6D45C4),
+    Color(0xFF0A6E9E),
+    Color(0xFF0D7A72),
+    Color(0xFFA96A0B),
+    Color(0xFFB03B3B),
+  ],
+);
+
+/// Sand and ochre — the warmest, and the closest to the light here.
+const savanePalette = KajPalette(
+  name: 'savane',
+  label: 'Savane',
+  seed: Color(0xFF8A5A0B),
+  ink: Color(0xFF8A5A0B),
+  hero: [Color(0xFFFAEEDA), Color(0xFFF6E7D2)],
+  tints: [
+    Color(0xFFA96A0B),
+    Color(0xFF0E7A63),
+    Color(0xFF0A6E9E),
+    Color(0xFFB03B3B),
+    Color(0xFF6D45C4),
+    Color(0xFF0D7A72),
+  ],
+);
+
+/// Slate. For the business that wants the app to be quiet — the only choice
+/// here with no hue to speak of, and deliberately so.
+const ardoisePalette = KajPalette(
+  name: 'ardoise',
+  label: 'Ardoise',
+  seed: Color(0xFF44506B),
+  ink: Color(0xFF44506B),
+  hero: [Color(0xFFE7EAF0), Color(0xFFE2E7EE)],
+  tints: [
+    Color(0xFF44506B),
+    Color(0xFF0A6E9E),
+    Color(0xFF0D7A72),
+    Color(0xFFA96A0B),
+    Color(0xFF6D45C4),
+    Color(0xFFB03B3B),
+  ],
+);
+
+/// Every palette this build knows, in the order they are offered.
+///
+/// The profile defaults come first because they are what the business already
+/// looks like; the rest follow. Tests iterate this rather than a hand-kept
+/// list, so adding a palette here is what subjects it to the contrast bar.
+const allPalettes = <KajPalette>[
+  farmPalette,
+  churchPalette,
+  retailPalette,
+  kajPalette,
+  oceanPalette,
+  prunePalette,
+  savanePalette,
+  ardoisePalette,
+];
+
+/// The palette a business chose, by its stored name.
+///
+/// Returns null rather than a default for a name this build has never heard
+/// of, so the caller can fall back to the profile's own colour. That case is
+/// not hypothetical: a palette added server-side, or an APK three versions
+/// old, must not leave somebody staring at a screen with no colour at all.
+KajPalette? paletteNamed(String? name) {
+  if (name == null || name.isEmpty) return null;
+  for (final palette in allPalettes) {
+    if (palette.name == name) return palette;
+  }
+  return null;
+}
+
+/// The palette for a business: what it chose, or what its profile implies.
+///
+/// [theme] wins when it names a palette this build knows. Otherwise the
+/// profile decides, exactly as it did before anyone could choose — and an
+/// unknown profile still falls through to the app's own, the same tolerance
+/// `homeScreenFor` shows, for the same reason: neither a profile nor a palette
+/// added server-side may break an APK already in somebody's hand.
+KajPalette paletteFor(String? profile, {String? theme}) =>
+    paletteNamed(theme) ??
+    switch (profile) {
       'farm' => farmPalette,
       'church' => churchPalette,
       'retail' => retailPalette,
@@ -263,17 +399,28 @@ class KajTheme extends InheritedWidget {
   bool updateShouldNotify(KajTheme oldWidget) => oldWidget.palette != palette;
 }
 
-/// Wraps [child] in a profile's colours: both the `ThemeData` every Material
+/// Wraps [child] in a business's colours: both the `ThemeData` every Material
 /// widget reads, and the palette the hand-painted parts read.
 class ProfileTheme extends StatelessWidget {
-  const ProfileTheme({super.key, required this.profile, required this.child});
+  const ProfileTheme({
+    super.key,
+    required this.profile,
+    this.theme,
+    required this.child,
+  });
 
   final String? profile;
+
+  /// The palette the business chose, if it chose one. Null means "whatever
+  /// the profile implies", which is what every business had before this
+  /// setting existed and what a business that never touches it keeps.
+  final String? theme;
+
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final palette = paletteFor(profile);
+    final palette = paletteFor(profile, theme: theme);
     return KajTheme(
       palette: palette,
       child: Theme(data: kajTheme(palette), child: child),

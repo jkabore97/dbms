@@ -15,6 +15,7 @@ class OrgSummary {
     this.currency = 'XOF',
     this.roles = const [],
     this.visibility = 'full',
+    this.theme,
   });
 
   final String id;
@@ -32,6 +33,14 @@ class OrgSummary {
   /// 'full' | 'summary' — an investor granted summary visibility sees totals,
   /// not the individual entries behind them.
   final String visibility;
+
+  /// The palette this business chose, or null for its profile's own colour.
+  ///
+  /// It rides along with the org list rather than being fetched per screen for
+  /// one reason: it is cached, so the app opens in the right colour with no
+  /// signal. A theme that arrived over the network would mean every home
+  /// screen flashing green before turning blue.
+  final String? theme;
 
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
@@ -80,6 +89,10 @@ class OrgSummary {
       currency: (row['default_currency'] as String?) ?? 'XOF',
       roles: (row['roles'] as List?)?.map((r) => r.toString()).toList() ?? [],
       visibility: (row['visibility'] as String?) ?? 'full',
+      // Absent on a database that has not run 022 yet. Null is the same as
+      // "never chose one", so an app ahead of its migration simply keeps the
+      // profile colours instead of failing to list the businesses at all.
+      theme: row['theme'] as String?,
     );
   }
 
@@ -93,6 +106,7 @@ class OrgSummary {
       currency: (row['currency'] as String?) ?? 'XOF',
       roles: roles.isEmpty ? const [] : roles.split(','),
       visibility: (row['visibility'] as String?) ?? 'full',
+      theme: row['theme'] as String?,
     );
   }
 
@@ -104,6 +118,7 @@ class OrgSummary {
         'currency': currency,
         'roles': roles.join(','),
         'visibility': visibility,
+        'theme': theme,
       };
 }
 

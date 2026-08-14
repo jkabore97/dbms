@@ -52,6 +52,7 @@ Each milestone ends with something demonstrable.
 | Phone numbers with a country code picker, stored as E.164 | built, 12 assertions |
 | A colour per business profile, measured against WCAG rather than eyeballed | built, 14 assertions |
 | Platform console: search, filter and page across thousands of businesses | built, 8 assertions |
+| A business chooses its own colours, previewed before saving | built, 13 + 13 assertions |
 
 **Not built**
 

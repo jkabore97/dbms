@@ -183,6 +183,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_console.sql
 
+      # The colour is cosmetic; the permission is not. This setting changes
+      # what every member of a business sees, so it is gated like renaming
+      # one — and the column is deliberately not an enum, which means the
+      # shape check is the only thing between it and whatever gets posted.
+      - name: Prove only an admin repaints a business, and only their own
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_org_theme.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

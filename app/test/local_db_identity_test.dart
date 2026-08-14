@@ -170,4 +170,57 @@ void main() {
     await upgraded.saveIdentity(const LocalIdentity(userId: 'user-1'));
     expect((await upgraded.loadIdentity())!.userId, 'user-1');
   });
+
+  test('upgrading the phone everybody actually has keeps its businesses',
+      () async {
+    // The v1 case above is the oldest device in the field. This is the
+    // commonest one: a phone on the previous release, which is every phone
+    // the moment an update ships. It is a separate test because it takes a
+    // different branch — v1 is handed a freshly created `cached_orgs`, and
+    // this one has an existing table that must be altered in place.
+    //
+    // Getting that guard wrong does not lose a colour. It throws while
+    // opening the database, which means the app does not start at all.
+    final dir = await Directory.systemTemp.createTemp('kaj_v7_test');
+    final path = p.join(dir.path, 'kaj.db');
+    addTearDown(() => dir.delete(recursive: true));
+
+    // Only the part of v7 this migration touches: the org cache as it was
+    // before the theme column, holding a business somebody can open offline.
+    final legacy = await databaseFactory.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        version: 7,
+        onCreate: (db, _) async {
+          await db.execute('''
+            CREATE TABLE cached_orgs (
+              org_id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT,
+              profile TEXT NOT NULL, currency TEXT, roles TEXT,
+              visibility TEXT
+            )
+          ''');
+        },
+      ),
+    );
+    await legacy.insert('cached_orgs', {
+      'org_id': 'org-1',
+      'name': 'Boutique Espérance',
+      'profile': 'retail',
+      'currency': 'XOF',
+      'roles': 'owner',
+      'visibility': 'full',
+    });
+    await legacy.close();
+
+    final upgraded = await LocalDb.open(path: path);
+    final orgs = await upgraded.cachedOrgs();
+    addTearDown(upgraded.close);
+
+    expect(orgs, hasLength(1), reason: 'the cached business survived');
+    expect(orgs.single.name, 'Boutique Espérance');
+    // Never chose a colour, so it still answers by its profile — and reading
+    // the new column off a row written before it existed must give null
+    // rather than throwing.
+    expect(orgs.single.theme, isNull);
+  });
 }
