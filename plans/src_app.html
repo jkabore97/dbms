@@ -1,0 +1,271 @@
+<title>Kaj Build Sequence</title>
+<style>
+/*@FONTS@*/
+
+:root {
+  --ground:  #FBFCFC;
+  --ink:     #10201F;
+  --muted:   #5A6B6A;
+  --rule:    #DCE5E4;
+  --surface: #F1F6F5;
+  --chip:    #E4EFEE;
+  --accent:  #0D9488;
+  --accent2: #4F46E5;
+  --warn:    #A2570B;
+  --warn-bg: #FBF2E4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #0B1413;
+    --ink:     #E6EEED;
+    --muted:   #93A6A4;
+    --rule:    #243634;
+    --surface: #12211F;
+    --chip:    #172C29;
+    --accent:  #4ECDC0;
+    --accent2: #9A93FF;
+    --warn:    #E0A960;
+    --warn-bg: #241C0F;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:  #0B1413;
+  --ink:     #E6EEED;
+  --muted:   #93A6A4;
+  --rule:    #243634;
+  --surface: #12211F;
+  --chip:    #172C29;
+  --accent:  #4ECDC0;
+  --accent2: #9A93FF;
+  --warn:    #E0A960;
+  --warn-bg: #241C0F;
+}
+
+/*@SHARED@*/
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Plan 1 of 3 · Product</p>
+  <h1>Kaj Build Sequence</h1>
+  <p class="standfirst">Six phases from a working codebase to an app whose numbers a bank would believe. Ordered by what has to be true before the next thing can start.</p>
+  <div class="meta">
+    <span>Owner <b>Founder + 1 developer</b></span>
+    <span>Horizon <b>~9 months</b></span>
+    <span>Starts from <b>migration 020, 205 Flutter tests, 16 SQL suites</b></span>
+  </div>
+</header>
+
+<section class="glance">
+  <h3 style="margin-top:34px">At a glance</h3>
+  <div class="glance-table">
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Name</th><th>Weeks</th><th>Gate — do not start the next phase until this is true</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0</td><td>Watch three people</td><td>3</td><td>You can name, per business, the one screen they open daily and the one thing that stopped them</td></tr>
+      <tr><td>1</td><td>Make it shippable</td><td>3</td><td>A signed APK runs on a real low-end phone; a crash you caused appears in your dashboard</td></tr>
+      <tr><td>2</td><td>Make the record trustworthy</td><td>8</td><td>A shop can reconcile its drawer to the franc, and a new person can take over the books</td></tr>
+      <tr><td>3</td><td>Connect the businesses</td><td>6</td><td>A supplier's invoice lands in the customer's app with nothing retyped, and no org can read another's data</td></tr>
+      <tr><td>4</td><td>Charge for it</td><td>5</td><td>Money arrives from Orange Money and the right business unlocks, without you touching anything</td></tr>
+      <tr><td>5</td><td>Widen the surface</td><td>ongoing</td><td>Play Store listing live; tenant subdomains resolving</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<div class="note prose">
+  <p><strong>What “most accurate” means here, and why it drives the order.</strong> An accurate app is not one with more features. It is one whose numbers can be checked against the physical world and found to agree — cash counted against cash recorded, sacks in the store against sacks in the ledger. Phase 2 is the heart of this plan for that reason, and Phases 0 and 1 exist only because you cannot make a record trustworthy for people who are not yet using it on a phone that cannot yet run it.</p>
+</div>
+
+<!-- ============ PHASE 0 ============ -->
+<section class="phase">
+  <div class="phase-num">0<small>3 weeks</small></div>
+  <div>
+    <h2>Watch three people use it</h2>
+    <p class="goal">Before another line of code: find out which of your assumptions is wrong, while wrongness is still cheap.</p>
+
+    <p>The codebase already carries three personas — Israel's church, Ignace's farm, Esperance's shop. Nobody has ever used it. Every estimate below this line is a guess until this phase is done, and the plan will change after it. That is the point of running it first.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Recruit exactly three businesses</strong> — one of each profile. Pick people you can reach by phone and visit within thirty minutes. Do not pick friends who will be kind about it.</li>
+      <li><strong>Install and give ten minutes of instruction.</strong> No more. If it needs an hour of training, that is a finding, and you want to discover it now rather than after you have hired agents to deliver that hour.</li>
+      <li><strong>Sit with each for one full working day.</strong> Silent. Do not help, do not correct, do not sell. Write down every hesitation, every wrong tap, every moment they reach for the paper notebook instead.</li>
+      <li><strong>Return on day five, unannounced.</strong> The only metric that matters: did they record anything without you in the room?</li>
+      <li><strong>Write one page per business</strong> — the single screen they open daily, the single thing that stopped them, and the workaround they invented.</li>
+      <li><strong>Re-order Phases 2 and 3 against those three pages.</strong> Publicly, in this document. If two of three never opened it again, stop and fix that before anything else on this list.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You can state, for each of the three, the one screen and the one blocker — from observation, not from asking them. People are polite about software; they are not polite about their own time.</div>
+
+    <div class="risk"><span class="label">Risk</span>The temptation to fix things during the visit. You are measuring, not selling. A bug you fix on the spot is a data point you have just destroyed.</div>
+  </div>
+</section>
+
+<!-- ============ PHASE 1 ============ -->
+<section class="phase">
+  <div class="phase-num">1<small>3 weeks</small></div>
+  <div>
+    <h2>Make it shippable</h2>
+    <p class="goal">Close the four things that block a real release, all of which were found in the production audit and none of which are features.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Give the app a real identity.</strong> <code>applicationId</code> is currently <code>com.example.kaj_app</code>. The Play Store rejects <code>com.example.*</code> outright, and this value can never be changed after first publication without shipping a different app. Choose it carefully — a domain you will own for a decade, reversed.</li>
+      <li><strong>Generate an upload keystore and back it up in two places today.</strong>
+        <ul>
+          <li>Store it outside the repository. Never commit it.</li>
+          <li>Wire the signing config to read from environment variables, the same way Supabase credentials already reach the app.</li>
+          <li>Losing this file means you can never update your own app again. It is the single most expensive mistake available to you in this phase.</li>
+        </ul>
+      </li>
+      <li><strong>Build a signed release APK and run it on two real Android phones</strong>, at least one of them cheap and old. CI has only ever built a <em>debug</em> APK, and no APK has ever been executed on hardware in this project.</li>
+      <li><strong>Verify the two Android-only features on that hardware:</strong> the barcode scanner and the on-device text recognition. Both compile. Neither has ever run. Treat them as unproven until you have scanned a real product and photographed a real delivery note.</li>
+      <li><strong>Turn the camera on.</strong> Deploy the uploads Worker, set the <code>UPLOADS_URL</code> repository variable to its origin, redeploy. Photo capture is currently hidden in production because that variable is empty — which is correct behaviour, and also means the feature does not exist for any user today.</li>
+      <li><strong>Add crash reporting</strong> before the first outside user. A crash on somebody's phone in Bobo-Dioulasso is currently invisible to you forever.</li>
+      <li><strong>Run a restore drill.</strong> Take a database backup, restore it into a scratch project, and run the 16 SQL suites against the restored copy. A backup nobody has restored is a rumour.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You can hand a stranger an APK by WhatsApp; a crash you deliberately caused shows up in your dashboard within a minute; and you have restored a backup once, with the tests passing on it.</div>
+
+    <div class="risk"><span class="label">Risk</span>Keystore loss, which is unrecoverable, and shipping to the Play Store before the crash reporting works, which makes your first bad review undiagnosable.</div>
+  </div>
+</section>
+
+<!-- ============ PHASE 2 ============ -->
+<section class="phase">
+  <div class="phase-num">2<small>8 weeks</small></div>
+  <div>
+    <h2>Make the record trustworthy</h2>
+    <p class="goal">Give every number in the app a way to be checked against the physical world — and give people who do not read French comfortably a way to enter it.</p>
+
+    <p>This is the phase that earns the word “accurate”, and it is where most of the eight weeks should go. Everything here is about the gap between what the app says and what is actually in the drawer, the store, or the field.</p>
+
+    <h3>2a. Cash reconciliation at day close</h3>
+    <p>A day-close concept already exists in the codebase. Extend it into a reconciliation: the person counts the physical cash, types the total, and the app shows the difference against what it believes. This is the highest-value accuracy feature you can build, because it makes every other number self-checking — a shop that reconciles daily discovers a missed sale the same evening rather than never.</p>
+    <ol class="steps">
+      <li>Add a counted-cash figure to the day close, with the variance shown plainly and stored.</li>
+      <li>Require a note when the variance exceeds a threshold the business sets.</li>
+      <li>Show a running record of variances — a till that is short every Tuesday is telling you something no single day can.</li>
+      <li>Never block the close. A person who cannot close because the numbers disagree simply stops closing.</li>
+    </ol>
+
+    <h3>2b. Opening balances</h3>
+    <p>Every business you sign already exists. It has stock on the shelf, money owed to it, and money it owes. Today the app can only describe a business that started the day it installed the app, which means its first month of figures are wrong in a way that is invisible and permanent.</p>
+    <ol class="steps">
+      <li>A guided opening entry: cash on hand, stock on hand, who owes us, who we owe.</li>
+      <li>Post it as a dated opening journal entry, not as invisible seed data, so it can be audited and corrected.</li>
+      <li>Make it repeatable — the first attempt is always wrong, and the agent will redo it on the second visit.</li>
+    </ol>
+
+    <h3>2c. A correction path for everything</h3>
+    <p>Ledger entries can already be reversed, and invoices can now be cancelled. Audit every other write for the same property — stock movements, harvests, herd events, payroll, sales. Anywhere a mistake cannot be undone, people either stop recording or start lying to the app.</p>
+
+    <h3>2d. Mooré and Dioula on the daily screens</h3>
+    <p>The app is French-only. A large share of the market you are selling to reads French with difficulty, and this is a bigger adoption barrier than any feature on this plan.</p>
+    <ol class="steps">
+      <li>Translate only the screens touched daily — recording, totals, day close. Not the admin console.</li>
+      <li>Have a native speaker who is <em>not</em> an employee test each screen with a real shopkeeper. Translated software that no speaker has used is a French app with unfamiliar words.</li>
+      <li>Keep pushing numbers and icons over words wherever a word can be removed entirely.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>A shop can count its drawer and agree with the app to the franc; a business that has traded for five years can enter what it already owns; and a person who reads little French can record a day's takings without help.</div>
+
+    <div class="risk"><span class="label">Risk</span>Translation delivered without a native speaker testing it on a real user. It will look finished and be unusable, and you will not find out for months.</div>
+  </div>
+</section>
+
+<!-- ============ PHASE 3 ============ -->
+<section class="phase">
+  <div class="phase-num">3<small>6 weeks</small></div>
+  <div>
+    <h2>Connect the businesses</h2>
+    <p class="goal">When a supplier on the platform invoices a customer on the platform, the invoice should arrive as a purchase — nothing retyped, nothing photographed.</p>
+
+    <p>This is the most commercially valuable thing left to build. It creates the network effect that makes the app hard to leave, and it acquires customers for you: a shop gets invited by its supplier, with trust already attached. It is also the most dangerous thing on this plan, because the tenant isolation you have is genuinely good and a careless sharing feature is how it gets destroyed.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Design the connection as an explicit, two-sided handshake.</strong> One org proposes, the other accepts. Nothing is shared before both have agreed, and either side can sever it at any time.</li>
+      <li><strong>Scope the grant to documents, never to the org.</strong> A connection permits <em>this invoice</em> to be visible to <em>that org</em>. It must never widen into a general read of the counterparty's books.</li>
+      <li><strong>Write the migration and its test suite together.</strong> The suite must include, at minimum: a connected org attempting to read a non-shared invoice; a severed connection attempting to read what it saw yesterday; and a third org attempting to read a connection it is not part of. All three must fail.</li>
+      <li><strong>Give the receiving side a review step.</strong> An arriving invoice is a <em>proposal</em> to record a purchase, not an automatic entry in somebody else's books. They accept it, and only then does it post.</li>
+      <li><strong>Handle the disconnected majority.</strong> Most counterparties will not be on the platform for years. The manual path must stay first-class and must not feel like a downgrade.</li>
+      <li><strong>Add the consolidated view</strong> for one person who owns several businesses. Memberships and the business picker already support the switching; what is missing is a combined total across them.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>Two businesses you control can trade end-to-end with nothing typed twice, and the test suite proves that a third business, and a severed partner, can read nothing.</div>
+
+    <div class="risk"><span class="label">Risk</span>A sharing bug here is not a bug, it is a breach — one business reading another's books. Budget the same care as the RLS work, and do not ship this phase on a deadline.</div>
+  </div>
+</section>
+
+<!-- ============ PHASE 4 ============ -->
+<section class="phase">
+  <div class="phase-num">4<small>5 weeks</small></div>
+  <div>
+    <h2>Charge for it</h2>
+    <p class="goal">Collect money over mobile money and unlock the right business automatically — without ever locking anybody out of their own records.</p>
+
+    <p>There is no billing concept anywhere in the schema today. The word “entitlement” appears in the code, but it refers to report visibility for observers, not to payment. This is a green field, which means you can build it around how money actually moves here.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Model periods, not subscriptions.</strong> Mobile money in the region is push-approval, not card-style recurring debit. Store a paid-until date per business and sell 3, 6 or 12 months at a time. One approval, far less churn.</li>
+      <li><strong>Define the free tier in the schema</strong>, not in the app. One user, unlimited recording, daily and weekly totals — forever, with no expiry. The paywall sits on employee accounts, invoices carrying the business's tax number, exports and multi-site.</li>
+      <li><strong>Make reading always free, including after expiry.</strong> This is the most important rule in this phase. A business locked out of its own history will never trust you again and will tell everyone in the market. Expiry stops <em>new writes</em> of paid features. It never hides what they already recorded.</li>
+      <li><strong>Integrate one aggregator</strong> for Orange Money and Moov. Shortlist to price and verify yourself: CinetPay, PayDunya, Ligdicash. Confirm settlement into a Burkinabè business account before writing any code.</li>
+      <li><strong>Take the webhook, not the client's word.</strong> The payment confirmation must arrive server-side and be verified. A client that can tell the server it has paid is a client that will.</li>
+      <li><strong>Build the reminder ladder</strong> — 14 days, 3 days, on the day, and a grace period afterwards. In the app, and by WhatsApp from a human for the businesses worth keeping.</li>
+      <li><strong>Give your platform admin a manual override.</strong> Payments fail, agents make mistakes, and you will need to extend somebody at 9pm. Log every override.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You can pay from a real Orange Money handset and watch the correct business unlock with no manual step, and an expired business can still open and read every figure it ever recorded.</div>
+
+    <div class="risk"><span class="label">Risk</span>Holding customer money. Charging businesses to use your software is ordinary commerce; settling funds <em>on behalf of</em> them is regulated across the UEMOA by the BCEAO. Keep that line bright and take advice before crossing it.</div>
+  </div>
+</section>
+
+<!-- ============ PHASE 5 ============ -->
+<section class="phase">
+  <div class="phase-num">5<small>ongoing</small></div>
+  <div>
+    <h2>Widen the surface</h2>
+    <p class="goal">The distribution work already scoped as M6 — worth doing only once the four phases above have real users behind them.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Play Store release</strong> — listing, screenshots in French, privacy policy, signed build from Phase 1.</li>
+      <li><strong>Tenant subdomains.</strong> Deploy the tenant router, populate the hostname-to-org mappings, wildcard DNS so each business can reach <code>{slug}.kajapp.com</code>.</li>
+      <li><strong>Custom domains</strong> for the businesses large enough to want them.</li>
+      <li><strong>Email domain claim</strong> — verify a TXT record, then anyone with that address joins the business automatically. Now genuinely useful, since sign-in is e-mail and password.</li>
+      <li><strong>Second country only after Burkina works.</strong> The country-code picker and the per-country trunk rules already make the app portable; nothing else about your business is.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>A business can be found, installed and signed up without you being in the room.</div>
+
+    <div class="risk"><span class="label">Risk</span>Doing this phase first. It is the most visible work and the least valuable until people are using the product daily.</div>
+  </div>
+</section>
+
+<hr class="end">
+
+<footer class="prose">
+  <h3>Standing rules for this plan</h3>
+  <ul class="plain">
+    <li><strong>Database first, app second.</strong> Every deploy that involves a migration runs the SQL before the app ships, or users meet an out-of-date-database error.</li>
+    <li><strong>Nothing is done because it built.</strong> This project has already shipped a regression behind a passing build. Run it, look at it, then call it done.</li>
+    <li><strong>Every schema change gets its own migration and its own test suite.</strong> The 16 suites are why the tenant boundary can be trusted; that only stays true if new work joins them.</li>
+    <li><strong>Web and Android only.</strong> Delete the iOS, macOS, Windows and Linux scaffolding whenever the Flutter tooling regenerates it.</li>
+  </ul>
+
+  <h3>What is uncertain</h3>
+  <p>Durations assume one developer at roughly full time and will move after Phase 0, which is the point of running it first. The payment aggregators named in Phase 4 are a shortlist to evaluate, not a recommendation — confirm coverage, fees and settlement yourself before committing. Any regulatory question raised here needs a Burkinabè lawyer or accountant, not this document.</p>
+</footer>
+
+</div>

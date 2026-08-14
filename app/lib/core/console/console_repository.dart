@@ -22,6 +22,60 @@ class ConsoleRepository {
   bool get isConfigured => _client != null;
 
   // ----------------------------------------------------------------
+  // The platform, for whoever runs it
+  // ----------------------------------------------------------------
+
+  /// How many businesses there are and how many are in trouble. One row, one
+  /// round trip, no business returned.
+  Future<PlatformOverview> overview() async {
+    final client = _requireClient();
+    final rows = await client.rpc('platform_overview') as List<dynamic>;
+    if (rows.isEmpty) return const PlatformOverview();
+    return PlatformOverview.fromRow(
+        Map<String, dynamic>.from(rows.first as Map));
+  }
+
+  /// One page of businesses, searched and filtered on the server.
+  ///
+  /// Nothing here loads the whole platform. The old console called
+  /// `all_orgs()`, which returned every row and ran two correlated subqueries
+  /// against each one; at a thousand businesses that is a screen nobody opens
+  /// twice. Filtering and ordering now happen on indexed columns and only the
+  /// returned page pays for a member count.
+  Future<OrgPage> searchOrgs({
+    String? query,
+    String? profile,
+    String status = 'active',
+    String? activity,
+    String sort = 'activity',
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final client = _requireClient();
+    final rows = await client.rpc('search_orgs', params: {
+      if (query != null && query.trim().isNotEmpty) 'p_query': query.trim(),
+      if (profile != null) 'p_profile': profile,
+      'p_status': status,
+      if (activity != null) 'p_activity': activity,
+      'p_sort': sort,
+      'p_limit': limit,
+      'p_offset': offset,
+    }) as List<dynamic>;
+
+    final parsed = rows
+        .map((r) => OrgRow.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+
+    // Every row carries the same total; an empty page means the filter
+    // matched nothing, or the offset ran past the end.
+    final total = rows.isEmpty
+        ? 0
+        : ((rows.first as Map)['total_count'] as num?)?.toInt() ?? 0;
+
+    return OrgPage(rows: parsed, total: total);
+  }
+
+  // ----------------------------------------------------------------
   // The activity log
   // ----------------------------------------------------------------
 

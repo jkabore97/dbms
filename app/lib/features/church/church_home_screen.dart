@@ -421,7 +421,9 @@ class _TodayCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     // The gradient is what makes this read as a screen rather than a printed
-    // form. White on it, because both stops are dark enough to carry it.
+    // form. The palette's ink on it, not white: the wash is pale by design
+    // and white measured well under the readable threshold on it.
+    final on = KajTheme.of(context).ink;
     return Card(
       elevation: 0,
       child: Container(
@@ -433,7 +435,7 @@ class _TodayCard extends StatelessWidget {
             Text(
               DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
               style: theme.textTheme.labelLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.75),
+                color: on.withValues(alpha: 0.72),
               ),
             ),
             const SizedBox(height: 12),
@@ -441,13 +443,13 @@ class _TodayCard extends StatelessWidget {
               currency.format(moneyIn),
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: on,
               ),
             ),
             Text(
               'reçu aujourd\'hui',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
+                color: on,
               ),
             ),
             if (moneyOut > 0) ...[
@@ -455,7 +457,7 @@ class _TodayCard extends StatelessWidget {
               Text(
                 '${currency.format(moneyOut)} dépensé',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: on.withValues(alpha: 0.82),
                 ),
               ),
             ],

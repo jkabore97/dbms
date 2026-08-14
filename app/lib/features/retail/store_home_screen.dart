@@ -409,7 +409,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                   Text(
                     "Aujourd'hui",
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: KajTheme.of(context).ink.withValues(alpha: 0.82),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -417,7 +417,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     _money.format(_day.netSales),
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: KajTheme.of(context).ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -425,7 +425,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     '${_day.saleCount} vente${_day.saleCount > 1 ? 's' : ''}'
                     '${_day.returnsTotal > 0 ? ' · ${_money.format(_day.returnsTotal)} rendus' : ''}',
                     style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: Colors.white),
+                        ?.copyWith(color: KajTheme.of(context).ink),
                   ),
                 ],
               ),

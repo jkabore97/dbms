@@ -1,0 +1,255 @@
+<title>Kaj Burkina Launch</title>
+<style>
+/*@FONTS@*/
+
+:root {
+  --ground:  #FDFBF9;
+  --ink:     #2A1508;
+  --muted:   #7A5A45;
+  --rule:    #EDE1D7;
+  --surface: #FAF3EC;
+  --chip:    #F5E7DB;
+  --accent:  #C2410C;
+  --accent2: #DB2777;
+  --warn:    #8A5A00;
+  --warn-bg: #FAF1DF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #17100B;
+    --ink:     #F2E7DE;
+    --muted:   #B29383;
+    --rule:    #33241A;
+    --surface: #1F1610;
+    --chip:    #2A1D14;
+    --accent:  #F98A55;
+    --accent2: #F87BB4;
+    --warn:    #E0B060;
+    --warn-bg: #251D10;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:  #17100B;
+  --ink:     #F2E7DE;
+  --muted:   #B29383;
+  --rule:    #33241A;
+  --surface: #1F1610;
+  --chip:    #2A1D14;
+  --accent:  #F98A55;
+  --accent2: #F87BB4;
+  --warn:    #E0B060;
+  --warn-bg: #251D10;
+}
+
+/*@SHARED@*/
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Plan 3 of 3 · Company</p>
+  <h1>Kaj Burkina Launch</h1>
+  <p class="standfirst">Standing the company up in Burkina Faso — registration, banking, first customers, and the route from three businesses to a district that sells itself.</p>
+  <div class="meta">
+    <span>Owner <b>Founder</b></span>
+    <span>Horizon <b>12 months to break-even attempt</b></span>
+    <span>First market <b>One quarter of Ouagadougou</b></span>
+  </div>
+</header>
+
+<div class="note prose">
+  <p><strong>Read the verification marks.</strong> Every legal, tax and fee item below is marked <span class="tag verify">Verify at source</span>. Rules and rates in Burkina Faso change, and I have no way to confirm the current ones from here. Treat those sections as the list of questions to take to CEFORE, a Burkinabè accountant, and a lawyer — not as answers. Everything unmarked is commercial judgement, which you are free to overrule with what you see in the market.</p>
+</div>
+
+<section class="glance">
+  <h3 style="margin-top:34px">The twelve months</h3>
+  <div class="glance-table">
+  <table>
+    <thead>
+      <tr><th>Stage</th><th>Months</th><th>What you are proving</th><th>Move on when</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>0–1</td><td>The company can legally trade and be paid</td><td>RCCM, IFU, bank account and merchant account all exist</td></tr>
+      <tr><td>2</td><td>1–3</td><td>Three businesses want it enough to keep using it</td><td>All three still recording at day 30, unprompted</td></tr>
+      <tr><td>3</td><td>3–6</td><td>Somebody who is not you can sell it</td><td>An agent onboards 10 businesses you never met</td></tr>
+      <tr><td>4</td><td>6–9</td><td>People will pay, and paying survives contact with mobile money</td><td>30 businesses have paid for a period, unassisted</td></tr>
+      <tr><td>5</td><td>9–12</td><td>One district is dense enough to sell itself</td><td>Referrals exceed cold onboarding for two months running</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section class="phase">
+  <div class="phase-num">1<small>Month 0–1</small></div>
+  <div>
+    <h2>Make the company able to trade and be paid</h2>
+    <p class="goal">Nothing else on this plan can start until money can legally reach you. Do this before writing another feature.</p>
+
+    <p><span class="tag verify">Verify at source</span> Burkina Faso operates under OHADA business law, and company registration runs through CEFORE, the one-stop formalities centre under the Maison de l'Entreprise. The sequence below is the shape of the process; confirm each requirement, document and fee directly with them.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Choose the legal form.</strong> A sole proprietorship is fastest and leaves your personal assets exposed. A limited company (SARL under OHADA) separates them, is what a serious customer expects on an invoice, and is what any future investor requires. For a business that will hold other people's financial records and employ agents, take the company.</li>
+      <li><strong>Register through CEFORE</strong> and come out with the two numbers everything else depends on:
+        <ul>
+          <li><strong>RCCM</strong> — the trade register entry that proves the company exists.</li>
+          <li><strong>IFU</strong> — the tax identifier. Your own app refuses to print a proper invoice header without one; you should not be the exception.</li>
+        </ul>
+      </li>
+      <li><strong>Open a business bank account</strong> in the company's name. Personal accounts for company revenue will fail you at the first audit, the first investor, and the first partnership with a microfinance institution.</li>
+      <li><strong>Open a mobile money merchant account</strong> — not a personal wallet. Collecting subscriptions into a personal Orange Money wallet is how small platforms get frozen, and it makes your revenue unprovable.</li>
+      <li><strong>Choose the tax regime with an accountant,</strong> based on projected turnover. Simplified regimes exist for smaller businesses and the thresholds matter; getting this wrong in year one is expensive to unwind. <span class="tag verify">Verify at source</span></li>
+      <li><strong>Ask specifically about the accounting standard.</strong> OHADA countries use SYSCOHADA, and your chart of accounts should follow it — your customers' accountants will expect the account codes they already know. Your schema already uses codes in that shape; have an accountant confirm the mapping.</li>
+      <li><strong>Check your data protection obligations</strong> with the CIL, the national data protection authority. You will hold financial records for hundreds of businesses. Find out now whether you must register, and what you must tell customers. <span class="tag verify">Verify at source</span></li>
+      <li><strong>Write the terms of service and privacy notice in French</strong> before the first outside customer — who owns the data (they do), what you do with it (run the service), what happens if they stop paying (they keep reading their records).</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You can issue a legal invoice from your own company, with your own IFU on it, and receive payment for it into a business account.</div>
+
+    <div class="risk"><span class="label">Risk</span>Trading informally for “just a few months”. Every customer you sign informally has to be re-papered later, and the first serious partner — a bank, an MFI, a large customer — will ask for the RCCM in the first meeting.</div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="phase">
+  <div class="phase-num">2<small>Month 1–3</small></div>
+  <div>
+    <h2>Three businesses, watched closely</h2>
+    <p class="goal">Find out whether anybody actually changes what they do on a Tuesday morning. Everything after this depends on the answer.</p>
+
+    <p>This is the same work as Phase 0 of the product plan, seen from the commercial side. Do not run it twice; run it once and take both sets of lessons from it.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Pick one quarter of Ouagadougou and stay in it.</strong> Density beats spread: neighbours talk, and support visits have to be walkable. A customer in Bobo-Dioulasso in month two is a customer you cannot serve.</li>
+      <li><strong>Choose three businesses that match the profiles already built</strong> — a shop, a farm, a church or association. Not friends. People who will tell you it is useless.</li>
+      <li><strong>Give it free, unconditionally, and say so.</strong> You are buying information, not revenue. Asking for money now contaminates the only signal you need.</li>
+      <li><strong>Do the onboarding yourself,</strong> including opening balances. This is how you find out how long it really takes, which sets the agent's daily target and your entire unit cost.</li>
+      <li><strong>Visit day 3 and day 10. Return on day 30 unannounced.</strong> The single question: are they still recording without being asked?</li>
+      <li><strong>Ask what they pay their accountant,</strong> and what a lost month of records costs them. Not “would you pay for this” — nobody answers that question honestly. You are looking for the price they already accept for the same relief.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>All three are still recording at day 30 without prompting, and you have a written note of what each already pays for bookkeeping.</div>
+
+    <div class="risk"><span class="label">Risk</span>Counting a business that only records when you visit. That is not a customer, it is a courtesy, and building a hiring plan on it will cost you a year.</div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="phase">
+  <div class="phase-num">3<small>Month 3–6</small></div>
+  <div>
+    <h2>Prove somebody else can sell it</h2>
+    <p class="goal">Move the sale out of the founder's hands, and open the institutional channels that make one conversation worth a hundred customers.</p>
+
+    <h3>Sell one pain, not accounting</h3>
+    <p>Nobody wakes up wanting bookkeeping. Lead with the sentence that belongs to the person in front of you: the shopkeeper losing money to stock that expires on a shelf nobody checked; the poultry farmer whose mortality rate warns him a week before the eggs drop; the church that has to show its members where the money went. The app is what you show second.</p>
+
+    <h3>The channel worth more than all the others</h3>
+    <p><strong>Microfinance institutions.</strong> An MFI cannot tell a good borrower from a bad one because nobody has records. A shop with six months of daily takings in your app is exactly what their credit committee is missing. That gives you a partner with a commercial reason to push adoption to hundreds of clients at once, a reason for the shopkeeper to keep recording through the boring middle — records now, credit later — and possibly somebody other than the shopkeeper paying the subscription.</p>
+    <p>Approach two or three, with a demonstration built on a real anonymised business, not slides.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Hire the first field agent</strong> — see the staffing plan. Their first fortnight is shadowing you, not selling.</li>
+      <li><strong>Give them ten businesses in the same quarter</strong> and let them onboard without you present.</li>
+      <li><strong>Open the institutional conversations in parallel:</strong> two MFIs, one cooperative union, one business association, one accountancy practice. These take months to mature, so start them before you need them.</li>
+      <li><strong>Demonstrate offline every time.</strong> Put the phone in aeroplane mode and record a sale. This is your genuine, hard-to-copy advantage in this market, and every competitor's demonstration dies at the farm gate.</li>
+      <li><strong>Let WhatsApp do the marketing.</strong> The app already shares summaries and invoices as images. Every one a shopkeeper forwards is an advertisement with a testimonial attached — put a small, tasteful mark on the shared image and otherwise stay out of the way.</li>
+      <li><strong>Film three customers in Mooré or Dioula,</strong> on a phone, saying what changed. Worth more than any brochure in French.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>Ten businesses you have never met are recording daily, and at least one institution has agreed to introduce you to its members.</div>
+
+    <div class="risk"><span class="label">Risk</span>Spreading across the city because a lead came from the other side of it. Say no. Density is the whole strategy at this stage.</div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="phase">
+  <div class="phase-num">4<small>Month 6–9</small></div>
+  <div>
+    <h2>Turn it on: charge, and find out what breaks</h2>
+    <p class="goal">Introduce money to a base that already values the product, and let the first thirty payments teach you where the plumbing leaks.</p>
+
+    <h3>The model</h3>
+    <ul class="plain">
+      <li><strong>Free forever for a single-user business</strong> — unlimited recording, daily and weekly totals. Your competition is a 500-franc notebook that never fails; a genuinely useful free tier is the only way to win the first month.</li>
+      <li><strong>Paid when the business has grown into it</strong> — employee accounts, invoices carrying their IFU, reports and exports, more than one site. They pay once the app has already made them money, which is an honest sequence and a self-selecting one.</li>
+      <li><strong>Sold as periods, not subscriptions.</strong> Three, six or twelve months, one mobile money approval, a discount for longer. Push-approval payments give you a monthly opportunity to churn; do not take it.</li>
+      <li><strong>A separate onboarding fee</strong> for the visit, the setup and the training. People here understand paying a person for a service far better than paying a website every month — and this fee is what makes the agent economics work.</li>
+      <li><strong>Reading is always free, including after expiry.</strong> This is the rule you never break. A business locked out of its own history will tell the entire market.</li>
+    </ul>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Set the price against what they already pay,</strong> using the answers you collected in Stage 2 — their accountant's fee, a month of data. Not against what software costs elsewhere.</li>
+      <li><strong>Choose one aggregator</strong> for Orange Money and Moov. Shortlist to evaluate: CinetPay, PayDunya, Ligdicash. Compare settlement time, fees and support responsiveness, and confirm settlement into a Burkinabè business account before any integration work. <span class="tag verify">Verify at source</span></li>
+      <li><strong>Charge your three founding businesses first,</strong> at a permanent discount, and tell them why. If they refuse, you have learned something enormous for the price of an awkward conversation.</li>
+      <li><strong>Never let an agent collect subscription money.</strong> The customer pays the aggregator from their own handset; the agent earns a commission from you afterwards. This removes the fraud rather than policing it.</li>
+      <li><strong>Watch the first thirty payments individually.</strong> Every failure is a fixable thing — a confusing prompt, a timeout, a customer who does not know their own wallet PIN.</li>
+      <li><strong>Publish the price openly.</strong> Negotiated pricing in a market where everyone talks is how you get a reputation for charging whatever you think someone will bear.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>Thirty businesses have paid for a period without you touching anything, and you can state your cost to acquire one business and the share still paying at month three.</div>
+
+    <div class="risk"><span class="label">Risk</span>Holding customer money. Charging businesses to use your software is ordinary commerce; settling funds <em>on behalf of</em> them is regulated across the UEMOA by the BCEAO and is a different company with different licences. Keep that line bright.</div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="phase">
+  <div class="phase-num">5<small>Month 9–12</small></div>
+  <div>
+    <h2>Make one district sell itself</h2>
+    <p class="goal">Reach the density where new customers arrive because their neighbour and their supplier already use it — then, and only then, repeat the pattern elsewhere.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Saturate before you spread.</strong> Keep going until a clear majority of a market's shops are on it. The moment referrals outrun cold onboarding, the model works and can be copied to the next quarter.</li>
+      <li><strong>Ship cross-business invoicing</strong> — Phase 3 of the product plan. A supplier invoicing a customer who is also on the platform is the mechanism that turns density into a network nobody wants to leave, and it recruits for you.</li>
+      <li><strong>Write the district playbook:</strong> which institution to approach first, how many visits an agent makes a day, what the day-30 retention was, what it cost. The second district is an execution problem only if the first one was written down.</li>
+      <li><strong>Then choose the second market</strong> — a second Ouagadougou quarter before Bobo-Dioulasso, and Bobo-Dioulasso before anywhere further. Concentrate operations where you can support them safely and reach them reliably; expanding into areas you cannot visit puts your staff at risk and your customers without support.</li>
+      <li><strong>Only after Burkina works, look at the region.</strong> The country picker and per-country phone rules already make the app portable; nothing else about your business is. Côte d'Ivoire, Mali, Senegal and Togo share the currency, the OHADA framework and much of the language — but not your relationships.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>Referrals exceed cold onboarding for two consecutive months, and a written playbook exists that somebody else could run.</div>
+
+    <div class="risk"><span class="label">Risk</span>Expanding on revenue rather than on density. A thin spread across three cities costs more to support than a saturated quarter and generates no word of mouth in any of them.</div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="phase">
+  <div class="phase-num">6<small>Continuous</small></div>
+  <div>
+    <h2>The obligations that run alongside everything</h2>
+    <p class="goal">The things that are cheap monthly and ruinous annually.</p>
+
+    <ul class="plain">
+      <li><strong>File and pay on time.</strong> Tax filings, social security for staff, annual accounts. Your product exists to make businesses filable; the credibility cost of being late yourself is out of proportion to the fine. <span class="tag verify">Verify at source</span></li>
+      <li><strong>Keep your own books in Kaj.</strong> Every gap you hit running your own company is a customer's gap you have not heard about yet.</li>
+      <li><strong>Insure what would end you</strong> — professional liability at minimum, given you hold customers' financial records.</li>
+      <li><strong>Hold a written data-loss plan.</strong> Backups restored and verified quarterly, and a plain-French sentence for customers about what you would do. You will be asked this by the first MFI that takes you seriously.</li>
+      <li><strong>Review security conditions before every operational expansion.</strong> Conditions vary by region; agents travelling to visit customers are your responsibility. Choose territories accordingly and revisit the decision regularly.</li>
+      <li><strong>Never sell or aggregate customer data.</strong> Your whole architecture is built on one business being unable to see another's books. The day that becomes a revenue line, the product you are actually selling is gone.</li>
+    </ul>
+
+    <div class="done"><span class="label">Done when</span>These are calendar entries with an owner, not intentions.</div>
+  </div>
+</section>
+
+<hr class="end">
+
+<footer class="prose">
+  <h3>The sequence in one paragraph</h3>
+  <p>Register the company so money can reach you. Give it free to three businesses and find out whether they keep using it. Prove somebody who is not you can sell it, while opening the microfinance channel that makes one conversation worth a hundred customers. Then charge — free forever at the bottom, paid when the business grows into it, sold in prepaid periods over mobile money, with reading never taken away. Saturate one quarter until it sells itself, write down how, and only then do it again somewhere else.</p>
+
+  <h3>What is uncertain</h3>
+  <p>Every item marked <span class="tag verify">Verify at source</span> needs confirming with CEFORE, a Burkinabè accountant, a labour lawyer, or the CIL — rules and fees change and I cannot check them from here. The payment aggregators named are a shortlist to evaluate, not a recommendation. Timings assume the product plan runs alongside this one; if adoption is slower than Stage 2 suggests, everything after it moves and the honest response is to move it rather than to hire against a date.</p>
+</footer>
+
+</div>

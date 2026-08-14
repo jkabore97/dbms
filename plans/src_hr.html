@@ -1,0 +1,277 @@
+<title>Staffing Kaj</title>
+<style>
+/*@FONTS@*/
+
+:root {
+  --ground:  #FCFBFE;
+  --ink:     #171533;
+  --muted:   #5E5A7A;
+  --rule:    #E3E0F0;
+  --surface: #F4F2FD;
+  --chip:    #E9E5FA;
+  --accent:  #5B4BE8;
+  --accent2: #9333EA;
+  --warn:    #9A5B12;
+  --warn-bg: #FAF1E5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #0F0E1C;
+    --ink:     #E9E7F6;
+    --muted:   #9E99BE;
+    --rule:    #2A2748;
+    --surface: #171531;
+    --chip:    #1F1C3E;
+    --accent:  #A99BFF;
+    --accent2: #D08BFF;
+    --warn:    #E0A960;
+    --warn-bg: #241C0F;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:  #0F0E1C;
+  --ink:     #E9E7F6;
+  --muted:   #9E99BE;
+  --rule:    #2A2748;
+  --surface: #171531;
+  --chip:    #1F1C3E;
+  --accent:  #A99BFF;
+  --accent2: #D08BFF;
+  --warn:    #E0A960;
+  --warn-bg: #241C0F;
+}
+
+/*@SHARED@*/
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Plan 2 of 3 · People</p>
+  <h1>Staffing Kaj</h1>
+  <p class="standfirst">Who to hire, in what order, and how to pay them — built around the fact that in this market the person who shows up is the product, not the overhead.</p>
+  <div class="meta">
+    <span>Owner <b>Founder</b></span>
+    <span>Horizon <b>18 months</b></span>
+    <span>Peak headcount <b>~14, mostly commission</b></span>
+  </div>
+</header>
+
+<div class="note prose">
+  <p><strong>What this plan assumes.</strong> That you meant the people who will run <em>your</em> company, not the Personnel module inside the app. If you meant the module, say so and I will write that instead. There is a pleasing symmetry either way: the staff records, contracts and payroll you will need for your own agents are exactly what migration 018 already built, so Kaj should run its own team on Kaj from the first hire. Be your own most demanding customer.</p>
+</div>
+
+<section class="glance">
+  <h3 style="margin-top:34px">The shape of the team, by stage</h3>
+  <div class="glance-table">
+  <table>
+    <thead>
+      <tr><th>Stage</th><th>Businesses</th><th>Who you have</th><th>The bottleneck</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0–6 mo</td><td>3 → 30</td><td>Founder, 1 field agent, 1 developer</td><td>Nobody knows if they want it</td></tr>
+      <tr><td>6–12 mo</td><td>30 → 200</td><td>+ support lead, 3 agents, part-time accountant</td><td>Support calls eat the founder's week</td></tr>
+      <tr><td>12–18 mo</td><td>200 → 800</td><td>+ agent coordinator, 8–10 agents, 2nd developer</td><td>Agent quality and cash-handling trust</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section class="phase">
+  <div class="phase-num">1<small>Month 0–2</small></div>
+  <div>
+    <h2>The first hire is a field agent, not a developer</h2>
+    <p class="goal">Hire the person who sits in the shop, because that is the job you cannot do at scale and the one that tells you whether any of this works.</p>
+
+    <p>The instinct is to hire engineering. Resist it. The codebase is further along than the market knowledge — you have twenty migrations and zero users. What you are short of is somebody who can sit with a shopkeeper for a morning and come back with the truth.</p>
+
+    <h3>Who this person is</h3>
+    <ul class="plain">
+      <li>Speaks Mooré or Dioula natively <em>and</em> French comfortably. This is not negotiable and it outranks every other qualification on this list.</li>
+      <li>Has sold something in a market, or worked in a family business. Not a graduate whose first job this is.</li>
+      <li>Patient with people who are slow with a phone, and not embarrassed by them.</li>
+      <li>Owns a smartphone and a motorbike, or can be equipped with both.</li>
+      <li>Comes with a reference from somebody you can telephone.</li>
+    </ul>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Write the job in one paragraph, in French,</strong> and describe the work honestly: visiting businesses, sitting with people, entering their figures, teaching, and reporting back what went wrong.</li>
+      <li><strong>Recruit through people, not adverts.</strong> Accountancy and management students, microfinance loan officers who have left, cyber café operators, church and association networks. Ask three people you trust for one name each.</li>
+      <li><strong>Interview in the field, not in an office.</strong> Take the two best candidates to a real shop and watch them talk to the owner. You are hiring for how the shopkeeper's face changes, nothing else.</li>
+      <li><strong>Trial for two weeks, paid, before any contract.</strong> Legal, ordinary, and it is how you find out whether they actually go out in the heat.</li>
+      <li><strong>Make them do Phase 0 of the product plan with you.</strong> Their first job is watching three businesses fail to use the app. It teaches them the product better than any training you could design, and it teaches you whether they observe or just talk.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>One agent has independently onboarded a business you never met, and that business recorded on its own for a week afterwards.</div>
+
+    <div class="risk"><span class="label">Risk</span>Hiring somebody impressive in an interview who will not go and sit in a hot shop for three hours. The field trial exists to catch exactly this, so do not skip it for a candidate you like.</div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="phase">
+  <div class="phase-num">2<small>Month 2–6</small></div>
+  <div>
+    <h2>Design the agent role properly before you have ten of them</h2>
+    <p class="goal">Turn what your first agent learned into a role a normal person can do — defined work, defined pay, defined measures.</p>
+
+    <p>This is the role your whole business rests on. It is also the model mobile money itself used to reach every village in West Africa, so you are not inventing it — you are copying something that demonstrably works here.</p>
+
+    <h3>What an agent does, exactly</h3>
+    <ol class="steps">
+      <li><strong>Signs up a business</strong> — installs the app, creates the account, and generates the invitation codes for staff.</li>
+      <li><strong>Enters opening balances</strong> — the cash, stock, debtors and creditors that exist on day one. This is the work that makes the first month's figures true, and it is the single hardest thing to teach.</li>
+      <li><strong>Trains two people, never one.</strong> The owner reads the totals; a younger person — often a child or a nephew who is quick with a phone — does the daily recording. A business with one trained person loses the app the week that person is ill.</li>
+      <li><strong>Returns on day three and day ten.</strong> Not to sell. To look at what they have recorded and correct it.</li>
+      <li><strong>Reports the failures upward</strong> — every confusion, every workaround, every request. This is a product research function disguised as a support visit, and it is worth as much as the revenue.</li>
+    </ol>
+
+    <h3>How an agent is paid</h3>
+    <p>A structure that survives a bad month and rewards retention rather than signatures:</p>
+    <ul class="plain">
+      <li><strong>A modest fixed base.</strong> Pure commission attracts people who will promise a shopkeeper anything, and you inherit the consequences. Confirm the current legal minimum wage (SMIG) and set the base above it.</li>
+      <li><strong>An onboarding fee per business</strong>, paid on completion of the day-ten visit — not on signature. Paying on signature buys you signatures.</li>
+      <li><strong>A recurring share</strong> of what their businesses pay, for as long as those businesses keep paying. This is the part that makes an agent care whether the shop is still using it in month six.</li>
+      <li><strong>Equipment provided, not deducted</strong> — phone, data, fuel. An agent paying for their own data will stop visiting.</li>
+    </ul>
+
+    <h3>How an agent is measured</h3>
+    <p>Three numbers, reviewed monthly. Resist adding a fourth.</p>
+    <ul class="plain">
+      <li><strong>Businesses still recording at day 30.</strong> The only number that matters. Not signups.</li>
+      <li><strong>Opening balances entered correctly</strong> — spot-checked by you against the physical shop, on one business per agent per month.</li>
+      <li><strong>Findings reported.</strong> An agent who reports nothing is not looking.</li>
+    </ul>
+
+    <div class="done"><span class="label">Done when</span>A new agent can be handed the written role, the training, and a district, and reach the day-30 target without you visiting a single one of their businesses.</div>
+
+    <div class="risk"><span class="label">Risk</span>Paying for signups. It is the easiest metric to collect and it will fill your platform with businesses that installed the app once. Pay for businesses still recording at day thirty, from the first commission you ever pay.</div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="phase">
+  <div class="phase-num">3<small>Month 3–6</small></div>
+  <div>
+    <h2>Take support off the founder</h2>
+    <p class="goal">Hire the support lead at the moment answering the phone stops you building — which will be earlier than you expect.</p>
+
+    <p>At around thirty businesses the calls become the job. The support lead is your second real hire and often your best one: they hear every problem in the business before anybody else does.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Run support on WhatsApp,</strong> because that is where the conversation already is. One number, published in the app, staffed in working hours with an honest statement of when it is not.</li>
+      <li><strong>Write the answers down as they happen.</strong> By call fifty you will have answered the same eight questions repeatedly; those eight are also your training curriculum and your product backlog.</li>
+      <li><strong>Give support read access, never write.</strong> The observer role with summary visibility already exists for precisely this. Nobody at Kaj should be able to alter a customer's books, and you should be able to say that sentence to a customer and have it be true.</li>
+      <li><strong>Route anything financial to a named person.</strong> A shopkeeper whose figures look wrong needs one person who owns it until it is resolved, not a queue.</li>
+      <li><strong>Publish a weekly summary of what support heard</strong> to the whole team, including the developer. This is the loop that keeps engineering honest.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You go a full week without personally answering a customer question, and the weekly support summary changes something in the product backlog.</div>
+
+    <div class="risk"><span class="label">Risk</span>Giving support write access to customer data because it is faster. It is faster, and the first time an employee alters a business's figures — even to help — you have lost the only thing you are really selling.</div>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="phase">
+  <div class="phase-num">4<small>Ongoing</small></div>
+  <div>
+    <h2>Control the two places money goes missing</h2>
+    <p class="goal">Design out the fraud that kills agent networks, before you have enough agents for it to start.</p>
+
+    <p>Agent networks in this region fail in two predictable ways. Both are structural, and both are solved by design rather than by trust.</p>
+
+    <h3>Cash in an agent's pocket</h3>
+    <ol class="steps">
+      <li><strong>Never let an agent collect subscription money.</strong> The customer pays the aggregator directly from their own handset; the agent is paid a commission by you afterwards. This removes the temptation entirely rather than policing it.</li>
+      <li><strong>If an onboarding fee must be collected in cash</strong> — sometimes it must — issue a receipt from the app, and reconcile daily. An unreceipted cash collection is an invitation.</li>
+      <li><strong>Reconcile agent commissions against actual platform payments monthly.</strong> Not against the agent's report of them.</li>
+    </ol>
+
+    <h3>Access that outlives the person</h3>
+    <ol class="steps">
+      <li><strong>Every agent has their own account.</strong> No shared logins, ever. The audit log is worthless if three people share a name.</li>
+      <li><strong>Removal is a same-day task,</strong> written into the leaving checklist: revoke the account, recover the phone, and tell the businesses they served who has replaced them.</li>
+      <li><strong>An agent must never be an admin of a customer's business.</strong> They set it up and hand ownership to the owner. If an agent leaves owning twenty shops' accounts, you have a hostage situation.</li>
+      <li><strong>Review platform-admin access quarterly.</strong> It is the most powerful role you have; it should belong to one or two people and be visibly logged.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>You can name every person with platform-admin rights from memory, no agent holds ownership of a customer's business, and last month's commissions reconcile to the franc against aggregator settlements.</div>
+
+    <div class="risk"><span class="label">Risk</span>Believing this is premature. It is cheap to design now and nearly impossible to retrofit onto forty agents who have grown used to the old way.</div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="phase">
+  <div class="phase-num">5<small>Before the first contract</small></div>
+  <div>
+    <h2>Employ people legally, from the first hire</h2>
+    <p class="goal">Get the employment paperwork right at hire one, when it costs an afternoon rather than a settlement.</p>
+
+    <p><span class="tag verify">Verify at source</span> Everything in this section changes with the law and with your circumstances. Treat it as the list of questions to take to a Burkinabè labour lawyer or accountant, not as advice you can act on directly.</p>
+
+    <h3>Steps</h3>
+    <ol class="steps">
+      <li><strong>Decide contract type per role.</strong> Fixed-term suits a trial season and an agent network you are still shaping; permanent suits the support lead and the developer you cannot afford to lose. Ask specifically about how many times a fixed-term contract may be renewed before it converts.</li>
+      <li><strong>Register with the CNSS</strong> — social security — and understand employer and employee contributions before you agree a net salary with anybody. Quoting net and discovering the employer charge afterwards is a classic and expensive first-hire mistake.</li>
+      <li><strong>Confirm the current SMIG</strong> and set your base pay above it, deliberately.</li>
+      <li><strong>Write contracts in French, signed, one copy each.</strong> Include the probation period, the notice period, and — for agents — the commission formula in full, with a worked example.</li>
+      <li><strong>Decide the status of agents explicitly.</strong> Employees and independent contractors carry very different obligations, and a network of “contractors” who work only for you, on your equipment, to your schedule, may be found to be employees. Get this classified correctly at the start.</li>
+      <li><strong>Keep the staff records in Kaj.</strong> Names, dates of birth, titles, contract type, national identity, emergency contact — the schema holds all of it already, and payroll runs off it. If your own records are not good enough for your own app, that is a product finding.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>Every person working for you has a signed contract, a CNSS registration, and a record in the app — and you can produce all three within a minute.</div>
+
+    <div class="risk"><span class="label">Risk</span>Informal arrangements with the first three hires, because they are friends and it is early. Those are precisely the arrangements that end badly, and you are building a company whose entire promise is proper records.</div>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="phase">
+  <div class="phase-num">6<small>Ongoing</small></div>
+  <div>
+    <h2>Train once, well, and write it down</h2>
+    <p class="goal">Build the curriculum from real support calls so that hire number ten is as good as hire number one.</p>
+
+    <h3>What every agent must be able to do, unaided</h3>
+    <ul class="plain">
+      <li>Install the app and create an account on a phone that is not theirs.</li>
+      <li>Enter opening balances for a shop that has traded for five years.</li>
+      <li>Explain, in Mooré or Dioula, why recording a sale is worth ninety seconds a day.</li>
+      <li>Close a day, reconcile the cash, and explain a variance without alarming anybody.</li>
+      <li>Generate an invitation code and get a second person onto the account.</li>
+      <li>Produce an invoice with the business's tax number on it.</li>
+      <li>Say clearly what the app does <em>not</em> do — the fastest way to lose a customer is a promise an agent invented.</li>
+    </ul>
+
+    <h3>How the training runs</h3>
+    <ol class="steps">
+      <li><strong>Two days classroom, three days shadowing, one week supervised.</strong> Then their own district.</li>
+      <li><strong>Assess by doing, not by asking.</strong> The final test is onboarding a real business while you watch and say nothing.</li>
+      <li><strong>One laminated card, three daily actions</strong> — for the shopkeeper, not the agent. If the card needs a second side, the app needs simplifying.</li>
+      <li><strong>Refresh the curriculum every quarter</strong> from the support log. The eight questions people actually ask are the syllabus.</li>
+    </ol>
+
+    <div class="done"><span class="label">Done when</span>An agent trained entirely by your support lead — with no involvement from you — hits the day-30 retention target on their first district.</div>
+
+    <div class="risk"><span class="label">Risk</span>Training that lives only in the founder's head. It scales to about four people and then silently degrades, and you will diagnose it as a hiring problem.</div>
+  </div>
+</section>
+
+<hr class="end">
+
+<footer class="prose">
+  <h3>The one thing to get right</h3>
+  <p>Your agents are not a sales channel bolted onto a software product. In this market they <em>are</em> the product — the reason a shopkeeper who has kept a paper cahier for twenty years changes what she does on a Tuesday morning. Budget for them as you would for engineering, hire them as carefully, and measure them on whether the businesses they touched are still recording a month later.</p>
+
+  <h3>What is uncertain</h3>
+  <p>Headcounts and timings scale with adoption and will move once the product plan's Phase 0 tells you what adoption actually looks like. Every legal and social-security item is marked for verification because it genuinely changes — take Section 5 to a Burkinabè labour specialist before you sign a first contract, not after.</p>
+</footer>
+
+</div>
