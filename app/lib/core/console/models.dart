@@ -1,3 +1,5 @@
+import '../admin/admin_repository.dart' show PlatformOrg;
+
 // What the console reads: the activity log, and the shape of the data
 // underneath it. Both come from 008_audit_log.sql and both are admin-only
 // server-side, so nothing here is cached on the device.
@@ -189,3 +191,150 @@ const auditActionLabels = <String, String>{
 };
 
 String auditActionLabel(String action) => auditActionLabels[action] ?? action;
+
+/// The shape of the whole platform, in one row.
+///
+/// Read by the console before any business is listed. Page one of an
+/// alphabetical list is not information; "eleven went quiet this month" is.
+class PlatformOverview {
+  const PlatformOverview({
+    this.total = 0,
+    this.active = 0,
+    this.archived = 0,
+    this.farms = 0,
+    this.shops = 0,
+    this.churches = 0,
+    this.otherProfiles = 0,
+    this.newThisWeek = 0,
+    this.active7d = 0,
+    this.silent30d = 0,
+    this.neverActive = 0,
+  });
+
+  final int total;
+  final int active;
+  final int archived;
+  final int farms;
+  final int shops;
+  final int churches;
+  final int otherProfiles;
+  final int newThisWeek;
+
+  /// Recorded something in the last seven days. The health number.
+  final int active7d;
+
+  /// Alive once, silent for a month. The churn signal, and the reason this
+  /// screen exists at all — it predicts a lost customer weeks ahead.
+  final int silent30d;
+
+  /// Onboarded and never used. A different failure with a different owner:
+  /// this one belongs to whoever signed them up.
+  final int neverActive;
+
+  factory PlatformOverview.fromRow(Map<String, dynamic> row) {
+    int n(String k) => (row[k] as num?)?.toInt() ?? 0;
+    return PlatformOverview(
+      total: n('total'),
+      active: n('active'),
+      archived: n('archived'),
+      farms: n('farms'),
+      shops: n('shops'),
+      churches: n('churches'),
+      otherProfiles: n('other_profiles'),
+      newThisWeek: n('new_this_week'),
+      active7d: n('active_7d'),
+      silent30d: n('silent_30d'),
+      neverActive: n('never_active'),
+    );
+  }
+}
+
+/// One row of the console's business list.
+class OrgRow {
+  const OrgRow({
+    required this.id,
+    required this.name,
+    required this.slug,
+    required this.profile,
+    required this.currency,
+    required this.memberCount,
+    this.archivedAt,
+    this.createdAt,
+    this.lastActivityAt,
+  });
+
+  final String id;
+  final String name;
+  final String slug;
+  final String profile;
+  final String currency;
+  final int memberCount;
+  final DateTime? archivedAt;
+  final DateTime? createdAt;
+  final DateTime? lastActivityAt;
+
+  bool get isArchived => archivedAt != null;
+  bool get neverActive => lastActivityAt == null;
+
+  int? get daysSinceActivity => lastActivityAt == null
+      ? null
+      : DateTime.now().difference(lastActivityAt!).inDays;
+
+  /// What the row's status pill says. Ordered by what a person scanning the
+  /// list needs to notice first.
+  OrgHealth get health {
+    if (isArchived) return OrgHealth.archived;
+    if (neverActive) return OrgHealth.neverStarted;
+    final days = daysSinceActivity!;
+    if (days >= 30) return OrgHealth.silent;
+    if (days >= 7) return OrgHealth.slowing;
+    return OrgHealth.healthy;
+  }
+
+  /// The shape the existing edit and delete dialogs take. Those screens are
+  /// correct and well tested; only the list around them changed, so this
+  /// converts rather than duplicating them.
+  ///
+  /// `entryCount` is deliberately not carried: the console no longer counts
+  /// every journal entry per row — that count is what made the old screen
+  /// unusable at scale. The delete dialog re-reads what it needs, and the
+  /// server makes the real decision either way.
+  PlatformOrg toPlatformOrg() => PlatformOrg(
+        id: id,
+        name: name,
+        slug: slug,
+        profile: profile,
+        currency: currency,
+        archivedAt: archivedAt,
+        memberCount: memberCount,
+        createdAt: createdAt,
+      );
+
+  factory OrgRow.fromRow(Map<String, dynamic> row) {
+    DateTime? when(Object? v) => v == null ? null : DateTime.tryParse('$v');
+    return OrgRow(
+      id: row['org_id'] as String,
+      name: (row['name'] as String?) ?? '',
+      slug: (row['slug'] as String?) ?? '',
+      profile: (row['profile'] as String?) ?? '',
+      currency: (row['currency'] as String?) ?? 'XOF',
+      memberCount: (row['member_count'] as num?)?.toInt() ?? 0,
+      archivedAt: when(row['archived_at']),
+      createdAt: when(row['created_at']),
+      lastActivityAt: when(row['last_activity_at']),
+    );
+  }
+}
+
+enum OrgHealth { healthy, slowing, silent, neverStarted, archived }
+
+/// One page of businesses, plus how many the filter matched in total.
+class OrgPage {
+  const OrgPage({required this.rows, required this.total});
+
+  final List<OrgRow> rows;
+
+  /// How many businesses match the current filter, not how many are on this
+  /// page. The pager is built on it.
+  final int total;
+}

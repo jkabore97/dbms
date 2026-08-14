@@ -22,7 +22,7 @@ import 'features/accounting/accounting_hub_screen.dart';
 import 'features/accounting/journal_screen.dart';
 import 'features/admin/admin_home_screen.dart';
 import 'features/admin/applications_screen.dart';
-import 'features/admin/businesses_screen.dart';
+import 'features/admin/platform_console_screen.dart';
 import 'features/admin/invite_generator_sheet.dart';
 import 'features/admin/create_business_screen.dart';
 import 'features/auth/join_or_apply_screen.dart';
@@ -383,7 +383,10 @@ class _AppRootState extends State<AppRoot> {
   Future<void> _openBusinesses() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BusinessesScreen(admin: widget.admin),
+        builder: (_) => PlatformConsoleScreen(
+          admin: widget.admin,
+          console: widget.console,
+        ),
       ),
     );
     if (!mounted) return;
