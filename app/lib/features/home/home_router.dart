@@ -33,10 +33,13 @@ Widget homeScreenFor({
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
-  // Colour follows the same column that picks the screen, so the two can
-  // never disagree: a farm cannot open green-titled onto a church's screen.
+  // Colour follows the business: the palette it chose, or — until somebody
+  // chooses one — the same column that picks the screen, so a farm that has
+  // never been near the setting still cannot open green-titled onto a
+  // church's screen.
   return ProfileTheme(
     profile: org.profile,
+    theme: org.theme,
     child: switch (org.profile) {
       'church' => ChurchHomeScreen(
           invoicing: invoicing,

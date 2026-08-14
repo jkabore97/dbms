@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/theme/kaj_theme.dart';
+import 'org_colours_screen.dart';
 
 /// The business's own details.
 ///
@@ -40,6 +42,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   String _currency = 'XOF';
   String _slug = '';
   String _profile = '';
+  String? _theme;
 
   bool _loading = true;
   bool _saving = false;
@@ -73,6 +76,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _currency = _currencies.contains(currency) ? currency : 'XOF';
         _slug = (org['slug'] as String?) ?? '';
         _profile = (org['profile'] as String?) ?? 'generic';
+        _theme = org['theme'] as String?;
         _loading = false;
       });
     } catch (error) {
@@ -117,6 +121,24 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     }
   }
 
+  Future<void> _openColours() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OrgColoursScreen(
+          admin: widget.admin,
+          orgId: widget.orgId,
+          profile: _profile,
+          current: _theme,
+          onSaved: widget.onSaved,
+        ),
+      ),
+    );
+    // Re-read rather than trusting what was passed back: the colour screen
+    // saves on its own, and this row has to agree with the server whether it
+    // saved once, three times, or not at all.
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -152,6 +174,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ],
                   onChanged:
                       _saving ? null : (v) => setState(() => _currency = v!),
+                ),
+                const SizedBox(height: 24),
+                Text('Couleurs', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                _ColourRow(
+                  palette: paletteFor(_profile, theme: _theme),
+                  label: paletteNamed(_theme)?.label ?? 'Couleur par défaut',
+                  onTap: _saving ? null : _openColours,
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
@@ -207,6 +237,56 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 _ReadOnlyRow(label: "Type d'activité", value: _profile),
               ],
             ),
+    );
+  }
+}
+
+/// The current palette, shown as itself rather than named.
+///
+/// A row reading "Océan" tells somebody nothing about what their staff are
+/// looking at; a strip of the actual gradient does.
+class _ColourRow extends StatelessWidget {
+  const _ColourRow({
+    required this.palette,
+    required this.label,
+    required this.onTap,
+  });
+
+  final KajPalette palette;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: kajGradient(palette),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(Icons.circle, size: 14, color: palette.ink),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
     );
   }
 }

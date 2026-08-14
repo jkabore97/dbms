@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -73,6 +73,22 @@ class LocalDb {
         if (oldVersion >= 6 && oldVersion < 7) {
           await db
               .execute('ALTER TABLE pending_captures ADD COLUMN ocr_text TEXT');
+        }
+        // v7 -> v8: the palette a business chose. Cached with the rest of the
+        // org row so the app opens in the right colour with no signal — a
+        // theme fetched over the network would mean every home screen
+        // flashing its old colour first.
+        //
+        // `>= 2` for the same reason `ocr_text` above needs `>= 6`, and it is
+        // worth stating because the trap is not obvious and this project has
+        // fallen into it once already: a device coming from v1 has just been
+        // handed the whole identity schema by the first line of this method,
+        // and that `CREATE TABLE cached_orgs` already includes this column.
+        // Adding it again is a duplicate-column error, and a failed migration
+        // here is not a missing colour — it is an app that will not open at
+        // all, on the oldest phones in the field.
+        if (oldVersion >= 2 && oldVersion < 8) {
+          await db.execute('ALTER TABLE cached_orgs ADD COLUMN theme TEXT');
         }
       },
     );
@@ -202,7 +218,8 @@ class LocalDb {
         profile    TEXT NOT NULL,
         currency   TEXT,
         roles      TEXT,
-        visibility TEXT
+        visibility TEXT,
+        theme      TEXT
       )
     ''');
   }

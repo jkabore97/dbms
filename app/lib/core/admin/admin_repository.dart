@@ -26,14 +26,32 @@ class AdminRepository {
   // The business itself
   // ----------------------------------------------------------------
 
+  static const _orgColumns =
+      'id, name, slug, profile, default_currency, custom_domain';
+
   Future<Map<String, dynamic>> fetchOrg(String orgId) async {
     final client = _requireClient();
-    final row = await client
-        .from('orgs')
-        .select('id, name, slug, profile, default_currency, custom_domain')
-        .eq('id', orgId)
-        .single();
-    return Map<String, dynamic>.from(row);
+    try {
+      final row = await client
+          .from('orgs')
+          .select('$_orgColumns, theme')
+          .eq('id', orgId)
+          .single();
+      return Map<String, dynamic>.from(row);
+    } on PostgrestException catch (error) {
+      // 42703 is "column does not exist": this database has not run 022 yet.
+      // The app deploys on a push to main and the migrations are applied by
+      // hand afterwards, so being one migration ahead is a normal state, not
+      // an exceptional one — and asking for a colour that does not exist yet
+      // must not take the whole settings screen down with it.
+      if (error.code != '42703') rethrow;
+      final row = await client
+          .from('orgs')
+          .select(_orgColumns)
+          .eq('id', orgId)
+          .single();
+      return Map<String, dynamic>.from(row);
+    }
   }
 
   // ----------------------------------------------------------------
@@ -328,6 +346,23 @@ class AdminRepository {
       if (slug != null && slug.isNotEmpty) 'p_slug': slug,
       if (profile != null && profile.isNotEmpty) 'p_profile': profile,
       if (currency != null && currency.isNotEmpty) 'p_currency': currency,
+    });
+  }
+
+  /// The palette this business shows everybody who opens it.
+  ///
+  /// Its own call rather than another argument on [updateOrg] because the two
+  /// are used at different moments: the settings form is filled in once, and
+  /// this fires while somebody is trying colours out. Passing null clears it,
+  /// which puts the business back on its profile's colour.
+  Future<void> setOrgTheme({required String orgId, String? theme}) async {
+    final client = _requireClient();
+    await client.rpc('set_org_theme', params: {
+      'p_org_id': orgId,
+      // Sent explicitly rather than omitted: omitting it would take the
+      // function's default, which is also null, but only by luck. Clearing a
+      // colour is a thing the caller asked for, not an absence.
+      'p_theme': (theme == null || theme.isEmpty) ? null : theme,
     });
   }
 
