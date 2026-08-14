@@ -25,7 +25,7 @@ Each milestone ends with something demonstrable.
 | 22 RLS policies, cross-tenant isolation | built, proven by test |
 | Church contributions + expenses | built |
 | Flutter app running on web and Android | built |
-| Login by phone/OTP, org resolution, profile routing (M1) | built, tested offline |
+| Login by email/password, org resolution, profile routing (M1) | built, tested offline |
 | Offline session + device PIN | built, tested |
 | Admin screens: people, roles, structure, settings (M2) | built |
 | Invitations by short code or QR | built, 15 assertions |
@@ -48,6 +48,10 @@ Each milestone ends with something demonstrable.
 | Manager sign-up: apply, be approved, own the business | built, in the same suite |
 | Staff records for every business, volunteers included | built, 17 assertions |
 | A farm with livestock and crops, not only poultry | built, 11 assertions |
+| Invoicing for every business, not only the farm — numbered, cancellable, shareable as an image | built, 14 assertions |
+| Phone numbers with a country code picker, stored as E.164 | built, 12 assertions |
+| A colour per business profile, measured against WCAG rather than eyeballed | built, 14 assertions |
+| Platform console: search, filter and page across thousands of businesses | built, 8 assertions |
 
 **Not built**
 
@@ -55,9 +59,9 @@ Custom domains. Reading an invitation QR with the camera — today the invitee
 types the code, though the scanner built for barcodes is now most of what
 that needs. Attributing a contribution
 to a named church member from the recording sheet (the SQL and the giving
-statement both support it; the sheet has no member picker yet). Sharing an
-invoice as a PDF or an image — the farm can raise one and take payment against
-it, but the customer's copy still has to be written out by hand.
+statement both support it; the sheet has no member picker yet). An invoice
+leaves as a rendered image, which is what WhatsApp actually wants — a true PDF
+export is still not built.
 
 **Not yet verified**
 
@@ -398,13 +402,12 @@ has been in anybody's hands yet.
 ## What matters more than any of this
 
 Put the app in Israel's and Ignace's hands and watch them use it. Everything
-through M4 is tested against Postgres and against a fake device; none of it has
-been tested against a person, and none of the network paths has run against a
-real Supabase project at all.
+through M5 is tested against Postgres and against a fake device; almost none of
+it has been tested against a person.
 
 One real user for a week will reorder this list more usefully than any amount
 of planning. The first thing that week will produce is a list of category and
 item names nobody predicted, which is now something the app absorbs rather than
 something that has to be shipped — and the second will be a number somebody
-reads differently than it was meant. M5 is the largest milestone left and the
-worst one to start on a guess.
+reads differently than it was meant. M6 is what is left, and it is
+distribution: doing it before anybody has used the thing distributes a guess.

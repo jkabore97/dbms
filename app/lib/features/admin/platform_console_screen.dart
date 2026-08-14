@@ -73,6 +73,12 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   bool _loading = true;
   String? _error;
 
+  /// True when the console is running against `all_orgs()` because the
+  /// database has not been migrated to 021 yet. Filtering and paging then
+  /// happen on the client, which is what 021 exists to stop — so the screen
+  /// says so rather than pretending.
+  bool _legacy = false;
+
   final _number = NumberFormat.decimalPattern('fr_FR');
   final _date = DateFormat('d MMM y', 'fr_FR');
 
@@ -127,6 +133,72 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         _overview = overview;
         _rows = page.rows;
         _total = page.total;
+        _legacy = false;
+        _loading = false;
+      });
+    } catch (error) {
+      // The database has not run 021 yet — the app arrived before its
+      // migration. `all_orgs()` from 014 is still there, so the console keeps
+      // working on the old data path instead of showing an error, and says so.
+      if (isSchemaOutOfDate(error)) {
+        await _loadLegacy();
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = describeError(error);
+      });
+    }
+  }
+
+  /// The pre-021 path. Loads every business, as the old screen did, and does
+  /// the filtering here. Correct but not scalable, which is the point of the
+  /// banner it turns on.
+  Future<void> _loadLegacy() async {
+    try {
+      final all = await widget.admin.allOrgs();
+      final q = _searchController.text.trim().toLowerCase();
+      final rows = all
+          .where((o) => _status == 'all'
+              ? true
+              : _status == 'archived'
+                  ? o.isArchived
+                  : !o.isArchived)
+          .where((o) => _profile == null || o.profile == _profile)
+          .where((o) =>
+              q.isEmpty ||
+              o.name.toLowerCase().contains(q) ||
+              o.slug.toLowerCase().contains(q))
+          .map((o) => OrgRow(
+                id: o.id,
+                name: o.name,
+                slug: o.slug,
+                profile: o.profile,
+                currency: o.currency,
+                memberCount: o.memberCount,
+                archivedAt: o.archivedAt,
+                createdAt: o.createdAt,
+              ))
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _legacy = true;
+        _overview = PlatformOverview(
+          total: all.length,
+          active: all.where((o) => !o.isArchived).length,
+          archived: all.where((o) => o.isArchived).length,
+          farms: all.where((o) => o.profile == 'farm').length,
+          shops: all.where((o) => o.profile == 'retail').length,
+          churches: all.where((o) => o.profile == 'church').length,
+          otherProfiles: all
+              .where((o) => !['farm', 'retail', 'church'].contains(o.profile))
+              .length,
+        );
+        // Paged here rather than server-side, which is exactly what 021 is for.
+        _rows = rows.skip(_page * _pageSize).take(_pageSize).toList();
+        _total = rows.length;
         _loading = false;
       });
     } catch (error) {
@@ -254,6 +326,19 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 _controls(theme),
                 const SizedBox(height: 8),
 
+                if (_legacy)
+                  Card(
+                    color: theme.colorScheme.tertiaryContainer,
+                    child: const ListTile(
+                      leading: Icon(Icons.info_outline),
+                      title: Text("Base de données à mettre à jour"),
+                      subtitle: Text(
+                        'La console fonctionne en mode réduit : recherche et '
+                        'filtres sont appliqués sur cet appareil. Appliquez '
+                        'la migration 021 pour la recherche côté serveur.',
+                      ),
+                    ),
+                  ),
                 if (_error != null)
                   Card(
                     color: theme.colorScheme.errorContainer,

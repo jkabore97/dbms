@@ -43,6 +43,19 @@ String describeError(Object error) {
   return text;
 }
 
+/// True when the server does not have the function this build is calling —
+/// the app is ahead of its migrations.
+///
+/// Worth naming, because it is the one failure a screen can sometimes work
+/// around: if an older function still exists, falling back to it keeps the
+/// screen usable until somebody applies the migration. Deploy order in this
+/// project is database first, app second; this is what makes getting it wrong
+/// survivable rather than a broken screen.
+bool isSchemaOutOfDate(Object error) =>
+    error is PostgrestException &&
+    ((error.code ?? '') == 'PGRST202' ||
+        error.message.contains('Could not find the function'));
+
 String _postgrest(PostgrestException error) {
   final code = error.code ?? '';
   final message = error.message;
