@@ -229,8 +229,8 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                     _alreadyClosed
                         ? 'Journée déjà clôturée — vous pouvez la revalider.'
                         : 'Fonctionne sans connexion',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: Colors.grey),
+                    style:
+                        theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),
                 ),
               ],

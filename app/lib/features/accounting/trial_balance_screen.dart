@@ -194,8 +194,8 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
 
                   for (final row in _rows)
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

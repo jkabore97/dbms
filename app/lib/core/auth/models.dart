@@ -67,8 +67,8 @@ class OrgSummary {
   /// put one tap from a home screen for everybody who can invite an employee.
   /// Widening it is a one-line change here; a rule that started wide is not
   /// one that can be narrowed later without taking something away.
-  bool get isSuperAdmin => roles.any(
-      (r) => r == 'owner' || r == 'super_admin' || r == 'platform_admin');
+  bool get isSuperAdmin => roles
+      .any((r) => r == 'owner' || r == 'super_admin' || r == 'platform_admin');
 
   /// The row shape returned by the `my_orgs()` RPC in 004_rls_policies.sql.
   factory OrgSummary.fromRpc(Map<String, dynamic> row) {

@@ -102,9 +102,8 @@ class _DeviceTabState extends State<DeviceTab> {
                         child: _Stat(
                           label: 'Refusé',
                           value: '${health.stuck}',
-                          tint: health.stuck > 0
-                              ? theme.colorScheme.error
-                              : null,
+                          tint:
+                              health.stuck > 0 ? theme.colorScheme.error : null,
                         ),
                       ),
                     ],
@@ -126,14 +125,12 @@ class _DeviceTabState extends State<DeviceTab> {
               ),
             ),
           ),
-
           if (_failed.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text('Refusés', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             for (final row in _failed) _FailureTile(row: row),
           ],
-
           const SizedBox(height: 24),
           Card(
             elevation: 0,

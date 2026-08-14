@@ -138,7 +138,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                     border: OutlineInputBorder(),
                   ),
                 ),
-
                 const SizedBox(height: 24),
                 Text('Monnaie', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
@@ -154,7 +153,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   onChanged:
                       _saving ? null : (v) => setState(() => _currency = v!),
                 ),
-
                 if (_error != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -171,7 +169,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                     ),
                   ),
                 ],
-
                 const SizedBox(height: 24),
                 SizedBox(
                   height: 52,
@@ -189,7 +186,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 40),
                 const Divider(),
                 const SizedBox(height: 16),

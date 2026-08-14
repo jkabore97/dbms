@@ -213,11 +213,13 @@ class StaffRepository {
       if (fullName != null && fullName.isNotEmpty) 'p_full_name': fullName,
       if (phone != null && phone.isNotEmpty) 'p_phone': phone,
       if (roleTitle != null && roleTitle.isNotEmpty) 'p_role_title': roleTitle,
-      if (employment != null && employment.isNotEmpty) 'p_employment': employment,
+      if (employment != null && employment.isNotEmpty)
+        'p_employment': employment,
       if (kind != null && kind.isNotEmpty) 'p_kind': kind,
       if (salary != null) 'p_salary': salary,
       if (hourlyRate != null) 'p_hourly_rate': hourlyRate,
-      if (nationalId != null && nationalId.isNotEmpty) 'p_national_id': nationalId,
+      if (nationalId != null && nationalId.isNotEmpty)
+        'p_national_id': nationalId,
       if (emergencyContact != null && emergencyContact.isNotEmpty)
         'p_emergency_contact': emergencyContact,
       if (emergencyPhone != null && emergencyPhone.isNotEmpty)
@@ -339,8 +341,7 @@ class StaffRepository {
     return id as String;
   }
 
-  static String _date(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
+  static String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 

@@ -167,10 +167,8 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                       ),
                     ),
                   ),
-
                   if (income.isEmpty && expense.isEmpty)
                     const SummaryOnlyNotice(),
-
                   if (income.isNotEmpty) ...[
                     const SectionHeader(title: 'Recettes'),
                     for (final line in income)
@@ -181,7 +179,6 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                         money: money,
                       ),
                   ],
-
                   if (expense.isNotEmpty) ...[
                     const SectionHeader(title: 'Dépenses'),
                     for (final line in expense)
@@ -192,7 +189,6 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                         money: money,
                       ),
                   ],
-
                   const SizedBox(height: 32),
                 ],
               ),

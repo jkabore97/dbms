@@ -56,9 +56,8 @@ class StockItem {
       name: row['name'] as String,
       unit: (row['unit'] as String?) ?? 'sac',
       onHand: _num(row['on_hand']),
-      reorderLevel: row['reorder_level'] == null
-          ? null
-          : _num(row['reorder_level']),
+      reorderLevel:
+          row['reorder_level'] == null ? null : _num(row['reorder_level']),
       belowReorder: row['below_reorder'] as bool? ?? false,
       lastMovement: last == null ? null : DateTime.parse(last).toLocal(),
     );
@@ -268,6 +267,15 @@ const eggGrades = <String, String>{
   'normal': 'Normal',
   'petit': 'Petit',
   'fêlé': 'Fêlé',
+};
+
+/// The same idea for what comes off a field, and the same reason: first-grade
+/// tomatoes and bruised ones do not fetch the same price, and a harvest that
+/// counts them together hides where the money went.
+const harvestGrades = <String, String>{
+  'first': 'Premier choix',
+  'second': 'Deuxième choix',
+  'damaged': 'Abîmé',
 };
 
 String _trimNumber(double value) {

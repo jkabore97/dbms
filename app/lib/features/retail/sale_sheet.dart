@@ -6,6 +6,7 @@ import '../../core/retail/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
+import '../../core/errors.dart';
 
 /// Recording a sale, with a customer standing there.
 ///
@@ -71,8 +72,8 @@ class _SaleSheetState extends State<SaleSheet> {
   double get _total =>
       _lines.fold<double>(0, (sum, line) => sum + line.lineTotal);
 
-  double? get _draftQuantity => double.tryParse(
-      _quantityController.text.trim().replaceAll(',', '.'));
+  double? get _draftQuantity =>
+      double.tryParse(_quantityController.text.trim().replaceAll(',', '.'));
   double? get _draftPrice =>
       double.tryParse(_priceController.text.trim().replaceAll(',', '.'));
 
@@ -149,7 +150,7 @@ class _SaleSheetState extends State<SaleSheet> {
       });
     } catch (error) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
@@ -183,7 +184,7 @@ class _SaleSheetState extends State<SaleSheet> {
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -208,8 +209,8 @@ class _SaleSheetState extends State<SaleSheet> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Nouvelle vente',
-                      style: theme.textTheme.titleLarge),
+                  child:
+                      Text('Nouvelle vente', style: theme.textTheme.titleLarge),
                 ),
                 if (widget.capture != null)
                   IconButton(
@@ -220,7 +221,6 @@ class _SaleSheetState extends State<SaleSheet> {
               ],
             ),
             const SizedBox(height: 16),
-
             if (widget.products.isNotEmpty) ...[
               SizedBox(
                 height: 40,
@@ -240,7 +240,6 @@ class _SaleSheetState extends State<SaleSheet> {
               ),
               const SizedBox(height: 12),
             ],
-
             TextField(
               controller: _nameController,
               enabled: !_busy,
@@ -291,7 +290,6 @@ class _SaleSheetState extends State<SaleSheet> {
               icon: const Icon(Icons.add),
               label: const Text('Ajouter au panier'),
             ),
-
             if (_lines.isNotEmpty) ...[
               const SizedBox(height: 20),
               ..._lines.asMap().entries.map((entry) {
@@ -331,7 +329,6 @@ class _SaleSheetState extends State<SaleSheet> {
                 ],
               ),
             ],
-
             const SizedBox(height: 16),
             SegmentedButton<String>(
               segments: const [
@@ -343,12 +340,10 @@ class _SaleSheetState extends State<SaleSheet> {
               onSelectionChanged:
                   _busy ? null : (s) => setState(() => _method = s.first),
             ),
-
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-
             const SizedBox(height: 20),
             SizedBox(
               height: 52,

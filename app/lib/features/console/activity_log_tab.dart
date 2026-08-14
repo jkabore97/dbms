@@ -63,8 +63,9 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
         action: _action,
       );
       // The filter list is only worth fetching once and is cheap to keep.
-      final actors =
-          _actors.isEmpty ? await widget.console.actors(widget.org.id) : _actors;
+      final actors = _actors.isEmpty
+          ? await widget.console.actors(widget.org.id)
+          : _actors;
 
       if (!mounted) return;
       setState(() {

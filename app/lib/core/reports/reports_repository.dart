@@ -30,8 +30,7 @@ class ReportsRepository {
     final client = _requireClient();
     final rows = await client.rpc('church_weekly_summary', params: {
       'p_org_id': orgId,
-      if (weekEnding != null)
-        'p_week_ending': _dateOnly(weekEnding),
+      if (weekEnding != null) 'p_week_ending': _dateOnly(weekEnding),
     }) as List<dynamic>;
 
     return WeeklySummary.fromRows(

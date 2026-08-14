@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/errors.dart';
 
 /// The platform's queue: people asking for a business to exist.
 ///
@@ -55,7 +56,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -113,7 +114,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
       // The server's refusals say something useful — the address was taken
       // while this was waiting, the application is already decided — and are
       // better than anything this screen could invent.
-      messenger.showSnackBar(SnackBar(content: Text('$error')));
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
     }
   }
 
@@ -129,7 +130,6 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (_loading) const LinearProgressIndicator(),
-
             if (_error != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -151,7 +151,6 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                 ),
               ),
             ],
-
             for (final application in _applications)
               Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -175,7 +174,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                           application.applicant,
                           application.contactPhone,
                           application.contactEmail,
-                        ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
+                        ]
+                            .whereType<String>()
+                            .where((s) => s.isNotEmpty)
+                            .join(' · '),
                         style: theme.textTheme.bodyMedium,
                       ),
                       if (application.description != null &&
@@ -212,7 +214,6 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                   ),
                 ),
               ),
-
             if (!_loading && _applications.isEmpty && _error == null)
               Padding(
                 padding: const EdgeInsets.only(top: 48),

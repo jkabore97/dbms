@@ -72,7 +72,8 @@ class OnboardingRepository {
     await client.rpc('save_my_profile', params: {
       'p_first_name': firstName,
       'p_last_name': lastName,
-      if (middleName != null && middleName.isNotEmpty) 'p_middle_name': middleName,
+      if (middleName != null && middleName.isNotEmpty)
+        'p_middle_name': middleName,
       if (dateOfBirth != null) 'p_date_of_birth': _date(dateOfBirth),
       if (title != null && title.isNotEmpty) 'p_title': title,
       if (phone != null && phone.isNotEmpty) 'p_phone': phone,
@@ -113,7 +114,8 @@ class OnboardingRepository {
     try {
       final rows = await client.rpc('my_org_application') as List<dynamic>;
       if (rows.isEmpty) return null;
-      return OrgApplication.fromRow(Map<String, dynamic>.from(rows.first as Map));
+      return OrgApplication.fromRow(
+          Map<String, dynamic>.from(rows.first as Map));
     } catch (_) {
       // A database without 017 yet. Treated as "never applied", which is what
       // it looks like from here.
@@ -194,8 +196,7 @@ class OnboardingRepository {
     return Invitation.fromRow(Map<String, dynamic>.from(rows.first as Map));
   }
 
-  static String _date(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
+  static String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 

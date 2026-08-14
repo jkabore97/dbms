@@ -95,8 +95,8 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
     setState(() => _sharing = true);
 
     try {
-      final boundary = _cardKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _cardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) throw StateError("Le rapport n'est pas prêt.");
 
       final image = await boundary.toImage(pixelRatio: 3.0);
@@ -162,7 +162,6 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
                   onShift: _shiftWeek,
                 ),
                 const SizedBox(height: 16),
-
                 if (_error != null)
                   Container(
                     padding: const EdgeInsets.all(12),

@@ -161,7 +161,8 @@ class CharacteristicsEditor extends StatelessWidget {
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
-                    onChanged: (v) => _replace(i, (name: v, value: values[i].value)),
+                    onChanged: (v) =>
+                        _replace(i, (name: v, value: values[i].value)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -177,7 +178,8 @@ class CharacteristicsEditor extends StatelessWidget {
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
-                    onChanged: (v) => _replace(i, (name: values[i].name, value: v)),
+                    onChanged: (v) =>
+                        _replace(i, (name: values[i].name, value: v)),
                   ),
                 ),
                 IconButton(
@@ -317,10 +319,18 @@ class AmountKeypad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const keys = [
-      '1', '2', '3',
-      '4', '5', '6',
-      '7', '8', '9',
-      '000', '0', '<',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '000',
+      '0',
+      '<',
     ];
 
     return GridView.count(

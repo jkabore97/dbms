@@ -5,6 +5,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
 
 /// Inviting somebody, in one sheet.
 ///
@@ -42,6 +44,10 @@ class InviteSheet extends StatefulWidget {
 
 class _InviteSheetState extends State<InviteSheet> {
   final _phoneController = TextEditingController();
+
+  /// Not always a local number: an accountant or a supplier's contact gets
+  /// invited the same way as the vendeuse standing at the counter.
+  CountryCode _country = defaultCountry;
 
   String _role = 'employee';
 
@@ -83,7 +89,7 @@ class _InviteSheetState extends State<InviteSheet> {
         role: _role,
         scopeKind: kind,
         scopeId: id,
-        phone: typed.isEmpty ? null : AuthRepository.normalizePhone(typed),
+        phone: typed.isEmpty ? null : _country.toE164(typed),
         visibility: _role == 'observer' ? _visibility : 'full',
         validFor: Duration(days: _validDays),
       );
@@ -139,7 +145,6 @@ class _InviteSheetState extends State<InviteSheet> {
           ),
         ),
         const SizedBox(height: 24),
-
         Text('Rôle', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -151,7 +156,6 @@ class _InviteSheetState extends State<InviteSheet> {
           ],
           onChanged: _working ? null : (v) => setState(() => _role = v!),
         ),
-
         if (_role == 'observer') ...[
           const SizedBox(height: 12),
           SegmentedButton<String>(
@@ -160,9 +164,8 @@ class _InviteSheetState extends State<InviteSheet> {
               ButtonSegment(value: 'summary', label: Text('Totaux seulement')),
             ],
             selected: {_visibility},
-            onSelectionChanged: _working
-                ? null
-                : (s) => setState(() => _visibility = s.first),
+            onSelectionChanged:
+                _working ? null : (s) => setState(() => _visibility = s.first),
           ),
           const SizedBox(height: 4),
           Text(
@@ -172,7 +175,6 @@ class _InviteSheetState extends State<InviteSheet> {
             ),
           ),
         ],
-
         const SizedBox(height: 20),
         Text('Portée', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
@@ -205,19 +207,17 @@ class _InviteSheetState extends State<InviteSheet> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-
         const SizedBox(height: 20),
         Text('Numéro de téléphone (optionnel)',
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
-        TextField(
+        PhoneField(
           controller: _phoneController,
+          country: _country,
+          onCountry: (c) => setState(() => _country = c),
+          labelText: 'Numéro',
+          hintText: '70 12 34 56',
           enabled: !_working,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: '70 12 34 56',
-          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -228,7 +228,6 @@ class _InviteSheetState extends State<InviteSheet> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-
         const SizedBox(height: 20),
         Text('Valable', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
@@ -242,12 +241,10 @@ class _InviteSheetState extends State<InviteSheet> {
           onSelectionChanged:
               _working ? null : (s) => setState(() => _validDays = s.first),
         ),
-
         if (_error != null) ...[
           const SizedBox(height: 16),
           _ErrorBanner(message: _error!),
         ],
-
         const SizedBox(height: 24),
         SizedBox(
           height: 52,

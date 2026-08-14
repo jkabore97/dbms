@@ -147,7 +147,6 @@ class _DatabaseTabState extends State<DatabaseTab> {
             ),
           ),
           const SizedBox(height: 8),
-
           for (final table in _tables)
             Card(
               elevation: 0,
@@ -199,7 +198,6 @@ class _DatabaseTabState extends State<DatabaseTab> {
                 onTap: () => _inspect(table),
               ),
             ),
-
           const SizedBox(height: 24),
           Text(
             "Les nombres ci-dessus ne comptent que les lignes de cette "

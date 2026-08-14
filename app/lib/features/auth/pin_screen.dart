@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/auth/pin_codec.dart';
+import '../../core/errors.dart';
 
 enum PinPurpose {
   /// First run after signing in: choose the code.
@@ -152,7 +153,7 @@ class _PinScreenState extends State<PinScreen> {
     } catch (error) {
       if (mounted) {
         setState(() {
-          _error = '$error';
+          _error = describeError(error);
           _entry = '';
           _firstEntry = null;
         });

@@ -5,6 +5,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
+import '../../core/errors.dart';
 
 /// The manager's side of getting somebody into the business.
 ///
@@ -48,7 +51,8 @@ class InviteGeneratorSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => InviteGeneratorSheet(orgId: orgId, onboarding: onboarding),
+      builder: (_) =>
+          InviteGeneratorSheet(orgId: orgId, onboarding: onboarding),
     );
   }
 
@@ -60,6 +64,10 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
   final _name = TextEditingController();
   final _title = TextEditingController();
   final _phone = TextEditingController();
+
+  /// The manager types the number they were given, and it is not always a
+  /// local one — a supplier's accountant in Abidjan is invited the same way.
+  CountryCode _country = defaultCountry;
 
   String _role = 'employee';
   Invitation? _invitation;
@@ -85,7 +93,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
         role: _role,
         fullName: _name.text.trim(),
         title: _title.text.trim(),
-        phone: _phone.text.trim(),
+        phone: _phone.text.trim().isEmpty ? '' : _country.toE164(_phone.text),
       );
       if (!mounted) return;
       setState(() {
@@ -96,7 +104,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = '$error';
+        _error = describeError(error);
       });
     }
   }
@@ -109,9 +117,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 20, 20, inset + 20),
       child: SingleChildScrollView(
-        child: _invitation == null
-            ? _form(theme)
-            : _ready(theme, _invitation!),
+        child: _invitation == null ? _form(theme) : _ready(theme, _invitation!),
       ),
     );
   }
@@ -129,7 +135,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 20),
-
         TextField(
           controller: _name,
           textCapitalization: TextCapitalization.words,
@@ -149,19 +154,18 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
+        PhoneField(
           controller: _phone,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'Téléphone (facultatif)',
-            // Said plainly, because it changes what the code is: with a
-            // number it belongs to one person, without it whoever holds it.
-            helperText: 'Avec un numéro, le code ne marche que pour lui.',
-            border: OutlineInputBorder(),
-          ),
+          country: _country,
+          onCountry: (c) => setState(() => _country = c),
+          labelText: 'Téléphone (facultatif)',
+          hintText: '70 12 34 56',
+          enabled: !_busy,
+          // Said plainly, because it changes what the code is: with a
+          // number it belongs to one person, without it whoever holds it.
+          helperText: 'Avec un numéro, le code ne marche que pour lui.',
         ),
         const SizedBox(height: 16),
-
         DropdownButtonFormField<String>(
           initialValue: _role,
           decoration: const InputDecoration(
@@ -176,7 +180,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           ],
           onChanged: _busy ? null : (v) => setState(() => _role = v ?? _role),
         ),
-
         if (_error != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -188,7 +191,6 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
             child: Text(_error!),
           ),
         ],
-
         const SizedBox(height: 20),
         FilledButton.icon(
           onPressed: _busy ? null : _generate,

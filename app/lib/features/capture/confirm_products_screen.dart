@@ -6,6 +6,7 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/invoice_reading.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/errors.dart';
 
 /// The screen M5's demo is actually about: *she photographs a delivery invoice
 /// and the products are in the system without typing.*
@@ -60,8 +61,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
       .map((l) => _Row(
             line: l,
             name: TextEditingController(text: l.name),
-            quantity: TextEditingController(
-                text: _plain(l.quantity)),
+            quantity: TextEditingController(text: _plain(l.quantity)),
             cost: TextEditingController(text: _plain(l.unitCost)),
           ))
       .toList();
@@ -177,7 +177,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
         // in, and pressing again is safe because each carries its own
         // client_uuid — so the message says both.
         _error = created == 0
-            ? '$error'
+            ? describeError(error)
             : '$created ligne${created > 1 ? 's' : ''} enregistrée'
                 '${created > 1 ? 's' : ''}, puis : $error\n'
                 'Réessayez : les lignes déjà enregistrées ne seront pas '
@@ -226,7 +226,6 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
             'bouton. Corrigez ce qui est faux, décochez ce qui n’en est pas.',
             style: theme.textTheme.bodySmall,
           ),
-
           if (unsure > 0) ...[
             const SizedBox(height: 12),
             Container(
@@ -250,7 +249,6 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
               ),
             ),
           ],
-
           if (_error != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -262,7 +260,6 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
               child: Text(_error!),
             ),
           ],
-
           const SizedBox(height: 16),
           for (final row in _rows) _lineCard(row, theme),
         ],

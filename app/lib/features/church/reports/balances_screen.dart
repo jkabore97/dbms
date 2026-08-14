@@ -116,7 +116,6 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   Card(
                     elevation: 0,
                     color: theme.colorScheme.primaryContainer,
@@ -145,7 +144,6 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
                   Text('Détail', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_balances.isEmpty && _error == null)

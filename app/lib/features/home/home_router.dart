@@ -4,9 +4,11 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
+import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/reports/reports_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
+import '../../core/theme/kaj_theme.dart';
 import '../church/church_home_screen.dart';
 import '../farm/farm_home_screen.dart';
 import '../retail/store_home_screen.dart';
@@ -24,41 +26,50 @@ Widget homeScreenFor({
   required OrgSummary org,
   ReportsRepository? reports,
   FarmRepository? farm,
+  InvoicingRepository? invoicing,
   RetailRepository? retail,
   StaffRepository? staff,
   CaptureRepository? capture,
   Widget? accountAction,
   VoidCallback? onHistory,
 }) {
-  return switch (org.profile) {
-    'church' => ChurchHomeScreen(
-        db: db,
-        orgId: org.id,
-        orgName: org.name,
-        reports: reports,
-        org: org,
-        capture: capture,
-        staff: staff,
-        accountAction: accountAction,
-        onHistory: onHistory,
-      ),
-    'farm' => FarmHomeScreen(
-        db: db,
-        org: org,
-        farm: farm,
-        capture: capture,
-        staff: staff,
-        accountAction: accountAction,
-      ),
-    'retail' => StoreHomeScreen(
-        org: org,
-        retail: retail,
-        staff: staff,
-        capture: capture,
-        accountAction: accountAction,
-      ),
-    // Anything else — a profile added server-side that this build has never
-    // heard of — lands here rather than failing.
-    _ => ProfilePendingScreen(org: org, accountAction: accountAction),
-  };
+  // Colour follows the same column that picks the screen, so the two can
+  // never disagree: a farm cannot open green-titled onto a church's screen.
+  return ProfileTheme(
+    profile: org.profile,
+    child: switch (org.profile) {
+      'church' => ChurchHomeScreen(
+          invoicing: invoicing,
+          db: db,
+          orgId: org.id,
+          orgName: org.name,
+          reports: reports,
+          org: org,
+          capture: capture,
+          staff: staff,
+          accountAction: accountAction,
+          onHistory: onHistory,
+        ),
+      'farm' => FarmHomeScreen(
+          invoicing: invoicing,
+          db: db,
+          org: org,
+          farm: farm,
+          capture: capture,
+          staff: staff,
+          accountAction: accountAction,
+        ),
+      'retail' => StoreHomeScreen(
+          invoicing: invoicing,
+          org: org,
+          retail: retail,
+          staff: staff,
+          capture: capture,
+          accountAction: accountAction,
+        ),
+      // Anything else — a profile added server-side that this build has never
+      // heard of — lands here rather than failing.
+      _ => ProfilePendingScreen(org: org, accountAction: accountAction),
+    },
+  );
 }

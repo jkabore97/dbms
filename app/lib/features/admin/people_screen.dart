@@ -165,7 +165,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     _Banner(message: _error!, onRetry: _load),
                     const SizedBox(height: 16),
                   ],
-
                   Text('Membres (${_members.length})',
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -200,14 +199,14 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                   visualDensity: VisualDensity.compact,
                                 )
                               : IconButton(
-                                  icon: const Icon(Icons.person_remove_outlined),
+                                  icon:
+                                      const Icon(Icons.person_remove_outlined),
                                   tooltip: 'Retirer',
                                   onPressed: () => _revokeMembership(m),
                                 ),
                         ),
                       ),
                     ),
-
                   const SizedBox(height: 24),
                   Text('Invitations en attente (${open.length})',
                       style: theme.textTheme.titleMedium),
@@ -223,7 +222,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         elevation: 0,
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
-                          leading: const Icon(Icons.confirmation_number_outlined),
+                          leading:
+                              const Icon(Icons.confirmation_number_outlined),
                           title: SelectableText(
                             i.code,
                             style: const TextStyle(

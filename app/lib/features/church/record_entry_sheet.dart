@@ -211,9 +211,8 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
     // opened this sheet, the arrows on the rows it produces, the amount, the
     // save button. The one mistake this flow must not allow is a person
     // recording an expense while believing they are recording a gift.
-    final accent = widget.isIncome
-        ? theme.colorScheme.primary
-        : Colors.orange.shade800;
+    final accent =
+        widget.isIncome ? theme.colorScheme.primary : Colors.orange.shade800;
 
     return Padding(
       padding: EdgeInsets.only(

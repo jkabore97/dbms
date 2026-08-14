@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/retail/staff.dart';
+import '../../core/errors.dart';
 
 /// Who gets paid, and what they are owed right now.
 ///
@@ -62,7 +63,7 @@ class _StaffScreenState extends State<StaffScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '$error';
+        _error = describeError(error);
         _loading = false;
       });
     }
@@ -140,7 +141,7 @@ class _StaffScreenState extends State<StaffScreen> {
         );
       }
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     }
   }
 
@@ -164,7 +165,6 @@ class _StaffScreenState extends State<StaffScreen> {
             if (_loading) const LinearProgressIndicator(),
             if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-
             if (totalOwed > 0) ...[
               Container(
                 width: double.infinity,
@@ -187,7 +187,6 @@ class _StaffScreenState extends State<StaffScreen> {
               ),
               const SizedBox(height: 16),
             ],
-
             if (!_loading && _people.isEmpty && _error == null)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
@@ -198,7 +197,6 @@ class _StaffScreenState extends State<StaffScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-
             ..._people.map((person) {
               final owed = _owedFor(person.id);
               return Card(
@@ -233,7 +231,6 @@ class _StaffScreenState extends State<StaffScreen> {
                 ),
               );
             }),
-
             const SizedBox(height: 80),
           ],
         ),
@@ -285,7 +282,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -341,9 +338,8 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               enabled: !_busy,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: _kind == 'casual'
-                    ? 'Taux horaire'
-                    : 'Salaire mensuel',
+                labelText:
+                    _kind == 'casual' ? 'Taux horaire' : 'Salaire mensuel',
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -364,8 +360,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
             SizedBox(
               height: 52,
               child: FilledButton(
-                onPressed:
-                    _name.text.trim().isEmpty || _busy ? null : _save,
+                onPressed: _name.text.trim().isEmpty || _busy ? null : _save,
                 child: _busy
                     ? const SizedBox(
                         width: 22,
@@ -435,7 +430,7 @@ class _ShiftSheetState extends State<_ShiftSheet> {
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

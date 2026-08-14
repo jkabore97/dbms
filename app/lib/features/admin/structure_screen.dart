@@ -200,8 +200,8 @@ class _StructureScreenState extends State<StructureScreen> {
                                   initial: entity.name,
                                 );
                                 if (name == null || name.isEmpty) return;
-                                await _run(() => widget.admin
-                                    .renameEntity(entity.id, name));
+                                await _run(() =>
+                                    widget.admin.renameEntity(entity.id, name));
                               },
                             ),
                           ),
@@ -214,8 +214,8 @@ class _StructureScreenState extends State<StructureScreen> {
                                     const Icon(Icons.subdirectory_arrow_right),
                                 title: Text(dept.name),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.edit_outlined,
-                                      size: 20),
+                                  icon:
+                                      const Icon(Icons.edit_outlined, size: 20),
                                   tooltip: 'Renommer',
                                   onPressed: () async {
                                     final name = await _askName(

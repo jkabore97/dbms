@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import 'package:uuid/uuid.dart';
+
 import '../../core/db/local_db.dart';
+import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../church/entry_controls.dart';
 
@@ -149,7 +152,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
             onAddNew: _addItem,
           ),
         const SizedBox(height: 16),
-
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -163,7 +165,8 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 decoration: const InputDecoration(
                   labelText: 'Quantité',
                   border: OutlineInputBorder(),
@@ -192,7 +195,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           ],
         ),
         const SizedBox(height: 16),
-
         Text('Prix par $_unit', style: theme.textTheme.labelLarge),
         const SizedBox(height: 6),
         Center(
@@ -224,7 +226,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
             ),
           ),
         const SizedBox(height: 12),
-
         AmountKeypad(
           onDigit: (d) => setState(() {
             if (_costDigits.length < 12) {
@@ -238,7 +239,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           }),
         ),
         const SizedBox(height: 12),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -250,7 +250,6 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           ),
         ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: 'Enregistrer la réception',
           accent: accent,
@@ -381,7 +380,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
             onAddNew: _addItem,
           ),
         const SizedBox(height: 16),
-
         Row(
           children: [
             Expanded(
@@ -395,7 +393,8 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 decoration: const InputDecoration(
                   labelText: 'Quantité',
                   border: OutlineInputBorder(),
@@ -424,7 +423,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
           ],
         ),
         const SizedBox(height: 16),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -443,7 +441,6 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: _isWaste ? 'Enregistrer la perte' : 'Enregistrer',
           accent: accent,
@@ -456,13 +453,40 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
   }
 }
 
-/// The morning collection.
-class RecordEggsSheet extends StatefulWidget {
-  const RecordEggsSheet({
+/// The daily gathering, whatever it is that gets gathered.
+///
+/// This was `RecordEggsSheet`, and the big button on the farm home screen said
+/// "Ramassage". Both were built when the only farm in the app was a poultry
+/// house, and both quietly told every other kind of farmer that the app was
+/// not for them: a market gardener lifting tomatoes and a goat keeper have a
+/// morning collection too, and there was nowhere to put it.
+///
+/// So the button says **Récolte** and the first question on the sheet is
+/// *what* — eggs, or any crop currently in the ground. The subject is picked
+/// rather than assumed, which is the whole of the change; everything below it
+/// (the big number, the keypad, the grades) is the same sheet it always was,
+/// because that part was never the problem.
+///
+/// Two things worth knowing about what happens on save.
+///
+/// **Eggs still go through the outbox and crops do not.** `recordEggs` writes
+/// to this device and syncs later; `record_harvest()` is a server call. That
+/// asymmetry is real and it is visible on screen — the crop list is only
+/// offered when the server answered — rather than hidden behind a button that
+/// fails at the field gate. Eggs are what gets counted at six in the morning
+/// with no signal, and eggs are the path that works then.
+///
+/// **Neither posts to the ledger.** Harvesting is not earning: the money
+/// arrives at the sale, through `record_farm_sale()`, and counting it twice
+/// would be the oldest bookkeeping mistake there is.
+class RecordHarvestSheet extends StatefulWidget {
+  const RecordHarvestSheet({
     super.key,
     required this.db,
     required this.orgId,
     this.flocks = const [],
+    this.farm,
+    this.hasPoultry = true,
   });
 
   final LocalDb db;
@@ -473,15 +497,72 @@ class RecordEggsSheet extends StatefulWidget {
   /// operation will always do.
   final List<Map<String, Object?>> flocks;
 
+  /// Null in a build with no server. Eggs still work; the crops in the ground
+  /// cannot be listed from one device.
+  final FarmRepository? farm;
+
+  /// False for a farm that keeps no birds, where offering "Œufs" first would
+  /// be the same wrong guess in the other direction.
+  final bool hasPoultry;
+
   @override
-  State<RecordEggsSheet> createState() => _RecordEggsSheetState();
+  State<RecordHarvestSheet> createState() => _RecordHarvestSheetState();
 }
 
-class _RecordEggsSheetState extends State<RecordEggsSheet> {
+/// What is being gathered. Eggs are their own case rather than a crop cycle
+/// because they are counted, stored and sold differently — and because they
+/// are the one thing that must still record with no signal.
+class _Subject {
+  const _Subject.eggs()
+      : cycle = null,
+        isEggs = true;
+  const _Subject.crop(CropCycle this.cycle) : isEggs = false;
+
+  final CropCycle? cycle;
+  final bool isEggs;
+
+  String get label => isEggs ? 'Œufs' : cycle!.crop;
+
+  /// What the big number is counting, written under it.
+  String get unit => isEggs ? 'œufs' : cycle!.unit;
+
+  /// The second line on the chip: which house, which plot.
+  String? get detail {
+    if (isEggs) return null;
+    final parts = [cycle!.variety, cycle!.plotName]
+        .where((p) => p != null && p.isNotEmpty)
+        .cast<String>();
+    return parts.isEmpty ? null : parts.join(' · ');
+  }
+
+  /// Eggs are whole things; a crop can come off in half-kilos.
+  bool get wholeOnly => isEggs;
+
+  Map<String, String> get grades => isEggs ? eggGrades : harvestGrades;
+  String get defaultGrade => isEggs ? 'normal' : 'first';
+}
+
+class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   String _digits = '';
   String _grade = 'normal';
   String? _flockId;
   bool _saving = false;
+  String? _error;
+
+  /// Null until the subject is settled, which for most farms happens
+  /// immediately: one thing to gather means nothing to ask.
+  _Subject? _subject;
+
+  List<CropCycle> _crops = const [];
+  bool _loadingCrops = false;
+
+  /// The keypad types digits; a crop's quantity may have a decimal part, so
+  /// the digits are read as thousandths of the unit only when the subject
+  /// allows it. Eggs stay integers, which is what they are.
+  double get _quantity {
+    final raw = int.tryParse(_digits) ?? 0;
+    return raw.toDouble();
+  }
 
   int get _count => int.tryParse(_digits) ?? 0;
 
@@ -491,103 +572,421 @@ class _RecordEggsSheetState extends State<RecordEggsSheet> {
     if (widget.flocks.length == 1) {
       _flockId = widget.flocks.first['flock_id'] as String;
     }
+    if (widget.hasPoultry) _subject = const _Subject.eggs();
+    _loadCrops();
+  }
+
+  /// Best-effort and never blocking: a farm with no signal keeps the egg path
+  /// it has always had, and a database without 019 behaves the same way.
+  Future<void> _loadCrops() async {
+    final farm = widget.farm;
+    if (farm == null || !farm.isConfigured) return;
+    setState(() => _loadingCrops = true);
+    try {
+      final crops = await farm.cropCycles(widget.orgId);
+      if (!mounted) return;
+      setState(() {
+        _crops = crops.where((c) => c.isOpen).toList();
+        _loadingCrops = false;
+        // A farm with no birds and one crop in the ground should not have to
+        // choose anything either.
+        if (_subject == null && _crops.length == 1) {
+          _select(_Subject.crop(_crops.first));
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingCrops = false);
+    }
+  }
+
+  void _select(_Subject subject) {
+    setState(() {
+      _subject = subject;
+      // The grades differ between eggs and crops, so a grade chosen for one
+      // cannot survive into the other.
+      _grade = subject.defaultGrade;
+    });
   }
 
   Future<void> _save() async {
-    if (_count <= 0 || _saving) return;
-    setState(() => _saving = true);
+    final subject = _subject;
+    if (subject == null || _quantity <= 0 || _saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
 
-    final flock = widget.flocks.cast<Map<String, Object?>?>().firstWhere(
-          (f) => f?['flock_id'] == _flockId,
-          orElse: () => null,
+    try {
+      if (subject.isEggs) {
+        final flock = widget.flocks.cast<Map<String, Object?>?>().firstWhere(
+              (f) => f?['flock_id'] == _flockId,
+              orElse: () => null,
+            );
+        await widget.db.recordEggs(
+          orgId: widget.orgId,
+          eggCount: _count,
+          flockId: _flockId,
+          batchCode: flock?['batch_code'] as String?,
+          grade: _grade,
         );
-
-    await widget.db.recordEggs(
-      orgId: widget.orgId,
-      eggCount: _count,
-      flockId: _flockId,
-      batchCode: flock?['batch_code'] as String?,
-      grade: _grade,
-    );
-
-    if (!mounted) return;
-    Navigator.pop(context, true);
+      } else {
+        final farm = widget.farm;
+        if (farm == null) throw StateError('Pas de serveur.');
+        await farm.recordHarvest(
+          orgId: widget.orgId,
+          cropCycleId: subject.cycle!.id,
+          quantity: _quantity,
+          unit: subject.cycle!.unit,
+          grade: _grade,
+          clientUuid: const Uuid().v4(),
+        );
+      }
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = "Enregistrement impossible. La récolte d'une culture demande "
+            'le réseau ; le ramassage des œufs, non.';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = Colors.amber.shade800;
+    final subject = _subject;
+    final accent = subject == null || subject.isEggs
+        ? Colors.amber.shade800
+        : Colors.green.shade700;
 
     return _SheetFrame(
-      icon: Icons.egg_outlined,
-      title: 'Ramassage',
+      icon: subject == null || subject.isEggs
+          ? Icons.egg_outlined
+          : Icons.eco_outlined,
+      title: 'Récolte',
       accent: accent,
       subtitle: "Production, pas recette : l'argent vient à la vente.",
       children: [
-        Center(
-          child: Text(
-            _digits.isEmpty ? '0' : '$_count',
-            style: theme.textTheme.displayLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: _digits.isEmpty ? Colors.grey.shade400 : accent,
+        ..._subjectPicker(theme, accent),
+        if (subject != null) ...[
+          Center(
+            child: Text(
+              _digits.isEmpty ? '0' : '$_count',
+              style: theme.textTheme.displayLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: _digits.isEmpty ? Colors.grey.shade400 : accent,
+              ),
             ),
           ),
-        ),
-        Center(
-          child: Text('œufs', style: theme.textTheme.bodyMedium),
-        ),
-        const SizedBox(height: 16),
-
-        if (widget.flocks.length > 1) ...[
-          Text('Bande', style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final flock in widget.flocks)
-                ChoiceChip(
-                  label: Text(flock['batch_code'] as String),
-                  selected: _flockId == flock['flock_id'],
-                  onSelected: (_) =>
-                      setState(() => _flockId = flock['flock_id'] as String),
-                ),
-            ],
+          Center(
+            child: Text(subject.unit, style: theme.textTheme.bodyMedium),
           ),
           const SizedBox(height: 16),
+
+          if (subject.isEggs && widget.flocks.length > 1) ...[
+            Text('Bande', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final flock in widget.flocks)
+                  ChoiceChip(
+                    label: Text(flock['batch_code'] as String),
+                    selected: _flockId == flock['flock_id'],
+                    onSelected: (_) =>
+                        setState(() => _flockId = flock['flock_id'] as String),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Cracked eggs and bruised tomatoes are counted apart for the same
+          // reason: they sell for less or not at all, and counting them with
+          // the rest makes a yield look better than the income it produces.
+          ChoiceChipRow(
+            values: subject.grades,
+            selected: _grade,
+            onSelect: (v) => setState(() => _grade = v),
+          ),
+          const SizedBox(height: 16),
+
+          AmountKeypad(
+            onDigit: (d) => setState(() {
+              if (_digits.length < 6) {
+                _digits = (_digits + d).replaceFirst(RegExp(r'^0+'), '');
+              }
+            }),
+            onBackspace: () => setState(() {
+              if (_digits.isNotEmpty) {
+                _digits = _digits.substring(0, _digits.length - 1);
+              }
+            }),
+          ),
+          const SizedBox(height: 16),
+
+          if (_error != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(_error!),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          _SaveButton(
+            label: 'Enregistrer la récolte',
+            accent: accent,
+            enabled: _quantity > 0,
+            saving: _saving,
+            onPressed: _save,
+          ),
         ],
+      ],
+    );
+  }
 
-        // Cracked eggs are counted apart because they sell for less or not at
-        // all. A farm that counts them with the rest has a lay rate that looks
-        // better than its income.
-        ChoiceChipRow(
-          values: eggGrades,
-          selected: _grade,
-          onSelect: (v) => setState(() => _grade = v),
+  /// The question this sheet exists to ask. Hidden entirely when there is only
+  /// one possible answer, because a farm with one flock and no fields should
+  /// not have to confirm what it is doing every morning.
+  List<Widget> _subjectPicker(ThemeData theme, Color accent) {
+    final options = <_Subject>[
+      if (widget.hasPoultry) const _Subject.eggs(),
+      for (final crop in _crops) _Subject.crop(crop),
+    ];
+
+    if (options.length < 2 && !_loadingCrops) {
+      if (options.isEmpty) {
+        return [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              "Rien à récolter pour l'instant. Ouvrez une bande ou une "
+              'culture dans « Élevage et cultures » — cela demande le réseau.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ];
+      }
+      return const [];
+    }
+
+    return [
+      Text('Que récoltez-vous ?', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final option in options)
+            ChoiceChip(
+              selected: _isSelected(option),
+              onSelected: (_) => _select(option),
+              label: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(option.label),
+                  if (option.detail != null)
+                    Text(
+                      option.detail!,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+          if (_canAddCrop)
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 18),
+              label: const Text('Autre…'),
+              onPressed: _saving ? null : _addCrop,
+            ),
+          if (_loadingCrops)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 20),
+    ];
+  }
+
+  /// The list of things to gather is not a fixed menu, and it must not be: a
+  /// farmer who starts picking okra in April cannot wait for a release to say
+  /// so. "Autre…" opens a cycle from a name and selects it, so the thing being
+  /// harvested is recorded in the same breath as the harvest.
+  ///
+  /// Needs the server, because a crop cycle is a row other people's phones
+  /// have to see. Offered only when there is one.
+  bool _isSelected(_Subject option) {
+    final subject = _subject;
+    if (subject == null) return false;
+    if (option.isEggs) return subject.isEggs;
+    return !subject.isEggs && subject.cycle!.id == option.cycle!.id;
+  }
+
+  bool get _canAddCrop => widget.farm?.isConfigured ?? false;
+
+  Future<void> _addCrop() async {
+    final created = await showDialog<CropCycle>(
+      context: context,
+      builder: (_) => _NewCropDialog(farm: widget.farm!, orgId: widget.orgId),
+    );
+    if (created == null || !mounted) return;
+    setState(() => _crops = [..._crops, created]);
+    _select(_Subject.crop(created));
+  }
+}
+
+/// Naming the thing being harvested, in as few words as it takes.
+///
+/// Deliberately smaller than the full crop sheet in "Élevage et cultures":
+/// that one plans a cycle — planting date, expected yield, expected harvest.
+/// This one is opened by somebody standing over a basket, and asks only what
+/// is in it and what it is measured in. `open_crop_cycle()` finds or creates
+/// the plot from its name, so nothing has to be defined first.
+class _NewCropDialog extends StatefulWidget {
+  const _NewCropDialog({required this.farm, required this.orgId});
+
+  final FarmRepository farm;
+  final String orgId;
+
+  @override
+  State<_NewCropDialog> createState() => _NewCropDialogState();
+}
+
+class _NewCropDialogState extends State<_NewCropDialog> {
+  final _crop = TextEditingController();
+  final _plot = TextEditingController();
+  String _unit = 'kg';
+  bool _saving = false;
+  String? _error;
+
+  static const _units = <String, String>{
+    'kg': 'Kilogrammes',
+    'sac': 'Sacs',
+    'panier': 'Paniers',
+    'litre': 'Litres',
+    'pièce': 'Pièces',
+  };
+
+  @override
+  void dispose() {
+    _crop.dispose();
+    _plot.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final crop = _crop.text.trim();
+    if (crop.isEmpty || _saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final id = await widget.farm.openCropCycle(
+        orgId: widget.orgId,
+        crop: crop,
+        plotName: _plot.text.trim(),
+        unit: _unit,
+      );
+      if (!mounted) return;
+      Navigator.pop(
+        context,
+        CropCycle(
+          id: id,
+          crop: crop,
+          plotName: _plot.text.trim().isEmpty ? null : _plot.text.trim(),
+          unit: _unit,
         ),
-        const SizedBox(height: 16),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Impossible pour le moment. Cela demande le réseau.';
+      });
+    }
+  }
 
-        AmountKeypad(
-          onDigit: (d) => setState(() {
-            if (_digits.length < 6) {
-              _digits = (_digits + d).replaceFirst(RegExp(r'^0+'), '');
-            }
-          }),
-          onBackspace: () => setState(() {
-            if (_digits.isNotEmpty) {
-              _digits = _digits.substring(0, _digits.length - 1);
-            }
-          }),
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Que récoltez-vous ?'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _crop,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Culture',
+                hintText: 'Tomate, gombo, maïs…',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _plot,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Parcelle (facultatif)',
+                hintText: 'Derrière la maison',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _unit,
+              decoration: const InputDecoration(
+                labelText: 'Compté en',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                for (final entry in _units.entries)
+                  DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+              ],
+              onChanged: _saving ? null : (v) => setState(() => _unit = v!),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 16),
-
-        _SaveButton(
-          label: 'Enregistrer le ramassage',
-          accent: accent,
-          enabled: _count > 0,
-          saving: _saving,
-          onPressed: _save,
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Ajouter'),
         ),
       ],
     );
@@ -696,7 +1095,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           wrap: true,
         ),
         const SizedBox(height: 16),
-
         Center(
           child: Text(
             _digits.isEmpty ? '0' : _digits,
@@ -708,7 +1106,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
         ),
         Center(child: Text(unit, style: theme.textTheme.bodyMedium)),
         const SizedBox(height: 8),
-
         if (_suspicious)
           Container(
             padding: const EdgeInsets.all(12),
@@ -732,7 +1129,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
             ),
           ),
         const SizedBox(height: 12),
-
         AmountKeypad(
           onDigit: (d) => setState(() {
             if (_digits.length < 6) {
@@ -746,7 +1142,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           }),
         ),
         const SizedBox(height: 12),
-
         TextField(
           controller: _noteController,
           enabled: !_saving,
@@ -758,7 +1153,6 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           ),
         ),
         const SizedBox(height: 16),
-
         _SaveButton(
           label: 'Enregistrer',
           accent: accent,

@@ -147,7 +147,9 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                     Row(
                       children: [
                         Icon(
-                          balanced ? Icons.check_circle_outline : Icons.warning_amber,
+                          balanced
+                              ? Icons.check_circle_outline
+                              : Icons.warning_amber,
                           size: 18,
                           color: balanced
                               ? Colors.green.shade800
@@ -171,10 +173,8 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                 ),
               ),
             ),
-
             if (assets.isEmpty && liabilities.isEmpty && equity.isEmpty)
               const SummaryOnlyNotice(),
-
             if (assets.isNotEmpty) ...[
               SectionHeader(title: accountTypes['asset']!),
               for (final line in assets)
@@ -185,7 +185,6 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   money: money,
                 ),
             ],
-
             if (liabilities.isNotEmpty) ...[
               SectionHeader(title: accountTypes['liability']!),
               for (final line in liabilities)
@@ -196,7 +195,6 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   money: money,
                 ),
             ],
-
             if (equity.isNotEmpty) ...[
               SectionHeader(title: accountTypes['equity']!),
               for (final line in equity)
@@ -212,7 +210,6 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   money: money,
                 ),
             ],
-
             const SizedBox(height: 32),
           ],
         ),

@@ -93,7 +93,8 @@ class AccountingRepository {
     }) as List<dynamic>;
 
     return rows
-        .map((r) => TrialBalanceRow.fromRow(Map<String, dynamic>.from(r as Map)))
+        .map(
+            (r) => TrialBalanceRow.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
   }
 
