@@ -183,6 +183,8 @@
   "@estimatedUnitCost": {"placeholders": {"amount": {"type": "String"}}},
   "unitCostIs": "Cost to make: {amount} / unit",
   "@unitCostIs": {"placeholders": {"amount": {"type": "String"}}},
+  "salePriceOptional": "Sale price (optional)",
+  "belowUnitCost": "Warning: below what it costs to make.",
   "enterProductMade": "Say what was made.",
   "enterQuantityMade": "Enter the quantity made.",
   "enterIngredients": "Add at least one ingredient with its quantity.",

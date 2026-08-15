@@ -214,6 +214,8 @@
   "@estimatedUnitCost": {"placeholders": {"amount": {"type": "String"}}},
   "unitCostIs": "Coût de revient : {amount} / unité",
   "@unitCostIs": {"placeholders": {"amount": {"type": "String"}}},
+  "salePriceOptional": "Prix de vente (facultatif)",
+  "belowUnitCost": "Attention : en dessous du coût de revient.",
   "enterProductMade": "Indiquez ce qui a été fabriqué.",
   "enterQuantityMade": "Indiquez la quantité fabriquée.",
   "enterIngredients": "Ajoutez au moins un ingrédient avec sa quantité.",

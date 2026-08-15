@@ -562,6 +562,12 @@ class StringsEn extends Strings {
   }
 
   @override
+  String get salePriceOptional => 'Sale price (optional)';
+
+  @override
+  String get belowUnitCost => 'Warning: below what it costs to make.';
+
+  @override
   String get enterProductMade => 'Say what was made.';
 
   @override
