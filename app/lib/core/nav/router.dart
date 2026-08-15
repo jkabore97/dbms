@@ -113,6 +113,14 @@ GoRouter buildRouter(SessionController session) {
     // is the one who cannot read whatever screen their phase would show.
     if (at(Routes.language)) return null;
 
+    // A location worth coming back to after a gate. The gates themselves and
+    // the splash are not destinations; everything else is somebody's place.
+    bool isDestination() =>
+        here != '/' &&
+        !at(Routes.splash) &&
+        !at(Routes.signIn) &&
+        !at(Routes.pin);
+
     switch (session.phase) {
       case SessionPhase.booting:
       case SessionPhase.resolving:
@@ -123,11 +131,20 @@ GoRouter buildRouter(SessionController session) {
         return here == '/' ? Routes.splash : null;
 
       case SessionPhase.signedOut:
-        return at(Routes.signIn) ? null : Routes.signIn;
+        if (at(Routes.signIn)) return null;
+        // Remember where this reload was headed. The sign-in page is a gate,
+        // not a destination: once the person is back in, the redirect below
+        // returns them here instead of to the home it would otherwise pick.
+        if (isDestination()) session.stashReturnTo(here);
+        return Routes.signIn;
 
       case SessionPhase.locked:
       case SessionPhase.choosingPin:
-        return at(Routes.pin) ? null : Routes.pin;
+        if (at(Routes.pin)) return null;
+        // Same as the sign-in gate: refreshing a deep page on a device with
+        // a code must unlock back into that page, not into the home screen.
+        if (isDestination()) session.stashReturnTo(here);
+        return Routes.pin;
 
       case SessionPhase.noOrg:
         // Belongs to no business yet, so there is no `/o/...` to be at — but
@@ -143,6 +160,11 @@ GoRouter buildRouter(SessionController session) {
         return Routes.join;
 
       case SessionPhase.picking:
+        // A gate we just came through may have interrupted a deep address —
+        // send the person back to it. If it names a business this account
+        // cannot open, the very next redirect pass lands on the picker.
+        final interrupted = session.takeReturnTo();
+        if (interrupted != null && interrupted != here) return interrupted;
         // A bookmark straight into a business is honoured here rather than
         // bounced to the picker — that is most of the point of having URLs.
         // `openOrg` refuses an id this person has no membership for, and the
@@ -166,6 +188,10 @@ GoRouter buildRouter(SessionController session) {
         return Routes.picker;
 
       case SessionPhase.ready:
+        // Same as `picking`: honour the address a gate interrupted, and let
+        // the next redirect pass validate whatever it names.
+        final resume = session.takeReturnTo();
+        if (resume != null && resume != here) return resume;
         if (here.startsWith('/o/')) {
           final id = _orgIdOf(here);
           if (id == null || session.orgById(id) == null) return Routes.picker;

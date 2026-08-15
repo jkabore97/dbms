@@ -214,7 +214,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             backgroundColor: theme.colorScheme.errorContainer,
                           )
                         : null,
-                    onTap: () => _edit(p),
+                    // Long press, not tap, on purpose: a thumb scrolling the
+                    // shelves must not fall into a sheet that changes prices.
+                    onLongPress: () => _edit(p),
                   ),
                 )),
             const SizedBox(height: 80),
