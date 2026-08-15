@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +19,8 @@ import 'core/console/console_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
 import 'core/invoicing/invoicing_repository.dart';
+import 'core/l10n/locale_controller.dart';
+import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
@@ -92,7 +95,14 @@ Future<void> _startup() async {
     sync = SyncService(db, client);
   }
 
+  // Loaded before runApp so the first frame is already in the right
+  // language. A screen that flashes French before switching teaches somebody
+  // the setting did not work.
+  final locale = LocaleController(db);
+  await locale.load();
+
   runApp(KajApp(
+    locale: locale,
     db: db,
     auth: AuthRepository(client),
     admin: AdminRepository(client),
@@ -169,6 +179,7 @@ class StartupErrorApp extends StatelessWidget {
 class KajApp extends StatefulWidget {
   const KajApp({
     super.key,
+    this.locale,
     required this.db,
     required this.auth,
     required this.admin,
@@ -183,6 +194,10 @@ class KajApp extends StatefulWidget {
     required this.onboarding,
     this.sync,
   });
+
+  /// Null in tests that do not care about language; the app then behaves
+  /// exactly as before this existed — French, not switchable.
+  final LocaleController? locale;
 
   final LocalDb db;
   final AuthRepository auth;
@@ -205,10 +220,12 @@ class KajApp extends StatefulWidget {
 class _KajAppState extends State<KajApp> {
   late final SessionController _session;
   late final GoRouter _router;
+  late final LocaleController _locale;
 
   @override
   void initState() {
     super.initState();
+    _locale = widget.locale ?? LocaleController(widget.db);
     _session = SessionController(
       db: widget.db,
       auth: widget.auth,
@@ -235,6 +252,7 @@ class _KajAppState extends State<KajApp> {
     // the URL, so it has no parent to be handed them by.
     return AppScope(
       session: _session,
+      localeController: _locale,
       db: widget.db,
       auth: widget.auth,
       admin: widget.admin,
@@ -248,17 +266,36 @@ class _KajAppState extends State<KajApp> {
       capture: widget.capture,
       onboarding: widget.onboarding,
       sync: widget.sync,
-      child: MaterialApp.router(
-        title: 'Kaj',
-        debugShowCheckedModeBanner: false,
-        // The app's own colours, for everything that belongs to no business:
-        // signing in, the business picker, the platform console. Each business
-        // then repaints itself in its profile's palette — see ProfileTheme.
-        theme: kajTheme(kajPalette),
-        // No org is named anywhere in this file, and none ever should be.
-        // Which business opens is decided by the signed-in user's memberships;
-        // the URL only says which of those to show.
-        routerConfig: _router,
+      // Rebuilds when the language changes — that is the whole trick: every
+      // screen below re-reads Strings.of(context) and repaints in the new
+      // language with nothing reloaded and nothing lost.
+      child: ListenableBuilder(
+        listenable: _locale,
+        builder: (context, _) => MaterialApp.router(
+          onGenerateTitle: (context) => Strings.of(context).appTitle,
+          debugShowCheckedModeBanner: false,
+          // The app's own colours, for everything that belongs to no business:
+          // signing in, the business picker, the platform console. Each
+          // business then repaints itself in its profile's palette — see
+          // ProfileTheme.
+          theme: kajTheme(kajPalette),
+          locale: _locale.effective,
+          supportedLocales: enabledLocales,
+          localizationsDelegates: const [
+            Strings.delegate,
+            // Fallbacks first: a delegate list is searched in order, and these
+            // answer only for the draft locales Material has never heard of.
+            MaterialFallbackDelegate(),
+            WidgetsFallbackDelegate(),
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          // No org is named anywhere in this file, and none ever should be.
+          // Which business opens is decided by the signed-in user's
+          // memberships; the URL only says which of those to show.
+          routerConfig: _router,
+        ),
       ),
     );
   }

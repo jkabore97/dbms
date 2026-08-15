@@ -1,0 +1,8 @@
+{
+  "@@locale": "mos",
+
+  "languageName": "Mòoré",
+  "@languageName": {
+    "description": "DRAFT — this file is a scaffold awaiting a Mooré speaker. Every key not translated here falls back to the French text, which is correct behaviour: a wrong word on a money screen is worse than a French one. Fill keys from app_fr.arb; the language stays hidden from the picker until reviewed (see draftLocales in core/l10n/locale_controller.dart)."
+  }
+}

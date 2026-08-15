@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/strings.dart';
+
 import '../../core/auth/models.dart';
 import '../../core/auth/pin_codec.dart';
 import '../../core/errors.dart';
@@ -58,16 +60,18 @@ class _PinScreenState extends State<PinScreen> {
 
   String get _title {
     if (widget.purpose == PinPurpose.create) {
-      return _confirming ? 'Confirmez le code' : 'Choisissez un code';
+      return _confirming
+          ? Strings.of(context).pinConfirm
+          : Strings.of(context).pinChoose;
     }
-    return 'Entrez votre code';
+    return Strings.of(context).pinEnter;
   }
 
   String get _subtitle {
     if (widget.purpose == PinPurpose.create) {
       return _confirming
-          ? 'Entrez-le une seconde fois.'
-          : "Ce code ouvre l'application quand vous n'avez pas de réseau.";
+          ? Strings.of(context).pinConfirmSubtitle
+          : Strings.of(context).pinChooseSubtitle;
     }
     return widget.identity.label;
   }
@@ -115,7 +119,7 @@ class _PinScreenState extends State<PinScreen> {
 
       if (pin != _firstEntry) {
         setState(() {
-          _error = 'Les deux codes ne correspondent pas. Recommencez.';
+          _error = Strings.of(context).pinMismatch;
           _firstEntry = null;
           _entry = '';
         });
@@ -130,14 +134,14 @@ class _PinScreenState extends State<PinScreen> {
     final salt = widget.identity.pinSalt;
     final hash = widget.identity.pinHash;
     if (salt == null || hash == null) {
-      setState(() => _error = 'Aucun code enregistré sur cet appareil.');
+      setState(() => _error = Strings.of(context).pinNoneStored);
       return;
     }
 
     if (!PinCodec.verify(pin, salt: salt, hash: hash)) {
       setState(() {
         _failures++;
-        _error = 'Code incorrect.';
+        _error = Strings.of(context).pinWrong;
         _entry = '';
       });
       return;
@@ -225,8 +229,8 @@ class _PinScreenState extends State<PinScreen> {
                             onPressed: _busy ? null : widget.onSignOut,
                             child: Text(
                               _failures >= 3
-                                  ? 'Code oublié ? Se reconnecter par SMS'
-                                  : 'Se reconnecter',
+                                  ? Strings.of(context).pinForgot
+                                  : Strings.of(context).pinReconnect,
                             ),
                           ),
                       ],

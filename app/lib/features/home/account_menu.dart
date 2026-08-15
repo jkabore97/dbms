@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/strings.dart';
+
 import '../../core/db/local_db.dart';
 
 /// The account menu every home screen carries: who you are, how to switch
@@ -23,6 +25,7 @@ class AccountMenu extends StatelessWidget {
     this.onInvite,
     this.onMyProfile,
     this.onApplyForOrg,
+    this.onLanguage,
   });
 
   final LocalDb db;
@@ -76,6 +79,10 @@ class AccountMenu extends StatelessWidget {
   /// Null for everyone except a platform admin.
   final VoidCallback? onCreateBusiness;
 
+  /// The device's language. Offered to everyone; the same screen is reachable
+  /// from the sign-in page for the person not yet signed in.
+  final VoidCallback? onLanguage;
+
   Future<void> _confirmSignOut(BuildContext context) async {
     final pending = await db.pendingCount();
     if (!context.mounted) return;
@@ -88,22 +95,16 @@ class AccountMenu extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Des données ne sont pas encore envoyées'),
-        content: Text(
-          '$pending enregistrement${pending > 1 ? 's' : ''} '
-          "attend${pending > 1 ? 'ent' : ''} le réseau. "
-          'Ces données restent sur cet appareil et seront envoyées à la '
-          'prochaine connexion de ce compte.\n\n'
-          'Se déconnecter maintenant ?',
-        ),
+        title: Text(Strings.of(context).unsentDataTitle),
+        content: Text(Strings.of(context).unsentDataBody(pending)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Rester connecté'),
+            child: Text(Strings.of(context).stayConnected),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Se déconnecter'),
+            child: Text(Strings.of(context).signOut),
           ),
         ],
       ),
@@ -116,7 +117,7 @@ class AccountMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.account_circle_outlined),
-      tooltip: 'Compte',
+      tooltip: Strings.of(context).account,
       onSelected: (value) {
         switch (value) {
           case 'accounting':
@@ -137,6 +138,8 @@ class AccountMenu extends StatelessWidget {
             onCreateBusiness?.call();
           case 'switch':
             onSwitchOrg?.call();
+          case 'language':
+            onLanguage?.call();
           case 'signout':
             _confirmSignOut(context);
         }
@@ -151,92 +154,102 @@ class AccountMenu extends StatelessWidget {
         ),
         const PopupMenuDivider(),
         if (onMyProfile != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'profile',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.badge_outlined),
-              title: Text('Mes informations'),
+              leading: const Icon(Icons.badge_outlined),
+              title: Text(Strings.of(context).myProfile),
             ),
           ),
         if (onAccounting != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'accounting',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.menu_book_outlined),
-              title: Text('Comptabilité'),
+              leading: const Icon(Icons.menu_book_outlined),
+              title: Text(Strings.of(context).accounting),
             ),
           ),
         if (onAdminister != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'admin',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.admin_panel_settings_outlined),
-              title: Text('Administration'),
+              leading: const Icon(Icons.admin_panel_settings_outlined),
+              title: Text(Strings.of(context).administration),
             ),
           ),
         if (onInvite != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'invite',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.person_add_alt),
-              title: Text('Inviter quelqu’un'),
+              leading: const Icon(Icons.person_add_alt),
+              title: Text(Strings.of(context).inviteSomeone),
             ),
           ),
         if (onApplications != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'applications',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.inbox_outlined),
-              title: Text('Demandes'),
+              leading: const Icon(Icons.inbox_outlined),
+              title: Text(Strings.of(context).applications),
             ),
           ),
         if (onBusinesses != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'businesses',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.business_outlined),
-              title: Text('Entreprises'),
+              leading: const Icon(Icons.business_outlined),
+              title: Text(Strings.of(context).businesses),
             ),
           ),
         if (onApplyForOrg != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'apply',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.business_center_outlined),
-              title: Text('Demander une entreprise'),
+              leading: const Icon(Icons.business_center_outlined),
+              title: Text(Strings.of(context).applyForBusiness),
             ),
           ),
         if (onCreateBusiness != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'create',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.add_business_outlined),
-              title: Text('Nouvelle activité'),
+              leading: const Icon(Icons.add_business_outlined),
+              title: Text(Strings.of(context).newBusiness),
             ),
           ),
         if (onSwitchOrg != null)
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'switch',
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.swap_horiz),
-              title: Text("Changer d'activité"),
+              leading: const Icon(Icons.swap_horiz),
+              title: Text(Strings.of(context).switchBusiness),
             ),
           ),
-        const PopupMenuItem<String>(
+        // The language of this device, offered to everybody signed in the
+        // same way it is offered before sign-in.
+        PopupMenuItem<String>(
+          value: 'language',
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.language),
+            title: Text(Strings.of(context).language),
+          ),
+        ),
+        PopupMenuItem<String>(
           value: 'signout',
           child: ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.logout),
-            title: Text('Se déconnecter'),
+            leading: const Icon(Icons.logout),
+            title: Text(Strings.of(context).signOut),
           ),
         ),
       ],

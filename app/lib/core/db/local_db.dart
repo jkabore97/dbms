@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -43,6 +43,7 @@ class LocalDb {
         await _createNamingSchema(db);
         await _createFarmSchema(db);
         await _createCaptureSchema(db);
+        await _createPrefsSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // v1 -> v2: who this device belongs to, and which businesses they can
@@ -90,6 +91,14 @@ class LocalDb {
         if (oldVersion >= 2 && oldVersion < 8) {
           await db.execute('ALTER TABLE cached_orgs ADD COLUMN theme TEXT');
         }
+        // v8 -> v9: device preferences — today only the language. A new
+        // table, so no duplicate-column trap this time: CREATE TABLE on a
+        // device that somehow has it already would throw, hence IF NOT
+        // EXISTS, which the CREATEs above predate but this one can use.
+        if (oldVersion < 9) {
+          await db.execute(
+              'CREATE TABLE IF NOT EXISTS device_prefs (k TEXT PRIMARY KEY, v TEXT)');
+        }
       },
     );
     return LocalDb._(db);
@@ -98,6 +107,32 @@ class LocalDb {
   /// Releases the file. The app never calls this — the database lives as long
   /// as the process — but tests need each case to start from nothing.
   Future<void> close() => _db.close();
+
+  /// Preferences that belong to the device, not to any account: today only
+  /// the language. Kept here rather than in shared_preferences so the whole
+  /// of what a device knows lives in one file with one migration story.
+  static Future<void> _createPrefsSchema(Database db) async {
+    await db.execute(
+        'CREATE TABLE IF NOT EXISTS device_prefs (k TEXT PRIMARY KEY, v TEXT)');
+  }
+
+  Future<String?> readPref(String key) async {
+    final rows =
+        await _db.query('device_prefs', where: 'k = ?', whereArgs: [key]);
+    if (rows.isEmpty) return null;
+    return rows.first['v'] as String?;
+  }
+
+  /// Null deletes: "follow the phone" is the absence of a choice, and a row
+  /// holding null would make every reader distinguish two kinds of nothing.
+  Future<void> writePref(String key, String? value) async {
+    if (value == null) {
+      await _db.delete('device_prefs', where: 'k = ?', whereArgs: [key]);
+    } else {
+      await _db.insert('device_prefs', {'k': key, 'v': value},
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
 
   static Future<void> _createSchema(Database db, int version) async {
     // Actions the device has taken that the server hasn't confirmed yet.

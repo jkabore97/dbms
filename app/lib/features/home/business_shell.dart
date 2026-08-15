@@ -71,6 +71,7 @@ class BusinessShell extends StatelessWidget {
           // Replaces "J'ai un code": the person holding the app is the
           // manager, and the person who needs reaching does not have it.
           onMyProfile: live ? () => context.push(Routes.myProfile) : null,
+          onLanguage: () => context.push(Routes.language),
           onApplyForOrg: !session.isPlatformAdmin && live
               ? () => context.push(Routes.applyForBusiness)
               : null,

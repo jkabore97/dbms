@@ -1,0 +1,9 @@
+# French is the template: it is the language the app was written in, so it is
+# the one guaranteed complete. A key missing from another language falls back
+# to the French text rather than crashing or showing the key name.
+arb-dir: lib/l10n
+template-arb-file: app_fr.arb
+output-localization-file: strings.dart
+output-class: Strings
+nullable-getter: false
+untranslated-messages-file: l10n_untranslated.json
