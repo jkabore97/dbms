@@ -1115,6 +1115,18 @@ abstract class Strings {
   /// **'Coût de revient : {amount} / unité'**
   String unitCostIs(String amount);
 
+  /// No description provided for @notifications.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien pour l\'instant. Vous serez prévenu ici : stock bas, crédit soldé, tontine prête à clore, nouvel arrivant.'**
+  String get noNotifications;
+
   /// No description provided for @makeAgain.
   ///
   /// In fr, this message translates to:

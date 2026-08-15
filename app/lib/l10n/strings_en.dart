@@ -562,6 +562,13 @@ class StringsEn extends Strings {
   }
 
   @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotifications =>
+      'Nothing yet. You will be told here: low stock, a settled credit, a tontine round ready to close, someone joining.';
+
+  @override
   String get makeAgain => 'Make again';
 
   @override
