@@ -402,6 +402,113 @@ it is the wrong thing to do next. A week with one real user will reorder the
 rest of this list more usefully than any amount of planning, and none of it
 has been in anybody's hands yet.
 
+---
+
+## The build order from here (August 2026)
+
+Sequenced by dependency and by what a pilot in Ouagadougou actually needs
+next, not by what is most interesting to build. Each block is promptable,
+like the milestones above. **M7 gates everything**: nothing below is worth
+building on top of an app no real person has used.
+
+### M7 — Production week (operational, small)
+
+> 1. Run `database/apply_006_to_023.sql` in the Supabase SQL editor (manual,
+>    the owner does this once).
+> 2. Set `UPLOADS_URL` in the repo's Actions variables and redeploy, then put
+>    one real photograph through the uploads Worker end to end.
+> 3. Verify email sign-up against the real project with "Confirm email" both
+>    on and off; keep whichever setting matches the app's wording.
+> 4. Put the app in one real business's hands for a week. Watch
+>    `outbox.last_error` in the console daily. Fix what actually breaks, and
+>    write down every category name and habit that surprised you.
+
+**Demo after M7:** a stranger recorded a week of real money with no help.
+
+### M8 — The credit book (carnet de crédit)
+
+The single feature that makes a shopkeeper feel the app was built here.
+Sales on trust are the daily reality; today the app pretends everything is
+cash.
+
+> Migration 024 + screens: a sale or delivery can be "à crédit" against a
+> named customer (customers table exists since 020). Records a receivable in
+> the existing double-entry machinery — no new ledger concepts. Partial
+> repayments. One screen per business: "Qui me doit combien", sorted by age
+> of debt, with a repayment button per row. The farm variant covers the
+> trader who takes eggs weekly and settles monthly; the church already has
+> pledges. SECURITY INVOKER functions, RLS-bound, test suite proving one
+> business cannot read another's debtors and that repayments never exceed
+> the debt.
+
+**Demo after M8:** Esperance sees who owes her money, oldest first.
+
+### M9 — Customers pay by Mobile Money
+
+> Pick the aggregator (CinetPay first candidate; PayDunya, FedaPay as
+> fallbacks — decide on XOF settlement to a BF account, Orange Money BF
+> fee, sandbox quality). Payment-link mode only, no in-app SDK: a new
+> `workers/payments` Worker creates a link for an invoice and receives the
+> signed webhook. Confirmation path: Worker verifies signature → calls
+> `record_payment_confirmation()` (SECURITY DEFINER, idempotent by
+> aggregator reference) → lands as an ordinary journal entry with the
+> reference in `details`. The client never confirms a payment; a payment
+> request may queue offline, a confirmation never does. Invoice screen and
+> the credit book (M8) both grow a "Payer par Mobile Money" share button —
+> the invoice image plus the link is the whole billing loop on WhatsApp.
+
+**Demo after M9:** an invoice is paid from a phone and the books already know.
+
+### M10 — Kaj gets paid (subscriptions)
+
+> Same rails as M9, platform side. A `subscriptions` table: org, plan,
+> paid-until, grace state. A monthly payment link sent to owners; the
+> webhook extends paid-until. Grace, never a cliff: an unpaid business goes
+> read-only after a long warning, it never loses data — trust is the
+> product. Free tier decision (e.g. churches free, businesses pay) is a
+> flag per org, changeable by the platform admin from the console.
+
+**Demo after M10:** the first franc of recurring revenue arrives.
+
+### M11 — The platform dashboard grows up
+
+> The console gains tabs, each one server-side aggregate, one round trip:
+> **Santé** (existing tiles + 30-day lines: entries/day, new businesses/week,
+> businesses going silent/week — you are looking for the bend);
+> **Croissance** (funnel: applications → approved → first entry → active at
+> 30 days — it says where people are lost); **Revenus** (MRR, paid vs free,
+> failed payments this week — each failure is a phone call); **Système**
+> (outbox errors platform-wide, app version vs migration state). Every
+> number tappable into the list of businesses behind it.
+
+**Demo after M11:** one screen answers "is anything wrong today" in 10 seconds.
+
+### M12 — Languages phase 3
+
+> Extract the remaining deep sheets (recording forms, invoice composer,
+> staff, gallery, livestock, console) — mechanical, the pattern is
+> established. Commission the Mooré and Dioula reviews of `app_mos.arb` /
+> `app_dyu.arb` from paid native speakers — the files are ready and the
+> fallback is safe, so enabling each is one line. Server messages move from
+> French sentences to error codes the app translates; the migrations keep
+> raising codes, `describeError()` maps them.
+
+### M13 — Tontines
+
+> Members, contribution schedule, whose turn, who has paid this round —
+> on the existing ledger, per business or standalone group. Design with
+> three real tontine organisers before writing SQL; the variants
+> (rotating, accumulating, with penalties) differ more than profiles do.
+
+### M14 — Distribution (the old M6, still last on purpose)
+
+> Custom domains, invoice PDF export, QR-scan invitation claiming, the
+> member picker on the church sheet, app-store presence. None of it
+> creates value until M7–M10 proved somebody wants the thing distributed.
+
+Parallelism: M8 and M11 touch disjoint code and can run side by side. M9
+blocks M10; M10 blocks the Revenus tab only. M12 can fill any idle week.
+
 ## What matters more than any of this
 
 Put the app in Israel's and Ignace's hands and watch them use it. Everything
