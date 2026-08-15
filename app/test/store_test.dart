@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
@@ -105,6 +106,9 @@ void main() {
           profile: 'retail');
 
       await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
         home: homeScreenFor(
           db: db,
           org: org,
@@ -124,6 +128,9 @@ void main() {
           profile: 'something-invented-next-year');
 
       await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
         home: homeScreenFor(db: db, org: org),
       ));
       await tester.pump();
@@ -135,6 +142,9 @@ void main() {
   testWidgets('the sale button is dead until the basket has something in it',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: Scaffold(
         body: SaleSheet(orgId: 'org-3', retail: RetailRepository(null)),
       ),

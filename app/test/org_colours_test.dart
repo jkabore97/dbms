@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/theme/kaj_theme.dart';
 import 'package:kaj_app/features/admin/org_colours_screen.dart';
@@ -30,6 +31,9 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: OrgColoursScreen(
         admin: AdminRepository(null),
         orgId: 'org-1',

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/accounting/accounting_repository.dart';
@@ -51,41 +53,41 @@ class AccountingHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Comptabilité')),
+      appBar: AppBar(title: Text(Strings.of(context).accounting)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _Tile(
             icon: Icons.receipt_long_outlined,
-            title: 'Journal',
-            subtitle: 'Toutes les écritures, dans les mots employés',
+            title: Strings.of(context).journalTitle,
+            subtitle: Strings.of(context).journalSubtitle,
             onTap: () => context.push(Routes.inside(org.id, 'journal')),
           ),
           _Tile(
             icon: Icons.trending_up,
-            title: 'Compte de résultat',
-            subtitle: "Ce qui est entré, ce qui est sorti, ce qu'il reste",
+            title: Strings.of(context).incomeStatement,
+            subtitle: Strings.of(context).incomeStatementSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'comptabilite/resultat')),
           ),
           _Tile(
             icon: Icons.account_balance_outlined,
-            title: 'Bilan',
-            subtitle: "Ce que possède l'activité et ce qu'elle doit",
+            title: Strings.of(context).balanceSheet,
+            subtitle: Strings.of(context).balanceSheetSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'comptabilite/bilan')),
           ),
           _Tile(
             icon: Icons.list_alt_outlined,
-            title: 'Plan comptable',
-            subtitle: 'Les catégories, et le détail de chacune',
+            title: Strings.of(context).chartOfAccounts,
+            subtitle: Strings.of(context).chartOfAccountsSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'comptabilite/plan')),
           ),
           _Tile(
             icon: Icons.balance_outlined,
-            title: 'Balance générale',
-            subtitle: 'La preuve que les comptes sont équilibrés',
+            title: Strings.of(context).trialBalance,
+            subtitle: Strings.of(context).trialBalanceSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'comptabilite/balance')),
           ),

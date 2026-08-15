@@ -533,6 +533,336 @@ abstract class Strings {
   /// **'Suit la langue de l\'appareil : {resolved}'**
   String languageSystemSubtitle(String resolved);
 
+  /// No description provided for @today.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get today;
+
+  /// No description provided for @invoices.
+  ///
+  /// In fr, this message translates to:
+  /// **'Factures'**
+  String get invoices;
+
+  /// No description provided for @reports.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapports'**
+  String get reports;
+
+  /// No description provided for @history.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get history;
+
+  /// No description provided for @photos.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get photos;
+
+  /// No description provided for @staffLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personnel'**
+  String get staffLabel;
+
+  /// No description provided for @pendingCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en attente'**
+  String pendingCount(int count);
+
+  /// No description provided for @dayClosed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Journée clôturée'**
+  String get dayClosed;
+
+  /// No description provided for @cancelEntryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler cette entrée ?'**
+  String get cancelEntryTitle;
+
+  /// No description provided for @back.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour'**
+  String get back;
+
+  /// No description provided for @cancelEntry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler l\'entrée'**
+  String get cancelEntry;
+
+  /// No description provided for @transferBetweenCashboxes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transfert entre caisses'**
+  String get transferBetweenCashboxes;
+
+  /// No description provided for @productsLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get productsLabel;
+
+  /// No description provided for @sale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vente'**
+  String get sale;
+
+  /// No description provided for @photo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get photo;
+
+  /// No description provided for @send.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get send;
+
+  /// No description provided for @lossesAvoided.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pertes évitées'**
+  String get lossesAvoided;
+
+  /// No description provided for @stock.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stock'**
+  String get stock;
+
+  /// No description provided for @flocks.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bandes'**
+  String get flocks;
+
+  /// No description provided for @startWithHarvest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencez par la récolte.'**
+  String get startWithHarvest;
+
+  /// No description provided for @nothingCountedToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien compté aujourd\'hui.\nCommencez par la récolte.'**
+  String get nothingCountedToday;
+
+  /// No description provided for @stockReceipt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réception de stock'**
+  String get stockReceipt;
+
+  /// No description provided for @feedGiven.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aliment distribué'**
+  String get feedGiven;
+
+  /// No description provided for @mortality.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mortalité'**
+  String get mortality;
+
+  /// No description provided for @harvest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récolte'**
+  String get harvest;
+
+  /// No description provided for @eggsCollected.
+  ///
+  /// In fr, this message translates to:
+  /// **'œufs ramassés'**
+  String get eggsCollected;
+
+  /// No description provided for @feedOut.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aliment sorti'**
+  String get feedOut;
+
+  /// No description provided for @received.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu'**
+  String get received;
+
+  /// No description provided for @spent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépensé'**
+  String get spent;
+
+  /// No description provided for @lowStockOf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il reste peu de {names}.'**
+  String lowStockOf(String names);
+
+  /// No description provided for @moduleComingSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est bien rattaché à cette activité. Le module {module} arrive bientôt — vous pourrez alors enregistrer vos opérations ici.'**
+  String moduleComingSoon(String module);
+
+  /// No description provided for @weeklySummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumé de la semaine'**
+  String get weeklySummary;
+
+  /// No description provided for @weeklySummarySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'À envoyer au pasteur, par WhatsApp'**
+  String get weeklySummarySubtitle;
+
+  /// No description provided for @balances.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soldes'**
+  String get balances;
+
+  /// No description provided for @balancesSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces, banque, Mobile Money'**
+  String get balancesSubtitle;
+
+  /// No description provided for @givingStatement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé de dons'**
+  String get givingStatement;
+
+  /// No description provided for @givingStatementSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour un membre, sur l\'année'**
+  String get givingStatementSubtitle;
+
+  /// No description provided for @journalTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Journal'**
+  String get journalTitle;
+
+  /// No description provided for @journalSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les écritures, dans les mots employés'**
+  String get journalSubtitle;
+
+  /// No description provided for @incomeStatement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte de résultat'**
+  String get incomeStatement;
+
+  /// No description provided for @incomeStatementSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui est entré, ce qui est sorti, ce qu\'il reste'**
+  String get incomeStatementSubtitle;
+
+  /// No description provided for @balanceSheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bilan'**
+  String get balanceSheet;
+
+  /// No description provided for @balanceSheetSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que possède l\'activité et ce qu\'elle doit'**
+  String get balanceSheetSubtitle;
+
+  /// No description provided for @chartOfAccounts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plan comptable'**
+  String get chartOfAccounts;
+
+  /// No description provided for @chartOfAccountsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les catégories, et le détail de chacune'**
+  String get chartOfAccountsSubtitle;
+
+  /// No description provided for @trialBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Balance générale'**
+  String get trialBalance;
+
+  /// No description provided for @trialBalanceSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La preuve que les comptes sont équilibrés'**
+  String get trialBalanceSubtitle;
+
+  /// No description provided for @people.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personnes'**
+  String get people;
+
+  /// No description provided for @peopleSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Membres, rôles et invitations'**
+  String get peopleSubtitle;
+
+  /// No description provided for @sitesAndDepartments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sites et départements'**
+  String get sitesAndDepartments;
+
+  /// No description provided for @structureSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La structure de l\'activité'**
+  String get structureSubtitle;
+
+  /// No description provided for @orgSettingsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres de l\'activité'**
+  String get orgSettingsTitle;
+
+  /// No description provided for @orgSettingsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom et monnaie'**
+  String get orgSettingsSubtitle;
+
+  /// No description provided for @consoleTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Console'**
+  String get consoleTitle;
+
+  /// No description provided for @consoleSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Journal d\'activité, données, état de l\'appareil'**
+  String get consoleSubtitle;
+
   /// No description provided for @save.
   ///
   /// In fr, this message translates to:

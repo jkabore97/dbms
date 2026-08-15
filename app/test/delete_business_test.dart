@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/features/admin/businesses_screen.dart';
@@ -38,6 +39,9 @@ void main() {
 
   Future<void> openDialog(WidgetTester tester, PlatformOrg target) async {
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(

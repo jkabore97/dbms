@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -166,7 +168,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       await _refresh();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Journée clôturée')),
+        SnackBar(content: Text(Strings.of(context).dayClosed)),
       );
     }
   }
@@ -175,7 +177,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Annuler cette entrée ?'),
+        title: Text(Strings.of(context).cancelEntryTitle),
         content: const Text(
           "L'entrée reste visible dans l'historique, marquée comme corrigée. "
           "Rien n'est supprimé.",
@@ -183,11 +185,11 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Retour'),
+            child: Text(Strings.of(context).back),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Annuler l\'entrée'),
+            child: Text(Strings.of(context).cancelEntry),
           ),
         ],
       ),
@@ -216,7 +218,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
               child: Center(
                 child: Chip(
                   avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
-                  label: Text('$_pending en attente'),
+                  label: Text(Strings.of(context).pendingCount(_pending)),
                   visualDensity: VisualDensity.compact,
                 ),
               ),
@@ -224,14 +226,14 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           if (widget.invoicing != null && widget.org != null)
             IconButton(
               icon: const Icon(Icons.receipt_long_outlined),
-              tooltip: 'Factures',
+              tooltip: Strings.of(context).invoices,
               onPressed: () =>
                   context.push(Routes.inside(widget.org!.id, 'factures')),
             ),
           if (widget.reports != null && widget.org != null)
             IconButton(
               icon: const Icon(Icons.assessment_outlined),
-              tooltip: 'Rapports',
+              tooltip: Strings.of(context).reports,
               onPressed: () =>
                   context.push(Routes.inside(widget.org!.id, 'rapports')),
             ),
@@ -244,7 +246,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           if (widget.onHistory != null && widget.org?.visibility != 'summary')
             IconButton(
               icon: const Icon(Icons.history),
-              tooltip: 'Historique',
+              tooltip: Strings.of(context).history,
               onPressed: widget.onHistory,
             ),
           if (widget.capture != null &&
@@ -252,14 +254,14 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
               widget.org != null)
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),
-              tooltip: 'Photos',
+              tooltip: Strings.of(context).photos,
               onPressed: () =>
                   context.push(Routes.inside(widget.org!.id, 'photos')),
             ),
           if (widget.staff != null && widget.org != null && widget.org!.isAdmin)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
-              tooltip: 'Personnel',
+              tooltip: Strings.of(context).staffLabel,
               onPressed: () =>
                   context.push(Routes.inside(widget.org!.id, 'personnel')),
             ),
@@ -279,7 +281,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                     currency: _currency,
                   ),
                   const SizedBox(height: 24),
-                  Text("Aujourd'hui", style: theme.textTheme.titleMedium),
+                  Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_entries.isEmpty)
                     const Padding(
@@ -341,7 +343,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           FloatingActionButton.small(
             heroTag: 'record-transfer',
             onPressed: _openTransferSheet,
-            tooltip: 'Transfert entre caisses',
+            tooltip: Strings.of(context).transferBetweenCashboxes,
             backgroundColor: theme.colorScheme.tertiaryContainer,
             foregroundColor: theme.colorScheme.onTertiaryContainer,
             child: const Icon(Icons.swap_horiz),

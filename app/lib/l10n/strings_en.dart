@@ -241,6 +241,180 @@ class StringsEn extends Strings {
   }
 
   @override
+  String get today => 'Today';
+
+  @override
+  String get invoices => 'Invoices';
+
+  @override
+  String get reports => 'Reports';
+
+  @override
+  String get history => 'History';
+
+  @override
+  String get photos => 'Photos';
+
+  @override
+  String get staffLabel => 'Staff';
+
+  @override
+  String pendingCount(int count) {
+    return '$count waiting';
+  }
+
+  @override
+  String get dayClosed => 'Day closed';
+
+  @override
+  String get cancelEntryTitle => 'Cancel this entry?';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get cancelEntry => 'Cancel the entry';
+
+  @override
+  String get transferBetweenCashboxes => 'Transfer between cashboxes';
+
+  @override
+  String get productsLabel => 'Products';
+
+  @override
+  String get sale => 'Sale';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get lossesAvoided => 'Losses avoided';
+
+  @override
+  String get stock => 'Stock';
+
+  @override
+  String get flocks => 'Flocks';
+
+  @override
+  String get startWithHarvest => 'Start with the harvest.';
+
+  @override
+  String get nothingCountedToday =>
+      'Nothing counted today.\nStart with the harvest.';
+
+  @override
+  String get stockReceipt => 'Stock received';
+
+  @override
+  String get feedGiven => 'Feed given';
+
+  @override
+  String get mortality => 'Mortality';
+
+  @override
+  String get harvest => 'Harvest';
+
+  @override
+  String get eggsCollected => 'eggs collected';
+
+  @override
+  String get feedOut => 'Feed used';
+
+  @override
+  String get received => 'Received';
+
+  @override
+  String get spent => 'Spent';
+
+  @override
+  String lowStockOf(String names) {
+    return 'Running low on $names.';
+  }
+
+  @override
+  String moduleComingSoon(String module) {
+    return 'Your account is attached to this business. The $module module is coming soon — you will then be able to record your operations here.';
+  }
+
+  @override
+  String get weeklySummary => 'Weekly summary';
+
+  @override
+  String get weeklySummarySubtitle => 'To send to the pastor, on WhatsApp';
+
+  @override
+  String get balances => 'Balances';
+
+  @override
+  String get balancesSubtitle => 'Cash, bank, Mobile Money';
+
+  @override
+  String get givingStatement => 'Giving statement';
+
+  @override
+  String get givingStatementSubtitle => 'For one member, over the year';
+
+  @override
+  String get journalTitle => 'Journal';
+
+  @override
+  String get journalSubtitle => 'Every entry, in the words people used';
+
+  @override
+  String get incomeStatement => 'Income statement';
+
+  @override
+  String get incomeStatementSubtitle =>
+      'What came in, what went out, what is left';
+
+  @override
+  String get balanceSheet => 'Balance sheet';
+
+  @override
+  String get balanceSheetSubtitle => 'What the business owns and what it owes';
+
+  @override
+  String get chartOfAccounts => 'Chart of accounts';
+
+  @override
+  String get chartOfAccountsSubtitle =>
+      'The categories, and the detail of each';
+
+  @override
+  String get trialBalance => 'Trial balance';
+
+  @override
+  String get trialBalanceSubtitle => 'The proof the books are balanced';
+
+  @override
+  String get people => 'People';
+
+  @override
+  String get peopleSubtitle => 'Members, roles and invitations';
+
+  @override
+  String get sitesAndDepartments => 'Sites and departments';
+
+  @override
+  String get structureSubtitle => 'The structure of the business';
+
+  @override
+  String get orgSettingsTitle => 'Business settings';
+
+  @override
+  String get orgSettingsSubtitle => 'Name and currency';
+
+  @override
+  String get consoleTitle => 'Console';
+
+  @override
+  String get consoleSubtitle => 'Activity log, data, device state';
+
+  @override
   String get save => 'Save';
 
   @override

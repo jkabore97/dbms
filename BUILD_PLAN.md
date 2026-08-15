@@ -54,7 +54,7 @@ Each milestone ends with something demonstrable.
 | Platform console: search, filter and page across thousands of businesses | built, 8 assertions |
 | A business chooses its own colours, previewed before saving | built, 13 + 13 assertions |
 | Every screen is a real page: back, refresh and bookmarks all work | built, 12 assertions |
-| Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions |
+| Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions — entry path + every home screen, hubs and admin tiles |
 
 **Not built**
 
