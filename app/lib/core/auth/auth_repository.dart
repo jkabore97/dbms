@@ -17,6 +17,10 @@ class AuthRepository {
 
   final SupabaseClient? _client;
 
+  /// The raw client, for repositories built at the scope rather than in
+  /// main(). Null in a build with no server, like everything else here.
+  SupabaseClient? get client => _client;
+
   bool get isConfigured => _client != null;
 
   User? get currentUser => _client?.auth.currentUser;

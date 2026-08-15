@@ -203,6 +203,23 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_invitation_codes.sql
 
+      # The carnet de crédit: sales on trust, the market's normal case. The
+      # load-bearing claims are that a promise still balances the books, a
+      # repayment can reach zero and never cross it, and one shop cannot
+      # read another's debtors.
+      - name: Prove the credit book balances and stays private
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_credit_book.sql
+
+      # The tontine: whose turn, who paid, and a round that cannot close
+      # while somebody has not paid — the contract that keeps notebook
+      # tontines out of quarrels.
+      - name: Prove the tontine rotates fairly and stays private
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_tontines.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

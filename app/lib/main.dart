@@ -16,6 +16,7 @@ import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
+import 'core/credit/credit_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
 import 'core/invoicing/invoicing_repository.dart';
@@ -26,6 +27,7 @@ import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
+import 'core/tontine/tontine_repository.dart';
 import 'core/theme/kaj_theme.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -265,6 +267,11 @@ class _KajAppState extends State<KajApp> {
       staff: widget.staff,
       capture: widget.capture,
       onboarding: widget.onboarding,
+      // Built here rather than threaded from main(): they wrap the same
+      // client every other repository wraps, and widening KajApp's
+      // constructor for each new module would make every test pay for it.
+      credit: CreditRepository(widget.auth.client),
+      tontine: TontineRepository(widget.auth.client),
       sync: widget.sync,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new

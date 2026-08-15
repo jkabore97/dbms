@@ -197,6 +197,12 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         title: Text(widget.org.name),
         actions: [
           IconButton(
+            icon: const Icon(Icons.handshake_outlined),
+            tooltip: Strings.of(context).creditBook,
+            onPressed: () =>
+                context.push(Routes.inside(widget.org.id, 'credits')),
+          ),
+          IconButton(
             icon: const Icon(Icons.inventory_2_outlined),
             tooltip: Strings.of(context).productsLabel,
             onPressed: widget.retail == null

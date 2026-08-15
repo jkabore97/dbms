@@ -26,6 +26,8 @@ class AccountMenu extends StatelessWidget {
     this.onMyProfile,
     this.onApplyForOrg,
     this.onLanguage,
+    this.onCreditBook,
+    this.onTontines,
   });
 
   final LocalDb db;
@@ -83,6 +85,12 @@ class AccountMenu extends StatelessWidget {
   /// from the sign-in page for the person not yet signed in.
   final VoidCallback? onLanguage;
 
+  /// The carnet de crédit and the tontines. In the menu for every profile:
+  /// the shop and farm home screens also carry a direct button, the church
+  /// reaches them from here.
+  final VoidCallback? onCreditBook;
+  final VoidCallback? onTontines;
+
   Future<void> _confirmSignOut(BuildContext context) async {
     final pending = await db.pendingCount();
     if (!context.mounted) return;
@@ -138,6 +146,10 @@ class AccountMenu extends StatelessWidget {
             onCreateBusiness?.call();
           case 'switch':
             onSwitchOrg?.call();
+          case 'credit':
+            onCreditBook?.call();
+          case 'tontines':
+            onTontines?.call();
           case 'language':
             onLanguage?.call();
           case 'signout':
@@ -232,6 +244,24 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.swap_horiz),
               title: Text(Strings.of(context).switchBusiness),
+            ),
+          ),
+        if (onCreditBook != null)
+          PopupMenuItem<String>(
+            value: 'credit',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.handshake_outlined),
+              title: Text(Strings.of(context).creditBook),
+            ),
+          ),
+        if (onTontines != null)
+          PopupMenuItem<String>(
+            value: 'tontines',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.group_outlined),
+              title: Text(Strings.of(context).tontines),
             ),
           ),
         // The language of this device, offered to everybody signed in the

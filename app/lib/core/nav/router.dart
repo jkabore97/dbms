@@ -29,6 +29,7 @@ import '../../features/church/reports/giving_statement_screen.dart';
 import '../../features/church/reports/reports_hub_screen.dart';
 import '../../features/church/reports/weekly_summary_screen.dart';
 import '../../features/console/console_screen.dart';
+import '../../features/credit/credit_book_screen.dart';
 import '../../features/farm/flocks_screen.dart';
 import '../../features/farm/livestock_screen.dart';
 import '../../features/farm/stock_screen.dart';
@@ -40,6 +41,7 @@ import '../../features/invoicing/new_invoice_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
 import '../../features/settings/language_screen.dart';
+import '../../features/tontine/tontines_screen.dart';
 import '../accounting/models.dart';
 import '../auth/models.dart';
 import '../capture/invoice_reading.dart';
@@ -689,6 +691,52 @@ GoRouter buildRouter(SessionController session) {
               state,
               (scope, org) => StaffScreen(org: org, staff: scope.staff),
             ),
+          ),
+          GoRoute(
+            path: 'credits',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) =>
+                  CreditBookScreen(org: org, credit: scope.credit),
+            ),
+            routes: [
+              GoRoute(
+                path: ':customerId',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) => CustomerDebtsScreen(
+                    org: org,
+                    credit: scope.credit,
+                    customerId: state.pathParameters['customerId']!,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'tontines',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) =>
+                  TontinesScreen(org: org, tontine: scope.tontine),
+            ),
+            routes: [
+              GoRoute(
+                path: ':tontineId',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) => TontineScreen(
+                    org: org,
+                    tontine: scope.tontine,
+                    tontineId: state.pathParameters['tontineId']!,
+                  ),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'stock',
