@@ -62,6 +62,7 @@ Each milestone ends with something demonstrable.
 | Scale to 200 articles: search in Articles, searchable recency-ordered ingredient picker, "Refaire" on past runs, ingredient flag off the sale sheet | built |
 | Crédit as a payment method: a credit sale moves stock and snapshots cost like cash, money lands in créances, the carnet debt links to the sale | built, 8 assertions |
 | Notifications phase 1: in-app bell, per-recipient rows, five trigger events, employees quiet by design | built, 9 assertions |
+| Ajout multiple: twenty articles in one save, one line each, parsed with per-line errors before anything is written | built |
 
 **Not built**
 
