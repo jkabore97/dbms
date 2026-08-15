@@ -863,6 +863,186 @@ abstract class Strings {
   /// **'Journal d\'activité, données, état de l\'appareil'**
   String get consoleSubtitle;
 
+  /// No description provided for @creditBook.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carnet de crédit'**
+  String get creditBook;
+
+  /// No description provided for @creditSale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vente à crédit'**
+  String get creditSale;
+
+  /// No description provided for @noDebtors.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne ne vous doit rien. Le carnet est à jour.'**
+  String get noDebtors;
+
+  /// No description provided for @totalOutstanding.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total dû : {amount}'**
+  String totalOutstanding(String amount);
+
+  /// No description provided for @owedForDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'{days, plural, =0{depuis aujourd\'hui} =1{depuis 1 jour} other{depuis {days} jours}}'**
+  String owedForDays(int days);
+
+  /// No description provided for @recordRepayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer un remboursement'**
+  String get recordRepayment;
+
+  /// No description provided for @amount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get amount;
+
+  /// No description provided for @remainingOf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste dû : {amount}'**
+  String remainingOf(String amount);
+
+  /// No description provided for @customerName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du client'**
+  String get customerName;
+
+  /// No description provided for @whatWasSold.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui a été vendu'**
+  String get whatWasSold;
+
+  /// No description provided for @whatWasSoldHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sac de riz, bidon d\'huile…'**
+  String get whatWasSoldHint;
+
+  /// No description provided for @enterCustomerName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le nom du client.'**
+  String get enterCustomerName;
+
+  /// No description provided for @enterAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez un montant valide.'**
+  String get enterAmount;
+
+  /// No description provided for @enterLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez un libellé.'**
+  String get enterLabel;
+
+  /// No description provided for @tontines.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tontines'**
+  String get tontines;
+
+  /// No description provided for @newTontine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle tontine'**
+  String get newTontine;
+
+  /// No description provided for @noTontines.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune tontine pour l\'instant. Créez la première.'**
+  String get noTontines;
+
+  /// No description provided for @roundN.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tour {n}'**
+  String roundN(int n);
+
+  /// No description provided for @takesThePot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prend la caisse ce tour'**
+  String get takesThePot;
+
+  /// No description provided for @markPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'A payé'**
+  String get markPaid;
+
+  /// No description provided for @closeRound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clore le tour'**
+  String get closeRound;
+
+  /// No description provided for @tontineName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de la tontine'**
+  String get tontineName;
+
+  /// No description provided for @amountPerRound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant par membre et par tour'**
+  String get amountPerRound;
+
+  /// No description provided for @period.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rythme'**
+  String get period;
+
+  /// No description provided for @periodDaily.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque jour'**
+  String get periodDaily;
+
+  /// No description provided for @periodWeekly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque semaine'**
+  String get periodWeekly;
+
+  /// No description provided for @periodMonthly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque mois'**
+  String get periodMonthly;
+
+  /// No description provided for @membersInOrder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Membres, dans l\'ordre des tours'**
+  String get membersInOrder;
+
+  /// No description provided for @membersInOrderHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un nom par ligne. Le premier prend la première caisse.'**
+  String get membersInOrderHelp;
+
+  /// No description provided for @needTwoMembers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il faut au moins deux membres.'**
+  String get needTwoMembers;
+
   /// No description provided for @save.
   ///
   /// In fr, this message translates to:

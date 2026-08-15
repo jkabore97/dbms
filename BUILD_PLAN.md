@@ -55,6 +55,8 @@ Each milestone ends with something demonstrable.
 | A business chooses its own colours, previewed before saving | built, 13 + 13 assertions |
 | Every screen is a real page: back, refresh and bookmarks all work | built, 12 assertions |
 | Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions — entry path + every home screen, hubs and admin tiles |
+| The credit book (M8): sales à crédit, repayments, qui-me-doit-combien | built, 11 assertions |
+| Tontines (M13): members, rounds, whose turn, close-the-round contract | built, 8 assertions |
 
 **Not built**
 

@@ -420,6 +420,112 @@ class StringsDyu extends Strings {
       'Journal d\'activité, données, état de l\'appareil';
 
   @override
+  String get creditBook => 'Carnet de crédit';
+
+  @override
+  String get creditSale => 'Vente à crédit';
+
+  @override
+  String get noDebtors => 'Personne ne vous doit rien. Le carnet est à jour.';
+
+  @override
+  String totalOutstanding(String amount) {
+    return 'Total dû : $amount';
+  }
+
+  @override
+  String owedForDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'depuis $days jours',
+      one: 'depuis 1 jour',
+      zero: 'depuis aujourd\'hui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordRepayment => 'Enregistrer un remboursement';
+
+  @override
+  String get amount => 'Montant';
+
+  @override
+  String remainingOf(String amount) {
+    return 'Reste dû : $amount';
+  }
+
+  @override
+  String get customerName => 'Nom du client';
+
+  @override
+  String get whatWasSold => 'Ce qui a été vendu';
+
+  @override
+  String get whatWasSoldHint => 'Sac de riz, bidon d\'huile…';
+
+  @override
+  String get enterCustomerName => 'Entrez le nom du client.';
+
+  @override
+  String get enterAmount => 'Entrez un montant valide.';
+
+  @override
+  String get enterLabel => 'Entrez un libellé.';
+
+  @override
+  String get tontines => 'Tontines';
+
+  @override
+  String get newTontine => 'Nouvelle tontine';
+
+  @override
+  String get noTontines => 'Aucune tontine pour l\'instant. Créez la première.';
+
+  @override
+  String roundN(int n) {
+    return 'Tour $n';
+  }
+
+  @override
+  String get takesThePot => 'Prend la caisse ce tour';
+
+  @override
+  String get markPaid => 'A payé';
+
+  @override
+  String get closeRound => 'Clore le tour';
+
+  @override
+  String get tontineName => 'Nom de la tontine';
+
+  @override
+  String get amountPerRound => 'Montant par membre et par tour';
+
+  @override
+  String get period => 'Rythme';
+
+  @override
+  String get periodDaily => 'Chaque jour';
+
+  @override
+  String get periodWeekly => 'Chaque semaine';
+
+  @override
+  String get periodMonthly => 'Chaque mois';
+
+  @override
+  String get membersInOrder => 'Membres, dans l\'ordre des tours';
+
+  @override
+  String get membersInOrderHelp =>
+      'Un nom par ligne. Le premier prend la première caisse.';
+
+  @override
+  String get needTwoMembers => 'Il faut au moins deux membres.';
+
+  @override
   String get save => 'Enregistrer';
 
   @override

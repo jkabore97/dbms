@@ -415,6 +415,112 @@ class StringsEn extends Strings {
   String get consoleSubtitle => 'Activity log, data, device state';
 
   @override
+  String get creditBook => 'Credit book';
+
+  @override
+  String get creditSale => 'Credit sale';
+
+  @override
+  String get noDebtors => 'Nobody owes you anything. The book is up to date.';
+
+  @override
+  String totalOutstanding(String amount) {
+    return 'Total owed: $amount';
+  }
+
+  @override
+  String owedForDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'for $days days',
+      one: 'for 1 day',
+      zero: 'since today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordRepayment => 'Record a repayment';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String remainingOf(String amount) {
+    return 'Still owed: $amount';
+  }
+
+  @override
+  String get customerName => 'Customer name';
+
+  @override
+  String get whatWasSold => 'What was sold';
+
+  @override
+  String get whatWasSoldHint => 'Bag of rice, can of oil…';
+
+  @override
+  String get enterCustomerName => 'Enter the customer\'s name.';
+
+  @override
+  String get enterAmount => 'Enter a valid amount.';
+
+  @override
+  String get enterLabel => 'Enter a label.';
+
+  @override
+  String get tontines => 'Tontines';
+
+  @override
+  String get newTontine => 'New tontine';
+
+  @override
+  String get noTontines => 'No tontine yet. Create the first one.';
+
+  @override
+  String roundN(int n) {
+    return 'Round $n';
+  }
+
+  @override
+  String get takesThePot => 'Takes the pot this round';
+
+  @override
+  String get markPaid => 'Paid';
+
+  @override
+  String get closeRound => 'Close the round';
+
+  @override
+  String get tontineName => 'Tontine name';
+
+  @override
+  String get amountPerRound => 'Amount per member per round';
+
+  @override
+  String get period => 'Rhythm';
+
+  @override
+  String get periodDaily => 'Every day';
+
+  @override
+  String get periodWeekly => 'Every week';
+
+  @override
+  String get periodMonthly => 'Every month';
+
+  @override
+  String get membersInOrder => 'Members, in turn order';
+
+  @override
+  String get membersInOrderHelp =>
+      'One name per line. The first takes the first pot.';
+
+  @override
+  String get needTwoMembers => 'At least two members are needed.';
+
+  @override
   String get save => 'Save';
 
   @override

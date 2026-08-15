@@ -5,6 +5,7 @@ import '../admin/admin_repository.dart';
 import '../auth/auth_repository.dart';
 import '../capture/capture_repository.dart';
 import '../console/console_repository.dart';
+import '../credit/credit_repository.dart';
 import '../db/local_db.dart';
 import '../farm/farm_repository.dart';
 import '../invoicing/invoicing_repository.dart';
@@ -14,6 +15,7 @@ import '../reports/reports_repository.dart';
 import '../retail/retail_repository.dart';
 import '../retail/staff.dart';
 import '../sync/sync_service.dart';
+import '../tontine/tontine_repository.dart';
 import 'session.dart';
 
 /// The repositories, reachable from anywhere below the router.
@@ -45,6 +47,8 @@ class AppScope extends InheritedWidget {
     required this.staff,
     required this.capture,
     required this.onboarding,
+    required this.credit,
+    required this.tontine,
     this.sync,
     required super.child,
   });
@@ -63,6 +67,8 @@ class AppScope extends InheritedWidget {
   final StaffRepository staff;
   final CaptureRepository capture;
   final OnboardingRepository onboarding;
+  final CreditRepository credit;
+  final TontineRepository tontine;
   final SyncService? sync;
 
   static AppScope of(BuildContext context) {

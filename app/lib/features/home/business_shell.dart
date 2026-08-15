@@ -72,6 +72,12 @@ class BusinessShell extends StatelessWidget {
           // manager, and the person who needs reaching does not have it.
           onMyProfile: live ? () => context.push(Routes.myProfile) : null,
           onLanguage: () => context.push(Routes.language),
+          onCreditBook: live
+              ? () => context.push(Routes.inside(org.id, 'credits'))
+              : null,
+          onTontines: live
+              ? () => context.push(Routes.inside(org.id, 'tontines'))
+              : null,
           onApplyForOrg: !session.isPlatformAdmin && live
               ? () => context.push(Routes.applyForBusiness)
               : null,

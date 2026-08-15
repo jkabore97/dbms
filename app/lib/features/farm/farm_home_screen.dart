@@ -240,6 +240,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                 ),
               ),
             ),
+          IconButton(
+            icon: const Icon(Icons.handshake_outlined),
+            tooltip: Strings.of(context).creditBook,
+            onPressed: () =>
+                context.push(Routes.inside(widget.org.id, 'credits')),
+          ),
           if (widget.capture != null && widget.capture!.isConfigured)
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),
