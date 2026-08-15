@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
@@ -11,8 +12,8 @@ import '../../core/capture/text_reader.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import 'capture_action.dart';
-import 'confirm_products_screen.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 
 /// Everything this business has photographed.
 ///
@@ -101,16 +102,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Future<void> _open(CapturedDocument document) async {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => DocumentScreen(
-          org: widget.org,
-          document: document,
-          capture: widget.capture,
-          retail: widget.retail,
-          products: _products,
-        ),
-      ),
+    // The document itself travels as `extra` rather than being refetched by
+    // id: it is already loaded here, and a second round trip to draw a
+    // photograph somebody just tapped would be a visible delay on a bad line.
+    final changed = await context.push<bool>(
+      Routes.inside(widget.org.id, 'photos/document'),
+      extra: DocumentArg(document: document, products: _products),
     );
     if (changed == true) await _load();
   }
@@ -442,15 +439,11 @@ class _DocumentScreenState extends State<DocumentScreen> {
     final retail = widget.retail;
     if (retail == null) return;
 
-    final added = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ConfirmProductsScreen(
-          org: widget.org,
-          retail: retail,
-          lines: _invoiceLines,
-          capture: widget.capture,
-          documentId: widget.document.id,
-        ),
+    final added = await context.push<bool>(
+      Routes.inside(widget.org.id, 'photos/produits'),
+      extra: ConfirmProductsArg(
+        lines: _invoiceLines,
+        documentId: widget.document.id,
       ),
     );
     if (added == true && mounted) Navigator.of(context).pop(true);

@@ -10,6 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Web-only, and reached only through core/nav/url_strategy.dart, whose
+  # conditional export keeps it out of the Android build entirely. All it does
+  # is drop the `#` from every address.
+  flutter_web_plugins:
+    sdk: flutter
+
   # Local-first storage. The device is the source of truth; the server is
   # a replica it catches up with when there's signal.
   sqflite: ^2.3.3
@@ -79,6 +85,13 @@ dependencies:
   # core/capture/text_reader_mobile.dart may import this: the web build must
   # never see it. See text_reader.dart for how that is arranged.
   google_mlkit_text_recognition: ^0.16.0
+
+  # Every screen is a real page with its own address, so the browser back
+  # button, a refresh and a bookmark all mean what they say. Before this, the
+  # whole app lived at "/" and moving between sign-in, the business picker and
+  # a business was a setState -- so back from inside a business left the app
+  # entirely rather than returning to the picker.
+  go_router: ^17.5.0
 
 dev_dependencies:
   flutter_test:

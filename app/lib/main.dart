@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'app_root.dart';
+import 'core/nav/app_scope.dart';
+import 'core/nav/router.dart';
+import 'core/nav/session.dart';
+import 'core/nav/url_strategy.dart';
 import 'core/accounting/accounting_repository.dart';
 import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
@@ -51,6 +55,11 @@ Future<void> main() async {
 Future<void> _startup() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Addresses without a `#`. A no-op on Android, which has no address bar.
+  // Must run before the first frame, or the first URL is written in the old
+  // form and the one after it in the new one.
+  useCleanUrls();
+
   // sqflite talks to a native plugin that does not exist in a browser. On web
   // the factory is swapped for the wasm/IndexedDB one before anything opens a
   // database; every call in LocalDb goes through the global factory, so this
@@ -78,8 +87,8 @@ Future<void> _startup() async {
       authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
     );
     client = Supabase.instance.client;
-    // Started by AppRoot once someone is actually signed in — draining the
-    // outbox before then would post entries with no author.
+    // Started by the session once someone is actually signed in — draining
+    // the outbox before then would post entries with no author.
     sync = SyncService(db, client);
   }
 
@@ -157,7 +166,7 @@ class StartupErrorApp extends StatelessWidget {
   }
 }
 
-class KajApp extends StatelessWidget {
+class KajApp extends StatefulWidget {
   const KajApp({
     super.key,
     required this.db,
@@ -190,30 +199,66 @@ class KajApp extends StatelessWidget {
   final SyncService? sync;
 
   @override
+  State<KajApp> createState() => _KajAppState();
+}
+
+class _KajAppState extends State<KajApp> {
+  late final SessionController _session;
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _session = SessionController(
+      db: widget.db,
+      auth: widget.auth,
+      admin: widget.admin,
+      accounting: widget.accounting,
+      sync: widget.sync,
+    );
+    _router = buildRouter(_session);
+    // Kicks the state machine off. The router is already listening, so the
+    // first phase it settles on is the first address the person sees.
+    _session.boot();
+  }
+
+  @override
+  void dispose() {
+    _session.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kaj',
-      debugShowCheckedModeBanner: false,
-      // The app's own colours, for everything that belongs to no business:
-      // signing in, the business picker, the platform console. Each business
-      // then repaints itself in its profile's palette — see ProfileTheme.
-      theme: kajTheme(kajPalette),
-      // No org is named anywhere in this file, and none ever should be. Which
-      // business opens is decided by the signed-in user's memberships.
-      home: AppRoot(
-        db: db,
-        auth: auth,
-        admin: admin,
-        reports: reports,
-        accounting: accounting,
-        console: console,
-        farm: farm,
-        invoicing: invoicing,
-        retail: retail,
-        staff: staff,
-        capture: capture,
-        onboarding: onboarding,
-        sync: sync,
+    // The repositories sit above the router rather than being threaded through
+    // constructors: a route builder is called by the router with nothing but
+    // the URL, so it has no parent to be handed them by.
+    return AppScope(
+      session: _session,
+      db: widget.db,
+      auth: widget.auth,
+      admin: widget.admin,
+      reports: widget.reports,
+      accounting: widget.accounting,
+      console: widget.console,
+      farm: widget.farm,
+      invoicing: widget.invoicing,
+      retail: widget.retail,
+      staff: widget.staff,
+      capture: widget.capture,
+      onboarding: widget.onboarding,
+      sync: widget.sync,
+      child: MaterialApp.router(
+        title: 'Kaj',
+        debugShowCheckedModeBanner: false,
+        // The app's own colours, for everything that belongs to no business:
+        // signing in, the business picker, the platform console. Each business
+        // then repaints itself in its profile's palette — see ProfileTheme.
+        theme: kajTheme(kajPalette),
+        // No org is named anywhere in this file, and none ever should be.
+        // Which business opens is decided by the signed-in user's memberships;
+        // the URL only says which of those to show.
+        routerConfig: _router,
       ),
     );
   }

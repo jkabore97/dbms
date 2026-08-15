@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
@@ -9,13 +10,10 @@ import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
-import '../invoicing/invoices_screen.dart';
-import '../capture/gallery_screen.dart';
-import '../retail/staff_screen.dart';
 import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
-import 'reports/reports_hub_screen.dart';
+import '../../core/nav/router.dart';
 
 /// Israel's home screen.
 ///
@@ -227,29 +225,15 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
             IconButton(
               icon: const Icon(Icons.receipt_long_outlined),
               tooltip: 'Factures',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => InvoicesScreen(
-                    org: widget.org!,
-                    invoicing: widget.invoicing!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org!.id, 'factures')),
             ),
           if (widget.reports != null && widget.org != null)
             IconButton(
               icon: const Icon(Icons.assessment_outlined),
               tooltip: 'Rapports',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReportsHubScreen(
-                    reports: widget.reports!,
-                    org: widget.org!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org!.id, 'rapports')),
             ),
           // A peer of Rapports rather than something to be found three taps
           // down inside Comptabilité: "when did we record that" is a question
@@ -269,29 +253,15 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),
               tooltip: 'Photos',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => GalleryScreen(
-                    org: widget.org!,
-                    capture: widget.capture!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org!.id, 'photos')),
             ),
           if (widget.staff != null && widget.org != null && widget.org!.isAdmin)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
               tooltip: 'Personnel',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => StaffScreen(
-                    org: widget.org!,
-                    staff: widget.staff!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org!.id, 'personnel')),
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],

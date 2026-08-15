@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import 'create_business_screen.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 
 /// Every business on the platform, and the three things that can be done to
 /// one: changed, put away, destroyed.
@@ -63,11 +65,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
 
   Future<void> _create() async {
     // CreateBusinessScreen pops the new org's id, not a flag.
-    final createdId = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => CreateBusinessScreen(admin: widget.admin),
-      ),
-    );
+    final createdId = await context.push<String>(Routes.newBusiness);
     if (createdId != null) await _load();
   }
 

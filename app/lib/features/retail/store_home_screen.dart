@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
@@ -8,13 +9,10 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
-import '../invoicing/invoices_screen.dart';
 import '../capture/capture_action.dart';
-import '../capture/gallery_screen.dart';
-import 'products_screen.dart';
-import 'staff_screen.dart';
 import 'sale_sheet.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 
 /// Esperance's home screen.
 ///
@@ -181,16 +179,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     final capture = widget.capture;
     if (capture == null) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GalleryScreen(
-          org: widget.org,
-          capture: capture,
-          retail: widget.retail,
-        ),
-      ),
-    );
-    await _load();
+    await context.push(Routes.inside(widget.org.id, 'photos'));
+    if (mounted) await _load();
   }
 
   @override
@@ -210,16 +200,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             onPressed: widget.retail == null
                 ? null
                 : () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ProductsScreen(
-                          org: widget.org,
-                          retail: widget.retail!,
-                          capture: widget.capture,
-                        ),
-                      ),
-                    );
-                    await _load();
+                    await context
+                        .push(Routes.inside(widget.org.id, 'produits'));
+                    if (mounted) await _load();
                   },
           ),
           if (canPhotograph)
@@ -232,30 +215,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             IconButton(
               icon: const Icon(Icons.receipt_long_outlined),
               tooltip: 'Factures',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => InvoicesScreen(
-                    org: widget.org,
-                    invoicing: widget.invoicing!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'factures')),
             ),
           if (widget.staff != null)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
               tooltip: 'Personnel',
               onPressed: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => StaffScreen(
-                      org: widget.org,
-                      staff: widget.staff!,
-                    ),
-                  ),
-                );
-                await _load();
+                await context.push(Routes.inside(widget.org.id, 'personnel'));
+                if (mounted) await _load();
               },
             ),
           if (widget.accountAction != null) widget.accountAction!,

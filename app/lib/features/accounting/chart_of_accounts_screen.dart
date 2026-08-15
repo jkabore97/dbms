@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
-import 'account_ledger_screen.dart';
 import 'report_shell.dart';
+import '../../core/nav/router.dart';
 
 /// The categories money falls into, and what has landed in each.
 ///
@@ -228,15 +229,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
           account: account,
           money: money,
           canEdit: widget.canEdit,
-          onOpen: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AccountLedgerScreen(
-                accounting: widget.accounting,
-                org: widget.org,
-                account: account,
-              ),
-            ),
+          onOpen: () => context.push(
+            Routes.inside(widget.org.id, 'comptabilite/compte'),
+            extra: LedgerAccountArg(account),
           ),
           onRename: () => _rename(account),
           onToggleActive: () => _setActive(account, !account.isActive),

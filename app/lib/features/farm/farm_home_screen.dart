@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
@@ -9,13 +10,8 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
-import '../invoicing/invoices_screen.dart';
-import '../capture/gallery_screen.dart';
-import '../retail/staff_screen.dart';
 import 'farm_sheets.dart';
-import 'flocks_screen.dart';
-import 'livestock_screen.dart';
-import 'stock_screen.dart';
+import '../../core/nav/router.dart';
 
 /// Ignace's home screen.
 ///
@@ -105,16 +101,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   Future<void> _openLivestock({int tab = 0}) async {
     final farm = widget.farm;
     if (farm == null) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LivestockScreen(
-          org: widget.org,
-          farm: farm,
-          initialTab: tab,
-        ),
-      ),
-    );
-    await _refresh();
+    // The tab rides in the query string, so a link to the goats is a link to
+    // the goats rather than to whichever tab happens to be first.
+    await context.push(Routes.inside(widget.org.id, 'troupeau?onglet=$tab'));
+    if (mounted) await _refresh();
   }
 
   @override
@@ -252,29 +242,15 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),
               tooltip: 'Photos',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => GalleryScreen(
-                    org: widget.org,
-                    capture: widget.capture!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'photos')),
             ),
           if (widget.staff != null && widget.org.isAdmin)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
               tooltip: 'Personnel',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => StaffScreen(
-                    org: widget.org,
-                    staff: widget.staff!,
-                  ),
-                ),
-              ),
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'personnel')),
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
@@ -324,11 +300,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                           tint: 0,
                           icon: Icons.inventory_2_outlined,
                           label: 'Stock',
-                          onTap: () => _push(StockScreen(
-                            db: widget.db,
-                            org: widget.org,
-                            farm: widget.farm,
-                          )),
+                          onTap: () =>
+                              _push(Routes.inside(widget.org.id, 'stock')),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -337,11 +310,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                           tint: 1,
                           icon: Icons.pets_outlined,
                           label: 'Bandes',
-                          onTap: () => _push(FlocksScreen(
-                            db: widget.db,
-                            org: widget.org,
-                            farm: widget.farm,
-                          )),
+                          onTap: () =>
+                              _push(Routes.inside(widget.org.id, 'bandes')),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -356,10 +326,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                           // nobody could re-send a copy.
                           onTap: widget.invoicing == null
                               ? () {}
-                              : () => _push(InvoicesScreen(
-                                    org: widget.org,
-                                    invoicing: widget.invoicing!,
-                                  )),
+                              : () => _push(
+                                  Routes.inside(widget.org.id, 'factures')),
                         ),
                       ),
                     ],
@@ -461,8 +429,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
     );
   }
 
-  Future<void> _push(Widget screen) async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  Future<void> _push(String location) async {
+    await context.push(location);
     if (mounted) await _refresh();
   }
 }

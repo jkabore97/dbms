@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/models.dart';
 import '../../../core/reports/reports_repository.dart';
-import 'balances_screen.dart';
-import 'giving_statement_screen.dart';
-import 'weekly_summary_screen.dart';
+import '../../../core/nav/router.dart';
 
 /// The reports, and who is allowed to see which.
 ///
@@ -45,33 +44,14 @@ class ReportsHubScreen extends StatelessWidget {
             icon: Icons.summarize_outlined,
             title: 'Résumé de la semaine',
             subtitle: 'À envoyer au pasteur, par WhatsApp',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => WeeklySummaryScreen(
-                  reports: reports,
-                  orgId: org.id,
-                  orgName: org.name,
-                  currency: org.currency,
-                  summaryOnly: _summaryOnly,
-                ),
-              ),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'rapports/semaine')),
           ),
           _ReportTile(
             icon: Icons.account_balance_wallet_outlined,
             title: 'Soldes',
             subtitle: 'Espèces, banque, Mobile Money',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BalancesScreen(
-                  reports: reports,
-                  orgId: org.id,
-                  currency: org.currency,
-                ),
-              ),
-            ),
+            onTap: () => context.push(Routes.inside(org.id, 'rapports/soldes')),
           ),
 
           // Named, per-person giving. Withheld from observers entirely.
@@ -80,17 +60,7 @@ class ReportsHubScreen extends StatelessWidget {
               icon: Icons.volunteer_activism_outlined,
               title: 'Relevé de dons',
               subtitle: "Pour un membre, sur l'année",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => GivingStatementScreen(
-                    reports: reports,
-                    orgId: org.id,
-                    orgName: org.name,
-                    currency: org.currency,
-                  ),
-                ),
-              ),
+              onTap: () => context.push(Routes.inside(org.id, 'rapports/dons')),
             ),
 
           if (_summaryOnly) ...[

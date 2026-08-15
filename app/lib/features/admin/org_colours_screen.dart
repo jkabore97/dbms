@@ -128,8 +128,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
                 onTap: _saving ? null : () => setState(() => _selected = null),
               ),
               const SizedBox(height: 20),
-              Text('Autres couleurs',
-                  style: previewTheme.textTheme.titleSmall),
+              Text('Autres couleurs', style: previewTheme.textTheme.titleSmall),
               const SizedBox(height: 12),
 
               for (final palette in allPalettes) ...[
@@ -154,8 +153,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
                   ),
                   child: Text(
                     _error!,
-                    style:
-                        TextStyle(color: theme.colorScheme.onErrorContainer),
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
                   ),
                 ),
               ],
@@ -327,8 +325,7 @@ class _MiniHome extends StatelessWidget {
                     color: palette.tint(i).withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(9),
                   ),
-                  child: Icon(Icons.circle,
-                      size: 12, color: palette.tint(i)),
+                  child: Icon(Icons.circle, size: 12, color: palette.tint(i)),
                 ),
                 if (i < 4) const SizedBox(width: 8),
               ],
