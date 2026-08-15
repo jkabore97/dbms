@@ -1043,6 +1043,96 @@ abstract class Strings {
   /// **'Il faut au moins deux membres.'**
   String get needTwoMembers;
 
+  /// No description provided for @production.
+  ///
+  /// In fr, this message translates to:
+  /// **'Production'**
+  String get production;
+
+  /// No description provided for @newProduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle production'**
+  String get newProduction;
+
+  /// No description provided for @noProduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune production enregistrée.\nRecevez d\'abord vos ingrédients en stock, puis enregistrez ici ce que vous fabriquez avec.'**
+  String get noProduction;
+
+  /// No description provided for @whatWasMade.
+  ///
+  /// In fr, this message translates to:
+  /// **'Produit fabriqué'**
+  String get whatWasMade;
+
+  /// No description provided for @whatWasMadeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gâteau, savon, beurre de karité…'**
+  String get whatWasMadeHint;
+
+  /// No description provided for @quantityMade.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quantité fabriquée'**
+  String get quantityMade;
+
+  /// No description provided for @ingredientsUsed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ingrédients utilisés'**
+  String get ingredientsUsed;
+
+  /// No description provided for @ingredient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ingrédient'**
+  String get ingredient;
+
+  /// No description provided for @quantity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quantité'**
+  String get quantity;
+
+  /// No description provided for @addIngredient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un ingrédient'**
+  String get addIngredient;
+
+  /// No description provided for @estimatedUnitCost.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coût de revient estimé : {amount} par unité'**
+  String estimatedUnitCost(String amount);
+
+  /// No description provided for @unitCostIs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coût de revient : {amount} / unité'**
+  String unitCostIs(String amount);
+
+  /// No description provided for @enterProductMade.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez ce qui a été fabriqué.'**
+  String get enterProductMade;
+
+  /// No description provided for @enterQuantityMade.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la quantité fabriquée.'**
+  String get enterQuantityMade;
+
+  /// No description provided for @enterIngredients.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez au moins un ingrédient avec sa quantité.'**
+  String get enterIngredients;
+
   /// No description provided for @save.
   ///
   /// In fr, this message translates to:

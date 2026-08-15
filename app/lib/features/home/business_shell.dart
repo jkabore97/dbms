@@ -78,6 +78,9 @@ class BusinessShell extends StatelessWidget {
           onTontines: live
               ? () => context.push(Routes.inside(org.id, 'tontines'))
               : null,
+          onProduction: live
+              ? () => context.push(Routes.inside(org.id, 'production'))
+              : null,
           onApplyForOrg: !session.isPlatformAdmin && live
               ? () => context.push(Routes.applyForBusiness)
               : null,

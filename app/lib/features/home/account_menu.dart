@@ -28,6 +28,7 @@ class AccountMenu extends StatelessWidget {
     this.onLanguage,
     this.onCreditBook,
     this.onTontines,
+    this.onProduction,
   });
 
   final LocalDb db;
@@ -91,6 +92,11 @@ class AccountMenu extends StatelessWidget {
   final VoidCallback? onCreditBook;
   final VoidCallback? onTontines;
 
+  /// The transformation tool: ingredients into products. Same posture as the
+  /// carnet — a direct button on the shop and farm home screens, the menu
+  /// everywhere.
+  final VoidCallback? onProduction;
+
   Future<void> _confirmSignOut(BuildContext context) async {
     final pending = await db.pendingCount();
     if (!context.mounted) return;
@@ -150,6 +156,8 @@ class AccountMenu extends StatelessWidget {
             onCreditBook?.call();
           case 'tontines':
             onTontines?.call();
+          case 'production':
+            onProduction?.call();
           case 'language':
             onLanguage?.call();
           case 'signout':
@@ -262,6 +270,15 @@ class AccountMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.group_outlined),
               title: Text(Strings.of(context).tontines),
+            ),
+          ),
+        if (onProduction != null)
+          PopupMenuItem<String>(
+            value: 'production',
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.soup_kitchen_outlined),
+              title: Text(Strings.of(context).production),
             ),
           ),
         // The language of this device, offered to everybody signed in the

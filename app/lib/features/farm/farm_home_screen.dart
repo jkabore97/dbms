@@ -246,6 +246,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             onPressed: () =>
                 context.push(Routes.inside(widget.org.id, 'credits')),
           ),
+          IconButton(
+            icon: const Icon(Icons.soup_kitchen_outlined),
+            tooltip: Strings.of(context).production,
+            onPressed: () =>
+                context.push(Routes.inside(widget.org.id, 'production')),
+          ),
           if (widget.capture != null && widget.capture!.isConfigured)
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),

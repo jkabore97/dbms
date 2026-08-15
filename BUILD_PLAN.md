@@ -57,6 +57,7 @@ Each milestone ends with something demonstrable.
 | Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions — entry path + every home screen, hubs and admin tiles |
 | The credit book (M8): sales à crédit, repayments, qui-me-doit-combien | built, 11 assertions |
 | Tontines (M13): members, rounds, whose turn, close-the-round contract | built, 8 assertions |
+| Production (transformation): ingredients become a product, cost moves with them, one unit's cost computed | built, 9 assertions |
 
 **Not built**
 
