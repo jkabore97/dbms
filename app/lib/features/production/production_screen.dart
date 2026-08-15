@@ -172,6 +172,7 @@ class _IngredientRow {
 class _NewProductionSheetState extends State<_NewProductionSheet> {
   final _name = TextEditingController();
   final _quantity = TextEditingController();
+  final _salePrice = TextEditingController();
   final List<_IngredientRow> _rows = [_IngredientRow()];
   List<Product> _products = const [];
   bool _busy = false;
@@ -198,6 +199,7 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
   void dispose() {
     _name.dispose();
     _quantity.dispose();
+    _salePrice.dispose();
     for (final r in _rows) {
       r.dispose();
     }
@@ -261,6 +263,7 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
         quantity: quantity,
         inputs: inputs,
       );
+      await _setSalePrice();
       if (mounted) Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
@@ -268,6 +271,30 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
         _busy = false;
         _error = describeError(error);
       });
+    }
+  }
+
+  double? get _typedSalePrice =>
+      double.tryParse(_salePrice.text.trim().replaceAll(',', '.'));
+
+  /// The shelf price, set in the same gesture as the making. The run is the
+  /// primary record — if this second write fails, the production stands and
+  /// the price can still be set from the Articles screen, so a failure here
+  /// is deliberately not allowed to undo a run already recorded.
+  Future<void> _setSalePrice() async {
+    final price = _typedSalePrice;
+    if (price == null || price <= 0) return;
+    try {
+      final made = _name.text.trim().toLowerCase();
+      final products = await widget.retail.products(widget.org.id);
+      for (final p in products) {
+        if (p.name.trim().toLowerCase() == made) {
+          await widget.retail.updateProduct(p.id, salePrice: price);
+          return;
+        }
+      }
+    } catch (_) {
+      // See above: the run is recorded; the price stays editable in Articles.
     }
   }
 
@@ -302,6 +329,18 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: strings.quantityMade),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _salePrice,
+              enabled: !_busy,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: strings.salePriceOptional,
+                suffixText: widget.org.currency,
+              ),
             ),
             const SizedBox(height: 16),
             Text(strings.ingredientsUsed,
@@ -372,6 +411,17 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600),
               ),
+              // The comparison the whole sheet exists to make possible: the
+              // price she is about to charge against what one unit costs her.
+              if (_typedSalePrice != null && _typedSalePrice! < estimate) ...[
+                const SizedBox(height: 4),
+                Text(
+                  strings.belowUnitCost,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w600),
+                ),
+              ],
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),

@@ -82,6 +82,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
     if (added == true) await _load();
   }
 
+  /// A product's prices, threshold and expiry, after it exists. The one thing
+  /// deliberately absent is the count: stock moves through deliveries, sales
+  /// and production so every movement stays on the record, not through a
+  /// number silently overwritten here.
+  Future<void> _edit(Product product) async {
+    final changed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _EditProductSheet(retail: widget.retail, product: product),
+    );
+    if (changed == true) await _load();
+  }
+
   /// Scan a code and go to what it is. A code this shop has never seen opens
   /// the stock-entry sheet with the barcode already in it, which is the whole
   /// point: the number is read once, by the camera, and never typed.
@@ -201,6 +214,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             backgroundColor: theme.colorScheme.errorContainer,
                           )
                         : null,
+                    onTap: () => _edit(p),
                   ),
                 )),
             const SizedBox(height: 80),
@@ -212,6 +226,194 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   static String _trim(double value) =>
       value == value.roundToDouble() ? value.round().toString() : '$value';
+}
+
+/// Fixing a product after it exists: the shelf price typed wrong, the cost
+/// that changed at the market, the alert threshold, the expiry date.
+class _EditProductSheet extends StatefulWidget {
+  const _EditProductSheet({required this.retail, required this.product});
+
+  final RetailRepository retail;
+  final Product product;
+
+  @override
+  State<_EditProductSheet> createState() => _EditProductSheetState();
+}
+
+class _EditProductSheetState extends State<_EditProductSheet> {
+  late final _price = TextEditingController(
+      text: widget.product.salePrice > 0
+          ? _plain(widget.product.salePrice)
+          : '');
+  late final _cost = TextEditingController(
+      text: widget.product.costPrice > 0
+          ? _plain(widget.product.costPrice)
+          : '');
+  late final _low = TextEditingController(
+      text: widget.product.lowStockAt == null
+          ? ''
+          : _plain(widget.product.lowStockAt!));
+  late DateTime? _expiresOn = widget.product.expiresOn;
+
+  bool _busy = false;
+  String? _error;
+
+  static String _plain(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : '$v';
+
+  @override
+  void dispose() {
+    _price.dispose();
+    _cost.dispose();
+    _low.dispose();
+    super.dispose();
+  }
+
+  double? _parse(TextEditingController c) =>
+      double.tryParse(c.text.trim().replaceAll(',', '.'));
+
+  Future<void> _save() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.retail.updateProduct(
+        widget.product.id,
+        salePrice: _parse(_price),
+        costPrice: _parse(_cost),
+        lowStockAt: _parse(_low),
+        expiresOn: _expiresOn,
+      );
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = describeError(error);
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final price = _parse(_price);
+    final cost = _parse(_cost) ?? widget.product.costPrice;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.product.name, style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+              '${_EditProductSheetState._plain(widget.product.quantity)} en stock '
+              '— le stock bouge par les entrées, les ventes et la production',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _price,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                      labelText: 'Prix de vente',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _cost,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                      labelText: 'Coût unitaire',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (price != null && cost > 0 && price < cost) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Attention : vendu en dessous de ce que ça coûte '
+                '(${_EditProductSheetState._plain(cost)}).',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _low,
+              enabled: !_busy,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Seuil d'alerte stock bas (facultatif)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _expiresOn ??
+                            DateTime.now().add(const Duration(days: 30)),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate:
+                            DateTime.now().add(const Duration(days: 365 * 5)),
+                      );
+                      if (picked != null) setState(() => _expiresOn = picked);
+                    },
+              icon: const Icon(Icons.event_outlined),
+              label: Text(_expiresOn == null
+                  ? "Date d'expiration (facultatif)"
+                  : 'Expire le '
+                      '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// A delivery arriving. Creates the product if it is new.

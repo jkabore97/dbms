@@ -567,6 +567,12 @@ class StringsFr extends Strings {
   }
 
   @override
+  String get salePriceOptional => 'Prix de vente (facultatif)';
+
+  @override
+  String get belowUnitCost => 'Attention : en dessous du coût de revient.';
+
+  @override
   String get enterProductMade => 'Indiquez ce qui a été fabriqué.';
 
   @override

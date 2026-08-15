@@ -1115,6 +1115,18 @@ abstract class Strings {
   /// **'Coût de revient : {amount} / unité'**
   String unitCostIs(String amount);
 
+  /// No description provided for @salePriceOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix de vente (facultatif)'**
+  String get salePriceOptional;
+
+  /// No description provided for @belowUnitCost.
+  ///
+  /// In fr, this message translates to:
+  /// **'Attention : en dessous du coût de revient.'**
+  String get belowUnitCost;
+
   /// No description provided for @enterProductMade.
   ///
   /// In fr, this message translates to:
