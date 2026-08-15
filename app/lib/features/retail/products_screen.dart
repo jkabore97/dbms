@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
@@ -99,6 +100,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
     if (added == true) await _load();
   }
 
+  /// Twenty articles in one save: a box of lines, "nom quantité prix [coût]",
+  /// for the shop being set up or the big market morning.
+  Future<void> _bulkAdd() async {
+    final added = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _BulkAddSheet(org: widget.org, retail: widget.retail),
+    );
+    if (added == true) await _load();
+  }
+
   /// A product's prices, threshold and expiry, after it exists. The one thing
   /// deliberately absent is the count: stock moves through deliveries, sales
   /// and production so every movement stays on the record, not through a
@@ -177,6 +189,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
       appBar: AppBar(
         title: const Text('Articles'),
         actions: [
+          IconButton(
+            onPressed: _bulkAdd,
+            icon: const Icon(Icons.playlist_add),
+            tooltip: 'Ajout multiple',
+          ),
           if (widget.capture != null)
             IconButton(
               onPressed: _scan,
@@ -269,6 +286,160 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   static String _trim(double value) =>
       value == value.roundToDouble() ? value.round().toString() : '$value';
+}
+
+/// Twenty articles typed as twenty lines, saved in one gesture. Each line is
+/// "nom quantité prix [coût]"; the preview shows exactly what will be saved
+/// and names each line's problem in place, so nothing half-typed slips
+/// through silently.
+class _BulkAddSheet extends StatefulWidget {
+  const _BulkAddSheet({required this.org, required this.retail});
+
+  final OrgSummary org;
+  final RetailRepository retail;
+
+  @override
+  State<_BulkAddSheet> createState() => _BulkAddSheetState();
+}
+
+class _BulkAddSheetState extends State<_BulkAddSheet> {
+  final _text = TextEditingController();
+  bool _busy = false;
+  String? _error;
+  int _saved = 0;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final lines = parseBulkLines(_text.text);
+    if (lines.isEmpty) {
+      setState(() => _error = 'Écrivez au moins une ligne.');
+      return;
+    }
+    if (lines.any((l) => !l.ok)) {
+      // Saving around a broken line would silently drop what somebody
+      // typed; the preview already points at it.
+      setState(() => _error = 'Corrigez les lignes en rouge avant '
+          "d'enregistrer.");
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+      _saved = 0;
+    });
+    try {
+      for (final l in lines) {
+        final productId = await widget.retail.ensureProduct(
+          orgId: widget.org.id,
+          name: l.name!,
+          salePrice: l.salePrice,
+          costPrice: l.costPrice,
+        );
+        await widget.retail.receive(
+          orgId: widget.org.id,
+          productId: productId,
+          quantity: l.quantity!,
+          unitCost: l.costPrice,
+        );
+        if (mounted) setState(() => _saved++);
+      }
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (error) {
+      // _saved lines are in; the message says where it stopped so the rest
+      // of the box can be saved again without doubling what got through —
+      // ensure_product is idempotent by name and a re-receive is a new
+      // delivery, so the honest advice is to delete the saved lines first.
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = '${describeError(error)}\n'
+              '$_saved ligne(s) déjà enregistrée(s) — retirez-les du texte '
+              'avant de réessayer.';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lines = parseBulkLines(_text.text);
+    final good = lines.where((l) => l.ok).length;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Ajout multiple', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+              'Un article par ligne : nom quantité prix (coût facultatif). '
+              'Exemple : Savon 20 300 200',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _text,
+              enabled: !_busy,
+              maxLines: 8,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: 'Savon 20 300\nSucre 1kg 10 600 450\nHuile 2,5 1500',
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
+              ),
+            ),
+            if (lines.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              for (final l in lines)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: l.ok
+                      ? Text(
+                          '✓ ${l.name} — ${l.quantity} × ${l.salePrice}'
+                          '${l.costPrice != null ? ' (coût ${l.costPrice})' : ''}',
+                          style: theme.textTheme.bodySmall,
+                        )
+                      : Text(
+                          'Ligne ${l.lineNumber} : ${l.error}',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error),
+                        ),
+                ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _busy || good == 0 ? null : _save,
+                child: _busy
+                    ? Text('Enregistrement… $_saved/$good')
+                    : Text('Enregistrer $good article(s)',
+                        style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Fixing a product after it exists: the shelf price typed wrong, the cost
