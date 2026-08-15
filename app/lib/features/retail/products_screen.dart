@@ -90,7 +90,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _EditProductSheet(retail: widget.retail, product: product),
+      builder: (_) => _EditProductSheet(
+        retail: widget.retail,
+        product: product,
+        // The archive button belongs to the person who answers for the
+        // business; the server refuses everyone else anyway.
+        canArchive: widget.org.isAdmin,
+      ),
     );
     if (changed == true) await _load();
   }
@@ -233,16 +239,25 @@ class _ProductsScreenState extends State<ProductsScreen> {
 /// Fixing a product after it exists: the shelf price typed wrong, the cost
 /// that changed at the market, the alert threshold, the expiry date.
 class _EditProductSheet extends StatefulWidget {
-  const _EditProductSheet({required this.retail, required this.product});
+  const _EditProductSheet({
+    required this.retail,
+    required this.product,
+    this.canArchive = false,
+  });
 
   final RetailRepository retail;
   final Product product;
+
+  /// Owner/admin only. Hiding the button for everyone else is a courtesy;
+  /// `archive_product()` makes the real check server-side.
+  final bool canArchive;
 
   @override
   State<_EditProductSheet> createState() => _EditProductSheetState();
 }
 
 class _EditProductSheetState extends State<_EditProductSheet> {
+  late final _name = TextEditingController(text: widget.product.name);
   late final _price = TextEditingController(
       text: widget.product.salePrice > 0
           ? _plain(widget.product.salePrice)
@@ -265,6 +280,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
 
   @override
   void dispose() {
+    _name.dispose();
     _price.dispose();
     _cost.dispose();
     _low.dispose();
@@ -282,6 +298,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     try {
       await widget.retail.updateProduct(
         widget.product.id,
+        name: _name.text,
         salePrice: _parse(_price),
         costPrice: _parse(_cost),
         lowStockAt: _parse(_low),
@@ -324,6 +341,17 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
+            TextField(
+              controller: _name,
+              enabled: !_busy,
+              decoration: const InputDecoration(
+                labelText: 'Nom du produit',
+                // Renaming cannot rewrite history — receipts snapshot names.
+                helperText: "Les ventes déjà faites gardent l'ancien nom.",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -411,10 +439,60 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
               ),
             ),
+            if (widget.canArchive) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _busy ? null : _archive,
+                icon: Icon(Icons.delete_outline,
+                    color: theme.colorScheme.error),
+                label: Text('Retirer de la boutique',
+                    style: TextStyle(color: theme.colorScheme.error)),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// "Deleting", the honest way: the product leaves the shelves and the sale
+  /// sheet; every sale, delivery and production it ever touched stays.
+  Future<void> _archive() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Retirer ${widget.product.name} ?'),
+        content: const Text(
+            'Le produit disparaîtra des listes et de la vente. '
+            "L'historique de ses ventes et de son stock est conservé."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Retirer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.retail.archiveProduct(widget.product.id);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = describeError(error);
+        });
+      }
+    }
   }
 }
 

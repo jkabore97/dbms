@@ -197,10 +197,13 @@ class RetailRepository {
     return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
   }
 
-  /// Shelf price, cost, expiry and reorder point. Everything a shopkeeper is
-  /// allowed to change about a product after it exists.
+  /// Name, shelf price, cost, expiry and reorder point. Everything a
+  /// shopkeeper is allowed to change about a product after it exists. A
+  /// rename cannot rewrite history: sale lines, production inputs and
+  /// receipts all snapshot the name they saw.
   Future<void> updateProduct(
     String productId, {
+    String? name,
     double? salePrice,
     double? costPrice,
     DateTime? expiresOn,
@@ -209,12 +212,23 @@ class RetailRepository {
   }) async {
     final client = _requireClient();
     await client.from('products').update({
+      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
       if (salePrice != null) 'sale_price': salePrice,
       if (costPrice != null) 'cost_price': costPrice,
       if (expiresOn != null) 'expires_on': _date(expiresOn),
       if (lowStockAt != null) 'low_stock_at': lowStockAt,
       if (isActive != null) 'is_active': isActive,
     }).eq('id', productId);
+  }
+
+  /// Takes a product off the shelves (or puts it back) without touching its
+  /// history. Owner/admin only — the server makes that check, not this app.
+  Future<void> archiveProduct(String productId, {bool archived = true}) async {
+    final client = _requireClient();
+    await client.rpc('archive_product', params: {
+      'p_product_id': productId,
+      'p_archived': archived,
+    });
   }
 
   static String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
