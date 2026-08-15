@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
+import '../../core/production/picker_order.dart';
 import '../../core/production/production_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
@@ -66,7 +67,15 @@ class _ProductionScreenState extends State<ProductionScreen> {
     }
   }
 
-  Future<void> _create() async {
+  /// Lowercased ingredient names from the runs on screen — what this
+  /// business actually cooks with, used to float those products to the top
+  /// of the picker. No schema, no extra fetch: the history is already here.
+  Set<String> get _recentNames => {
+        for (final r in _runs)
+          for (final i in r.inputs) i.name.trim().toLowerCase(),
+      };
+
+  Future<void> _create({ProductionRun? repeat}) async {
     final made = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -74,6 +83,8 @@ class _ProductionScreenState extends State<ProductionScreen> {
         org: widget.org,
         production: widget.production,
         retail: widget.retail,
+        recentNames: _recentNames,
+        repeat: repeat,
       ),
     );
     if (made == true && mounted) await _load();
@@ -137,6 +148,18 @@ class _ProductionScreenState extends State<ProductionScreen> {
                                       ),
                                     ),
                                   ],
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    // Day two of any real bakery: the same
+                                    // cakes as yesterday. One tap brings the
+                                    // whole recipe back; only the quantities
+                                    // are left to confirm.
+                                    child: TextButton.icon(
+                                      onPressed: () => _create(repeat: r),
+                                      icon: const Icon(Icons.replay, size: 18),
+                                      label: Text(strings.makeAgain),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -152,11 +175,21 @@ class _NewProductionSheet extends StatefulWidget {
     required this.org,
     required this.production,
     required this.retail,
+    this.recentNames = const {},
+    this.repeat,
   });
 
   final OrgSummary org;
   final ProductionRepository production;
   final RetailRepository retail;
+
+  /// Lowercased ingredient names from recent runs; floats them to the top
+  /// of the picker.
+  final Set<String> recentNames;
+
+  /// A past run to make again: prefills the product, the quantity and the
+  /// whole ingredient list, leaving only the numbers to confirm.
+  final ProductionRun? repeat;
 
   @override
   State<_NewProductionSheet> createState() => _NewProductionSheetState();
@@ -170,14 +203,24 @@ class _IngredientRow {
 }
 
 class _NewProductionSheetState extends State<_NewProductionSheet> {
-  final _name = TextEditingController();
-  final _quantity = TextEditingController();
+  late final _name = TextEditingController(text: widget.repeat?.productName);
+  late final _quantity = TextEditingController(
+      text: widget.repeat == null ? null : _plain(widget.repeat!.quantity));
   final _salePrice = TextEditingController();
-  final List<_IngredientRow> _rows = [_IngredientRow()];
+  late final List<_IngredientRow> _rows = [
+    if (widget.repeat == null || widget.repeat!.inputs.isEmpty)
+      _IngredientRow()
+    else
+      for (final i in widget.repeat!.inputs)
+        _IngredientRow()..quantity.text = _plain(i.quantity),
+  ];
   List<Product> _products = const [];
   bool _busy = false;
   String? _error;
   late final _money = NumberFormat.decimalPattern('fr_FR');
+
+  static String _plain(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : '$v';
 
   @override
   void initState() {
@@ -188,9 +231,27 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
   Future<void> _loadProducts() async {
     try {
       final products = await widget.retail.products(widget.org.id);
-      if (mounted) setState(() => _products = products);
+      if (!mounted) return;
+      setState(() {
+        _products = orderForPicking(products, widget.recentNames);
+        // A repeated run arrives with names; resolve them to today's
+        // products. One that vanished since (renamed, archived) leaves its
+        // row unselected with the quantity kept — visible, not silent.
+        final repeat = widget.repeat;
+        if (repeat != null) {
+          for (var i = 0; i < repeat.inputs.length && i < _rows.length; i++) {
+            final wanted = repeat.inputs[i].name.trim().toLowerCase();
+            for (final p in _products) {
+              if (p.name.trim().toLowerCase() == wanted) {
+                _rows[i].product = p;
+                break;
+              }
+            }
+          }
+        }
+      });
     } catch (_) {
-      // The dropdowns stay empty and saving says why; the sheet itself
+      // The picker stays empty and saving says why; the sheet itself
       // should not crash for a fetch the save will repeat anyway.
     }
   }
@@ -274,6 +335,20 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
     }
   }
 
+  /// The searchable picker one ingredient row opens. The list arrives
+  /// already ordered by [orderForPicking] — recently cooked with on top —
+  /// and narrows as letters are typed.
+  Future<void> _pickFor(_IngredientRow row) async {
+    final picked = await showModalBottomSheet<Product>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ProductPicker(products: _products),
+    );
+    if (picked != null && mounted) {
+      setState(() => row.product = picked);
+    }
+  }
+
   double? get _typedSalePrice =>
       double.tryParse(_salePrice.text.trim().replaceAll(',', '.'));
 
@@ -353,18 +428,20 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: DropdownButtonFormField<Product>(
-                        initialValue: row.product,
-                        isExpanded: true,
-                        decoration:
-                            InputDecoration(labelText: strings.ingredient),
-                        items: [
-                          for (final p in _products)
-                            DropdownMenuItem(value: p, child: Text(p.name)),
-                        ],
-                        onChanged: _busy
-                            ? null
-                            : (p) => setState(() => row.product = p),
+                      // Not a dropdown, on purpose: at two hundred articles
+                      // a dropdown is a wall. Tapping opens a search — three
+                      // typed letters beat any amount of scrolling.
+                      child: InkWell(
+                        onTap: _busy ? null : () => _pickFor(row),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: strings.ingredient,
+                            suffixIcon: const Icon(Icons.arrow_drop_down),
+                          ),
+                          isEmpty: row.product == null,
+                          child: Text(row.product?.name ?? '',
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -441,6 +518,86 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(strings.save),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A shelf you search instead of scroll: a text field and the products that
+/// match, ordered with the recently-cooked-with on top. Tapping one returns
+/// it to the ingredient row that opened the picker.
+class _ProductPicker extends StatefulWidget {
+  const _ProductPicker({required this.products});
+
+  final List<Product> products;
+
+  @override
+  State<_ProductPicker> createState() => _ProductPickerState();
+}
+
+class _ProductPickerState extends State<_ProductPicker> {
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = Strings.of(context);
+    final q = _search.text.trim().toLowerCase();
+    final matches = q.isEmpty
+        ? widget.products
+        : widget.products
+            .where((p) => p.name.toLowerCase().contains(q))
+            .toList();
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          16, 16, 16, MediaQuery.of(context).viewInsets.bottom),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _search,
+              autofocus: true,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: strings.searchProduct,
+                prefixIcon: const Icon(Icons.search),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: matches.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(strings.noProductFound,
+                            textAlign: TextAlign.center),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: matches.length,
+                      itemBuilder: (context, i) {
+                        final p = matches[i];
+                        return ListTile(
+                          title: Text(p.name),
+                          trailing: p.isIngredient
+                              ? const Icon(Icons.soup_kitchen_outlined,
+                                  size: 18)
+                              : null,
+                          onTap: () => Navigator.pop(context, p),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

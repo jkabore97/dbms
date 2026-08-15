@@ -19,6 +19,7 @@ class Product {
     this.quantity = 0,
     this.expiresOn,
     this.lowStockAt,
+    this.isIngredient = false,
   });
 
   final String id;
@@ -33,6 +34,10 @@ class Product {
   final double quantity;
   final DateTime? expiresOn;
   final double? lowStockAt;
+
+  /// Cooked with, not sold: hidden from the sale picker, surfaced first in
+  /// the production picker. A signpost, not a rule — see migration 028.
+  final bool isIngredient;
 
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
@@ -57,6 +62,7 @@ class Product {
       quantity: parse(row['quantity']),
       expiresOn: expires == null ? null : DateTime.parse(expires),
       lowStockAt: low == null ? null : parse(low),
+      isIngredient: row['is_ingredient'] == true,
     );
   }
 }

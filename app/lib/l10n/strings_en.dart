@@ -562,6 +562,15 @@ class StringsEn extends Strings {
   }
 
   @override
+  String get makeAgain => 'Make again';
+
+  @override
+  String get searchProduct => 'Search for a product…';
+
+  @override
+  String get noProductFound => 'No product found. Receive it into stock first.';
+
+  @override
   String get salePriceOptional => 'Sale price (optional)';
 
   @override

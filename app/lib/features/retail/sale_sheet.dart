@@ -69,6 +69,12 @@ class _SaleSheetState extends State<SaleSheet> {
     super.dispose();
   }
 
+  /// The shelf without the kitchen: flagged ingredients stay out of the
+  /// picker so a thumb cannot sell the production flour at 0 F. Typing the
+  /// name still works — the flag is a signpost, not a rule.
+  late final List<Product> _sellable =
+      widget.products.where((p) => !p.isIngredient).toList();
+
   double get _total =>
       _lines.fold<double>(0, (sum, line) => sum + line.lineTotal);
 
@@ -221,15 +227,15 @@ class _SaleSheetState extends State<SaleSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            if (widget.products.isNotEmpty) ...[
+            if (_sellable.isNotEmpty) ...[
               SizedBox(
                 height: 40,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: widget.products.length,
+                  itemCount: _sellable.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, i) {
-                    final product = widget.products[i];
+                    final product = _sellable[i];
                     return ChoiceChip(
                       label: Text(product.name),
                       selected: _picked?.id == product.id,

@@ -1115,6 +1115,24 @@ abstract class Strings {
   /// **'Coût de revient : {amount} / unité'**
   String unitCostIs(String amount);
 
+  /// No description provided for @makeAgain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refaire'**
+  String get makeAgain;
+
+  /// No description provided for @searchProduct.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un article…'**
+  String get searchProduct;
+
+  /// No description provided for @noProductFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun article trouvé. Recevez-le d\'abord en stock.'**
+  String get noProductFound;
+
   /// No description provided for @salePriceOptional.
   ///
   /// In fr, this message translates to:

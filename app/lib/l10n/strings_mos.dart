@@ -567,6 +567,16 @@ class StringsMos extends Strings {
   }
 
   @override
+  String get makeAgain => 'Refaire';
+
+  @override
+  String get searchProduct => 'Rechercher un article…';
+
+  @override
+  String get noProductFound =>
+      'Aucun article trouvé. Recevez-le d\'abord en stock.';
+
+  @override
   String get salePriceOptional => 'Prix de vente (facultatif)';
 
   @override
