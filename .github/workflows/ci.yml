@@ -236,6 +236,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_product_lifecycle.sql
 
+      # Crédit as a payment method: the goods move like a cash sale, the
+      # money lands in créances, the carnet gains a debt the 024 repayment
+      # flow settles — and no cash account is touched on the way.
+      - name: Prove a credit sale moves the goods and books the créance
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_sale_on_credit.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

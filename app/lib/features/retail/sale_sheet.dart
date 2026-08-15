@@ -52,6 +52,7 @@ class _SaleSheetState extends State<SaleSheet> {
   final _nameController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
   final _priceController = TextEditingController();
+  final _customerController = TextEditingController();
 
   /// One per basket, not one per attempt. See the class comment.
   late final String _clientUuid = const Uuid().v4();
@@ -66,6 +67,7 @@ class _SaleSheetState extends State<SaleSheet> {
     _nameController.dispose();
     _quantityController.dispose();
     _priceController.dispose();
+    _customerController.dispose();
     super.dispose();
   }
 
@@ -175,6 +177,10 @@ class _SaleSheetState extends State<SaleSheet> {
       setState(() => _error = 'Ajoutez au moins un article.');
       return;
     }
+    if (_method == 'credit' && _customerController.text.trim().isEmpty) {
+      setState(() => _error = 'Entrez le nom du client pour un crédit.');
+      return;
+    }
 
     setState(() {
       _busy = true;
@@ -187,6 +193,8 @@ class _SaleSheetState extends State<SaleSheet> {
         lines: _lines,
         method: _method,
         clientUuid: _clientUuid,
+        customerName:
+            _method == 'credit' ? _customerController.text.trim() : null,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -337,15 +345,31 @@ class _SaleSheetState extends State<SaleSheet> {
             ],
             const SizedBox(height: 16),
             SegmentedButton<String>(
+              showSelectedIcon: false,
               segments: const [
                 ButtonSegment(value: 'cash', label: Text('Espèces')),
                 ButtonSegment(value: 'mobile_money', label: Text('Mobile')),
                 ButtonSegment(value: 'bank', label: Text('Banque')),
+                ButtonSegment(value: 'credit', label: Text('Crédit')),
               ],
               selected: {_method},
               onSelectionChanged:
                   _busy ? null : (s) => setState(() => _method = s.first),
             ),
+            if (_method == 'credit') ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _customerController,
+                enabled: !_busy,
+                decoration: const InputDecoration(
+                  labelText: 'Nom du client',
+                  // The same sale as always — the goods leave, the day's
+                  // totals count it — only the money waits in the carnet.
+                  helperText: 'La vente ira dans le carnet de crédit.',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),

@@ -94,6 +94,9 @@ class RetailRepository {
   /// [clientUuid] is what makes a retry safe: the server returns the original
   /// sale rather than selling the same goods twice. Callers should generate it
   /// once per basket and reuse it across retries, never per attempt.
+  /// [customerName] turns the sale into a credit sale when [method] is
+  /// 'credit': same lines, same stock movement, same day totals — the money
+  /// lands in créances and the carnet gains a debt naming what was taken.
   Future<String> recordSale({
     required String orgId,
     required List<SaleLineDraft> lines,
@@ -101,6 +104,8 @@ class RetailRepository {
     String? note,
     String? clientUuid,
     String? deviceId,
+    String? customerName,
+    String? customerPhone,
   }) async {
     final client = _requireClient();
     if (lines.isEmpty) {
@@ -114,6 +119,10 @@ class RetailRepository {
       if (note != null && note.isNotEmpty) 'p_note': note,
       if (clientUuid != null) 'p_client_uuid': clientUuid,
       if (deviceId != null) 'p_device_id': deviceId,
+      if (customerName != null && customerName.isNotEmpty)
+        'p_customer_name': customerName,
+      if (customerPhone != null && customerPhone.isNotEmpty)
+        'p_customer_phone': customerPhone,
     });
     return id as String;
   }
