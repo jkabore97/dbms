@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/main.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
@@ -275,6 +276,78 @@ void main() {
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsOneWidget);
     expect(find.text('Entrez votre code'), findsNothing);
+  });
+
+  group('a refresh keeps your place', () {
+    // The complaint, verbatim: "when I refresh the webpage it takes me to a
+    // different page." On a device with a code, reloading a deep page sent
+    // the browser to /code, which replaced the address — and unlocking then
+    // landed on the business home, because there was nothing left to return
+    // to. The redirect now stashes the interrupted address and unlocks back
+    // into it.
+
+    /// What a browser reload amounts to: the app restarts locked while the
+    /// address bar still names the deep page.
+    Future<void> reloadAt(WidgetTester tester, String location) async {
+      final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+      (app.routerConfig as GoRouter).go(location);
+      await flush(tester);
+    }
+
+    testWidgets('unlocking returns to the page that was reloaded',
+        (tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+          id: 'org-1',
+          name: 'Grace Chapel',
+          profile: 'church',
+          roles: ['owner'],
+        ),
+      ]);
+      await pumpApp(tester);
+      await reloadAt(tester, '/o/org-1/produits');
+
+      // Still gated: the reload lands on the code screen first.
+      expect(find.text('Entrez votre code'), findsOneWidget);
+
+      await enterPin(tester, '1379');
+
+      // The page that was reloaded — not the home the redirect used to pick.
+      expect(find.text('Articles'), findsOneWidget,
+          reason: 'unlocking forgot the page the refresh was headed to');
+      expect(find.text('Recette'), findsNothing);
+    });
+
+    testWidgets('with several businesses the reload skips the picker too',
+        (tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Boutique Sanou', profile: 'retail'),
+      ]);
+      await pumpApp(tester);
+      await reloadAt(tester, '/o/org-2/produits');
+      await enterPin(tester, '1379');
+
+      expect(find.text('Choisissez une activité'), findsNothing,
+          reason: 'the reload named a business; the picker is a detour');
+      expect(find.text('Articles'), findsOneWidget);
+    });
+
+    testWidgets("someone else's business still lands on the picker",
+        (tester) async {
+      // The stash must not become a doorway: an address this account cannot
+      // open is validated the same way a typed bookmark is.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await pumpApp(tester);
+      await reloadAt(tester, '/o/org-locked-away/produits');
+      await enterPin(tester, '1379');
+
+      expect(find.text('Choisissez une activité'), findsOneWidget);
+      expect(find.text('Articles'), findsNothing);
+    });
   });
 
   group('back means what it says', () {

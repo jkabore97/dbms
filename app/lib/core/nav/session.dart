@@ -74,6 +74,29 @@ class SessionController extends ChangeNotifier {
   String? _lastOrgId;
   String? get lastOrgId => _lastOrgId;
 
+  /// Where a reload was headed before a gate — the PIN screen, the sign-in —
+  /// took over.
+  ///
+  /// Refreshing `/o/x/produits` on a device with a code used to land on the
+  /// business home: the redirect sent the browser to `/code`, which replaced
+  /// the address, and after unlocking there was nothing left to return to.
+  /// The redirect now stashes the interrupted location here and takes it back
+  /// once the phase allows it, so a refresh unlocks into the same page.
+  ///
+  /// No notifyListeners on either side: both calls happen inside the router's
+  /// own redirect, which is already navigating.
+  String? _returnTo;
+
+  void stashReturnTo(String location) {
+    _returnTo = location;
+  }
+
+  String? takeReturnTo() {
+    final location = _returnTo;
+    _returnTo = null;
+    return location;
+  }
+
   /// Set when the org list came from the device instead of the server. The
   /// home screen still works; the user simply has not been re-checked.
   bool _orgsFromCache = false;
