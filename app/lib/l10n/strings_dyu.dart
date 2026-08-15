@@ -243,6 +243,183 @@ class StringsDyu extends Strings {
   }
 
   @override
+  String get today => 'Aujourd\'hui';
+
+  @override
+  String get invoices => 'Factures';
+
+  @override
+  String get reports => 'Rapports';
+
+  @override
+  String get history => 'Historique';
+
+  @override
+  String get photos => 'Photos';
+
+  @override
+  String get staffLabel => 'Personnel';
+
+  @override
+  String pendingCount(int count) {
+    return '$count en attente';
+  }
+
+  @override
+  String get dayClosed => 'Journée clôturée';
+
+  @override
+  String get cancelEntryTitle => 'Annuler cette entrée ?';
+
+  @override
+  String get back => 'Retour';
+
+  @override
+  String get cancelEntry => 'Annuler l\'entrée';
+
+  @override
+  String get transferBetweenCashboxes => 'Transfert entre caisses';
+
+  @override
+  String get productsLabel => 'Articles';
+
+  @override
+  String get sale => 'Vente';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get send => 'Envoyer';
+
+  @override
+  String get lossesAvoided => 'Pertes évitées';
+
+  @override
+  String get stock => 'Stock';
+
+  @override
+  String get flocks => 'Bandes';
+
+  @override
+  String get startWithHarvest => 'Commencez par la récolte.';
+
+  @override
+  String get nothingCountedToday =>
+      'Rien compté aujourd\'hui.\nCommencez par la récolte.';
+
+  @override
+  String get stockReceipt => 'Réception de stock';
+
+  @override
+  String get feedGiven => 'Aliment distribué';
+
+  @override
+  String get mortality => 'Mortalité';
+
+  @override
+  String get harvest => 'Récolte';
+
+  @override
+  String get eggsCollected => 'œufs ramassés';
+
+  @override
+  String get feedOut => 'Aliment sorti';
+
+  @override
+  String get received => 'Reçu';
+
+  @override
+  String get spent => 'Dépensé';
+
+  @override
+  String lowStockOf(String names) {
+    return 'Il reste peu de $names.';
+  }
+
+  @override
+  String moduleComingSoon(String module) {
+    return 'Votre compte est bien rattaché à cette activité. Le module $module arrive bientôt — vous pourrez alors enregistrer vos opérations ici.';
+  }
+
+  @override
+  String get weeklySummary => 'Résumé de la semaine';
+
+  @override
+  String get weeklySummarySubtitle => 'À envoyer au pasteur, par WhatsApp';
+
+  @override
+  String get balances => 'Soldes';
+
+  @override
+  String get balancesSubtitle => 'Espèces, banque, Mobile Money';
+
+  @override
+  String get givingStatement => 'Relevé de dons';
+
+  @override
+  String get givingStatementSubtitle => 'Pour un membre, sur l\'année';
+
+  @override
+  String get journalTitle => 'Journal';
+
+  @override
+  String get journalSubtitle => 'Toutes les écritures, dans les mots employés';
+
+  @override
+  String get incomeStatement => 'Compte de résultat';
+
+  @override
+  String get incomeStatementSubtitle =>
+      'Ce qui est entré, ce qui est sorti, ce qu\'il reste';
+
+  @override
+  String get balanceSheet => 'Bilan';
+
+  @override
+  String get balanceSheetSubtitle =>
+      'Ce que possède l\'activité et ce qu\'elle doit';
+
+  @override
+  String get chartOfAccounts => 'Plan comptable';
+
+  @override
+  String get chartOfAccountsSubtitle =>
+      'Les catégories, et le détail de chacune';
+
+  @override
+  String get trialBalance => 'Balance générale';
+
+  @override
+  String get trialBalanceSubtitle =>
+      'La preuve que les comptes sont équilibrés';
+
+  @override
+  String get people => 'Personnes';
+
+  @override
+  String get peopleSubtitle => 'Membres, rôles et invitations';
+
+  @override
+  String get sitesAndDepartments => 'Sites et départements';
+
+  @override
+  String get structureSubtitle => 'La structure de l\'activité';
+
+  @override
+  String get orgSettingsTitle => 'Paramètres de l\'activité';
+
+  @override
+  String get orgSettingsSubtitle => 'Nom et monnaie';
+
+  @override
+  String get consoleTitle => 'Console';
+
+  @override
+  String get consoleSubtitle =>
+      'Journal d\'activité, données, état de l\'appareil';
+
+  @override
   String get save => 'Enregistrer';
 
   @override

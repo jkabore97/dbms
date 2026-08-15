@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/models.dart';
@@ -36,21 +38,21 @@ class ReportsHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rapports')),
+      appBar: AppBar(title: Text(Strings.of(context).reports)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _ReportTile(
             icon: Icons.summarize_outlined,
-            title: 'Résumé de la semaine',
-            subtitle: 'À envoyer au pasteur, par WhatsApp',
+            title: Strings.of(context).weeklySummary,
+            subtitle: Strings.of(context).weeklySummarySubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'rapports/semaine')),
           ),
           _ReportTile(
             icon: Icons.account_balance_wallet_outlined,
-            title: 'Soldes',
-            subtitle: 'Espèces, banque, Mobile Money',
+            title: Strings.of(context).balances,
+            subtitle: Strings.of(context).balancesSubtitle,
             onTap: () => context.push(Routes.inside(org.id, 'rapports/soldes')),
           ),
 
@@ -58,8 +60,8 @@ class ReportsHubScreen extends StatelessWidget {
           if (!org.isObserverOnly)
             _ReportTile(
               icon: Icons.volunteer_activism_outlined,
-              title: 'Relevé de dons',
-              subtitle: "Pour un membre, sur l'année",
+              title: Strings.of(context).givingStatement,
+              subtitle: Strings.of(context).givingStatementSubtitle,
               onTap: () => context.push(Routes.inside(org.id, 'rapports/dons')),
             ),
 

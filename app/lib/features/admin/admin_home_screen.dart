@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -43,7 +45,7 @@ class AdminHomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Administration')),
+      appBar: AppBar(title: Text(Strings.of(context).administration)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -77,22 +79,22 @@ class AdminHomeScreen extends StatelessWidget {
 
           _AdminTile(
             icon: Icons.group_outlined,
-            title: 'Personnes',
-            subtitle: 'Membres, rôles et invitations',
+            title: Strings.of(context).people,
+            subtitle: Strings.of(context).peopleSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'administration/personnel')),
           ),
           _AdminTile(
             icon: Icons.account_tree_outlined,
-            title: 'Sites et départements',
-            subtitle: "La structure de l'activité",
+            title: Strings.of(context).sitesAndDepartments,
+            subtitle: Strings.of(context).structureSubtitle,
             onTap: () =>
                 context.push(Routes.inside(org.id, 'administration/structure')),
           ),
           _AdminTile(
             icon: Icons.settings_outlined,
-            title: "Paramètres de l'activité",
-            subtitle: 'Nom et monnaie',
+            title: Strings.of(context).orgSettingsTitle,
+            subtitle: Strings.of(context).orgSettingsSubtitle,
             onTap: () => context
                 .push(Routes.inside(org.id, 'administration/parametres')),
           ),
@@ -105,8 +107,8 @@ class AdminHomeScreen extends StatelessWidget {
             const SizedBox(height: 8),
             _AdminTile(
               icon: Icons.terminal,
-              title: 'Console',
-              subtitle: "Journal d'activité, données, état de l'appareil",
+              title: Strings.of(context).consoleTitle,
+              subtitle: Strings.of(context).consoleSubtitle,
               onTap: () =>
                   context.push(Routes.inside(org.id, 'administration/console')),
             ),

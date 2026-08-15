@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/features/auth/join_by_code_screen.dart';
 
@@ -16,6 +17,9 @@ void main() {
   Future<void> pumpScreen(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
         // A null client is fine: nothing here reaches the network. Enabling
         // the button is a pure function of what has been typed.
         home: JoinByCodeScreen(admin: AdminRepository(null)),

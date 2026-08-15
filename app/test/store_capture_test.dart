@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
@@ -52,6 +53,9 @@ void main() {
 
   Future<void> pump(WidgetTester tester, CaptureRepository capture) async {
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: StoreHomeScreen(org: org, capture: capture),
     ));
     await tester.pump();

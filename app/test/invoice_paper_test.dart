@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/invoicing/models.dart';
 import 'package:kaj_app/features/invoicing/invoice_paper.dart';
@@ -60,6 +61,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(child: InvoicePaper(doc: d)),
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -233,7 +235,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               child: Center(
                 child: Chip(
                   avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
-                  label: Text('$_pending en attente'),
+                  label: Text(Strings.of(context).pendingCount(_pending)),
                   visualDensity: VisualDensity.compact,
                 ),
               ),
@@ -241,14 +243,14 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           if (widget.capture != null && widget.capture!.isConfigured)
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),
-              tooltip: 'Photos',
+              tooltip: Strings.of(context).photos,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'photos')),
             ),
           if (widget.staff != null && widget.org.isAdmin)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
-              tooltip: 'Personnel',
+              tooltip: Strings.of(context).staffLabel,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'personnel')),
             ),
@@ -299,7 +301,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                         child: _NavCard(
                           tint: 0,
                           icon: Icons.inventory_2_outlined,
-                          label: 'Stock',
+                          label: Strings.of(context).stock,
                           onTap: () =>
                               _push(Routes.inside(widget.org.id, 'stock')),
                         ),
@@ -309,7 +311,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                         child: _NavCard(
                           tint: 1,
                           icon: Icons.pets_outlined,
-                          label: 'Bandes',
+                          label: Strings.of(context).flocks,
                           onTap: () =>
                               _push(Routes.inside(widget.org.id, 'bandes')),
                         ),
@@ -319,7 +321,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                         child: _NavCard(
                           tint: 2,
                           icon: Icons.receipt_long_outlined,
-                          label: 'Factures',
+                          label: Strings.of(context).invoices,
                           // The shared screen since 020. The farm-only one was
                           // built on outstanding_invoices(), so an invoice
                           // vanished from the app the moment it was paid and
@@ -334,15 +336,14 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  Text("Aujourd'hui", style: theme.textTheme.titleMedium),
+                  Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_events.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
                       child: Center(
                         child: Text(
-                          "Rien compté aujourd'hui.\n"
-                          'Commencez par la récolte.',
+                          Strings.of(context).nothingCountedToday,
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -367,7 +368,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             children: [
               FloatingActionButton.small(
                 heroTag: 'farm-receive',
-                tooltip: 'Réception de stock',
+                tooltip: Strings.of(context).stockReceipt,
                 onPressed: () => _open(ReceiveStockSheet(
                   db: widget.db,
                   orgId: widget.org.id,
@@ -382,7 +383,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               const SizedBox(width: 12),
               FloatingActionButton.small(
                 heroTag: 'farm-consume',
-                tooltip: 'Aliment distribué',
+                tooltip: Strings.of(context).feedGiven,
                 onPressed: () => _open(MoveStockSheet(
                   db: widget.db,
                   orgId: widget.org.id,
@@ -394,7 +395,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               const SizedBox(width: 12),
               FloatingActionButton.small(
                 heroTag: 'farm-mortality',
-                tooltip: 'Mortalité',
+                tooltip: Strings.of(context).mortality,
                 onPressed: _recordFlockEvent,
                 backgroundColor: theme.colorScheme.errorContainer,
                 foregroundColor: theme.colorScheme.onErrorContainer,
@@ -418,9 +419,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             backgroundColor: KajTheme.of(context).ink,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.agriculture_outlined, size: 28),
-            label: const Text(
-              'Récolte',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            label: Text(
+              Strings.of(context).harvest,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             extendedPadding: const EdgeInsets.symmetric(horizontal: 28),
           ),
@@ -465,7 +466,9 @@ class _TodayCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
+              DateFormat('EEEE d MMMM',
+                      Localizations.localeOf(context).toString())
+                  .format(DateTime.now()),
               style: theme.textTheme.labelLarge
                   ?.copyWith(color: on.withValues(alpha: 0.7)),
             ),
@@ -475,14 +478,14 @@ class _TodayCard extends StatelessWidget {
               style: theme.textTheme.displaySmall
                   ?.copyWith(fontWeight: FontWeight.bold, color: on),
             ),
-            Text('œufs ramassés',
+            Text(Strings.of(context).eggsCollected,
                 style: theme.textTheme.bodyMedium?.copyWith(color: on)),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: _Figure(
-                    label: 'Mortalité',
+                    label: Strings.of(context).mortality,
                     value: trimQuantity(day.deaths),
                     tint: day.deaths > 0 ? theme.colorScheme.error : on,
                     on: on,
@@ -490,7 +493,7 @@ class _TodayCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: _Figure(
-                    label: 'Aliment sorti',
+                    label: Strings.of(context).feedOut,
                     value: trimQuantity(day.feedUsed),
                     on: on,
                   ),
@@ -503,14 +506,14 @@ class _TodayCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _Figure(
-                      label: 'Reçu',
+                      label: Strings.of(context).received,
                       value: currency.format(moneyIn),
                       on: on,
                     ),
                   ),
                   Expanded(
                     child: _Figure(
-                      label: 'Dépensé',
+                      label: Strings.of(context).spent,
                       value: currency.format(moneyOut),
                       on: on,
                     ),
@@ -583,7 +586,7 @@ class _LowStockBanner extends StatelessWidget {
           Expanded(
             child: Text(
               items.length == 1
-                  ? 'Il reste peu de $names.'
+                  ? Strings.of(context).lowStockOf(names)
                   : '${items.length} articles presque épuisés : $names.',
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onErrorContainer),

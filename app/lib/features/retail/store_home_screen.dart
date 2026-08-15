@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -196,7 +198,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.inventory_2_outlined),
-            tooltip: 'Articles',
+            tooltip: Strings.of(context).productsLabel,
             onPressed: widget.retail == null
                 ? null
                 : () async {
@@ -208,20 +210,20 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           if (canPhotograph)
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
-              tooltip: 'Photos',
+              tooltip: Strings.of(context).photos,
               onPressed: _openGallery,
             ),
           if (widget.invoicing != null)
             IconButton(
               icon: const Icon(Icons.receipt_long_outlined),
-              tooltip: 'Factures',
+              tooltip: Strings.of(context).invoices,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'factures')),
             ),
           if (widget.staff != null)
             IconButton(
               icon: const Icon(Icons.groups_outlined),
-              tooltip: 'Personnel',
+              tooltip: Strings.of(context).staffLabel,
               onPressed: () async {
                 await context.push(Routes.inside(widget.org.id, 'personnel'));
                 if (mounted) await _load();
@@ -244,7 +246,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                   FloatingActionButton.small(
                     heroTag: 'sell',
                     onPressed: _sell,
-                    tooltip: 'Vente',
+                    tooltip: Strings.of(context).sale,
                     child: const Icon(Icons.point_of_sale),
                   ),
                 if (widget.retail != null && canPhotograph)
@@ -254,7 +256,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     heroTag: 'photo',
                     onPressed: _photograph,
                     icon: const Icon(Icons.photo_camera),
-                    label: const Text('Photo'),
+                    label: Text(Strings.of(context).photo),
                   ),
               ],
             ),
@@ -278,7 +280,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     OutlinedButton.icon(
                       onPressed: _load,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Réessayer'),
+                      label: Text(Strings.of(context).retry),
                     ),
                   ],
                 ),
@@ -304,7 +306,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     ),
                     TextButton(
                       onPressed: _load,
-                      child: const Text('Envoyer'),
+                      child: Text(Strings.of(context).send),
                     ),
                   ],
                 ),
@@ -412,7 +414,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Pertes évitées',
+                          Text(Strings.of(context).lossesAvoided,
                               style: theme.textTheme.titleSmall),
                           Text(
                             _money.format(_lossesAvoided),

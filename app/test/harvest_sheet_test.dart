@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/features/farm/farm_sheets.dart';
@@ -41,6 +42,9 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       home: Scaffold(
         body: RecordHarvestSheet(
           db: db,

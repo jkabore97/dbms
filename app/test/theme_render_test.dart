@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
@@ -35,6 +36,9 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
       theme: kajTheme(kajPalette),
       home: homeScreenFor(
         db: db,
@@ -88,6 +92,9 @@ void main() {
     testWidgets('KajTheme.of finds the profile palette below the router',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
         home: homeScreenFor(
           db: db,
           org: const OrgSummary(id: 'o', name: 'T', profile: 'farm'),
@@ -104,7 +111,11 @@ void main() {
       // Sign-in, the business picker and the console live above any
       // ProfileTheme. They must not need one.
       await tester.pumpWidget(
-        MaterialApp(home: Builder(builder: (context) {
+        MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+        home: Builder(builder: (context) {
           expect(KajTheme.of(context), kajPalette);
           return const SizedBox();
         })),

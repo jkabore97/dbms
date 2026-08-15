@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/strings.dart';
+
 import '../../core/auth/models.dart';
-import '../auth/org_picker_screen.dart' show iconForProfile, labelForProfile;
+import '../auth/org_picker_screen.dart'
+    show iconForProfile, localizedProfile;
 
 /// The landing screen for an org whose profile has no module yet — the farm
 /// and the retail shop, until those land.
@@ -49,16 +52,15 @@ class ProfilePendingScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  labelForProfile(org.profile),
+                  localizedProfile(context, org.profile),
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  "Votre compte est bien rattaché à cette activité. Le module "
-                  '${labelForProfile(org.profile).toLowerCase()} arrive '
-                  'bientôt — vous pourrez alors enregistrer vos opérations ici.',
+                  Strings.of(context).moduleComingSoon(
+                      localizedProfile(context, org.profile).toLowerCase()),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),

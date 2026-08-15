@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
@@ -62,6 +63,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
         home: ChurchHomeScreen(
           db: db,
           orgId: org.id,
