@@ -169,57 +169,70 @@ class _PinScreenState extends State<PinScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    widget.purpose == PinPurpose.create
-                        ? Icons.lock_outline
-                        : Icons.lock_open_outlined,
-                    size: 44,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(_title, style: theme.textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  Text(
-                    _subtitle,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  _Dots(filled: _entry.length, total: _pinLength),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 40,
-                    child: _error == null
-                        ? null
-                        : Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: theme.colorScheme.error),
+        // Scrollable rather than a bare Column: the keypad, the dots and the
+        // sign-out line together are taller than a short window, and a fixed
+        // Column simply clips whatever does not fit — which here is the way
+        // out for somebody who cannot remember their code. Centred while
+        // there is room, scrollable when there is not.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 380),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          widget.purpose == PinPurpose.create
+                              ? Icons.lock_outline
+                              : Icons.lock_open_outlined,
+                          size: 44,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(_title, style: theme.textTheme.headlineSmall),
+                        const SizedBox(height: 8),
+                        Text(
+                          _subtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                  ),
-                  _Keypad(onDigit: _press, onBackspace: _backspace),
-                  const SizedBox(height: 16),
-                  if (widget.onSignOut != null &&
-                      widget.purpose == PinPurpose.unlock)
-                    TextButton(
-                      onPressed: _busy ? null : widget.onSignOut,
-                      child: Text(
-                        _failures >= 3
-                            ? 'Code oublié ? Se reconnecter par SMS'
-                            : 'Se reconnecter',
-                      ),
+                        ),
+                        const SizedBox(height: 32),
+                        _Dots(filled: _entry.length, total: _pinLength),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 40,
+                          child: _error == null
+                              ? null
+                              : Text(
+                                  _error!,
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      TextStyle(color: theme.colorScheme.error),
+                                ),
+                        ),
+                        _Keypad(onDigit: _press, onBackspace: _backspace),
+                        const SizedBox(height: 16),
+                        if (widget.onSignOut != null &&
+                            widget.purpose == PinPurpose.unlock)
+                          TextButton(
+                            onPressed: _busy ? null : widget.onSignOut,
+                            child: Text(
+                              _failures >= 3
+                                  ? 'Code oublié ? Se reconnecter par SMS'
+                                  : 'Se reconnecter',
+                            ),
+                          ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             ),
           ),

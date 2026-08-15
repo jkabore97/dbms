@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/onboarding/onboarding_repository.dart';
-import '../admin/create_business_screen.dart';
 import 'profile_form_screen.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 
 /// What somebody sees when they have an account and belong to nothing.
 ///
@@ -89,6 +90,9 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
   }
 
   Future<void> _editProfile({String? intro, String? nextLabel}) async {
+    // Kept as a pushed page rather than a route of its own: the wording
+    // changes with why it was opened (before an application it explains
+    // itself differently), and that is content, not an address.
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ProfileFormScreen(
@@ -144,15 +148,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
     }
     if (!mounted) return;
 
-    final applied = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => CreateBusinessScreen(
-          admin: widget.admin,
-          onboarding: widget.onboarding,
-          asApplication: true,
-        ),
-      ),
-    );
+    final applied = await context.push<bool>(Routes.applyForBusiness);
     if (applied == true) await _load();
   }
 

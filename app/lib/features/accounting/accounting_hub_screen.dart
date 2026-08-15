@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
-import 'balance_sheet_screen.dart';
-import 'chart_of_accounts_screen.dart';
-import 'income_statement_screen.dart';
-import 'journal_screen.dart';
-import 'trial_balance_screen.dart';
+import '../../core/nav/router.dart';
 
 /// The accounting section.
 ///
@@ -62,51 +59,35 @@ class AccountingHubScreen extends StatelessWidget {
             icon: Icons.receipt_long_outlined,
             title: 'Journal',
             subtitle: 'Toutes les écritures, dans les mots employés',
-            onTap: () => _open(
-              context,
-              JournalScreen(accounting: accounting, org: org),
-            ),
+            onTap: () => context.push(Routes.inside(org.id, 'journal')),
           ),
           _Tile(
             icon: Icons.trending_up,
             title: 'Compte de résultat',
             subtitle: "Ce qui est entré, ce qui est sorti, ce qu'il reste",
-            onTap: () => _open(
-              context,
-              IncomeStatementScreen(accounting: accounting, org: org),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'comptabilite/resultat')),
           ),
           _Tile(
             icon: Icons.account_balance_outlined,
             title: 'Bilan',
             subtitle: "Ce que possède l'activité et ce qu'elle doit",
-            onTap: () => _open(
-              context,
-              BalanceSheetScreen(accounting: accounting, org: org),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'comptabilite/bilan')),
           ),
           _Tile(
             icon: Icons.list_alt_outlined,
             title: 'Plan comptable',
             subtitle: 'Les catégories, et le détail de chacune',
-            onTap: () => _open(
-              context,
-              ChartOfAccountsScreen(
-                accounting: accounting,
-                org: org,
-                db: db,
-                canEdit: org.isAdmin,
-              ),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'comptabilite/plan')),
           ),
           _Tile(
             icon: Icons.balance_outlined,
             title: 'Balance générale',
             subtitle: 'La preuve que les comptes sont équilibrés',
-            onTap: () => _open(
-              context,
-              TrialBalanceScreen(accounting: accounting, org: org),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'comptabilite/balance')),
           ),
           const SizedBox(height: 8),
           Container(
@@ -133,10 +114,6 @@ class AccountingHubScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _open(BuildContext context, Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }
 

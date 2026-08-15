@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/theme/kaj_theme.dart';
-import 'org_colours_screen.dart';
+import '../../core/nav/router.dart';
 
 /// The business's own details.
 ///
@@ -122,17 +123,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   }
 
   Future<void> _openColours() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OrgColoursScreen(
-          admin: widget.admin,
-          orgId: widget.orgId,
-          profile: _profile,
-          current: _theme,
-          onSaved: widget.onSaved,
-        ),
-      ),
-    );
+    await context.push(
+        Routes.inside(widget.orgId, 'administration/parametres/couleurs'));
     // Re-read rather than trusting what was passed back: the colour screen
     // saves on its own, and this row has to agree with the server whether it
     // saved once, three times, or not at all.

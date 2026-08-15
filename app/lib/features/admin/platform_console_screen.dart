@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/console/console_repository.dart';
@@ -9,7 +10,7 @@ import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
-import 'create_business_screen.dart';
+import '../../core/nav/router.dart';
 
 /// The console for somebody running a platform with thousands of businesses
 /// on it.
@@ -243,9 +244,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   int get _pageCount => _total == 0 ? 1 : ((_total - 1) ~/ _pageSize) + 1;
 
   Future<void> _create() async {
-    final id = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => CreateBusinessScreen(admin: widget.admin)),
-    );
+    final id = await context.push<String>(Routes.newBusiness);
     if (id != null && mounted) await _load();
   }
 
@@ -325,7 +324,6 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 const SizedBox(height: 16),
                 _controls(theme),
                 const SizedBox(height: 8),
-
                 if (_legacy)
                   Card(
                     color: theme.colorScheme.tertiaryContainer,
@@ -450,7 +448,8 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 _load();
               },
               itemBuilder: (_) => const [
-                PopupMenuItem(value: 'activity', child: Text('Activité récente')),
+                PopupMenuItem(
+                    value: 'activity', child: Text('Activité récente')),
                 PopupMenuItem(value: 'name', child: Text('Nom')),
                 PopupMenuItem(value: 'newest', child: Text('Plus récentes')),
               ],
@@ -505,8 +504,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             icon: const Icon(Icons.chevron_left),
             tooltip: 'Page précédente',
           ),
-          Text('${_page + 1} / $_pageCount',
-              style: theme.textTheme.bodyMedium),
+          Text('${_page + 1} / $_pageCount', style: theme.textTheme.bodyMedium),
           IconButton(
             onPressed: _page + 1 >= _pageCount
                 ? null
@@ -587,7 +585,8 @@ class _StatStrip extends StatelessWidget {
           value: number.format(overview.archived),
           colour: Theme.of(context).colorScheme.outline,
           selected: status == 'archived',
-          onTap: () => onSelect(null, status == 'archived' ? 'active' : 'archived'),
+          onTap: () =>
+              onSelect(null, status == 'archived' ? 'active' : 'archived'),
         ),
       ],
     );
@@ -678,8 +677,8 @@ class _TableHeader extends StatelessWidget {
               child: Text('MEMBRES', style: style, textAlign: TextAlign.right)),
           Expanded(
               flex: 3,
-              child:
-                  Text('DERNIÈRE ACTIVITÉ', style: style, textAlign: TextAlign.right)),
+              child: Text('DERNIÈRE ACTIVITÉ',
+                  style: style, textAlign: TextAlign.right)),
           const SizedBox(width: 40),
         ],
       ),
@@ -714,9 +713,14 @@ class _OrgRowTile extends StatelessWidget {
     return switch (org.health) {
       OrgHealth.healthy => (label: 'Active', colour: const Color(0xFF0E7A63)),
       OrgHealth.slowing => (label: 'Ralentit', colour: const Color(0xFFA96A0B)),
-      OrgHealth.silent => (label: 'Silencieuse', colour: const Color(0xFFB1541A)),
-      OrgHealth.neverStarted =>
-        (label: 'Jamais utilisée', colour: const Color(0xFFB03B3B)),
+      OrgHealth.silent => (
+          label: 'Silencieuse',
+          colour: const Color(0xFFB1541A)
+        ),
+      OrgHealth.neverStarted => (
+          label: 'Jamais utilisée',
+          colour: const Color(0xFFB03B3B)
+        ),
       OrgHealth.archived => (label: 'Archivée', colour: scheme.outline),
     };
   }

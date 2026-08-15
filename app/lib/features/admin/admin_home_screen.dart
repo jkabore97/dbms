@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/db/local_db.dart';
-import '../console/console_screen.dart';
-import 'org_settings_screen.dart';
-import 'people_screen.dart';
-import 'structure_screen.dart';
+import '../../core/nav/router.dart';
 
 /// The administration hub.
 ///
@@ -81,46 +79,22 @@ class AdminHomeScreen extends StatelessWidget {
             icon: Icons.group_outlined,
             title: 'Personnes',
             subtitle: 'Membres, rôles et invitations',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PeopleScreen(
-                  admin: admin,
-                  orgId: org.id,
-                  orgName: org.name,
-                ),
-              ),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'administration/personnel')),
           ),
           _AdminTile(
             icon: Icons.account_tree_outlined,
             title: 'Sites et départements',
             subtitle: "La structure de l'activité",
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => StructureScreen(
-                  admin: admin,
-                  orgId: org.id,
-                  profile: org.profile,
-                ),
-              ),
-            ),
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'administration/structure')),
           ),
           _AdminTile(
             icon: Icons.settings_outlined,
             title: "Paramètres de l'activité",
             subtitle: 'Nom et monnaie',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OrgSettingsScreen(
-                  admin: admin,
-                  orgId: org.id,
-                  onSaved: onOrgChanged,
-                ),
-              ),
-            ),
+            onTap: () => context
+                .push(Routes.inside(org.id, 'administration/parametres')),
           ),
 
           // Last, and behind the narrower role test. Everything above is
@@ -133,16 +107,8 @@ class AdminHomeScreen extends StatelessWidget {
               icon: Icons.terminal,
               title: 'Console',
               subtitle: "Journal d'activité, données, état de l'appareil",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ConsoleScreen(
-                    console: console!,
-                    db: db!,
-                    org: org,
-                  ),
-                ),
-              ),
+              onTap: () =>
+                  context.push(Routes.inside(org.id, 'administration/console')),
             ),
           ],
         ],

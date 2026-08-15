@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:kaj_app/app_root.dart';
+import 'package:kaj_app/main.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
@@ -25,6 +25,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// The repository is built with a null client, which is what a device with no
 /// connection effectively has — no live session, no way to fetch orgs. Every
 /// decision below therefore comes from the device.
+///
+/// This runs against the real `KajApp`, which builds the real session and the
+/// real router — so what is asserted is the wiring a user actually gets, not a
+/// screen assembled by the test. The last group is the reason the router
+/// exists: every one of these steps used to be a `setState`, which left nothing
+/// in history, so pressing back inside a business left the app instead of
+/// returning to the picker.
 void main() {
   setUpAll(() async {
     sqfliteFfiInit();
@@ -81,24 +88,34 @@ void main() {
   }
 
   Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: AppRoot(
-          db: db,
-          auth: auth,
-          admin: admin,
-          reports: reports,
-          accounting: accounting,
-          console: console,
-          farm: farm,
-          invoicing: invoicing,
-          retail: retail,
-          staff: staff,
-          capture: capture,
-          onboarding: onboarding,
-        ),
-      ),
-    );
+    // The real app, with the real router. KajApp builds its own MaterialApp,
+    // so there is deliberately no wrapper here: a test that supplied its own
+    // Navigator would be testing a tree the user never gets.
+    await tester.pumpWidget(KajApp(
+      db: db,
+      auth: auth,
+      admin: admin,
+      reports: reports,
+      accounting: accounting,
+      console: console,
+      farm: farm,
+      invoicing: invoicing,
+      retail: retail,
+      staff: staff,
+      capture: capture,
+      onboarding: onboarding,
+    ));
+    await flush(tester);
+  }
+
+  /// What the browser's back button does, as the framework sees it.
+  ///
+  /// `handlePopRoute` is the same entry point the platform uses for a browser
+  /// back or an Android system back, so this asserts the real thing rather
+  /// than tapping an AppBar arrow — which is a different gesture and was never
+  /// the one that was broken.
+  Future<void> pressBack(WidgetTester tester) async {
+    await tester.binding.handlePopRoute();
     await flush(tester);
   }
 
@@ -252,5 +269,94 @@ void main() {
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsOneWidget);
     expect(find.text('Entrez votre code'), findsNothing);
+  });
+
+  group('back means what it says', () {
+    // The bug this router was built for. Every step below used to be a
+    // setState, so the browser kept no record of it: pressing back inside a
+    // business went back past the app itself.
+
+    testWidgets('back from a business returns to the picker, not out of the app',
+        (tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+
+      expect(find.text('Choisissez une activité'), findsOneWidget);
+      await tester.tap(find.text('Ferme Ignace'));
+      await flush(tester);
+      expect(find.text('Récolte'), findsOneWidget);
+
+      await pressBack(tester);
+
+      // The whole point: still in the app, and back where we came from.
+      expect(find.text('Choisissez une activité'), findsOneWidget,
+          reason: 'back from a business left the app instead of returning '
+              'to the picker');
+      expect(find.text('Récolte'), findsNothing);
+    });
+
+    testWidgets('the picker is the first page, so back cannot escape it',
+        (tester) async {
+      // A person who has just chosen has nowhere further back to go inside
+      // the app. What must not happen is a blank screen or a half-built one.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+
+      await pressBack(tester);
+
+      expect(find.text('Choisissez une activité'), findsOneWidget);
+    });
+
+    testWidgets('a business can be reopened after going back', (tester) async {
+      // Back followed by forward-by-tapping. This is the sequence that breaks
+      // when a router keeps stale state: the second open shows the first
+      // business, or nothing at all.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+
+      await tester.tap(find.text('Ferme Ignace'));
+      await flush(tester);
+      await pressBack(tester);
+
+      await tester.tap(find.text('Grace Chapel'));
+      await flush(tester);
+
+      // The church, not the farm we opened first.
+      expect(find.text('Recette'), findsOneWidget);
+      expect(find.text('Récolte'), findsNothing);
+    });
+
+    testWidgets('one business has no picker to go back to', (tester) async {
+      // Somebody with a single business never sees the picker, so back must
+      // not invent one — it has nowhere to go and must leave the app alone.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+          id: 'org-1',
+          name: 'Grace Chapel',
+          profile: 'church',
+          roles: ['owner'],
+        ),
+      ]);
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+      expect(find.text('Recette'), findsOneWidget);
+
+      await pressBack(tester);
+
+      expect(find.text('Recette'), findsOneWidget,
+          reason: 'back emptied the only business this person has');
+    });
   });
 }

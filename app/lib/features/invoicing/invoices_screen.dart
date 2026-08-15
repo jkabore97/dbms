@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/invoicing/models.dart';
 import '../accounting/report_shell.dart';
-import 'billing_details_screen.dart';
-import 'invoice_document_screen.dart';
-import 'new_invoice_screen.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 
 /// Invoicing, for whichever business is open.
 ///
@@ -96,14 +95,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _openNew() async {
-    final id = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => NewInvoiceScreen(
-          org: widget.org,
-          invoicing: widget.invoicing,
-        ),
-      ),
-    );
+    final id = await context
+        .push<String>(Routes.inside(widget.org.id, 'factures/nouvelle'));
     if (id == null || !mounted) return;
     // Straight to the document: raising an invoice and sending it are one
     // errand, and a list is not what somebody wanted when they pressed create.
@@ -111,27 +104,14 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _openDocument(String id) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => InvoiceDocumentScreen(
-          org: widget.org,
-          invoicing: widget.invoicing,
-          invoiceId: id,
-        ),
-      ),
-    );
+    // The id is in the path, so this page can be linked and reloaded.
+    await context.push(Routes.inside(widget.org.id, 'factures/$id'));
     if (mounted) await _load();
   }
 
   Future<void> _openBilling() async {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => BillingDetailsScreen(
-          org: widget.org,
-          invoicing: widget.invoicing,
-        ),
-      ),
-    );
+    final changed = await context
+        .push<bool>(Routes.inside(widget.org.id, 'factures/facturation'));
     if (changed == true && mounted) await _load();
   }
 
