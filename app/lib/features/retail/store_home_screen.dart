@@ -203,6 +203,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                 context.push(Routes.inside(widget.org.id, 'credits')),
           ),
           IconButton(
+            icon: const Icon(Icons.soup_kitchen_outlined),
+            tooltip: Strings.of(context).production,
+            onPressed: () async {
+              await context.push(Routes.inside(widget.org.id, 'production'));
+              if (mounted) await _load();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.inventory_2_outlined),
             tooltip: Strings.of(context).productsLabel,
             onPressed: widget.retail == null

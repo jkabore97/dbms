@@ -521,6 +521,57 @@ class StringsEn extends Strings {
   String get needTwoMembers => 'At least two members are needed.';
 
   @override
+  String get production => 'Production';
+
+  @override
+  String get newProduction => 'New production';
+
+  @override
+  String get noProduction =>
+      'No production recorded yet.\nReceive your ingredients into stock first, then record here what you make with them.';
+
+  @override
+  String get whatWasMade => 'Product made';
+
+  @override
+  String get whatWasMadeHint => 'Cake, soap, shea butter…';
+
+  @override
+  String get quantityMade => 'Quantity made';
+
+  @override
+  String get ingredientsUsed => 'Ingredients used';
+
+  @override
+  String get ingredient => 'Ingredient';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get addIngredient => 'Add an ingredient';
+
+  @override
+  String estimatedUnitCost(String amount) {
+    return 'Estimated cost: $amount per unit';
+  }
+
+  @override
+  String unitCostIs(String amount) {
+    return 'Cost to make: $amount / unit';
+  }
+
+  @override
+  String get enterProductMade => 'Say what was made.';
+
+  @override
+  String get enterQuantityMade => 'Enter the quantity made.';
+
+  @override
+  String get enterIngredients =>
+      'Add at least one ingredient with its quantity.';
+
+  @override
   String get save => 'Save';
 
   @override

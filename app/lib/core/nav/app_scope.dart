@@ -11,6 +11,7 @@ import '../farm/farm_repository.dart';
 import '../invoicing/invoicing_repository.dart';
 import '../l10n/locale_controller.dart';
 import '../onboarding/onboarding_repository.dart';
+import '../production/production_repository.dart';
 import '../reports/reports_repository.dart';
 import '../retail/retail_repository.dart';
 import '../retail/staff.dart';
@@ -49,6 +50,7 @@ class AppScope extends InheritedWidget {
     required this.onboarding,
     required this.credit,
     required this.tontine,
+    required this.production,
     this.sync,
     required super.child,
   });
@@ -69,6 +71,7 @@ class AppScope extends InheritedWidget {
   final OnboardingRepository onboarding;
   final CreditRepository credit;
   final TontineRepository tontine;
+  final ProductionRepository production;
   final SyncService? sync;
 
   static AppScope of(BuildContext context) {
