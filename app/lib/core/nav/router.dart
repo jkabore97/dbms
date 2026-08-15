@@ -38,6 +38,7 @@ import '../../features/invoicing/billing_details_screen.dart';
 import '../../features/invoicing/invoice_document_screen.dart';
 import '../../features/invoicing/invoices_screen.dart';
 import '../../features/invoicing/new_invoice_screen.dart';
+import '../../features/notify/notifications_screen.dart';
 import '../../features/production/production_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
@@ -764,6 +765,14 @@ GoRouter buildRouter(SessionController session) {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => NotificationsScreen(notify: scope.notify),
+            ),
           ),
           GoRoute(
             path: 'production',

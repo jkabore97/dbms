@@ -5,6 +5,7 @@ import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../admin/invite_generator_sheet.dart';
+import '../notify/notifications_screen.dart';
 import 'account_menu.dart';
 import 'home_router.dart';
 
@@ -49,7 +50,17 @@ class BusinessShell extends StatelessWidget {
         // with.
         onHistory:
             live ? () => context.push(Routes.inside(org.id, 'journal')) : null,
-        accountAction: AccountMenu(
+        // One slot, two widgets: the bell rides next to the account menu so
+        // every home screen gets it without knowing it exists.
+        accountAction: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (live)
+              NotificationBell(
+                notify: scope.notify,
+                listRoute: Routes.inside(org.id, 'notifications'),
+              ),
+            AccountMenu(
           db: scope.db,
           userLabel: session.identity?.label ?? '',
           onSignOut: session.signOut,
@@ -92,6 +103,8 @@ class BusinessShell extends StatelessWidget {
           // the user: it is an address, so back returns here.
           onSwitchOrg:
               session.orgs.length > 1 ? () => context.go(Routes.picker) : null,
+            ),
+          ],
         ),
       ),
     );

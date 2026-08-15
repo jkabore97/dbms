@@ -23,6 +23,7 @@ import 'core/invoicing/invoicing_repository.dart';
 import 'core/l10n/locale_controller.dart';
 import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
+import 'core/notify/notifications_repository.dart';
 import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
@@ -274,6 +275,7 @@ class _KajAppState extends State<KajApp> {
       credit: CreditRepository(widget.auth.client),
       tontine: TontineRepository(widget.auth.client),
       production: ProductionRepository(widget.auth.client),
+      notify: NotificationsRepository(widget.auth.client),
       sync: widget.sync,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new

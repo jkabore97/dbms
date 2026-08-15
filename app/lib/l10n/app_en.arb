@@ -183,6 +183,8 @@
   "@estimatedUnitCost": {"placeholders": {"amount": {"type": "String"}}},
   "unitCostIs": "Cost to make: {amount} / unit",
   "@unitCostIs": {"placeholders": {"amount": {"type": "String"}}},
+  "notifications": "Notifications",
+  "noNotifications": "Nothing yet. You will be told here: low stock, a settled credit, a tontine round ready to close, someone joining.",
   "makeAgain": "Make again",
   "searchProduct": "Search for a product…",
   "noProductFound": "No product found. Receive it into stock first.",

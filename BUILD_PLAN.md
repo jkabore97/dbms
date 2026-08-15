@@ -61,6 +61,7 @@ Each milestone ends with something demonstrable.
 | Product lifecycle: rename without rewriting receipts; owner-only archive that keeps all history | built, 6 assertions |
 | Scale to 200 articles: search in Articles, searchable recency-ordered ingredient picker, "Refaire" on past runs, ingredient flag off the sale sheet | built |
 | Crédit as a payment method: a credit sale moves stock and snapshots cost like cash, money lands in créances, the carnet debt links to the sale | built, 8 assertions |
+| Notifications phase 1: in-app bell, per-recipient rows, five trigger events, employees quiet by design | built, 9 assertions |
 
 **Not built**
 

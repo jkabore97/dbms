@@ -567,6 +567,13 @@ class StringsMos extends Strings {
   }
 
   @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotifications =>
+      'Rien pour l\'instant. Vous serez prévenu ici : stock bas, crédit soldé, tontine prête à clore, nouvel arrivant.';
+
+  @override
   String get makeAgain => 'Refaire';
 
   @override
