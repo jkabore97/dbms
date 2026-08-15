@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -140,6 +140,61 @@ class CaptureAction {
     if (source == null || !context.mounted) return false;
     return take(context,
         orgId: orgId, capture: capture, source: source, kind: kind);
+  }
+
+  /// Picks a photograph and hands back the bytes without filing anything —
+  /// the notebook reader wants an image to read, not a gallery entry.
+  /// Returns null on cancel, and says why on any other dead end.
+  static Future<({Uint8List bytes, String contentType})?> pick(
+      BuildContext context) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Prendre une photo'),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text(
+                  kIsWeb ? 'Choisir un fichier' : 'Choisir une photo'),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !context.mounted) return null;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final XFile? file;
+    try {
+      file = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 2000,
+        imageQuality: 80,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+    } on Exception catch (error) {
+      messenger.showSnackBar(SnackBar(
+        content: Text("La caméra n'est pas disponible : $error"),
+      ));
+      return null;
+    }
+    if (file == null) return null; // Cancelled. Say nothing.
+
+    final contentType = _typeOf(file);
+    if (contentType == null || !contentType.startsWith('image/')) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Ce type de fichier ne peut pas être lu.'),
+      ));
+      return null;
+    }
+    return (bytes: await file.readAsBytes(), contentType: contentType);
   }
 
   /// What the upload Worker will accept. `XFile.mimeType` is filled in on the

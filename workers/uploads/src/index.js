@@ -78,6 +78,13 @@ export default {
         return withCors(await get(request, env, decodeURIComponent(object[1])), cors);
       }
 
+      // POST /v1/orgs/<org_id>/read-page — the handwriting reader: a
+      // photographed notebook page in, editable product lines out.
+      const read = url.pathname.match(/^\/v1\/orgs\/([^/]+)\/read-page$/);
+      if (read && request.method === "POST") {
+        return withCors(await readPage(request, env, read[1]), cors);
+      }
+
       // Something to point a browser at when a deploy is being checked. Says
       // nothing about who is using it.
       if (url.pathname === "/" || url.pathname === "/v1/health") {
@@ -158,6 +165,131 @@ async function put(request, env, orgId) {
   // object is unreferenced — a lifecycle rule on the bucket is the right
   // place to sweep those, not this Worker, which must not be able to delete.
   return json({ key, bytes: body.byteLength, contentType }, 201);
+}
+
+// ------------------------------------------------------------
+// The handwriting reader
+//
+// The on-device OCR reads printed invoices well and handwritten notebook
+// pages badly — that is not a tuning problem, it is a different capability.
+// This endpoint sends the photograph to an AI vision model and returns
+// product lines for the app's existing confirm-before-save screen. The
+// same authorisation rule as uploads: membership is proven by selecting
+// the org as the caller, and nothing here decides anything on its own.
+//
+// The API key lives only in a Worker secret (wrangler secret put
+// ANTHROPIC_API_KEY). Until it is set, the endpoint answers 501 and the
+// app explains itself politely — the feature is deployed dormant rather
+// than half-configured.
+// ------------------------------------------------------------
+
+const READER_PROMPT =
+  "Cette photo montre une page de carnet de commerce manuscrite (souvent en " +
+  "français, prix en francs CFA, décimales à virgule). Relève chaque ligne " +
+  "produit : le nom, la quantité, et le prix unitaire. Réponds UNIQUEMENT " +
+  'par un tableau JSON strict : [{"name": "…", "quantity": 0, ' +
+  '"unit_price": 0}]. Nombres en notation à point. Ignore les lignes ' +
+  "illisibles plutôt que de deviner. Tableau vide [] si rien n'est lisible.";
+
+async function readPage(request, env, orgId) {
+  if (!UUID.test(orgId)) {
+    return problem(400, "That is not a business id.");
+  }
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  if (!(await isMember(env, token, orgId))) {
+    return problem(403, "You are not a member of that business.");
+  }
+  if (!env.ANTHROPIC_API_KEY) {
+    return problem(501, "Reader not configured.");
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return problem(400, "Send JSON: {image, mime}.");
+  }
+  const image = typeof body.image === "string" ? body.image : "";
+  const mime = typeof body.mime === "string" ? body.mime.toLowerCase() : "";
+  if (!image || !mime.startsWith("image/") || !ALLOWED_TYPES.has(mime)) {
+    return problem(415, "Photos only.");
+  }
+  // Base64 inflates by 4/3; this keeps the decoded page under the same
+  // ceiling as an upload.
+  if (image.length > (MAX_BYTES * 4) / 3) {
+    return problem(413, "That file is too large.");
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: env.READER_MODEL || "claude-haiku-4-5-20251001",
+      max_tokens: 2000,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mime, data: image },
+            },
+            { type: "text", text: READER_PROMPT },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("reader upstream", response.status, await response.text());
+    return problem(502, "The reader failed.");
+  }
+
+  const result = await response.json();
+  const text = Array.isArray(result.content)
+    ? result.content
+        .filter((c) => c && c.type === "text")
+        .map((c) => c.text)
+        .join("\n")
+    : "";
+
+  return json({ lines: extractLines(text) });
+}
+
+// The model is asked for strict JSON and usually complies; when it wraps
+// the array in a sentence anyway, the first [...] span is the answer.
+// Anything unparseable becomes an empty list rather than an error — the
+// person retakes the photo, which is the fix either way.
+function extractLines(text) {
+  const start = text.indexOf("[");
+  const end = text.lastIndexOf("]");
+  if (start < 0 || end <= start) return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const lines = [];
+  for (const entry of parsed) {
+    if (!entry || typeof entry !== "object") continue;
+    const name = typeof entry.name === "string" ? entry.name.trim() : "";
+    const quantity = Number(entry.quantity);
+    const unitPrice = Number(entry.unit_price);
+    if (!name || !Number.isFinite(quantity) || quantity <= 0) continue;
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) continue;
+    lines.push({ name, quantity, unit_price: unitPrice });
+  }
+  return lines;
 }
 
 // ------------------------------------------------------------
@@ -298,6 +430,8 @@ const FRENCH = {
   413: "Ce fichier est trop volumineux (12 Mo maximum).",
   415: "Photos et PDF uniquement.",
   500: "Le service de photos a échoué.",
+  501: "Le lecteur de carnet n'est pas encore configuré.",
+  502: "Le lecteur de carnet a échoué. Réessayez.",
 };
 
 function problem(status, detail) {

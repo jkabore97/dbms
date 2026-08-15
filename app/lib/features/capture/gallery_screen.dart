@@ -101,6 +101,43 @@ class _GalleryScreenState extends State<GalleryScreen> {
     if (taken) await _load();
   }
 
+  /// The handwriting reader: photograph a page of the paper carnet, let the
+  /// AI read it, and land on the same confirm-before-save screen the invoice
+  /// capture uses. Online-only, and honest about it — the sheet the person
+  /// edits is the safety net, not the reading.
+  Future<void> _readNotebook() async {
+    final picked = await CaptureAction.pick(context);
+    if (picked == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+        const SnackBar(content: Text('Lecture de la page…')));
+    try {
+      final lines = await widget.capture.readNotebookPage(
+        orgId: widget.org.id,
+        bytes: picked.bytes,
+        contentType: picked.contentType,
+      );
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      if (lines.isEmpty) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text("Rien de lisible sur cette page. "
+                'Reprenez la photo de plus près, bien éclairée.')));
+        return;
+      }
+      final added = await context.push<bool>(
+        Routes.inside(widget.org.id, 'photos/produits'),
+        extra: ConfirmProductsArg(lines: lines),
+      );
+      if (added == true && mounted) await _load();
+    } catch (error) {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+    }
+  }
+
   Future<void> _open(CapturedDocument document) async {
     // The document itself travels as `extra` rather than being refetched by
     // id: it is already loaded here, and a second round trip to draw a
@@ -119,7 +156,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
     final filed = _documents.where((d) => d.isFiled).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Photos')),
+      appBar: AppBar(
+        title: const Text('Photos'),
+        actions: [
+          // Only a shop stocks products, so only a shop reads carnets.
+          if (widget.retail != null && widget.capture.isConfigured)
+            IconButton(
+              onPressed: _readNotebook,
+              icon: const Icon(Icons.auto_stories_outlined),
+              tooltip: 'Lire une page de carnet',
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _capture,
         icon: const Icon(Icons.photo_camera),
