@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/nav/router.dart';
 import '../../core/phone/country_codes.dart';
+import '../../l10n/strings.dart';
 import '../common/phone_field.dart';
 
 /// The way in — and, now, the way to get an account in the first place.
@@ -168,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final b = _phoneConfirmController.text.trim();
     if (a.isEmpty || b.isEmpty) return null;
     if (_country.toE164(a) != _country.toE164(b)) {
-      return 'Les deux numéros ne sont pas identiques.';
+      return Strings.of(context).phonesDiffer;
     }
     return null;
   }
@@ -178,13 +181,15 @@ class _LoginScreenState extends State<LoginScreen> {
   /// The middle name and the job title are useful and not worth a wall.
   String? get _signUpProblem {
     if (!_isSignUp) return null;
-    if (_firstNameController.text.trim().isEmpty) return 'Entrez votre prénom.';
-    if (_lastNameController.text.trim().isEmpty) {
-      return 'Entrez votre nom de famille.';
+    if (_firstNameController.text.trim().isEmpty) {
+      return Strings.of(context).enterFirstName;
     }
-    if (_birthDate == null) return 'Indiquez votre date de naissance.';
+    if (_lastNameController.text.trim().isEmpty) {
+      return Strings.of(context).enterLastName;
+    }
+    if (_birthDate == null) return Strings.of(context).enterBirthDate;
     if (_phoneController.text.trim().isEmpty) {
-      return 'Entrez votre numéro de téléphone.';
+      return Strings.of(context).enterPhone;
     }
     if (_phoneMismatch != null) return _phoneMismatch;
     return null;
@@ -201,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // 017 refuses anything under fourteen; refusing it here too means the
       // form says so before the round trip.
       lastDate: DateTime(now.year - 14, now.month, now.day),
-      helpText: 'Date de naissance',
+      helpText: Strings.of(context).birthDate,
     );
     if (picked != null) setState(() => _birthDate = picked);
   }
@@ -215,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (!email.contains('@')) {
-      setState(() => _error = 'Entrez une adresse e-mail valide.');
+      setState(() => _error = Strings.of(context).enterValidEmail);
       return Future.value();
     }
     final problem = _signUpProblem;
@@ -224,11 +229,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return Future.value();
     }
     if (_isSignUp && password.length < 6) {
-      setState(
-        () => _error = 'Le mot de passe doit contenir au moins 6 caractères.',
-      );
+      setState(() => _error = Strings.of(context).passwordTooShort);
       return Future.value();
     }
+
+    // Read before the awaits: an error message fetched through a context
+    // that may since have been disposed is the lint's point, not pedantry.
+    final refused = Strings.of(context).signInRefused;
 
     return _run(() async {
       final response = _isSignUp
@@ -241,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final user = response.user;
       if (user == null) {
-        throw StateError('Connexion refusée. Réessayez.');
+        throw StateError(refused);
       }
 
       // Signed up into a project that confirms addresses: the account is real
@@ -307,7 +314,18 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               children: [
-                const SizedBox(height: 16),
+                // Before everything else, because the person who needs it is
+                // the one who cannot read the rest of this screen. A globe
+                // with the language's own name — the one word guaranteed
+                // legible to them.
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => context.push(Routes.language),
+                    icon: const Icon(Icons.language, size: 18),
+                    label: Text(Strings.of(context).languageName),
+                  ),
+                ),
                 Icon(
                   Icons.account_balance_wallet_outlined,
                   size: 56,
@@ -315,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Kaj',
+                  Strings.of(context).appTitle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -324,9 +342,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 Text(
                   _isSignUp
-                      ? 'Créez votre compte. Vous rejoindrez une activité '
-                          'ensuite, avec un code.'
-                      : 'Connectez-vous pour ouvrir votre activité.',
+                      ? Strings.of(context).signUpTagline
+                      : Strings.of(context).signInTagline,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -378,9 +395,9 @@ class _LoginScreenState extends State<LoginScreen> {
         textCapitalization: TextCapitalization.words,
         autofillHints: const [AutofillHints.givenName],
         onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(
-          labelText: 'Prénom',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: Strings.of(context).firstName,
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 12),
@@ -389,9 +406,9 @@ class _LoginScreenState extends State<LoginScreen> {
         enabled: !_busy,
         textCapitalization: TextCapitalization.words,
         autofillHints: const [AutofillHints.middleName],
-        decoration: const InputDecoration(
-          labelText: 'Deuxième prénom (facultatif)',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: Strings.of(context).middleName,
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 12),
@@ -401,9 +418,9 @@ class _LoginScreenState extends State<LoginScreen> {
         textCapitalization: TextCapitalization.characters,
         autofillHints: const [AutofillHints.familyName],
         onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(
-          labelText: 'Nom de famille',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: Strings.of(context).lastName,
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 12),
@@ -417,8 +434,10 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: const Icon(Icons.cake_outlined),
           label: Text(
             _birthDate == null
-                ? 'Date de naissance'
-                : DateFormat('d MMMM y', 'fr_FR').format(_birthDate!),
+                ? Strings.of(context).birthDate
+                : DateFormat.yMMMMd(
+                        Localizations.localeOf(context).toString())
+                    .format(_birthDate!),
           ),
         ),
       ),
@@ -428,10 +447,10 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: _titleController,
         enabled: !_busy,
         textCapitalization: TextCapitalization.sentences,
-        decoration: const InputDecoration(
-          labelText: 'Fonction (facultatif)',
-          hintText: 'Vendeuse, gérant, comptable…',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: Strings.of(context).jobTitle,
+          hintText: Strings.of(context).jobTitleHint,
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 16),
@@ -454,13 +473,13 @@ class _LoginScreenState extends State<LoginScreen> {
         // The picker is shown on both fields but sets the one value, so
         // correcting the country on the second corrects the first too.
         onCountry: (c) => setState(() => _country = c),
-        labelText: 'Confirmez le numéro',
+        labelText: Strings.of(context).confirmPhone,
         enabled: !_busy,
         large: true,
         onChanged: (_) => setState(() {}),
         errorText: _phoneMismatch,
         helperText: _phoneMismatch == null
-            ? "C'est ce numéro que votre responsable utilisera."
+            ? Strings.of(context).phoneIsForManager
             : null,
       ),
     ];
@@ -474,9 +493,9 @@ class _LoginScreenState extends State<LoginScreen> {
         enabled: !_busy,
         keyboardType: TextInputType.emailAddress,
         autofillHints: const [AutofillHints.email],
-        decoration: const InputDecoration(
-          labelText: 'E-mail',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: Strings.of(context).email,
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 16),
@@ -488,8 +507,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _isSignUp ? AutofillHints.newPassword : AutofillHints.password,
         ],
         decoration: InputDecoration(
-          labelText: 'Mot de passe',
-          helperText: _isSignUp ? 'Au moins 6 caractères' : null,
+          labelText: Strings.of(context).password,
+          helperText: _isSignUp ? Strings.of(context).passwordMin : null,
           border: const OutlineInputBorder(),
         ),
         onSubmitted: (_) => _busy ? null : _submitEmail(),
@@ -500,7 +519,7 @@ class _LoginScreenState extends State<LoginScreen> {
           controller: _phoneController,
           country: _country,
           onCountry: (c) => setState(() => _country = c),
-          labelText: 'Numéro de téléphone',
+          labelText: Strings.of(context).phoneNumber,
           hintText: '70 12 34 56',
           enabled: !_busy,
           large: true,
@@ -510,7 +529,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
       const SizedBox(height: 20),
       _PrimaryButton(
-        label: _isSignUp ? 'Créer mon compte' : 'Se connecter',
+        label: _isSignUp
+            ? Strings.of(context).createMyAccount
+            : Strings.of(context).signIn,
         busy: _busy,
         onPressed: _submitEmail,
       ),
@@ -537,7 +558,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Compte créé',
+                    Strings.of(context).accountCreated,
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
@@ -545,8 +566,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Un message a été envoyé à ${_emailController.text.trim()}. '
-              'Ouvrez le lien qu\'il contient, puis revenez vous connecter.',
+              Strings.of(context)
+                  .confirmEmailSent(_emailController.text.trim()),
               style: theme.textTheme.bodyMedium,
             ),
           ],
@@ -554,7 +575,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       const SizedBox(height: 20),
       _PrimaryButton(
-        label: 'Se connecter',
+        label: Strings.of(context).signIn,
         busy: _busy,
         onPressed: () => setState(() {
           _intent = _Intent.signIn;
@@ -584,16 +605,16 @@ class _IntentSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SegmentedButton<_Intent>(
-      segments: const [
+      segments: [
         ButtonSegment(
           value: _Intent.signIn,
-          label: Text('Se connecter'),
-          icon: Icon(Icons.login, size: 18),
+          label: Text(Strings.of(context).signIn),
+          icon: const Icon(Icons.login, size: 18),
         ),
         ButtonSegment(
           value: _Intent.signUp,
-          label: Text('Créer un compte'),
-          icon: Icon(Icons.person_add_alt, size: 18),
+          label: Text(Strings.of(context).signUp),
+          icon: const Icon(Icons.person_add_alt, size: 18),
         ),
       ],
       selected: {intent},

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/strings.dart';
+
 import '../../core/auth/models.dart';
 
 /// Signed in, invited to nothing.
@@ -41,12 +43,12 @@ class NoOrgScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('En attente'),
+        title: Text(Strings.of(context).waiting),
         actions: [
           IconButton(
             onPressed: onSignOut,
             icon: const Icon(Icons.logout),
-            tooltip: 'Se déconnecter',
+            tooltip: Strings.of(context).signOut,
           ),
         ],
       ),
@@ -75,15 +77,13 @@ class NoOrgScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Votre compte est prêt',
+                          Strings.of(context).accountReady,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Vous n'êtes encore rattaché à aucune activité. "
-                          'Si le responsable vous a remis un code, entrez-le. '
-                          'Sinon, communiquez-lui le numéro ci-dessous.',
+                          Strings.of(context).accountReadyBody,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium,
                         ),
@@ -101,7 +101,7 @@ class NoOrgScreen extends StatelessWidget {
                             child: Column(
                               children: [
                                 Text(
-                                  'À communiquer au responsable',
+                                  Strings.of(context).giveThisToManager,
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
@@ -129,9 +129,9 @@ class NoOrgScreen extends StatelessWidget {
                             child: FilledButton.icon(
                               onPressed: checking ? null : onCreateBusiness,
                               icon: const Icon(Icons.add_business_outlined),
-                              label: const Text(
-                                'Créer une activité',
-                                style: TextStyle(fontSize: 17),
+                              label: Text(
+                                Strings.of(context).createBusiness,
+                                style: const TextStyle(fontSize: 17),
                               ),
                             ),
                           ),
@@ -154,18 +154,18 @@ class NoOrgScreen extends StatelessWidget {
                                     onPressed: checking ? null : onJoinByCode,
                                     icon: const Icon(
                                         Icons.confirmation_number_outlined),
-                                    label: const Text(
-                                      "J'ai un code",
-                                      style: TextStyle(fontSize: 17),
+                                    label: Text(
+                                      Strings.of(context).iHaveACode,
+                                      style: const TextStyle(fontSize: 17),
                                     ),
                                   )
                                 : FilledButton.icon(
                                     onPressed: checking ? null : onJoinByCode,
                                     icon: const Icon(
                                         Icons.confirmation_number_outlined),
-                                    label: const Text(
-                                      "J'ai un code",
-                                      style: TextStyle(fontSize: 17),
+                                    label: Text(
+                                      Strings.of(context).iHaveACode,
+                                      style: const TextStyle(fontSize: 17),
                                     ),
                                   ),
                           ),
@@ -185,9 +185,9 @@ class NoOrgScreen extends StatelessWidget {
                                         strokeWidth: 2),
                                   )
                                 : const Icon(Icons.refresh),
-                            label: const Text(
-                              'Vérifier',
-                              style: TextStyle(fontSize: 17),
+                            label: Text(
+                              Strings.of(context).verify,
+                              style: const TextStyle(fontSize: 17),
                             ),
                           ),
                         ),

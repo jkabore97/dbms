@@ -1,0 +1,601 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'strings_dyu.dart';
+import 'strings_en.dart';
+import 'strings_fr.dart';
+import 'strings_mos.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of Strings
+/// returned by `Strings.of(context)`.
+///
+/// Applications need to include `Strings.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/strings.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: Strings.localizationsDelegates,
+///   supportedLocales: Strings.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the Strings.supportedLocales
+/// property.
+abstract class Strings {
+  Strings(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static Strings of(BuildContext context) {
+    return Localizations.of<Strings>(context, Strings)!;
+  }
+
+  static const LocalizationsDelegate<Strings> delegate = _StringsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('dyu'),
+    Locale('en'),
+    Locale('fr'),
+    Locale('mos')
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Kaj'**
+  String get appTitle;
+
+  /// This language's own name, in itself — shown in the language picker so somebody who cannot read the current language can still find their own.
+  ///
+  /// In fr, this message translates to:
+  /// **'Français'**
+  String get languageName;
+
+  /// No description provided for @signInTagline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez-vous pour ouvrir votre activité.'**
+  String get signInTagline;
+
+  /// No description provided for @signUpTagline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre compte. Vous rejoindrez une activité ensuite, avec un code.'**
+  String get signUpTagline;
+
+  /// No description provided for @signIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se connecter'**
+  String get signIn;
+
+  /// No description provided for @signUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un compte'**
+  String get signUp;
+
+  /// No description provided for @createMyAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer mon compte'**
+  String get createMyAccount;
+
+  /// No description provided for @firstName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get firstName;
+
+  /// No description provided for @middleName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Deuxième prénom (facultatif)'**
+  String get middleName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de famille'**
+  String get lastName;
+
+  /// No description provided for @birthDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance'**
+  String get birthDate;
+
+  /// No description provided for @jobTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fonction (facultatif)'**
+  String get jobTitle;
+
+  /// No description provided for @jobTitleHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vendeuse, gérant, comptable…'**
+  String get jobTitleHint;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de téléphone'**
+  String get phoneNumber;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'70 12 34 56'**
+  String get phoneHint;
+
+  /// No description provided for @confirmPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez le numéro'**
+  String get confirmPhone;
+
+  /// No description provided for @phoneIsForManager.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est ce numéro que votre responsable utilisera.'**
+  String get phoneIsForManager;
+
+  /// No description provided for @email.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe'**
+  String get password;
+
+  /// No description provided for @passwordMin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au moins 6 caractères'**
+  String get passwordMin;
+
+  /// No description provided for @enterFirstName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez votre prénom.'**
+  String get enterFirstName;
+
+  /// No description provided for @enterLastName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez votre nom de famille.'**
+  String get enterLastName;
+
+  /// No description provided for @enterBirthDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez votre date de naissance.'**
+  String get enterBirthDate;
+
+  /// No description provided for @enterPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez votre numéro de téléphone.'**
+  String get enterPhone;
+
+  /// No description provided for @phonesDiffer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les deux numéros ne sont pas identiques.'**
+  String get phonesDiffer;
+
+  /// No description provided for @enterValidEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez une adresse e-mail valide.'**
+  String get enterValidEmail;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mot de passe doit contenir au moins 6 caractères.'**
+  String get passwordTooShort;
+
+  /// No description provided for @signInRefused.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion refusée. Réessayez.'**
+  String get signInRefused;
+
+  /// No description provided for @accountCreated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte créé'**
+  String get accountCreated;
+
+  /// No description provided for @confirmEmailSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un message a été envoyé à {email}. Ouvrez le lien qu\'il contient, puis revenez vous connecter.'**
+  String confirmEmailSent(String email);
+
+  /// No description provided for @serverNotConfigured.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur non configuré'**
+  String get serverNotConfigured;
+
+  /// No description provided for @pinEnter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez votre code'**
+  String get pinEnter;
+
+  /// No description provided for @pinChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un code'**
+  String get pinChoose;
+
+  /// No description provided for @pinConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez le code'**
+  String get pinConfirm;
+
+  /// No description provided for @pinConfirmSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez-le une seconde fois.'**
+  String get pinConfirmSubtitle;
+
+  /// No description provided for @pinChooseSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code ouvre l\'application quand vous n\'avez pas de réseau.'**
+  String get pinChooseSubtitle;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les deux codes ne correspondent pas. Recommencez.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinNoneStored.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun code enregistré sur cet appareil.'**
+  String get pinNoneStored;
+
+  /// No description provided for @pinWrong.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code incorrect.'**
+  String get pinWrong;
+
+  /// No description provided for @pinForgot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code oublié ? Se reconnecter'**
+  String get pinForgot;
+
+  /// No description provided for @pinReconnect.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se reconnecter'**
+  String get pinReconnect;
+
+  /// No description provided for @pickBusiness.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une activité'**
+  String get pickBusiness;
+
+  /// No description provided for @manageBusinesses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer les entreprises'**
+  String get manageBusinesses;
+
+  /// No description provided for @newBusiness.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle activité'**
+  String get newBusiness;
+
+  /// No description provided for @signOut.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter'**
+  String get signOut;
+
+  /// No description provided for @church.
+  ///
+  /// In fr, this message translates to:
+  /// **'Église'**
+  String get church;
+
+  /// No description provided for @farm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ferme'**
+  String get farm;
+
+  /// No description provided for @shop.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commerce'**
+  String get shop;
+
+  /// No description provided for @business.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activité'**
+  String get business;
+
+  /// No description provided for @waiting.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get waiting;
+
+  /// No description provided for @accountReady.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est prêt'**
+  String get accountReady;
+
+  /// No description provided for @accountReadyBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'êtes encore rattaché à aucune activité. Si le responsable vous a remis un code, entrez-le. Sinon, communiquez-lui le numéro ci-dessous.'**
+  String get accountReadyBody;
+
+  /// No description provided for @giveThisToManager.
+  ///
+  /// In fr, this message translates to:
+  /// **'À communiquer au responsable'**
+  String get giveThisToManager;
+
+  /// No description provided for @createBusiness.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une activité'**
+  String get createBusiness;
+
+  /// No description provided for @iHaveACode.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai un code'**
+  String get iHaveACode;
+
+  /// No description provided for @verify.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get verify;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes informations'**
+  String get myProfile;
+
+  /// No description provided for @inviteSomeone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inviter quelqu’un'**
+  String get inviteSomeone;
+
+  /// No description provided for @applications.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get applications;
+
+  /// No description provided for @businesses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entreprises'**
+  String get businesses;
+
+  /// No description provided for @applyForBusiness.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander une entreprise'**
+  String get applyForBusiness;
+
+  /// No description provided for @switchBusiness.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer d\'activité'**
+  String get switchBusiness;
+
+  /// No description provided for @accounting.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comptabilité'**
+  String get accounting;
+
+  /// No description provided for @administration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Administration'**
+  String get administration;
+
+  /// No description provided for @account.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get account;
+
+  /// No description provided for @stayConnected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rester connecté'**
+  String get stayConnected;
+
+  /// No description provided for @unsentDataTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des données ne sont pas encore envoyées'**
+  String get unsentDataTitle;
+
+  /// No description provided for @unsentDataBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 enregistrement attend le réseau.} other{{count} enregistrements attendent le réseau.}} Ces données restent sur cet appareil et seront envoyées à la prochaine connexion de ce compte.\n\nSe déconnecter maintenant ?'**
+  String unsentDataBody(int count);
+
+  /// No description provided for @language.
+  ///
+  /// In fr, this message translates to:
+  /// **'Langue'**
+  String get language;
+
+  /// No description provided for @languageSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La langue de cet appareil. Chacun choisit la sienne.'**
+  String get languageSubtitle;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comme le téléphone'**
+  String get languageSystem;
+
+  /// No description provided for @languageSystemSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suit la langue de l\'appareil : {resolved}'**
+  String languageSystemSubtitle(String resolved);
+
+  /// No description provided for @save.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get save;
+
+  /// No description provided for @saved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistré'**
+  String get saved;
+
+  /// No description provided for @cancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get cancel;
+
+  /// No description provided for @retry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get retry;
+
+  /// No description provided for @close.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get close;
+}
+
+class _StringsDelegate extends LocalizationsDelegate<Strings> {
+  const _StringsDelegate();
+
+  @override
+  Future<Strings> load(Locale locale) {
+    return SynchronousFuture<Strings>(lookupStrings(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['dyu', 'en', 'fr', 'mos'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_StringsDelegate old) => false;
+}
+
+Strings lookupStrings(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'dyu':
+      return StringsDyu();
+    case 'en':
+      return StringsEn();
+    case 'fr':
+      return StringsFr();
+    case 'mos':
+      return StringsMos();
+  }
+
+  throw FlutterError(
+      'Strings.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/features/admin/create_business_screen.dart';
 import 'package:kaj_app/features/auth/no_org_screen.dart';
@@ -64,7 +65,11 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        MaterialApp(home: CreateBusinessScreen(admin: AdminRepository(null))),
+        MaterialApp(
+            locale: const Locale('fr'),
+            localizationsDelegates: Strings.localizationsDelegates,
+            supportedLocales: Strings.supportedLocales,
+            home: CreateBusinessScreen(admin: AdminRepository(null))),
       );
       await tester.pumpAndSettle();
     }
@@ -135,6 +140,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('fr'),
+          localizationsDelegates: Strings.localizationsDelegates,
+          supportedLocales: Strings.supportedLocales,
           home: NoOrgScreen(
             identity: identity,
             onRetry: () async {},
@@ -154,6 +162,9 @@ void main() {
       var tapped = false;
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('fr'),
+          localizationsDelegates: Strings.localizationsDelegates,
+          supportedLocales: Strings.supportedLocales,
           home: NoOrgScreen(
             identity: identity,
             onRetry: () async {},

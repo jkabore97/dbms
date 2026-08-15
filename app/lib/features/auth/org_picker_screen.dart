@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
+import '../../l10n/strings.dart';
 
 /// Shown when someone belongs to more than one business — the accountant who
 /// keeps books for a church and a farm, or an owner with two shops.
@@ -15,7 +16,7 @@ class OrgPickerScreen extends StatelessWidget {
     this.onSignOut,
     this.onCreateBusiness,
     this.onBusinesses,
-    this.title = 'Choisissez une activité',
+    this.title,
   });
 
   final List<OrgSummary> orgs;
@@ -31,7 +32,9 @@ class OrgPickerScreen extends StatelessWidget {
   /// archive or delete one.
   final VoidCallback? onBusinesses;
 
-  final String title;
+  /// Null takes the localized default. Passed only by callers that mean
+  /// something narrower than "choose".
+  final String? title;
 
   @override
   Widget build(BuildContext context) {
@@ -39,25 +42,25 @@ class OrgPickerScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(title ?? Strings.of(context).pickBusiness),
         actions: [
           if (onBusinesses != null)
             IconButton(
               onPressed: onBusinesses,
               icon: const Icon(Icons.business_outlined),
-              tooltip: 'Gérer les entreprises',
+              tooltip: Strings.of(context).manageBusinesses,
             ),
           if (onCreateBusiness != null)
             IconButton(
               onPressed: onCreateBusiness,
               icon: const Icon(Icons.add_business_outlined),
-              tooltip: 'Nouvelle activité',
+              tooltip: Strings.of(context).newBusiness,
             ),
           if (onSignOut != null)
             IconButton(
               onPressed: onSignOut,
               icon: const Icon(Icons.logout),
-              tooltip: 'Se déconnecter',
+              tooltip: Strings.of(context).signOut,
             ),
         ],
       ),
@@ -95,7 +98,7 @@ class OrgPickerScreen extends StatelessWidget {
                   ),
                   subtitle: Text(
                     [
-                      labelForProfile(org.profile),
+                      localizedProfile(context, org.profile),
                       if (org.roles.isNotEmpty) labelForRole(org.roles.first),
                     ].join(' · '),
                   ),
@@ -121,6 +124,22 @@ IconData iconForProfile(String profile) {
       return Icons.storefront_outlined;
     default:
       return Icons.business_outlined;
+  }
+}
+
+/// The localized profile label. The plain [labelForProfile] stays for the
+/// screens not yet migrated; new code takes this one.
+String localizedProfile(BuildContext context, String profile) {
+  final strings = Strings.of(context);
+  switch (profile) {
+    case 'church':
+      return strings.church;
+    case 'farm':
+      return strings.farm;
+    case 'retail':
+      return strings.shop;
+    default:
+      return strings.business;
   }
 }
 

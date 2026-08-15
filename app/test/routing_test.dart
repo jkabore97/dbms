@@ -88,6 +88,12 @@ void main() {
   }
 
   Future<void> pumpApp(WidgetTester tester) async {
+    // A Burkinabè phone, not the test harness's en_US default. Language now
+    // follows the device, so without this the whole suite would render in
+    // English and every French assertion below would be asserting a bug.
+    tester.platformDispatcher.localesTestValue = [const Locale('fr')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
     // The real app, with the real router. KajApp builds its own MaterialApp,
     // so there is deliberately no wrapper here: a test that supplied its own
     // Navigator would be testing a tree the user never gets.

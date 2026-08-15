@@ -8,6 +8,7 @@ import '../console/console_repository.dart';
 import '../db/local_db.dart';
 import '../farm/farm_repository.dart';
 import '../invoicing/invoicing_repository.dart';
+import '../l10n/locale_controller.dart';
 import '../onboarding/onboarding_repository.dart';
 import '../reports/reports_repository.dart';
 import '../retail/retail_repository.dart';
@@ -31,6 +32,7 @@ class AppScope extends InheritedWidget {
   const AppScope({
     super.key,
     required this.session,
+    required this.localeController,
     required this.db,
     required this.auth,
     required this.admin,
@@ -48,6 +50,7 @@ class AppScope extends InheritedWidget {
   });
 
   final SessionController session;
+  final LocaleController localeController;
   final LocalDb db;
   final AuthRepository auth;
   final AdminRepository admin;

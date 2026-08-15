@@ -39,6 +39,7 @@ import '../../features/invoicing/invoices_screen.dart';
 import '../../features/invoicing/new_invoice_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
+import '../../features/settings/language_screen.dart';
 import '../accounting/models.dart';
 import '../auth/models.dart';
 import '../capture/invoice_reading.dart';
@@ -81,6 +82,7 @@ abstract final class Routes {
   static const applyForBusiness = '/demander-une-entreprise';
   static const console = '/console';
   static const applications = '/demandes';
+  static const language = '/langue';
 
   /// A business, and everything inside it.
   static String org(String id) => '/o/$id';
@@ -103,6 +105,10 @@ GoRouter buildRouter(SessionController session) {
     final here = state.matchedLocation;
 
     bool at(String path) => here == path || here.startsWith('$path/');
+
+    // The language screen answers to no phase: the person who most needs it
+    // is the one who cannot read whatever screen their phase would show.
+    if (at(Routes.language)) return null;
 
     switch (session.phase) {
       case SessionPhase.booting:
@@ -183,6 +189,11 @@ GoRouter buildRouter(SessionController session) {
     redirect: redirect,
     routes: [
       GoRoute(path: '/', builder: (_, __) => const _Splash()),
+      // Reachable from every phase — see the redirect, which never blocks it.
+      // The person who most needs this screen is the one who cannot read the
+      // sign-in page, so gating it behind sign-in would be absurd.
+      GoRoute(
+          path: Routes.language, builder: (_, __) => const LanguageScreen()),
       GoRoute(path: Routes.splash, builder: (_, __) => const _Splash()),
 
       GoRoute(

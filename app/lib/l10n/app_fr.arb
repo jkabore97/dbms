@@ -1,0 +1,113 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Kaj",
+
+  "languageName": "Français",
+  "@languageName": {
+    "description": "This language's own name, in itself — shown in the language picker so somebody who cannot read the current language can still find their own."
+  },
+
+  "signInTagline": "Connectez-vous pour ouvrir votre activité.",
+  "signUpTagline": "Créez votre compte. Vous rejoindrez une activité ensuite, avec un code.",
+  "signIn": "Se connecter",
+  "signUp": "Créer un compte",
+  "createMyAccount": "Créer mon compte",
+  "firstName": "Prénom",
+  "middleName": "Deuxième prénom (facultatif)",
+  "lastName": "Nom de famille",
+  "birthDate": "Date de naissance",
+  "jobTitle": "Fonction (facultatif)",
+  "jobTitleHint": "Vendeuse, gérant, comptable…",
+  "phoneNumber": "Numéro de téléphone",
+  "phoneHint": "70 12 34 56",
+  "confirmPhone": "Confirmez le numéro",
+  "phoneIsForManager": "C'est ce numéro que votre responsable utilisera.",
+  "email": "E-mail",
+  "password": "Mot de passe",
+  "passwordMin": "Au moins 6 caractères",
+  "enterFirstName": "Entrez votre prénom.",
+  "enterLastName": "Entrez votre nom de famille.",
+  "enterBirthDate": "Indiquez votre date de naissance.",
+  "enterPhone": "Entrez votre numéro de téléphone.",
+  "phonesDiffer": "Les deux numéros ne sont pas identiques.",
+  "enterValidEmail": "Entrez une adresse e-mail valide.",
+  "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+  "signInRefused": "Connexion refusée. Réessayez.",
+  "accountCreated": "Compte créé",
+  "confirmEmailSent": "Un message a été envoyé à {email}. Ouvrez le lien qu'il contient, puis revenez vous connecter.",
+  "@confirmEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNotConfigured": "Serveur non configuré",
+
+  "pinEnter": "Entrez votre code",
+  "pinChoose": "Choisissez un code",
+  "pinConfirm": "Confirmez le code",
+  "pinConfirmSubtitle": "Entrez-le une seconde fois.",
+  "pinChooseSubtitle": "Ce code ouvre l'application quand vous n'avez pas de réseau.",
+  "pinMismatch": "Les deux codes ne correspondent pas. Recommencez.",
+  "pinNoneStored": "Aucun code enregistré sur cet appareil.",
+  "pinWrong": "Code incorrect.",
+  "pinForgot": "Code oublié ? Se reconnecter",
+  "pinReconnect": "Se reconnecter",
+
+  "pickBusiness": "Choisissez une activité",
+  "manageBusinesses": "Gérer les entreprises",
+  "newBusiness": "Nouvelle activité",
+  "signOut": "Se déconnecter",
+  "church": "Église",
+  "farm": "Ferme",
+  "shop": "Commerce",
+  "business": "Activité",
+
+  "waiting": "En attente",
+  "accountReady": "Votre compte est prêt",
+  "accountReadyBody": "Vous n'êtes encore rattaché à aucune activité. Si le responsable vous a remis un code, entrez-le. Sinon, communiquez-lui le numéro ci-dessous.",
+  "giveThisToManager": "À communiquer au responsable",
+  "createBusiness": "Créer une activité",
+  "iHaveACode": "J'ai un code",
+  "verify": "Vérifier",
+
+  "myProfile": "Mes informations",
+  "inviteSomeone": "Inviter quelqu’un",
+  "applications": "Demandes",
+  "businesses": "Entreprises",
+  "applyForBusiness": "Demander une entreprise",
+  "switchBusiness": "Changer d'activité",
+  "accounting": "Comptabilité",
+  "administration": "Administration",
+  "account": "Compte",
+  "stayConnected": "Rester connecté",
+  "unsentDataTitle": "Des données ne sont pas encore envoyées",
+  "unsentDataBody": "{count, plural, =1{1 enregistrement attend le réseau.} other{{count} enregistrements attendent le réseau.}} Ces données restent sur cet appareil et seront envoyées à la prochaine connexion de ce compte.\n\nSe déconnecter maintenant ?",
+  "@unsentDataBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "language": "Langue",
+  "languageSubtitle": "La langue de cet appareil. Chacun choisit la sienne.",
+  "languageSystem": "Comme le téléphone",
+  "languageSystemSubtitle": "Suit la langue de l'appareil : {resolved}",
+  "@languageSystemSubtitle": {
+    "placeholders": {
+      "resolved": {
+        "type": "String"
+      }
+    }
+  },
+
+  "save": "Enregistrer",
+  "saved": "Enregistré",
+  "cancel": "Annuler",
+  "retry": "Réessayer",
+  "close": "Fermer"
+}
