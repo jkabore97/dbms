@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import 'invoice_reading.dart';
 import 'models.dart';
+import 'notebook_reading.dart';
 
 /// Photographs: taking them, sending them, reading them back.
 ///
@@ -211,6 +213,45 @@ class CaptureRepository {
           "Le serveur n'a pas dit où la photo a été rangée.");
     }
     return key;
+  }
+
+  // ----------------------------------------------------------------
+  // The handwriting reader
+  // ----------------------------------------------------------------
+
+  /// Sends a photographed notebook page to the Worker's /read-page and
+  /// returns editable product lines for the same confirm screen the
+  /// invoice capture uses. Online-only by nature: the reading happens on
+  /// a model the phone does not carry.
+  ///
+  /// A Worker without its ANTHROPIC_API_KEY secret answers 501; that
+  /// surfaces as the polite sentence below rather than a failure, because
+  /// the feature ships deployed-but-dormant until the key is set.
+  Future<List<InvoiceLine>> readNotebookPage({
+    required String orgId,
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    final response = await _http.post(
+      Uri.parse('$_uploads/v1/orgs/$orgId/read-page'),
+      headers: {
+        'Authorization': 'Bearer ${_requireToken()}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'image': base64Encode(bytes),
+        'mime': contentType,
+      }),
+    );
+
+    if (response.statusCode == 501) {
+      throw const CaptureException(
+          "Le lecteur de carnet n'est pas encore configuré.");
+    }
+    if (response.statusCode != 200) {
+      throw CaptureException(_messageFrom(response));
+    }
+    return parseNotebookLines(response.body);
   }
 
   // ----------------------------------------------------------------
