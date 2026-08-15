@@ -58,6 +58,7 @@ Each milestone ends with something demonstrable.
 | The credit book (M8): sales à crédit, repayments, qui-me-doit-combien | built, 11 assertions |
 | Tontines (M13): members, rounds, whose turn, close-the-round contract | built, 8 assertions |
 | Production (transformation): ingredients become a product, cost moves with them, one unit's cost computed | built, 9 assertions |
+| Product lifecycle: rename without rewriting receipts; owner-only archive that keeps all history | built, 6 assertions |
 
 **Not built**
 
