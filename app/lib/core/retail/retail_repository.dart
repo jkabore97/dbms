@@ -35,7 +35,7 @@ class RetailRepository {
     var query = client
         .from('products')
         .select('id, name, barcode, serial, cost_price, sale_price, quantity, '
-            'expires_on, low_stock_at')
+            'expires_on, low_stock_at, is_ingredient')
         .eq('org_id', orgId);
     if (activeOnly) query = query.eq('is_active', true);
 
@@ -209,6 +209,7 @@ class RetailRepository {
     DateTime? expiresOn,
     double? lowStockAt,
     bool? isActive,
+    bool? isIngredient,
   }) async {
     final client = _requireClient();
     await client.from('products').update({
@@ -218,6 +219,7 @@ class RetailRepository {
       if (expiresOn != null) 'expires_on': _date(expiresOn),
       if (lowStockAt != null) 'low_stock_at': lowStockAt,
       if (isActive != null) 'is_active': isActive,
+      if (isIngredient != null) 'is_ingredient': isIngredient,
     }).eq('id', productId);
   }
 

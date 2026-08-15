@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/core/production/picker_order.dart';
 import 'package:kaj_app/core/production/production_repository.dart';
+import 'package:kaj_app/core/retail/models.dart';
 
 /// The client half of the transformation tool: rows parse, the payload keys
 /// match what record_production() expects, and a build with no server says
@@ -51,6 +53,33 @@ void main() {
       final draft =
           const ProductionInputDraft(productId: 'p1', quantity: 2.5).toJson();
       expect(draft, {'product_id': 'p1', 'quantity': 2.5});
+    });
+  });
+
+  group('the picker keeps a big shelf small', () {
+    // Two hundred articles must not bury the ten things the maker actually
+    // cooks with: recently used first, then flagged ingredients, then the
+    // rest — alphabetical inside each band.
+    test('recently cooked with floats above flags, flags above the rest', () {
+      final products = [
+        const Product(id: '1', name: 'Zeste'),
+        const Product(id: '2', name: 'Farine', isIngredient: true),
+        const Product(id: '3', name: 'Ampoule'),
+        const Product(id: '4', name: 'Huile', isIngredient: true),
+        const Product(id: '5', name: 'Sucre'),
+      ];
+      final ordered = orderForPicking(products, {'sucre', 'huile'});
+      expect(ordered.map((p) => p.name).toList(),
+          ['Huile', 'Sucre', 'Farine', 'Ampoule', 'Zeste']);
+    });
+
+    test('with no history, flagged ingredients lead alphabetically', () {
+      final products = [
+        const Product(id: '1', name: 'Savon'),
+        const Product(id: '2', name: 'Karité', isIngredient: true),
+      ];
+      final ordered = orderForPicking(products, const {});
+      expect(ordered.first.name, 'Karité');
     });
   });
 

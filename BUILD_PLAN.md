@@ -59,6 +59,7 @@ Each milestone ends with something demonstrable.
 | Tontines (M13): members, rounds, whose turn, close-the-round contract | built, 8 assertions |
 | Production (transformation): ingredients become a product, cost moves with them, one unit's cost computed | built, 9 assertions |
 | Product lifecycle: rename without rewriting receipts; owner-only archive that keeps all history | built, 6 assertions |
+| Scale to 200 articles: search in Articles, searchable recency-ordered ingredient picker, "Refaire" on past runs, ingredient flag off the sale sheet | built |
 
 **Not built**
 

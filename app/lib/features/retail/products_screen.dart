@@ -46,6 +46,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
   bool _loading = true;
   String? _error;
 
+  /// The search box. Filtering happens on the device over the list already
+  /// fetched — instant, and it works with no signal. At two hundred articles
+  /// three typed letters beat any amount of scrolling.
+  final _search = TextEditingController();
+
+  List<Product> get _visible {
+    final q = _search.text.trim().toLowerCase();
+    if (q.isEmpty) return _products;
+    return _products.where((p) => p.name.toLowerCase().contains(q)).toList();
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,6 +202,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
               Text('Valeur du stock : ${_money.format(stockValue)}',
                   style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
+              TextField(
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Rechercher un article…',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _search.text.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(_search.clear),
+                        ),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
             if (!_loading && _products.isEmpty && _error == null)
               Padding(
@@ -203,13 +237,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   ],
                 ),
               ),
-            ..._products.map((p) => Card(
+            ..._visible.map((p) => Card(
                   elevation: 0,
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: ListTile(
                     title: Text(p.name),
                     subtitle: Text([
                       '${_trim(p.quantity)} en stock',
+                      if (p.isIngredient) 'ingrédient',
                       if (p.salePrice > 0) _money.format(p.salePrice),
                       if (p.expiresOn != null)
                         'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
@@ -271,6 +306,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
           ? ''
           : _plain(widget.product.lowStockAt!));
   late DateTime? _expiresOn = widget.product.expiresOn;
+  late bool _isIngredient = widget.product.isIngredient;
 
   bool _busy = false;
   String? _error;
@@ -303,6 +339,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         costPrice: _parse(_cost),
         lowStockAt: _parse(_low),
         expiresOn: _expiresOn,
+        isIngredient: _isIngredient,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -420,6 +457,16 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                   ? "Date d'expiration (facultatif)"
                   : 'Expire le '
                       '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
+            ),
+            const SizedBox(height: 4),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _isIngredient,
+              onChanged:
+                  _busy ? null : (v) => setState(() => _isIngredient = v),
+              title: const Text('Ingrédient de production'),
+              subtitle: const Text(
+                  'Caché de la vente, proposé en premier en production.'),
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),
