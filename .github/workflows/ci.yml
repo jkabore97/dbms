@@ -192,6 +192,17 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_org_theme.sql
 
+      # "function gen_random_bytes(integer) does not exist" reached a real
+      # owner trying to hire: the code minter needed pgcrypto, which is
+      # created only in schema.sql and therefore in none of the migration
+      # bundles that actually get pasted into Supabase. The invitation suite
+      # never caught it because every row in it supplies its own code, so the
+      # one function between an admin and a new employee was never called.
+      - name: Prove an invitation code can be minted with no extensions
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_invitation_codes.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
