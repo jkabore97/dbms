@@ -4,6 +4,7 @@ import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/staff.dart';
@@ -39,7 +40,11 @@ class FarmHomeScreen extends StatefulWidget {
     this.capture,
     this.staff,
     this.accountAction,
+    this.access = OrgAccess.allEdit,
   });
+
+  /// The owner's dial from 031: which tools this person is shown here.
+  final OrgAccess access;
 
   final LocalDb db;
   final OrgSummary org;
@@ -240,18 +245,20 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                 ),
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.handshake_outlined),
-            tooltip: Strings.of(context).creditBook,
-            onPressed: () =>
-                context.push(Routes.inside(widget.org.id, 'credits')),
-          ),
-          IconButton(
-            icon: const Icon(Icons.soup_kitchen_outlined),
-            tooltip: Strings.of(context).production,
-            onPressed: () =>
-                context.push(Routes.inside(widget.org.id, 'production')),
-          ),
+          if (widget.access.canSee('credits'))
+            IconButton(
+              icon: const Icon(Icons.handshake_outlined),
+              tooltip: Strings.of(context).creditBook,
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'credits')),
+            ),
+          if (widget.access.canSee('production'))
+            IconButton(
+              icon: const Icon(Icons.soup_kitchen_outlined),
+              tooltip: Strings.of(context).production,
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'production')),
+            ),
           if (widget.capture != null && widget.capture!.isConfigured)
             IconButton(
               icon: const Icon(Icons.photo_camera_outlined),

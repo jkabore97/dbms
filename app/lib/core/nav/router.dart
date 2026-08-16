@@ -16,6 +16,7 @@ import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
 import '../../features/admin/structure_screen.dart';
+import '../../features/admin/team_access_screen.dart';
 import '../../features/auth/join_or_apply_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/no_org_screen.dart';
@@ -485,6 +486,15 @@ GoRouter buildRouter(SessionController session) {
             ),
             routes: [
               GoRoute(
+                path: 'acces',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) =>
+                      TeamAccessScreen(admin: scope.admin, orgId: org.id),
+                ),
+              ),
+              GoRoute(
                 path: 'personnel',
                 builder: (context, state) => _withOrg(
                   context,
@@ -709,6 +719,7 @@ GoRouter buildRouter(SessionController session) {
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
+                access: scope.session.accessFor(org.id),
               ),
             ),
           ),
@@ -725,8 +736,11 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) =>
-                  CreditBookScreen(org: org, credit: scope.credit),
+              (scope, org) => CreditBookScreen(
+                org: org,
+                credit: scope.credit,
+                access: scope.session.accessFor(org.id),
+              ),
             ),
             routes: [
               GoRoute(
@@ -738,6 +752,7 @@ GoRouter buildRouter(SessionController session) {
                     org: org,
                     credit: scope.credit,
                     customerId: state.pathParameters['customerId']!,
+                    access: scope.session.accessFor(org.id),
                   ),
                 ),
               ),
@@ -748,8 +763,11 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) =>
-                  TontinesScreen(org: org, tontine: scope.tontine),
+              (scope, org) => TontinesScreen(
+                org: org,
+                tontine: scope.tontine,
+                access: scope.session.accessFor(org.id),
+              ),
             ),
             routes: [
               GoRoute(
@@ -761,6 +779,7 @@ GoRouter buildRouter(SessionController session) {
                     org: org,
                     tontine: scope.tontine,
                     tontineId: state.pathParameters['tontineId']!,
+                    access: scope.session.accessFor(org.id),
                   ),
                 ),
               ),
@@ -783,6 +802,7 @@ GoRouter buildRouter(SessionController session) {
                 org: org,
                 production: scope.production,
                 retail: scope.retail,
+                access: scope.session.accessFor(org.id),
               ),
             ),
           ),

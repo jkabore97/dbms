@@ -65,6 +65,7 @@ Each milestone ends with something demonstrable.
 | Ajout multiple: twenty articles in one save, one line each, parsed with per-line errors before anything is written | built |
 | The handwriting reader: a photographed carnet page becomes editable product lines via AI vision, dormant until ANTHROPIC_API_KEY is set on the Worker | built |
 | The glass restyle: aurora wash behind every page in the business's own palette, frosted surfaces, soft geometry — no blur, so it runs on cheap phones | built |
+| Team access (M-rights): the owner's dial per tool per tier — hidden/view/edit, server-enforced on prices, credit and production | built, 8 assertions |
 
 **Not built**
 

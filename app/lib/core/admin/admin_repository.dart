@@ -399,6 +399,47 @@ class AdminRepository {
     });
   }
 
+  // ----------------------------------------------------------------
+  // The owner's dial (031): who sees what, who edits what
+  // ----------------------------------------------------------------
+
+  /// The rules as stored: `{tier: {feature: access}}`. Absent entries mean
+  /// the preserving default ('edit', reports 'view').
+  Future<Map<String, Map<String, String>>> featureRules(String orgId) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('org_feature_rules')
+        .select('tier, feature, access')
+        .eq('org_id', orgId);
+    final out = <String, Map<String, String>>{};
+    for (final r in rows as List) {
+      final row = Map<String, dynamic>.from(r as Map);
+      out.putIfAbsent(row['tier'] as String, () => {})[
+          row['feature'] as String] = row['access'] as String;
+    }
+    return out;
+  }
+
+  /// Writes the whole dial in one save. Explicit rows for every feature and
+  /// tier, so what the owner saw on screen is exactly what is stored.
+  Future<void> saveFeatureRules(
+    String orgId,
+    Map<String, Map<String, String>> rules,
+  ) async {
+    final client = _requireClient();
+    await client.from('org_feature_rules').upsert([
+      for (final tier in rules.entries)
+        for (final feature in tier.value.entries)
+          {
+            'org_id': orgId,
+            'tier': tier.key,
+            'feature': feature.key,
+            'access': feature.value,
+            'updated_by': currentUserId,
+          },
+    ]);
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {

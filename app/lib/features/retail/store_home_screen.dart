@@ -4,6 +4,7 @@ import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
@@ -43,9 +44,13 @@ class StoreHomeScreen extends StatefulWidget {
     this.staff,
     this.capture,
     this.accountAction,
+    this.access = OrgAccess.allEdit,
   });
 
   final OrgSummary org;
+
+  /// The owner's dial from 031: which tools this person is shown here.
+  final OrgAccess access;
 
   /// Null in a build with no server.
   final RetailRepository? retail;
@@ -158,6 +163,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         retail: retail,
         capture: widget.capture,
         products: _products,
+        canCredit: widget.access.canEdit('credits'),
       ),
     );
     if (recorded == true) await _load();
@@ -196,20 +202,23 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.handshake_outlined),
-            tooltip: Strings.of(context).creditBook,
-            onPressed: () =>
-                context.push(Routes.inside(widget.org.id, 'credits')),
-          ),
-          IconButton(
-            icon: const Icon(Icons.soup_kitchen_outlined),
-            tooltip: Strings.of(context).production,
-            onPressed: () async {
-              await context.push(Routes.inside(widget.org.id, 'production'));
-              if (mounted) await _load();
-            },
-          ),
+          if (widget.access.canSee('credits'))
+            IconButton(
+              icon: const Icon(Icons.handshake_outlined),
+              tooltip: Strings.of(context).creditBook,
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'credits')),
+            ),
+          if (widget.access.canSee('production'))
+            IconButton(
+              icon: const Icon(Icons.soup_kitchen_outlined),
+              tooltip: Strings.of(context).production,
+              onPressed: () async {
+                await context.push(Routes.inside(widget.org.id, 'production'));
+                if (mounted) await _load();
+              },
+            ),
+          if (widget.access.canSee('products'))
           IconButton(
             icon: const Icon(Icons.inventory_2_outlined),
             tooltip: Strings.of(context).productsLabel,
@@ -221,20 +230,20 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     if (mounted) await _load();
                   },
           ),
-          if (canPhotograph)
+          if (canPhotograph && widget.access.canSee('photos'))
             IconButton(
               icon: const Icon(Icons.photo_library_outlined),
               tooltip: Strings.of(context).photos,
               onPressed: _openGallery,
             ),
-          if (widget.invoicing != null)
+          if (widget.invoicing != null && widget.access.canSee('invoices'))
             IconButton(
               icon: const Icon(Icons.receipt_long_outlined),
               tooltip: Strings.of(context).invoices,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'factures')),
             ),
-          if (widget.staff != null)
+          if (widget.staff != null && widget.access.canSee('staff'))
             IconButton(
               icon: const Icon(Icons.groups_outlined),
               tooltip: Strings.of(context).staffLabel,

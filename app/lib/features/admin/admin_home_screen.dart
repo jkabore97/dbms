@@ -92,6 +92,13 @@ class AdminHomeScreen extends StatelessWidget {
                 context.push(Routes.inside(org.id, 'administration/structure')),
           ),
           _AdminTile(
+            icon: Icons.key_outlined,
+            title: "Accès de l'équipe",
+            subtitle: 'Qui voit quoi, qui modifie quoi',
+            onTap: () =>
+                context.push(Routes.inside(org.id, 'administration/acces')),
+          ),
+          _AdminTile(
             icon: Icons.settings_outlined,
             title: Strings.of(context).orgSettingsTitle,
             subtitle: Strings.of(context).orgSettingsSubtitle,
