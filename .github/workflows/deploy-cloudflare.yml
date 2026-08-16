@@ -109,10 +109,15 @@ jobs:
       - name: Build web
         working-directory: app
         run: |
-          flutter build web --release \
+          flutter build web --release --pwa-strategy none \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL"
+          # --pwa-strategy none stops registering a service worker, but the
+          # tool still plants an empty file under this name. Phones that
+          # installed the old offline-first worker re-fetch this URL and get
+          # the self-destruct from web/, which evicts their stale cache.
+          cp web/flutter_service_worker.js build/web/flutter_service_worker.js
 
       - name: Deploy
         run: npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml
