@@ -30,7 +30,12 @@ class SaleSheet extends StatefulWidget {
     required this.retail,
     this.capture,
     this.products = const [],
+    this.canCredit = true,
   });
+
+  /// Whether "Crédit" is offered at all — the owner's dial from 031. The
+  /// server refuses regardless; this keeps the refused button off screen.
+  final bool canCredit;
 
   final String orgId;
   final RetailRepository retail;
@@ -346,11 +351,13 @@ class _SaleSheetState extends State<SaleSheet> {
             const SizedBox(height: 16),
             SegmentedButton<String>(
               showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(value: 'cash', label: Text('Espèces')),
-                ButtonSegment(value: 'mobile_money', label: Text('Mobile')),
-                ButtonSegment(value: 'bank', label: Text('Banque')),
-                ButtonSegment(value: 'credit', label: Text('Crédit')),
+              segments: [
+                const ButtonSegment(value: 'cash', label: Text('Espèces')),
+                const ButtonSegment(
+                    value: 'mobile_money', label: Text('Mobile')),
+                const ButtonSegment(value: 'bank', label: Text('Banque')),
+                if (widget.canCredit)
+                  const ButtonSegment(value: 'credit', label: Text('Crédit')),
               ],
               selected: {_method},
               onSelectionChanged:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
@@ -32,6 +33,7 @@ Widget homeScreenFor({
   CaptureRepository? capture,
   Widget? accountAction,
   VoidCallback? onHistory,
+  OrgAccess access = OrgAccess.allEdit,
 }) {
   // Colour follows the business: the palette it chose, or — until somebody
   // chooses one — the same column that picks the screen, so a farm that has
@@ -61,6 +63,7 @@ Widget homeScreenFor({
           capture: capture,
           staff: staff,
           accountAction: accountAction,
+          access: access,
         ),
       'retail' => StoreHomeScreen(
           invoicing: invoicing,
@@ -69,6 +72,7 @@ Widget homeScreenFor({
           staff: staff,
           capture: capture,
           accountAction: accountAction,
+          access: access,
         ),
       // Anything else — a profile added server-side that this build has never
       // heard of — lands here rather than failing.

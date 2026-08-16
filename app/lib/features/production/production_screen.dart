@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../../core/production/picker_order.dart';
@@ -23,7 +24,11 @@ class ProductionScreen extends StatefulWidget {
     required this.org,
     required this.production,
     required this.retail,
+    this.access = OrgAccess.allEdit,
   });
+
+  /// The owner's dial: at 'view' the history reads, nothing records.
+  final OrgAccess access;
 
   final OrgSummary org;
   final ProductionRepository production;
@@ -96,7 +101,9 @@ class _ProductionScreenState extends State<ProductionScreen> {
     final dates = DateFormat('d MMM', 'fr_FR');
     return Scaffold(
       appBar: AppBar(title: Text(strings.production)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !widget.access.canEdit('production')
+          ? null
+          : FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.soup_kitchen_outlined),
         label: Text(strings.newProduction),
@@ -148,6 +155,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
                                       ),
                                     ),
                                   ],
+                                  if (widget.access.canEdit('production'))
                                   Align(
                                     alignment: Alignment.centerRight,
                                     // Day two of any real bakery: the same

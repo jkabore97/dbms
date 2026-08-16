@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
@@ -23,7 +24,13 @@ class ProductsScreen extends StatefulWidget {
     required this.org,
     required this.retail,
     this.capture,
+    this.access = OrgAccess.allEdit,
   });
+
+  /// The owner's dial from 031. At 'view' the shelves are read-only: no
+  /// receiving, no bulk add, no edit sheet — the server refuses price edits
+  /// anyway; this keeps the refused gestures off screen.
+  final OrgAccess access;
 
   final OrgSummary org;
   final RetailRepository retail;
@@ -189,11 +196,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
       appBar: AppBar(
         title: const Text('Articles'),
         actions: [
-          IconButton(
-            onPressed: _bulkAdd,
-            icon: const Icon(Icons.playlist_add),
-            tooltip: 'Ajout multiple',
-          ),
+          if (widget.access.canEdit('products'))
+            IconButton(
+              onPressed: _bulkAdd,
+              icon: const Icon(Icons.playlist_add),
+              tooltip: 'Ajout multiple',
+            ),
           if (widget.capture != null)
             IconButton(
               onPressed: _scan,
@@ -202,11 +210,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addStock,
-        icon: const Icon(Icons.add),
-        label: const Text('Entrée de stock'),
-      ),
+      floatingActionButton: widget.access.canEdit('products')
+          ? FloatingActionButton.extended(
+              onPressed: _addStock,
+              icon: const Icon(Icons.add),
+              label: const Text('Entrée de stock'),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -274,7 +284,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         : null,
                     // Long press, not tap, on purpose: a thumb scrolling the
                     // shelves must not fall into a sheet that changes prices.
-                    onLongPress: () => _edit(p),
+                    // And only for those the owner lets edit at all.
+                    onLongPress: widget.access.canEdit('products')
+                        ? () => _edit(p)
+                        : null,
                   ),
                 )),
             const SizedBox(height: 80),

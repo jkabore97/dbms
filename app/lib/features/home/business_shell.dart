@@ -33,12 +33,16 @@ class BusinessShell extends StatelessWidget {
     final live = scope.auth.hasLiveSession;
     final admin = org.isAdmin && live;
     final platform = session.isPlatformAdmin && live;
+    // The owner's dial: which tools this person is even shown. The server
+    // enforces the ones that matter; this decides what exists on screen.
+    final access = session.accessFor(org.id);
 
     return _HomeWithNotice(
       notice: session.orgsFromCache ? session.notice : null,
       child: homeScreenFor(
         db: scope.db,
         org: org,
+        access: access,
         reports: scope.reports,
         farm: scope.farm,
         invoicing: scope.invoicing,
@@ -71,7 +75,7 @@ class BusinessShell extends StatelessWidget {
           onAdminister: admin
               ? () => context.push(Routes.inside(org.id, 'administration'))
               : null,
-          onAccounting: live
+          onAccounting: live && access.canSee('reports')
               ? () => context.push(Routes.inside(org.id, 'comptabilite'))
               : null,
           onCreateBusiness:
@@ -83,13 +87,13 @@ class BusinessShell extends StatelessWidget {
           // manager, and the person who needs reaching does not have it.
           onMyProfile: live ? () => context.push(Routes.myProfile) : null,
           onLanguage: () => context.push(Routes.language),
-          onCreditBook: live
+          onCreditBook: live && access.canSee('credits')
               ? () => context.push(Routes.inside(org.id, 'credits'))
               : null,
-          onTontines: live
+          onTontines: live && access.canSee('tontines')
               ? () => context.push(Routes.inside(org.id, 'tontines'))
               : null,
-          onProduction: live
+          onProduction: live && access.canSee('production')
               ? () => context.push(Routes.inside(org.id, 'production'))
               : null,
           onApplyForOrg: !session.isPlatformAdmin && live

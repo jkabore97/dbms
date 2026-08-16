@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
+import '../access/org_access.dart';
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
 import '../auth/auth_repository.dart';
@@ -82,6 +83,45 @@ class SessionController extends ChangeNotifier {
   String? get lastOrgId => _lastOrgId;
 
   static const _lastOrgKey = 'last_org_id';
+
+  /// What each opened business lets this person see and edit — the owner's
+  /// dial from 031, fetched once per business per session. Screens read it
+  /// synchronously; until the fetch lands they get the same defaults the
+  /// server applies to a business that never touched the dial.
+  final Map<String, OrgAccess> _access = {};
+
+  OrgAccess accessFor(String? orgId) {
+    if (orgId == null) return OrgAccess.allEdit;
+    final loaded = _access[orgId];
+    if (loaded != null) return loaded;
+    final org = orgById(orgId);
+    if (org == null || org.isAdmin) return OrgAccess.allEdit;
+    return const OrgAccess.forTier({});
+  }
+
+  Future<void> _loadAccess(OrgSummary org) async {
+    if (org.isAdmin) {
+      _access[org.id] = OrgAccess.allEdit;
+      return;
+    }
+    final client = auth.client;
+    if (client == null) return;
+    try {
+      final rows = await client
+          .from('org_feature_rules')
+          .select('feature, access')
+          .eq('org_id', org.id)
+          .eq('tier', OrgAccess.tierOf(org.roles));
+      _access[org.id] = OrgAccess.forTier({
+        for (final r in rows as List)
+          (r as Map)['feature'] as String: r['access'] as String,
+      });
+      _emit();
+    } catch (_) {
+      // Offline, or a server older than 031: the defaults already in place
+      // are exactly what that server would answer.
+    }
+  }
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —
   /// took over.
@@ -254,6 +294,7 @@ class SessionController extends ChangeNotifier {
     await db.writePref(_lastOrgKey, null);
     _identity = null;
     _orgs = const [];
+    _access.clear();
     _lastOrgId = null;
     _notice = null;
     _isPlatformAdmin = false;
@@ -312,6 +353,8 @@ class SessionController extends ChangeNotifier {
     _startSync();
 
     _orgs = orgs;
+    // Rules may have changed since the last resolve; the next open refetches.
+    _access.clear();
     _orgsFromCache = fromCache;
     _isPlatformAdmin = platformAdmin;
     _notice = notice;
@@ -351,6 +394,7 @@ class SessionController extends ChangeNotifier {
     _lastOrgId = orgId;
     _phase = SessionPhase.ready;
     unawaited(db.writePref(_lastOrgKey, orgId));
+    unawaited(_loadAccess(orgById(orgId)!));
     unawaited(cacheChart(orgById(orgId)!));
     // Deliberately no notifyListeners(): the router is already mid-navigation
     // to this route, and telling it to re-run its redirect from inside that

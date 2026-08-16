@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
@@ -11,7 +12,15 @@ import '../../l10n/strings.dart';
 /// The business's tontines, and the one screen a round needs: who has paid,
 /// who has not, whose turn the pot is.
 class TontinesScreen extends StatefulWidget {
-  const TontinesScreen({super.key, required this.org, required this.tontine});
+  const TontinesScreen({
+    super.key,
+    required this.org,
+    required this.tontine,
+    this.access = OrgAccess.allEdit,
+  });
+
+  /// The owner's dial: at 'view' the rounds read, nothing is recorded.
+  final OrgAccess access;
 
   final OrgSummary org;
   final TontineRepository tontine;
@@ -67,7 +76,9 @@ class _TontinesScreenState extends State<TontinesScreen> {
     final strings = Strings.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(strings.tontines)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !widget.access.canEdit('tontines')
+          ? null
+          : FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.group_add_outlined),
         label: Text(strings.newTontine),
@@ -119,7 +130,11 @@ class TontineScreen extends StatefulWidget {
     required this.org,
     required this.tontine,
     required this.tontineId,
+    this.access = OrgAccess.allEdit,
   });
+
+  /// See [TontinesScreen.access].
+  final OrgAccess access;
 
   final OrgSummary org;
   final TontineRepository tontine;
@@ -231,7 +246,8 @@ class _TontineScreenState extends State<TontineScreen> {
                               style: const TextStyle(
                                   fontSize: 17, fontWeight: FontWeight.w500)),
                           subtitle: m.isTaker ? Text(strings.takesThePot) : null,
-                          trailing: m.hasPaid
+                          trailing: m.hasPaid ||
+                                  !widget.access.canEdit('tontines')
                               ? null
                               : FilledButton.tonal(
                                   onPressed: () => _markPaid(m),
@@ -246,7 +262,10 @@ class _TontineScreenState extends State<TontineScreen> {
                         // Offered only once everyone has paid — the server
                         // enforces it anyway; hiding a button that can only
                         // refuse is kinder than showing it.
-                        onPressed: allPaid ? _advance : null,
+                        onPressed:
+                            allPaid && widget.access.canEdit('tontines')
+                                ? _advance
+                                : null,
                         icon: const Icon(Icons.skip_next),
                         label: Text(strings.closeRound),
                       ),

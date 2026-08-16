@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/credit/credit_repository.dart';
 import '../../core/errors.dart';
@@ -15,7 +16,15 @@ import '../../l10n/strings.dart';
 /// Amounts are large and names are larger; this is read behind a counter,
 /// not at a desk.
 class CreditBookScreen extends StatefulWidget {
-  const CreditBookScreen({super.key, required this.org, required this.credit});
+  const CreditBookScreen({
+    super.key,
+    required this.org,
+    required this.credit,
+    this.access = OrgAccess.allEdit,
+  });
+
+  /// The owner's dial: at 'view' the carnet is read-only here.
+  final OrgAccess access;
 
   final OrgSummary org;
   final CreditRepository credit;
@@ -75,7 +84,9 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(strings.creditBook)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !widget.access.canEdit('credits')
+          ? null
+          : FloatingActionButton.extended(
         onPressed: _newSale,
         icon: const Icon(Icons.handshake_outlined),
         label: Text(strings.creditSale),
@@ -166,7 +177,11 @@ class CustomerDebtsScreen extends StatefulWidget {
     required this.org,
     required this.credit,
     required this.customerId,
+    this.access = OrgAccess.allEdit,
   });
+
+  /// The owner's dial: at 'view' debts are read, never settled here.
+  final OrgAccess access;
 
   final OrgSummary org;
   final CreditRepository credit;
@@ -291,7 +306,10 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                               ? Icon(Icons.check_circle,
                                   color: theme.colorScheme.primary)
                               : FilledButton.tonal(
-                                  onPressed: () => _repay(debt),
+                                  onPressed:
+                                      widget.access.canEdit('credits')
+                                          ? () => _repay(debt)
+                                          : null,
                                   child: Text(_money.format(debt.remaining)),
                                 ),
                         ),
