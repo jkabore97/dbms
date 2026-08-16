@@ -304,7 +304,14 @@ ThemeData kajTheme(KajPalette palette) {
   final hairline = Colors.white.withValues(alpha: 0.65);
 
   return ThemeData(
-    colorScheme: scheme,
+    // surfaceContainerHighest is re-pointed at frosted white on purpose:
+    // twenty-eight screens tint their cards with it by hand, and every one
+    // of them painted opaque grey over the wash — the glass existed in the
+    // theme and nowhere on screen. Re-pointing the slot turns them all into
+    // panes at once, the sign-in card first among them.
+    colorScheme: scheme.copyWith(
+      surfaceContainerHighest: Colors.white.withValues(alpha: kGlassCardAlpha),
+    ),
     useMaterial3: true,
 
     // Transparent on purpose: the page's ground is the palette wash painted
@@ -449,6 +456,10 @@ class KajBackground extends StatelessWidget {
     // StackFit.expand, not loose: a Stack whose children are all Positioned
     // otherwise sizes itself to nothing, and a zero-sized Navigator is a
     // blank page — caught by screenshot, kept here as a warning.
+    // The first version of this wash was lerped so far toward white that a
+    // phone in daylight showed a white page — the owner said, correctly,
+    // that there was no proof of any new style. The hero tints now arrive
+    // nearly full strength and the glows are colours, not hints.
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -459,9 +470,9 @@ class KajBackground extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color.lerp(palette.hero.first, Colors.white, 0.45)!,
-                  Colors.white,
-                  Color.lerp(palette.hero.last, Colors.white, 0.35)!,
+                  Color.lerp(palette.hero.first, Colors.white, 0.10)!,
+                  Color.lerp(palette.hero.last, Colors.white, 0.55)!,
+                  Color.lerp(palette.hero.last, Colors.white, 0.12)!,
                 ],
               ),
             ),
@@ -470,12 +481,17 @@ class KajBackground extends StatelessWidget {
         Positioned(
           top: -140,
           right: -100,
-          child: _glow(palette.tint(0).withValues(alpha: 0.13), 340),
+          child: _glow(palette.tint(0).withValues(alpha: 0.30), 440),
+        ),
+        Positioned(
+          top: 320,
+          left: -180,
+          child: _glow(palette.tint(4).withValues(alpha: 0.18), 400),
         ),
         Positioned(
           bottom: -160,
-          left: -120,
-          child: _glow(palette.tint(2).withValues(alpha: 0.11), 380),
+          right: -140,
+          child: _glow(palette.tint(2).withValues(alpha: 0.26), 480),
         ),
         Positioned.fill(child: child),
       ],
