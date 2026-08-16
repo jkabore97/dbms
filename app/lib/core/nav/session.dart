@@ -71,8 +71,17 @@ class SessionController extends ChangeNotifier {
 
   /// The business the router last settled on. Kept so a redirect can send
   /// somebody straight back to it, and so `/` knows where "home" is.
+  ///
+  /// Persisted on the device under [_lastOrgKey], because a value that lives
+  /// only in memory forgets itself on every reload: a person with several
+  /// businesses was dumped on the picker each time the page refreshed —
+  /// sometimes before the org list had even arrived, which showed a picker
+  /// with nothing to pick. The device remembers instead, the same way it
+  /// remembers the language.
   String? _lastOrgId;
   String? get lastOrgId => _lastOrgId;
+
+  static const _lastOrgKey = 'last_org_id';
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —
   /// took over.
@@ -242,6 +251,7 @@ class SessionController extends ChangeNotifier {
   Future<void> signOut() async {
     await auth.signOut();
     await db.clearIdentity();
+    await db.writePref(_lastOrgKey, null);
     _identity = null;
     _orgs = const [];
     _lastOrgId = null;
@@ -306,6 +316,11 @@ class SessionController extends ChangeNotifier {
     _isPlatformAdmin = platformAdmin;
     _notice = notice;
 
+    // What this device last had open, surviving the reload that wipes the
+    // in-memory copy. Memory wins when it has an answer — an in-session
+    // resolve must not yank somebody back to wherever yesterday ended.
+    _lastOrgId ??= await db.readPref(_lastOrgKey);
+
     if (orgs.isEmpty) {
       // Either genuinely uninvited, or offline before the first successful
       // fetch. Both land on the waiting screen, which is the one screen
@@ -335,16 +350,20 @@ class SessionController extends ChangeNotifier {
     if (orgById(orgId) == null) return;
     _lastOrgId = orgId;
     _phase = SessionPhase.ready;
+    unawaited(db.writePref(_lastOrgKey, orgId));
     unawaited(cacheChart(orgById(orgId)!));
     // Deliberately no notifyListeners(): the router is already mid-navigation
     // to this route, and telling it to re-run its redirect from inside that
     // navigation is how a redirect loop starts.
   }
 
-  /// Leaving a business for the picker, without signing out.
+  /// Leaving a business for the picker, without signing out. Remembered like
+  /// an opening is: somebody who chose the picker gets the picker back on
+  /// reload, not the business they left.
   void leaveOrg() {
     _lastOrgId = null;
     _phase = SessionPhase.picking;
+    unawaited(db.writePref(_lastOrgKey, null));
     _emit();
   }
 
