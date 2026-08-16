@@ -276,33 +276,57 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
       _ => kajPalette,
     };
 
-/// Builds the app's `ThemeData` from a palette.
+/// The frost. One number rather than many: the app bar, the cards and the
+/// inputs all take their translucency from here, and the render tests assert
+/// against the same constants — so "the glass got cloudier" is a deliberate
+/// edit in one place, never a drift.
+///
+/// Everything glassy here is translucency over the soft [KajBackground]
+/// wash, deliberately without `BackdropFilter` blur: real blur is the most
+/// expensive pixel on a cheap phone, and the frosted read comes from the
+/// layering, not the blur.
+const double kGlassAppBarAlpha = 0.62;
+const double kGlassCardAlpha = 0.66;
+const double kGlassFieldAlpha = 0.55;
+
+/// Builds the app's `ThemeData` from a palette — the glass edition.
+///
+/// The geometry is soft (large radii, hairline light borders, no hard
+/// elevation), the surfaces are translucent, and the page behind them is the
+/// palette's own wash painted by [KajBackground]. Every business keeps its
+/// colour; the glass is how the colour is worn.
+///
+/// One thing deliberately unchanged through every restyle: the enlarged body
+/// text. No amount of style is worth a smaller font on a cheap screen in
+/// daylight.
 ThemeData kajTheme(KajPalette palette) {
   final scheme = ColorScheme.fromSeed(seedColor: palette.seed);
+  final hairline = Colors.white.withValues(alpha: 0.65);
 
   return ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
-    scaffoldBackgroundColor: scheme.surface,
 
-    // Larger default text: many users are reading on cheap phones in poor
-    // light, sometimes without reading glasses. This predates the colour and
-    // survives it.
+    // Transparent on purpose: the page's ground is the palette wash painted
+    // by KajBackground behind the Navigator, which is what lets every
+    // translucent surface above it read as glass instead of as grey.
+    scaffoldBackgroundColor: Colors.transparent,
+
     textTheme: const TextTheme(
       bodyMedium: TextStyle(fontSize: 16),
       bodyLarge: TextStyle(fontSize: 18),
     ),
 
-    // The app bar carries the business's colour, which is the cheapest way to
-    // say which business is open without spending a line of the screen on it.
-    // A pale wash with the palette's ink on it rather than a saturated block
-    // with white — the same reversal as the hero card, and for the same
-    // measured reason.
+    // The app bar still carries the business's colour — frosted now: the
+    // hero tint at kGlassAppBarAlpha over the wash, with the palette's ink
+    // on it. The ink was measured against the solid tint; over the lighter
+    // blend the contrast only improves.
     appBarTheme: AppBarTheme(
-      backgroundColor: palette.hero.first,
+      backgroundColor: palette.hero.first.withValues(alpha: kGlassAppBarAlpha),
       foregroundColor: palette.ink,
       elevation: 0,
       scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       centerTitle: false,
       titleTextStyle: TextStyle(
         fontSize: 20,
@@ -312,28 +336,37 @@ ThemeData kajTheme(KajPalette palette) {
       iconTheme: IconThemeData(color: palette.ink),
     ),
 
+    // A pane of glass: translucent white, a hairline of light along its
+    // edge, and a large radius. Screens that tint their cards keep their
+    // tint and inherit the shape.
     cardTheme: CardThemeData(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white.withValues(alpha: kGlassCardAlpha),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: hairline),
+      ),
     ),
 
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),
 
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
 
     chipTheme: ChipThemeData(
@@ -341,29 +374,126 @@ ThemeData kajTheme(KajPalette palette) {
       side: BorderSide.none,
     ),
 
+    // Fields are shallow pools: translucent white with a soft edge that
+    // sharpens to the palette's primary when focused.
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      fillColor: Colors.white.withValues(alpha: kGlassFieldAlpha),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+        borderSide:
+            BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: scheme.primary, width: 2),
       ),
     ),
 
-    listTileTheme: ListTileThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    // Sheets and dialogs float above content someone was just reading, so
+    // they stay near-opaque — frosted at the edge of legibility is a trick
+    // played on the reader, not a style.
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.97),
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.96),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: Colors.white.withValues(alpha: 0.97),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
 
-    dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 24),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+
+    listTileTheme: ListTileThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+
+    dividerTheme: DividerThemeData(
+      color: scheme.outlineVariant.withValues(alpha: 0.5),
+      space: 24,
+    ),
   );
+}
+
+/// The ground every page stands on: the palette's wash, lit by two soft
+/// colour glows drifting in from the corners — the "aurora" that makes the
+/// glass above it read as glass.
+///
+/// Painted once behind the Navigator (and again, in the business's own
+/// palette, by [ProfileTheme]), it is entirely static: gradients, no blur,
+/// no animation — the futurism has to run on a cheap phone in a market.
+class KajBackground extends StatelessWidget {
+  const KajBackground({super.key, required this.palette, required this.child});
+
+  final KajPalette palette;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // StackFit.expand, not loose: a Stack whose children are all Positioned
+    // otherwise sizes itself to nothing, and a zero-sized Navigator is a
+    // blank page — caught by screenshot, kept here as a warning.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(palette.hero.first, Colors.white, 0.45)!,
+                  Colors.white,
+                  Color.lerp(palette.hero.last, Colors.white, 0.35)!,
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: -140,
+          right: -100,
+          child: _glow(palette.tint(0).withValues(alpha: 0.13), 340),
+        ),
+        Positioned(
+          bottom: -160,
+          left: -120,
+          child: _glow(palette.tint(2).withValues(alpha: 0.11), 380),
+        ),
+        Positioned.fill(child: child),
+      ],
+    );
+  }
+
+  Widget _glow(Color colour, double size) => IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [colour, colour.withValues(alpha: 0)],
+            ),
+          ),
+        ),
+      );
 }
 
 /// The gradient behind a hero card or an app bar, painted along the diagonal
@@ -423,7 +553,12 @@ class ProfileTheme extends StatelessWidget {
     final palette = paletteFor(profile, theme: theme);
     return KajTheme(
       palette: palette,
-      child: Theme(data: kajTheme(palette), child: child),
+      child: Theme(
+        data: kajTheme(palette),
+        // The business's own wash behind its transparent Scaffold — this is
+        // what repaints the whole page, not just the widgets, in its colours.
+        child: KajBackground(palette: palette, child: child),
+      ),
     );
   }
 }

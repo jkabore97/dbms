@@ -350,6 +350,44 @@ void main() {
     });
   });
 
+  group('a reload remembers which business was open', () {
+    // The complaint, with a screenshot: refreshing from the root URL dumped
+    // a person with several businesses onto the picker — sometimes before
+    // the org list had even arrived, an empty picker. The open business now
+    // lives in device_prefs, like the language, and a reload walks straight
+    // back into it.
+
+    testWidgets('several businesses, but the remembered one opens directly',
+        (tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await tester.runAsync(() => db.writePref('last_org_id', 'org-2'));
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+
+      expect(find.text('Récolte'), findsOneWidget,
+          reason: 'the reload forgot which business was open');
+      expect(find.text('Choisissez une activité'), findsNothing);
+    });
+
+    testWidgets('a remembered business that no longer exists is the picker',
+        (tester) async {
+      // Removed from the account since the last visit: the stale memory must
+      // fall through to the picker, not crash or loop.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+        OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+      ]);
+      await tester.runAsync(() => db.writePref('last_org_id', 'org-gone'));
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+
+      expect(find.text('Choisissez une activité'), findsOneWidget);
+    });
+  });
+
   group('back means what it says', () {
     // The bug this router was built for. Every step below used to be a
     // setState, so the browser kept no record of it: pressing back inside a
