@@ -66,6 +66,7 @@ Each milestone ends with something demonstrable.
 | The handwriting reader: a photographed carnet page becomes editable product lines via AI vision, dormant until ANTHROPIC_API_KEY is set on the Worker | built |
 | The glass restyle: aurora wash behind every page in the business's own palette, frosted surfaces, soft geometry — no blur, so it runs on cheap phones | built |
 | Team access (M-rights): the owner's dial per tool per tier — hidden/view/edit, server-enforced on prices, credit and production | built, 8 assertions |
+| Security hardening (032): closed a full-audit finding list — the critical one let any sign-up set is_platform_admin on their own row (RLS gates rows, not columns); locked by a column-scoped grant AND a guard trigger that survives a Supabase re-grant, plus membership checks added to the definer functions (receive_products, pay_employee, record_shift, record_return) that wrote where the caller's RLS would have refused | built, 10 assertions |
 
 **Not built**
 
@@ -424,8 +425,10 @@ building on top of an app no real person has used.
 
 ### M7 — Production week (operational, small)
 
-> 1. Run `database/apply_006_to_023.sql` in the Supabase SQL editor (manual,
->    the owner does this once).
+> 1. Run `database/apply_006_to_032.sql` in the Supabase SQL editor (manual,
+>    the owner does this once). This bundle now also carries the 032 security
+>    hardening — critically, the fix that stops any sign-up from making
+>    themselves a platform admin — so applying it is not optional.
 > 2. Set `UPLOADS_URL` in the repo's Actions variables and redeploy, then put
 >    one real photograph through the uploads Worker end to end.
 > 3. Verify email sign-up against the real project with "Confirm email" both
