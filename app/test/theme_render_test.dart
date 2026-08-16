@@ -56,25 +56,25 @@ void main() {
     // initState, and replacing the tree underneath a half-finished one is a
     // race, not an assertion.
     testWidgets('the farm is green', (tester) async {
-      expect(await appBarColourFor(tester, 'farm'), farmPalette.hero.first);
+      expect(await appBarColourFor(tester, 'farm'), farmPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
     });
 
     testWidgets('the church is indigo', (tester) async {
-      expect(await appBarColourFor(tester, 'church'), churchPalette.hero.first);
+      expect(await appBarColourFor(tester, 'church'), churchPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
     });
 
     testWidgets('the shop is amber', (tester) async {
-      expect(await appBarColourFor(tester, 'retail'), retailPalette.hero.first);
+      expect(await appBarColourFor(tester, 'retail'), retailPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
     });
 
     test('and no two of them are the same', () {
       // The whole point: somebody who runs two of these knows which is open
       // before reading a word.
       final heads = {
-        farmPalette.hero.first,
-        churchPalette.hero.first,
-        retailPalette.hero.first,
-        kajPalette.hero.first,
+        farmPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        churchPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        retailPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        kajPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
       };
       expect(heads.length, 4);
     });
@@ -84,7 +84,7 @@ void main() {
       // Same tolerance homeScreenFor has always had. A profile added
       // server-side must not be able to brick an APK already installed.
       final unknown = await appBarColourFor(tester, 'quarry');
-      expect(unknown, kajPalette.hero.first);
+      expect(unknown, kajPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
     });
   });
 

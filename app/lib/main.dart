@@ -290,6 +290,13 @@ class _KajAppState extends State<KajApp> {
           // business then repaints itself in its profile's palette — see
           // ProfileTheme.
           theme: kajTheme(kajPalette),
+          // The app's wash behind every page. Scaffolds are transparent in
+          // the glass theme, so this is the ground they stand on; inside a
+          // business, ProfileTheme paints its own wash over this one.
+          builder: (context, child) => KajBackground(
+            palette: kajPalette,
+            child: child ?? const SizedBox.shrink(),
+          ),
           locale: _locale.effective,
           supportedLocales: enabledLocales,
           localizationsDelegates: const [
