@@ -15,6 +15,8 @@ import '../../features/admin/org_colours_screen.dart';
 import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
+import '../../features/analytics/owner_analytics_screen.dart';
+import '../../features/analytics/platform_analytics_screen.dart';
 import '../../features/admin/structure_screen.dart';
 import '../../features/admin/team_access_screen.dart';
 import '../../features/auth/join_or_apply_screen.dart';
@@ -86,6 +88,7 @@ abstract final class Routes {
   static const newBusiness = '/nouvelle-entreprise';
   static const applyForBusiness = '/demander-une-entreprise';
   static const console = '/console';
+  static const platformAnalytics = '/console/analyses';
   static const applications = '/demandes';
   static const language = '/langue';
 
@@ -359,6 +362,12 @@ GoRouter buildRouter(SessionController session) {
             console: scope.console,
           );
         },
+      ),
+
+      GoRoute(
+        path: Routes.platformAnalytics,
+        builder: (context, _) =>
+            PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics),
       ),
 
       GoRoute(
@@ -644,6 +653,19 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) => GivingStatementScreen(
                     reports: scope.reports,
+                    orgId: org.id,
+                    orgName: org.name,
+                    currency: org.currency,
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: 'analyse',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) => OwnerAnalyticsScreen(
+                    analytics: scope.analytics,
                     orgId: org.id,
                     orgName: org.name,
                     currency: org.currency,

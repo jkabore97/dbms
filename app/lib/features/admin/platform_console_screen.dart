@@ -293,6 +293,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         title: const Text('Console'),
         actions: [
           IconButton(
+            onPressed: () => context.push(Routes.platformAnalytics),
+            icon: const Icon(Icons.insights_outlined),
+            tooltip: 'Analyses',
+          ),
+          IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',

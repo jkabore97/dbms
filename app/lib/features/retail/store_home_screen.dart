@@ -200,6 +200,15 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
+          // Owner-only: the same full visibility the server requires for the
+          // analytics functions. An employee on the till never sees this.
+          if (widget.org.visibility == 'full')
+            IconButton(
+              icon: const Icon(Icons.insights_outlined),
+              tooltip: 'Analyses',
+              onPressed: () =>
+                  context.push(Routes.inside(widget.org.id, 'rapports/analyse')),
+            ),
           if (widget.access.canSee('credits'))
             IconButton(
               icon: const Icon(Icons.handshake_outlined),

@@ -286,12 +286,20 @@ jobs:
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_production_edit.sql
 
       # The church profile is association now: same members/giving chart, the
-      # table renamed to members with a church_members compat view over it, and
-      # existing church businesses migrated to read as associations.
+      # internal church_members table kept (renaming it would break bundle
+      # re-runnability), and existing church businesses migrated to read as
+      # associations.
       - name: Prove the association profile
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_association.sql
+
+      # Owner analytics (what sells, when, how fast) and the platform-wide view,
+      # each refusing a caller who is not entitled to it.
+      - name: Prove the analytics add up and stay gated
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_analytics.sql
 
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
