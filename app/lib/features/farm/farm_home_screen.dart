@@ -423,12 +423,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             onPressed: () => _open(RecordHarvestSheet(
               db: widget.db,
               orgId: widget.org.id,
-              flocks: _flocks,
               farm: widget.farm,
-              // A farm that has never recorded a bird still gets the egg
-              // option — the shape is empty on day one and guessing "no
-              // poultry" from that would be worse than offering both.
-              hasPoultry: _shape.hasPoultry || _shape.isEmpty,
             )),
             backgroundColor: KajTheme.of(context).ink,
             foregroundColor: Colors.white,
@@ -486,14 +481,6 @@ class _TodayCard extends StatelessWidget {
               style: theme.textTheme.labelLarge
                   ?.copyWith(color: on.withValues(alpha: 0.7)),
             ),
-            const SizedBox(height: 12),
-            Text(
-              '${day.eggs}',
-              style: theme.textTheme.displaySmall
-                  ?.copyWith(fontWeight: FontWeight.bold, color: on),
-            ),
-            Text(Strings.of(context).eggsCollected,
-                style: theme.textTheme.bodyMedium?.copyWith(color: on)),
             const SizedBox(height: 16),
             Row(
               children: [

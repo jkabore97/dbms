@@ -481,68 +481,48 @@ class RecordHarvestSheet extends StatefulWidget {
     super.key,
     required this.db,
     required this.orgId,
-    this.flocks = const [],
     this.farm,
-    this.hasPoultry = true,
   });
 
   final LocalDb db;
   final String orgId;
 
-  /// `{flockId: batchCode}` from the device's cache. Empty is fine — eggs can
-  /// be recorded for the farm as a whole, which is what a single-house
-  /// operation will always do.
-  final List<Map<String, Object?>> flocks;
-
-  /// Null in a build with no server. Eggs still work; the crops in the ground
-  /// cannot be listed from one device.
+  /// Null in a build with no server. The crops in the ground cannot be listed
+  /// from one device, so the sheet says so rather than offering an empty pick.
   final FarmRepository? farm;
-
-  /// False for a farm that keeps no birds, where offering "Œufs" first would
-  /// be the same wrong guess in the other direction.
-  final bool hasPoultry;
 
   @override
   State<RecordHarvestSheet> createState() => _RecordHarvestSheetState();
 }
 
-/// What is being gathered. Eggs are their own case rather than a crop cycle
-/// because they are counted, stored and sold differently — and because they
-/// are the one thing that must still record with no signal.
+/// What is being gathered — a crop currently in the ground. Eggs used to be a
+/// second case here; they are now kept as ordinary stock (Réception / Stock)
+/// like anything else the farm stores, so this sheet is crops only.
 class _Subject {
-  const _Subject.eggs()
-      : cycle = null,
-        isEggs = true;
-  const _Subject.crop(CropCycle this.cycle) : isEggs = false;
+  const _Subject.crop(this.cycle);
 
-  final CropCycle? cycle;
-  final bool isEggs;
+  final CropCycle cycle;
 
-  String get label => isEggs ? 'Œufs' : cycle!.crop;
+  String get label => cycle.crop;
 
   /// What the big number is counting, written under it.
-  String get unit => isEggs ? 'œufs' : cycle!.unit;
+  String get unit => cycle.unit;
 
-  /// The second line on the chip: which house, which plot.
+  /// The second line on the chip: which variety, which plot.
   String? get detail {
-    if (isEggs) return null;
-    final parts = [cycle!.variety, cycle!.plotName]
+    final parts = [cycle.variety, cycle.plotName]
         .where((p) => p != null && p.isNotEmpty)
         .cast<String>();
     return parts.isEmpty ? null : parts.join(' · ');
   }
 
-  /// Eggs are whole things; a crop can come off in half-kilos.
-  bool get wholeOnly => isEggs;
-
-  Map<String, String> get grades => isEggs ? eggGrades : harvestGrades;
-  String get defaultGrade => isEggs ? 'normal' : 'first';
+  Map<String, String> get grades => harvestGrades;
+  String get defaultGrade => 'first';
 }
 
 class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   String _digits = '';
-  String _grade = 'normal';
-  String? _flockId;
+  String _grade = 'first';
   bool _saving = false;
   String? _error;
 
@@ -566,15 +546,11 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.flocks.length == 1) {
-      _flockId = widget.flocks.first['flock_id'] as String;
-    }
-    if (widget.hasPoultry) _subject = const _Subject.eggs();
     _loadCrops();
   }
 
-  /// Best-effort and never blocking: a farm with no signal keeps the egg path
-  /// it has always had, and a database without 019 behaves the same way.
+  /// Best-effort and never blocking: a database without 019 simply shows the
+  /// "nothing in the ground" message rather than an error.
   Future<void> _loadCrops() async {
     final farm = widget.farm;
     if (farm == null || !farm.isConfigured) return;
@@ -599,8 +575,6 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   void _select(_Subject subject) {
     setState(() {
       _subject = subject;
-      // The grades differ between eggs and crops, so a grade chosen for one
-      // cannot survive into the other.
       _grade = subject.defaultGrade;
     });
   }
@@ -614,38 +588,24 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
     });
 
     try {
-      if (subject.isEggs) {
-        final flock = widget.flocks.cast<Map<String, Object?>?>().firstWhere(
-              (f) => f?['flock_id'] == _flockId,
-              orElse: () => null,
-            );
-        await widget.db.recordEggs(
-          orgId: widget.orgId,
-          eggCount: _count,
-          flockId: _flockId,
-          batchCode: flock?['batch_code'] as String?,
-          grade: _grade,
-        );
-      } else {
-        final farm = widget.farm;
-        if (farm == null) throw StateError('Pas de serveur.');
-        await farm.recordHarvest(
-          orgId: widget.orgId,
-          cropCycleId: subject.cycle!.id,
-          quantity: _quantity,
-          unit: subject.cycle!.unit,
-          grade: _grade,
-          clientUuid: const Uuid().v4(),
-        );
-      }
+      final farm = widget.farm;
+      if (farm == null) throw StateError('Pas de serveur.');
+      await farm.recordHarvest(
+        orgId: widget.orgId,
+        cropCycleId: subject.cycle.id,
+        quantity: _quantity,
+        unit: subject.cycle.unit,
+        grade: _grade,
+        clientUuid: const Uuid().v4(),
+      );
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = "Enregistrement impossible. La récolte d'une culture demande "
-            'le réseau ; le ramassage des œufs, non.';
+        _error = 'Enregistrement impossible. La récolte d\'une culture demande '
+            'le réseau.';
       });
     }
   }
@@ -654,14 +614,10 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final subject = _subject;
-    final accent = subject == null || subject.isEggs
-        ? Colors.amber.shade800
-        : Colors.green.shade700;
+    final accent = Colors.green.shade700;
 
     return _SheetFrame(
-      icon: subject == null || subject.isEggs
-          ? Icons.egg_outlined
-          : Icons.eco_outlined,
+      icon: Icons.eco_outlined,
       title: 'Récolte',
       accent: accent,
       subtitle: "Production, pas recette : l'argent vient à la vente.",
@@ -682,28 +638,9 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
           ),
           const SizedBox(height: 16),
 
-          if (subject.isEggs && widget.flocks.length > 1) ...[
-            Text('Bande', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final flock in widget.flocks)
-                  ChoiceChip(
-                    label: Text(flock['batch_code'] as String),
-                    selected: _flockId == flock['flock_id'],
-                    onSelected: (_) =>
-                        setState(() => _flockId = flock['flock_id'] as String),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Cracked eggs and bruised tomatoes are counted apart for the same
-          // reason: they sell for less or not at all, and counting them with
-          // the rest makes a yield look better than the income it produces.
+          // Bruised tomatoes are counted apart from first-grade for a reason:
+          // they sell for less or not at all, and counting them with the rest
+          // makes a yield look better than the income it produces.
           ChoiceChipRow(
             values: subject.grades,
             selected: _grade,
@@ -754,7 +691,6 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   /// not have to confirm what it is doing every morning.
   List<Widget> _subjectPicker(ThemeData theme, Color accent) {
     final options = <_Subject>[
-      if (widget.hasPoultry) const _Subject.eggs(),
       for (final crop in _crops) _Subject.crop(crop),
     ];
 
@@ -764,8 +700,8 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
-              "Rien à récolter pour l'instant. Ouvrez une bande ou une "
-              'culture dans « Élevage et cultures » — cela demande le réseau.',
+              "Rien à récolter pour l'instant. Ouvrez une culture dans "
+              '« Élevage et cultures » — cela demande le réseau.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
@@ -830,8 +766,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
   bool _isSelected(_Subject option) {
     final subject = _subject;
     if (subject == null) return false;
-    if (option.isEggs) return subject.isEggs;
-    return !subject.isEggs && subject.cycle!.id == option.cycle!.id;
+    return subject.cycle.id == option.cycle.id;
   }
 
   bool get _canAddCrop => widget.farm?.isConfigured ?? false;
