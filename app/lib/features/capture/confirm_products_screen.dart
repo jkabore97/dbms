@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -66,11 +67,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
           ))
       .toList();
 
-  late final NumberFormat _money = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.org.currency,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _money = moneyFormat(widget.org.currency);
 
   bool _saving = false;
   String? _error;

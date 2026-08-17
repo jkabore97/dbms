@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
@@ -84,11 +85,7 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final money = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
-      decimalDigits: 0,
-    );
+    final money = moneyFormat(widget.currency);
 
     // Closing again after a late entry updates the figures, so the streak
     // shown is what it will be once this tap lands.

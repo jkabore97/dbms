@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 
 import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
@@ -77,11 +78,7 @@ class FarmHomeScreen extends StatefulWidget {
 }
 
 class _FarmHomeScreenState extends State<FarmHomeScreen> {
-  late final NumberFormat _currency = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _currency = moneyFormat(widget.org.currency);
 
   ({int eggs, double deaths, double feedUsed}) _today =
       (eggs: 0, deaths: 0, feedUsed: 0);
@@ -391,9 +388,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                 onPressed: () => _open(ReceiveStockSheet(
                   db: widget.db,
                   orgId: widget.org.id,
-                  currencySymbol: widget.org.currency == 'XOF'
-                      ? 'FCFA'
-                      : widget.org.currency,
+                  currency: widget.org.currency,
                 )),
                 backgroundColor: Colors.orange.shade100,
                 foregroundColor: Colors.orange.shade900,

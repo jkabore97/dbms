@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -29,23 +30,19 @@ class ReceiveStockSheet extends StatefulWidget {
     super.key,
     required this.db,
     required this.orgId,
-    this.currencySymbol = 'FCFA',
+    this.currency = 'XOF',
   });
 
   final LocalDb db;
   final String orgId;
-  final String currencySymbol;
+  final String currency;
 
   @override
   State<ReceiveStockSheet> createState() => _ReceiveStockSheetState();
 }
 
 class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
-  late final NumberFormat _currency = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.currencySymbol,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _currency = moneyFormat(widget.currency);
 
   final _quantityController = TextEditingController();
   final _noteController = TextEditingController();

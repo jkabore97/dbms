@@ -157,8 +157,7 @@ class _StockScreenState extends State<StockScreen> {
               onPressed: () => _record(ReceiveStockSheet(
                 db: widget.db,
                 orgId: widget.org.id,
-                currencySymbol:
-                    widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+                currency: widget.org.currency,
               )),
               icon: const Icon(Icons.local_shipping_outlined),
               label: const Text('Réception'),

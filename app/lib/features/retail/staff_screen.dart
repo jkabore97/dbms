@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -29,11 +30,7 @@ class StaffScreen extends StatefulWidget {
 }
 
 class _StaffScreenState extends State<StaffScreen> {
-  late final NumberFormat _money = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.org.currency,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _money = moneyFormat(widget.org.currency);
 
   List<Employee> _people = const [];
   List<UnpaidWork> _owed = const [];

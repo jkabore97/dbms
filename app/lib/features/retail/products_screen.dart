@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/org_access.dart';
@@ -44,11 +45,7 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  late final NumberFormat _money = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.org.currency,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _money = moneyFormat(widget.org.currency);
 
   List<Product> _products = const [];
   bool _loading = true;

@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import '../../../core/format/money.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -273,11 +274,7 @@ class _StatementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: currency == 'XOF' ? 'FCFA' : currency,
-      decimalDigits: 0,
-    );
+    final money = moneyFormat(currency);
     final date = DateFormat('d MMM', 'fr_FR');
     final total = lines.fold<double>(0, (sum, l) => sum + l.amount);
 

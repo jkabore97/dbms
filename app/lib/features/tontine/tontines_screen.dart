@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
@@ -33,7 +33,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
   List<TontineSummary> _rows = const [];
   bool _loading = true;
   String? _error;
-  late final _money = NumberFormat.decimalPattern('fr_FR');
+  late final _money = moneyFormat(widget.org.currency);
 
   @override
   void initState() {

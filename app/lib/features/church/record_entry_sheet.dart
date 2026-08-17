@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
@@ -34,7 +35,7 @@ class RecordEntrySheet extends StatefulWidget {
     required this.db,
     required this.orgId,
     required this.direction,
-    this.currencySymbol = 'FCFA',
+    this.currency = 'XOF',
   });
 
   final LocalDb db;
@@ -43,7 +44,7 @@ class RecordEntrySheet extends StatefulWidget {
   /// 'in' | 'out'
   final String direction;
 
-  final String currencySymbol;
+  final String currency;
 
   bool get isIncome => direction == 'in';
 
@@ -52,11 +53,7 @@ class RecordEntrySheet extends StatefulWidget {
 }
 
 class _RecordEntrySheetState extends State<RecordEntrySheet> {
-  late final NumberFormat _currency = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.currencySymbol,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _currency = moneyFormat(widget.currency);
 
   final _nameController = TextEditingController();
   final _noteController = TextEditingController();

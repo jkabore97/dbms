@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../core/format/money.dart';
 
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
@@ -65,11 +65,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final money = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
-      decimalDigits: 0,
-    );
+    final money = moneyFormat(widget.currency);
     final total = _balances.fold<double>(0, (sum, b) => sum + b.balance);
 
     return Scaffold(
