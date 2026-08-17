@@ -17,6 +17,7 @@ import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
 import '../../features/analytics/platform_analytics_screen.dart';
+import '../../features/admin/trainers_screen.dart';
 import '../../features/admin/structure_screen.dart';
 import '../../features/admin/team_access_screen.dart';
 import '../../features/auth/join_or_apply_screen.dart';
@@ -89,6 +90,7 @@ abstract final class Routes {
   static const applyForBusiness = '/demander-une-entreprise';
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
+  static const trainers = '/console/formateurs';
   static const applications = '/demandes';
   static const language = '/langue';
 
@@ -368,6 +370,12 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.platformAnalytics,
         builder: (context, _) =>
             PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics),
+      ),
+
+      GoRoute(
+        path: Routes.trainers,
+        builder: (context, _) =>
+            TrainersScreen(console: AppScope.of(context).console),
       ),
 
       GoRoute(

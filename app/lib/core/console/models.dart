@@ -338,3 +338,51 @@ class OrgPage {
   /// page. The pager is built on it.
   final int total;
 }
+
+/// A trainer account (038) and how many businesses they currently cover.
+class Trainer {
+  const Trainer({
+    required this.userId,
+    required this.fullName,
+    required this.phone,
+    required this.assignments,
+  });
+
+  final String userId;
+  final String? fullName;
+  final String? phone;
+  final int assignments;
+
+  String get label => (fullName != null && fullName!.trim().isNotEmpty)
+      ? fullName!
+      : (phone ?? 'Formateur');
+
+  factory Trainer.fromRow(Map<String, dynamic> r) => Trainer(
+        userId: r['user_id'] as String,
+        fullName: r['full_name'] as String?,
+        phone: r['phone'] as String?,
+        assignments: (r['assignments'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// One business a trainer covers.
+class TrainerOrg {
+  const TrainerOrg({
+    required this.orgId,
+    required this.name,
+    required this.slug,
+    required this.profile,
+  });
+
+  final String orgId;
+  final String name;
+  final String slug;
+  final String profile;
+
+  factory TrainerOrg.fromRow(Map<String, dynamic> r) => TrainerOrg(
+        orgId: r['org_id'] as String,
+        name: (r['name'] ?? '') as String,
+        slug: (r['slug'] ?? '') as String,
+        profile: (r['profile'] ?? '') as String,
+      );
+}

@@ -137,18 +137,37 @@ class AdminRepository {
   /// of people they share an org with.
   Future<List<Member>> fetchMembers(String orgId) async {
     final client = _requireClient();
-    final rows = await client
-        .from('memberships')
-        .select(
-          'id, user_id, role, scope_kind, scope_id, visibility, '
-          'profiles(full_name, phone)',
-        )
-        .eq('org_id', orgId);
-    return (rows as List)
-        .map((r) => Member.fromRow(Map<String, dynamic>.from(r as Map)))
-        .toList()
-      ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+    // Trainers (038) hold an observer membership so they can read to advise,
+    // but they are the platform's people, not the business's — so they are
+    // kept out of the roster. The filter degrades gracefully on a database that
+    // has not run 038 yet (42703), where there are no trainers to exclude.
+    try {
+      final rows = await client
+          .from('memberships')
+          .select(
+            'id, user_id, role, scope_kind, scope_id, visibility, '
+            'profiles(full_name, phone)',
+          )
+          .eq('org_id', orgId)
+          .eq('is_trainer', false);
+      return _members(rows as List);
+    } on PostgrestException catch (error) {
+      if (error.code != '42703') rethrow;
+      final rows = await client
+          .from('memberships')
+          .select(
+            'id, user_id, role, scope_kind, scope_id, visibility, '
+            'profiles(full_name, phone)',
+          )
+          .eq('org_id', orgId);
+      return _members(rows as List);
+    }
   }
+
+  List<Member> _members(List rows) => rows
+      .map((r) => Member.fromRow(Map<String, dynamic>.from(r as Map)))
+      .toList()
+    ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
 
   /// Revoking a grant, not deleting a person. Someone who holds two roles
   /// keeps the other one.

@@ -153,6 +153,57 @@ class ConsoleRepository {
         .toList();
   }
 
+  // ----------------------------------------------------------------
+  // Trainers (038): the people the platform sends to train businesses.
+  // ----------------------------------------------------------------
+
+  /// Every trainer account and how many businesses each currently covers.
+  Future<List<Trainer>> trainers() async {
+    final client = _requireClient();
+    final rows = await client.rpc('list_trainers') as List<dynamic>;
+    return rows
+        .map((r) => Trainer.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Marks (or unmarks) the account with this phone as a trainer. Returns the
+  /// account id. Raises if no account has that phone.
+  Future<String> setTrainerByPhone(String phone, {bool isTrainer = true}) async {
+    final client = _requireClient();
+    final id = await client.rpc('set_trainer_by_phone', params: {
+      'p_phone': phone,
+      'p_is_trainer': isTrainer,
+    });
+    return id as String;
+  }
+
+  /// The businesses a trainer covers.
+  Future<List<TrainerOrg>> trainerOrgs(String userId) async {
+    final client = _requireClient();
+    final rows = await client.rpc('trainer_orgs', params: {
+      'p_user_id': userId,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => TrainerOrg.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  Future<void> assignTrainer(String orgId, String userId) async {
+    final client = _requireClient();
+    await client.rpc('assign_trainer', params: {
+      'p_org_id': orgId,
+      'p_user_id': userId,
+    });
+  }
+
+  Future<void> unassignTrainer(String orgId, String userId) async {
+    final client = _requireClient();
+    await client.rpc('unassign_trainer', params: {
+      'p_org_id': orgId,
+      'p_user_id': userId,
+    });
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {
