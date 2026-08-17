@@ -39,6 +39,28 @@ class OrgAccess {
           ? 'supervisor'
           : 'employee';
 
+  /// Value equality, so the session can tell a freshly fetched dial from the
+  /// one already in effect and skip a rebuild — and a redirect — when nothing
+  /// actually changed.
+  @override
+  bool operator ==(Object other) {
+    if (other is! OrgAccess) return false;
+    if (other.isAdmin != isAdmin || other._rules.length != _rules.length) {
+      return false;
+    }
+    for (final e in _rules.entries) {
+      if (other._rules[e.key] != e.value) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        isAdmin,
+        Object.hashAllUnordered(
+            _rules.entries.map((e) => Object.hash(e.key, e.value))),
+      );
+
   /// The feature keys of 031, in the order the owner's screen shows them.
   static const features = [
     'products',

@@ -420,6 +420,31 @@ class AdminRepository {
     return out;
   }
 
+  /// The dial as it applies to one tier — what a non-admin member's own screens
+  /// read on open. Empty when there is no client (offline) or the server is
+  /// older than 031: exactly the "business that never touched the dial" answer,
+  /// which is what an untouched or unreachable dial should look like. The
+  /// dangerous actions are refused at the database regardless, so an offline
+  /// employee seeing a tool they cannot use is a hidden menu entry, not a hole.
+  Future<Map<String, String>> featureRulesForTier(
+      String orgId, String tier) async {
+    final client = _client;
+    if (client == null) return const {};
+    try {
+      final rows = await client
+          .from('org_feature_rules')
+          .select('feature, access')
+          .eq('org_id', orgId)
+          .eq('tier', tier);
+      return {
+        for (final r in rows as List)
+          (r as Map)['feature'] as String: r['access'] as String,
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   /// Writes the whole dial in one save. Explicit rows for every feature and
   /// tier, so what the owner saw on screen is exactly what is stored.
   Future<void> saveFeatureRules(
