@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,6 +29,7 @@ class SaleSheet extends StatefulWidget {
     super.key,
     required this.orgId,
     required this.retail,
+    this.currency = 'XOF',
     this.capture,
     this.products = const [],
     this.canCredit = true,
@@ -38,6 +40,11 @@ class SaleSheet extends StatefulWidget {
   final bool canCredit;
 
   final String orgId;
+
+  /// The business's currency, so the cart shows the same money everything else
+  /// does — not bare numbers while every other screen shows FCFA.
+  final String currency;
+
   final RetailRepository retail;
 
   /// What is on the shelves, for the picker. An empty list is not an error —
@@ -61,6 +68,8 @@ class _SaleSheetState extends State<SaleSheet> {
 
   /// One per basket, not one per attempt. See the class comment.
   late final String _clientUuid = const Uuid().v4();
+
+  late final _money = moneyFormat(widget.currency);
 
   String _method = 'cash';
   Product? _picked;
@@ -318,11 +327,11 @@ class _SaleSheetState extends State<SaleSheet> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(line.name),
                   subtitle: Text('${_trim(line.quantity)} × '
-                      '${line.unitPrice.toStringAsFixed(0)}'),
+                      '${_money.format(line.unitPrice)}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(line.lineTotal.toStringAsFixed(0),
+                      Text(_money.format(line.lineTotal),
                           style: theme.textTheme.titleMedium),
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
@@ -341,7 +350,7 @@ class _SaleSheetState extends State<SaleSheet> {
                 children: [
                   Text('Total', style: theme.textTheme.titleMedium),
                   Text(
-                    _total.toStringAsFixed(0),
+                    _money.format(_total),
                     style: theme.textTheme.headlineSmall
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),

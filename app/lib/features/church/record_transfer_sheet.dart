@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
@@ -26,12 +27,12 @@ class RecordTransferSheet extends StatefulWidget {
     super.key,
     required this.db,
     required this.orgId,
-    this.currencySymbol = 'FCFA',
+    this.currency = 'XOF',
   });
 
   final LocalDb db;
   final String orgId;
-  final String currencySymbol;
+  final String currency;
 
   @override
   State<RecordTransferSheet> createState() => _RecordTransferSheetState();
@@ -47,11 +48,7 @@ const _places = <String, String>{
 };
 
 class _RecordTransferSheetState extends State<RecordTransferSheet> {
-  late final NumberFormat _currency = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: widget.currencySymbol,
-    decimalDigits: 0,
-  );
+  late final NumberFormat _currency = moneyFormat(widget.currency);
 
   final _labelController = TextEditingController();
 

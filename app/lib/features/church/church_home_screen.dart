@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 
 import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
@@ -87,11 +88,7 @@ class ChurchHomeScreen extends StatefulWidget {
 }
 
 class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
-  final _currency = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: 'FCFA',
-    decimalDigits: 0,
-  );
+  late final _currency = moneyFormat(widget.org?.currency ?? 'XOF');
 
   double _moneyIn = 0;
   double _moneyOut = 0;
@@ -134,6 +131,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
         db: widget.db,
         orgId: widget.orgId,
         direction: direction,
+        currency: widget.org?.currency ?? 'XOF',
       ),
     );
 
@@ -147,6 +145,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       builder: (_) => RecordTransferSheet(
         db: widget.db,
         orgId: widget.orgId,
+        currency: widget.org?.currency ?? 'XOF',
       ),
     );
 

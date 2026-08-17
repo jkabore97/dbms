@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/format/money.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -38,7 +39,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
   bool _loading = true;
   String? _error;
 
-  late final _money = NumberFormat.decimalPattern('fr_FR');
+  late final _money = moneyFormat(widget.org.currency);
 
   @override
   void initState() {
@@ -196,7 +197,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
   bool _loading = true;
   String? _error;
 
-  late final _money = NumberFormat.decimalPattern('fr_FR');
+  late final _money = moneyFormat(widget.org.currency);
   late final _date = DateFormat('d MMM y', 'fr_FR');
 
   @override

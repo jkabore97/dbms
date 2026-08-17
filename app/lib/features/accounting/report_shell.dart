@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+// Re-exported so reports/invoices importing report_shell still get moneyFormat,
+// which now lives in core/format/money.dart for every feature to share.
+export '../../core/format/money.dart' show moneyFormat;
+
 import '../../core/auth/auth_repository.dart';
 
 /// The parts every accounting screen needs and none of them should own.
@@ -372,10 +376,3 @@ class SummaryOnlyNotice extends StatelessWidget {
   }
 }
 
-/// Money, the way it is written here: no decimals, because a centime of CFA
-/// franc does not exist and a column of ",00" is a column of noise.
-NumberFormat moneyFormat(String currency) => NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: currency == 'XOF' ? 'FCFA' : currency,
-      decimalDigits: 0,
-    );
