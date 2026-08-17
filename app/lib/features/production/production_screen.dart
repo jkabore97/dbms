@@ -81,6 +81,15 @@ class _ProductionScreenState extends State<ProductionScreen> {
           for (final i in r.inputs) i.name.trim().toLowerCase(),
       };
 
+  Future<void> _edit(ProductionRun run) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _EditRunSheet(production: widget.production, run: run),
+    );
+    if (saved == true) await _load();
+  }
+
   Future<void> _create({ProductionRun? repeat}) async {
     final made = await showModalBottomSheet<bool>(
       context: context,
@@ -157,17 +166,29 @@ class _ProductionScreenState extends State<ProductionScreen> {
                                     ),
                                   ],
                                   if (widget.access.canEdit('production'))
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    // Day two of any real bakery: the same
-                                    // cakes as yesterday. One tap brings the
-                                    // whole recipe back; only the quantities
-                                    // are left to confirm.
-                                    child: TextButton.icon(
-                                      onPressed: () => _create(repeat: r),
-                                      icon: const Icon(Icons.replay, size: 18),
-                                      label: Text(strings.makeAgain),
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      // Correcting a wrong output count or a
+                                      // mistyped name. The ingredients stay;
+                                      // the server re-derives the unit cost.
+                                      TextButton.icon(
+                                        onPressed: () => _edit(r),
+                                        icon: const Icon(Icons.edit_outlined,
+                                            size: 18),
+                                        label: const Text('Modifier'),
+                                      ),
+                                      // Day two of any real bakery: the same
+                                      // cakes as yesterday. One tap brings the
+                                      // whole recipe back; only the quantities
+                                      // are left to confirm.
+                                      TextButton.icon(
+                                        onPressed: () => _create(repeat: r),
+                                        icon:
+                                            const Icon(Icons.replay, size: 18),
+                                        label: Text(strings.makeAgain),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -610,6 +631,119 @@ class _ProductPickerState extends State<_ProductPicker> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Correcting a past run: the output count and its name. The ingredients are
+/// not touched here — a wrong ingredient is a fresh run, not a correction —
+/// and the server re-derives the unit cost from the unchanged total.
+class _EditRunSheet extends StatefulWidget {
+  const _EditRunSheet({required this.production, required this.run});
+
+  final ProductionRepository production;
+  final ProductionRun run;
+
+  @override
+  State<_EditRunSheet> createState() => _EditRunSheetState();
+}
+
+class _EditRunSheetState extends State<_EditRunSheet> {
+  late final _quantity = TextEditingController(
+    text: widget.run.quantity.toStringAsFixed(0),
+  );
+  late final _name = TextEditingController(text: widget.run.productName);
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _quantity.dispose();
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final qty = double.tryParse(_quantity.text.trim().replaceAll(',', '.'));
+    final name = _name.text.trim();
+    if (qty == null || qty <= 0) {
+      setState(() => _error = 'Entrez la quantité produite.');
+      return;
+    }
+    if (name.isEmpty) {
+      setState(() => _error = 'Entrez le nom du produit.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.production
+          .updateRun(widget.run.runId, quantity: qty, productName: name);
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = describeError(error);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Corriger la production', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            'Les ingrédients ne changent pas. Le coût unitaire est recalculé.',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(
+              labelText: 'Produit',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _quantity,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Quantité produite',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Enregistrer la correction'),
+          ),
+        ],
       ),
     );
   }
