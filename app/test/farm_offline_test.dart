@@ -74,9 +74,10 @@ void main() {
         (tester) async {
       await pumpHome(tester);
 
-      // The eggs tell you today, the mortality tells you next week, and the
-      // money tells you last month. That is the order.
-      expect(find.text('œufs ramassés'), findsOneWidget);
+      // Egg collection was removed (eggs are ordinary stock now), so the
+      // header leads with the flock figures — mortality tells you next week,
+      // and the money, underneath, tells you last month.
+      expect(find.text('œufs ramassés'), findsNothing);
       expect(find.text('Mortalité'), findsOneWidget);
       expect(find.text('Aliment sorti'), findsOneWidget);
       expect(find.text('Récolte'), findsOneWidget);
@@ -226,34 +227,6 @@ void main() {
 
     final pending = await tester.runAsync(() => db.pendingActions());
     expect(pending!.single['action'], 'move_stock');
-  });
-
-  testWidgets('the morning collection is production, not income',
-      (tester) async {
-    await pumpHome(tester);
-
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Récolte'));
-    await flush(tester);
-
-    await tapKeys(tester, ['4', '0', '4']);
-    await tester.tap(find.text('Enregistrer la récolte'));
-    await flush(tester);
-
-    final day = await tester.runAsync(() => db.farmDay(org.id, DateTime.now()));
-    expect(day!.eggs, 404);
-
-    // Recording production as revenue is how a farm convinces itself it is
-    // profitable months before anybody pays for anything.
-    final totals = await tester.runAsync(
-      () => db.dayTotals(org.id, DateTime.now()),
-    );
-    expect(totals!.moneyIn, 0);
-
-    final pending = await tester.runAsync(() => db.pendingActions());
-    expect(pending!.single['action'], 'record_eggs');
-
-    // And the day's card on the home screen says so without a round trip.
-    expect(find.text('404'), findsWidgets);
   });
 
   group('the device on its own', () {
