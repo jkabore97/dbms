@@ -54,6 +54,35 @@ class AdminRepository {
     }
   }
 
+  /// The business's Wave handle (037), or null when unset — or when the column
+  /// does not exist yet, since the app can run one migration ahead of the
+  /// database, the same reason fetchOrg tolerates a missing `theme`.
+  Future<String?> waveMerchant(String orgId) async {
+    final client = _requireClient();
+    try {
+      final row = await client
+          .from('orgs')
+          .select('wave_merchant')
+          .eq('id', orgId)
+          .maybeSingle();
+      final value = row?['wave_merchant'] as String?;
+      return (value != null && value.trim().isNotEmpty) ? value : null;
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') return null; // database not on 037 yet
+      rethrow;
+    }
+  }
+
+  /// Sets (or clears, with null) the business's Wave handle. Admin-only,
+  /// enforced by set_org_wave() server-side.
+  Future<void> setWaveMerchant(String orgId, String? merchant) async {
+    final client = _requireClient();
+    await client.rpc('set_org_wave', params: {
+      'p_org_id': orgId,
+      'p_merchant': merchant,
+    });
+  }
+
   // ----------------------------------------------------------------
   // Sites and departments
   // ----------------------------------------------------------------

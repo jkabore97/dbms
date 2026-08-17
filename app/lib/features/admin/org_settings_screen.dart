@@ -39,6 +39,7 @@ class OrgSettingsScreen extends StatefulWidget {
 
 class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   final _nameController = TextEditingController();
+  final _waveController = TextEditingController();
 
   String _currency = 'XOF';
   String _slug = '';
@@ -60,6 +61,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _waveController.dispose();
     super.dispose();
   }
 
@@ -70,9 +72,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     });
     try {
       final org = await widget.admin.fetchOrg(widget.orgId);
+      final wave = await widget.admin.waveMerchant(widget.orgId);
       if (!mounted) return;
       setState(() {
         _nameController.text = (org['name'] as String?) ?? '';
+        _waveController.text = wave ?? '';
         final currency = (org['default_currency'] as String?) ?? 'XOF';
         _currency = _currencies.contains(currency) ? currency : 'XOF';
         _slug = (org['slug'] as String?) ?? '';
@@ -107,6 +111,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         name: name,
         currency: _currency,
       );
+      final wave = _waveController.text.trim();
+      await widget.admin.setWaveMerchant(widget.orgId, wave.isEmpty ? null : wave);
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
@@ -166,6 +172,22 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ],
                   onChanged:
                       _saving ? null : (v) => setState(() => _currency = v!),
+                ),
+                const SizedBox(height: 24),
+                Text('Paiement Wave', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _waveController,
+                  enabled: !_saving,
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: '+226 70 00 00 00',
+                    prefixIcon: Icon(Icons.qr_code_2),
+                    helperText: 'Le numéro Wave du commerce. Laissez vide pour '
+                        'ne pas proposer Wave à la vente.',
+                    helperMaxLines: 2,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text('Couleurs', style: theme.textTheme.labelLarge),

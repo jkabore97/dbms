@@ -138,6 +138,49 @@ class RetailRepository {
   }
 
   // ----------------------------------------------------------------
+  // Wave mobile payment (037). Prep: the QR handle and the receipt facts.
+  // ----------------------------------------------------------------
+
+  /// The business's Wave handle — what its payment QR encodes — or null when
+  /// the owner has not set one, in which case the sale sheet never offers Wave.
+  Future<String?> waveMerchant(String orgId) async {
+    final client = _requireClient();
+    final row = await client
+        .from('orgs')
+        .select('wave_merchant')
+        .eq('id', orgId)
+        .maybeSingle();
+    final value = row?['wave_merchant'] as String?;
+    return (value != null && value.trim().isNotEmpty) ? value : null;
+  }
+
+  /// Sets (or clears, with null) the business's Wave handle. Admin-only,
+  /// enforced by set_org_wave() server-side.
+  Future<void> setWaveMerchant(String orgId, String? merchant) async {
+    final client = _requireClient();
+    await client.rpc('set_org_wave', params: {
+      'p_org_id': orgId,
+      'p_merchant': merchant,
+    });
+  }
+
+  /// Stamps the Wave sender's name (and reference) onto a recorded sale and
+  /// marks the payment confirmed — the step the webhook will one day take.
+  Future<void> confirmWavePayment({
+    required String saleId,
+    required String sender,
+    String? reference,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('attach_wave_payment', params: {
+      'p_sale_id': saleId,
+      'p_sender': sender,
+      if (reference != null && reference.isNotEmpty) 'p_ref': reference,
+      'p_status': 'confirmed',
+    });
+  }
+
+  // ----------------------------------------------------------------
   // Stocking
   // ----------------------------------------------------------------
 

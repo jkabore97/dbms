@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/retail/models.dart';
@@ -34,7 +35,12 @@ class SaleSheet extends StatefulWidget {
     this.products = const [],
     this.canCredit = true,
     this.initialMethod = 'cash',
+    this.orgName = '',
   });
+
+  /// The shop's name, printed on the Wave receipt. Empty is fine — the receipt
+  /// falls back to a generic heading.
+  final String orgName;
 
   /// Whether "Crédit" is offered at all — the owner's dial from 031. The
   /// server refuses regardless; this keeps the refused button off screen.
@@ -81,6 +87,26 @@ class _SaleSheetState extends State<SaleSheet> {
   Product? _picked;
   bool _busy = false;
   String? _error;
+
+  /// The business's Wave handle, fetched once on open. Null while loading and
+  /// null when the owner has set none — either way, Wave is not offered.
+  String? _waveMerchant;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWave();
+  }
+
+  Future<void> _loadWave() async {
+    try {
+      final merchant = await widget.retail.waveMerchant(widget.orgId);
+      if (mounted) setState(() => _waveMerchant = merchant);
+    } catch (_) {
+      // A shop with no Wave handle, or an offline open, simply has no Wave
+      // button. It is never the reason a sale cannot be recorded.
+    }
+  }
 
   @override
   void dispose() {
@@ -201,6 +227,9 @@ class _SaleSheetState extends State<SaleSheet> {
       setState(() => _error = 'Entrez le nom du client pour un crédit.');
       return;
     }
+    if (_method == 'wave') {
+      return _saveWave();
+    }
 
     setState(() {
       _busy = true;
@@ -216,6 +245,55 @@ class _SaleSheetState extends State<SaleSheet> {
         customerName:
             _method == 'credit' ? _customerController.text.trim() : null,
       );
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) setState(() => _error = describeError(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// The Wave path: show the QR for the customer to scan, take the sender's
+  /// name, record the sale, confirm it, and hand back a receipt. Nothing is
+  /// recorded if the payment sheet is dismissed — a QR shown is not a sale.
+  Future<void> _saveWave() async {
+    final merchant = _waveMerchant;
+    if (merchant == null) return;
+
+    final sender = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => WavePaymentSheet(
+        merchant: merchant,
+        amount: _total,
+        currency: widget.currency,
+      ),
+    );
+    if (sender == null || !mounted) return; // dismissed — no sale
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final saleId = await widget.retail.recordSale(
+        orgId: widget.orgId,
+        lines: _lines,
+        method: 'wave',
+        clientUuid: _clientUuid,
+      );
+      await widget.retail.confirmWavePayment(saleId: saleId, sender: sender);
+      if (mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => WaveReceiptDialog(
+            shopName: widget.orgName,
+            total: _total,
+            currency: widget.currency,
+            sender: sender,
+          ),
+        );
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) setState(() => _error = describeError(error));
@@ -370,6 +448,12 @@ class _SaleSheetState extends State<SaleSheet> {
                 const ButtonSegment(value: 'cash', label: Text('Espèces')),
                 const ButtonSegment(
                     value: 'mobile_money', label: Text('Mobile')),
+                if (_waveMerchant != null)
+                  const ButtonSegment(
+                    value: 'wave',
+                    label: Text('Wave'),
+                    icon: Icon(Icons.qr_code_2),
+                  ),
                 const ButtonSegment(value: 'bank', label: Text('Banque')),
                 if (widget.canCredit)
                   const ButtonSegment(value: 'credit', label: Text('Crédit')),
@@ -407,8 +491,11 @@ class _SaleSheetState extends State<SaleSheet> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Enregistrer la vente',
-                        style: TextStyle(fontSize: 17)),
+                    : Text(
+                        _method == 'wave'
+                            ? 'Payer avec Wave'
+                            : 'Enregistrer la vente',
+                        style: const TextStyle(fontSize: 17)),
               ),
             ),
           ],
@@ -419,4 +506,194 @@ class _SaleSheetState extends State<SaleSheet> {
 
   static String _trim(double value) =>
       value == value.roundToDouble() ? value.round().toString() : '$value';
+}
+
+/// The Wave payment step: the customer scans, pays, and the shopkeeper types
+/// the name Wave shows for the payer before confirming.
+///
+/// Returns the sender's name on confirm, or null when dismissed. It records
+/// nothing itself — the sale is written only after this returns a name, so a
+/// customer who walks away leaves no sale behind.
+class WavePaymentSheet extends StatefulWidget {
+  const WavePaymentSheet({
+    super.key,
+    required this.merchant,
+    required this.amount,
+    required this.currency,
+  });
+
+  /// The business's Wave handle, encoded into the QR the customer scans.
+  final String merchant;
+  final double amount;
+  final String currency;
+
+  @override
+  State<WavePaymentSheet> createState() => _WavePaymentSheetState();
+}
+
+class _WavePaymentSheetState extends State<WavePaymentSheet> {
+  final _senderController = TextEditingController();
+  late final _money = moneyFormat(widget.currency);
+
+  @override
+  void dispose() {
+    _senderController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Paiement Wave', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text('Faites scanner ce code au client, puis entrez son nom Wave.',
+              style: theme.textTheme.bodySmall),
+          const SizedBox(height: 16),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              // qr_flutter draws it on device — nothing is fetched, so the code
+              // shows with no signal, which is the whole point at a counter.
+              child: QrImageView(
+                data: widget.merchant,
+                version: QrVersions.auto,
+                size: 200,
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              _money.format(widget.amount),
+              style: theme.textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _senderController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Nom de l\'expéditeur Wave',
+              helperText: 'Le nom qui apparaît sur le paiement Wave.',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Annuler'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: _senderController.text.trim().isEmpty
+                        ? null
+                        : () => Navigator.of(context)
+                            .pop(_senderController.text.trim()),
+                    icon: const Icon(Icons.check),
+                    label: const Text('Paiement reçu'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The receipt for a confirmed Wave payment — carrying the sender's name, which
+/// is the record a shopkeeper wants when a payment is later queried.
+class WaveReceiptDialog extends StatelessWidget {
+  const WaveReceiptDialog({
+    super.key,
+    required this.shopName,
+    required this.total,
+    required this.currency,
+    required this.sender,
+  });
+
+  final String shopName;
+  final double total;
+  final String currency;
+  final String sender;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final money = moneyFormat(currency);
+    final now = DateTime.now();
+    final stamp = '${now.day.toString().padLeft(2, '0')}/'
+        '${now.month.toString().padLeft(2, '0')}/${now.year} '
+        '${now.hour.toString().padLeft(2, '0')}:'
+        '${now.minute.toString().padLeft(2, '0')}';
+
+    return AlertDialog(
+      icon: const Icon(Icons.check_circle_outline, color: Color(0xFF0E7A63), size: 40),
+      title: const Text('Paiement Wave reçu'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (shopName.isNotEmpty)
+            Text(shopName, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 12),
+          _row(context, 'Montant', money.format(total), bold: true),
+          _row(context, 'Payé par', sender),
+          _row(context, 'Méthode', 'Wave'),
+          _row(context, 'Date', stamp),
+        ],
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Terminer'),
+        ),
+      ],
+    );
+  }
+
+  Widget _row(BuildContext context, String label, String value,
+      {bool bold = false}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: bold ? FontWeight.bold : FontWeight.w500)),
+        ],
+      ),
+    );
+  }
 }
