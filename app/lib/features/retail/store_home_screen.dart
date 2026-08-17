@@ -157,6 +157,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       isScrollControlled: true,
       builder: (_) => SaleSheet(
         orgId: widget.org.id,
+        orgName: widget.org.name,
         retail: retail,
         currency: widget.org.currency,
         capture: widget.capture,
