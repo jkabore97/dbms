@@ -33,11 +33,17 @@ class SaleSheet extends StatefulWidget {
     this.capture,
     this.products = const [],
     this.canCredit = true,
+    this.initialMethod = 'cash',
   });
 
   /// Whether "Crédit" is offered at all — the owner's dial from 031. The
   /// server refuses regardless; this keeps the refused button off screen.
   final bool canCredit;
+
+  /// Which payment method the sheet opens on. 'credit' when the carnet opens
+  /// it, so recording a credit sale there picks real products and moves stock
+  /// instead of writing a free-text line unrelated to the inventory.
+  final String initialMethod;
 
   final String orgId;
 
@@ -71,7 +77,7 @@ class _SaleSheetState extends State<SaleSheet> {
 
   late final _money = moneyFormat(widget.currency);
 
-  String _method = 'cash';
+  late String _method = widget.initialMethod;
   Product? _picked;
   bool _busy = false;
   String? _error;

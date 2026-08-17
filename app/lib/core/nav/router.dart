@@ -739,6 +739,7 @@ GoRouter buildRouter(SessionController session) {
               (scope, org) => CreditBookScreen(
                 org: org,
                 credit: scope.credit,
+                retail: scope.retail,
                 access: scope.session.accessFor(org.id),
               ),
             ),

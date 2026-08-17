@@ -8,6 +8,9 @@ import '../../core/auth/models.dart';
 import '../../core/credit/credit_repository.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import '../retail/sale_sheet.dart';
+import '../../core/retail/retail_repository.dart';
+import '../../core/retail/models.dart';
 import '../../l10n/strings.dart';
 
 /// Qui me doit combien — the carnet de crédit.
@@ -21,6 +24,7 @@ class CreditBookScreen extends StatefulWidget {
     super.key,
     required this.org,
     required this.credit,
+    required this.retail,
     this.access = OrgAccess.allEdit,
   });
 
@@ -29,6 +33,11 @@ class CreditBookScreen extends StatefulWidget {
 
   final OrgSummary org;
   final CreditRepository credit;
+
+  /// The store side, so a credit sale in the carnet picks real products and
+  /// moves stock through the same record_sale() path a cash sale uses —
+  /// instead of a free-text line unrelated to the inventory.
+  final RetailRepository retail;
 
   @override
   State<CreditBookScreen> createState() => _CreditBookScreenState();
@@ -68,7 +77,36 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     }
   }
 
+  /// A credit sale, product-backed: the same SaleSheet the store uses, opened
+  /// on the Crédit method, so it picks real articles, moves stock and snapshots
+  /// cost, and the debt it records is linked to that sale — not a free-text
+  /// line unrelated to the inventory.
   Future<void> _newSale() async {
+    List<Product> products = const [];
+    try {
+      products = await widget.retail.products(widget.org.id);
+    } catch (_) {
+      // Offline: the sheet still lets a name be typed; better than blocking.
+    }
+    if (!mounted) return;
+    final done = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SaleSheet(
+        orgId: widget.org.id,
+        retail: widget.retail,
+        currency: widget.org.currency,
+        products: products,
+        initialMethod: 'credit',
+      ),
+    );
+    if (done == true && mounted) await _load();
+  }
+
+  /// A debt with no article behind it — money lent, a service owed. Kept as a
+  /// deliberate secondary path: most carnet entries are goods taken on trust,
+  /// which now go through _newSale; this is the exception, not the door.
+  Future<void> _newLoan() async {
     final done = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -84,7 +122,17 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     final total = _rows.fold<double>(0, (s, r) => s + r.totalOwed);
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.creditBook)),
+      appBar: AppBar(
+        title: Text(strings.creditBook),
+        actions: [
+          if (widget.access.canEdit('credits'))
+            IconButton(
+              tooltip: 'Dette sans article (prêt)',
+              icon: const Icon(Icons.request_quote_outlined),
+              onPressed: _newLoan,
+            ),
+        ],
+      ),
       floatingActionButton: !widget.access.canEdit('credits')
           ? null
           : FloatingActionButton.extended(
