@@ -269,6 +269,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_security.sql
 
+      # A farm entry carries no ledger, so a wrong count is corrected in place
+      # like a notebook — the owner and a writer may, an observer may not, and
+      # a harvest cannot be corrected to nothing.
+      - name: Prove a farm entry can be corrected
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_farm_edits.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
