@@ -192,9 +192,9 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           archived: all.where((o) => o.isArchived).length,
           farms: all.where((o) => o.profile == 'farm').length,
           shops: all.where((o) => o.profile == 'retail').length,
-          churches: all.where((o) => o.profile == 'church').length,
+          churches: all.where((o) => o.profile == 'church' || o.profile == 'association').length,
           otherProfiles: all
-              .where((o) => !['farm', 'retail', 'church'].contains(o.profile))
+              .where((o) => !['farm', 'retail', 'church', 'association'].contains(o.profile))
               .length,
         );
         // Paged here rather than server-side, which is exactly what 021 is for.
@@ -429,6 +429,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               'farm': 'Fermes',
               'retail': 'Boutiques',
               'church': 'Associations',
+              'association': 'Associations',
             }.entries)
               FilterChip(
                 label: Text(entry.value),
@@ -706,6 +707,7 @@ class _OrgRowTile extends StatelessWidget {
     'farm': 'Ferme',
     'retail': 'Boutique',
     'church': 'Association',
+    'association': 'Association',
   };
 
   ({String label, Color colour}) _health(BuildContext context) {

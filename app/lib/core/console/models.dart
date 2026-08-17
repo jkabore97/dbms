@@ -179,7 +179,7 @@ const auditTableLabels = <String, String>{
   'accounts': 'Plan comptable',
   'pending_invitations': 'Invitations',
   'journal_entries': 'Écritures',
-  'church_members': 'Fidèles',
+  'church_members': 'Membres',
 };
 
 String auditTableLabel(String table) => auditTableLabels[table] ?? table;

@@ -271,7 +271,7 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
     paletteNamed(theme) ??
     switch (profile) {
       'farm' => farmPalette,
-      'church' => churchPalette,
+      'church' || 'association' => churchPalette,
       'retail' => retailPalette,
       _ => kajPalette,
     };

@@ -234,7 +234,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
   }
 
   static String _profileLabel(String profile) => switch (profile) {
-        'church' => 'Église',
+        'church' || 'association' => 'Association',
         'farm' => 'Ferme',
         'retail' => 'Commerce',
         _ => 'Autre',

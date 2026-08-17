@@ -177,7 +177,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       'Aucun membre enregistré. Les relevés sont établis pour '
-                      'les personnes inscrites au registre de l\'église.',
+                      'les personnes inscrites au registre de l\'association.',
                     ),
                   )
                 else

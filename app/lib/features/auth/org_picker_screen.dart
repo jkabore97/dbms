@@ -117,7 +117,8 @@ class OrgPickerScreen extends StatelessWidget {
 IconData iconForProfile(String profile) {
   switch (profile) {
     case 'church':
-      return Icons.church_outlined;
+    case 'association':
+      return Icons.groups_outlined;
     case 'farm':
       return Icons.agriculture_outlined;
     case 'retail':
@@ -133,6 +134,7 @@ String localizedProfile(BuildContext context, String profile) {
   final strings = Strings.of(context);
   switch (profile) {
     case 'church':
+    case 'association':
       return strings.church;
     case 'farm':
       return strings.farm;
@@ -146,7 +148,8 @@ String localizedProfile(BuildContext context, String profile) {
 String labelForProfile(String profile) {
   switch (profile) {
     case 'church':
-      return 'Église';
+    case 'association':
+      return 'Association';
     case 'farm':
       return 'Ferme';
     case 'retail':

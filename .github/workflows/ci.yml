@@ -285,6 +285,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_production_edit.sql
 
+      # The church profile is association now: same members/giving chart, the
+      # table renamed to members with a church_members compat view over it, and
+      # existing church businesses migrated to read as associations.
+      - name: Prove the association profile
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_association.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
