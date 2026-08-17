@@ -374,7 +374,7 @@ abstract class Strings {
   /// No description provided for @church.
   ///
   /// In fr, this message translates to:
-  /// **'Église'**
+  /// **'Association'**
   String get church;
 
   /// No description provided for @farm.

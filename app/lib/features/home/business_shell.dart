@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
-import '../admin/invite_generator_sheet.dart';
+import '../../l10n/strings.dart';
 import '../notify/notifications_screen.dart';
-import 'account_menu.dart';
 import 'home_router.dart';
 
 /// A business, open.
@@ -31,8 +30,6 @@ class BusinessShell extends StatelessWidget {
     final scope = AppScope.of(context);
     final session = scope.session;
     final live = scope.auth.hasLiveSession;
-    final admin = org.isAdmin && live;
-    final platform = session.isPlatformAdmin && live;
     // The owner's dial: which tools this person is even shown. The server
     // enforces the ones that matter; this decides what exists on screen.
     final access = session.accessFor(org.id);
@@ -54,59 +51,23 @@ class BusinessShell extends StatelessWidget {
         // with.
         onHistory:
             live ? () => context.push(Routes.inside(org.id, 'journal')) : null,
-        // One slot, two widgets: the bell rides next to the account menu so
-        // every home screen gets it without knowing it exists.
+        // One slot, two widgets: the bell rides next to the account button so
+        // every home screen gets both without knowing they exist. The bell is
+        // always present — greyed offline rather than removed — and the whole
+        // account menu folded into one Compte screen, so nothing here has to
+        // know which of a dozen destinations a person is even allowed.
         accountAction: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (live)
-              NotificationBell(
-                notify: scope.notify,
-                listRoute: Routes.inside(org.id, 'notifications'),
-              ),
-            AccountMenu(
-          db: scope.db,
-          userLabel: session.identity?.label ?? '',
-          onSignOut: session.signOut,
-          // All of these need the server, so all of them disappear once the
-          // token has expired — the rest of the app keeps working offline. A
-          // report computed from a device's partial copy of the books would be
-          // a wrong number presented as a right one.
-          onAdminister: admin
-              ? () => context.push(Routes.inside(org.id, 'administration'))
-              : null,
-          onAccounting: live && access.canSee('reports')
-              ? () => context.push(Routes.inside(org.id, 'comptabilite'))
-              : null,
-          onCreateBusiness:
-              platform ? () => context.push(Routes.newBusiness) : null,
-          onBusinesses: platform ? () => context.push(Routes.console) : null,
-          onApplications:
-              platform ? () => context.push(Routes.applications) : null,
-          // Replaces "J'ai un code": the person holding the app is the
-          // manager, and the person who needs reaching does not have it.
-          onMyProfile: live ? () => context.push(Routes.myProfile) : null,
-          onLanguage: () => context.push(Routes.language),
-          onCreditBook: live && access.canSee('credits')
-              ? () => context.push(Routes.inside(org.id, 'credits'))
-              : null,
-          onTontines: live && access.canSee('tontines')
-              ? () => context.push(Routes.inside(org.id, 'tontines'))
-              : null,
-          onProduction: live && access.canSee('production')
-              ? () => context.push(Routes.inside(org.id, 'production'))
-              : null,
-          onApplyForOrg: !session.isPlatformAdmin && live
-              ? () => context.push(Routes.applyForBusiness)
-              : null,
-          onInvite: admin
-              ? () => InviteGeneratorSheet.open(context,
-                  orgId: org.id, onboarding: scope.onboarding)
-              : null,
-          // Going to the picker rather than swapping the business out behind
-          // the user: it is an address, so back returns here.
-          onSwitchOrg:
-              session.orgs.length > 1 ? () => context.go(Routes.picker) : null,
+            NotificationBell(
+              notify: scope.notify,
+              listRoute: Routes.inside(org.id, 'notifications'),
+              enabled: live,
+            ),
+            IconButton(
+              icon: const Icon(Icons.account_circle_outlined),
+              tooltip: Strings.of(context).account,
+              onPressed: () => context.push(Routes.inside(org.id, 'compte')),
             ),
           ],
         ),

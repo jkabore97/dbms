@@ -15,12 +15,18 @@ class NotificationBell extends StatefulWidget {
     super.key,
     required this.notify,
     required this.listRoute,
+    this.enabled = true,
   });
 
   final NotificationsRepository notify;
 
   /// Where the bell opens, e.g. `Routes.inside(org.id, 'notifications')`.
   final String listRoute;
+
+  /// The bell is always on the app bar so its place never moves; offline it is
+  /// greyed and inert rather than gone, because a control that vanishes teaches
+  /// people it was never there.
+  final bool enabled;
 
   @override
   State<NotificationBell> createState() => _NotificationBellState();
@@ -36,7 +42,7 @@ class _NotificationBellState extends State<NotificationBell> {
   }
 
   Future<void> _refresh() async {
-    if (!widget.notify.isConfigured) return;
+    if (!widget.enabled || !widget.notify.isConfigured) return;
     try {
       final rows = await widget.notify.recent();
       if (mounted) {
@@ -50,6 +56,17 @@ class _NotificationBellState extends State<NotificationBell> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.enabled) {
+      // Offline: present but inert, greyed so it reads as "later", not "gone".
+      return IconButton(
+        tooltip: Strings.of(context).notifications,
+        onPressed: null,
+        icon: Icon(
+          Icons.notifications_outlined,
+          color: Theme.of(context).disabledColor,
+        ),
+      );
+    }
     return IconButton(
       tooltip: Strings.of(context).notifications,
       icon: Badge.count(
