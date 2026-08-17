@@ -112,4 +112,23 @@ class ProductionRepository {
       'p_client_uuid': _uuid.v4(),
     });
   }
+
+  /// Correcting a past run (034). The ingredients stay as recorded — only the
+  /// output count, its name and note change — and the server re-derives the
+  /// unit cost from the unchanged total. Refused for an observer, and for an
+  /// employee the owner dialled to 'view' on production.
+  Future<void> updateRun(
+    String runId, {
+    double? quantity,
+    String? productName,
+    String? note,
+  }) async {
+    await _c.rpc('update_production_run', params: {
+      'p_run_id': runId,
+      if (quantity != null) 'p_quantity': quantity,
+      if (productName != null && productName.isNotEmpty)
+        'p_product_name': productName,
+      if (note != null && note.isNotEmpty) 'p_note': note,
+    });
+  }
 }
