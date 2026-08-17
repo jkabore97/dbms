@@ -77,8 +77,12 @@ class CreateBusinessScreen extends StatefulWidget {
   State<CreateBusinessScreen> createState() => _CreateBusinessScreenState();
 }
 
-/// The profiles the app has a home screen for. 'generic' is last because it is
-/// the fallback, not a choice anybody makes first.
+/// The profiles a business can be created as — each one the app has a real
+/// home screen for. 'generic' ("Autre") is deliberately absent: it made an
+/// empty business with no dedicated module, which was more confusing than
+/// useful to offer. Existing generic businesses keep working (the server still
+/// accepts the value and their home screen still renders); it is simply no
+/// longer something new businesses are created as.
 const _profiles =
     <({String value, String label, String detail, IconData icon})>[
   (
@@ -98,12 +102,6 @@ const _profiles =
     label: 'Commerce',
     detail: 'Ventes et dépenses',
     icon: Icons.storefront_outlined,
-  ),
-  (
-    value: 'generic',
-    label: 'Autre',
-    detail: 'Comptabilité simple, sans module dédié',
-    icon: Icons.work_outline,
   ),
 ];
 

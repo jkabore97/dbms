@@ -543,11 +543,17 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                 // member of this business opens on tomorrow morning.
                 helperText: 'Change l’écran d’accueil de tous les membres.',
               ),
-              items: const [
-                DropdownMenuItem(value: 'church', child: Text('Église')),
-                DropdownMenuItem(value: 'farm', child: Text('Ferme')),
-                DropdownMenuItem(value: 'retail', child: Text('Commerce')),
-                DropdownMenuItem(value: 'generic', child: Text('Autre')),
+              items: [
+                const DropdownMenuItem(value: 'church', child: Text('Église')),
+                const DropdownMenuItem(value: 'farm', child: Text('Ferme')),
+                const DropdownMenuItem(
+                    value: 'retail', child: Text('Commerce')),
+                // 'Autre' is no longer offered when creating a business. Kept
+                // here only for one already on it, so its edit form neither
+                // breaks (a Dropdown value must match an item) nor lets a
+                // business be newly switched to the empty profile.
+                if (widget.org.profile == 'generic')
+                  const DropdownMenuItem(value: 'generic', child: Text('Autre')),
               ],
               onChanged: (v) => setState(() => _profile = v ?? _profile),
             ),

@@ -97,6 +97,17 @@ void main() {
       expect(createCallback(tester), isNotNull);
     });
 
+    testWidgets('the empty "Autre" profile is no longer offered',
+        (tester) async {
+      await pump(tester);
+      // The three profiles with a real home screen remain; the empty one that
+      // made a business with no module is gone.
+      expect(find.text('Église'), findsOneWidget);
+      expect(find.text('Ferme'), findsOneWidget);
+      expect(find.text('Commerce'), findsOneWidget);
+      expect(find.text('Autre'), findsNothing);
+    });
+
     testWidgets('typing the name fills the address in', (tester) async {
       await pump(tester);
       await tester.enterText(find.byType(TextField).first, 'Ignace Poultry');
