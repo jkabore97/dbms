@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -256,6 +257,19 @@ class _LivestockScreenState extends State<LivestockScreen>
                           icon: const Icon(Icons.vaccines_outlined, size: 18),
                           label: const Text('Vaccin'),
                         ),
+                        if (!widget.org.isObserverOnly)
+                          TextButton.icon(
+                            onPressed: () => showFarmCorrections(
+                              context,
+                              title: herd.label,
+                              farm: widget.farm,
+                              kind: FarmEntryKind.herd,
+                              subjectId: herd.id,
+                              canWrite: true,
+                            ),
+                            icon: const Icon(Icons.history, size: 18),
+                            label: const Text('Corriger'),
+                          ),
                       ],
                     ),
                   ],
@@ -334,10 +348,29 @@ class _LivestockScreenState extends State<LivestockScreen>
                       ),
                     ],
                     const SizedBox(height: 12),
-                    FilledButton.tonalIcon(
-                      onPressed: () => _harvest(cycle),
-                      icon: const Icon(Icons.agriculture_outlined, size: 18),
-                      label: const Text('Enregistrer une récolte'),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        FilledButton.tonalIcon(
+                          onPressed: () => _harvest(cycle),
+                          icon:
+                              const Icon(Icons.agriculture_outlined, size: 18),
+                          label: const Text('Enregistrer une récolte'),
+                        ),
+                        if (!widget.org.isObserverOnly && cycle.harvested > 0)
+                          TextButton.icon(
+                            onPressed: () => showFarmCorrections(
+                              context,
+                              title: cycle.crop,
+                              farm: widget.farm,
+                              kind: FarmEntryKind.harvest,
+                              subjectId: cycle.id,
+                              canWrite: true,
+                            ),
+                            icon: const Icon(Icons.history, size: 18),
+                            label: const Text('Corriger'),
+                          ),
+                      ],
                     ),
                   ],
                 ),

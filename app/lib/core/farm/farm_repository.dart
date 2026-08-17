@@ -337,6 +337,99 @@ class FarmRepository {
     return id as String;
   }
 
+  // ----------------------------------------------------------------
+  // Correcting an entry (033). A farm event carries no ledger, so a wrong
+  // count is fixed in place — the server refuses it for an observer and
+  // refuses a harvest of nothing, so these just pass the correction through.
+  // ----------------------------------------------------------------
+
+  /// The recent events of one flock, newest first, for the corrections list.
+  /// Read straight from the table: its select policy is has_full_visibility,
+  /// the same entitlement the home feed already needs.
+  Future<List<Map<String, dynamic>>> flockEvents(String flockId) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('flock_events')
+        .select('id, kind, quantity, note, occurred_at')
+        .eq('flock_id', flockId)
+        .order('occurred_at', ascending: false)
+        .limit(50) as List<dynamic>;
+    return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> herdEvents(String herdId) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('herd_events')
+        .select('id, kind, quantity, note, occurred_on')
+        .eq('herd_id', herdId)
+        .order('occurred_on', ascending: false)
+        .limit(50) as List<dynamic>;
+    return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> harvestsOf(String cropCycleId) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('harvests')
+        .select('id, quantity, unit, grade, note, harvested_on')
+        .eq('crop_cycle_id', cropCycleId)
+        .order('harvested_on', ascending: false)
+        .limit(50) as List<dynamic>;
+    return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
+  }
+
+  Future<void> updateFlockEvent(
+    String eventId, {
+    double? quantity,
+    String? kind,
+    String? note,
+    DateTime? occurredAt,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('update_flock_event', params: {
+      'p_event_id': eventId,
+      if (quantity != null) 'p_quantity': quantity,
+      if (kind != null) 'p_kind': kind,
+      if (note != null) 'p_note': note,
+      if (occurredAt != null) 'p_occurred_at': occurredAt.toIso8601String(),
+    });
+  }
+
+  Future<void> updateHerdEvent(
+    String eventId, {
+    double? quantity,
+    String? kind,
+    String? note,
+    DateTime? occurredOn,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('update_herd_event', params: {
+      'p_event_id': eventId,
+      if (quantity != null) 'p_quantity': quantity,
+      if (kind != null) 'p_kind': kind,
+      if (note != null) 'p_note': note,
+      if (occurredOn != null) 'p_occurred_on': _date(occurredOn),
+    });
+  }
+
+  Future<void> updateHarvest(
+    String harvestId, {
+    double? quantity,
+    String? grade,
+    String? note,
+    DateTime? harvestedOn,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('update_harvest', params: {
+      'p_harvest_id': harvestId,
+      if (quantity != null) 'p_quantity': quantity,
+      if (grade != null) 'p_grade': grade,
+      if (note != null) 'p_note': note,
+      if (harvestedOn != null) 'p_harvested_on': _date(harvestedOn),
+    });
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {

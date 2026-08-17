@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
@@ -220,6 +221,16 @@ class _FlocksScreenState extends State<FlocksScreen> {
                 canWrite: _canWrite,
                 onRecord: () => _record(flock),
                 onClose: () => _close(flock),
+                onCorrect: widget.farm == null
+                    ? null
+                    : () => showFarmCorrections(
+                          context,
+                          title: flock.batchCode,
+                          farm: widget.farm!,
+                          kind: FarmEntryKind.flock,
+                          subjectId: flock.id,
+                          canWrite: true,
+                        ),
               ),
             const SizedBox(height: 96),
           ],
@@ -235,12 +246,16 @@ class _FlockCard extends StatelessWidget {
     required this.canWrite,
     required this.onRecord,
     required this.onClose,
+    this.onCorrect,
   });
 
   final Flock flock;
   final bool canWrite;
   final VoidCallback onRecord;
   final VoidCallback onClose;
+
+  /// Null in a build with no server — corrections read and write the server.
+  final VoidCallback? onCorrect;
 
   @override
   Widget build(BuildContext context) {
@@ -294,13 +309,20 @@ class _FlockCard extends StatelessWidget {
                     onSelected: (v) {
                       if (v == 'record') onRecord();
                       if (v == 'close') onClose();
+                      if (v == 'correct') onCorrect?.call();
                     },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
                         value: 'record',
                         child: Text('Enregistrer un événement'),
                       ),
-                      PopupMenuItem(value: 'close', child: Text('Clôturer')),
+                      if (onCorrect != null)
+                        const PopupMenuItem(
+                          value: 'correct',
+                          child: Text('Corriger une entrée'),
+                        ),
+                      const PopupMenuItem(
+                          value: 'close', child: Text('Clôturer')),
                     ],
                   ),
               ],
