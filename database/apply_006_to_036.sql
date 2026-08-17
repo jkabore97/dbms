@@ -12229,13 +12229,21 @@ begin
 end;
 $$;
 
-grant execute on function org_sales_headline(uuid, timestamptz)           to authenticated;
-grant execute on function org_product_performance(uuid, timestamptz, int) to authenticated;
-grant execute on function org_sales_by_hour(uuid, timestamptz)            to authenticated;
-grant execute on function org_sales_by_weekday(uuid, timestamptz)         to authenticated;
-grant execute on function org_sales_daily(uuid, timestamptz)              to authenticated;
-grant execute on function platform_business_performance(timestamptz)      to authenticated;
-grant execute on function platform_analytics_headline(timestamptz)        to authenticated;
+-- Guarded because the migration runs before any test creates the role, and on
+-- a fresh cluster `authenticated` (a Supabase-managed role) does not exist yet
+-- — every grant in this schema is wrapped this way for the same reason.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function org_sales_headline(uuid, timestamptz)           to authenticated;
+        grant execute on function org_product_performance(uuid, timestamptz, int) to authenticated;
+        grant execute on function org_sales_by_hour(uuid, timestamptz)            to authenticated;
+        grant execute on function org_sales_by_weekday(uuid, timestamptz)         to authenticated;
+        grant execute on function org_sales_daily(uuid, timestamptz)              to authenticated;
+        grant execute on function platform_business_performance(timestamptz)      to authenticated;
+        grant execute on function platform_analytics_headline(timestamptz)        to authenticated;
+    end if;
+end $$;
 
 notify pgrst, 'reload schema';
 
