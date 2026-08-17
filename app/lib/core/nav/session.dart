@@ -100,27 +100,21 @@ class SessionController extends ChangeNotifier {
   }
 
   Future<void> _loadAccess(OrgSummary org) async {
+    final OrgAccess next;
     if (org.isAdmin) {
-      _access[org.id] = OrgAccess.allEdit;
-      return;
+      next = OrgAccess.allEdit;
+    } else {
+      final rules =
+          await admin.featureRulesForTier(org.id, OrgAccess.tierOf(org.roles));
+      next = OrgAccess.forTier(rules);
     }
-    final client = auth.client;
-    if (client == null) return;
-    try {
-      final rows = await client
-          .from('org_feature_rules')
-          .select('feature, access')
-          .eq('org_id', org.id)
-          .eq('tier', OrgAccess.tierOf(org.roles));
-      _access[org.id] = OrgAccess.forTier({
-        for (final r in rows as List)
-          (r as Map)['feature'] as String: r['access'] as String,
-      });
-      _emit();
-    } catch (_) {
-      // Offline, or a server older than 031: the defaults already in place
-      // are exactly what that server would answer.
-    }
+    // Emit only if this changes what screens already see — an unchanged dial
+    // (an admin, an untouched business, an offline fetch that came back empty)
+    // must not fire a rebuild, because _loadAccess runs during the resolve and
+    // open flows where a stray notify re-runs the router's redirect.
+    final changed = accessFor(org.id) != next;
+    _access[org.id] = next;
+    if (changed) _emit();
   }
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —
@@ -383,7 +377,14 @@ class SessionController extends ChangeNotifier {
     _emit();
 
     final resolved = orgById(_lastOrgId);
-    if (resolved != null) unawaited(cacheChart(resolved));
+    if (resolved != null) {
+      unawaited(cacheChart(resolved));
+      // The business this resolve auto-opened (a single-org employee, or the
+      // one remembered across a reload) has its id in _lastOrgId already, so
+      // the router's later openOrg() early-returns and never loads the dial.
+      // Load it here, or an employee sees every tool the owner hid.
+      unawaited(_loadAccess(resolved));
+    }
   }
 
   /// Which business is open. Called by the router when a `/o/:orgId` route is
