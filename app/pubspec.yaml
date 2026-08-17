@@ -67,6 +67,10 @@ dependencies:
   # report nobody can forward is a report nobody reads.
   share_plus: ^13.3.0
 
+  # Opens the support WhatsApp chat (a wa.me link) from the help screen. Works
+  # on both ship targets — an intent on Android, a new tab on web.
+  url_launcher: ^6.3.0
+
   # The camera button. Works on both ship targets: an intent on Android, a
   # file input with `capture` on web. No platform scaffolding is added by it,
   # which is why it was chosen over a full camera package — M5 needs one

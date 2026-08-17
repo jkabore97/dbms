@@ -18,6 +18,8 @@ import '../../features/admin/platform_console_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
 import '../../features/analytics/platform_analytics_screen.dart';
 import '../../features/admin/trainers_screen.dart';
+import '../../features/account/compte_screen.dart';
+import '../../features/account/legal_screens.dart';
 import '../../features/admin/structure_screen.dart';
 import '../../features/admin/team_access_screen.dart';
 import '../../features/auth/join_or_apply_screen.dart';
@@ -93,6 +95,9 @@ abstract final class Routes {
   static const trainers = '/console/formateurs';
   static const applications = '/demandes';
   static const language = '/langue';
+  static const privacy = '/confidentialite';
+  static const terms = '/conditions';
+  static const faq = '/aide';
 
   /// A business, and everything inside it.
   static String org(String id) => '/o/$id';
@@ -231,6 +236,12 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
           path: Routes.language, builder: (_, __) => const LanguageScreen()),
       GoRoute(path: Routes.splash, builder: (_, __) => const _Splash()),
+
+      // The static legal and help pages. Top-level so they open with no signal
+      // and can be linked from anywhere, signed in or not.
+      GoRoute(path: Routes.privacy, builder: (_, __) => const PrivacyScreen()),
+      GoRoute(path: Routes.terms, builder: (_, __) => const TermsScreen()),
+      GoRoute(path: Routes.faq, builder: (_, __) => const FaqScreen()),
 
       GoRoute(
         path: Routes.signIn,
@@ -618,6 +629,14 @@ GoRouter buildRouter(SessionController session) {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'compte',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => CompteScreen(org: org),
+            ),
           ),
           GoRoute(
             path: 'rapports',

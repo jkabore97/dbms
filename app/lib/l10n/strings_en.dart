@@ -148,7 +148,7 @@ class StringsEn extends Strings {
   String get signOut => 'Sign out';
 
   @override
-  String get church => 'Church';
+  String get church => 'Association';
 
   @override
   String get farm => 'Farm';
