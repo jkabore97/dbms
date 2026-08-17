@@ -43,7 +43,11 @@ Widget homeScreenFor({
     profile: org.profile,
     theme: org.theme,
     child: switch (org.profile) {
-      'church' => ChurchHomeScreen(
+      // 'association' is the name now; 'church' is still matched for any
+      // business not yet migrated by 035. Same home screen (kept as the
+      // ChurchHomeScreen class internally) — associations and churches keep
+      // members and money the same way.
+      'church' || 'association' => ChurchHomeScreen(
           invoicing: invoicing,
           db: db,
           orgId: org.id,

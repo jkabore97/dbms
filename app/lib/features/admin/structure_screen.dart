@@ -46,7 +46,7 @@ class _StructureScreenState extends State<StructureScreen> {
   }
 
   String get _entityWord => switch (widget.profile) {
-        'church' => 'Campus',
+        'church' || 'association' => 'Section',
         'farm' => 'Site',
         'retail' => 'Boutique',
         _ => 'Site',
@@ -268,7 +268,7 @@ class _StructureScreenState extends State<StructureScreen> {
                     widget.orgId,
                     name,
                     kind: switch (widget.profile) {
-                      'church' => 'campus',
+                      'church' || 'association' => 'section',
                       'farm' => 'farm_site',
                       'retail' => 'branch',
                       _ => null,

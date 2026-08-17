@@ -102,7 +102,9 @@ void main() {
       await pump(tester);
       // The three profiles with a real home screen remain; the empty one that
       // made a business with no module is gone.
-      expect(find.text('Église'), findsOneWidget);
+      // Church became Association (035); the empty "Autre" stays gone.
+      expect(find.text('Association'), findsOneWidget);
+      expect(find.text('Église'), findsNothing);
       expect(find.text('Ferme'), findsOneWidget);
       expect(find.text('Commerce'), findsOneWidget);
       expect(find.text('Autre'), findsNothing);

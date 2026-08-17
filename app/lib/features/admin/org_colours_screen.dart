@@ -189,7 +189,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
 
   static String _profileLabel(String profile) => switch (profile) {
         'farm' => 'La couleur des fermes',
-        'church' => 'La couleur des églises',
+        'church' || 'association' => 'La couleur des associations',
         'retail' => 'La couleur des boutiques',
         _ => "La couleur de l'application",
       };

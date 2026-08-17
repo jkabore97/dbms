@@ -150,7 +150,7 @@ class StringsFr extends Strings {
   String get signOut => 'Se déconnecter';
 
   @override
-  String get church => 'Église';
+  String get church => 'Association';
 
   @override
   String get farm => 'Ferme';

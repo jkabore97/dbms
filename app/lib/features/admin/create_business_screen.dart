@@ -86,10 +86,10 @@ class CreateBusinessScreen extends StatefulWidget {
 const _profiles =
     <({String value, String label, String detail, IconData icon})>[
   (
-    value: 'church',
-    label: 'Église',
-    detail: 'Offrandes, dîmes, dépenses, résumé du dimanche',
-    icon: Icons.church_outlined,
+    value: 'association',
+    label: 'Association',
+    detail: 'Membres, cotisations, dépenses, résumé',
+    icon: Icons.groups_outlined,
   ),
   (
     value: 'farm',
@@ -115,7 +115,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   /// admin is being decided by the person typing.
   final _descriptionController = TextEditingController();
 
-  String _profile = 'church';
+  String _profile = 'association';
 
   /// True once the slug has been edited by hand, after which typing the name
   /// stops overwriting it — otherwise a deliberate slug is silently undone by
@@ -228,7 +228,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                 labelText: "Nom de l'activité",
-                hintText: 'Église Bethel',
+                hintText: 'Association Bethel',
                 border: OutlineInputBorder(),
               ),
             ),

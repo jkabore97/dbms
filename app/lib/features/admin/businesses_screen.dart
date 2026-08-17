@@ -323,14 +323,14 @@ class _BusinessCard extends StatelessWidget {
   }
 
   static IconData _iconFor(String profile) => switch (profile) {
-        'church' => Icons.church_outlined,
+        'church' || 'association' => Icons.groups_outlined,
         'farm' => Icons.agriculture_outlined,
         'retail' => Icons.storefront_outlined,
         _ => Icons.work_outline,
       };
 
   static String _profileLabel(String profile) => switch (profile) {
-        'church' => 'Église',
+        'church' || 'association' => 'Association',
         'farm' => 'Ferme',
         'retail' => 'Commerce',
         _ => 'Autre',
@@ -544,10 +544,16 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                 helperText: 'Change l’écran d’accueil de tous les membres.',
               ),
               items: [
-                const DropdownMenuItem(value: 'church', child: Text('Église')),
+                const DropdownMenuItem(
+                    value: 'association', child: Text('Association')),
                 const DropdownMenuItem(value: 'farm', child: Text('Ferme')),
                 const DropdownMenuItem(
                     value: 'retail', child: Text('Commerce')),
+                // A business not yet migrated by 035 still reads 'church';
+                // keep it selectable so its edit form does not crash on a
+                // value with no item, without offering it to anyone else.
+                if (widget.org.profile == 'church')
+                  const DropdownMenuItem(value: 'church', child: Text('Association')),
                 // 'Autre' is no longer offered when creating a business. Kept
                 // here only for one already on it, so its edit form neither
                 // breaks (a Dropdown value must match an item) nor lets a
