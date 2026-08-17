@@ -12,6 +12,7 @@ import 'core/nav/router.dart';
 import 'core/nav/session.dart';
 import 'core/nav/url_strategy.dart';
 import 'core/accounting/accounting_repository.dart';
+import 'core/analytics/analytics_repository.dart';
 import 'core/admin/admin_repository.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/capture/capture_repository.dart';
@@ -276,6 +277,7 @@ class _KajAppState extends State<KajApp> {
       tontine: TontineRepository(widget.auth.client),
       production: ProductionRepository(widget.auth.client),
       notify: NotificationsRepository(widget.auth.client),
+      analytics: AnalyticsRepository(widget.auth.client),
       sync: widget.sync,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new

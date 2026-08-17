@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
+import '../analytics/analytics_repository.dart';
 import '../auth/auth_repository.dart';
 import '../capture/capture_repository.dart';
 import '../console/console_repository.dart';
@@ -53,6 +54,7 @@ class AppScope extends InheritedWidget {
     required this.tontine,
     required this.production,
     required this.notify,
+    required this.analytics,
     this.sync,
     required super.child,
   });
@@ -75,6 +77,7 @@ class AppScope extends InheritedWidget {
   final TontineRepository tontine;
   final ProductionRepository production;
   final NotificationsRepository notify;
+  final AnalyticsRepository analytics;
   final SyncService? sync;
 
   static AppScope of(BuildContext context) {
