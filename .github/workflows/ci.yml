@@ -308,6 +308,13 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_wave_payment.sql
 
+      # Trainers: platform-admin only assigns them, an assigned trainer reads
+      # all and writes/administers nothing, and both ends see the assignment.
+      - name: Prove trainer accounts
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_trainer.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

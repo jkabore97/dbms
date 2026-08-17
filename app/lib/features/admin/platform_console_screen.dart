@@ -298,6 +298,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             tooltip: 'Analyses',
           ),
           IconButton(
+            onPressed: () => context.push(Routes.trainers),
+            icon: const Icon(Icons.school_outlined),
+            tooltip: 'Formateurs',
+          ),
+          IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
