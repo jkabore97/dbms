@@ -71,6 +71,12 @@ dependencies:
   # on both ship targets — an intent on Android, a new tab on web.
   url_launcher: ^6.3.0
 
+  # Prints an invoice: the system print dialog on Android, the browser's on
+  # the web. The page is the same pixels the share button captures — pdf only
+  # wraps that image, so the printed document always matches the sent one.
+  printing: ^5.13.0
+  pdf: ^3.11.0
+
   # The camera button. Works on both ship targets: an intent on Android, a
   # file input with `capture` on web. No platform scaffolding is added by it,
   # which is why it was chosen over a full camera package — M5 needs one

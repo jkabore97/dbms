@@ -26,10 +26,18 @@ class NewInvoiceScreen extends StatefulWidget {
     super.key,
     required this.org,
     required this.invoicing,
+    this.revisionOf,
   });
 
   final OrgSummary org;
   final InvoicingRepository invoicing;
+
+  /// Set when this screen corrects an existing invoice rather than writing a
+  /// new one. The fields open pre-filled from the document, and saving calls
+  /// revise_invoice — the server withdraws the old invoice and issues the
+  /// replacement in one transaction, so the books never disagree with the
+  /// paper. Owner-only, enforced server-side.
+  final InvoiceDocument? revisionOf;
 
   @override
   State<NewInvoiceScreen> createState() => _NewInvoiceScreenState();
@@ -46,6 +54,23 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
   /// Starts with one empty line, because an invoice with none is not a state
   /// anybody wants to be in and "add the first line" is a wasted tap.
   final List<_LineDraft> _lines = [_LineDraft()];
+
+  @override
+  void initState() {
+    super.initState();
+    final doc = widget.revisionOf;
+    if (doc != null) {
+      _customer.text = doc.customerName;
+      _address.text = doc.customerAddress ?? '';
+      // The phone stays on the customer's record either way — create matches
+      // the customer by name — so an empty field here loses nothing.
+      _lines.clear();
+      for (final line in doc.lines) {
+        _lines.add(_LineDraft.from(line));
+      }
+      if (_lines.isEmpty) _lines.add(_LineDraft());
+    }
+  }
 
   int? _dueDays = 30;
   bool _saving = false;
@@ -91,16 +116,30 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
     });
 
     try {
-      final id = await widget.invoicing.create(
-        orgId: widget.org.id,
-        customerName: _customer.text.trim(),
-        customerAddress: _address.text.trim(),
-        customerPhone:
-            _phone.text.trim().isEmpty ? null : _country.toE164(_phone.text),
-        lines: _complete,
-        dueDays: _dueDays,
-        memo: _memo.text.trim(),
-      );
+      final revising = widget.revisionOf;
+      final id = revising != null
+          ? await widget.invoicing.revise(
+              invoiceId: revising.id,
+              customerName: _customer.text.trim(),
+              customerAddress: _address.text.trim(),
+              customerPhone: _phone.text.trim().isEmpty
+                  ? null
+                  : _country.toE164(_phone.text),
+              lines: _complete,
+              dueDays: _dueDays,
+              memo: _memo.text.trim(),
+            )
+          : await widget.invoicing.create(
+              orgId: widget.org.id,
+              customerName: _customer.text.trim(),
+              customerAddress: _address.text.trim(),
+              customerPhone: _phone.text.trim().isEmpty
+                  ? null
+                  : _country.toE164(_phone.text),
+              lines: _complete,
+              dueDays: _dueDays,
+              memo: _memo.text.trim(),
+            );
       if (!mounted) return;
       Navigator.pop(context, id);
     } catch (error) {
@@ -117,7 +156,11 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nouvelle facture')),
+      appBar: AppBar(
+        title: Text(widget.revisionOf == null
+            ? 'Nouvelle facture'
+            : 'Corriger la facture ${widget.revisionOf!.number}'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
@@ -254,7 +297,9 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2))
             : const Icon(Icons.receipt_long),
-        label: const Text('Créer la facture'),
+        label: Text(widget.revisionOf == null
+            ? 'Créer la facture'
+            : 'Corriger la facture'),
       ),
     );
   }
@@ -263,6 +308,18 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
 /// One line's controllers, kept together so removing a line disposes exactly
 /// the three that belonged to it.
 class _LineDraft {
+  _LineDraft();
+
+  /// Pre-filled from an existing document, for the revision flow.
+  _LineDraft.from(InvoiceLine line) {
+    description.text = line.description;
+    quantity.text = _plain(line.quantity);
+    price.text = _plain(line.unitPrice);
+  }
+
+  static String _plain(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : '$v';
+
   final description = TextEditingController();
   final quantity = TextEditingController(text: '1');
   final price = TextEditingController();

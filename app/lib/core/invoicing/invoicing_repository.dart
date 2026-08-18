@@ -113,6 +113,38 @@ class InvoicingRepository {
     return id as String;
   }
 
+  /// Corrects an invoice (040): the server withdraws the old document
+  /// (contre-passing its entry) and issues a replacement that names it, in one
+  /// transaction. Admin-only server-side; refuses an invoice money has
+  /// already arrived against.
+  Future<String> revise({
+    required String invoiceId,
+    required String customerName,
+    required List<InvoiceLine> lines,
+    String? customerPhone,
+    String? customerAddress,
+    int? dueDays,
+    DateTime? dueOn,
+    DateTime? issuedOn,
+    String? memo,
+  }) async {
+    final client = _require();
+    final id = await client.rpc('revise_invoice', params: {
+      'p_invoice_id': invoiceId,
+      'p_customer_name': customerName.trim(),
+      'p_lines': lines.map((l) => l.toJson()).toList(),
+      if (customerPhone != null && customerPhone.isNotEmpty)
+        'p_customer_phone': customerPhone,
+      if (customerAddress != null && customerAddress.isNotEmpty)
+        'p_customer_address': customerAddress,
+      if (dueOn != null) 'p_due_on': _day(dueOn),
+      if (dueDays != null && dueDays > 0) 'p_due_days': dueDays,
+      if (issuedOn != null) 'p_issued_on': _day(issuedOn),
+      if (memo != null && memo.isNotEmpty) 'p_memo': memo,
+    });
+    return id as String;
+  }
+
   /// Money against an invoice. Settling is its own act — an invoice is not
   /// paid because somebody ticked it, it is paid because cash arrived.
   Future<void> recordPayment({

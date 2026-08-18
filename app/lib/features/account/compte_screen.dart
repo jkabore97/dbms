@@ -111,6 +111,14 @@ class CompteScreen extends StatelessWidget {
                 title: Strings.of(context).administration,
                 onTap: () => context.push(inside('administration')),
               ),
+            // Owner-only, the same full visibility the server requires for
+            // the analytics functions themselves.
+            if (org.visibility == 'full' && org.profile == 'retail')
+              _Tile(
+                icon: Icons.insights_outlined,
+                title: 'Analyses',
+                onTap: () => context.push(inside('rapports/analyse')),
+              ),
             if (access.canSee('reports'))
               _Tile(
                 icon: Icons.menu_book_outlined,
@@ -134,6 +142,12 @@ class CompteScreen extends StatelessWidget {
                 icon: Icons.soup_kitchen_outlined,
                 title: Strings.of(context).production,
                 onTap: () => context.push(inside('production')),
+              ),
+            if (access.canSee('staff'))
+              _Tile(
+                icon: Icons.groups_outlined,
+                title: Strings.of(context).staffLabel,
+                onTap: () => context.push(inside('personnel')),
               ),
             if (admin)
               _Tile(
