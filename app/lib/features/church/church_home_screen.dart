@@ -88,7 +88,7 @@ class ChurchHomeScreen extends StatefulWidget {
 }
 
 class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
-  late final _currency = moneyFormat(widget.org?.currency ?? 'XOF');
+  NumberFormat get _currency => moneyFormat(widget.org?.currency ?? 'XOF');
 
   double _moneyIn = 0;
   double _moneyOut = 0;

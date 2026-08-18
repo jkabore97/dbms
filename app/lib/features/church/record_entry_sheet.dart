@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
@@ -53,7 +52,7 @@ class RecordEntrySheet extends StatefulWidget {
 }
 
 class _RecordEntrySheetState extends State<RecordEntrySheet> {
-  late final NumberFormat _currency = moneyFormat(widget.currency);
+  NumberFormat get _currency => moneyFormat(widget.currency);
 
   final _nameController = TextEditingController();
   final _noteController = TextEditingController();

@@ -78,7 +78,7 @@ class FarmHomeScreen extends StatefulWidget {
 }
 
 class _FarmHomeScreenState extends State<FarmHomeScreen> {
-  late final NumberFormat _currency = moneyFormat(widget.org.currency);
+  NumberFormat get _currency => moneyFormat(widget.org.currency);
 
   ({int eggs, double deaths, double feedUsed}) _today =
       (eggs: 0, deaths: 0, feedUsed: 0);

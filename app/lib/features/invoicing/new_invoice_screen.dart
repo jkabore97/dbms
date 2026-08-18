@@ -51,7 +51,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
   bool _saving = false;
   String? _error;
 
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   @override
   void dispose() {

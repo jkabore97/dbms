@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 
 import '../../l10n/strings.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/access/org_access.dart';
@@ -78,7 +77,7 @@ class StoreHomeScreen extends StatefulWidget {
 }
 
 class _StoreHomeScreenState extends State<StoreHomeScreen> {
-  late final NumberFormat _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   StoreDay _day = const StoreDay();
   List<ExpiringProduct> _expiring = const [];

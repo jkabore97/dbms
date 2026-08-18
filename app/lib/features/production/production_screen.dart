@@ -43,7 +43,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
   List<ProductionRun> _runs = const [];
   bool _loading = true;
   String? _error;
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
   late final _qty = NumberFormat.decimalPattern('fr_FR');
 
   @override
@@ -247,7 +247,7 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
   List<Product> _products = const [];
   bool _busy = false;
   String? _error;
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   static String _plain(double v) =>
       v == v.roundToDouble() ? v.round().toString() : '$v';

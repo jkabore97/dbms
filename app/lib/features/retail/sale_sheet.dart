@@ -81,7 +81,7 @@ class _SaleSheetState extends State<SaleSheet> {
   /// One per basket, not one per attempt. See the class comment.
   late final String _clientUuid = const Uuid().v4();
 
-  late final _money = moneyFormat(widget.currency);
+  NumberFormat get _money => moneyFormat(widget.currency);
 
   late String _method = widget.initialMethod;
   Product? _picked;
@@ -533,7 +533,7 @@ class WavePaymentSheet extends StatefulWidget {
 
 class _WavePaymentSheetState extends State<WavePaymentSheet> {
   final _senderController = TextEditingController();
-  late final _money = moneyFormat(widget.currency);
+  NumberFormat get _money => moneyFormat(widget.currency);
 
   @override
   void dispose() {

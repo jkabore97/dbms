@@ -45,7 +45,7 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  late final NumberFormat _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   List<Product> _products = const [];
   bool _loading = true;

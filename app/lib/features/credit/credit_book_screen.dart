@@ -48,7 +48,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
   bool _loading = true;
   String? _error;
 
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   @override
   void initState() {
@@ -245,7 +245,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
   bool _loading = true;
   String? _error;
 
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
   late final _date = DateFormat('d MMM y', 'fr_FR');
 
   @override

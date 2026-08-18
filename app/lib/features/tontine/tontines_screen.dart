@@ -33,7 +33,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
   List<TontineSummary> _rows = const [];
   bool _loading = true;
   String? _error;
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   @override
   void initState() {
