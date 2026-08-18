@@ -51,6 +51,7 @@ import '../../features/retail/staff_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../../features/tontine/tontines_screen.dart';
 import '../accounting/models.dart';
+import '../invoicing/models.dart' show InvoiceDocument;
 import '../auth/models.dart';
 import '../capture/invoice_reading.dart';
 import '../capture/models.dart';
@@ -615,7 +616,29 @@ GoRouter buildRouter(SessionController session) {
                       org: org, invoicing: scope.invoicing),
                 ),
               ),
-              // Last, so `nouvelle` and `facturation` are not swallowed by it.
+              GoRoute(
+                path: 'corriger',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) {
+                    // Reached from the document with the document in hand;
+                    // a cold load has nothing to correct — see `extra` note.
+                    final doc = state.extra;
+                    if (doc is! InvoiceDocument) {
+                      return _MissingContext(
+                        backTo: Routes.inside(org.id, 'factures'),
+                      );
+                    }
+                    return NewInvoiceScreen(
+                      org: org,
+                      invoicing: scope.invoicing,
+                      revisionOf: doc,
+                    );
+                  },
+                ),
+              ),
+              // Last, so the named siblings are not swallowed by it.
               GoRoute(
                 path: ':invoiceId',
                 builder: (context, state) => _withOrg(

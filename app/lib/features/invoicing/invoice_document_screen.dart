@@ -1,13 +1,18 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/invoicing/models.dart';
+import '../../core/nav/router.dart';
 import '../accounting/report_shell.dart';
 import 'invoice_paper.dart';
 import '../../core/errors.dart';
@@ -84,6 +89,19 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     }
   }
 
+  /// The paper as pixels — the one capture behind both sending and printing,
+  /// so what leaves the shop is always exactly what is on screen.
+  Future<Uint8List> _capturePaper() async {
+    final boundary = _paperKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) throw StateError("La facture n'est pas prête.");
+
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) throw StateError("L'image n'a pas pu être créée.");
+    return data.buffer.asUint8List();
+  }
+
   Future<void> _share() async {
     final doc = _doc;
     if (doc == null || _sharing) return;
@@ -91,18 +109,11 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final boundary = _paperKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) throw StateError("La facture n'est pas prête.");
-
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (data == null) throw StateError("L'image n'a pas pu être créée.");
-
+      final png = await _capturePaper();
       await SharePlus.instance.share(ShareParams(
         files: [
           XFile.fromData(
-            data.buffer.asUint8List(),
+            png,
             mimeType: 'image/png',
             name: 'facture-${doc.number}.png',
           ),
@@ -118,6 +129,58 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
       ));
     } finally {
       if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  /// The system print dialog (the browser's, on the web), fed a one-page PDF
+  /// wrapping the same capture the share button sends.
+  Future<void> _print() async {
+    final doc = _doc;
+    if (doc == null || _sharing) return;
+    setState(() => _sharing = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final png = await _capturePaper();
+      final image = pw.MemoryImage(png);
+      await Printing.layoutPdf(
+        name: 'facture-${doc.number}',
+        onLayout: (format) async {
+          final pdf = pw.Document();
+          pdf.addPage(pw.Page(
+            pageFormat: format,
+            build: (_) => pw.Center(
+              child: pw.Image(image, fit: pw.BoxFit.contain),
+            ),
+          ));
+          return pdf.save();
+        },
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text("Impression impossible sur cet appareil. $error"),
+      ));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  /// The owner corrects the document: the server withdraws this invoice and
+  /// issues a replacement in one transaction, and the screen lands on the new
+  /// one. Offered only while nothing has been paid — after money has moved,
+  /// the answer is a refund or credit note, and the server says so too.
+  Future<void> _revise() async {
+    final doc = _doc;
+    if (doc == null) return;
+
+    final newId = await context.push<String>(
+      Routes.inside(widget.org.id, 'factures/corriger'),
+      extra: doc,
+    );
+    if (newId != null && mounted) {
+      context.pushReplacement(
+          Routes.inside(widget.org.id, 'factures/$newId'));
     }
   }
 
@@ -196,10 +259,17 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
       appBar: AppBar(
         title: Text(doc == null ? 'Facture' : 'Facture ${doc.number}'),
         actions: [
+          if (doc != null)
+            IconButton(
+              icon: const Icon(Icons.print_outlined),
+              tooltip: 'Imprimer',
+              onPressed: _sharing ? null : _print,
+            ),
           if (doc != null && _canWrite && !doc.isCancelled)
             PopupMenuButton<String>(
               onSelected: (v) {
                 if (v == 'payment') _recordPayment();
+                if (v == 'revise') _revise();
                 if (v == 'cancel') _cancel();
               },
               itemBuilder: (_) => [
@@ -207,6 +277,14 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
                   const PopupMenuItem(
                     value: 'payment',
                     child: Text('Enregistrer un paiement'),
+                  ),
+                // The owner's pen: withdraws this document and issues a
+                // corrected one. Gone once money has arrived — from there the
+                // path is a refund or credit note.
+                if (widget.org.isAdmin && doc.paid == 0)
+                  const PopupMenuItem(
+                    value: 'revise',
+                    child: Text('Modifier la facture'),
                   ),
                 const PopupMenuItem(
                   value: 'cancel',

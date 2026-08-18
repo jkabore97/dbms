@@ -133,6 +133,19 @@ class FaqScreen extends StatelessWidget {
         '# Comment recevoir un paiement Wave ?',
         'Renseignez votre numéro Wave dans Paramètres, puis choisissez « Wave » '
             'au moment de la vente : le client scanne le QR et paie.',
+        '# Un client veut payer en dollars ou en euros.',
+        'Définissez vos taux dans Compte › Administration › Paramètres › Taux '
+            'de change. À la vente, touchez la monnaie du client : '
+            'l\'application affiche exactement le montant à encaisser, et le '
+            'reçu garde les deux montants et le taux. Vos livres restent dans '
+            'votre monnaie.',
+        '# Comment imprimer ou envoyer une facture ?',
+        'Ouvrez la facture : l\'icône imprimante lance l\'impression, et '
+            '« Envoyer » la partage en image (WhatsApp ou autre). Le '
+            'propriétaire peut aussi la corriger tant que rien n\'a été payé.',
+        '# Où sont les analyses et le carnet de crédit ?',
+        'Sous Compte › Mon entreprise, pour garder l\'écran de vente simple. '
+            'Les analyses sont réservées au propriétaire.',
         '# J\'ai oublié mon code (PIN).',
         'Reconnectez-vous avec votre mot de passe pour définir un nouveau code.',
         '# Comment contacter quelqu\'un ?',

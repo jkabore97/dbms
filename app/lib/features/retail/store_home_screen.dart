@@ -200,22 +200,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
-          // Owner-only: the same full visibility the server requires for the
-          // analytics functions. An employee on the till never sees this.
-          if (widget.org.visibility == 'full')
-            IconButton(
-              icon: const Icon(Icons.insights_outlined),
-              tooltip: 'Analyses',
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'rapports/analyse')),
-            ),
-          if (widget.access.canSee('credits'))
-            IconButton(
-              icon: const Icon(Icons.handshake_outlined),
-              tooltip: Strings.of(context).creditBook,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'credits')),
-            ),
+          // The bar carries only what a till reaches for many times a day.
+          // Analyses, the carnet and the personnel are consulted, not worked
+          // in, so they live under Compte instead of crowding this row.
           if (widget.access.canSee('production'))
             IconButton(
               icon: const Icon(Icons.soup_kitchen_outlined),
@@ -249,15 +236,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
               tooltip: Strings.of(context).invoices,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'factures')),
-            ),
-          if (widget.staff != null && widget.access.canSee('staff'))
-            IconButton(
-              icon: const Icon(Icons.groups_outlined),
-              tooltip: Strings.of(context).staffLabel,
-              onPressed: () async {
-                await context.push(Routes.inside(widget.org.id, 'personnel'));
-                if (mounted) await _load();
-              },
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
