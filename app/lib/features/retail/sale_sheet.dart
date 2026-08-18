@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
+import '../../core/rates/currency_rates.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -92,20 +93,37 @@ class _SaleSheetState extends State<SaleSheet> {
   /// null when the owner has set none — either way, Wave is not offered.
   String? _waveMerchant;
 
+  /// The owner's exchange rates (039). Empty until loaded and empty when the
+  /// owner has set none — either way, no currency chips are drawn.
+  List<CurrencyRate> _rates = const [];
+
+  /// Which currency the customer is paying in. Null is the home currency —
+  /// the default, always, so a distracted thumb cannot leave a sale marked
+  /// as dollars.
+  CurrencyRate? _tender;
+
   @override
   void initState() {
     super.initState();
-    _loadWave();
+    _loadPaymentOptions();
   }
 
-  Future<void> _loadWave() async {
+  Future<void> _loadPaymentOptions() async {
+    // Fetched together, tolerated separately: a shop with no Wave handle or no
+    // rates — or an offline open — simply has fewer buttons. Neither is ever
+    // the reason a sale cannot be recorded.
     try {
       final merchant = await widget.retail.waveMerchant(widget.orgId);
       if (mounted) setState(() => _waveMerchant = merchant);
-    } catch (_) {
-      // A shop with no Wave handle, or an offline open, simply has no Wave
-      // button. It is never the reason a sale cannot be recorded.
-    }
+    } catch (_) {}
+    try {
+      final rates = await widget.retail.currencyRates(widget.orgId);
+      // A rate equal to the home currency (left over from a currency change)
+      // must not draw a second chip for the same money.
+      final foreign =
+          rates.where((r) => r.currency != widget.currency).toList();
+      if (mounted) setState(() => _rates = foreign);
+    } catch (_) {}
   }
 
   @override
@@ -236,8 +254,14 @@ class _SaleSheetState extends State<SaleSheet> {
       _error = null;
     });
 
+    // Pinned before the awaits: the amounts the receipt prints must be the
+    // ones the sale was saved with, not whatever the basket holds by the time
+    // the dialog opens.
+    final tender = _tender;
+    final total = _total;
+
     try {
-      await widget.retail.recordSale(
+      final saleId = await widget.retail.recordSale(
         orgId: widget.orgId,
         lines: _lines,
         method: _method,
@@ -245,6 +269,32 @@ class _SaleSheetState extends State<SaleSheet> {
         customerName:
             _method == 'credit' ? _customerController.text.trim() : null,
       );
+
+      // Paid in a foreign currency: describe the cash that actually crossed
+      // the counter, then hand back a receipt naming both amounts and the
+      // rate — the paper that settles any later argument.
+      if (tender != null && total > 0) {
+        final collected = tender.fromHome(total);
+        await widget.retail.attachSaleTender(
+          saleId: saleId,
+          currency: tender.currency,
+          amount: collected,
+          rate: tender.rate,
+        );
+        if (mounted) {
+          await showDialog<void>(
+            context: context,
+            builder: (_) => TenderReceiptDialog(
+              shopName: widget.orgName,
+              total: total,
+              currency: widget.currency,
+              tenderCurrency: tender.currency,
+              tenderAmount: collected,
+              rate: tender.rate,
+            ),
+          );
+        }
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) setState(() => _error = describeError(error));
@@ -459,9 +509,72 @@ class _SaleSheetState extends State<SaleSheet> {
                   const ButtonSegment(value: 'credit', label: Text('Crédit')),
               ],
               selected: {_method},
-              onSelectionChanged:
-                  _busy ? null : (s) => setState(() => _method = s.first),
+              onSelectionChanged: _busy
+                  ? null
+                  : (s) => setState(() {
+                        _method = s.first;
+                        // A debt is owed in the home currency, and Wave pays
+                        // in it; the tender choice only means something for
+                        // cash across the counter.
+                        if (_method == 'credit' || _method == 'wave') {
+                          _tender = null;
+                        }
+                      }),
             ),
+            // The customer's currency — drawn only when the owner has set
+            // rates, defaulting to the shop's own. Tap USD and the line below
+            // says exactly what to collect; the books stay in the home
+            // currency regardless.
+            if (_rates.isNotEmpty &&
+                _method != 'credit' &&
+                _method != 'wave') ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: Text(widget.currency == 'XOF' ? 'FCFA' : widget.currency),
+                    selected: _tender == null,
+                    onSelected:
+                        _busy ? null : (_) => setState(() => _tender = null),
+                  ),
+                  for (final r in _rates)
+                    ChoiceChip(
+                      label: Text(r.currency),
+                      selected: _tender?.currency == r.currency,
+                      onSelected:
+                          _busy ? null : (_) => setState(() => _tender = r),
+                    ),
+                ],
+              ),
+              if (_tender != null && _total > 0) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('À encaisser',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          foreignMoneyFormat(_tender!.currency)
+                              .format(_tender!.fromHome(_total)),
+                          style: theme.textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          rateLabel(
+                              _tender!.currency, _tender!.rate, widget.currency),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ],
             if (_method == 'credit') ...[
               const SizedBox(height: 12),
               TextField(
@@ -666,6 +779,87 @@ class WaveReceiptDialog extends StatelessWidget {
           _row(context, 'Montant', money.format(total), bold: true),
           _row(context, 'Payé par', sender),
           _row(context, 'Méthode', 'Wave'),
+          _row(context, 'Date', stamp),
+        ],
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Terminer'),
+        ),
+      ],
+    );
+  }
+
+  Widget _row(BuildContext context, String label, String value,
+      {bool bold = false}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: bold ? FontWeight.bold : FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The receipt for a sale paid in a foreign currency: both amounts and the
+/// rate, in writing — what settles the argument when someone later asks why
+/// 15 dollars became 9 000 francs.
+class TenderReceiptDialog extends StatelessWidget {
+  const TenderReceiptDialog({
+    super.key,
+    required this.shopName,
+    required this.total,
+    required this.currency,
+    required this.tenderCurrency,
+    required this.tenderAmount,
+    required this.rate,
+  });
+
+  final String shopName;
+
+  /// The sale as booked, in the home currency.
+  final double total;
+  final String currency;
+
+  /// The cash that crossed the counter.
+  final String tenderCurrency;
+  final double tenderAmount;
+  final double rate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final money = moneyFormat(currency);
+    final foreign = foreignMoneyFormat(tenderCurrency);
+    final now = DateTime.now();
+    final stamp = '${now.day.toString().padLeft(2, '0')}/'
+        '${now.month.toString().padLeft(2, '0')}/${now.year} '
+        '${now.hour.toString().padLeft(2, '0')}:'
+        '${now.minute.toString().padLeft(2, '0')}';
+
+    return AlertDialog(
+      icon: const Icon(Icons.check_circle_outline,
+          color: Color(0xFF0E7A63), size: 40),
+      title: const Text('Vente enregistrée'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (shopName.isNotEmpty)
+            Text(shopName, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 12),
+          _row(context, 'Montant', money.format(total), bold: true),
+          _row(context, 'Payé', foreign.format(tenderAmount)),
+          _row(context, 'Taux', rateLabel(tenderCurrency, rate, currency)),
           _row(context, 'Date', stamp),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/rates/currency_rates.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/nav/router.dart';
 
@@ -42,6 +43,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   final _waveController = TextEditingController();
 
   String _currency = 'XOF';
+  List<CurrencyRate> _rates = const [];
   String _slug = '';
   String _profile = '';
   String? _theme;
@@ -73,10 +75,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     try {
       final org = await widget.admin.fetchOrg(widget.orgId);
       final wave = await widget.admin.waveMerchant(widget.orgId);
+      final rates = await widget.admin.currencyRates(widget.orgId);
       if (!mounted) return;
       setState(() {
         _nameController.text = (org['name'] as String?) ?? '';
         _waveController.text = wave ?? '';
+        _rates = rates;
         final currency = (org['default_currency'] as String?) ?? 'XOF';
         _currency = _currencies.contains(currency) ? currency : 'XOF';
         _slug = (org['slug'] as String?) ?? '';
@@ -125,6 +129,41 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _error = AuthRepository.describeError(error);
         _saving = false;
       });
+    }
+  }
+
+  /// Add a currency, or (with [existing]) change its rate. Each is one
+  /// immediate write and a reload, so the list always agrees with the server.
+  Future<void> _editRate([CurrencyRate? existing]) async {
+    final result = await showDialog<(String, double)>(
+      context: context,
+      builder: (_) => RateDialog(
+        homeCurrency: _currency,
+        taken: [for (final r in _rates) r.currency],
+        existing: existing,
+      ),
+    );
+    if (result == null) return;
+    try {
+      await widget.admin.setCurrencyRate(widget.orgId, result.$1, result.$2);
+      if (mounted) await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AuthRepository.describeError(error))));
+      }
+    }
+  }
+
+  Future<void> _removeRate(CurrencyRate rate) async {
+    try {
+      await widget.admin.removeCurrencyRate(widget.orgId, rate.currency);
+      if (mounted) await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AuthRepository.describeError(error))));
+      }
     }
   }
 
@@ -187,6 +226,37 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                     helperText: 'Le numéro Wave du commerce. Laissez vide pour '
                         'ne pas proposer Wave à la vente.',
                     helperMaxLines: 2,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Taux de change', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 4),
+                Text(
+                  'Pour encaisser une vente dans une autre monnaie. Les '
+                  'livres restent en ${_currency == 'XOF' ? 'FCFA' : _currency}.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 8),
+                for (final r in _rates)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.currency_exchange),
+                    title: Text(rateLabel(r.currency, r.rate, _currency)),
+                    subtitle: Text(knownCurrencies[r.currency] ?? ''),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: 'Retirer',
+                      onPressed: _saving ? null : () => _removeRate(r),
+                    ),
+                    onTap: _saving ? null : () => _editRate(r),
+                  ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: _saving ? null : () => _editRate(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Ajouter une monnaie'),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -331,6 +401,134 @@ class _ReadOnlyRow extends StatelessWidget {
           Expanded(child: SelectableText(value)),
         ],
       ),
+    );
+  }
+}
+
+/// Adding or editing one exchange rate: pick the currency, type the rate the
+/// business actually gets. Editing pins the currency and only the rate moves.
+///
+/// When a XOF business adds EUR, the field pre-fills the CFA franc's fixed
+/// peg (655,957) — the one rate that is law rather than market. The owner may
+/// still overwrite it with their bank's effective rate.
+class RateDialog extends StatefulWidget {
+  const RateDialog({
+    super.key,
+    required this.homeCurrency,
+    required this.taken,
+    this.existing,
+  });
+
+  final String homeCurrency;
+
+  /// Currencies that already have a rate, kept out of the picker so the same
+  /// code cannot be added twice.
+  final List<String> taken;
+
+  final CurrencyRate? existing;
+
+  @override
+  State<RateDialog> createState() => _RateDialogState();
+}
+
+class _RateDialogState extends State<RateDialog> {
+  late final _rateController = TextEditingController(
+      text: widget.existing == null ? '' : '${widget.existing!.rate}');
+  late String? _code = widget.existing?.currency;
+
+  List<String> get _choices => [
+        for (final code in knownCurrencies.keys)
+          if (code != widget.homeCurrency && !widget.taken.contains(code))
+            code,
+      ];
+
+  double? get _rate =>
+      double.tryParse(_rateController.text.trim().replaceAll(',', '.'));
+
+  bool get _canSave => _code != null && (_rate ?? 0) > 0;
+
+  @override
+  void dispose() {
+    _rateController.dispose();
+    super.dispose();
+  }
+
+  void _pick(String? code) {
+    setState(() {
+      _code = code;
+      // The peg, offered not imposed: only into an empty field.
+      if (code == 'EUR' &&
+          widget.homeCurrency == 'XOF' &&
+          _rateController.text.trim().isEmpty) {
+        _rateController.text = '$eurXofPeg';
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final home = widget.homeCurrency == 'XOF' ? 'FCFA' : widget.homeCurrency;
+    return AlertDialog(
+      title: Text(widget.existing == null
+          ? 'Ajouter une monnaie'
+          : 'Modifier le taux'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.existing == null)
+            DropdownButtonFormField<String>(
+              initialValue: _code,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Monnaie',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                for (final code in _choices)
+                  DropdownMenuItem(
+                    value: code,
+                    child: Text('$code — ${knownCurrencies[code]}'),
+                  ),
+              ],
+              onChanged: _pick,
+            )
+          else
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${widget.existing!.currency} — '
+                '${knownCurrencies[widget.existing!.currency] ?? ''}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _rateController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: 'Taux',
+              prefixText: _code == null ? null : '1 $_code = ',
+              suffixText: home,
+              helperText: _code == 'EUR' && widget.homeCurrency == 'XOF'
+                  ? 'Taux fixe officiel : 655,957'
+                  : 'Le taux que vous obtenez réellement.',
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed:
+              _canSave ? () => Navigator.of(context).pop((_code!, _rate!)) : null,
+          child: const Text('Enregistrer'),
+        ),
+      ],
     );
   }
 }

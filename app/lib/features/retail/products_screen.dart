@@ -7,6 +7,7 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
+import 'convert_dialog.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
 import '../../core/errors.dart';
@@ -125,6 +126,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       isScrollControlled: true,
       builder: (_) => _EditProductSheet(
         retail: widget.retail,
+        org: widget.org,
         product: product,
         // The archive button belongs to the person who answers for the
         // business; the server refuses everyone else anyway.
@@ -457,11 +459,13 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
 class _EditProductSheet extends StatefulWidget {
   const _EditProductSheet({
     required this.retail,
+    required this.org,
     required this.product,
     this.canArchive = false,
   });
 
   final RetailRepository retail;
+  final OrgSummary org;
   final Product product;
 
   /// Owner/admin only. Hiding the button for everyone else is a courtesy;
@@ -591,9 +595,30 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     enabled: !_busy,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Coût unitaire',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      // Goods bought in another currency: convert, and the
+                      // field receives the home-currency figure.
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.currency_exchange, size: 20),
+                        tooltip: 'Payé dans une autre monnaie',
+                        onPressed: _busy
+                            ? null
+                            : () async {
+                                final converted =
+                                    await CurrencyConvertDialog.open(
+                                  context,
+                                  retail: widget.retail,
+                                  orgId: widget.org.id,
+                                  homeCurrency: widget.org.currency,
+                                );
+                                if (converted != null && mounted) {
+                                  setState(() => _cost.text =
+                                      converted.round().toString());
+                                }
+                              },
+                      ),
                     ),
                   ),
                 ),
@@ -857,9 +882,30 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                     controller: _cost,
                     enabled: !_busy,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Coût unitaire',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      // Goods bought in another currency: convert, and the
+                      // field receives the home-currency figure.
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.currency_exchange, size: 20),
+                        tooltip: 'Payé dans une autre monnaie',
+                        onPressed: _busy
+                            ? null
+                            : () async {
+                                final converted =
+                                    await CurrencyConvertDialog.open(
+                                  context,
+                                  retail: widget.retail,
+                                  orgId: widget.org.id,
+                                  homeCurrency: widget.org.currency,
+                                );
+                                if (converted != null && mounted) {
+                                  setState(() => _cost.text =
+                                      converted.round().toString());
+                                }
+                              },
+                      ),
                     ),
                   ),
                 ),

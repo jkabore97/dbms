@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../rates/currency_rates.dart';
 import 'models.dart';
 
 /// Everything the admin screens do with the server, behind one door.
@@ -81,6 +82,51 @@ class AdminRepository {
       'p_org_id': orgId,
       'p_merchant': merchant,
     });
+  }
+
+  // ----------------------------------------------------------------
+  // Exchange rates (039). Direct table ops: RLS lets members read and only
+  // admins write, so there is nothing to wrap. Missing table (a database not
+  // yet on 039) reads as "no rates", same posture as the Wave column.
+  // ----------------------------------------------------------------
+
+  Future<List<CurrencyRate>> currencyRates(String orgId) async {
+    final client = _requireClient();
+    try {
+      final rows = await client
+          .from('org_currency_rates')
+          .select('currency, rate')
+          .eq('org_id', orgId)
+          .order('currency');
+      return (rows as List)
+          .map((r) => CurrencyRate.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (error) {
+      if (error.code == '42P01') return const []; // database not on 039 yet
+      rethrow;
+    }
+  }
+
+  /// Sets 1 [currency] = [rate] in the business's home currency. Upsert, so
+  /// editing a rate is the same call as adding one.
+  Future<void> setCurrencyRate(String orgId, String currency, double rate) async {
+    final client = _requireClient();
+    await client.from('org_currency_rates').upsert({
+      'org_id': orgId,
+      'currency': currency.toUpperCase(),
+      'rate': rate,
+      'updated_by': currentUserId,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  Future<void> removeCurrencyRate(String orgId, String currency) async {
+    final client = _requireClient();
+    await client
+        .from('org_currency_rates')
+        .delete()
+        .eq('org_id', orgId)
+        .eq('currency', currency.toUpperCase());
   }
 
   // ----------------------------------------------------------------
