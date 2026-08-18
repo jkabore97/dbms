@@ -47,7 +47,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   bool get _canWrite => !widget.org.isObserverOnly;
 
-  late final _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
   final _date = DateFormat('d MMM y', 'fr_FR');
 
   @override

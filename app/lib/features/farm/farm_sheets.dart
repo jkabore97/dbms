@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -42,7 +41,7 @@ class ReceiveStockSheet extends StatefulWidget {
 }
 
 class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
-  late final NumberFormat _currency = moneyFormat(widget.currency);
+  NumberFormat get _currency => moneyFormat(widget.currency);
 
   final _quantityController = TextEditingController();
   final _noteController = TextEditingController();

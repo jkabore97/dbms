@@ -1,5 +1,9 @@
 import 'package:intl/intl.dart';
 
+// Re-exported so a screen holding a `NumberFormat get _money` needs only this
+// file, not its own intl import.
+export 'package:intl/intl.dart' show NumberFormat;
+
 /// The one way money is written in this app.
 ///
 /// Every amount on every screen goes through here, so a business that chose

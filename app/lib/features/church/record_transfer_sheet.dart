@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
 import 'entry_controls.dart';
@@ -48,7 +47,7 @@ const _places = <String, String>{
 };
 
 class _RecordTransferSheetState extends State<RecordTransferSheet> {
-  late final NumberFormat _currency = moneyFormat(widget.currency);
+  NumberFormat get _currency => moneyFormat(widget.currency);
 
   final _labelController = TextEditingController();
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
-import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/auth/models.dart';
@@ -30,7 +29,7 @@ class StaffScreen extends StatefulWidget {
 }
 
 class _StaffScreenState extends State<StaffScreen> {
-  late final NumberFormat _money = moneyFormat(widget.org.currency);
+  NumberFormat get _money => moneyFormat(widget.org.currency);
 
   List<Employee> _people = const [];
   List<UnpaidWork> _owed = const [];
