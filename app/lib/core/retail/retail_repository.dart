@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../rates/currency_rates.dart';
 import 'models.dart';
 
 /// The shop's reads and writes.
@@ -177,6 +178,43 @@ class RetailRepository {
       'p_sender': sender,
       if (reference != null && reference.isNotEmpty) 'p_ref': reference,
       'p_status': 'confirmed',
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // Multi-currency (039). The owner's rates, read at the till; the tender
+  // stamped after a foreign-currency sale.
+  // ----------------------------------------------------------------
+
+  /// The business's exchange rates. Empty when the owner has set none — the
+  /// sale sheet then shows no currency chips at all.
+  Future<List<CurrencyRate>> currencyRates(String orgId) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('org_currency_rates')
+        .select('currency, rate')
+        .eq('org_id', orgId)
+        .order('currency');
+    return (rows as List)
+        .map((r) => CurrencyRate.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Describes how a recorded sale was physically paid when the cash was a
+  /// foreign currency. Receipt facts only — the ledger already holds the sale
+  /// in the home currency and cannot be steered by this.
+  Future<void> attachSaleTender({
+    required String saleId,
+    required String currency,
+    required double amount,
+    required double rate,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('attach_sale_tender', params: {
+      'p_sale_id': saleId,
+      'p_currency': currency,
+      'p_amount': amount,
+      'p_rate': rate,
     });
   }
 
