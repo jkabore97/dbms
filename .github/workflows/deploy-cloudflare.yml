@@ -109,7 +109,16 @@ jobs:
       - name: Build web
         working-directory: app
         run: |
-          flutter build web --release --pwa-strategy none \
+          # --no-web-resources-cdn: bundle CanvasKit and serve it from this
+          # Worker's own origin instead of fetching ~1.5 MB from
+          # www.gstatic.com on every cold load. A default build imports
+          # canvaskit.js from that Google CDN at boot; when the CDN is slow or
+          # blocked — a real, everyday condition on a Ouagadougou connection —
+          # that fetch never resolves and the page stays blank, which is worst
+          # of all on a directly opened or reloaded deep link (there is no
+          # warm cache to fall back on). Serving it same-origin removes the
+          # dependency entirely and makes every first paint faster.
+          flutter build web --release --pwa-strategy none --no-web-resources-cdn \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL"
