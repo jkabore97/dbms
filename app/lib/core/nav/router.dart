@@ -123,8 +123,16 @@ GoRouter buildRouter(SessionController session) {
     bool at(String path) => here == path || here.startsWith('$path/');
 
     // The language screen answers to no phase: the person who most needs it
-    // is the one who cannot read whatever screen their phase would show.
-    if (at(Routes.language)) return null;
+    // is the one who cannot read whatever screen their phase would show. The
+    // static help and legal pages are the same — reachable from Compte while
+    // signed in, and from the sign-in page before; a phase-based redirect must
+    // not bounce them back to a business the way it does app screens.
+    if (at(Routes.language) ||
+        at(Routes.faq) ||
+        at(Routes.privacy) ||
+        at(Routes.terms)) {
+      return null;
+    }
 
     // A location worth coming back to after a gate. The gates themselves and
     // the splash are not destinations; everything else is somebody's place.

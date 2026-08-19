@@ -17,6 +17,7 @@ import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
+import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The M1 flow, exercised the way it will actually be used: on a phone with no
@@ -264,6 +265,35 @@ void main() {
     expect(find.text('Votre compte est prêt'), findsOneWidget);
     // The number the owner needs in order to add them.
     expect(find.text('+22670000001'), findsOneWidget);
+  });
+
+  testWidgets('the help and legal pages open while signed in, not bounce',
+      (tester) async {
+    // Regression: these static pages were not on the redirect's allow-list, so
+    // a signed-in reader tapping them from Compte was thrown back to their
+    // business. They answer to no phase, like the language screen.
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+    ]);
+    await pumpApp(tester);
+    await enterPin(tester, '1379');
+    expect(find.text('Choisissez une activité'), findsOneWidget);
+
+    // The router object outlives the screens it swaps, so it stays valid
+    // across navigations where a captured element would be deactivated.
+    final router = GoRouter.of(tester.element(find.byType(OrgPickerScreen)));
+
+    for (final route in const ['/aide', '/confidentialite', '/conditions']) {
+      router.go(route);
+      await flush(tester);
+      // The picker is gone and the static page is showing — the redirect let
+      // it through rather than sending the reader back to a business.
+      expect(find.text('Choisissez une activité'), findsNothing,
+          reason: 'redirect bounced $route back to the picker/business');
+      router.go('/entreprises');
+      await flush(tester);
+    }
   });
 
   testWidgets('an identity with no code cannot be trusted offline',

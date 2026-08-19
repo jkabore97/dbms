@@ -71,7 +71,12 @@ fi
 
 cd "$repo_root/app"
 flutter pub get
-flutter build web --release \
+# --no-web-resources-cdn: serve CanvasKit from our own origin instead of
+# fetching ~1.5 MB from www.gstatic.com on every cold load. A shop in
+# Ouagadougou opening a fresh link cannot depend on a Google CDN being fast,
+# or reachable at all — when that fetch stalls, the page never paints. See the
+# same flag and reasoning in deploy-cloudflare.yml.
+flutter build web --release --no-web-resources-cdn \
   --dart-define=SUPABASE_URL="$supabase_url" \
   --dart-define=SUPABASE_PUBLISHABLE_KEY="$supabase_key"
 
