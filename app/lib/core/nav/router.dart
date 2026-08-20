@@ -318,6 +318,10 @@ GoRouter buildRouter(SessionController session) {
           final scope = AppScope.of(context);
           return OrgPickerScreen(
             orgs: scope.session.orgs,
+            // A cold load lands here mid-resolve with an empty list; show a
+            // spinner rather than a blank page until my_orgs() answers.
+            loading: scope.session.phase == SessionPhase.booting ||
+                scope.session.phase == SessionPhase.resolving,
             // `push`, not `go`: opening a business is a step *into* the
             // app, so the picker has to stay underneath it. `go` replaces the
             // location, which is what left back with nowhere to return to and
