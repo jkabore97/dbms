@@ -237,6 +237,31 @@ class ConsoleRepository {
         .toList();
   }
 
+  /// One page of the platform-wide activity log (048), newest first, across
+  /// every business. [before] is the id of the oldest row already shown —
+  /// keyset paging, like the per-org log, so the log growing at the top while
+  /// it is read never repeats a row.
+  Future<List<PlatformAuditEvent>> platformAudit({
+    int limit = 50,
+    int? before,
+    String? orgId,
+    String? action,
+    String? table,
+  }) async {
+    final client = _requireClient();
+    final rows = await client.rpc('platform_audit_page', params: {
+      'p_limit': limit,
+      if (before != null) 'p_before': before,
+      if (orgId != null) 'p_org_id': orgId,
+      if (action != null) 'p_action': action,
+      if (table != null) 'p_table': table,
+    }) as List<dynamic>;
+    return rows
+        .map((r) =>
+            PlatformAuditEvent.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// Grant or revoke platform access. Never on oneself — the server refuses it.
   Future<void> setPlatformAdmin(String userId, bool value) async {
     final client = _requireClient();

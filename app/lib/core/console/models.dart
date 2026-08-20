@@ -459,3 +459,47 @@ class PersonOrg {
         archived: (r['archived'] as bool?) ?? false,
       );
 }
+
+/// One entry in the platform-wide activity log (048): what changed, in which
+/// business, and by whom — the moderator's view across every tenant.
+class PlatformAuditEvent {
+  const PlatformAuditEvent({
+    required this.id,
+    required this.at,
+    required this.orgId,
+    required this.orgName,
+    required this.action,
+    required this.tableName,
+    this.actorId,
+    this.actorLabel,
+    this.rowId,
+    this.summary,
+  });
+
+  final int id;
+  final DateTime at;
+  final String orgId;
+  final String orgName;
+
+  /// 'insert' | 'update' | 'delete'.
+  final String action;
+  final String tableName;
+  final String? actorId;
+  final String? actorLabel;
+  final String? rowId;
+  final String? summary;
+
+  factory PlatformAuditEvent.fromRow(Map<String, dynamic> r) =>
+      PlatformAuditEvent(
+        id: ((r['id'] as num?) ?? 0).toInt(),
+        at: DateTime.parse(r['at'] as String).toLocal(),
+        orgId: r['org_id'] as String,
+        orgName: (r['org_name'] ?? '') as String,
+        action: (r['action'] ?? '') as String,
+        tableName: (r['table_name'] ?? '') as String,
+        actorId: r['actor_id'] as String?,
+        actorLabel: r['actor_label'] as String?,
+        rowId: r['row_id'] as String?,
+        summary: r['summary'] as String?,
+      );
+}

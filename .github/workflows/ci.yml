@@ -368,6 +368,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_platform_people.sql
 
+      # The platform-wide activity log: only a platform admin may read it, it
+      # spans every business carrying each event's business name, and the org
+      # and action filters narrow it.
+      - name: Prove the platform activity log is platform-admin only
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_platform_audit.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
