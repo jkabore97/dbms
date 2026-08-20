@@ -581,6 +581,15 @@ class AdminRepository {
     await client.rpc('restore_org', params: {'p_org_id': orgId});
   }
 
+  /// Freeze a business, or thaw it (049). Platform admin only — the server
+  /// refuses anyone else. A frozen business goes read-only for its members;
+  /// its data is untouched, and thawing restores writes exactly.
+  Future<void> setOrgSuspended(String orgId, bool suspend) async {
+    final client = _requireClient();
+    await client.rpc('set_org_suspended',
+        params: {'p_org_id': orgId, 'p_suspend': suspend});
+  }
+
   /// Destroys a business and everything in it. Permanent.
   ///
   /// [confirmName] must equal the business's own name; the server checks it

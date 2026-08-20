@@ -25,6 +25,8 @@ class OrgSettingsScreen extends StatefulWidget {
     required this.admin,
     required this.orgId,
     this.onSaved,
+    this.canSuspend = false,
+    this.suspended = false,
   });
 
   final AdminRepository admin;
@@ -33,6 +35,14 @@ class OrgSettingsScreen extends StatefulWidget {
   /// Lets whoever opened this refresh the org list — the name shown in the app
   /// bar and the picker comes from `my_orgs()`, not from this screen.
   final VoidCallback? onSaved;
+
+  /// Whether to show the platform's freeze control (049). True only for a
+  /// platform admin; the server refuses `set_org_suspended` to anyone else
+  /// regardless of what the client draws.
+  final bool canSuspend;
+
+  /// Whether this business is currently frozen, as the org list last reported.
+  final bool suspended;
 
   @override
   State<OrgSettingsScreen> createState() => _OrgSettingsScreenState();
@@ -51,6 +61,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
+
+  late bool _suspended = widget.suspended;
+  bool _togglingSuspend = false;
 
   static const _currencies = ['XOF', 'XAF', 'EUR', 'USD', 'GHS', 'NGN'];
 
@@ -164,6 +177,66 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AuthRepository.describeError(error))));
       }
+    }
+  }
+
+  /// Freeze the business, or thaw it. Suspending is guarded by a confirmation
+  /// because it stops a real shop trading; lifting it is not. Either way the
+  /// org list is refreshed so the read-only banner appears or clears at once.
+  Future<void> _toggleSuspend() async {
+    final freezing = !_suspended;
+    if (freezing) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Suspendre cette entreprise ?'),
+          content: const Text(
+            'Ses membres pourront encore tout consulter, mais ne pourront '
+            'plus rien enregistrer — ni vente, ni dépense, ni stock — '
+            "jusqu'à la réactivation. Les données ne sont pas supprimées.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Suspendre'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+
+    setState(() {
+      _togglingSuspend = true;
+      _error = null;
+    });
+    try {
+      await widget.admin.setOrgSuspended(widget.orgId, freezing);
+      // The banner in the shell reads `org.suspended`, which comes from the
+      // cached org list — refresh it so the freeze takes visible effect now.
+      widget.onSaved?.call();
+      if (!mounted) return;
+      setState(() {
+        _suspended = freezing;
+        _togglingSuspend = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(freezing
+              ? 'Entreprise suspendue'
+              : 'Entreprise réactivée'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = AuthRepository.describeError(error);
+        _togglingSuspend = false;
+      });
     }
   }
 
@@ -319,6 +392,52 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 const SizedBox(height: 12),
                 _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
                 _ReadOnlyRow(label: "Type d'activité", value: _profile),
+                if (widget.canSuspend) ...[
+                  const SizedBox(height: 40),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Text('Modération de la plateforme',
+                      style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  Text(
+                    _suspended
+                        ? 'Cette entreprise est suspendue : ses membres peuvent '
+                            'consulter mais rien enregistrer. Réactivez-la pour '
+                            'rétablir les opérations.'
+                        : 'Suspendre gèle toutes les écritures sans rien '
+                            'supprimer. À utiliser pour un impayé, un litige ou '
+                            'un abus, le temps de le régler.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _togglingSuspend ? null : _toggleSuspend,
+                      icon: _togglingSuspend
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(_suspended
+                              ? Icons.lock_open_outlined
+                              : Icons.lock_outline),
+                      label: Text(
+                        _suspended ? 'Réactiver' : 'Suspendre',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      style: _suspended
+                          ? null
+                          : OutlinedButton.styleFrom(
+                              foregroundColor: theme.colorScheme.error,
+                              side: BorderSide(color: theme.colorScheme.error),
+                            ),
+                    ),
+                  ),
+                ],
               ],
             ),
     );

@@ -34,7 +34,7 @@ class BusinessShell extends StatelessWidget {
     // enforces the ones that matter; this decides what exists on screen.
     final access = session.accessFor(org.id);
 
-    return _HomeWithNotice(
+    final home = _HomeWithNotice(
       notice: session.orgsFromCache ? session.notice : null,
       child: homeScreenFor(
         db: scope.db,
@@ -70,6 +70,56 @@ class BusinessShell extends StatelessWidget {
               onPressed: () => context.push(Routes.inside(org.id, 'compte')),
             ),
           ],
+        ),
+      ),
+    );
+
+    // A frozen business stays fully readable but takes no more writes. The
+    // banner is not dismissable — unlike the offline notice, this is not a
+    // transient condition the person can wave away; it is the state of the
+    // business until the platform lifts it, and every refused save downstream
+    // makes more sense with it in view.
+    if (!org.suspended) return home;
+    return Column(
+      children: [
+        const _SuspendedBanner(),
+        Expanded(child: home),
+      ],
+    );
+  }
+}
+
+/// The standing notice on a business the platform has frozen. Members keep
+/// their history and their reports; nothing new can be recorded until it is
+/// reactivated.
+class _SuspendedBanner extends StatelessWidget {
+  const _SuspendedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.errorContainer,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline,
+                  size: 18, color: theme.colorScheme.onErrorContainer),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Cette entreprise est suspendue. La consultation reste '
+                  'possible, mais aucune nouvelle opération ne peut être '
+                  'enregistrée.',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onErrorContainer),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

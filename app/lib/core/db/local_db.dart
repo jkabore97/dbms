@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -98,6 +98,19 @@ class LocalDb {
         if (oldVersion < 9) {
           await db.execute(
               'CREATE TABLE IF NOT EXISTS device_prefs (k TEXT PRIMARY KEY, v TEXT)');
+        }
+        // v9 -> v10: whether a business has been frozen by the platform (049).
+        // Cached with the rest of the org row so the read-only banner shows the
+        // instant a business opens, with no signal.
+        //
+        // `>= 2` for the reason `theme` needed it: a device coming from v1 was
+        // just handed the whole identity schema by the first line of this
+        // method, and that `CREATE TABLE cached_orgs` already includes this
+        // column — adding it again is a duplicate-column error that would keep
+        // the oldest phones from opening at all.
+        if (oldVersion >= 2 && oldVersion < 10) {
+          await db.execute(
+              'ALTER TABLE cached_orgs ADD COLUMN suspended INTEGER NOT NULL DEFAULT 0');
         }
       },
     );
@@ -254,7 +267,8 @@ class LocalDb {
         currency   TEXT,
         roles      TEXT,
         visibility TEXT,
-        theme      TEXT
+        theme      TEXT,
+        suspended  INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }

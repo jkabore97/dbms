@@ -607,6 +607,12 @@ GoRouter buildRouter(SessionController session) {
                     admin: scope.admin,
                     orgId: org.id,
                     onSaved: scope.session.resolveOrgs,
+                    // The suspend control is the platform's, not the business's:
+                    // an owner cannot freeze their own shop. Shown only to a
+                    // platform admin, and the server refuses it to anyone else
+                    // regardless.
+                    canSuspend: scope.session.isPlatformAdmin,
+                    suspended: org.suspended,
                   ),
                 ),
                 routes: [
