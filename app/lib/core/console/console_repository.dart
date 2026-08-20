@@ -204,6 +204,48 @@ class ConsoleRepository {
     });
   }
 
+  // ----------------------------------------------------------------
+  // People (047): the platform admin's global directory, across every
+  // business — the other axis to searchOrgs.
+  // ----------------------------------------------------------------
+
+  /// Search every account by name, phone or email. Empty query lists everyone.
+  Future<List<PlatformPerson>> searchPeople(
+    String? query, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final client = _requireClient();
+    final rows = await client.rpc('platform_people', params: {
+      if (query != null && query.trim().isNotEmpty) 'p_query': query.trim(),
+      'p_limit': limit,
+      'p_offset': offset,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => PlatformPerson.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// The businesses one person belongs to, and their role in each.
+  Future<List<PersonOrg>> userOrgs(String userId) async {
+    final client = _requireClient();
+    final rows = await client.rpc('platform_user_orgs', params: {
+      'p_user_id': userId,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => PersonOrg.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Grant or revoke platform access. Never on oneself — the server refuses it.
+  Future<void> setPlatformAdmin(String userId, bool value) async {
+    final client = _requireClient();
+    await client.rpc('set_platform_admin', params: {
+      'p_user_id': userId,
+      'p_value': value,
+    });
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {

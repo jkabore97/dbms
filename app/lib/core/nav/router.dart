@@ -15,6 +15,7 @@ import '../../features/admin/org_colours_screen.dart';
 import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
+import '../../features/admin/platform_people_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
 import '../../features/analytics/platform_analytics_screen.dart';
 import '../../features/admin/trainers_screen.dart';
@@ -96,6 +97,7 @@ abstract final class Routes {
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
+  static const consolePeople = '/console/personnes';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -404,6 +406,17 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.trainers,
         builder: (context, _) =>
             TrainersScreen(console: AppScope.of(context).console),
+      ),
+
+      GoRoute(
+        path: Routes.consolePeople,
+        builder: (context, _) {
+          final scope = AppScope.of(context);
+          return PlatformPeopleScreen(
+            console: scope.console,
+            admin: scope.admin,
+          );
+        },
       ),
 
       GoRoute(
