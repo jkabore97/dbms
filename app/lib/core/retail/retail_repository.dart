@@ -128,6 +128,49 @@ class RetailRepository {
     return id as String;
   }
 
+  // ----------------------------------------------------------------
+  // Corrections (042). Undoing a transaction the honest way: a reversal that
+  // cancels it in both the stock count and the ledger, so accounting and
+  // analysis correct themselves. Reads for the corrections screen, and the
+  // one write it needs that did not exist before (a delivery's reversal).
+  // ----------------------------------------------------------------
+
+  /// Recent sales, newest first — for the corrections screen. Each carries
+  /// whether it has already been returned.
+  Future<List<SaleSummary>> recentSales(String orgId, {int limit = 50}) async {
+    final client = _requireClient();
+    final rows = await client.rpc('recent_sales', params: {
+      'p_org_id': orgId,
+      'p_limit': limit,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => SaleSummary.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Recent deliveries (purchases/stock entries), newest first — for the
+  /// corrections screen. Each carries whether it has already been reversed.
+  Future<List<Delivery>> recentDeliveries(String orgId, {int limit = 50}) async {
+    final client = _requireClient();
+    final rows = await client.rpc('recent_deliveries', params: {
+      'p_org_id': orgId,
+      'p_limit': limit,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => Delivery.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Reverses a delivery: the goods leave the count they were added to, and the
+  /// purchase is reversed in the books. Owner/admin only, enforced server-side.
+  Future<void> reverseReceipt(String receiptId, {String? reason}) async {
+    final client = _requireClient();
+    await client.rpc('reverse_receipt', params: {
+      'p_receipt_id': receiptId,
+      if (reason != null && reason.trim().isNotEmpty) 'p_reason': reason.trim(),
+    });
+  }
+
   /// Undoes a sale by writing a return against it. The original stays.
   Future<String> recordReturn(String saleId, {String? note}) async {
     final client = _requireClient();

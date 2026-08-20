@@ -135,6 +135,82 @@ class StoreDay {
   }
 }
 
+/// A delivery that arrived — one row of `recent_deliveries` (016/042). Shown on
+/// the corrections screen so an owner can undo a purchase that was a mistake or
+/// a test. [reversed] is true once it has been put back.
+class Delivery {
+  const Delivery({
+    required this.id,
+    required this.productName,
+    required this.quantity,
+    required this.unitCost,
+    required this.lineTotal,
+    required this.receivedAt,
+    this.receivedBy,
+    this.reversed = false,
+  });
+
+  final String id;
+  final String productName;
+  final double quantity;
+  final double unitCost;
+  final double lineTotal;
+  final DateTime receivedAt;
+  final String? receivedBy;
+  final bool reversed;
+
+  factory Delivery.fromRow(Map<String, dynamic> row) {
+    double parse(Object? v) =>
+        v == null ? 0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0);
+    return Delivery(
+      id: row['id'] as String,
+      productName: (row['product_name'] as String?) ?? '',
+      quantity: parse(row['quantity']),
+      unitCost: parse(row['unit_cost']),
+      lineTotal: parse(row['line_total']),
+      receivedAt: DateTime.parse(row['received_at'] as String),
+      receivedBy: row['received_by'] as String?,
+      reversed: row['reversed'] == true,
+    );
+  }
+}
+
+/// A recorded sale — one row of `recent_sales` (042). Shown on the corrections
+/// screen so an owner can return one that was a mistake or a test.
+class SaleSummary {
+  const SaleSummary({
+    required this.id,
+    required this.method,
+    required this.total,
+    required this.occurredAt,
+    this.note,
+    this.soldBy,
+    this.reversed = false,
+  });
+
+  final String id;
+  final String method;
+  final double total;
+  final DateTime occurredAt;
+  final String? note;
+  final String? soldBy;
+  final bool reversed;
+
+  factory SaleSummary.fromRow(Map<String, dynamic> row) {
+    double parse(Object? v) =>
+        v == null ? 0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0);
+    return SaleSummary(
+      id: row['id'] as String,
+      method: (row['method'] as String?) ?? 'cash',
+      total: parse(row['total']),
+      occurredAt: DateTime.parse(row['occurred_at'] as String),
+      note: row['note'] as String?,
+      soldBy: row['sold_by'] as String?,
+      reversed: row['reversed'] == true,
+    );
+  }
+}
+
 /// One line of a sale being composed on screen, before it is sent.
 ///
 /// Not a database row: this is the basket. [productId] is null for something
