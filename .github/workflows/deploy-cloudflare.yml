@@ -53,6 +53,12 @@ jobs:
       # work. Set it to the kaj-uploads Worker's origin once
       # "Deploy the upload Worker" has run.
       UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
+      # The account Worker's origin, for admin password reset and account
+      # deletion. A repository *variable*: like UPLOADS_URL, a missing one is
+      # not a failure — the app simply hides those two admin actions rather
+      # than offering ones that cannot work. Set it once the account Worker
+      # has been deployed.
+      ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -121,7 +127,8 @@ jobs:
           flutter build web --release --pwa-strategy none --no-web-resources-cdn \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-            --dart-define=UPLOADS_URL="$UPLOADS_URL"
+            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
           # --pwa-strategy none stops registering a service worker, but the
           # tool still plants an empty file under this name. Phones that
           # installed the old offline-first worker re-fetch this URL and get

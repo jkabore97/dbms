@@ -1,0 +1,96 @@
+name: Deploy the account Worker
+
+# Publishes workers/account-admin — the only thing allowed to reset another
+# person's password or delete their account, and the one place that holds the
+# Supabase service-role key.
+#
+# Kept apart from "Deploy to Cloudflare" for the same reason the upload Worker
+# is: it depends on a secret the app deploy must never carry (here the
+# service-role key, set once with `wrangler secret put`), and a problem with it
+# must not be able to stop the app itself going out.
+#
+# The service-role key is NOT set here and is not a repository secret. It is a
+# Worker secret, set once by hand:
+#   npx wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/account-admin/wrangler.toml
+# Until it is set the Worker deploys dormant: every write answers 501 and the
+# app says the feature is not configured.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/account-admin/**'
+      - '.github/workflows/deploy-account-admin.yml'
+
+concurrency:
+  group: cloudflare-account
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      ALLOWED_ORIGINS: ${{ vars.ACCOUNT_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check what this needs is present
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          if [ -n "$missing" ]; then
+            echo "Empty at deploy time:$missing" >&2
+            echo "All three are repository secrets:" >&2
+            echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions" >&2
+            exit 1
+          fi
+
+      - name: Check the Cloudflare token is one Cloudflare accepts
+        run: |
+          body=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify) || true
+          case "$body" in
+            *'"success":true'*) echo "Token accepted by Cloudflare." ;;
+            *)
+              echo "Cloudflare rejected CLOUDFLARE_API_TOKEN." >&2
+              echo "$body" >&2
+              echo "Create one at https://dash.cloudflare.com/profile/api-tokens with" >&2
+              echo "  Workers Scripts: Edit" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Deploy
+        run: |
+          npx --yes wrangler@4 deploy \
+            --config workers/account-admin/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
+            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+
+      - name: Say where it went
+        run: |
+          {
+            echo "### Account Worker deployed"
+            echo
+            echo "Health check: \`/v1/health\` on the kaj-account worker URL above —"
+            echo "\`configured: false\` until the service-role key is set."
+            echo
+            echo "Two one-time steps remain for password reset and account deletion:"
+            echo
+            echo "1. Set the service-role key as a Worker secret:"
+            echo "   \`npx wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/account-admin/wrangler.toml\`"
+            echo "2. Set the repository variable \`ACCOUNT_ADMIN_URL\` to the worker origin"
+            echo "   and re-run *Deploy to Cloudflare* so the app is compiled to talk to it."
+            echo
+            echo "Until both are done, those two buttons stay hidden; role change and"
+            echo "remove-from-business work regardless."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -127,6 +127,15 @@ class AuthRepository {
     }
   }
 
+  /// Changes the signed-in person's own password. Self-service through
+  /// Supabase, so it needs no service-role key and no Worker — the admin path
+  /// (resetting someone else's) is the one that does. Throws on failure so the
+  /// screen can say what went wrong.
+  Future<void> updateMyPassword(String newPassword) async {
+    final client = _requireClient();
+    await client.auth.updateUser(UserAttributes(password: newPassword));
+  }
+
   Future<void> signOut() async {
     // A failure here means the token could not be revoked server-side. The
     // local session is dropped either way; the alternative is a user who

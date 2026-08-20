@@ -1,0 +1,41 @@
+# The account-admin Worker: the only thing that may reset another person's
+# password or delete their account. See src/index.js for why this exists and
+# why it is the one place in the platform that holds the service-role key.
+#
+# Deployed separately from the app (workflows/deploy-account-admin.yml) on
+# purpose: it needs a secret the app deploy must never carry, and if that
+# secret is wrong the app's own deploy must still go out.
+
+name = "kaj-account"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Gives kaj-account.<subdomain>.workers.dev, which is what the app is compiled
+# to talk to (ACCOUNT_ADMIN_URL) until there is a domain.
+workers_dev = true
+
+[vars]
+# Public values, both of them: SUPABASE_URL and the anon key are compiled into
+# the Flutter web bundle already. They are here so the Worker can forward the
+# CALLER's own token to PostgREST to ask "may you do this" — the authorisation
+# is answered by Postgres, as the caller, exactly as in the uploads Worker.
+#
+# Set at deploy time from the same repository secrets the app build uses — see
+# deploy-account-admin.yml, which writes them over these before deploying.
+SUPABASE_URL = ""
+SUPABASE_PUBLISHABLE_KEY = ""
+
+# Who may call this from a browser. Not a wildcard: the endpoint acts on behalf
+# of whoever is signed in when a page calls it.
+ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"
+
+# The service-role key is NOT here. It is a Worker secret, set once and never
+# committed:
+#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config workers/account-admin/wrangler.toml
+# Until it is set, every write endpoint answers 501 and the app says the
+# feature is not configured — deployed dormant rather than half-configured,
+# the same posture as the handwriting reader's ANTHROPIC_API_KEY.
+#
+# Deploy with:
+#   wrangler deploy --config workers/account-admin/wrangler.toml
+# The token needs "Workers Scripts: Edit".
