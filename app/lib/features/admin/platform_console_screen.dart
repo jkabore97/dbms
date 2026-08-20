@@ -298,6 +298,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             tooltip: 'Personnes',
           ),
           IconButton(
+            onPressed: () => context.push(Routes.consoleAudit),
+            icon: const Icon(Icons.history),
+            tooltip: 'Activité',
+          ),
+          IconButton(
             onPressed: () => context.push(Routes.platformAnalytics),
             icon: const Icon(Icons.insights_outlined),
             tooltip: 'Analyses',

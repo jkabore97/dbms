@@ -16,6 +16,7 @@ import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
 import '../../features/admin/platform_people_screen.dart';
+import '../../features/admin/platform_audit_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
 import '../../features/analytics/platform_analytics_screen.dart';
 import '../../features/admin/trainers_screen.dart';
@@ -98,6 +99,7 @@ abstract final class Routes {
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
   static const consolePeople = '/console/personnes';
+  static const consoleAudit = '/console/activite';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -417,6 +419,12 @@ GoRouter buildRouter(SessionController session) {
             admin: scope.admin,
           );
         },
+      ),
+
+      GoRoute(
+        path: Routes.consoleAudit,
+        builder: (context, _) =>
+            PlatformAuditScreen(console: AppScope.of(context).console),
       ),
 
       GoRoute(
