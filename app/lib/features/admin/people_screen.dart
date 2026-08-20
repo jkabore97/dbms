@@ -135,6 +135,250 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
   }
 
+  /// The management menu for one member: what an admin can do to their
+  /// account. The two Worker-backed actions (reset password, delete account)
+  /// appear only when the account Worker's address was compiled in; the server
+  /// re-checks authority on every one regardless.
+  Future<void> _manage(Member member) async {
+    final canWorker = widget.admin.canManageAccounts;
+    final isSelf = member.userId == widget.admin.currentUserId;
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    child: Text(member.label.characters.first.toUpperCase()),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(member.label,
+                            style: Theme.of(ctx).textTheme.titleMedium),
+                        Text(roleLabel(member.role),
+                            style: Theme.of(ctx).textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: const Text('Changer la responsabilité'),
+              onTap: () => Navigator.pop(ctx, 'role'),
+            ),
+            if (canWorker)
+              ListTile(
+                leading: const Icon(Icons.password_outlined),
+                title: const Text('Réinitialiser le mot de passe'),
+                onTap: () => Navigator.pop(ctx, 'password'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.person_remove_outlined),
+              title: const Text("Retirer de l'entreprise"),
+              onTap: () => Navigator.pop(ctx, 'remove'),
+            ),
+            if (canWorker && !isSelf)
+              ListTile(
+                leading: Icon(Icons.delete_forever_outlined,
+                    color: Theme.of(ctx).colorScheme.error),
+                title: Text('Supprimer le compte',
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                onTap: () => Navigator.pop(ctx, 'delete'),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case 'role':
+        await _changeRole(member);
+      case 'password':
+        await _resetPassword(member);
+      case 'remove':
+        await _revokeMembership(member);
+      case 'delete':
+        await _deleteAccount(member);
+    }
+  }
+
+  /// The roles an admin may assign. Owner is deliberately absent — promoting to
+  /// owner is a transfer of the business, refused by the server here.
+  static const _assignableRoles = [
+    'super_admin',
+    'admin',
+    'manager',
+    'supervisor',
+    'employee',
+    'observer',
+    'approver',
+  ];
+
+  Future<void> _changeRole(Member member) async {
+    var selected = _assignableRoles.contains(member.role)
+        ? member.role
+        : 'employee';
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Responsabilité de ${member.label}'),
+        content: StatefulBuilder(
+          builder: (ctx, setInner) => DropdownButton<String>(
+            value: selected,
+            isExpanded: true,
+            items: [
+              for (final r in _assignableRoles)
+                DropdownMenuItem(value: r, child: Text(roleLabel(r))),
+            ],
+            onChanged: (v) => setInner(() => selected = v ?? selected),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, selected),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+    if (chosen == null || chosen == member.role) return;
+    await _run(() => widget.admin.setMembershipRole(member.membershipId, chosen),
+        done: 'Responsabilité mise à jour.');
+  }
+
+  Future<void> _resetPassword(Member member) async {
+    final pw1 = TextEditingController();
+    final pw2 = TextEditingController();
+    String? error;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setInner) => AlertDialog(
+          title: Text('Nouveau mot de passe — ${member.label}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: pw1,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nouveau mot de passe',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: pw2,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirmer',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 8),
+                Text(error!,
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (pw1.text.length < 8) {
+                  setInner(() =>
+                      error = 'Au moins 8 caractères.');
+                  return;
+                }
+                if (pw1.text != pw2.text) {
+                  setInner(() => error = 'Les deux ne correspondent pas.');
+                  return;
+                }
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Changer'),
+            ),
+          ],
+        ),
+      ),
+    );
+    final password = pw1.text;
+    pw1.dispose();
+    pw2.dispose();
+    if (ok != true) return;
+    await _run(() => widget.admin.setUserPassword(member.userId, password),
+        done: 'Mot de passe changé.');
+  }
+
+  Future<void> _deleteAccount(Member member) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Supprimer le compte de ${member.label} ?'),
+        content: const Text(
+          "Le compte sera supprimé et la personne déconnectée. À sa prochaine "
+          "connexion, elle arrivera sur la page d'accueil pour rejoindre une "
+          'entreprise avec un code ou en demander une.\n\n'
+          "L'historique de ce qu'elle a enregistré reste dans les comptes.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _run(() => widget.admin.deleteUserAccount(member.userId),
+        done: 'Compte supprimé.');
+  }
+
+  /// Runs an admin action, shows the outcome, and reloads. One place so every
+  /// action reports failure the same way instead of hanging silently.
+  Future<void> _run(Future<void> Function() action, {required String done}) async {
+    try {
+      await action();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(done)));
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthRepository.describeError(error))),
+      );
+    }
+  }
+
   Future<void> _revokeInvitation(Invitation invitation) async {
     try {
       await widget.admin.revokeInvitation(invitation.id);
@@ -192,18 +436,17 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           ),
                           trailing: m.role == 'owner'
                               // The owner is the one grant this screen will not
-                              // remove. An org with nobody able to administer it
+                              // touch. An org with nobody able to administer it
                               // cannot be repaired from inside the app.
                               ? const Chip(
                                   label: Text('Propriétaire'),
                                   visualDensity: VisualDensity.compact,
                                 )
-                              : IconButton(
-                                  icon:
-                                      const Icon(Icons.person_remove_outlined),
-                                  tooltip: 'Retirer',
-                                  onPressed: () => _revokeMembership(m),
-                                ),
+                              : const Icon(Icons.chevron_right),
+                          // Tap a member to manage them — change their role,
+                          // reset their password, remove them, delete the
+                          // account. The owner has no such menu.
+                          onTap: m.role == 'owner' ? null : () => _manage(m),
                         ),
                       ),
                     ),

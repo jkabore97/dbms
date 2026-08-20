@@ -50,6 +50,14 @@ const supabasePublishableKey =
 /// nothing teaches people the app is broken.
 const uploadsUrl = String.fromEnvironment('UPLOADS_URL');
 
+/// The origin of the account Worker (workers/account-admin), e.g.
+/// `https://kaj-account.kabore-boss.workers.dev`. Empty in a build made before
+/// that Worker was deployed, and the admin password-reset and delete-account
+/// actions are then hidden rather than shown and failing — the same posture as
+/// the camera above. Role change and remove-from-business need no Worker and
+/// are always available.
+const accountAdminUrl = String.fromEnvironment('ACCOUNT_ADMIN_URL');
+
 Future<void> main() async {
   // Anything thrown before `runApp` leaves the browser showing a blank white
   // page with the reason buried in the console. Catch it and put it on screen.
@@ -110,7 +118,7 @@ Future<void> _startup() async {
     locale: locale,
     db: db,
     auth: AuthRepository(client),
-    admin: AdminRepository(client),
+    admin: AdminRepository(client, accountAdminUrl: accountAdminUrl),
     reports: ReportsRepository(client),
     accounting: AccountingRepository(client),
     console: ConsoleRepository(client),

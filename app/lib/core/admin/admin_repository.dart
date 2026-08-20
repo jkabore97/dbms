@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../rates/currency_rates.dart';
@@ -15,13 +18,32 @@ import 'models.dart';
 /// So every method here talks to Supabase directly, and every one of them is
 /// expected to fail when there is no signal. The screens say so.
 class AdminRepository {
-  AdminRepository(this._client);
+  AdminRepository(
+    this._client, {
+    String accountAdminUrl = '',
+    http.Client? httpClient,
+  })  : _accountUrl = _trimSlash(accountAdminUrl),
+        _http = httpClient ?? http.Client();
 
   final SupabaseClient? _client;
 
+  /// The account Worker's origin, from `--dart-define=ACCOUNT_ADMIN_URL`. Empty
+  /// until the Worker is deployed and the app rebuilt to know its address, in
+  /// which case the password-reset and delete-account actions stay hidden — the
+  /// same "deployed dormant" posture the camera and the handwriting reader take.
+  final String _accountUrl;
+  final http.Client _http;
+
   bool get isConfigured => _client != null;
 
+  /// Whether admin-set passwords and account deletion are available at all —
+  /// i.e. whether the account Worker's address was compiled in.
+  bool get canManageAccounts => _client != null && _accountUrl.isNotEmpty;
+
   String? get currentUserId => _client?.auth.currentUser?.id;
+
+  static String _trimSlash(String url) =>
+      url.endsWith('/') ? url.substring(0, url.length - 1) : url;
 
   // ----------------------------------------------------------------
   // The business itself
@@ -220,6 +242,65 @@ class AdminRepository {
   Future<void> revokeMembership(String membershipId) async {
     final client = _requireClient();
     await client.from('memberships').delete().eq('id', membershipId);
+  }
+
+  /// Changes a member's responsibility. Owner-of-the-org only, and never the
+  /// owner's own role — the server (044) enforces both.
+  Future<void> setMembershipRole(String membershipId, String role) async {
+    final client = _requireClient();
+    await client.rpc('set_membership_role', params: {
+      'p_membership_id': membershipId,
+      'p_role': role,
+    });
+  }
+
+  /// Sets a new password for another user — an admin resetting an employee's.
+  /// Goes through the account Worker, the one holder of the service-role key;
+  /// the Worker re-checks with the server that the caller may manage this user
+  /// before it acts. [canManageAccounts] gates whether this is even offered.
+  Future<void> setUserPassword(String userId, String password) async {
+    await _accountPost('/v1/users/$userId/password', {'password': password});
+  }
+
+  /// Deletes a user's account outright: they are removed from the database and
+  /// signed out, and their next sign-in lands on the waiting page. Same Worker,
+  /// same server-side re-check (can_delete_user), which refuses an owner, the
+  /// caller themselves, and any cross-tenant deletion.
+  Future<void> deleteUserAccount(String userId) async {
+    await _accountPost('/v1/users/$userId/delete', const {});
+  }
+
+  Future<void> _accountPost(String path, Map<String, dynamic> body) async {
+    if (_accountUrl.isEmpty) {
+      throw StateError(
+        "La gestion des comptes n'est pas configurée sur cette installation.",
+      );
+    }
+    final token = _client?.auth.currentSession?.accessToken;
+    if (token == null) {
+      throw StateError('Connectez-vous d\'abord.');
+    }
+    final response = await _http.post(
+      Uri.parse('$_accountUrl$path'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode >= 400) {
+      throw StateError(_accountError(response));
+    }
+  }
+
+  static String _accountError(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['error'] is String) {
+        return decoded['error'] as String;
+      }
+    } catch (_) {}
+    return "L'opération a échoué. Réessayez.";
   }
 
   // ----------------------------------------------------------------
