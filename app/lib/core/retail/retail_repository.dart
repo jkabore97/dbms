@@ -302,15 +302,31 @@ class RetailRepository {
     bool? isIngredient,
   }) async {
     final client = _requireClient();
-    await client.from('products').update({
-      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-      if (salePrice != null) 'sale_price': salePrice,
-      if (costPrice != null) 'cost_price': costPrice,
-      if (expiresOn != null) 'expires_on': _date(expiresOn),
-      if (lowStockAt != null) 'low_stock_at': lowStockAt,
-      if (isActive != null) 'is_active': isActive,
-      if (isIngredient != null) 'is_ingredient': isIngredient,
-    }).eq('id', productId);
+    // `.select()` turns a silent no-op into a fact we can check. A PostgREST
+    // update that matches no row — because RLS refused it, or the id is not in
+    // this org — returns success with an empty list, and that is exactly how
+    // "editing an article did nothing, with no error" reached the shop floor
+    // once. If nothing came back, the edit did not land: say so, loudly,
+    // rather than popping the sheet as if it had.
+    final rows = await client
+        .from('products')
+        .update({
+          if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+          if (salePrice != null) 'sale_price': salePrice,
+          if (costPrice != null) 'cost_price': costPrice,
+          if (expiresOn != null) 'expires_on': _date(expiresOn),
+          if (lowStockAt != null) 'low_stock_at': lowStockAt,
+          if (isActive != null) 'is_active': isActive,
+          if (isIngredient != null) 'is_ingredient': isIngredient,
+        })
+        .eq('id', productId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw StateError(
+        "La modification n'a pas été enregistrée. Vérifiez que vous avez le "
+        'droit de modifier les articles de cette boutique.',
+      );
+    }
   }
 
   /// Takes a product off the shelves (or puts it back) without touching its

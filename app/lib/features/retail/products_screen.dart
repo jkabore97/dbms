@@ -225,8 +225,25 @@ class _ProductsScreenState extends State<ProductsScreen> {
             if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             if (_products.isNotEmpty) ...[
-              Text('Valeur du stock : ${_money.format(stockValue)}',
-                  style: theme.textTheme.titleMedium),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // The count the owner asked for: how many articles the shop
+                  // carries, in one place. While a search narrows the list it
+                  // says "shown / total" so the number on screen is never
+                  // mistaken for the whole shelf.
+                  Text(
+                    _search.text.trim().isEmpty
+                        ? '${_products.length} article'
+                            '${_products.length > 1 ? 's' : ''}'
+                        : '${_visible.length} / ${_products.length} articles',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text('Valeur : ${_money.format(stockValue)}',
+                      style: theme.textTheme.titleMedium),
+                ],
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _search,

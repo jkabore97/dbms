@@ -329,6 +329,17 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_invoice_revision.sql
 
+      # The platform admin runs businesses from the console but belongs to none
+      # of them. feature_access() and has_full_visibility() were membership-only,
+      # so their product edits, credits, production and owner figures silently
+      # did nothing — an UPDATE that matched no row and reported success. This
+      # proves the platform admin edits again, while a dialled-down employee
+      # still cannot.
+      - name: Prove a platform admin edits a business they run but do not join
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_platform_admin_edit.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

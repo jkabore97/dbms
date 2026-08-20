@@ -65,4 +65,34 @@ Tomate 5 250
     expect(l.ok, isFalse);
     expect(l.error, contains('nom'));
   });
+
+  test('a repeated name is flagged, not silently merged', () {
+    // The "I typed ten, only eight appeared" report: two lines resolving to
+    // the same name fold into one product server-side (ensure_product matches
+    // on the lowercased name), and the second line's quantity stacks onto the
+    // first. Commonest when a size the parser reads as a quantity is the only
+    // thing telling two products apart.
+    final lines = parseBulkLines('''
+Sac ciment 50 8000
+Sac ciment 25 5000
+''');
+    expect(lines, hasLength(2));
+    expect(lines[0].ok, isTrue);
+    expect(lines[0].name, 'Sac ciment');
+    expect(lines[1].ok, isFalse);
+    expect(lines[1].error, contains('Doublon'));
+  });
+
+  test('the duplicate check ignores case, like the server does', () {
+    final lines = parseBulkLines('Savon 20 300\nsavon 5 350');
+    expect(lines[0].ok, isTrue);
+    expect(lines[1].ok, isFalse);
+    expect(lines[1].error, contains('Doublon'));
+  });
+
+  test('distinct names on adjacent lines both stand', () {
+    final lines = parseBulkLines('Savon 20 300\nSucre 10 600');
+    expect(lines[0].ok, isTrue);
+    expect(lines[1].ok, isTrue);
+  });
 }
