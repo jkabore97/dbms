@@ -425,12 +425,14 @@ building on top of an app no real person has used.
 
 ### M7 — Production week (operational, small)
 
-> 1. Run `database/apply_006_to_048.sql` in the Supabase SQL editor (manual,
+> 1. Run `database/apply_006_to_049.sql` in the Supabase SQL editor (manual,
 >    the owner does this once). This bundle carries the 032 security
 >    hardening — critically, the fix that stops any sign-up from making
 >    themselves a platform admin — so applying it is not optional. It also
 >    carries 041, which lets the platform admin edit the businesses they run
->    from the console but do not belong to.
+>    from the console but do not belong to, and the platform moderation set
+>    (047 people directory, 048 activity log, 049 suspend/freeze — a suspended
+>    business goes read-only through `can_write_org` without losing its data).
 > 2. Set `UPLOADS_URL` in the repo's Actions variables and redeploy, then put
 >    one real photograph through the uploads Worker end to end.
 > 3. Verify email sign-up against the real project with "Confirm email" both

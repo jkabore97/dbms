@@ -16,6 +16,7 @@ class OrgSummary {
     this.roles = const [],
     this.visibility = 'full',
     this.theme,
+    this.suspended = false,
   });
 
   final String id;
@@ -41,6 +42,13 @@ class OrgSummary {
   /// signal. A theme that arrived over the network would mean every home
   /// screen flashing green before turning blue.
   final String? theme;
+
+  /// Whether a platform admin has frozen this business (049). A suspended
+  /// business is read-only for its members — the till, stock and books stop —
+  /// but never invisible: its history and the banner explaining why stay put.
+  /// The flag rides the cached org list, so the read-only state is known the
+  /// instant a business opens, offline included.
+  final bool suspended;
 
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
@@ -93,6 +101,9 @@ class OrgSummary {
       // "never chose one", so an app ahead of its migration simply keeps the
       // profile colours instead of failing to list the businesses at all.
       theme: row['theme'] as String?,
+      // Absent before 049. A database that has not run it yet freezes nothing,
+      // so the safe default is "not suspended" rather than a missing-key crash.
+      suspended: (row['suspended'] as bool?) ?? false,
     );
   }
 
@@ -107,6 +118,9 @@ class OrgSummary {
       roles: roles.isEmpty ? const [] : roles.split(','),
       visibility: (row['visibility'] as String?) ?? 'full',
       theme: row['theme'] as String?,
+      // SQLite has no boolean: stored as 1/0, read back the same way. A row
+      // written before this column existed reads null, which is "not frozen".
+      suspended: (row['suspended'] as int? ?? 0) == 1,
     );
   }
 
@@ -119,6 +133,7 @@ class OrgSummary {
         'roles': roles.join(','),
         'visibility': visibility,
         'theme': theme,
+        'suspended': suspended ? 1 : 0,
       };
 }
 
