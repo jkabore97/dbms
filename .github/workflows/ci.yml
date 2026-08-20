@@ -340,6 +340,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_platform_admin_edit.sql
 
+      # Undoing a transaction is a reversal, not a deletion, and it cancels in
+      # both places the transaction lived: a delivery's reversal takes the goods
+      # back out of stock AND reverses the purchase in the ledger; a clerk is
+      # refused; a delivery cannot be reversed twice; a returned sale is flagged.
+      - name: Prove a transaction is corrected by reversal, in stock and books
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_corrections.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

@@ -154,6 +154,13 @@ $$;
 -- ------------------------------------------------------------
 -- Security invoker: a delivery is a purchase, and 006 already decided that an
 -- observer entitled to totals is not entitled to the line items behind them.
+--
+-- Dropped before creating so the bundle stays re-runnable: 042 later adds a
+-- column to this function's return type, and on a second pass of the bundle
+-- this create-or-replace would otherwise meet that wider shape and fail with
+-- "cannot change return type". The drop makes the two definitions agree to
+-- disagree in order.
+drop function if exists recent_deliveries(uuid, int);
 create or replace function recent_deliveries(
     p_org_id uuid,
     p_limit  int default 50

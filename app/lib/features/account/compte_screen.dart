@@ -125,6 +125,15 @@ class CompteScreen extends StatelessWidget {
                 title: Strings.of(context).accounting,
                 onTap: () => context.push(inside('comptabilite')),
               ),
+            // Undo a sale or a purchase entered by mistake — or test data.
+            // Owner/admin only, and only where there are sales and deliveries
+            // to undo; the server refuses everyone else regardless.
+            if (admin && org.profile == 'retail')
+              _Tile(
+                icon: Icons.history_toggle_off_outlined,
+                title: 'Corrections',
+                onTap: () => context.push(inside('corrections')),
+              ),
             if (access.canSee('credits'))
               _Tile(
                 icon: Icons.handshake_outlined,

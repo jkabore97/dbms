@@ -46,6 +46,7 @@ import '../../features/invoicing/invoices_screen.dart';
 import '../../features/invoicing/new_invoice_screen.dart';
 import '../../features/notify/notifications_screen.dart';
 import '../../features/production/production_screen.dart';
+import '../../features/retail/corrections_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
 import '../../features/settings/language_screen.dart';
@@ -806,6 +807,15 @@ GoRouter buildRouter(SessionController session) {
                 capture: scope.capture,
                 access: scope.session.accessFor(org.id),
               ),
+            ),
+          ),
+          GoRoute(
+            path: 'corrections',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) =>
+                  CorrectionsScreen(org: org, retail: scope.retail),
             ),
           ),
           GoRoute(
