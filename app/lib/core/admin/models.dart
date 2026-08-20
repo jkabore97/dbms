@@ -179,6 +179,40 @@ const roleLabels = <String, String>{
 
 String roleLabel(String role) => roleLabels[role] ?? role;
 
+/// The account-management ladder — the client mirror of `role_rank()` (045).
+/// Higher manages lower; equal manages neither. `platform_admin` (what
+/// `my_orgs()` reports for a platform admin) sits above every business role.
+/// Kept in step with the server, which is the real enforcement: this only
+/// decides which management actions are worth *offering*.
+int accountRoleRank(String role) {
+  switch (role) {
+    case 'platform_admin':
+      return 1000;
+    case 'owner':
+      return 100;
+    case 'super_admin':
+      return 90;
+    case 'admin':
+      return 80;
+    case 'manager':
+      return 60;
+    case 'supervisor':
+      return 50;
+    case 'approver':
+      return 40;
+    case 'employee':
+      return 30;
+    case 'observer':
+      return 20;
+    default:
+      return 0;
+  }
+}
+
+/// The highest rank among a caller's roles in one business.
+int accountRankOf(Iterable<String> roles) =>
+    roles.fold(0, (best, r) => accountRoleRank(r) > best ? accountRoleRank(r) : best);
+
 String scopeKindLabel(String kind) => switch (kind) {
       'org' => "Toute l'activité",
       'entity' => 'Site',

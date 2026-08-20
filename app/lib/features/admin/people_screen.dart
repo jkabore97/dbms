@@ -17,11 +17,19 @@ class PeopleScreen extends StatefulWidget {
     required this.admin,
     required this.orgId,
     required this.orgName,
+    this.callerRoles = const [],
   });
 
   final AdminRepository admin;
   final String orgId;
   final String orgName;
+
+  /// The signed-in person's own roles in this business, from `my_orgs()`. They
+  /// set the ceiling on who this person may manage: an admin reaches the staff
+  /// and responsables below them, never a peer or someone above. Empty means
+  /// "manage no one" — the server enforces the same, this only hides the
+  /// actions it would refuse.
+  final List<String> callerRoles;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -134,6 +142,16 @@ class _PeopleScreenState extends State<PeopleScreen> {
       );
     }
   }
+
+  /// The caller's ceiling, from their roles in this business.
+  int get _myRank => accountRankOf(widget.callerRoles);
+
+  /// Whether this person may manage that member at all — the client mirror of
+  /// the server's rank rule. The owner is never managed from here, and a member
+  /// the caller does not outrank shows no menu. The server refuses the same,
+  /// so this only keeps buttons that would 403 off the screen.
+  bool _canManage(Member member) =>
+      member.role != 'owner' && _myRank > accountRoleRank(member.role);
 
   /// The management menu for one member: what an admin can do to their
   /// account. The two Worker-backed actions (reset password, delete account)
@@ -434,19 +452,19 @@ class _PeopleScreenState extends State<PeopleScreen> {
                             '${roleLabel(m.role)} · ${_scopeLabel(m)}'
                             '${m.visibility == 'summary' ? ' · totaux seulement' : ''}',
                           ),
-                          trailing: m.role == 'owner'
-                              // The owner is the one grant this screen will not
-                              // touch. An org with nobody able to administer it
-                              // cannot be repaired from inside the app.
-                              ? const Chip(
-                                  label: Text('Propriétaire'),
-                                  visualDensity: VisualDensity.compact,
-                                )
-                              : const Icon(Icons.chevron_right),
-                          // Tap a member to manage them — change their role,
-                          // reset their password, remove them, delete the
-                          // account. The owner has no such menu.
-                          onTap: m.role == 'owner' ? null : () => _manage(m),
+                          // A chevron (and a tap) only for a member this person
+                          // outranks. The owner, a peer, and anyone above show
+                          // no menu — the server would refuse them, so the app
+                          // does not offer them.
+                          trailing: _canManage(m)
+                              ? const Icon(Icons.chevron_right)
+                              : m.role == 'owner'
+                                  ? const Chip(
+                                      label: Text('Propriétaire'),
+                                      visualDensity: VisualDensity.compact,
+                                    )
+                                  : null,
+                          onTap: _canManage(m) ? () => _manage(m) : null,
                         ),
                       ),
                     ),
