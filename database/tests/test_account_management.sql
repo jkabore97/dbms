@@ -199,7 +199,8 @@ do $$ begin
 end $$;
 rollback;
 
--- saA (super_admin) may reset the admin and everyone below, never the owner.
+-- saA (super_admin) is Kaj's platform staff: they reach the owner and everyone
+-- below.
 begin;
 set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000007';
 set local role authenticated;
@@ -207,22 +208,26 @@ do $$ begin
     if not manages_user('21212121-0000-0000-0000-000000000002') then
         raise exception 'FAIL: a super_admin cannot reset an admin below them';
     end if;
-    if manages_user('21212121-0000-0000-0000-000000000001') then
-        raise exception 'FAIL: a super_admin reset the owner';
+    if not manages_user('21212121-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: a super_admin cannot reset the owner beneath them';
     end if;
-    raise notice 'PASS: the super_admin reaches the admin, not the owner';
+    raise notice 'PASS: the super_admin reaches the owner and the admin';
 end $$;
 rollback;
 
--- ownerA sits at the top: the super_admin and everyone under them.
+-- ownerA is the top of their own store — admins and below — but not the
+-- super_admin above them.
 begin;
 set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000001';
 set local role authenticated;
 do $$ begin
-    if not manages_user('21212121-0000-0000-0000-000000000007') then
-        raise exception 'FAIL: the owner cannot reset a super_admin';
+    if not manages_user('21212121-0000-0000-0000-000000000002') then
+        raise exception 'FAIL: the owner cannot reset an admin below them';
     end if;
-    raise notice 'PASS: the owner reaches the super_admin';
+    if manages_user('21212121-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: the owner reset a super_admin above them';
+    end if;
+    raise notice 'PASS: the owner reaches the admin, not the super_admin';
 end $$;
 rollback;
 

@@ -200,17 +200,18 @@ const roleLabels = <String, String>{
 String roleLabel(String role) => roleLabels[role] ?? role;
 
 /// The account-management ladder — the client mirror of `role_rank()` (045).
-/// Higher manages lower; equal manages neither. `platform_admin` (what
-/// `my_orgs()` reports for a platform admin) sits above every business role.
-/// Kept in step with the server, which is the real enforcement: this only
-/// decides which management actions are worth *offering*.
+/// Higher manages lower; equal manages neither. `super_admin` is Kaj's platform
+/// staff and sits above a store's `owner`; `platform_admin` (what `my_orgs()`
+/// reports for a platform admin) sits above everything. Kept in step with the
+/// server, which is the real enforcement: this only decides which management
+/// actions are worth *offering*.
 int accountRoleRank(String role) {
   switch (role) {
     case 'platform_admin':
       return 1000;
-    case 'owner':
-      return 100;
     case 'super_admin':
+      return 100;
+    case 'owner':
       return 90;
     case 'admin':
       return 80;

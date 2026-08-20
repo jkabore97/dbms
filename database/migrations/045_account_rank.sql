@@ -2,11 +2,14 @@
 -- 045_account_rank.sql — password resets and role changes follow the hierarchy.
 --
 -- 044 let any admin of a shared business reset any co-member's password and
--- change any non-owner's role. The owner asked for rank: an admin may reset
--- the passwords of the staff and the section responsables beneath them, a
--- super_admin those of the admins and everyone below, an owner everyone — and
--- no one may reach a peer or someone above them. The same order governs who may
--- reassign whose responsibility.
+-- change any non-owner's role. The owner asked for rank, and named the order:
+-- super_admin is Kaj's own platform staff and sits above a store's owner; the
+-- owner is the top of their own store, above the admins they appoint; an admin
+-- reaches the responsables and staff beneath them. So a super_admin reaches an
+-- owner and everyone below, an owner reaches the admins and below, an admin the
+-- responsables and staff — and no one a peer or someone above them. The
+-- platform's own is_platform_admin flag stays above all of this and bypasses
+-- it. The same order governs who may reassign whose responsibility.
 --
 -- The rule is one comparison against a rank ladder. manages_user() is what the
 -- account Worker asks before it resets a password, and what can_delete_user()
@@ -14,16 +17,18 @@
 -- 044 verbatim apart from the rank clause.
 -- ============================================================
 
--- The ladder. Higher manages lower; equal manages neither. An unknown role
--- ranks at the bottom, so it can manage no one and is managed by any admin.
+-- The ladder. Higher manages lower; equal manages neither. super_admin is
+-- Kaj's platform staff and sits above a store's owner; the owner is the top of
+-- their own store. An unknown role ranks at the bottom, so it can manage no one
+-- and is managed by any admin.
 create or replace function role_rank(p_role role_name)
 returns int
 language sql
 immutable
 as $$
     select case p_role
-        when 'owner'       then 100
-        when 'super_admin' then 90
+        when 'super_admin' then 100
+        when 'owner'       then 90
         when 'admin'       then 80
         when 'manager'     then 60
         when 'supervisor'  then 50

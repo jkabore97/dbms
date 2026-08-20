@@ -108,9 +108,12 @@ void main() {
   });
 
   test('the rank ladder places each role where the server does', () {
-    expect(accountRoleRank('platform_admin'), greaterThan(accountRoleRank('owner')));
-    expect(accountRoleRank('owner'), greaterThan(accountRoleRank('super_admin')));
-    expect(accountRoleRank('super_admin'), greaterThan(accountRoleRank('admin')));
+    // super_admin is Kaj's platform staff: above a store's owner. The
+    // platform-admin flag is above everything.
+    expect(accountRoleRank('platform_admin'),
+        greaterThan(accountRoleRank('super_admin')));
+    expect(accountRoleRank('super_admin'), greaterThan(accountRoleRank('owner')));
+    expect(accountRoleRank('owner'), greaterThan(accountRoleRank('admin')));
     expect(accountRoleRank('admin'), greaterThan(accountRoleRank('manager')));
     expect(accountRoleRank('manager'), greaterThan(accountRoleRank('employee')));
     expect(accountRoleRank('sorcier-inconnu'), 0);
