@@ -13,6 +13,7 @@ class OrgPickerScreen extends StatelessWidget {
     super.key,
     required this.orgs,
     required this.onSelected,
+    this.loading = false,
     this.onSignOut,
     this.onCreateBusiness,
     this.onBusinesses,
@@ -21,6 +22,17 @@ class OrgPickerScreen extends StatelessWidget {
 
   final List<OrgSummary> orgs;
   final void Function(OrgSummary org) onSelected;
+
+  /// True while the business list is still being fetched. It matters because
+  /// this screen can be opened cold — a bookmark or a reload straight onto
+  /// `/entreprises` — before any org has arrived, and for a platform admin the
+  /// list is *every* business there is, a heavier query that is slow on a thin
+  /// connection. Without this the screen drew an empty page during that whole
+  /// window, which reads as broken. An empty list is either "still loading"
+  /// (spinner) or, once loaded, "you belong to none" (a message) — never a
+  /// blank.
+  final bool loading;
+
   final VoidCallback? onSignOut;
 
   /// Null for everyone except a platform admin, whose list here is every
@@ -67,13 +79,55 @@ class OrgPickerScreen extends StatelessWidget {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: orgs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final org = orgs[i];
-              return Card(
+          child: orgs.isEmpty ? _empty(context) : _list(context, theme),
+        ),
+      ),
+    );
+  }
+
+  /// Loading or truly empty — never a blank page. While the list is still on
+  /// its way this is a spinner; once it has arrived empty (a rare state, since
+  /// the router sends someone who belongs to nothing to the waiting room) it
+  /// is a plain message rather than a screen that looks broken.
+  Widget _empty(BuildContext context) {
+    final theme = Theme.of(context);
+    if (loading) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 20),
+          Text('Chargement de vos entreprises…',
+              style: theme.textTheme.bodyMedium),
+        ],
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.business_outlined,
+              size: 48, color: theme.colorScheme.outline),
+          const SizedBox(height: 16),
+          Text(
+            "Aucune entreprise pour l'instant.",
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _list(BuildContext context, ThemeData theme) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: orgs.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, i) {
+        final org = orgs[i];
+        return Card(
                 elevation: 0,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: ListTile(
@@ -106,10 +160,7 @@ class OrgPickerScreen extends StatelessWidget {
                   onTap: () => onSelected(org),
                 ),
               );
-            },
-          ),
-        ),
-      ),
+      },
     );
   }
 }

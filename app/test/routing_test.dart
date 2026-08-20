@@ -17,6 +17,7 @@ import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
+import 'package:kaj_app/core/theme/kaj_theme.dart';
 import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -504,6 +505,51 @@ void main() {
 
       expect(find.text('Recette'), findsOneWidget,
           reason: 'back emptied the only business this person has');
+    });
+  });
+
+  group("a business's colour reaches every page inside it, not just home", () {
+    // The report: "color modification only applies to one page." Only the home
+    // screen was wrapped in ProfileTheme, so a business that chose a palette
+    // saw it on its home and then the app's default teal on Articles, the
+    // settings and every other pushed page. The palette is now applied at
+    // _withOrg — the single door every `/o/<id>/...` route passes through — so
+    // this opens an inner page directly and checks the colour actually arrived.
+
+    Future<GoRouter> openThemed(WidgetTester tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+          id: 'org-1',
+          name: 'Boutique Sanou',
+          profile: 'retail', // default palette would be terracotta…
+          theme: 'ocean', // …but this business chose ocean.
+          roles: ['owner'],
+        ),
+      ]);
+      await pumpApp(tester);
+      await enterPin(tester, '1379');
+      return GoRouter.of(tester.element(find.byType(Scaffold).first));
+    }
+
+    testWidgets('the chosen palette paints a pushed inner page', (tester) async {
+      final router = await openThemed(tester);
+      router.go('/o/org-1/produits');
+      await flush(tester);
+
+      // We are on Articles, a pushed route built by _withOrg — not the home.
+      expect(find.text('Articles'), findsOneWidget);
+
+      final context = tester.element(find.byType(Scaffold).last);
+      // The hand-painted parts (hero gradients, tinted chips) read this.
+      expect(KajTheme.of(context), oceanPalette,
+          reason: 'an inner page fell back to the app palette, not the '
+              "business's chosen one");
+      // And the Material theme the AppBar is painted from carries it too.
+      expect(
+        Theme.of(context).appBarTheme.backgroundColor,
+        oceanPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        reason: 'the inner page kept the default app-bar colour',
+      );
     });
   });
 }

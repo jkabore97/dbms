@@ -425,10 +425,12 @@ building on top of an app no real person has used.
 
 ### M7 — Production week (operational, small)
 
-> 1. Run `database/apply_006_to_032.sql` in the Supabase SQL editor (manual,
->    the owner does this once). This bundle now also carries the 032 security
+> 1. Run `database/apply_006_to_041.sql` in the Supabase SQL editor (manual,
+>    the owner does this once). This bundle carries the 032 security
 >    hardening — critically, the fix that stops any sign-up from making
->    themselves a platform admin — so applying it is not optional.
+>    themselves a platform admin — so applying it is not optional. It also
+>    carries 041, which lets the platform admin edit the businesses they run
+>    from the console but do not belong to.
 > 2. Set `UPLOADS_URL` in the repo's Actions variables and redeploy, then put
 >    one real photograph through the uploads Worker end to end.
 > 3. Verify email sign-up against the real project with "Confirm email" both

@@ -79,6 +79,12 @@ class _SaleSheetState extends State<SaleSheet> {
   final _priceController = TextEditingController();
   final _customerController = TextEditingController();
 
+  /// Filters the quick-pick chips. On the device, over the list already in
+  /// hand — instant, and working with no signal. A shop scaled to two hundred
+  /// articles cannot be a two-hundred-chip horizontal scroll; three typed
+  /// letters find the one being sold.
+  final _searchController = TextEditingController();
+
   /// One per basket, not one per attempt. See the class comment.
   late final String _clientUuid = const Uuid().v4();
 
@@ -132,6 +138,7 @@ class _SaleSheetState extends State<SaleSheet> {
     _quantityController.dispose();
     _priceController.dispose();
     _customerController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -140,6 +147,15 @@ class _SaleSheetState extends State<SaleSheet> {
   /// name still works — the flag is a signpost, not a rule.
   late final List<Product> _sellable =
       widget.products.where((p) => !p.isIngredient).toList();
+
+  /// The chips actually drawn: the sellable shelf, narrowed by the search box.
+  /// An empty query shows everything, so the picker behaves exactly as before
+  /// for a shop with a handful of articles.
+  List<Product> get _pickable {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return _sellable;
+    return _sellable.where((p) => p.name.toLowerCase().contains(q)).toList();
+  }
 
   double get _total =>
       _lines.fold<double>(0, (sum, line) => sum + line.lineTotal);
@@ -384,22 +400,57 @@ class _SaleSheetState extends State<SaleSheet> {
             ),
             const SizedBox(height: 16),
             if (_sellable.isNotEmpty) ...[
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _sellable.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) {
-                    final product = _sellable[i];
-                    return ChoiceChip(
-                      label: Text(product.name),
-                      selected: _picked?.id == product.id,
-                      onSelected: _busy ? null : (_) => _pick(product),
-                    );
-                  },
+              // The search box earns its place only once the chip row stops
+              // being scannable at a glance. Below that it is just clutter over
+              // the till, so a small shop never sees it.
+              if (_sellable.length > 8) ...[
+                TextField(
+                  controller: _searchController,
+                  enabled: !_busy,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: 'Rechercher un article…',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Effacer',
+                            onPressed: () =>
+                                setState(_searchController.clear),
+                          ),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 10),
+              ],
+              if (_pickable.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'Aucun article ne correspond — tapez le nom ci-dessous '
+                    'pour le vendre quand même.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _pickable.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final product = _pickable[i];
+                      return ChoiceChip(
+                        label: Text(product.name),
+                        selected: _picked?.id == product.id,
+                        onSelected: _busy ? null : (_) => _pick(product),
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 12),
             ],
             TextField(

@@ -49,6 +49,15 @@ double? _num(String token) =>
 List<BulkLine> parseBulkLines(String text) {
   final out = <BulkLine>[];
   final lines = text.split('\n');
+  // Names already claimed by a good line above, lowercased the same way
+  // ensure_product() matches them (011). A second line with the same name is
+  // not a second article: the server would fold it into the first, and the
+  // quantity typed on this line would silently stack onto the other's. That is
+  // the "I typed ten, only eight appeared" report — commonest when two
+  // products differ only by a size the parser reads as a quantity ("Sac ciment
+  // 50 8000" and "Sac ciment 25 5000" are both "Sac ciment"). Caught here so
+  // the person renames one rather than losing it.
+  final seenNames = <String>{};
   for (var i = 0; i < lines.length; i++) {
     final raw = lines[i].trim();
     if (raw.isEmpty) continue;
@@ -95,6 +104,15 @@ List<BulkLine> parseBulkLines(String text) {
           lineNumber: lineNumber,
           raw: raw,
           error: 'Un prix ne peut pas être négatif.'));
+      continue;
+    }
+    final key = name.toLowerCase();
+    if (!seenNames.add(key)) {
+      out.add(BulkLine(
+          lineNumber: lineNumber,
+          raw: raw,
+          error: 'Doublon : « $name » est déjà plus haut. '
+              'Renommez-le (ex. « $name 25kg ») ou retirez la ligne.'));
       continue;
     }
 

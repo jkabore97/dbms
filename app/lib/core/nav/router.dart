@@ -50,6 +50,7 @@ import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../../features/tontine/tontines_screen.dart';
+import '../theme/kaj_theme.dart';
 import '../accounting/models.dart';
 import '../invoicing/models.dart' show InvoiceDocument;
 import '../auth/models.dart';
@@ -317,6 +318,10 @@ GoRouter buildRouter(SessionController session) {
           final scope = AppScope.of(context);
           return OrgPickerScreen(
             orgs: scope.session.orgs,
+            // A cold load lands here mid-resolve with an empty list; show a
+            // spinner rather than a blank page until my_orgs() answers.
+            loading: scope.session.phase == SessionPhase.booting ||
+                scope.session.phase == SessionPhase.resolving,
             // `push`, not `go`: opening a business is a step *into* the
             // app, so the picker has to stay underneath it. `go` replaces the
             // location, which is what left back with nowhere to return to and
@@ -954,7 +959,18 @@ Widget _withOrg(
   final scope = AppScope.of(context);
   final org = scope.session.orgById(state.pathParameters['orgId']);
   if (org == null) return const _MissingContext(backTo: Routes.picker);
-  return build(scope, org);
+  // The business's colours, on every page inside it — not just the home
+  // screen. Each `/o/<id>/...` route is a page of its own (they replace the
+  // shell rather than nest under it), so the palette has to be applied here,
+  // at the one place they all pass through, or a business's settings, product
+  // list and reports all open in the app's default teal instead of the colour
+  // it chose. `homeScreenFor` wraps the home screen the same way; the wash is
+  // idempotent, so the home route carrying both is harmless.
+  return ProfileTheme(
+    profile: org.profile,
+    theme: org.theme,
+    child: build(scope, org),
+  );
 }
 
 /// What a page shows when it was opened cold and the thing it was meant to
