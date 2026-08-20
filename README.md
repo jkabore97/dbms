@@ -482,8 +482,8 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `045` up to date, paste
-`database/apply_006_to_045.sql` into the Supabase SQL editor and run it once.
+To bring a database anywhere between `005` and `046` up to date, paste
+`database/apply_006_to_046.sql` into the Supabase SQL editor and run it once.
 It is `006` through `041` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it

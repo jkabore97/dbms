@@ -78,23 +78,30 @@ void main() {
     expect(find.text('Supprimer le compte'), findsNothing);
   });
 
-  testWidgets('with the account Worker, password reset and delete appear too',
+  testWidgets('with the account Worker, view/edit and the rest appear too',
       (tester) async {
     await openMenu(tester, canManage: true);
 
+    // The information is shown…
+    expect(find.text('Nom complet'), findsOneWidget);
+    // …and, because the caller outranks them, every action including the edit.
+    expect(find.text('Modifier les informations'), findsOneWidget);
     expect(find.text('Changer la responsabilité'), findsOneWidget);
     expect(find.text("Retirer de l'entreprise"), findsOneWidget);
     expect(find.text('Réinitialiser le mot de passe'), findsOneWidget);
     expect(find.text('Supprimer le compte'), findsOneWidget);
   });
 
-  testWidgets('an admin gets no menu on a member they do not outrank',
+  testWidgets('a member the caller cannot outrank shows info but no actions',
       (tester) async {
-    // A super_admin sits above an admin: tapping opens nothing, so none of the
-    // management actions are reachable. The server would refuse them anyway.
+    // A super_admin sits above an admin: the sheet still shows their
+    // information — a colleague may read it — but offers no way to edit or
+    // manage them. The server would refuse those anyway.
     await openMenu(tester,
         canManage: true, callerRoles: const ['admin'], memberRole: 'super_admin');
 
+    expect(find.text('Nom complet'), findsOneWidget);
+    expect(find.text('Modifier les informations'), findsNothing);
     expect(find.text('Changer la responsabilité'), findsNothing);
     expect(find.text('Réinitialiser le mot de passe'), findsNothing);
     expect(find.text('Supprimer le compte'), findsNothing);

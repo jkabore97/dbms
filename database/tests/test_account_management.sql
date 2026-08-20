@@ -260,4 +260,36 @@ end $$;
 rollback;
 
 \echo ''
+\echo '--- TEST 7: an admin edits a member below them, never one above ---'
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$
+declare v_name text;
+begin
+    -- The employee below: the edit lands and full_name is reassembled.
+    perform admin_save_member_profile(
+        '21212121-0000-0000-0000-000000000003',
+        p_first_name => 'Awa', p_last_name => 'Traoré', p_title => 'Vendeuse');
+    select full_name into v_name from profiles
+     where id = '21212121-0000-0000-0000-000000000003';
+    if v_name <> 'Awa Traoré' then
+        raise exception 'FAIL: the employee edit did not land (full_name=%)', v_name;
+    end if;
+
+    -- The super_admin above: refused, and their profile is untouched.
+    begin
+        perform admin_save_member_profile(
+            '21212121-0000-0000-0000-000000000007',
+            p_first_name => 'Piraté', p_last_name => 'Non');
+        raise exception 'FAIL: an admin edited a super_admin above them';
+    exception when raise_exception then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+    end;
+
+    raise notice 'PASS: the admin edits below, and is refused above';
+end $$;
+rollback;
+
+\echo ''
 \echo '=== test_account_management.sql: all checks passed ==='

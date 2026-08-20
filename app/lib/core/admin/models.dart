@@ -74,6 +74,11 @@ class Member {
     required this.visibility,
     this.fullName,
     this.phone,
+    this.firstName,
+    this.middleName,
+    this.lastName,
+    this.dateOfBirth,
+    this.title,
   });
 
   final String membershipId;
@@ -85,6 +90,15 @@ class Member {
   final String? fullName;
   final String? phone;
 
+  /// The rest of the person's own information, readable by a colleague (the
+  /// profiles select policy allows it) and shown in the member detail. Editable
+  /// by an admin who outranks them, through admin_save_member_profile (046).
+  final String? firstName;
+  final String? middleName;
+  final String? lastName;
+  final DateTime? dateOfBirth;
+  final String? title;
+
   /// What to call someone whose profile has no name yet — which is everyone,
   /// on the day they are invited.
   String get label {
@@ -95,6 +109,7 @@ class Member {
 
   factory Member.fromRow(Map<String, dynamic> row) {
     final profile = row['profiles'] as Map?;
+    final dob = profile?['date_of_birth'] as String?;
     return Member(
       membershipId: row['id'] as String,
       userId: row['user_id'] as String,
@@ -104,6 +119,11 @@ class Member {
       visibility: (row['visibility'] as String?) ?? 'full',
       fullName: profile?['full_name'] as String?,
       phone: profile?['phone'] as String?,
+      firstName: profile?['first_name'] as String?,
+      middleName: profile?['middle_name'] as String?,
+      lastName: profile?['last_name'] as String?,
+      dateOfBirth: (dob != null && dob.isNotEmpty) ? DateTime.tryParse(dob) : null,
+      title: profile?['title'] as String?,
     );
   }
 }

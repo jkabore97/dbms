@@ -214,7 +214,7 @@ class AdminRepository {
           .from('memberships')
           .select(
             'id, user_id, role, scope_kind, scope_id, visibility, '
-            'profiles(full_name, phone)',
+            'profiles(full_name, phone, first_name, middle_name, last_name, date_of_birth, title)',
           )
           .eq('org_id', orgId)
           .eq('is_trainer', false);
@@ -225,7 +225,7 @@ class AdminRepository {
           .from('memberships')
           .select(
             'id, user_id, role, scope_kind, scope_id, visibility, '
-            'profiles(full_name, phone)',
+            'profiles(full_name, phone, first_name, middle_name, last_name, date_of_birth, title)',
           )
           .eq('org_id', orgId);
       return _members(rows as List);
@@ -253,6 +253,33 @@ class AdminRepository {
       'p_role': role,
     });
   }
+
+  /// Edits another member's own information — names, phone, date of birth,
+  /// title. Runs through admin_save_member_profile (046), which lets an admin
+  /// edit only someone they outrank; the server is the enforcement.
+  Future<void> saveMemberProfile(
+    String userId, {
+    required String firstName,
+    required String lastName,
+    String? middleName,
+    DateTime? dateOfBirth,
+    String? title,
+    String? phone,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('admin_save_member_profile', params: {
+      'p_user_id': userId,
+      'p_first_name': firstName,
+      'p_last_name': lastName,
+      if (middleName != null && middleName.isNotEmpty) 'p_middle_name': middleName,
+      if (dateOfBirth != null) 'p_date_of_birth': _dateOnly(dateOfBirth),
+      if (title != null && title.isNotEmpty) 'p_title': title,
+      if (phone != null && phone.isNotEmpty) 'p_phone': phone,
+    });
+  }
+
+  static String _dateOnly(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// Sets a new password for another user — an admin resetting an employee's.
   /// Goes through the account Worker, the one holder of the service-role key;
