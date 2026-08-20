@@ -193,37 +193,64 @@ class SessionController extends ChangeNotifier {
   // Boot
   // ----------------------------------------------------------------
 
-  Future<void> boot() async {
-    final identity = await db.loadIdentity();
+  /// The device's cached org list, or an empty list if even that read fails.
+  /// A broken local store must not leave the app wedged on a spinner: empty
+  /// falls through to the waiting room, which carries a Retry.
+  Future<List<OrgSummary>> _cachedOrgsSafe() async {
+    try {
+      return await db.cachedOrgs();
+    } catch (_) {
+      return const [];
+    }
+  }
 
-    if (identity == null) {
+  Future<void> boot() async {
+    try {
+      // Bounded like the network steps: this is a local read and should be
+      // instant, but a wedged web IndexedDB (a version-change blocked by another
+      // open tab, say) can make it hang, and boot() is the one await standing
+      // between a cold start and any screen at all. A timeout here means the app
+      // always leaves the splash — worst case to sign-in — instead of freezing.
+      final identity = await db.loadIdentity().timeout(resolveTimeout);
+
+      if (identity == null) {
+        _phase = SessionPhase.signedOut;
+        _emit();
+        return;
+      }
+
+      _identity = identity;
+
+      // A live token means the server has vouched for this person within the
+      // hour. Anything else and the device has to vouch for them itself.
+      if (auth.hasLiveSession) {
+        if (!identity.hasPin) {
+          _phase = SessionPhase.choosingPin;
+          _emit();
+        } else {
+          await resolveOrgs();
+        }
+        return;
+      }
+
+      if (identity.hasPin) {
+        _phase = SessionPhase.locked;
+      } else {
+        // Signed in once, never set a code, and now the token is stale. There
+        // is nothing on the device that can prove who this is, so ask the
+        // server.
+        _phase = SessionPhase.signedOut;
+      }
+      _emit();
+    } catch (error) {
+      // boot() is kicked off unawaited, so a throw here is unhandled and the
+      // app freezes on the splash with the phase stuck at `booting`. The local
+      // store is the only thing that can fail this early — a broken IndexedDB
+      // on the web, most likely. Sign-in is the safe place to land: a page with
+      // a way forward, not a spinner with none.
       _phase = SessionPhase.signedOut;
       _emit();
-      return;
     }
-
-    _identity = identity;
-
-    // A live token means the server has vouched for this person within the
-    // hour. Anything else and the device has to vouch for them itself.
-    if (auth.hasLiveSession) {
-      if (!identity.hasPin) {
-        _phase = SessionPhase.choosingPin;
-        _emit();
-      } else {
-        await resolveOrgs();
-      }
-      return;
-    }
-
-    if (identity.hasPin) {
-      _phase = SessionPhase.locked;
-    } else {
-      // Signed in once, never set a code, and now the token is stale. There is
-      // nothing on the device that can prove who this is, so ask the server.
-      _phase = SessionPhase.signedOut;
-    }
-    _emit();
   }
 
   // ----------------------------------------------------------------
@@ -361,16 +388,21 @@ class SessionController extends ChangeNotifier {
         // The connection died, or stalled past the timeout, between signing in
         // and asking. Fall back to what this device already knows rather than
         // stranding the user on a spinner.
-        orgs = await db.cachedOrgs();
+        orgs = await _cachedOrgsSafe();
         fromCache = true;
         notice = AuthRepository.describeError(error);
       }
     } else {
-      orgs = await db.cachedOrgs();
+      orgs = await _cachedOrgsSafe();
       fromCache = true;
     }
 
-    _startSync();
+    // A failure here must never escape: resolveOrgs is kicked off unawaited by
+    // boot(), so anything it throws is unhandled and freezes the app on the
+    // spinner with the phase stuck at `resolving`. Sync is best-effort anyway.
+    try {
+      _startSync();
+    } catch (_) {}
 
     _orgs = orgs;
     // Rules may have changed since the last resolve; the next open refetches.
@@ -382,7 +414,10 @@ class SessionController extends ChangeNotifier {
     // What this device last had open, surviving the reload that wipes the
     // in-memory copy. Memory wins when it has an answer — an in-session
     // resolve must not yank somebody back to wherever yesterday ended.
-    _lastOrgId ??= await db.readPref(_lastOrgKey);
+    // Guarded: a failed pref read must not throw out of this unawaited call.
+    try {
+      _lastOrgId ??= await db.readPref(_lastOrgKey);
+    } catch (_) {}
 
     if (orgs.isEmpty) {
       // Either genuinely uninvited, or offline before the first successful
