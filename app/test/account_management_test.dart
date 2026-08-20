@@ -7,12 +7,15 @@ import 'package:kaj_app/l10n/strings.dart';
 
 /// The People tab as an account manager: tapping a member opens a menu, and the
 /// two Worker-backed actions (reset password, delete account) appear only when
-/// the account Worker's address was compiled in. Role change and remove are
-/// always there.
+/// the account Worker's address was compiled in. The menu itself appears only
+/// for a member the caller outranks — the client mirror of the server's rank
+/// rule (045).
 class _FakeAdmin extends AdminRepository {
-  _FakeAdmin({required this.canManage}) : super(null);
+  _FakeAdmin({required this.canManage, this.memberRole = 'employee'})
+      : super(null);
 
   final bool canManage;
+  final String memberRole;
 
   @override
   bool get canManageAccounts => canManage;
@@ -21,11 +24,11 @@ class _FakeAdmin extends AdminRepository {
   String? get currentUserId => 'someone-else';
 
   @override
-  Future<List<Member>> fetchMembers(String orgId) async => const [
+  Future<List<Member>> fetchMembers(String orgId) async => [
         Member(
           membershipId: 'm1',
           userId: 'u1',
-          role: 'employee',
+          role: memberRole,
           scopeKind: 'org',
           scopeId: 'o1',
           visibility: 'full',
@@ -48,11 +51,17 @@ void main() {
         home: child,
       );
 
-  Future<void> openMenu(WidgetTester tester, {required bool canManage}) async {
+  Future<void> openMenu(
+    WidgetTester tester, {
+    required bool canManage,
+    List<String> callerRoles = const ['admin'],
+    String memberRole = 'employee',
+  }) async {
     await tester.pumpWidget(wrap(PeopleScreen(
-      admin: _FakeAdmin(canManage: canManage),
+      admin: _FakeAdmin(canManage: canManage, memberRole: memberRole),
       orgId: 'o1',
       orgName: 'Boutique',
+      callerRoles: callerRoles,
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Awa'));
@@ -69,13 +78,45 @@ void main() {
     expect(find.text('Supprimer le compte'), findsNothing);
   });
 
-  testWidgets('with the account Worker, password reset and delete appear too',
+  testWidgets('with the account Worker, view/edit and the rest appear too',
       (tester) async {
     await openMenu(tester, canManage: true);
 
+    // The information is shown…
+    expect(find.text('Nom complet'), findsOneWidget);
+    // …and, because the caller outranks them, every action including the edit.
+    expect(find.text('Modifier les informations'), findsOneWidget);
     expect(find.text('Changer la responsabilité'), findsOneWidget);
     expect(find.text("Retirer de l'entreprise"), findsOneWidget);
     expect(find.text('Réinitialiser le mot de passe'), findsOneWidget);
     expect(find.text('Supprimer le compte'), findsOneWidget);
+  });
+
+  testWidgets('a member the caller cannot outrank shows info but no actions',
+      (tester) async {
+    // A super_admin sits above an admin: the sheet still shows their
+    // information — a colleague may read it — but offers no way to edit or
+    // manage them. The server would refuse those anyway.
+    await openMenu(tester,
+        canManage: true, callerRoles: const ['admin'], memberRole: 'super_admin');
+
+    expect(find.text('Nom complet'), findsOneWidget);
+    expect(find.text('Modifier les informations'), findsNothing);
+    expect(find.text('Changer la responsabilité'), findsNothing);
+    expect(find.text('Réinitialiser le mot de passe'), findsNothing);
+    expect(find.text('Supprimer le compte'), findsNothing);
+  });
+
+  test('the rank ladder places each role where the server does', () {
+    // super_admin is Kaj's platform staff: above a store's owner. The
+    // platform-admin flag is above everything.
+    expect(accountRoleRank('platform_admin'),
+        greaterThan(accountRoleRank('super_admin')));
+    expect(accountRoleRank('super_admin'), greaterThan(accountRoleRank('owner')));
+    expect(accountRoleRank('owner'), greaterThan(accountRoleRank('admin')));
+    expect(accountRoleRank('admin'), greaterThan(accountRoleRank('manager')));
+    expect(accountRoleRank('manager'), greaterThan(accountRoleRank('employee')));
+    expect(accountRoleRank('sorcier-inconnu'), 0);
+    expect(accountRankOf(const ['employee', 'admin']), accountRoleRank('admin'));
   });
 }

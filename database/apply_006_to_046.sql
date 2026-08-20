@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_044.sql — applies migrations 006 through 044 in order.
+-- apply_006_to_046.sql — applies migrations 006 through 046 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -13660,6 +13660,229 @@ begin
         grant execute on function set_membership_role(uuid, role_name) to authenticated;
         grant execute on function manages_user(uuid)    to authenticated;
         grant execute on function can_delete_user(uuid) to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 045_account_rank.sql
+-- ============================================================
+-- ============================================================
+-- 045_account_rank.sql — password resets and role changes follow the hierarchy.
+--
+-- 044 let any admin of a shared business reset any co-member's password and
+-- change any non-owner's role. The owner asked for rank, and named the order:
+-- super_admin is Kaj's own platform staff and sits above a store's owner; the
+-- owner is the top of their own store, above the admins they appoint; an admin
+-- reaches the responsables and staff beneath them. So a super_admin reaches an
+-- owner and everyone below, an owner reaches the admins and below, an admin the
+-- responsables and staff — and no one a peer or someone above them. The
+-- platform's own is_platform_admin flag stays above all of this and bypasses
+-- it. The same order governs who may reassign whose responsibility.
+--
+-- The rule is one comparison against a rank ladder. manages_user() is what the
+-- account Worker asks before it resets a password, and what can_delete_user()
+-- (unchanged) is built on — so a deletion inherits the same ceiling. Bodies are
+-- 044 verbatim apart from the rank clause.
+-- ============================================================
+
+-- The ladder. Higher manages lower; equal manages neither. super_admin is
+-- Kaj's platform staff and sits above a store's owner; the owner is the top of
+-- their own store. An unknown role ranks at the bottom, so it can manage no one
+-- and is managed by any admin.
+create or replace function role_rank(p_role role_name)
+returns int
+language sql
+immutable
+as $$
+    select case p_role
+        when 'super_admin' then 100
+        when 'owner'       then 90
+        when 'admin'       then 80
+        when 'manager'     then 60
+        when 'supervisor'  then 50
+        when 'approver'    then 40
+        when 'employee'    then 30
+        when 'observer'    then 20
+        else 0
+    end;
+$$;
+
+-- Whether the caller may reset this user's password: a platform admin, or an
+-- admin of a shared business who outranks the target's highest role anywhere.
+-- The "highest role anywhere" is deliberate: it stops an admin of a small shop
+-- resetting the login of someone who is a super_admin or owner in another
+-- business, since the password is one global credential, not a per-org one.
+create or replace function manages_user(p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select
+        exists (select 1 from profiles
+                where id = auth.uid() and is_platform_admin)
+        or exists (
+            select 1
+            from memberships me
+            where me.user_id = auth.uid()
+              and me.role in ('owner', 'super_admin', 'admin')
+              and me.org_id in (
+                  select org_id from memberships where user_id = p_user_id
+              )
+              and role_rank(me.role) > (
+                  select coalesce(max(role_rank(t.role)), 0)
+                  from memberships t where t.user_id = p_user_id
+              )
+        );
+$$;
+
+-- Change a member's responsibility — now rank-bound. 044's guards stay (admin
+-- of the org, never the owner's role, never *to* owner); added: the caller must
+-- outrank both the role held and the role assigned, so an admin can shuffle the
+-- staff and responsables below them but cannot touch a peer, promote anyone to
+-- their own level, or lift themselves. A platform admin, who holds no
+-- membership, runs the platform and is exempt from the rank test.
+create or replace function set_membership_role(
+    p_membership_id uuid,
+    p_role          role_name
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org         uuid;
+    v_role        role_name;
+    v_caller_rank int;
+begin
+    if auth.uid() is null then
+        raise exception 'set_membership_role() needs a signed-in caller';
+    end if;
+
+    select org_id, role into v_org, v_role
+    from memberships where id = p_membership_id;
+    if v_org is null then
+        raise exception 'No such membership';
+    end if;
+
+    if not is_org_admin(v_org) then
+        raise exception 'Only an owner or admin can change a role';
+    end if;
+    if v_role = 'owner' then
+        raise exception 'The owner''s role cannot be changed here';
+    end if;
+    if p_role = 'owner' then
+        raise exception 'Use a transfer of ownership, not a role change';
+    end if;
+
+    if not exists (select 1 from profiles
+                   where id = auth.uid() and is_platform_admin) then
+        select coalesce(max(role_rank(m.role)), 0) into v_caller_rank
+        from memberships m
+        where m.org_id = v_org and m.user_id = auth.uid();
+
+        if v_caller_rank <= role_rank(v_role)
+           or v_caller_rank <= role_rank(p_role) then
+            raise exception 'You can only assign a responsibility below your own';
+        end if;
+    end if;
+
+    update memberships set role = p_role where id = p_membership_id;
+end;
+$$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 046_admin_edit_member.sql
+-- ============================================================
+-- ============================================================
+-- 046_admin_edit_member.sql — an admin edits a member's own information.
+--
+-- profiles are editable by their owner alone (004): a person fixes the spelling
+-- of their own name. The owner asked for the People tab to let an admin see and
+-- edit everyone's information. Seeing already works — the profiles select policy
+-- lets colleagues read one another — so this adds only the edit, through one
+-- SECURITY DEFINER function so no table policy has to be widened.
+--
+-- Who may edit whom follows the same ladder as a password reset: the function
+-- is gated by manages_user() (045), so an admin reaches the staff and the
+-- responsables beneath them, a super_admin the admins and below, an owner
+-- everyone — and no one a peer or someone above. Body mirrors save_my_profile
+-- (017): the same name assembly, the same friendly phone-collision message.
+-- ============================================================
+
+create or replace function admin_save_member_profile(
+    p_user_id       uuid,
+    p_first_name    text,
+    p_last_name     text,
+    p_middle_name   text default null,
+    p_date_of_birth date default null,
+    p_title         text default null,
+    p_phone         text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_first text := nullif(btrim(coalesce(p_first_name, '')), '');
+    v_last  text := nullif(btrim(coalesce(p_last_name, '')), '');
+    v_mid   text := nullif(btrim(coalesce(p_middle_name, '')), '');
+    v_phone text := nullif(btrim(coalesce(p_phone, '')), '');
+    v_full  text;
+begin
+    if auth.uid() is null then
+        raise exception 'admin_save_member_profile() needs a signed-in caller';
+    end if;
+
+    -- The whole authorisation, and it is the ladder: a caller may edit only
+    -- someone they outrank. manages_user() is false for oneself, so an admin
+    -- fixes their own details through the personal form, not here.
+    if not manages_user(p_user_id) then
+        raise exception 'Vous ne pouvez pas modifier les informations de ce compte.';
+    end if;
+
+    if v_first is null or v_last is null then
+        raise exception 'Un prénom et un nom de famille sont requis.';
+    end if;
+
+    -- full_name stays the one field every screen reads, assembled from the
+    -- parts so it never drifts out of step (family name last, as written here).
+    v_full := btrim(concat_ws(' ', v_first, v_mid, v_last));
+
+    -- A number already on another account is a mistyped digit far more often
+    -- than a real collision; answer in words, not with a constraint name.
+    if v_phone is not null and exists (
+        select 1 from profiles where phone = v_phone and id <> p_user_id
+    ) then
+        raise exception 'Ce numéro est déjà utilisé par un autre compte.';
+    end if;
+
+    update profiles set
+        first_name    = v_first,
+        middle_name   = v_mid,
+        last_name     = v_last,
+        full_name     = v_full,
+        date_of_birth = coalesce(p_date_of_birth, date_of_birth),
+        title         = coalesce(nullif(btrim(coalesce(p_title, '')), ''), title),
+        phone         = coalesce(v_phone, phone)
+    where id = p_user_id;
+end;
+$$;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function admin_save_member_profile(uuid, text, text, text, date, text, text)
+            to authenticated;
     end if;
 end $$;
 

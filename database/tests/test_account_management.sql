@@ -17,6 +17,7 @@
 \set plat   '''21212121-0000-0000-0000-000000000004'''
 \set empF   '''21212121-0000-0000-0000-000000000005'''
 \set ownerB '''21212121-0000-0000-0000-000000000006'''
+\set saA    '''21212121-0000-0000-0000-000000000007'''
 \set orgA   '''21000000-0000-0000-0000-000000000001'''
 \set orgB   '''21000000-0000-0000-0000-000000000002'''
 
@@ -35,19 +36,21 @@ insert into auth.users (id, phone, raw_user_meta_data) values
     (:empE,   '+22621000003', '{"full_name": "EmployeE"}'),
     (:plat,   '+22621000004', '{"full_name": "Plateforme"}'),
     (:empF,   '+22621000005', '{"full_name": "EmployeF"}'),
-    (:ownerB, '+22621000006', '{"full_name": "PatronneB"}');
+    (:ownerB, '+22621000006', '{"full_name": "PatronneB"}'),
+    (:saA,    '+22621000007', '{"full_name": "SuperA"}');
 update profiles set is_platform_admin = true where id = :plat;
 
 insert into orgs (id, name, slug, profile, default_currency) values
     (:orgA, 'Boutique A', 'boutique-a-21', 'retail', 'XOF'),
     (:orgB, 'Boutique B', 'boutique-b-21', 'retail', 'XOF');
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
-    (:orgA, :ownerA, 'owner',    'org', :orgA, 'full'),
-    (:orgA, :adminA, 'admin',    'org', :orgA, 'full'),
-    (:orgA, :empE,   'employee', 'org', :orgA, 'full'),
-    (:orgA, :empF,   'employee', 'org', :orgA, 'full'),
-    (:orgB, :ownerB, 'owner',    'org', :orgB, 'full'),
-    (:orgB, :empF,   'employee', 'org', :orgB, 'full');
+    (:orgA, :ownerA, 'owner',       'org', :orgA, 'full'),
+    (:orgA, :saA,    'super_admin', 'org', :orgA, 'full'),
+    (:orgA, :adminA, 'admin',       'org', :orgA, 'full'),
+    (:orgA, :empE,   'employee',    'org', :orgA, 'full'),
+    (:orgA, :empF,   'employee',    'org', :orgA, 'full'),
+    (:orgB, :ownerB, 'owner',       'org', :orgB, 'full'),
+    (:orgB, :empF,   'employee',    'org', :orgB, 'full');
 
 
 \echo ''
@@ -173,6 +176,123 @@ do $$ begin
         raise exception 'FAIL: platform admin deleted an owner';
     end if;
     raise notice 'PASS: platform admin deletes a non-owner, never an owner';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 5: password reset follows the ladder, not just membership ---'
+-- adminA (admin) may reset those below, never a super_admin, an owner, or a peer.
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$ begin
+    if not manages_user('21212121-0000-0000-0000-000000000003') then
+        raise exception 'FAIL: an admin cannot reset an employee below them';
+    end if;
+    if manages_user('21212121-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: an admin reset a super_admin above them';
+    end if;
+    if manages_user('21212121-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: an admin reset the owner';
+    end if;
+    raise notice 'PASS: the admin reaches below and no further';
+end $$;
+rollback;
+
+-- saA (super_admin) is Kaj's platform staff: they reach the owner and everyone
+-- below.
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000007';
+set local role authenticated;
+do $$ begin
+    if not manages_user('21212121-0000-0000-0000-000000000002') then
+        raise exception 'FAIL: a super_admin cannot reset an admin below them';
+    end if;
+    if not manages_user('21212121-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: a super_admin cannot reset the owner beneath them';
+    end if;
+    raise notice 'PASS: the super_admin reaches the owner and the admin';
+end $$;
+rollback;
+
+-- ownerA is the top of their own store — admins and below — but not the
+-- super_admin above them.
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$ begin
+    if not manages_user('21212121-0000-0000-0000-000000000002') then
+        raise exception 'FAIL: the owner cannot reset an admin below them';
+    end if;
+    if manages_user('21212121-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: the owner reset a super_admin above them';
+    end if;
+    raise notice 'PASS: the owner reaches the admin, not the super_admin';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 6: a role change cannot reach a peer or lift past the changer ---'
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$
+declare
+    v_sa  uuid;
+    v_emp uuid;
+begin
+    select id into v_sa  from memberships where user_id = '21212121-0000-0000-0000-000000000007' and org_id = '21000000-0000-0000-0000-000000000001';
+    select id into v_emp from memberships where user_id = '21212121-0000-0000-0000-000000000003' and org_id = '21000000-0000-0000-0000-000000000001';
+
+    -- An admin cannot demote a super_admin above them.
+    begin
+        perform set_membership_role(v_sa, 'employee');
+        raise exception 'FAIL: an admin reassigned a super_admin';
+    exception when raise_exception then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+    end;
+
+    -- Nor promote anyone to the admin's own level.
+    begin
+        perform set_membership_role(v_emp, 'admin');
+        raise exception 'FAIL: an admin promoted a member to admin (their own level)';
+    exception when raise_exception then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+    end;
+
+    raise notice 'PASS: a role change stays strictly below the changer';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 7: an admin edits a member below them, never one above ---'
+begin;
+set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$
+declare v_name text;
+begin
+    -- The employee below: the edit lands and full_name is reassembled.
+    perform admin_save_member_profile(
+        '21212121-0000-0000-0000-000000000003',
+        p_first_name => 'Awa', p_last_name => 'Traoré', p_title => 'Vendeuse');
+    select full_name into v_name from profiles
+     where id = '21212121-0000-0000-0000-000000000003';
+    if v_name <> 'Awa Traoré' then
+        raise exception 'FAIL: the employee edit did not land (full_name=%)', v_name;
+    end if;
+
+    -- The super_admin above: refused, and their profile is untouched.
+    begin
+        perform admin_save_member_profile(
+            '21212121-0000-0000-0000-000000000007',
+            p_first_name => 'Piraté', p_last_name => 'Non');
+        raise exception 'FAIL: an admin edited a super_admin above them';
+    exception when raise_exception then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+    end;
+
+    raise notice 'PASS: the admin edits below, and is refused above';
 end $$;
 rollback;
 

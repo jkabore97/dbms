@@ -548,6 +548,8 @@ GoRouter buildRouter(SessionController session) {
                     admin: scope.admin,
                     orgId: org.id,
                     orgName: org.name,
+                    // Sets the ceiling on who this person may manage.
+                    callerRoles: org.roles,
                   ),
                 ),
               ),
