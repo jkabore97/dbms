@@ -386,3 +386,76 @@ class TrainerOrg {
         profile: (r['profile'] ?? '') as String,
       );
 }
+
+/// One account in the platform-wide directory (047), with its footprint —
+/// how many businesses it belongs to — and whether it holds platform access.
+class PlatformPerson {
+  const PlatformPerson({
+    required this.userId,
+    required this.isPlatformAdmin,
+    required this.businessCount,
+    this.fullName,
+    this.phone,
+    this.email,
+    this.title,
+    this.createdAt,
+  });
+
+  final String userId;
+  final bool isPlatformAdmin;
+  final int businessCount;
+  final String? fullName;
+  final String? phone;
+  final String? email;
+  final String? title;
+  final DateTime? createdAt;
+
+  /// What to call someone whose profile has no name yet.
+  String get label {
+    final name = fullName?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return email ?? phone ?? 'Sans nom';
+  }
+
+  factory PlatformPerson.fromRow(Map<String, dynamic> r) {
+    final created = r['created_at'] as String?;
+    return PlatformPerson(
+      userId: r['user_id'] as String,
+      isPlatformAdmin: (r['is_platform_admin'] as bool?) ?? false,
+      businessCount: ((r['business_count'] as num?) ?? 0).toInt(),
+      fullName: r['full_name'] as String?,
+      phone: r['phone'] as String?,
+      email: r['email'] as String?,
+      title: r['title'] as String?,
+      createdAt: (created != null && created.isNotEmpty)
+          ? DateTime.tryParse(created)
+          : null,
+    );
+  }
+}
+
+/// One business a person belongs to, and their role in it — the footprint a
+/// moderator reads before acting on the account.
+class PersonOrg {
+  const PersonOrg({
+    required this.orgId,
+    required this.orgName,
+    required this.profile,
+    required this.role,
+    this.archived = false,
+  });
+
+  final String orgId;
+  final String orgName;
+  final String profile;
+  final String role;
+  final bool archived;
+
+  factory PersonOrg.fromRow(Map<String, dynamic> r) => PersonOrg(
+        orgId: r['org_id'] as String,
+        orgName: (r['org_name'] ?? '') as String,
+        profile: (r['profile'] ?? '') as String,
+        role: (r['role'] ?? '') as String,
+        archived: (r['archived'] as bool?) ?? false,
+      );
+}
