@@ -53,6 +53,7 @@ class SessionController extends ChangeNotifier {
     required this.admin,
     required this.accounting,
     this.sync,
+    this.resolveTimeout = const Duration(seconds: 12),
   });
 
   final LocalDb db;
@@ -60,6 +61,14 @@ class SessionController extends ChangeNotifier {
   final AdminRepository admin;
   final AccountingRepository accounting;
   final SyncService? sync;
+
+  /// How long a single network step of a resolve may stall before it is
+  /// treated as a dead connection. Long enough that a genuinely slow reply
+  /// still lands, short enough that a stalled socket does not hang the app
+  /// open-endedly. The resolve makes up to three such calls, each bounded
+  /// independently. Injectable so a test can prove the fallback without
+  /// waiting out the real timeout.
+  final Duration resolveTimeout;
 
   SessionPhase _phase = SessionPhase.booting;
   SessionPhase get phase => _phase;
@@ -310,20 +319,36 @@ class SessionController extends ChangeNotifier {
     String? notice;
 
     if (auth.hasLiveSession) {
+      // Every network call below is bounded by a timeout. On a market
+      // connection a request can stall — the socket stays open and the reply
+      // never comes, so the future neither completes nor throws. An unbounded
+      // await there hangs the whole app on "Chargement de vos entreprises…"
+      // with no way forward, which is exactly what a reload was doing. A
+      // timed-out call is treated as a dead connection: fall back to what the
+      // device already knows, show the notice, and let the next resolve retry.
+
       // Asked first and separately: it never throws, and a platform admin with
       // no businesses yet needs it precisely when the org list comes back
-      // empty.
-      platformAdmin = await admin.isPlatformAdmin();
+      // empty. A stall must neither hang the app nor silently claim admin, so
+      // it defaults closed and the next resolve re-reads it.
+      try {
+        platformAdmin =
+            await admin.isPlatformAdmin().timeout(resolveTimeout);
+      } catch (_) {
+        platformAdmin = false;
+      }
+
+      // Anything addressed to this person's phone or email becomes a
+      // membership before we ask what they belong to — otherwise an invited
+      // user would land on the waiting screen with an invitation sitting
+      // unclaimed on the server. Best-effort: a stall or error simply defers
+      // the sweep to the next launch rather than blocking the org fetch.
+      try {
+        await admin.claimMyInvitations().timeout(resolveTimeout);
+      } catch (_) {}
 
       try {
-        // Anything addressed to this person's phone or email becomes a
-        // membership before we ask what they belong to — otherwise an invited
-        // user would land on the waiting screen with an invitation sitting
-        // unclaimed on the server. Never throws; a missed sweep is picked up
-        // on the next launch or by typing the code.
-        await admin.claimMyInvitations();
-
-        orgs = await auth.fetchOrgs();
+        orgs = await auth.fetchOrgs().timeout(resolveTimeout);
         await db.cacheOrgs(orgs);
 
         final identity = _identity;
@@ -333,8 +358,9 @@ class SessionController extends ChangeNotifier {
           _identity = updated;
         }
       } catch (error) {
-        // The connection died between signing in and asking. Fall back to what
-        // this device already knows rather than stranding the user.
+        // The connection died, or stalled past the timeout, between signing in
+        // and asking. Fall back to what this device already knows rather than
+        // stranding the user on a spinner.
         orgs = await db.cachedOrgs();
         fromCache = true;
         notice = AuthRepository.describeError(error);
