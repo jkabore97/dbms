@@ -155,14 +155,17 @@ end $$;
 rollback;
 
 \echo ''
-\echo '--- TEST 4: a reversed sale is flagged in recent_sales ---'
+\echo '--- TEST 4: a reversed sale leaves recent_sales flagged AND the analytics ---'
 begin;
 set local "request.jwt.claim.sub" = '20202020-0000-0000-0000-000000000001';
 set local role authenticated;
 do $$
 declare
-    v_sale uuid;
-    v_flag boolean;
+    v_sale    uuid;
+    v_flag    boolean;
+    v_count   bigint;
+    v_revenue numeric;
+    v_rows    int;
 begin
     v_sale := record_sale(
         p_org_id => '20000000-0000-0000-0000-000000000001',
@@ -175,6 +178,14 @@ begin
         raise exception 'FAIL: a fresh sale is already marked reversed';
     end if;
 
+    -- Before the correction, the analytics count it: 1 sale, 1000 in revenue.
+    select sale_count, revenue into v_count, v_revenue
+      from org_sales_headline('20000000-0000-0000-0000-000000000001', null);
+    if v_count <> 1 or v_revenue <> 1000 then
+        raise exception 'FAIL: pre-correction analytics are % sales / %',
+            v_count, v_revenue;
+    end if;
+
     perform record_return(v_sale, 'test data');
 
     select reversed into v_flag from recent_sales(
@@ -182,7 +193,24 @@ begin
     if not v_flag then
         raise exception 'FAIL: a returned sale is not flagged reversed';
     end if;
-    raise notice 'PASS: the returned sale shows as reversed in recent_sales';
+
+    -- The correction reaches the analytics too: the reversed sale is gone from
+    -- the headline and from what-sells. This is the "they are not connected"
+    -- report — now they are.
+    select sale_count, revenue into v_count, v_revenue
+      from org_sales_headline('20000000-0000-0000-0000-000000000001', null);
+    if v_count <> 0 or v_revenue <> 0 then
+        raise exception 'FAIL: after correction analytics still show % sales / %',
+            v_count, v_revenue;
+    end if;
+
+    select count(*) into v_rows from org_product_performance(
+        '20000000-0000-0000-0000-000000000001', null, 100);
+    if v_rows <> 0 then
+        raise exception 'FAIL: the reversed product still appears in what-sells (% rows)', v_rows;
+    end if;
+
+    raise notice 'PASS: the correction reaches recent_sales and the analytics';
 end $$;
 rollback;
 
