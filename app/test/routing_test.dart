@@ -364,6 +364,30 @@ void main() {
       expect(find.text('Articles'), findsOneWidget);
     });
 
+    testWidgets('reloading a business home lands in it, not the dead-end',
+        (tester) async {
+      // The report, with a screenshot: refreshing /o/<id> showed "Cette page
+      // s'ouvre depuis la liste" — the _withOrg fallback, fired because the
+      // org list had not loaded yet. A business URL the person can open must
+      // resolve to the business once the list arrives, never to that dead-end.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+          id: 'org-1',
+          name: 'Grace Chapel',
+          profile: 'church',
+          roles: ['owner'],
+        ),
+      ]);
+      await pumpApp(tester);
+      await reloadAt(tester, '/o/org-1');
+      await enterPin(tester, '1379');
+
+      expect(find.text("Cette page s'ouvre depuis la liste."), findsNothing,
+          reason: 'a reload of a real business URL hit the missing-context '
+              'dead-end instead of opening the business');
+      expect(find.text('Recette'), findsOneWidget);
+    });
+
     testWidgets("someone else's business still lands on the picker",
         (tester) async {
       // The stash must not become a doorway: an address this account cannot

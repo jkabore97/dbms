@@ -947,10 +947,21 @@ String? _orgIdOf(String location) {
 /// its id. This resolves one to the other in the single place, so no route
 /// builder has to decide what to do when it cannot.
 ///
-/// The redirect above has already refused an id this person has no membership
-/// for, so reaching the fallback means the org list changed underneath — a
-/// business archived in another tab, say. Sending them to the picker is the
-/// honest answer to that, and it is a page rather than a crash.
+/// Two ways the id can fail to resolve, and they are not the same:
+///
+///   * **The list has not loaded yet.** A browser refresh straight onto
+///     `/o/<id>` rebuilds the app from nothing: the org list is empty until
+///     `resolveOrgs()` finishes, and for that whole window `orgById` finds
+///     nothing. Showing the "opens from the list" dead-end here is a lie — the
+///     business is real and about to arrive — and it is exactly what a reload
+///     of a deep business URL was hitting. While the session is still booting
+///     or resolving we wait, with a spinner; when the list lands the router
+///     rebuilds this and the business appears (or the redirect sends an id this
+///     person truly cannot open to the picker).
+///   * **The list has loaded and the id is genuinely not in it.** Only then is
+///     the fallback honest: the org was archived in another tab, say. The
+///     redirect has already refused an id with no membership, so this is a page
+///     rather than a crash.
 Widget _withOrg(
   BuildContext context,
   GoRouterState state,
@@ -958,7 +969,13 @@ Widget _withOrg(
 ) {
   final scope = AppScope.of(context);
   final org = scope.session.orgById(state.pathParameters['orgId']);
-  if (org == null) return const _MissingContext(backTo: Routes.picker);
+  if (org == null) {
+    final phase = scope.session.phase;
+    if (phase == SessionPhase.booting || phase == SessionPhase.resolving) {
+      return const _Splash();
+    }
+    return const _MissingContext(backTo: Routes.picker);
+  }
   // The business's colours, on every page inside it — not just the home
   // screen. Each `/o/<id>/...` route is a page of its own (they replace the
   // shell rather than nest under it), so the palette has to be applied here,
