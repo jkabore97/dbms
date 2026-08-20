@@ -323,6 +323,8 @@ GoRouter buildRouter(SessionController session) {
             // spinner rather than a blank page until my_orgs() answers.
             loading: scope.session.phase == SessionPhase.booting ||
                 scope.session.phase == SessionPhase.resolving,
+            // The escape hatch if that resolve never returns.
+            onRetry: scope.session.resolveOrgs,
             // `push`, not `go`: opening a business is a step *into* the
             // app, so the picker has to stay underneath it. `go` replaces the
             // location, which is what left back with nowhere to return to and

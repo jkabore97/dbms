@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
@@ -14,6 +16,7 @@ class OrgPickerScreen extends StatelessWidget {
     required this.orgs,
     required this.onSelected,
     this.loading = false,
+    this.onRetry,
     this.onSignOut,
     this.onCreateBusiness,
     this.onBusinesses,
@@ -32,6 +35,12 @@ class OrgPickerScreen extends StatelessWidget {
   /// (spinner) or, once loaded, "you belong to none" (a message) — never a
   /// blank.
   final bool loading;
+
+  /// Retries the resolve from the loading state's escape hatch. A resolve that
+  /// stalls should recover on its own within seconds, but if it does not, this
+  /// screen must never be a trap: after a short wait it offers a way to try
+  /// again rather than spin forever.
+  final VoidCallback? onRetry;
 
   final VoidCallback? onSignOut;
 
@@ -92,15 +101,7 @@ class OrgPickerScreen extends StatelessWidget {
   Widget _empty(BuildContext context) {
     final theme = Theme.of(context);
     if (loading) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 20),
-          Text('Chargement de vos entreprises…',
-              style: theme.textTheme.bodyMedium),
-        ],
-      );
+      return _LoadingWithEscape(onRetry: onRetry, onSignOut: onSignOut);
     }
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -161,6 +162,91 @@ class OrgPickerScreen extends StatelessWidget {
                 ),
               );
       },
+    );
+  }
+}
+
+/// The loading state, with an escape hatch.
+///
+/// A resolve that stalls now falls back to the cached list within seconds, so
+/// the spinner is normally brief. But no spinner on this app may be a trap:
+/// after a short wait this reveals "Réessayer" and "Se déconnecter", so a
+/// person whose resolve never returns — a wedged local store, a connection
+/// that neither answers nor errors — always has a way out instead of a screen
+/// that loads forever.
+class _LoadingWithEscape extends StatefulWidget {
+  const _LoadingWithEscape({this.onRetry, this.onSignOut});
+
+  final VoidCallback? onRetry;
+  final VoidCallback? onSignOut;
+
+  @override
+  State<_LoadingWithEscape> createState() => _LoadingWithEscapeState();
+}
+
+class _LoadingWithEscapeState extends State<_LoadingWithEscape> {
+  bool _stuck = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Long enough that a normal resolve (bounded to ~12s per network step, and
+    // usually far quicker) has finished and moved us off this screen; short
+    // enough that a person is not left wondering. If we are still here at 10s,
+    // something is wrong and they should be offered a way out.
+    _timer = Timer(const Duration(seconds: 10), () {
+      if (mounted) setState(() => _stuck = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 20),
+          Text('Chargement de vos entreprises…',
+              style: theme.textTheme.bodyMedium),
+          if (_stuck) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Cela prend plus de temps que prévu.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            if (widget.onRetry != null)
+              FilledButton.icon(
+                onPressed: () {
+                  setState(() => _stuck = false);
+                  _timer?.cancel();
+                  _timer = Timer(const Duration(seconds: 10), () {
+                    if (mounted) setState(() => _stuck = true);
+                  });
+                  widget.onRetry!();
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Réessayer'),
+              ),
+            if (widget.onSignOut != null)
+              TextButton(
+                onPressed: widget.onSignOut,
+                child: const Text('Se déconnecter'),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }

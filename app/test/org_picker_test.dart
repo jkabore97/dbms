@@ -33,6 +33,42 @@ void main() {
     expect(find.text('Chargement de vos entreprises…'), findsOneWidget);
   });
 
+  testWidgets('a loading picker that never resolves offers a way out',
+      (tester) async {
+    // The "loading forever" report: if the resolve never returns, the spinner
+    // must not be a trap. After a short wait it reveals Réessayer (which fires
+    // the retry) and Se déconnecter.
+    var retried = false;
+    var signedOut = false;
+    await tester.pumpWidget(wrap(OrgPickerScreen(
+      orgs: const [],
+      loading: true,
+      onSelected: (_) {},
+      onRetry: () => retried = true,
+      onSignOut: () => signedOut = true,
+    )));
+    await tester.pump();
+
+    // Nothing but the spinner at first.
+    expect(find.text('Réessayer'), findsNothing);
+
+    // Past the escape threshold, the way out appears.
+    await tester.pump(const Duration(seconds: 11));
+    expect(find.text('Réessayer'), findsOneWidget);
+    expect(find.text('Se déconnecter'), findsOneWidget);
+
+    // Sign out first: pressing Réessayer restarts the wait and hides both.
+    await tester.tap(find.text('Se déconnecter'));
+    await tester.pump();
+    expect(signedOut, isTrue);
+
+    await tester.tap(find.text('Réessayer'));
+    await tester.pump();
+    expect(retried, isTrue);
+    // Réessayer returns to the plain spinner while the retry runs.
+    expect(find.text('Réessayer'), findsNothing);
+  });
+
   testWidgets('an empty picker that has finished loading says so', (tester) async {
     await tester.pumpWidget(wrap(OrgPickerScreen(
       orgs: const [],
