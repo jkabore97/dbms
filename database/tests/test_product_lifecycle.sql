@@ -177,4 +177,46 @@ end $$;
 commit;
 
 \echo ''
+\echo '--- TEST 5: re-adding a removed article brings the same one back (051) ---'
+begin;
+set local "request.jwt.claim.sub" = '92929292-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$
+declare v_first uuid; v_again uuid; v_active boolean; v_rows int;
+begin
+    -- A fresh article, then removed from the shop.
+    v_first := ensure_product('92000000-0000-0000-0000-000000000001'::uuid,
+                              'Savon de Marseille', 500, 300, null, null,
+                              '92929292-0000-0000-0000-000000000001');
+    perform archive_product(v_first);
+    select is_active into v_active from products where id = v_first;
+    if v_active then
+        raise exception 'FAIL: the article was not removed to begin with';
+    end if;
+
+    -- Adding the same name again must bring back the very same row, active.
+    v_again := ensure_product('92000000-0000-0000-0000-000000000001'::uuid,
+                              'Savon de Marseille', null, null, null, null,
+                              '92929292-0000-0000-0000-000000000001');
+    if v_again is distinct from v_first then
+        raise exception 'FAIL: re-adding made a second product (% vs %)',
+            v_again, v_first;
+    end if;
+    select is_active into v_active from products where id = v_first;
+    if not v_active then
+        raise exception 'FAIL: re-adding did not bring the article back';
+    end if;
+
+    -- And there is still exactly one row for that name — no duplicate.
+    select count(*) into v_rows from products
+     where org_id = '92000000-0000-0000-0000-000000000001'
+       and lower(btrim(name)) = 'savon de marseille';
+    if v_rows <> 1 then
+        raise exception 'FAIL: % rows for one name after revival', v_rows;
+    end if;
+    raise notice 'PASS: the removed article came back as itself, once';
+end $$;
+commit;
+
+\echo ''
 \echo '=== test_product_lifecycle.sql: all assertions passed ==='

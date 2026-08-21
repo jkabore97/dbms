@@ -190,6 +190,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final theme = Theme.of(context);
     final stockValue =
         _products.fold<double>(0, (sum, p) => sum + p.quantity * p.costPrice);
+    // The count of articles is how many distinct lines the shop carries; the
+    // count of items is how many things are actually on the shelves behind
+    // them — 12 articles can be 340 units of stock. The owner asked to see both.
+    final totalItems =
+        _products.fold<double>(0, (sum, p) => sum + p.quantity);
 
     return Scaffold(
       appBar: AppBar(
@@ -230,14 +235,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   // The count the owner asked for: how many articles the shop
-                  // carries, in one place. While a search narrows the list it
+                  // carries, and — next to it — how many items sit behind them
+                  // in total. While a search narrows the list the article part
                   // says "shown / total" so the number on screen is never
-                  // mistaken for the whole shelf.
+                  // mistaken for the whole shelf; the item total always counts
+                  // the whole shelf, not the filtered view.
                   Text(
-                    _search.text.trim().isEmpty
-                        ? '${_products.length} article'
-                            '${_products.length > 1 ? 's' : ''}'
-                        : '${_visible.length} / ${_products.length} articles',
+                    '${_search.text.trim().isEmpty ? '${_products.length} article'
+                            '${_products.length > 1 ? 's' : ''}' : '${_visible.length} / ${_products.length} articles'}'
+                        ' · ${_trim(totalItems)} en stock',
                     style: theme.textTheme.titleMedium,
                   ),
                   Text('Valeur : ${_money.format(stockValue)}',
