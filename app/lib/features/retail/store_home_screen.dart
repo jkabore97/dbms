@@ -240,31 +240,55 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
-      // The camera is the primary action and the sale is the small one above
-      // it. That is the wrong way round for a till and the right way round
-      // for this shop: what a sale is worth is already known when it happens,
-      // and what is lost is lost because nobody wrote the delivery down.
+      // Selling is what a till does all day, so the sale is the big, filled,
+      // labelled button — impossible to miss and sized for a thumb in a hurry.
+      // The camera keeps its place for the shop that also photographs its
+      // deliveries, but as the smaller companion above it rather than the
+      // headline: a sale's value is known the moment it happens, so the button
+      // that records it should be the obvious one.
       floatingActionButton: (widget.retail == null && !canPhotograph)
           ? null
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                // The camera sits above the till button when both are here, as
+                // a small round secondary. On a shop with no sale button (a
+                // pure capture business) it stays the big labelled one, so that
+                // shop still has a clear primary action.
+                if (canPhotograph)
+                  widget.retail != null
+                      ? FloatingActionButton.small(
+                          heroTag: 'photo',
+                          onPressed: _photograph,
+                          tooltip: Strings.of(context).photo,
+                          child: const Icon(Icons.photo_camera),
+                        )
+                      : FloatingActionButton.extended(
+                          heroTag: 'photo',
+                          onPressed: _photograph,
+                          icon: const Icon(Icons.photo_camera),
+                          label: Text(Strings.of(context).photo),
+                        ),
+                if (canPhotograph && widget.retail != null)
+                  const SizedBox(height: 12),
                 if (widget.retail != null)
-                  FloatingActionButton.small(
+                  FloatingActionButton.extended(
                     heroTag: 'sell',
                     onPressed: _sell,
-                    tooltip: Strings.of(context).sale,
-                    child: const Icon(Icons.point_of_sale),
-                  ),
-                if (widget.retail != null && canPhotograph)
-                  const SizedBox(height: 12),
-                if (canPhotograph)
-                  FloatingActionButton.extended(
-                    heroTag: 'photo',
-                    onPressed: _photograph,
-                    icon: const Icon(Icons.photo_camera),
-                    label: Text(Strings.of(context).photo),
+                    // Filled in the shop's own brand colour rather than the
+                    // softer container tint an extended FAB takes by default,
+                    // so the one button she reaches for most stands out from
+                    // the aurora behind it. onPrimary keeps the label legible
+                    // on it — the palette is WCAG-checked for exactly this pair.
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    icon: const Icon(Icons.point_of_sale),
+                    label: Text(
+                      Strings.of(context).sale,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
                   ),
               ],
             ),
