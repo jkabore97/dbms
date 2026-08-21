@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/retail/store_home_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -79,15 +80,44 @@ void main() {
       ),
     );
 
-    // Extended and labelled, rather than the small round one the sale gets.
-    // The plan is explicit that the camera is the home screen's primary
-    // action, and the reason is that a sale's value is already known when it
-    // happens while a loss happens because nobody wrote the delivery down.
+    // This shop has no till button wired in (no retail repository), so the
+    // camera is the only action and stays the big labelled one. When a shop
+    // has both, the sale is the headline and the camera becomes the small
+    // round companion above it — see the FAB in store_home_screen.dart.
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsOneWidget);
     expect(find.byIcon(Icons.photo_camera), findsOneWidget);
 
     // And the way back to what has already been photographed.
     expect(find.byIcon(Icons.photo_library_outlined), findsOneWidget);
+  });
+
+  testWidgets('with a till and a camera, the sale is the headline button',
+      (tester) async {
+    // A real shop has both. The sale is the big labelled button she reaches
+    // for all day; the camera becomes the small round companion above it.
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: StoreHomeScreen(
+        org: org,
+        retail: RetailRepository(client),
+        capture: CaptureRepository(
+          client,
+          db: db,
+          uploadsUrl: 'https://kaj-uploads.example.workers.dev',
+        ),
+      ),
+    ));
+    await tester.pump();
+
+    // The sale is extended and labelled — the obvious action.
+    expect(find.widgetWithText(FloatingActionButton, 'Vente'), findsOneWidget);
+    expect(find.byIcon(Icons.point_of_sale), findsOneWidget);
+
+    // The camera is still there, but now the small icon-only one: no label.
+    expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsNothing);
+    expect(find.byIcon(Icons.photo_camera), findsOneWidget);
   });
 
   testWidgets('a build with no server draws neither button', (tester) async {
