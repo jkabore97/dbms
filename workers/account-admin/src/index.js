@@ -95,7 +95,15 @@ async function setPassword(request, env, userId) {
     return problem(403, "Vous ne gérez pas ce compte.");
   }
 
-  const res = await admin(env, "PUT", userId, { password });
+  // email_confirm: true is what makes the reset actually usable. GoTrue will
+  // accept the new password on an unconfirmed account and answer 200 — but then
+  // refuse the sign-in that uses it with "email not confirmed", which looks
+  // exactly like a password that does not work. Most people here get their
+  // account from a manager's code and never click a confirmation link, so their
+  // email sits unconfirmed. An admin setting a password is vouching for the
+  // account, so we confirm it in the same call. Sign-in is by email, so it is
+  // the email that has to be confirmed; a phoneless/emailless edge stays a 502.
+  const res = await admin(env, "PUT", userId, { password, email_confirm: true });
   if (!res.ok) {
     console.error("gotrue set-password", res.status, await res.text());
     return problem(502, "Le changement de mot de passe a échoué.");
