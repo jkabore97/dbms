@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
@@ -132,8 +133,24 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     }
   }
 
-  /// The system print dialog (the browser's, on the web), fed a one-page PDF
-  /// wrapping the same capture the share button sends.
+  /// One page, A4, wrapping the same capture the share button sends — the one
+  /// source behind both printing and the downloadable file, so the shop's paper,
+  /// its print-out and its saved PDF are pixel-for-pixel the same document.
+  Future<Uint8List> _buildPdf(PdfPageFormat format) async {
+    final png = await _capturePaper();
+    final image = pw.MemoryImage(png);
+    final pdf = pw.Document();
+    pdf.addPage(pw.Page(
+      pageFormat: format,
+      margin: const pw.EdgeInsets.all(24),
+      build: (_) => pw.Center(
+        child: pw.Image(image, fit: pw.BoxFit.contain),
+      ),
+    ));
+    return pdf.save();
+  }
+
+  /// The system print dialog (the browser's, on the web), fed the one-page PDF.
   Future<void> _print() async {
     final doc = _doc;
     if (doc == null || _sharing) return;
@@ -141,25 +158,37 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final png = await _capturePaper();
-      final image = pw.MemoryImage(png);
       await Printing.layoutPdf(
         name: 'facture-${doc.number}',
-        onLayout: (format) async {
-          final pdf = pw.Document();
-          pdf.addPage(pw.Page(
-            pageFormat: format,
-            build: (_) => pw.Center(
-              child: pw.Image(image, fit: pw.BoxFit.contain),
-            ),
-          ));
-          return pdf.save();
-        },
+        onLayout: (format) => _buildPdf(format),
       );
     } catch (error) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
         content: Text("Impression impossible sur cet appareil. $error"),
+      ));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  /// Save the invoice as a PDF file. On the web this downloads
+  /// `facture-<n°>.pdf`; on the phone it opens the system save/share sheet, so
+  /// the same document can be kept, e-mailed or printed from a computer later.
+  /// Deliberately a PDF, not the WhatsApp image: a file to keep, not to chat.
+  Future<void> _download() async {
+    final doc = _doc;
+    if (doc == null || _sharing) return;
+    setState(() => _sharing = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final bytes = await _buildPdf(PdfPageFormat.a4);
+      await Printing.sharePdf(bytes: bytes, filename: 'facture-${doc.number}.pdf');
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text("Téléchargement impossible sur cet appareil. $error"),
       ));
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -259,6 +288,12 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
       appBar: AppBar(
         title: Text(doc == null ? 'Facture' : 'Facture ${doc.number}'),
         actions: [
+          if (doc != null)
+            IconButton(
+              icon: const Icon(Icons.download_outlined),
+              tooltip: 'Télécharger (PDF)',
+              onPressed: _sharing ? null : _download,
+            ),
           if (doc != null)
             IconButton(
               icon: const Icon(Icons.print_outlined),
