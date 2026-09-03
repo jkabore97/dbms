@@ -48,7 +48,7 @@ void main() {
     await tester.pump();
 
     final context = tester.element(find.byType(Scaffold).first);
-    return Theme.of(context).appBarTheme.backgroundColor!;
+    return Theme.of(context).colorScheme.primary;
   }
 
   group('a business is painted in its own colours', () {
@@ -56,25 +56,25 @@ void main() {
     // initState, and replacing the tree underneath a half-finished one is a
     // race, not an assertion.
     testWidgets('the farm is green', (tester) async {
-      expect(await appBarColourFor(tester, 'farm'), farmPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+      expect(await appBarColourFor(tester, 'farm'), farmPalette.ink);
     });
 
     testWidgets('the church is indigo', (tester) async {
-      expect(await appBarColourFor(tester, 'church'), churchPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+      expect(await appBarColourFor(tester, 'church'), churchPalette.ink);
     });
 
     testWidgets('the shop is amber', (tester) async {
-      expect(await appBarColourFor(tester, 'retail'), retailPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+      expect(await appBarColourFor(tester, 'retail'), retailPalette.ink);
     });
 
     test('and no two of them are the same', () {
       // The whole point: somebody who runs two of these knows which is open
       // before reading a word.
       final heads = {
-        farmPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
-        churchPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
-        retailPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
-        kajPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        farmPalette.ink,
+        churchPalette.ink,
+        retailPalette.ink,
+        kajPalette.ink,
       };
       expect(heads.length, 4);
     });
@@ -84,7 +84,7 @@ void main() {
       // Same tolerance homeScreenFor has always had. A profile added
       // server-side must not be able to brick an APK already installed.
       final unknown = await appBarColourFor(tester, 'quarry');
-      expect(unknown, kajPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+      expect(unknown, kajPalette.ink);
     });
   });
 
