@@ -297,6 +297,11 @@ class _OrderCard extends StatelessWidget {
               Text('Livraison : ${order.address}',
                   style: theme.textTheme.bodySmall),
             ],
+            if ((order.courierName ?? '').isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text('Livreur : ${order.courierName}',
+                  style: theme.textTheme.bodySmall),
+            ],
             if ((order.note ?? '').isNotEmpty) ...[
               const SizedBox(height: 4),
               Text('Note : ${order.note}', style: theme.textTheme.bodySmall),

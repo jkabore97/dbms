@@ -419,6 +419,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_orders.sql
 
+      # Who carries a delivery: registration is open, approval is the
+      # platform's, one job has one courier, only that courier walks it to
+      # the door, and the customer's bell rings at each step of the road.
+      - name: Prove a delivery is carried by exactly the courier it names
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_couriers.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

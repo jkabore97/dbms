@@ -236,6 +236,11 @@ class _OrderCard extends StatelessWidget {
             Text('Livraison : ${order.address}',
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
+          if ((order.courierName ?? '').isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('Livreur : ${order.courierName}',
+                style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+          ],
           if ((order.note ?? '').isNotEmpty) ...[
             const SizedBox(height: 4),
             Text('Note : ${order.note}',

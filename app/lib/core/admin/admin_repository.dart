@@ -131,6 +131,28 @@ class AdminRepository {
   }
 
   // ----------------------------------------------------------------
+  // Couriers (056): the platform decides who carries.
+  // ----------------------------------------------------------------
+
+  Future<List<PlatformCourier>> platformCouriers() async {
+    final rows =
+        await _requireClient().rpc('platform_couriers') as List<dynamic>;
+    return rows
+        .map((r) =>
+            PlatformCourier.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// 'approved', 'suspended' or back to 'pending'. Platform only,
+  /// said by the server.
+  Future<void> decideCourier(String userId, String status) async {
+    await _requireClient().rpc('decide_courier', params: {
+      'p_user_id': userId,
+      'p_status': status,
+    });
+  }
+
+  // ----------------------------------------------------------------
   // Exchange rates (039). Direct table ops: RLS lets members read and only
   // admins write, so there is nothing to wrap. Missing table (a database not
   // yet on 039) reads as "no rates", same posture as the Wave column.
@@ -861,4 +883,30 @@ class FeaturedCandidate {
       featuredUntil: until == null ? null : DateTime.tryParse(until)?.toLocal(),
     );
   }
+}
+
+/// One courier as the platform sees them (056).
+class PlatformCourier {
+  const PlatformCourier({
+    required this.userId,
+    required this.name,
+    required this.status,
+    required this.createdAt,
+    this.phone,
+  });
+
+  final String userId;
+  final String name;
+  final String? phone;
+  final String status;
+  final DateTime createdAt;
+
+  factory PlatformCourier.fromRow(Map<String, dynamic> row) => PlatformCourier(
+        userId: row['user_id'] as String,
+        name: (row['name'] as String?) ?? 'Sans nom',
+        phone: row['phone'] as String?,
+        status: (row['status'] as String?) ?? 'pending',
+        createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
+            DateTime.now(),
+      );
 }
