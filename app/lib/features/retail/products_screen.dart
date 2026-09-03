@@ -515,6 +515,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
           : _plain(widget.product.lowStockAt!));
   late DateTime? _expiresOn = widget.product.expiresOn;
   late bool _isIngredient = widget.product.isIngredient;
+  late bool _isPublished = widget.product.isPublished;
 
   bool _busy = false;
   String? _error;
@@ -548,6 +549,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         lowStockAt: _parse(_low),
         expiresOn: _expiresOn,
         isIngredient: _isIngredient,
+        isPublished: _isPublished,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -696,6 +698,19 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               title: const Text('Ingrédient de production'),
               subtitle: const Text(
                   'Caché de la vente, proposé en premier en production.'),
+            ),
+            // The shop window: this article, visible to anyone with the
+            // vitrine link — once the administrator has opened the vitrine in
+            // the business settings. Off by default; the shop picks each one.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _isPublished,
+              onChanged:
+                  _busy ? null : (v) => setState(() => _isPublished = v),
+              title: const Text('Afficher sur la vitrine en ligne'),
+              subtitle: const Text(
+                  'Visible du public, avec sa photo et son prix, si la '
+                  'vitrine de la boutique est ouverte.'),
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),

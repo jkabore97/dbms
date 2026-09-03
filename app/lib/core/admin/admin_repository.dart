@@ -590,6 +590,40 @@ class AdminRepository {
         params: {'p_org_id': orgId, 'p_suspend': suspend});
   }
 
+  /// The vitrine switch and its blurb (052). A database that has not run 052
+  /// yet reads as "closed" — the same posture as the Wave column, because the
+  /// app runs one migration ahead of the database by design.
+  Future<({bool enabled, String? blurb})> storefront(String orgId) async {
+    final client = _requireClient();
+    try {
+      final row = await client
+          .from('orgs')
+          .select('storefront_enabled, storefront_blurb')
+          .eq('id', orgId)
+          .maybeSingle();
+      return (
+        enabled: row?['storefront_enabled'] == true,
+        blurb: row?['storefront_blurb'] as String?,
+      );
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') return (enabled: false, blurb: null);
+      rethrow;
+    }
+  }
+
+  /// Opens or closes the vitrine and sets its blurb. Admin-only, enforced by
+  /// set_storefront(). The blurb is always sent — an empty string clears it —
+  /// so the field on screen is exactly what the street reads.
+  Future<void> setStorefront(String orgId,
+      {required bool enabled, String? blurb}) async {
+    final client = _requireClient();
+    await client.rpc('set_storefront', params: {
+      'p_org_id': orgId,
+      'p_enabled': enabled,
+      'p_blurb': blurb ?? '',
+    });
+  }
+
   /// Destroys a business and everything in it. Permanent.
   ///
   /// [confirmName] must equal the business's own name; the server checks it

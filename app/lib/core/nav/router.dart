@@ -43,6 +43,8 @@ import '../../features/farm/livestock_screen.dart';
 import '../../features/farm/stock_screen.dart';
 import '../../features/home/business_shell.dart';
 import '../../features/invoicing/billing_details_screen.dart';
+import '../../features/storefront/storefront_screen.dart';
+import '../storefront/storefront_repository.dart';
 import '../../features/invoicing/invoice_document_screen.dart';
 import '../../features/invoicing/invoices_screen.dart';
 import '../../features/invoicing/new_invoice_screen.dart';
@@ -108,6 +110,9 @@ abstract final class Routes {
 
   /// A business, and everything inside it.
   static String org(String id) => '/o/$id';
+
+  /// A shop's public vitrine — reachable signed out, by anyone with the link.
+  static String storefront(String slug) => '/s/$slug';
   static String inside(String id, String rest) => '/o/$id/$rest';
 }
 
@@ -136,7 +141,11 @@ GoRouter buildRouter(SessionController session) {
     if (at(Routes.language) ||
         at(Routes.faq) ||
         at(Routes.privacy) ||
-        at(Routes.terms)) {
+        at(Routes.terms) ||
+        // A shop's vitrine is for the street: the person opening it is a
+        // shopper with no account, sent the link on WhatsApp, and must never
+        // be bounced to a sign-in page for looking in a shop window.
+        here.startsWith('/s/')) {
       return null;
     }
 
@@ -257,6 +266,21 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(path: Routes.privacy, builder: (_, __) => const PrivacyScreen()),
       GoRoute(path: Routes.terms, builder: (_, __) => const TermsScreen()),
       GoRoute(path: Routes.faq, builder: (_, __) => const FaqScreen()),
+
+      // A shop's public vitrine. Top-level and never redirected — see the
+      // redirect above — because the person opening it is a shopper with no
+      // account, sent the link on WhatsApp. Anonymous reads, by design (052).
+      GoRoute(
+        path: '/s/:slug',
+        builder: (context, state) {
+          final scope = AppScope.of(context);
+          return StorefrontScreen(
+            slug: state.pathParameters['slug'] ?? '',
+            storefront: StorefrontRepository(scope.auth.client),
+            capture: scope.capture,
+          );
+        },
+      ),
 
       GoRoute(
         path: Routes.signIn,

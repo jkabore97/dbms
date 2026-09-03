@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -65,6 +66,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   late bool _suspended = widget.suspended;
   bool _togglingSuspend = false;
 
+  bool _storefrontEnabled = false;
+  final _blurbController = TextEditingController();
+
+  /// The vitrine's address: on the web, this very site; elsewhere, the site
+  /// the shop is known at. What the shop pastes into a WhatsApp status.
+  String get _storefrontUrl {
+    final origin = Uri.base.scheme.startsWith('http')
+        ? Uri.base.origin
+        : 'https://dbms.kabore-boss.workers.dev';
+    return '$origin/s/$_slug';
+  }
+
   static const _currencies = ['XOF', 'XAF', 'EUR', 'USD', 'GHS', 'NGN'];
 
   @override
@@ -77,6 +90,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   void dispose() {
     _nameController.dispose();
     _waveController.dispose();
+    _blurbController.dispose();
     super.dispose();
   }
 
@@ -89,6 +103,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final org = await widget.admin.fetchOrg(widget.orgId);
       final wave = await widget.admin.waveMerchant(widget.orgId);
       final rates = await widget.admin.currencyRates(widget.orgId);
+      final storefront = await widget.admin.storefront(widget.orgId);
       if (!mounted) return;
       setState(() {
         _nameController.text = (org['name'] as String?) ?? '';
@@ -99,6 +114,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _slug = (org['slug'] as String?) ?? '';
         _profile = (org['profile'] as String?) ?? 'generic';
         _theme = org['theme'] as String?;
+        _storefrontEnabled = storefront.enabled;
+        _blurbController.text = storefront.blurb ?? '';
         _loading = false;
       });
     } catch (error) {
@@ -130,6 +147,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       );
       final wave = _waveController.text.trim();
       await widget.admin.setWaveMerchant(widget.orgId, wave.isEmpty ? null : wave);
+      await widget.admin.setStorefront(
+        widget.orgId,
+        enabled: _storefrontEnabled,
+        blurb: _blurbController.text.trim(),
+      );
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
@@ -340,6 +362,37 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   label: paletteNamed(_theme)?.label ?? 'Couleur par défaut',
                   onTap: _saving ? null : _openColours,
                 ),
+                const SizedBox(height: 24),
+                Text('Vitrine en ligne', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 4),
+                Text(
+                  'Une page publique de la boutique, avec les articles que vous '
+                  "choisissez d'afficher — photo et prix — à partager sur "
+                  "WhatsApp. Rien ne s'y vend : le client vous contacte.",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _storefrontEnabled,
+                  onChanged: _saving
+                      ? null
+                      : (v) => setState(() => _storefrontEnabled = v),
+                  title: const Text('Ouvrir la vitrine'),
+                ),
+                if (_storefrontEnabled) ...[
+                  TextField(
+                    controller: _blurbController,
+                    enabled: !_saving,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Quelques mots sur la boutique (facultatif)',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _LinkRow(url: _storefrontUrl),
+                ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -489,6 +542,47 @@ class _ColourRow extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The vitrine's address with a copy button — what the shop pastes into a
+/// WhatsApp status. Selectable too, for the person who would rather long-press.
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.link, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SelectableText(url, style: theme.textTheme.bodySmall),
+          ),
+          IconButton(
+            tooltip: 'Copier le lien',
+            icon: const Icon(Icons.copy_outlined, size: 18),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: url));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Lien copié')),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
