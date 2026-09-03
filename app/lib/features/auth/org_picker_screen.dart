@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/nav/router.dart';
 
 import '../../core/auth/models.dart';
 import '../../l10n/strings.dart';
@@ -65,6 +68,11 @@ class OrgPickerScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(title ?? Strings.of(context).pickBusiness),
         actions: [
+          IconButton(
+            onPressed: () => context.go(Routes.directory),
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Les vitrines',
+          ),
           if (onBusinesses != null)
             IconButton(
               onPressed: onBusinesses,
