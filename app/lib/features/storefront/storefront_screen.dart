@@ -8,6 +8,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/storefront/storefront_repository.dart';
+import 'shop_style.dart';
 
 /// A shop's window, for the street.
 ///
@@ -17,6 +18,12 @@ import '../../core/storefront/storefront_repository.dart';
 /// one way to act on it: contact the shop. Nothing is bought here. Phase one
 /// of the vitrine is a window, not a till; the till comes when shoppers are
 /// actually pulling on the door.
+///
+/// The look is the settled one for selling goods online (see [ShopStyle]):
+/// white page, a quiet header, the shop's name large over a warm band, then
+/// the photographs, each on its own off-white square with the name and the
+/// price in small type underneath. The photograph is the product; nothing
+/// else on the page is allowed to compete with it.
 class StorefrontScreen extends StatefulWidget {
   const StorefrontScreen({
     super.key,
@@ -61,8 +68,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     }
     try {
       final shop = await widget.storefront.shop(widget.slug);
-      final items =
-          shop == null ? const <PublicItem>[] : await widget.storefront.items(widget.slug);
+      final items = shop == null
+          ? const <PublicItem>[]
+          : await widget.storefront.items(widget.slug);
       if (!mounted) return;
       setState(() {
         _shop = shop;
@@ -84,42 +92,40 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  void _directory() => context.go(Routes.directory);
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final shop = _shop;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(shop?.name ?? 'Vitrine'),
-        actions: [
-          IconButton(
-            tooltip: 'Toutes les vitrines',
-            icon: const Icon(Icons.storefront_outlined),
-            onPressed: () => context.go(Routes.directory),
-          ),
-        ],
+    return ShopPage(
+      title: shop?.name ?? 'Vitrine',
+      leading: IconButton(
+        tooltip: 'Toutes les vitrines',
+        icon: const Icon(Icons.arrow_back),
+        onPressed: _directory,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _Notice(
-                  icon: Icons.cloud_off_outlined,
+              ? ShopNotice(
                   text: _error!,
-                  action: TextButton(
+                  action: OutlinedButton(
                       onPressed: _load, child: const Text('Réessayer')),
                 )
               : shop == null
-                  ? const _Notice(
-                      icon: Icons.storefront_outlined,
+                  ? ShopNotice(
                       text: "Cette vitrine n'existe pas, ou n'est pas ouverte.",
+                      action: OutlinedButton(
+                          onPressed: _directory,
+                          child: const Text('Voir les autres vitrines')),
                     )
                   : _Window(
                       shop: shop,
                       items: _items,
                       capture: widget.capture,
                       onOpen: _open,
-                      theme: theme,
+                      onDirectory: _directory,
                     ),
     );
   }
@@ -131,14 +137,14 @@ class _Window extends StatelessWidget {
     required this.items,
     required this.capture,
     required this.onOpen,
-    required this.theme,
+    required this.onDirectory,
   });
 
   final PublicShop shop;
   final List<PublicItem> items;
   final CaptureRepository capture;
   final Future<void> Function(String url) onOpen;
-  final ThemeData theme;
+  final VoidCallback onDirectory;
 
   @override
   Widget build(BuildContext context) {
@@ -147,80 +153,112 @@ class _Window extends StatelessWidget {
     final phone = (shop.phone ?? '').trim();
     final address = (shop.address ?? '').trim();
     final blurb = (shop.blurb ?? '').trim();
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = ShopStyle.columnsFor(width);
+    final wide = width >= 560;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: EdgeInsets.zero,
       children: [
-        // Who this is and how to reach them — the one action of the window.
-        Text(shop.name, style: theme.textTheme.headlineSmall),
-        if (blurb.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(blurb, style: theme.textTheme.bodyLarge),
-        ],
-        if (address.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Row(
+        // The band: who this is, in a word or two, and the one thing to do.
+        ColoredBox(
+          color: ShopStyle.stone,
+          child: ShopWidth(
+            padding: EdgeInsets.symmetric(
+                horizontal: 20, vertical: wide ? 56 : 36),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shop.name,
+                  style: TextStyle(
+                    fontSize: wide ? 40 : 30,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.6,
+                    color: ShopStyle.ink,
+                  ),
+                ),
+                if (blurb.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Text(blurb,
+                        style: const TextStyle(
+                            fontSize: 17,
+                            height: 1.45,
+                            color: ShopStyle.ink)),
+                  ),
+                ],
+                if (address.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(address,
+                      style: const TextStyle(
+                          fontSize: 14, color: ShopStyle.mist)),
+                ],
+                if (whatsapp != null || phone.isNotEmpty) ...[
+                  const SizedBox(height: 22),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (whatsapp != null)
+                        FilledButton(
+                          onPressed: () => onOpen(whatsapp),
+                          child: const Text('Écrire sur WhatsApp'),
+                        ),
+                      if (phone.isNotEmpty)
+                        OutlinedButton(
+                          onPressed: () => onOpen('tel:$phone'),
+                          child: const Text('Appeler'),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+
+        // The goods.
+        ShopWidth(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.place_outlined,
-                  size: 18, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(address,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 32),
+              ShopSectionLabel(
+                'Les articles',
+                note: items.isEmpty
+                    ? null
+                    : '${items.length} article${items.length > 1 ? 's' : ''}',
               ),
-            ],
-          ),
-        ],
-        if (whatsapp != null || phone.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: [
-              if (whatsapp != null)
-                FilledButton.icon(
-                  onPressed: () => onOpen(whatsapp),
-                  icon: const Icon(Icons.chat_outlined),
-                  label: const Text('WhatsApp'),
+              const SizedBox(height: 18),
+              if (items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Text('Aucun article affiché pour le moment.',
+                      style: TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: wide ? 24 : 14,
+                    mainAxisSpacing: wide ? 36 : 26,
+                    // Room under the square for a two-line name, the price
+                    // and an "Épuisé" — measured, not guessed: 0.74 clipped
+                    // the last line on a 390px phone.
+                    childAspectRatio: wide ? 0.70 : 0.62,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, i) =>
+                      _ItemTile(item: items[i], money: money, capture: capture),
                 ),
-              if (phone.isNotEmpty)
-                OutlinedButton.icon(
-                  onPressed: () => onOpen('tel:$phone'),
-                  icon: const Icon(Icons.call_outlined),
-                  label: const Text('Appeler'),
-                ),
+              ShopFooter(onDirectory: onDirectory),
             ],
-          ),
-        ],
-        const SizedBox(height: 22),
-
-        // The articles.
-        if (items.isEmpty)
-          Text('Aucun article affiché pour le moment.',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant))
-        else
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.76,
-            children: [
-              for (final item in items)
-                _ItemCard(item: item, money: money, capture: capture),
-            ],
-          ),
-
-        const SizedBox(height: 28),
-        Center(
-          child: Text(
-            'Vitrine propulsée par Kaj',
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
         ),
       ],
@@ -228,8 +266,12 @@ class _Window extends StatelessWidget {
   }
 }
 
-class _ItemCard extends StatelessWidget {
-  const _ItemCard({
+/// One article: the photograph on its square, then the name and the price
+/// in small type. No frame, no shadow — the square is the frame. Out of
+/// stock fades the picture and says so under the price, rather than
+/// shouting over it in red.
+class _ItemTile extends StatelessWidget {
+  const _ItemTile({
     required this.item,
     required this.money,
     required this.capture,
@@ -241,73 +283,55 @@ class _ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _Photo(photoKey: item.photoKey, capture: capture),
-                if (!item.inStock)
-                  Positioned(
-                    left: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Épuisé',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: ColoredBox(
+              color: ShopStyle.stone,
+              child: Opacity(
+                opacity: item.inStock ? 1 : 0.45,
+                child: _Photo(photoKey: item.photoKey, capture: capture),
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  money.format(item.price),
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          item.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 1.25,
+              color: ShopStyle.ink),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          money.format(item.price),
+          style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
+        ),
+        if (!item.inStock)
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Text('Épuisé',
+                style: TextStyle(
+                    fontSize: 12,
+                    letterSpacing: 0.6,
+                    fontWeight: FontWeight.w600,
+                    color: ShopStyle.mist)),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
 
 /// The article's photo, fetched once through the public read and held for
-/// the life of the card — a rebuild must not refetch a picture on a slow link.
+/// the life of the tile — a rebuild must not refetch a picture on a slow link.
 class _Photo extends StatefulWidget {
   const _Photo({required this.photoKey, required this.capture});
 
@@ -325,13 +349,8 @@ class _PhotoState extends State<_Photo> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final placeholder = ColoredBox(
-      color: theme.colorScheme.surfaceContainerHighest,
-      child: Center(
-        child: Icon(Icons.image_outlined,
-            size: 34, color: theme.colorScheme.onSurfaceVariant),
-      ),
+    const placeholder = Center(
+      child: Icon(Icons.image_outlined, size: 34, color: ShopStyle.line),
     );
     final future = _bytes;
     if (future == null) return placeholder;
@@ -342,35 +361,6 @@ class _PhotoState extends State<_Photo> {
         if (bytes == null) return placeholder;
         return Image.memory(bytes, fit: BoxFit.cover);
       },
-    );
-  }
-}
-
-class _Notice extends StatelessWidget {
-  const _Notice({required this.icon, required this.text, this.action});
-
-  final IconData icon;
-  final String text;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 44, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 12),
-            Text(text,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge),
-            if (action != null) ...[const SizedBox(height: 8), action!],
-          ],
-        ),
-      ),
     );
   }
 }
