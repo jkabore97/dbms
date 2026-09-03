@@ -46,6 +46,56 @@ void main() {
     });
   });
 
+  group('how an order is paid (057)', () {
+    CustomerOrder wave(String status, {String? paidAt, String? shopWave}) =>
+        CustomerOrder.fromRow({
+          'id': 'o1',
+          'shop_name': 'A',
+          'shop_slug': 'a',
+          'status': status,
+          'fulfilment': 'delivery',
+          'payment_method': 'wave',
+          'paid_at': paidAt,
+          'shop_wave': shopWave,
+          'total': 17500,
+          'currency': 'XOF',
+          'created_at': '2026-09-03T10:00:00Z',
+        });
+
+    test('a Wave order can be paid once accepted, until confirmed', () {
+      const link = 'https://pay.wave.com/m/esperance';
+      expect(wave('pending', shopWave: link).canPayNow, isFalse,
+          reason: 'paying before the shop says yes is money in limbo');
+      expect(wave('accepted', shopWave: link).canPayNow, isTrue);
+      expect(wave('ready', shopWave: link).canPayNow, isTrue);
+      expect(wave('in_transit', shopWave: link).canPayNow, isTrue);
+      expect(
+          wave('accepted', shopWave: link, paidAt: '2026-09-03T11:00:00Z')
+              .canPayNow,
+          isFalse,
+          reason: 'confirmed paid asks for no more money');
+      expect(wave('accepted').canPayNow, isFalse,
+          reason: 'no link, no button');
+    });
+
+    test('cash is the default and labels read in French', () {
+      final o = CustomerOrder.fromRow({
+        'id': 'o2',
+        'shop_name': 'A',
+        'shop_slug': 'a',
+        'status': 'pending',
+        'fulfilment': 'pickup',
+        'total': 500,
+        'currency': 'XOF',
+        'created_at': '2026-09-03T10:00:00Z',
+      });
+      expect(o.paymentMethod, 'cash');
+      expect(o.isPaid, isFalse);
+      expect(paymentLabel('cash'), 'Espèces');
+      expect(paymentLabel('wave'), 'Wave');
+    });
+  });
+
   group('a row becomes an order', () {
     test('the customer side, lines included', () {
       final o = CustomerOrder.fromRow({

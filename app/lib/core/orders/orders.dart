@@ -71,6 +71,10 @@ String orderStatusLabel(String status) => switch (status) {
 String fulfilmentLabel(String fulfilment) =>
     fulfilment == 'delivery' ? 'Livraison' : 'Retrait en boutique';
 
+/// How the order is paid (057).
+String paymentLabel(String method) =>
+    method == 'wave' ? 'Wave' : 'Espèces';
+
 /// An order as its customer sees it.
 class CustomerOrder {
   const CustomerOrder({
@@ -87,6 +91,9 @@ class CustomerOrder {
     this.address,
     this.phone,
     this.courierName,
+    this.paymentMethod = 'cash',
+    this.paidAt,
+    this.shopWave,
   });
 
   final String id;
@@ -105,7 +112,23 @@ class CustomerOrder {
   /// Who carries it, once a livreur took the course (056).
   final String? courierName;
 
+  /// 'cash' or 'wave' (057); [paidAt] is set only by the shop's
+  /// confirmation, and [shopWave] is the link to pay a Wave order with.
+  final String paymentMethod;
+  final DateTime? paidAt;
+  final String? shopWave;
+
   bool get isOpen => orderIsOpen(status);
+  bool get isPaid => paidAt != null;
+
+  /// The customer can pay now: a Wave order the shop has accepted (paying
+  /// before the shop says yes would be money in limbo) and not yet
+  /// confirmed as paid.
+  bool get canPayNow =>
+      paymentMethod == 'wave' &&
+      !isPaid &&
+      shopWave != null &&
+      (status == 'accepted' || status == 'ready' || status == 'in_transit');
 
   factory CustomerOrder.fromRow(Map<String, dynamic> row) => CustomerOrder(
         id: row['id'] as String,
@@ -121,6 +144,11 @@ class CustomerOrder {
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
             DateTime.now(),
         courierName: row['courier_name'] as String?,
+        paymentMethod: (row['payment_method'] as String?) ?? 'cash',
+        paidAt: row['paid_at'] == null
+            ? null
+            : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
+        shopWave: row['shop_wave'] as String?,
         lines: _lines(row['lines']),
       );
 }
@@ -140,6 +168,8 @@ class ShopOrder {
     this.note,
     this.address,
     this.courierName,
+    this.paymentMethod = 'cash',
+    this.paidAt,
   });
 
   final String id;
@@ -157,7 +187,12 @@ class ShopOrder {
   /// Who carries it, once a livreur took the course (056).
   final String? courierName;
 
+  /// 'cash' or 'wave' (057); [paidAt] is the shop's own confirmation.
+  final String paymentMethod;
+  final DateTime? paidAt;
+
   bool get isOpen => orderIsOpen(status);
+  bool get isPaid => paidAt != null;
 
   /// What the shop may do next, in the order the buttons are shown.
   List<String> get nextStatuses => switch (status) {
@@ -186,6 +221,10 @@ class ShopOrder {
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
             DateTime.now(),
         courierName: row['courier_name'] as String?,
+        paymentMethod: (row['payment_method'] as String?) ?? 'cash',
+        paidAt: row['paid_at'] == null
+            ? null
+            : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
         lines: _lines(row['lines']),
       );
 }

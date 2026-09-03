@@ -58,6 +58,15 @@ class RetailRepository {
     });
   }
 
+  /// The shop's word that the money arrived (057) — or that a tap was a
+  /// mistake. Only the shop's writers may say either.
+  Future<void> setOrderPaid(String orderId, bool paid) async {
+    await _requireClient().rpc('set_order_paid', params: {
+      'p_order_id': orderId,
+      'p_paid': paid,
+    });
+  }
+
   // ----------------------------------------------------------------
   // What is on the shelves
   // ----------------------------------------------------------------

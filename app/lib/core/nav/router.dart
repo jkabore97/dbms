@@ -248,7 +248,10 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.applications)) {
           return null;
         }
-        return Routes.picker;
+        // The street is home for everyone now, member or not (the owner's
+        // words: signed in, you are still on the main page). The business
+        // is one tap away behind the boutique button in the corner.
+        return Routes.directory;
 
       case SessionPhase.ready:
         // Same as `picking`: honour the address a gate interrupted, and let
@@ -271,9 +274,10 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.applications)) {
           return null;
         }
-        // `/`, the splash, or a stale sign-in URL: go to the open business.
-        final open = session.lastOrgId;
-        return open == null ? Routes.picker : Routes.org(open);
+        // `/`, the splash, or a stale sign-in URL: the street, like
+        // everyone else. The remembered business stays one tap away — the
+        // boutique button in the corner opens it directly.
+        return Routes.directory;
     }
   }
 

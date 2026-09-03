@@ -58,6 +58,7 @@ class StorefrontRepository {
     String? note,
     String? address,
     String? phone,
+    String payment = 'cash',
   }) async {
     final id = await _requireClient().rpc('place_order', params: {
       'p_slug': slug,
@@ -69,6 +70,7 @@ class StorefrontRepository {
       'p_note': note,
       'p_address': address,
       'p_phone': phone,
+      'p_payment': payment,
     });
     return id as String;
   }
@@ -126,6 +128,7 @@ class PublicShop {
     this.currency = 'XOF',
     this.lat,
     this.lng,
+    this.waveMerchant,
   });
 
   final String orgId;
@@ -142,6 +145,9 @@ class PublicShop {
   final double? lat;
   final double? lng;
 
+  /// The shop's Wave merchant link (057), when it takes Wave.
+  final String? waveMerchant;
+
   bool get hasLocation => lat != null && lng != null;
 
   factory PublicShop.fromRow(Map<String, dynamic> row) => PublicShop(
@@ -156,6 +162,7 @@ class PublicShop {
         currency: (row['currency'] as String?) ?? 'XOF',
         lat: _num(row['lat']),
         lng: _num(row['lng']),
+        waveMerchant: row['wave_merchant'] as String?,
       );
 }
 

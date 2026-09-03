@@ -82,6 +82,8 @@ class DeliveryJob {
     this.phone,
     this.dropAddress,
     this.status,
+    this.paymentMethod = 'cash',
+    this.paidAt,
   });
 
   final String orderId;
@@ -95,11 +97,16 @@ class DeliveryJob {
 
   /// Null on the open board (everything there is 'ready' by definition).
   final String? status;
+
+  /// 'cash' or 'wave' (057). [paidAt] set means nothing to collect.
+  final String paymentMethod;
+  final DateTime? paidAt;
   final double total;
   final String currency;
   final DateTime createdAt;
 
   bool get shopHasPin => shopLat != null && shopLng != null;
+  bool get isPaid => paidAt != null;
 
   /// Still needs the courier: taken but not collected, or on the road.
   bool get isRunning => status == 'ready' || status == 'in_transit';
@@ -114,6 +121,10 @@ class DeliveryJob {
         phone: row['phone'] as String?,
         dropAddress: row['drop_address'] as String?,
         status: row['status'] as String?,
+        paymentMethod: (row['payment_method'] as String?) ?? 'cash',
+        paidAt: row['paid_at'] == null
+            ? null
+            : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
         total: _num(row['total']) ?? 0,
         currency: (row['currency'] as String?) ?? 'XOF',
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??

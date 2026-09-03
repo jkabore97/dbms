@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
@@ -57,6 +58,32 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// Opens the shop's own Wave link. The app cannot see the money move —
+  /// the shop confirms in its till and the order then shows "Payé".
+  Future<void> _payWithWave(CustomerOrder order) async {
+    final raw = order.shopWave;
+    if (raw == null) return;
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !(uri.isScheme('https') || uri.isScheme('http'))) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Payer avec Wave'),
+          content: Text('Dans votre application Wave, envoyez '
+              '${moneyFormat(order.currency).format(order.total)} '
+              'au marchand : $raw'),
+          actions: [
+            FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Compris')),
+          ],
+        ),
+      );
+      return;
+    }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _cancel(CustomerOrder order) async {
@@ -137,6 +164,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                     onCancel: o.status == 'pending'
                                         ? () => _cancel(o)
                                         : null,
+                                    onPay: o.canPayNow
+                                        ? () => _payWithWave(o)
+                                        : null,
                                   ),
                                 const SizedBox(height: 28),
                               ],
@@ -158,11 +188,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order, required this.busy, this.onCancel});
+  const _OrderCard({
+    required this.order,
+    required this.busy,
+    this.onCancel,
+    this.onPay,
+  });
 
   final CustomerOrder order;
   final bool busy;
   final VoidCallback? onCancel;
+  final VoidCallback? onPay;
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +231,9 @@ class _OrderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 2),
-          Text('$when · ${fulfilmentLabel(order.fulfilment)}',
+          Text(
+              '$when · ${fulfilmentLabel(order.fulfilment)} · '
+              '${order.isPaid ? 'Payé' : paymentLabel(order.paymentMethod)}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           const SizedBox(height: 12),
           for (final l in order.lines)
@@ -245,6 +283,15 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text('Note : ${order.note}',
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+          ],
+          if (onPay != null) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: busy ? null : onPay,
+              icon: const Icon(Icons.phone_iphone_outlined, size: 18),
+              label: Text(
+                  'Payer avec Wave · ${moneyFormat(order.currency).format(order.total)}'),
+            ),
           ],
           if (onCancel != null) ...[
             const SizedBox(height: 12),

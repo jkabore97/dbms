@@ -427,6 +427,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_couriers.sql
 
+      # How an order is paid: Wave only where the shop takes it, only the
+      # shop confirms money arrived (and can unsay a mis-tap), and the
+      # courier collects nothing that is already paid.
+      - name: Prove a payment is the shop's word, not the customer's claim
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_order_payments.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

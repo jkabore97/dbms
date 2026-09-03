@@ -18,7 +18,6 @@ import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
 import 'package:kaj_app/core/theme/kaj_theme.dart';
-import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The M1 flow, exercised the way it will actually be used: on a phone with no
@@ -194,13 +193,18 @@ void main() {
 
     expect(find.text('Les vitrines'), findsOneWidget);
     expect(find.text('Se connecter'), findsNothing);
+
+    // The three doors the owner asked for: the boutique (to have one),
+    // the livraison, and the person.
+    expect(find.byTooltip('Ouvrir ma boutique'), findsOneWidget);
+    expect(find.byTooltip('Espace livreur'), findsOneWidget);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.person_outline));
     await tester.pumpAndSettle();
-    expect(find.text('Devenir vendeur'), findsOneWidget);
-    expect(find.text('Rejoindre une entreprise'), findsOneWidget);
-    expect(find.text('Mes entreprises'), findsNothing);
+    expect(find.text('Mon profil'), findsOneWidget);
+    expect(find.text('Mes commandes'), findsOneWidget);
+    expect(find.text('Se déconnecter'), findsOneWidget);
   });
 
   testWidgets('a known device with a stale token asks for the code',
@@ -236,6 +240,10 @@ void main() {
     await pumpApp(tester);
 
     await enterPin(tester, '1379');
+    // Home is the street; the boutique button opens the only business
+    // directly, with no picker in between.
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
 
     // No picker: straight to the church module, named after the org the
     // membership resolved to — not after anything compiled into the build.
@@ -252,6 +260,8 @@ void main() {
     await pumpApp(tester);
 
     await enterPin(tester, '1379');
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
 
     // Same binary, same PIN, different business: the farm does not land in a
     // screen built for counting offerings.
@@ -268,8 +278,8 @@ void main() {
     expect(find.text('Dépense'), findsNothing);
   });
 
-  testWidgets('two businesses show a picker, and picking one opens it',
-      (tester) async {
+  testWidgets('two businesses: the street first, then the boutique button '
+      'offers the picker', (tester) async {
     await seedDevice(tester, orgs: const [
       OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
       OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
@@ -278,6 +288,12 @@ void main() {
 
     await enterPin(tester, '1379');
 
+    // Signed in, still on the main page — the owner's words. The business
+    // is behind the boutique button in the corner.
+    expect(find.text('Les vitrines'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
     expect(find.text('Choisissez une activité'), findsOneWidget);
     expect(find.text('Grace Chapel'), findsOneWidget);
     expect(find.text('Ferme Ignace'), findsOneWidget);
@@ -297,11 +313,9 @@ void main() {
     await enterPin(tester, '1379');
 
     // Home is the street now; the waiting room is one tap behind the
-    // account corner, for the employee holding an invitation code.
+    // boutique button, for the employee holding an invitation code.
     expect(find.text('Les vitrines'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.person_outline));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Rejoindre une entreprise'));
+    await tester.tap(find.byTooltip('Ouvrir ma boutique'));
     await flush(tester);
 
     expect(find.text('Votre compte est prêt'), findsOneWidget);
@@ -320,20 +334,19 @@ void main() {
     ]);
     await pumpApp(tester);
     await enterPin(tester, '1379');
-    expect(find.text('Choisissez une activité'), findsOneWidget);
+    expect(find.text('Les vitrines'), findsOneWidget);
 
-    // The router object outlives the screens it swaps, so it stays valid
-    // across navigations where a captured element would be deactivated.
-    final router = GoRouter.of(tester.element(find.byType(OrgPickerScreen)));
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final router = app.routerConfig as GoRouter;
 
     for (final route in const ['/aide', '/confidentialite', '/conditions']) {
       router.go(route);
       await flush(tester);
-      // The picker is gone and the static page is showing — the redirect let
-      // it through rather than sending the reader back to a business.
-      expect(find.text('Choisissez une activité'), findsNothing,
-          reason: 'redirect bounced $route back to the picker/business');
-      router.go('/entreprises');
+      // The street is gone and the static page is showing — the redirect
+      // let it through rather than sending the reader back home.
+      expect(find.text('Les vitrines'), findsNothing,
+          reason: 'redirect bounced $route back home');
+      router.go('/vitrines');
       await flush(tester);
     }
   });
@@ -486,8 +499,11 @@ void main() {
     // lives in device_prefs, like the language, and a reload walks straight
     // back into it.
 
-    testWidgets('several businesses, but the remembered one opens directly',
+    testWidgets('the remembered business is one tap, not a picker',
         (tester) async {
+      // The root now lands on the street for everyone; what the memory buys
+      // is that the boutique button opens the remembered business directly
+      // instead of asking again. Deep URLs still restore exactly.
       await seedDevice(tester, orgs: const [
         OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
         OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
@@ -496,8 +512,12 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
+      expect(find.text('Les vitrines'), findsOneWidget);
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester);
+
       expect(find.text('Récolte'), findsOneWidget,
-          reason: 'the reload forgot which business was open');
+          reason: 'the boutique button forgot which business was open');
       expect(find.text('Choisissez une activité'), findsNothing);
     });
 
@@ -513,6 +533,9 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
+      expect(find.text('Les vitrines'), findsOneWidget);
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester);
       expect(find.text('Choisissez une activité'), findsOneWidget);
     });
   });
@@ -531,6 +554,8 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester);
       expect(find.text('Choisissez une activité'), findsOneWidget);
       await tester.tap(find.text('Ferme Ignace'));
       await flush(tester);
@@ -545,9 +570,9 @@ void main() {
       expect(find.text('Récolte'), findsNothing);
     });
 
-    testWidgets('the picker is the first page, so back cannot escape it',
+    testWidgets('the street is the first page, so back cannot escape it',
         (tester) async {
-      // A person who has just chosen has nowhere further back to go inside
+      // A person who has just arrived has nowhere further back to go inside
       // the app. What must not happen is a blank screen or a half-built one.
       await seedDevice(tester, orgs: const [
         OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
@@ -558,7 +583,7 @@ void main() {
 
       await pressBack(tester);
 
-      expect(find.text('Choisissez une activité'), findsOneWidget);
+      expect(find.text('Les vitrines'), findsOneWidget);
     });
 
     testWidgets('a business can be reopened after going back', (tester) async {
@@ -572,6 +597,8 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester);
       await tester.tap(find.text('Ferme Ignace'));
       await flush(tester);
       await pressBack(tester);
@@ -597,10 +624,14 @@ void main() {
       ]);
       await pumpApp(tester);
       await enterPin(tester, '1379');
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester, rounds: 12);
       expect(find.text('Recette'), findsOneWidget);
 
       await pressBack(tester);
 
+      // The shell swallows the pop: the only business has no picker behind
+      // it, and back must not empty the screen.
       expect(find.text('Recette'), findsOneWidget,
           reason: 'back emptied the only business this person has');
     });
@@ -626,6 +657,8 @@ void main() {
       ]);
       await pumpApp(tester);
       await enterPin(tester, '1379');
+      await tester.tap(find.byTooltip('Ma boutique'));
+      await flush(tester);
       return GoRouter.of(tester.element(find.byType(Scaffold).first));
     }
 
