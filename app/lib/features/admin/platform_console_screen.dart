@@ -293,6 +293,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         title: const Text('Console'),
         actions: [
           IconButton(
+            onPressed: () => context.go(Routes.directory),
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Les vitrines',
+          ),
+          IconButton(
             onPressed: () => context.push(Routes.consolePeople),
             icon: const Icon(Icons.people_outline),
             tooltip: 'Personnes',

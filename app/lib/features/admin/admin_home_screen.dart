@@ -45,7 +45,16 @@ class AdminHomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).administration)),
+      appBar: AppBar(
+        title: Text(Strings.of(context).administration),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Les vitrines',
+            onPressed: () => context.go(Routes.directory),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

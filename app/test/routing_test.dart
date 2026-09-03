@@ -421,6 +421,29 @@ void main() {
         findsNothing);
   });
 
+  testWidgets('the picker offers a deliberate door back to the street',
+      (tester) async {
+    // The street must never catch a business user falling backwards — but a
+    // button that *goes* there is the owner's ask, and it must go both ways.
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+    ]);
+    await pumpApp(tester);
+    await enterPin(tester, '1379');
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
+    expect(find.text('Choisissez une activité'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Les vitrines'));
+    await flush(tester);
+    expect(find.text('Les vitrines'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
+    expect(find.text('Choisissez une activité'), findsOneWidget);
+  });
+
   group('a real reload boots at the address in the bar', () {
     // The in-app go() below the other groups is a shortcut; a browser
     // refresh is a COLD BOOT with the deep URL as the platform's default

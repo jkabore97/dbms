@@ -210,6 +210,13 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
+          // The one door out to the public side, asked for by name: the
+          // street, deliberately — never by falling backwards into it.
+          IconButton(
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Les vitrines',
+            onPressed: () => context.go(Routes.directory),
+          ),
           // The bar carries only what a till reaches for many times a day.
           // Analyses, the carnet and the personnel are consulted, not worked
           // in, so they live under Compte instead of crowding this row.
