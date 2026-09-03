@@ -37,7 +37,7 @@ alter table orders add column if not exists paid_at timestamptz;
 -- The 055 signature must go first: two place_order overloads whose extra
 -- arguments all have defaults would make every short call ambiguous.
 drop function if exists place_order(text, jsonb, text, text, text, text);
-create function place_order(
+create or replace function place_order(
     p_slug       text,
     p_lines      jsonb,
     p_fulfilment text default 'pickup',

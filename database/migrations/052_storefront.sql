@@ -83,7 +83,8 @@ as $$
       and o.suspended_at is null;
 $$;
 
-create or replace function storefront(p_slug text)
+drop function if exists storefront(text);
+create function storefront(p_slug text)
 returns table (
     org_id   uuid,
     name     text,
