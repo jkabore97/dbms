@@ -1,8 +1,49 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kaj_app/core/courier/courier_repository.dart';
+import 'package:kaj_app/features/courier/courier_screen.dart';
+
+/// An approved courier with an empty board, for walking the screen itself.
+class _ApprovedCourier extends CourierRepository {
+  _ApprovedCourier() : super(null);
+  @override
+  bool get isConfigured => true;
+  @override
+  Future<String?> status() async => 'approved';
+  @override
+  Future<List<DeliveryJob>> available() async => const [];
+  @override
+  Future<List<DeliveryJob>> mine() async => const [];
+}
 
 /// The courier's job card (056): what a row from the server becomes.
 void main() {
+  testWidgets('the tab lives in the URL, so a refresh keeps it',
+      (tester) async {
+    // /livreur?onglet=courses must open on Mes courses, not Disponibles:
+    // that is what makes the tab a page of its own that a reload restores.
+    final router = GoRouter(
+      initialLocation: '/livreur?onglet=courses',
+      routes: [
+        GoRoute(
+          path: '/livreur',
+          builder: (_, __) => CourierScreen(courier: _ApprovedCourier()),
+        ),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    for (var i = 0; i < 4; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 30)));
+      await tester.pump();
+    }
+
+    expect(find.text('Aucune course. Prenez-en une dans Disponibles.'),
+        findsOneWidget,
+        reason: 'the ?onglet=courses tab was not restored');
+  });
+
   test('a board row has the shop, the door and the total — no customer yet',
       () {
     final job = DeliveryJob.fromRow({

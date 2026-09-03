@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/nav/url_tabs.dart';
 import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -41,9 +43,10 @@ class LivestockScreen extends StatefulWidget {
 }
 
 class _LivestockScreenState extends State<LivestockScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs =
-      TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
+    with SingleTickerProviderStateMixin, UrlTabsMixin {
+  @override
+  List<String> get tabSlugs => const ['animaux', 'cultures'];
+
 
   List<Herd> _herds = const [];
   List<CropCycle> _crops = const [];
@@ -54,12 +57,6 @@ class _LivestockScreenState extends State<LivestockScreen>
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -163,7 +160,7 @@ class _LivestockScreenState extends State<LivestockScreen>
       appBar: AppBar(
         title: const Text('Élevage et cultures'),
         bottom: TabBar(
-          controller: _tabs,
+          controller: tabs,
           tabs: const [
             Tab(text: 'Animaux', icon: Icon(Icons.pets)),
             Tab(text: 'Cultures', icon: Icon(Icons.grass)),
@@ -171,15 +168,15 @@ class _LivestockScreenState extends State<LivestockScreen>
         ),
       ),
       floatingActionButton: AnimatedBuilder(
-        animation: _tabs,
+        animation: tabs,
         builder: (context, _) => FloatingActionButton.extended(
-          onPressed: _tabs.index == 0 ? _openHerd : _openCrop,
+          onPressed: tabs.index == 0 ? _openHerd : _openCrop,
           icon: const Icon(Icons.add),
-          label: Text(_tabs.index == 0 ? 'Groupe' : 'Culture'),
+          label: Text(tabs.index == 0 ? 'Groupe' : 'Culture'),
         ),
       ),
       body: TabBarView(
-        controller: _tabs,
+        controller: tabs,
         children: [
           _herdList(theme),
           _cropList(theme),

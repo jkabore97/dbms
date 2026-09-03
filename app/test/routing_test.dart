@@ -421,6 +421,60 @@ void main() {
         findsNothing);
   });
 
+  group('a real reload boots at the address in the bar', () {
+    // The in-app go() below the other groups is a shortcut; a browser
+    // refresh is a COLD BOOT with the deep URL as the platform's default
+    // route. These walk that exact path, so "each page is its own link"
+    // is proven at the door and not just past it.
+    Future<void> coldBootAt(WidgetTester tester, String location) async {
+      tester.binding.platformDispatcher.defaultRouteNameTestValue = location;
+      addTearDown(() => tester.binding.platformDispatcher
+          .defaultRouteNameTestValue = '/');
+      await pumpApp(tester);
+    }
+
+    testWidgets('a deep page inside a business survives the reload',
+        (tester) async {
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+            id: 'org-1', name: 'Boutique Sanou', profile: 'retail',
+            roles: ['owner']),
+      ]);
+      await coldBootAt(tester, '/o/org-1/produits');
+
+      expect(find.text('Entrez votre code'), findsOneWidget);
+      await enterPin(tester, '1379');
+
+      expect(find.text('Articles'), findsOneWidget,
+          reason: 'a real reload lost the page in the address bar');
+    });
+
+    testWidgets('the join page survives a reload for a member too',
+        (tester) async {
+      // Regression: /rejoindre was only on the no-business allow-list, so a
+      // member refreshing it — joining a second business with a code — was
+      // bounced to the street.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(
+            id: 'org-1', name: 'Boutique Sanou', profile: 'retail',
+            roles: ['owner']),
+      ]);
+      await coldBootAt(tester, '/rejoindre');
+      await enterPin(tester, '1379');
+
+      expect(find.text('Votre compte est prêt'), findsOneWidget,
+          reason: 'a member reloading /rejoindre was bounced away');
+    });
+
+    testWidgets("the livreur's page survives a reload", (tester) async {
+      await seedDevice(tester);
+      await coldBootAt(tester, '/livreur');
+      await enterPin(tester, '1379');
+
+      expect(find.text('Espace livreur'), findsOneWidget);
+    });
+  });
+
   group('a refresh keeps your place', () {
     // The complaint, verbatim: "when I refresh the webpage it takes me to a
     // different page." On a device with a code, reloading a deep page sent

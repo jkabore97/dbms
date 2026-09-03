@@ -203,6 +203,12 @@ GoRouter buildRouter(SessionController session) {
         return Routes.pin;
 
       case SessionPhase.noOrg:
+        // A gate may have interrupted a shopper's or a courier's page — a
+        // refresh on /livreur goes through the code screen like any other.
+        // Without this, only members got their page back, and everyone
+        // else's refresh landed on the street.
+        final back = session.takeReturnTo();
+        if (back != null && back != here) return back;
         // Belongs to no business yet, so there is no `/o/...` to be at — but
         // the things somebody in that position does need are all reachable.
         if (at(Routes.join) ||
@@ -239,6 +245,7 @@ GoRouter buildRouter(SessionController session) {
           return Routes.picker;
         }
         if (at(Routes.picker) ||
+            at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
             at(Routes.courier) ||
@@ -265,6 +272,7 @@ GoRouter buildRouter(SessionController session) {
           return null;
         }
         if (at(Routes.picker) ||
+            at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
             at(Routes.courier) ||
@@ -384,9 +392,14 @@ GoRouter buildRouter(SessionController session) {
           // A build with no server, or an expired token, has nothing to check a
           // code against and nothing to file an application with. That case
           // keeps the old screen, which says so and offers a retry.
+          // A cold reload can build this page a frame before the session has
+          // read the identity off the device; a null-check here was a white
+          // screen on refresh. The splash holds the door for that frame.
+          final identity = scope.session.identity;
+          if (identity == null) return const _Splash();
           if (!scope.auth.hasLiveSession) {
             return NoOrgScreen(
-              identity: scope.session.identity!,
+              identity: identity,
               onRetry: scope.session.resolveOrgs,
               onSignOut: scope.session.signOut,
               // The bootstrap case: the person who runs the platform, before
