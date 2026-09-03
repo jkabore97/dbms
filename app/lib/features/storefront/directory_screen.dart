@@ -303,6 +303,8 @@ class _AccountCorner extends StatelessWidget {
                     context.go(Routes.join);
                   case 'orders':
                     context.go(Routes.myOrders);
+                  case 'courier':
+                    context.go(Routes.courier);
                   case 'profile':
                     context.go(Routes.myProfile);
                   case 'out':
@@ -341,6 +343,13 @@ class _AccountCorner extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(Icons.receipt_long_outlined),
                     title: Text('Mes commandes'),
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'courier',
+                  child: ListTile(
+                    leading: Icon(Icons.sports_motorsports_outlined),
+                    title: Text('Espace livreur'),
                   ),
                 ),
                 const PopupMenuItem(

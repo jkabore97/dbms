@@ -318,6 +318,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             tooltip: 'À la une',
           ),
           IconButton(
+            onPressed: () => context.push(Routes.consoleCouriers),
+            icon: const Icon(Icons.sports_motorsports_outlined),
+            tooltip: 'Livreurs',
+          ),
+          IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',

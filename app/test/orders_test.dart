@@ -31,6 +31,13 @@ void main() {
           ['delivered', 'cancelled']);
     });
 
+    test('on a motorbike, the shop can only confirm the end', () {
+      expect(order('in_transit', fulfilment: 'delivery').nextStatuses,
+          ['delivered']);
+      expect(orderIsOpen('in_transit'), isTrue);
+      expect(orderStatusLabel('in_transit'), 'En route');
+    });
+
     test('a final order offers nothing', () {
       for (final s in ['picked_up', 'delivered', 'refused', 'cancelled']) {
         expect(order(s).nextStatuses, isEmpty, reason: s);
@@ -51,10 +58,12 @@ void main() {
         'total': '35000',
         'currency': 'XOF',
         'created_at': '2026-09-03T10:00:00Z',
+        'courier_name': 'Moussa Moto',
         'lines': [
           {'name': 'Riz parfumé 25kg', 'unit_price': 17500, 'quantity': 2},
         ],
       });
+      expect(o.courierName, 'Moussa Moto');
       expect(o.isOpen, isTrue);
       expect(o.total, 35000);
       expect(o.lines.single.total, 35000);

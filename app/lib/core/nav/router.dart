@@ -15,7 +15,10 @@ import '../../features/admin/org_colours_screen.dart';
 import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
+import '../../core/courier/courier_repository.dart';
+import '../../features/admin/couriers_screen.dart';
 import '../../features/admin/featured_screen.dart';
+import '../../features/courier/courier_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
 import '../../features/orders/shop_orders_screen.dart';
 import '../../features/admin/platform_people_screen.dart';
@@ -108,6 +111,8 @@ abstract final class Routes {
   static const consoleAudit = '/console/activite';
   static const consoleFeatured = '/console/a-la-une';
   static const myOrders = '/mes-commandes';
+  static const courier = '/livreur';
+  static const consoleCouriers = '/console/livreurs';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -203,6 +208,7 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -235,6 +241,7 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.picker) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -257,6 +264,7 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.picker) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -310,6 +318,15 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.myOrders,
         builder: (context, state) => MyOrdersScreen(
           storefront: StorefrontRepository(AppScope.of(context).auth.client),
+        ),
+      ),
+
+      // The livreur's whole world (056): the pitch, the wait, the board and
+      // their courses — the server says which of those this person gets.
+      GoRoute(
+        path: Routes.courier,
+        builder: (context, state) => CourierScreen(
+          courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),
 
@@ -501,6 +518,13 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.consoleFeatured,
         builder: (context, _) =>
             FeaturedScreen(admin: AppScope.of(context).admin),
+      ),
+
+      // Who may carry deliveries: also the platform's decision (056).
+      GoRoute(
+        path: Routes.consoleCouriers,
+        builder: (context, _) =>
+            CouriersScreen(admin: AppScope.of(context).admin),
       ),
 
       GoRoute(

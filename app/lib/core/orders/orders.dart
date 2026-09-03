@@ -33,6 +33,7 @@ class OrderLine {
 /// cancel while it is still pending.
 ///
 ///   pending → accepted → ready → picked_up | delivered
+///   ready → in_transit → delivered      (a courier carries it, 056)
 ///   pending → refused
 ///   pending → cancelled (by the customer)
 ///   accepted | ready → cancelled (by the shop)
@@ -40,6 +41,7 @@ const orderStatuses = [
   'pending',
   'accepted',
   'ready',
+  'in_transit',
   'picked_up',
   'delivered',
   'refused',
@@ -48,13 +50,17 @@ const orderStatuses = [
 
 /// Still needs something from somebody.
 bool orderIsOpen(String status) =>
-    status == 'pending' || status == 'accepted' || status == 'ready';
+    status == 'pending' ||
+    status == 'accepted' ||
+    status == 'ready' ||
+    status == 'in_transit';
 
 /// What a person reads.
 String orderStatusLabel(String status) => switch (status) {
       'pending' => 'En attente',
       'accepted' => 'Acceptée',
       'ready' => 'Prête',
+      'in_transit' => 'En route',
       'picked_up' => 'Récupérée',
       'delivered' => 'Livrée',
       'refused' => 'Refusée',
@@ -80,6 +86,7 @@ class CustomerOrder {
     this.note,
     this.address,
     this.phone,
+    this.courierName,
   });
 
   final String id;
@@ -94,6 +101,9 @@ class CustomerOrder {
   final String currency;
   final DateTime createdAt;
   final List<OrderLine> lines;
+
+  /// Who carries it, once a livreur took the course (056).
+  final String? courierName;
 
   bool get isOpen => orderIsOpen(status);
 
@@ -110,6 +120,7 @@ class CustomerOrder {
         currency: (row['currency'] as String?) ?? 'XOF',
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
             DateTime.now(),
+        courierName: row['courier_name'] as String?,
         lines: _lines(row['lines']),
       );
 }
@@ -128,6 +139,7 @@ class ShopOrder {
     this.phone,
     this.note,
     this.address,
+    this.courierName,
   });
 
   final String id;
@@ -142,6 +154,9 @@ class ShopOrder {
   final DateTime createdAt;
   final List<OrderLine> lines;
 
+  /// Who carries it, once a livreur took the course (056).
+  final String? courierName;
+
   bool get isOpen => orderIsOpen(status);
 
   /// What the shop may do next, in the order the buttons are shown.
@@ -153,6 +168,8 @@ class ShopOrder {
         'ready' => fulfilment == 'delivery'
             ? const ['delivered', 'cancelled']
             : const ['picked_up', 'cancelled'],
+        // On a motorbike: the shop can only confirm the end of the journey.
+        'in_transit' => const ['delivered'],
         _ => const [],
       };
 
@@ -168,6 +185,7 @@ class ShopOrder {
         currency: (row['currency'] as String?) ?? 'XOF',
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
             DateTime.now(),
+        courierName: row['courier_name'] as String?,
         lines: _lines(row['lines']),
       );
 }
@@ -177,6 +195,7 @@ String orderActionLabel(String status) => switch (status) {
       'accepted' => 'Accepter',
       'refused' => 'Refuser',
       'ready' => 'Prête',
+      'in_transit' => 'En route',
       'picked_up' => 'Récupérée',
       'delivered' => 'Livrée',
       'cancelled' => 'Annuler',
