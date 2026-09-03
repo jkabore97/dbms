@@ -12,11 +12,15 @@ void main() {
       'shop_lat': '12.3714',
       'shop_lng': -1.5197,
       'drop_address': 'Dassasgho, en face de la pharmacie',
+      'drop_lat': '12.3901',
+      'drop_lng': -1.4877,
       'total': '17500',
       'currency': 'XOF',
       'created_at': '2026-09-03T10:00:00Z',
     });
     expect(job.shopHasPin, isTrue);
+    expect(job.hasDropPin, isTrue);
+    expect(job.dropLat, closeTo(12.3901, 1e-9));
     expect(job.customerName, isNull);
     expect(job.phone, isNull);
     expect(job.total, 17500);
@@ -51,5 +55,7 @@ void main() {
       'created_at': '2026-09-03T10:00:00Z',
     });
     expect(job.shopHasPin, isFalse);
+    expect(job.hasDropPin, isFalse,
+        reason: 'no pin shared means no itinerary invented');
   });
 }

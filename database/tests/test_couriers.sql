@@ -61,7 +61,8 @@ begin
     insert into t_job29
     select place_order('livreur-a-29',
         '[{"product_id":"29aaaaaa-0000-0000-0000-000000000001","quantity":1}]'::jsonb,
-        'delivery', null, 'Dassasgho, en face de la pharmacie', '+22670000029');
+        'delivery', null, 'Dassasgho, en face de la pharmacie', '+22670000029',
+        'cash', 12.3901, -1.4877);
 end $$;
 set local "request.jwt.claim.sub" = :owner_a;
 do $$
@@ -185,6 +186,10 @@ begin
       from available_deliveries() a where a.shop_name = 'Boutique Esperance';
     if v_drop <> 'Dassasgho, en face de la pharmacie' or v_total <> 17500 then
         raise exception 'FAIL: the card is wrong (% / %)', v_drop, v_total;
+    end if;
+    if (select a.drop_lat from available_deliveries() a
+         where a.shop_name = 'Boutique Esperance') is distinct from 12.3901 then
+        raise exception 'FAIL: the board lost the customer''s pin';
     end if;
     perform take_delivery(v_id);
     if (select count(*) from available_deliveries() a

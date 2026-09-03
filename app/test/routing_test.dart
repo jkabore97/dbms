@@ -382,6 +382,31 @@ void main() {
         findsNothing);
   });
 
+  testWidgets('entering the business world leaves the street behind',
+      (tester) async {
+    // The owner's complaint: from the picker, the console or a store, back
+    // fell out onto the public vitrines page. The boutique button REPLACES
+    // the street in history, so back from the picker has nowhere public
+    // to fall — the picker holds.
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+    ]);
+    await pumpApp(tester);
+    await enterPin(tester, '1379');
+    expect(find.text('Les vitrines'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ma boutique'));
+    await flush(tester);
+    expect(find.text('Choisissez une activité'), findsOneWidget);
+
+    await pressBack(tester);
+
+    expect(find.text('Les vitrines'), findsNothing,
+        reason: 'back from the picker fell out onto the public street');
+    expect(find.text('Choisissez une activité'), findsOneWidget);
+  });
+
   testWidgets('the directory of vitrines opens without signing in',
       (tester) async {
     // "Près de moi" is for a shopper walking down the street, not a member.

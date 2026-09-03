@@ -402,6 +402,11 @@ class _JobCard extends StatelessWidget {
               place: (job.dropAddress ?? '').trim().isEmpty
                   ? 'Adresse chez le client'
                   : job.dropAddress!.trim(),
+              // The customer pinned their door (058): the itinerary goes to
+              // the pin, not to a guess at the written address.
+              onRoute: job.hasDropPin
+                  ? () => onOpen(directionsUrl(job.dropLat!, job.dropLng!))
+                  : null,
             ),
             if (job.customerName != null || phone.isNotEmpty) ...[
               const SizedBox(height: 8),

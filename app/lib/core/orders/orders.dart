@@ -170,6 +170,8 @@ class ShopOrder {
     this.courierName,
     this.paymentMethod = 'cash',
     this.paidAt,
+    this.dropLat,
+    this.dropLng,
   });
 
   final String id;
@@ -191,8 +193,13 @@ class ShopOrder {
   final String paymentMethod;
   final DateTime? paidAt;
 
+  /// The customer's own pin (058), when they shared one with a delivery.
+  final double? dropLat;
+  final double? dropLng;
+
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
+  bool get hasDropPin => dropLat != null && dropLng != null;
 
   /// What the shop may do next, in the order the buttons are shown.
   List<String> get nextStatuses => switch (status) {
@@ -225,6 +232,8 @@ class ShopOrder {
         paidAt: row['paid_at'] == null
             ? null
             : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
+        dropLat: _num(row['drop_lat']),
+        dropLng: _num(row['drop_lng']),
         lines: _lines(row['lines']),
       );
 }

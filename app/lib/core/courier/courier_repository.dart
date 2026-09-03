@@ -81,6 +81,8 @@ class DeliveryJob {
     this.customerName,
     this.phone,
     this.dropAddress,
+    this.dropLat,
+    this.dropLng,
     this.status,
     this.paymentMethod = 'cash',
     this.paidAt,
@@ -95,6 +97,10 @@ class DeliveryJob {
   final String? phone;
   final String? dropAddress;
 
+  /// The customer's own pin (058), when they shared one.
+  final double? dropLat;
+  final double? dropLng;
+
   /// Null on the open board (everything there is 'ready' by definition).
   final String? status;
 
@@ -106,6 +112,7 @@ class DeliveryJob {
   final DateTime createdAt;
 
   bool get shopHasPin => shopLat != null && shopLng != null;
+  bool get hasDropPin => dropLat != null && dropLng != null;
   bool get isPaid => paidAt != null;
 
   /// Still needs the courier: taken but not collected, or on the road.
@@ -120,6 +127,8 @@ class DeliveryJob {
         customerName: row['customer_name'] as String?,
         phone: row['phone'] as String?,
         dropAddress: row['drop_address'] as String?,
+        dropLat: _num(row['drop_lat']),
+        dropLng: _num(row['drop_lng']),
         status: row['status'] as String?,
         paymentMethod: (row['payment_method'] as String?) ?? 'cash',
         paidAt: row['paid_at'] == null

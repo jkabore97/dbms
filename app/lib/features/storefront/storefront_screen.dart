@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -176,6 +177,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     String? address,
     String? phone,
     required String payment,
+    double? dropLat,
+    double? dropLng,
   }) async {
     setState(() => _sending = true);
     try {
@@ -187,6 +190,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         address: address,
         phone: phone,
         payment: payment,
+        dropLat: dropLat,
+        dropLng: dropLng,
       );
       return null;
     } catch (_) {
@@ -331,6 +336,8 @@ class _OrderSheet extends StatefulWidget {
     String? address,
     String? phone,
     required String payment,
+    double? dropLat,
+    double? dropLng,
   }) onSubmit;
 
   @override
@@ -340,6 +347,12 @@ class _OrderSheet extends StatefulWidget {
 class _OrderSheetState extends State<_OrderSheet> {
   String _fulfilment = 'pickup';
   String _payment = 'cash';
+
+  /// The door's pin (058): the phone's fix or a Google Maps link. Optional;
+  /// the address in words is still what the courier reads first.
+  double? _dropLat;
+  double? _dropLng;
+  bool _locating = false;
   final _note = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
@@ -352,6 +365,88 @@ class _OrderSheetState extends State<_OrderSheet> {
     _address.dispose();
     _phone.dispose();
     super.dispose();
+  }
+
+  /// Where the customer is standing, once. Refusal loses nothing — the
+  /// written address still travels with the order.
+  Future<void> _useMyPosition() async {
+    setState(() => _locating = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text("Sans votre position, l'adresse écrite suffit."),
+        ));
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _dropLat = position.latitude;
+        _dropLng = position.longitude;
+      });
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
+      ));
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  /// A link out of Google Maps, for the customer marking a door they are
+  /// not standing at. Short goo.gl links carry nothing; the message says so.
+  Future<void> _pasteMapsLink() async {
+    final controller = TextEditingController();
+    final text = await showDialog<String>(
+      context: context,
+      builder: (dialog) => Theme(
+        data: ShopStyle.theme(dialog),
+        child: AlertDialog(
+          title: const Text('Lien Google Maps'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'https://www.google.com/maps/...@12.37,-1.52,17z',
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(dialog).pop(),
+                child: const Text('Annuler')),
+            FilledButton(
+                onPressed: () => Navigator.of(dialog).pop(controller.text),
+                child: const Text('Utiliser')),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (text == null || !mounted) return;
+    final position = parseGoogleMapsLink(text);
+    if (position == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Ce lien ne contient pas de position. Ouvrez-le dans '
+            "Google Maps et copiez l'adresse complète."),
+      ));
+      return;
+    }
+    setState(() {
+      _dropLat = position.lat;
+      _dropLng = position.lng;
+    });
   }
 
   Future<void> _submit() async {
@@ -370,6 +465,8 @@ class _OrderSheetState extends State<_OrderSheet> {
       address: _address.text.trim().isEmpty ? null : _address.text.trim(),
       phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
       payment: _payment,
+      dropLat: _fulfilment == 'delivery' ? _dropLat : null,
+      dropLng: _fulfilment == 'delivery' ? _dropLng : null,
     );
     if (!mounted) return;
     if (error != null) {
@@ -484,6 +581,53 @@ class _OrderSheetState extends State<_OrderSheet> {
                   hintText: 'Quartier, repère, en face de…',
                 ),
               ),
+              const SizedBox(height: 8),
+              // The pin: exactly where the door is, for the livreur's
+              // itinerary. Optional, and said so by staying quiet buttons.
+              if (_dropLat == null)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _locating ? null : _useMyPosition,
+                      icon: _locating
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.my_location, size: 16),
+                      label: const Text('Épingler ma position'),
+                    ),
+                    TextButton(
+                      onPressed: _pasteMapsLink,
+                      child: const Text('Lien Google Maps'),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 18, color: ShopStyle.ink),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text('Position épinglée pour le livreur',
+                          style: TextStyle(
+                              fontSize: 14, color: ShopStyle.ink)),
+                    ),
+                    IconButton(
+                      tooltip: 'Retirer',
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => setState(() {
+                        _dropLat = null;
+                        _dropLng = null;
+                      }),
+                    ),
+                  ],
+                ),
             ],
             const SizedBox(height: 12),
             TextField(
