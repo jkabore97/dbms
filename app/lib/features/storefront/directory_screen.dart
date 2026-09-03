@@ -6,14 +6,16 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/nav/router.dart';
 import '../../core/storefront/storefront_repository.dart';
+import 'shop_style.dart';
 
-/// Every open vitrine, as a list or on a map — for anyone, no account.
+/// Every open vitrine, as tiles and on a map — for anyone, no account.
 ///
 /// Ouagadougou has no street addresses a stranger can follow, which is why
 /// the pin matters: "près de moi" asks the phone where it is once, and the
-/// directory comes back nearest first with a distance on each row. The map
+/// directory comes back nearest first with a distance on each tile. The map
 /// is OpenStreetMap through flutter_map — no key, no bill, and a tile that
-/// loads on a cheap phone. Tapping a shop, in either view, opens its window.
+/// loads on a cheap phone. Tapping a shop, on a tile or a pin, opens its
+/// window. Same street-side look as the window itself ([ShopStyle]).
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key, required this.storefront});
 
@@ -74,7 +76,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   /// Ask the phone where it is, once, then reload nearest first. Every way
   /// this can fail — refused, switched off, no fix — is said in words; the
-  /// list is still there in name order, so nothing is lost by refusing.
+  /// tiles are still there in name order, so nothing is lost by refusing.
   Future<void> _nearMe() async {
     setState(() => _locating = true);
     final messenger = ScaffoldMessenger.of(context);
@@ -113,103 +115,294 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final placed = _entries.where((e) => e.hasLocation).toList();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Les vitrines'),
-        actions: [
-          IconButton(
-            tooltip: _map ? 'Voir la liste' : 'Voir la carte',
-            icon: Icon(_map ? Icons.list_alt_outlined : Icons.map_outlined),
-            onPressed: _loading ? null : () => setState(() => _map = !_map),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: (_loading || _locating) ? null : _nearMe,
-        icon: _locating
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(_here == null ? Icons.my_location : Icons.near_me),
-        label: Text(_here == null ? 'Près de moi' : 'Actualiser'),
-      ),
+    return ShopPage(
+      title: 'Les vitrines',
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _Notice(
+              ? ShopNotice(
                   text: _error!,
-                  action: TextButton(
+                  action: OutlinedButton(
                       onPressed: _load, child: const Text('Réessayer')),
                 )
-              : _entries.isEmpty
-                  ? const _Notice(text: 'Aucune vitrine ouverte pour le moment.')
-                  : _map
-                      ? _MapView(
-                          entries: placed,
-                          here: _here,
-                          fallback: _ouaga,
-                          onOpen: _open,
-                        )
-                      : _ListView(
-                          entries: _entries,
-                          located: _here != null,
-                          onOpen: _open,
-                          theme: theme,
-                        ),
+              : _Street(
+                  entries: _entries,
+                  here: _here,
+                  fallback: _ouaga,
+                  map: _map,
+                  locating: _locating,
+                  onNearMe: _nearMe,
+                  onToggleMap: () => setState(() => _map = !_map),
+                  onOpen: _open,
+                ),
     );
   }
 }
 
-class _ListView extends StatelessWidget {
-  const _ListView({
+class _Street extends StatelessWidget {
+  const _Street({
     required this.entries,
-    required this.located,
+    required this.here,
+    required this.fallback,
+    required this.map,
+    required this.locating,
+    required this.onNearMe,
+    required this.onToggleMap,
     required this.onOpen,
-    required this.theme,
   });
 
   final List<DirectoryEntry> entries;
-  final bool located;
+  final LatLng? here;
+  final LatLng fallback;
+  final bool map;
+  final bool locating;
+  final VoidCallback onNearMe;
+  final VoidCallback onToggleMap;
   final void Function(DirectoryEntry) onOpen;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 96),
-      itemCount: entries.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (context, i) {
-        final e = entries[i];
-        final line = (e.address ?? '').trim().isNotEmpty
-            ? e.address!.trim()
-            : (e.blurb ?? '').trim();
-        final distance = distanceLabel(e.distanceKm);
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.primaryContainer,
-            foregroundColor: theme.colorScheme.onPrimaryContainer,
-            child: Icon(_iconFor(e.profile)),
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= 560;
+    final columns = ShopStyle.columnsFor(width);
+    final placed = entries.where((e) => e.hasLocation).toList();
+    final located = here != null;
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        ColoredBox(
+          color: ShopStyle.stone,
+          child: ShopWidth(
+            padding: EdgeInsets.symmetric(
+                horizontal: 20, vertical: wide ? 56 : 36),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Les boutiques,\nprès de vous.',
+                  style: TextStyle(
+                    fontSize: wide ? 40 : 30,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.6,
+                    color: ShopStyle.ink,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: const Text(
+                    'Chaque vitrine est tenue par la boutique elle-même : '
+                    'ses articles, ses prix, son numéro. Dites où vous êtes '
+                    'et les plus proches passent en premier.',
+                    style: TextStyle(
+                        fontSize: 17, height: 1.45, color: ShopStyle.ink),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: locating ? null : onNearMe,
+                      icon: locating
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: ShopStyle.paper),
+                            )
+                          : Icon(located ? Icons.near_me : Icons.my_location,
+                              size: 18),
+                      label: Text(located ? 'Actualiser' : 'Près de moi'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: entries.isEmpty ? null : onToggleMap,
+                      icon: Icon(
+                          map ? Icons.grid_view_outlined : Icons.map_outlined,
+                          size: 18),
+                      label: Text(map ? 'Masquer la carte' : 'Voir la carte'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          title: Text(e.name),
-          subtitle: line.isEmpty ? null : Text(line, maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          trailing: distance != null
-              ? Text(distance,
-                  style: theme.textTheme.labelLarge
-                      ?.copyWith(color: theme.colorScheme.primary))
-              : (located && !e.hasLocation
-                  ? Icon(Icons.location_off_outlined,
-                      size: 18, color: theme.colorScheme.onSurfaceVariant)
-                  : const Icon(Icons.chevron_right)),
-          onTap: () => onOpen(e),
-        );
-      },
+        ),
+        ShopWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (map) ...[
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: wide ? 460 : 320,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: _MapView(
+                      entries: placed,
+                      here: here,
+                      fallback: fallback,
+                      onOpen: onOpen,
+                    ),
+                  ),
+                ),
+                if (placed.length < entries.length) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '${entries.length - placed.length} vitrine'
+                    '${entries.length - placed.length > 1 ? 's' : ''} '
+                    "sans position n'apparaî"
+                    '${entries.length - placed.length > 1 ? 'ssent' : 't'} '
+                    'que dans la liste.',
+                    style:
+                        const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                  ),
+                ],
+              ],
+              const SizedBox(height: 32),
+              ShopSectionLabel(
+                located ? 'Les plus proches' : 'Toutes les vitrines',
+                note: entries.isEmpty
+                    ? null
+                    : '${entries.length} vitrine${entries.length > 1 ? 's' : ''}',
+              ),
+              const SizedBox(height: 18),
+              if (entries.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Text('Aucune vitrine ouverte pour le moment.',
+                      style: TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: wide ? 24 : 14,
+                    mainAxisSpacing: wide ? 36 : 26,
+                    childAspectRatio: 0.82,
+                  ),
+                  itemCount: entries.length,
+                  itemBuilder: (context, i) => _ShopTile(
+                    entry: entries[i],
+                    located: located,
+                    onOpen: () => onOpen(entries[i]),
+                  ),
+                ),
+              const ShopFooter(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One shop: a warm square with its initial, the name, one line about it,
+/// and — once the shopper said where they are — how far.
+class _ShopTile extends StatelessWidget {
+  const _ShopTile({
+    required this.entry,
+    required this.located,
+    required this.onOpen,
+  });
+
+  final DirectoryEntry entry;
+  final bool located;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = (entry.address ?? '').trim().isNotEmpty
+        ? entry.address!.trim()
+        : (entry.blurb ?? '').trim();
+    final distance = distanceLabel(entry.distanceKm);
+    final initial =
+        entry.name.trim().isEmpty ? '·' : entry.name.trim()[0].toUpperCase();
+
+    return InkWell(
+      onTap: onOpen,
+      borderRadius: BorderRadius.circular(6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1.15,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: ColoredBox(
+                color: ShopStyle.stone,
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 56,
+                          fontWeight: FontWeight.w700,
+                          color: ShopStyle.line,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 12,
+                      bottom: 10,
+                      child: Icon(_iconFor(entry.profile),
+                          size: 18, color: ShopStyle.mist),
+                    ),
+                    if (distance != null)
+                      Positioned(
+                        right: 10,
+                        top: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ShopStyle.ink,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(distance,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: ShopStyle.paper)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            entry.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+                color: ShopStyle.ink),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            line.isNotEmpty
+                ? line
+                : (located && !entry.hasLocation
+                    ? 'Position non renseignée'
+                    : _labelFor(entry.profile)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,6 +410,12 @@ class _ListView extends StatelessWidget {
         'farm' => Icons.agriculture_outlined,
         'association' || 'church' => Icons.groups_outlined,
         _ => Icons.storefront_outlined,
+      };
+
+  static String _labelFor(String profile) => switch (profile) {
+        'farm' => 'Ferme',
+        'association' || 'church' => 'Association',
+        _ => 'Boutique',
       };
 }
 
@@ -235,7 +434,6 @@ class _MapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final centre = here ??
         (entries.isNotEmpty
             ? LatLng(entries.first.lat!, entries.first.lng!)
@@ -257,9 +455,9 @@ class _MapView extends StatelessWidget {
                 height: 22,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
+                    color: ShopStyle.ink,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
+                    border: Border.all(color: ShopStyle.paper, width: 3),
                   ),
                 ),
               ),
@@ -272,8 +470,8 @@ class _MapView extends StatelessWidget {
                   onTap: () => onOpen(e),
                   child: Tooltip(
                     message: e.name,
-                    child: Icon(Icons.location_on,
-                        size: 40, color: theme.colorScheme.error),
+                    child: const Icon(Icons.location_on,
+                        size: 40, color: ShopStyle.ink),
                   ),
                 ),
               ),
@@ -283,35 +481,6 @@ class _MapView extends StatelessWidget {
           attributions: [TextSourceAttribution('OpenStreetMap contributors')],
         ),
       ],
-    );
-  }
-}
-
-class _Notice extends StatelessWidget {
-  const _Notice({required this.text, this.action});
-
-  final String text;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.storefront_outlined,
-                size: 44, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 12),
-            Text(text,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge),
-            if (action != null) ...[const SizedBox(height: 8), action!],
-          ],
-        ),
-      ),
     );
   }
 }
