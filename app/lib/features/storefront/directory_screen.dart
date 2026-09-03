@@ -287,85 +287,66 @@ class _AccountCorner extends StatelessWidget {
           case SessionPhase.noOrg:
           case SessionPhase.picking:
           case SessionPhase.ready:
+            // The three doors the owner asked for, in a row: the boutique,
+            // the livraison, the person. A member's boutique button opens
+            // their business (or the picker when several and none is
+            // remembered); a shopper's opens the way to have one.
             final member = session.phase != SessionPhase.noOrg;
             final open = session.lastOrgId;
-            return PopupMenuButton<String>(
-              tooltip: 'Mon compte',
-              icon: const Icon(Icons.person_outline),
-              onSelected: (choice) async {
-                switch (choice) {
-                  case 'businesses':
-                    context.go(open != null && member
-                        ? Routes.org(open)
-                        : Routes.picker);
-                  case 'become':
-                  case 'join':
-                    context.go(Routes.join);
-                  case 'orders':
-                    context.go(Routes.myOrders);
-                  case 'courier':
-                    context.go(Routes.courier);
-                  case 'profile':
-                    context.go(Routes.myProfile);
-                  case 'out':
-                    await session.signOut();
-                }
-              },
-              itemBuilder: (context) => [
-                if (member)
-                  const PopupMenuItem(
-                    value: 'businesses',
-                    child: ListTile(
-                      leading: Icon(Icons.storefront_outlined),
-                      title: Text('Mes entreprises'),
-                    ),
-                  )
-                else ...[
-                  const PopupMenuItem(
-                    value: 'become',
-                    child: ListTile(
-                      leading: Icon(Icons.add_business_outlined),
-                      title: Text('Devenir vendeur'),
-                      subtitle: Text('Créer ma boutique sur Kaj'),
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'join',
-                    child: ListTile(
-                      leading: Icon(Icons.badge_outlined),
-                      title: Text('Rejoindre une entreprise'),
-                      subtitle: Text("J'ai un code d'invitation"),
-                    ),
-                  ),
-                ],
-                const PopupMenuItem(
-                  value: 'orders',
-                  child: ListTile(
-                    leading: Icon(Icons.receipt_long_outlined),
-                    title: Text('Mes commandes'),
-                  ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: member ? 'Ma boutique' : 'Ouvrir ma boutique',
+                  icon: Icon(member
+                      ? Icons.store_outlined
+                      : Icons.add_business_outlined),
+                  onPressed: () => context.go(member
+                      ? (open != null ? Routes.org(open) : Routes.picker)
+                      : Routes.join),
                 ),
-                const PopupMenuItem(
-                  value: 'courier',
-                  child: ListTile(
-                    leading: Icon(Icons.sports_motorsports_outlined),
-                    title: Text('Espace livreur'),
-                  ),
+                IconButton(
+                  tooltip: 'Espace livreur',
+                  icon: const Icon(Icons.sports_motorsports_outlined),
+                  onPressed: () => context.go(Routes.courier),
                 ),
-                const PopupMenuItem(
-                  value: 'profile',
-                  child: ListTile(
-                    leading: Icon(Icons.person_outline),
-                    title: Text('Mon profil'),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'out',
-                  child: ListTile(
-                    leading: Icon(Icons.logout),
-                    title: Text('Se déconnecter'),
-                  ),
+                PopupMenuButton<String>(
+                  tooltip: 'Mon compte',
+                  icon: const Icon(Icons.person_outline),
+                  onSelected: (choice) async {
+                    switch (choice) {
+                      case 'orders':
+                        context.go(Routes.myOrders);
+                      case 'profile':
+                        context.go(Routes.myProfile);
+                      case 'out':
+                        await session.signOut();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'orders',
+                      child: ListTile(
+                        leading: Icon(Icons.receipt_long_outlined),
+                        title: Text('Mes commandes'),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'profile',
+                      child: ListTile(
+                        leading: Icon(Icons.person_outline),
+                        title: Text('Mon profil'),
+                      ),
+                    ),
+                    PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'out',
+                      child: ListTile(
+                        leading: Icon(Icons.logout),
+                        title: Text('Se déconnecter'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );

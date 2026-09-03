@@ -59,6 +59,20 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
     }
   }
 
+  Future<void> _setPaid(ShopOrder order, bool paid) async {
+    setState(() => _busyId = order.id);
+    try {
+      await widget.retail.setOrderPaid(order.id, paid);
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
   Future<void> _move(ShopOrder order, String status) async {
     if (status == 'refused' || status == 'cancelled') {
       final ok = await showDialog<bool>(
@@ -147,6 +161,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
                       busyId: _busyId,
                       onMove: _move,
                       onOpen: _open,
+                      onSetPaid: _setPaid,
                     ),
                     _List(
                       orders: past,
@@ -154,6 +169,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
                       busyId: _busyId,
                       onMove: _move,
                       onOpen: _open,
+                      onSetPaid: _setPaid,
                     ),
                   ]),
       ),
@@ -168,6 +184,7 @@ class _List extends StatelessWidget {
     required this.busyId,
     required this.onMove,
     required this.onOpen,
+    required this.onSetPaid,
   });
 
   final List<ShopOrder> orders;
@@ -175,6 +192,7 @@ class _List extends StatelessWidget {
   final String? busyId;
   final Future<void> Function(ShopOrder, String) onMove;
   final Future<void> Function(String) onOpen;
+  final Future<void> Function(ShopOrder, bool) onSetPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +214,7 @@ class _List extends StatelessWidget {
         busy: busyId == orders[i].id,
         onMove: onMove,
         onOpen: onOpen,
+        onSetPaid: onSetPaid,
       ),
     );
   }
@@ -207,12 +226,14 @@ class _OrderCard extends StatelessWidget {
     required this.busy,
     required this.onMove,
     required this.onOpen,
+    required this.onSetPaid,
   });
 
   final ShopOrder order;
   final bool busy;
   final Future<void> Function(ShopOrder, String) onMove;
   final Future<void> Function(String) onOpen;
+  final Future<void> Function(ShopOrder, bool) onSetPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +263,10 @@ class _OrderCard extends StatelessWidget {
                 ),
               ],
             ),
-            Text('$when · ${fulfilmentLabel(order.fulfilment)}',
+            Text(
+                '$when · ${fulfilmentLabel(order.fulfilment)} · '
+                '${paymentLabel(order.paymentMethod)}'
+                '${order.isPaid ? ' · payé' : ''}',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             if (phone.isNotEmpty) ...[
@@ -306,12 +330,27 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text('Note : ${order.note}', style: theme.textTheme.bodySmall),
             ],
-            if (next.isNotEmpty) ...[
+            if (next.isNotEmpty || order.isOpen || order.isPaid) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
                 children: [
+                  // The money's word lives beside the state's: the shop
+                  // confirms a payment arrived, or unsays a mis-tap.
+                  if (!order.isPaid && order.isOpen)
+                    OutlinedButton.icon(
+                      onPressed:
+                          busy ? null : () => onSetPaid(order, true),
+                      icon: const Icon(Icons.price_check_outlined, size: 18),
+                      label: const Text('Paiement reçu'),
+                    )
+                  else if (order.isPaid)
+                    TextButton(
+                      onPressed:
+                          busy ? null : () => onSetPaid(order, false),
+                      child: const Text('Annuler le paiement'),
+                    ),
                   for (var i = 0; i < next.length; i++)
                     if (next[i] == 'refused' || next[i] == 'cancelled')
                       TextButton(

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/courier/courier_repository.dart';
 import '../../core/format/money.dart';
+import '../../core/orders/orders.dart';
 import '../../core/nav/router.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_style.dart';
@@ -433,7 +434,11 @@ class _JobCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 6),
-            Text('À encaisser à la porte : ${money.format(job.total)}',
+            Text(
+                job.isPaid
+                    ? 'Déjà payé (${paymentLabel(job.paymentMethod)}) — '
+                        'rien à encaisser'
+                    : 'À encaisser à la porte : ${money.format(job.total)}',
                 style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

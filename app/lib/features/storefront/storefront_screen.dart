@@ -155,6 +155,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           items: _items,
           basket: Map.of(_basket),
           currency: _shop?.currency ?? 'XOF',
+          waveMerchant: _shop?.waveMerchant,
           onSubmit: _send,
         ),
       ),
@@ -174,6 +175,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     String? note,
     String? address,
     String? phone,
+    required String payment,
   }) async {
     setState(() => _sending = true);
     try {
@@ -184,6 +186,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         note: note,
         address: address,
         phone: phone,
+        payment: payment,
       );
       return null;
     } catch (_) {
@@ -310,17 +313,24 @@ class _OrderSheet extends StatefulWidget {
     required this.basket,
     required this.currency,
     required this.onSubmit,
+    this.waveMerchant,
   });
 
   final List<PublicItem> items;
   final Map<String, double> basket;
   final String currency;
+
+  /// The shop's Wave link (057). Null means cash is the only choice and
+  /// the payment row does not appear at all.
+  final String? waveMerchant;
+
   final Future<String?> Function({
     required Map<String, double> lines,
     required String fulfilment,
     String? note,
     String? address,
     String? phone,
+    required String payment,
   }) onSubmit;
 
   @override
@@ -329,6 +339,7 @@ class _OrderSheet extends StatefulWidget {
 
 class _OrderSheetState extends State<_OrderSheet> {
   String _fulfilment = 'pickup';
+  String _payment = 'cash';
   final _note = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
@@ -358,6 +369,7 @@ class _OrderSheetState extends State<_OrderSheet> {
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
       address: _address.text.trim().isEmpty ? null : _address.text.trim(),
       phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+      payment: _payment,
     );
     if (!mounted) return;
     if (error != null) {
@@ -445,6 +457,24 @@ class _OrderSheetState extends State<_OrderSheet> {
               onSelectionChanged: (s) =>
                   setState(() => _fulfilment = s.first),
             ),
+            if (widget.waveMerchant != null) ...[
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                      value: 'cash',
+                      label: Text('Espèces'),
+                      icon: Icon(Icons.payments_outlined)),
+                  ButtonSegment(
+                      value: 'wave',
+                      label: Text('Wave'),
+                      icon: Icon(Icons.phone_iphone_outlined)),
+                ],
+                selected: {_payment},
+                onSelectionChanged: (s) =>
+                    setState(() => _payment = s.first),
+              ),
+            ],
             if (_fulfilment == 'delivery') ...[
               const SizedBox(height: 12),
               TextField(
@@ -493,10 +523,13 @@ class _OrderSheetState extends State<_OrderSheet> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Rien à payer maintenant : vous payez à la boutique, '
-              'au retrait ou à la livraison.',
-              style: TextStyle(fontSize: 13, color: ShopStyle.mist),
+            Text(
+              _payment == 'wave'
+                  ? 'Rien à payer maintenant : dès que la boutique accepte, '
+                      'un bouton Wave apparaît dans Mes commandes.'
+                  : 'Rien à payer maintenant : vous payez à la boutique, '
+                      'au retrait ou à la livraison.',
+              style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
           ],
         ),
