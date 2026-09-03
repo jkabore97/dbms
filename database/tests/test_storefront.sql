@@ -125,14 +125,18 @@ begin
         raise exception 'FAIL: wrong shop in the window: %', v_name;
     end if;
 
+    -- Membership, not order: *which* articles are in the window is the claim.
+    -- The order of 'Épuisé' against 'Sucre' depends on the database's
+    -- collation — C on a scratch cluster, en_US.utf8 on CI — and is not it.
     select count(*), string_agg(name, ',' order by name)
       into v_rows, v_names from storefront_products('vitrine-a-25');
-    if v_rows <> 2 then
-        raise exception 'FAIL: expected exactly 2 articles in the window, got % (%)',
+    if v_rows <> 2
+       or not exists (select 1 from storefront_products('vitrine-a-25')
+                       where name = 'Sucre 1kg')
+       or not exists (select 1 from storefront_products('vitrine-a-25')
+                       where name = 'Épuisé') then
+        raise exception 'FAIL: expected exactly Sucre 1kg and Épuisé in the window, got % (%)',
             v_rows, v_names;
-    end if;
-    if v_names <> 'Sucre 1kg,Épuisé' then
-        raise exception 'FAIL: the wrong articles are in the window: %', v_names;
     end if;
 
     select in_stock, photo_key into v_sucre_stock, v_photo
