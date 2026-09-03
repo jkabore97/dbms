@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -65,10 +66,73 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// Ouagadougou's centre: where the map opens with nothing better to show.
   static const _ouaga = LatLng(12.3714, -1.5197);
 
+  // The search across every window (059). `_query` is the trimmed text the
+  // hits answer; while it is two letters or more the results replace the
+  // street. The stamp drops an answer that arrives after a newer question.
+  final TextEditingController _search = TextEditingController();
+  Timer? _debounce;
+  int _searchStamp = 0;
+  String _query = '';
+  List<ProductHit> _hits = const [];
+  bool _hunting = false;
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String text) {
+    _debounce?.cancel();
+    final q = text.trim();
+    if (q.length < 2) {
+      setState(() {
+        _query = q;
+        _hits = const [];
+        _hunting = false;
+      });
+      return;
+    }
+    // A breath between keystrokes, so the network sees words, not letters.
+    _debounce = Timer(const Duration(milliseconds: 350), () => _runSearch(q));
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    _onSearchChanged('');
+  }
+
+  Future<void> _runSearch(String q) async {
+    final stamp = ++_searchStamp;
+    setState(() {
+      _query = q;
+      _hunting = true;
+    });
+    try {
+      final hits = await widget.storefront.searchProducts(
+        q,
+        lat: _here?.latitude,
+        lng: _here?.longitude,
+      );
+      if (!mounted || stamp != _searchStamp) return;
+      setState(() {
+        _hits = hits;
+        _hunting = false;
+      });
+    } catch (_) {
+      if (!mounted || stamp != _searchStamp) return;
+      setState(() {
+        _hits = const [];
+        _hunting = false;
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -242,6 +306,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onToggleMap: () => setState(() => _map = !_map),
                   onOpen: _open,
                   onPin: _showShop,
+                  search: _search,
+                  query: _query,
+                  hits: _hits,
+                  hunting: _hunting,
+                  onSearchChanged: _onSearchChanged,
+                  onClearSearch: _clearSearch,
                 ),
     );
   }
@@ -373,6 +443,12 @@ class _Street extends StatelessWidget {
     required this.onToggleMap,
     required this.onOpen,
     required this.onPin,
+    required this.search,
+    required this.query,
+    required this.hits,
+    required this.hunting,
+    required this.onSearchChanged,
+    required this.onClearSearch,
   });
 
   final List<DirectoryEntry> entries;
@@ -386,6 +462,13 @@ class _Street extends StatelessWidget {
   final VoidCallback onToggleMap;
   final void Function(DirectoryEntry) onOpen;
   final void Function(DirectoryEntry) onPin;
+
+  final TextEditingController search;
+  final String query;
+  final List<ProductHit> hits;
+  final bool hunting;
+  final void Function(String) onSearchChanged;
+  final VoidCallback onClearSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -456,10 +539,61 @@ class _Street extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 18),
+                // The search across every window: an article by its name,
+                // wherever it is on the street.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: TextField(
+                    controller: search,
+                    onChanged: onSearchChanged,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Chercher un article — savon, riz, café…',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: search.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Effacer',
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: onClearSearch,
+                            ),
+                      filled: true,
+                      fillColor: ShopStyle.paper,
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: const BorderSide(color: ShopStyle.line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: const BorderSide(color: ShopStyle.line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: const BorderSide(
+                            color: ShopStyle.ink, width: 1.4),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
+        // While a search is live the results are the page; the strip, the
+        // map and the list wait behind the cross that clears it.
+        if (query.length >= 2)
+          ShopWidth(
+            child: _SearchResults(
+              query: query,
+              hits: hits,
+              hunting: hunting,
+              located: here != null,
+              capture: capture,
+            ),
+          )
+        else
         ShopWidth(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,6 +690,145 @@ class _Street extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// What the search found: articles from every window, each naming its shop.
+/// Empty is said in words, with the query echoed so the shopper sees what
+/// the street actually heard.
+class _SearchResults extends StatelessWidget {
+  const _SearchResults({
+    required this.query,
+    required this.hits,
+    required this.hunting,
+    required this.located,
+    required this.capture,
+  });
+
+  final String query;
+  final List<ProductHit> hits;
+  final bool hunting;
+  final bool located;
+  final CaptureRepository capture;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= 560;
+    final columns = ShopStyle.columnsFor(width);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        ShopSectionLabel(
+          'Résultats',
+          note: hunting
+              ? null
+              : '${hits.length} article${hits.length > 1 ? 's' : ''}',
+        ),
+        const SizedBox(height: 18),
+        if (hunting)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 48),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (hits.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'Aucun article ne répond à « $query ». Essayez un autre mot.',
+              style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: wide ? 24 : 14,
+              mainAxisSpacing: wide ? 36 : 26,
+              childAspectRatio: wide ? 0.66 : 0.58,
+            ),
+            itemCount: hits.length,
+            itemBuilder: (context, i) => _HitTile(
+              hit: hits[i],
+              located: located,
+              capture: capture,
+              onTap: () => context.go(Routes.storefront(hits[i].shopSlug)),
+            ),
+          ),
+        const ShopFooter(),
+      ],
+    );
+  }
+}
+
+/// One found article: the photograph, the name, the price, and — because the
+/// answer spans the whole street — the shop it is in and how far that is.
+class _HitTile extends StatelessWidget {
+  const _HitTile({
+    required this.hit,
+    required this.located,
+    required this.capture,
+    required this.onTap,
+  });
+
+  final ProductHit hit;
+  final bool located;
+  final CaptureRepository capture;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(hit.currency);
+    final distance = distanceLabel(hit.distanceKm);
+    final shopLine = distance == null ? hit.shopName : '${hit.shopName} · $distance';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1.15,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: ColoredBox(
+                color: ShopStyle.stone,
+                child: Opacity(
+                  opacity: hit.inStock ? 1 : 0.45,
+                  child: _Photo(photoKey: hit.photoKey, capture: capture),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(hit.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.25,
+                  color: ShopStyle.ink)),
+          const SizedBox(height: 2),
+          Text(
+            hit.inStock
+                ? money.format(hit.price)
+                : '${money.format(hit.price)} · Épuisé',
+            style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+          ),
+          Text(shopLine,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: ShopStyle.mist)),
+        ],
+      ),
     );
   }
 }
