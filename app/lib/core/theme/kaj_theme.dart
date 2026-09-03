@@ -276,246 +276,290 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
       _ => kajPalette,
     };
 
-/// The frost. One number rather than many: the app bar, the cards and the
-/// inputs all take their translucency from here, and the render tests assert
-/// against the same constants — so "the glass got cloudier" is a deliberate
-/// edit in one place, never a drift.
+/// The page. The look the owner asked for, by name, is the one that sells
+/// goods online (allbirds.com): white paper, near-black type, a warm
+/// off-white for anything that has to sit apart from the page, hairlines
+/// instead of shadows, one black pill of a button. It replaced the glass
+/// edition — translucent panes over a colour wash — because that read as
+/// "an app" where this reads as "a shop", and the owner runs shops.
 ///
-/// Everything glassy here is translucency over the soft [KajBackground]
-/// wash, deliberately without `BackdropFilter` blur: real blur is the most
-/// expensive pixel on a cheap phone, and the frosted read comes from the
-/// layering, not the blur.
-const double kGlassAppBarAlpha = 0.62;
-const double kGlassCardAlpha = 0.66;
-const double kGlassFieldAlpha = 0.55;
+/// The business's colour is not gone: it is now the one accent. The
+/// palette's ink paints what carries state — the floating button, a switch,
+/// a focused field, the icon on a tile, the day's figure — and the pale
+/// hero wash is the flat band behind the home screen's figure. Everything
+/// else is paper, ink and stone, the same for every business, so a shop and
+/// a farm are told apart by their accent rather than by a different page.
+const kPaper = Color(0xFFFFFFFF);
+const kInk = Color(0xFF1F1F1F);
+const kStone = Color(0xFFF4F3EF);
+const kMist = Color(0xFF6E6E6B);
+const kLine = Color(0xFFE7E5E0);
 
-/// Builds the app's `ThemeData` from a palette — the glass edition.
-///
-/// The geometry is soft (large radii, hairline light borders, no hard
-/// elevation), the surfaces are translucent, and the page behind them is the
-/// palette's own wash painted by [KajBackground]. Every business keeps its
-/// colour; the glass is how the colour is worn.
+/// Builds the app's `ThemeData` from a palette — the paper edition.
 ///
 /// One thing deliberately unchanged through every restyle: the enlarged body
 /// text. No amount of style is worth a smaller font on a cheap screen in
 /// daylight.
 ThemeData kajTheme(KajPalette palette) {
-  final scheme = ColorScheme.fromSeed(seedColor: palette.seed);
-  final hairline = Colors.white.withValues(alpha: 0.65);
+  final scheme = ColorScheme.fromSeed(seedColor: palette.seed).copyWith(
+    // The accent: the business's ink, everywhere Material asks for primary.
+    primary: palette.ink,
+    onPrimary: kPaper,
+    primaryContainer: palette.hero.first,
+    onPrimaryContainer: palette.ink,
+    secondary: palette.ink,
+    onSecondary: kPaper,
+    secondaryContainer: kStone,
+    onSecondaryContainer: kInk,
+    tertiary: palette.ink,
+    // Paper, and stone for every container slot: twenty-eight screens tint
+    // their cards with surfaceContainerHighest by hand, and re-pointing the
+    // slot turns them all into quiet off-white blocks at once.
+    surface: kPaper,
+    onSurface: kInk,
+    onSurfaceVariant: kMist,
+    surfaceContainerLowest: kPaper,
+    surfaceContainerLow: kStone,
+    surfaceContainer: kStone,
+    surfaceContainerHigh: kStone,
+    surfaceContainerHighest: kStone,
+    surfaceTint: Colors.transparent,
+    outline: kLine,
+    outlineVariant: kLine,
+  );
+  const pill = StadiumBorder();
+  // Every hand-set text style below is derived from the base theme's own so
+  // it keeps the app's font family: a bare TextStyle on a button falls back
+  // to the platform's default face on the web, and a page with two typefaces
+  // reads as two products.
+  final base = ThemeData(colorScheme: scheme, useMaterial3: true);
+  final label = base.textTheme.labelLarge ?? const TextStyle();
+  final title = base.textTheme.titleLarge ?? const TextStyle();
+  final buttonText = label.copyWith(
+      fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.2);
 
-  return ThemeData(
-    // surfaceContainerHighest is re-pointed at frosted white on purpose:
-    // twenty-eight screens tint their cards with it by hand, and every one
-    // of them painted opaque grey over the wash — the glass existed in the
-    // theme and nowhere on screen. Re-pointing the slot turns them all into
-    // panes at once, the sign-in card first among them.
-    colorScheme: scheme.copyWith(
-      surfaceContainerHighest: Colors.white.withValues(alpha: kGlassCardAlpha),
+  return base.copyWith(
+    scaffoldBackgroundColor: kPaper,
+    canvasColor: kPaper,
+    dividerColor: kLine,
+
+    textTheme: base.textTheme.copyWith(
+      bodyMedium: base.textTheme.bodyMedium?.copyWith(fontSize: 16, color: kInk),
+      bodyLarge: base.textTheme.bodyLarge?.copyWith(fontSize: 18, color: kInk),
+      titleLarge: title.copyWith(
+          fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.3),
+      headlineSmall: base.textTheme.headlineSmall?.copyWith(
+          fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.4),
+      displaySmall: base.textTheme.displaySmall?.copyWith(
+          fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: -0.8),
     ),
-    useMaterial3: true,
 
-    // Transparent on purpose: the page's ground is the palette wash painted
-    // by KajBackground behind the Navigator, which is what lets every
-    // translucent surface above it read as glass instead of as grey.
-    scaffoldBackgroundColor: Colors.transparent,
-
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(fontSize: 16),
-      bodyLarge: TextStyle(fontSize: 18),
-    ),
-
-    // The app bar still carries the business's colour — frosted now: the
-    // hero tint at kGlassAppBarAlpha over the wash, with the palette's ink
-    // on it. The ink was measured against the solid tint; over the lighter
-    // blend the contrast only improves.
+    // Paper, with a hairline under it. The colour that used to be here is
+    // now the accent on the page instead.
     appBarTheme: AppBarTheme(
-      backgroundColor: palette.hero.first.withValues(alpha: kGlassAppBarAlpha),
-      foregroundColor: palette.ink,
+      backgroundColor: kPaper,
+      foregroundColor: kInk,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        fontSize: 20,
+      shape: const Border(bottom: BorderSide(color: kLine)),
+      titleTextStyle: title.copyWith(
+        fontSize: 19,
         fontWeight: FontWeight.w600,
-        color: palette.ink,
+        letterSpacing: 0.2,
+        color: kInk,
       ),
-      iconTheme: IconThemeData(color: palette.ink),
+      iconTheme: const IconThemeData(color: kInk),
     ),
 
-    // A pane of glass: translucent white, a hairline of light along its
-    // edge, and a large radius. Screens that tint their cards keep their
-    // tint and inherit the shape.
+    // A card is a hairline on paper: no fill to speak of, no shadow, a small
+    // radius. Screens that tint their cards keep their tint.
     cardTheme: CardThemeData(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      color: Colors.white.withValues(alpha: kGlassCardAlpha),
+      color: kPaper,
       surfaceTintColor: Colors.transparent,
+      margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: hairline),
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: kLine),
       ),
     ),
 
+    // The one black pill, and its outlined twin.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        backgroundColor: kInk,
+        foregroundColor: kPaper,
+        disabledBackgroundColor: kLine,
+        disabledForegroundColor: kMist,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        shape: pill,
+        textStyle: buttonText,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        foregroundColor: kInk,
+        side: const BorderSide(color: kInk, width: 1.2),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        shape: pill,
+        textStyle: buttonText,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: palette.ink,
+        shape: pill,
+        textStyle: label.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: kInk,
+        foregroundColor: kPaper,
+        shape: pill,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        textStyle: buttonText,
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        selectedBackgroundColor: kInk,
+        selectedForegroundColor: kPaper,
+        foregroundColor: kInk,
+        side: const BorderSide(color: kLine),
       ),
     ),
 
+    // The accent, floating: the business's ink with white on it.
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 0,
+      highlightElevation: 0,
+      backgroundColor: palette.ink,
+      foregroundColor: kPaper,
+      shape: pill,
+      extendedTextStyle: buttonText,
     ),
 
     chipTheme: ChipThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: kStone,
+      selectedColor: palette.hero.first,
+      shape: pill,
       side: BorderSide.none,
+      labelStyle: label.copyWith(color: kInk, fontWeight: FontWeight.w500),
     ),
 
-    // Fields are shallow pools: translucent white with a soft edge that
-    // sharpens to the palette's primary when focused.
+    // Fields are white with a hairline that turns to ink when it has focus.
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withValues(alpha: kGlassFieldAlpha),
+      fillColor: kPaper,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: kLine),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: kLine),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: scheme.primary, width: 2),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: kInk, width: 1.5),
       ),
+      labelStyle: label.copyWith(color: kMist, fontWeight: FontWeight.w400),
+      hintStyle: label.copyWith(color: kMist, fontWeight: FontWeight.w400),
     ),
 
-    // Sheets and dialogs float above content someone was just reading, so
-    // they stay near-opaque — frosted at the edge of legibility is a trick
-    // played on the reader, not a style.
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: Colors.white.withValues(alpha: 0.97),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: kPaper,
       surfaceTintColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: Colors.white.withValues(alpha: 0.96),
+      backgroundColor: kPaper,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     popupMenuTheme: PopupMenuThemeData(
-      color: Colors.white.withValues(alpha: 0.97),
+      color: kPaper,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: kLine),
+      ),
     ),
 
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      backgroundColor: kInk,
+      contentTextStyle: label.copyWith(color: kPaper, fontSize: 15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
 
     listTileTheme: ListTileThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      iconColor: kInk,
     ),
 
-    dividerTheme: DividerThemeData(
-      color: scheme.outlineVariant.withValues(alpha: 0.5),
-      space: 24,
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: kPaper,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: kStone,
+      elevation: 0,
+      iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(
+          color: states.contains(WidgetState.selected) ? palette.ink : kMist)),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) => label.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: states.contains(WidgetState.selected) ? kInk : kMist)),
     ),
+    tabBarTheme: const TabBarThemeData(
+      labelColor: kInk,
+      unselectedLabelColor: kMist,
+      indicatorColor: kInk,
+      dividerColor: kLine,
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: palette.ink),
+
+    dividerTheme: const DividerThemeData(color: kLine, space: 24, thickness: 1),
   );
 }
 
-/// The ground every page stands on: the palette's wash, lit by two soft
-/// colour glows drifting in from the corners — the "aurora" that makes the
-/// glass above it read as glass.
-///
-/// Painted once behind the Navigator (and again, in the business's own
-/// palette, by [ProfileTheme]), it is entirely static: gradients, no blur,
-/// no animation — the futurism has to run on a cheap phone in a market.
+/// The ground every page stands on: paper. It stays a widget with the same
+/// signature so the app shell and the profile theme need not change; what
+/// it paints is a white page, because that is what the goods sit on.
 class KajBackground extends StatelessWidget {
   const KajBackground({super.key, required this.palette, required this.child});
 
   final KajPalette palette;
   final Widget child;
 
-  @override
-  Widget build(BuildContext context) {
-    // StackFit.expand, not loose: a Stack whose children are all Positioned
-    // otherwise sizes itself to nothing, and a zero-sized Navigator is a
-    // blank page — caught by screenshot, kept here as a warning.
-    // The first version of this wash was lerped so far toward white that a
-    // phone in daylight showed a white page — the owner said, correctly,
-    // that there was no proof of any new style. The hero tints now arrive
-    // nearly full strength and the glows are colours, not hints.
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(palette.hero.first, Colors.white, 0.10)!,
-                  Color.lerp(palette.hero.last, Colors.white, 0.55)!,
-                  Color.lerp(palette.hero.last, Colors.white, 0.12)!,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: -140,
-          right: -100,
-          child: _glow(palette.tint(0).withValues(alpha: 0.30), 440),
-        ),
-        Positioned(
-          top: 320,
-          left: -180,
-          child: _glow(palette.tint(4).withValues(alpha: 0.18), 400),
-        ),
-        Positioned(
-          bottom: -160,
-          right: -140,
-          child: _glow(palette.tint(2).withValues(alpha: 0.26), 480),
-        ),
-        Positioned.fill(child: child),
-      ],
-    );
-  }
+  /// A page never grows wider than this on a monitor. A shop page spread
+  /// across 1920 pixels is a form nobody can read in one glance; a centred
+  /// column with paper either side is what every goods site does.
+  static const maxWidth = 1120.0;
 
-  Widget _glow(Color colour, double size) => IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [colour, colour.withValues(alpha: 0)],
-            ),
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+        color: kPaper,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxWidth),
+            child: child,
           ),
         ),
       );
 }
 
-/// The gradient behind a hero card or an app bar, painted along the diagonal
-/// so the two stops are both visible on a wide, short box.
+/// The band behind a home screen's figure: the palette's pale wash, flat.
+/// Still a `LinearGradient` so the panels that paint it need not change; the
+/// two stops are the same colour, which is the point — a band, not a sunset.
 LinearGradient kajGradient(KajPalette palette) => LinearGradient(
-      colors: palette.hero,
+      colors: [palette.hero.first, palette.hero.first],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );

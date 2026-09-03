@@ -86,8 +86,8 @@ void main() {
     // And the screen is wearing it: the app bar takes the chosen palette, not
     // the farm's green, so the preview is the whole frame and not a swatch.
     final context = tester.element(find.byType(Scaffold).first);
-    expect(Theme.of(context).appBarTheme.backgroundColor,
-        oceanPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+    expect(Theme.of(context).colorScheme.primary,
+        oceanPalette.ink);
   });
 
   testWidgets('choosing a different colour arms the save button',
@@ -103,8 +103,8 @@ void main() {
     // The preview follows immediately, before anything is written: the point
     // of the screen is deciding by looking, not by saving and then judging.
     final context = tester.element(find.byType(Scaffold).first);
-    expect(Theme.of(context).appBarTheme.backgroundColor,
-        prunePalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+    expect(Theme.of(context).colorScheme.primary,
+        prunePalette.ink);
   });
 
   testWidgets('going back to the colour already saved disarms it again',
@@ -135,8 +135,8 @@ void main() {
 
     expect(saveCallback(tester), isNotNull);
     final context = tester.element(find.byType(Scaffold).first);
-    expect(Theme.of(context).appBarTheme.backgroundColor,
-        retailPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+    expect(Theme.of(context).colorScheme.primary,
+        retailPalette.ink);
   });
 
   testWidgets('a colour this build does not know shows as the default',
@@ -149,7 +149,7 @@ void main() {
 
     expect(saveCallback(tester), isNull);
     final context = tester.element(find.byType(Scaffold).first);
-    expect(Theme.of(context).appBarTheme.backgroundColor,
-        churchPalette.hero.first.withValues(alpha: kGlassAppBarAlpha));
+    expect(Theme.of(context).colorScheme.primary,
+        churchPalette.ink);
   });
 }

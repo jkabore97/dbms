@@ -315,7 +315,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                     children: [
                       Expanded(
                         child: _NavCard(
-                          tint: 0,
                           icon: Icons.inventory_2_outlined,
                           label: Strings.of(context).stock,
                           onTap: () =>
@@ -325,7 +324,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _NavCard(
-                          tint: 1,
                           icon: Icons.pets_outlined,
                           label: Strings.of(context).flocks,
                           onTap: () =>
@@ -335,7 +333,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _NavCard(
-                          tint: 2,
                           icon: Icons.receipt_long_outlined,
                           label: Strings.of(context).invoices,
                           // The shared screen since 020. The farm-only one was
@@ -642,29 +639,25 @@ class _NavCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    required this.tint,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  /// Position in the grid, not meaning: the point is that neighbours differ.
-  final int tint;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colour = KajTheme.of(context).tint(tint);
+    // The business's one accent on a stone tile, not a rotation of six
+    // colours: the tiles are told apart by their icon and their word.
+    final colour = theme.colorScheme.primary;
 
     return Card(
       elevation: 0,
-      // A tint of the colour rather than the colour: six saturated blocks
-      // would shout over the figures above them, which are the point of the
-      // screen.
-      color: colour.withValues(alpha: 0.07),
+      color: theme.colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -673,11 +666,8 @@ class _NavCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  // A tint of the colour with the icon drawn in the colour
-                  // itself. A white icon on a saturated chip failed contrast
-                  // on four of the six tile colours.
-                  color: colour.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
+                  color: colour.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 24, color: colour),
               ),

@@ -602,8 +602,8 @@ void main() {
               "business's chosen one");
       // And the Material theme the AppBar is painted from carries it too.
       expect(
-        Theme.of(context).appBarTheme.backgroundColor,
-        oceanPalette.hero.first.withValues(alpha: kGlassAppBarAlpha),
+        Theme.of(context).colorScheme.primary,
+        oceanPalette.ink,
         reason: 'the inner page kept the default app-bar colour',
       );
     });
