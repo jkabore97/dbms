@@ -593,20 +593,28 @@ class AdminRepository {
   /// The vitrine switch and its blurb (052). A database that has not run 052
   /// yet reads as "closed" — the same posture as the Wave column, because the
   /// app runs one migration ahead of the database by design.
-  Future<({bool enabled, String? blurb})> storefront(String orgId) async {
+  Future<({bool enabled, String? blurb, double? lat, double? lng})> storefront(
+      String orgId) async {
     final client = _requireClient();
+    double? num_(Object? v) =>
+        v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
     try {
       final row = await client
           .from('orgs')
-          .select('storefront_enabled, storefront_blurb')
+          .select('storefront_enabled, storefront_blurb, lat, lng')
           .eq('id', orgId)
           .maybeSingle();
       return (
         enabled: row?['storefront_enabled'] == true,
         blurb: row?['storefront_blurb'] as String?,
+        lat: num_(row?['lat']),
+        lng: num_(row?['lng']),
       );
     } on PostgrestException catch (error) {
-      if (error.code == '42703') return (enabled: false, blurb: null);
+      // 052 or 053 not run yet: closed, unplaced.
+      if (error.code == '42703') {
+        return (enabled: false, blurb: null, lat: null, lng: null);
+      }
       rethrow;
     }
   }
@@ -621,6 +629,19 @@ class AdminRepository {
       'p_org_id': orgId,
       'p_enabled': enabled,
       'p_blurb': blurb ?? '',
+    });
+  }
+
+  /// Places the shop on the vitrine map, or lifts it off with both nulls.
+  /// Admin-only, both-or-neither and inside the world — all enforced by
+  /// set_storefront_location() (053).
+  Future<void> setStorefrontLocation(String orgId,
+      {double? lat, double? lng}) async {
+    final client = _requireClient();
+    await client.rpc('set_storefront_location', params: {
+      'p_org_id': orgId,
+      'p_lat': lat,
+      'p_lng': lng,
     });
   }
 
