@@ -313,6 +313,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             tooltip: 'Formateurs',
           ),
           IconButton(
+            onPressed: () => context.push(Routes.consoleFeatured),
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'À la une',
+          ),
+          IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',

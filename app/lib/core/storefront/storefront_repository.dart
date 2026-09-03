@@ -42,6 +42,15 @@ class StorefrontRepository {
         .toList();
   }
 
+  /// The articles à la une (054): the paid spots on the welcome page.
+  Future<List<FeaturedItem>> featured() async {
+    final rows =
+        await _requireClient().rpc('storefront_featured') as List<dynamic>;
+    return rows
+        .map((r) => FeaturedItem.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.
@@ -70,6 +79,8 @@ class PublicShop {
     this.address,
     this.theme,
     this.currency = 'XOF',
+    this.lat,
+    this.lng,
   });
 
   final String orgId;
@@ -82,6 +93,12 @@ class PublicShop {
   final String? theme;
   final String currency;
 
+  /// Where the shop is (054), when it placed itself; null otherwise.
+  final double? lat;
+  final double? lng;
+
+  bool get hasLocation => lat != null && lng != null;
+
   factory PublicShop.fromRow(Map<String, dynamic> row) => PublicShop(
         orgId: row['org_id'] as String,
         name: row['name'] as String,
@@ -92,8 +109,54 @@ class PublicShop {
         address: row['address'] as String?,
         theme: row['theme'] as String?,
         currency: (row['currency'] as String?) ?? 'XOF',
+        lat: _num(row['lat']),
+        lng: _num(row['lng']),
       );
 }
+
+double? _num(Object? v) =>
+    v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+
+/// An article à la une (054): one of the paid spots on the welcome page,
+/// with the shop it belongs to so a tap can open that shop's window.
+class FeaturedItem {
+  const FeaturedItem({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.inStock,
+    required this.shopName,
+    required this.shopSlug,
+    this.photoKey,
+    this.currency = 'XOF',
+  });
+
+  final String id;
+  final String name;
+  final double price;
+  final bool inStock;
+  final String shopName;
+  final String shopSlug;
+  final String? photoKey;
+  final String currency;
+
+  factory FeaturedItem.fromRow(Map<String, dynamic> row) => FeaturedItem(
+        id: row['id'] as String,
+        name: row['name'] as String,
+        price: _num(row['sale_price']) ?? 0.0,
+        inStock: row['in_stock'] == true,
+        shopName: (row['shop_name'] as String?) ?? '',
+        shopSlug: (row['shop_slug'] as String?) ?? '',
+        photoKey: row['photo_key'] as String?,
+        currency: (row['currency'] as String?) ?? 'XOF',
+      );
+}
+
+/// The link that opens turn-by-turn directions to a pin in whatever maps
+/// app the phone has — Google Maps on Android and in every browser. No key,
+/// no billing, and the shopper is guided by the app they already trust.
+String directionsUrl(double lat, double lng) =>
+    'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
 
 /// One article in the window. `inStock` is a yes/no on purpose: a shopper is
 /// told whether to come, never how many are on the shelf.

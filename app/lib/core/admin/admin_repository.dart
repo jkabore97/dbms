@@ -107,6 +107,30 @@ class AdminRepository {
   }
 
   // ----------------------------------------------------------------
+  // À la une (054): the paid spots on the welcome page. Platform only, and
+  // the server is the one that says so.
+  // ----------------------------------------------------------------
+
+  /// Every article currently in a window, with its shop and its spot's end
+  /// date if it has one — what the platform chooses from.
+  Future<List<FeaturedCandidate>> featuredCandidates() async {
+    final rows = await _requireClient().rpc('platform_featured_candidates')
+        as List<dynamic>;
+    return rows
+        .map((r) =>
+            FeaturedCandidate.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Puts an article à la une until [until], or takes it down with null.
+  Future<void> setProductFeatured(String productId, DateTime? until) async {
+    await _requireClient().rpc('set_product_featured', params: {
+      'p_product_id': productId,
+      'p_until': until?.toUtc().toIso8601String(),
+    });
+  }
+
+  // ----------------------------------------------------------------
   // Exchange rates (039). Direct table ops: RLS lets members read and only
   // admins write, so there is nothing to wrap. Missing table (a database not
   // yet on 039) reads as "no rates", same posture as the Wave column.
@@ -793,6 +817,48 @@ class PlatformOrg {
       memberCount: (row['member_count'] as num?)?.toInt() ?? 0,
       entryCount: (row['entry_count'] as num?)?.toInt() ?? 0,
       createdAt: when(row['created_at']),
+    );
+  }
+}
+
+/// One article the platform may put à la une (054): what it is, whose it is,
+/// and until when it is on the welcome page, if it is.
+class FeaturedCandidate {
+  const FeaturedCandidate({
+    required this.productId,
+    required this.name,
+    required this.price,
+    required this.shopName,
+    required this.shopSlug,
+    this.currency = 'XOF',
+    this.featuredUntil,
+  });
+
+  final String productId;
+  final String name;
+  final double price;
+  final String shopName;
+  final String shopSlug;
+  final String currency;
+  final DateTime? featuredUntil;
+
+  /// On the welcome page right now: a date, and one still ahead.
+  bool get live =>
+      featuredUntil != null && featuredUntil!.isAfter(DateTime.now());
+
+  factory FeaturedCandidate.fromRow(Map<String, dynamic> row) {
+    final raw = row['sale_price'];
+    final until = row['featured_until'] as String?;
+    return FeaturedCandidate(
+      productId: row['product_id'] as String,
+      name: row['name'] as String,
+      price: raw == null
+          ? 0.0
+          : (raw is num ? raw.toDouble() : double.tryParse('$raw') ?? 0.0),
+      shopName: (row['shop_name'] as String?) ?? '',
+      shopSlug: (row['shop_slug'] as String?) ?? '',
+      currency: (row['currency'] as String?) ?? 'XOF',
+      featuredUntil: until == null ? null : DateTime.tryParse(until)?.toLocal(),
     );
   }
 }

@@ -162,12 +162,45 @@ void main() {
     await flush(tester);
   }
 
-  testWidgets('a fresh device asks who you are', (tester) async {
+  testWidgets('a fresh device lands on the street, with a way in',
+      (tester) async {
+    // The front door is the welcome page — the vitrines — not a gate. A
+    // stranger sees the shops and "Se connecter"; the sign-in page is one
+    // tap away, and it is the tap that opens it.
     await pumpApp(tester);
+
+    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.text('Se connecter'), findsOneWidget);
+    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
+        findsNothing);
+
+    await tester.tap(find.text('Se connecter'));
+    await flush(tester);
 
     expect(find.text('Kaj'), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsOneWidget);
+  });
+
+  testWidgets('a signed-in person with no business is a shopper at home '
+      'on the street', (tester) async {
+    // Unlocked, but member of nothing: their home is the welcome page, with
+    // the account corner offering the way to become a seller.
+    await seedDevice(tester);
+    await pumpApp(tester);
+    expect(find.text('Entrez votre code'), findsOneWidget);
+
+    await enterPin(tester, '1379');
+
+    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.text('Se connecter'), findsNothing);
+    expect(find.byIcon(Icons.person_outline), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.person_outline));
+    await tester.pumpAndSettle();
+    expect(find.text('Devenir vendeur'), findsOneWidget);
+    expect(find.text('Rejoindre une entreprise'), findsOneWidget);
+    expect(find.text('Mes entreprises'), findsNothing);
   });
 
   testWidgets('a known device with a stale token asks for the code',
@@ -263,6 +296,14 @@ void main() {
 
     await enterPin(tester, '1379');
 
+    // Home is the street now; the waiting room is one tap behind the
+    // account corner, for the employee holding an invitation code.
+    expect(find.text('Les vitrines'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.person_outline));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rejoindre une entreprise'));
+    await flush(tester);
+
     expect(find.text('Votre compte est prêt'), findsOneWidget);
     // The number the owner needs in order to add them.
     expect(find.text('+22670000001'), findsOneWidget);
@@ -304,8 +345,10 @@ void main() {
     await seedDevice(tester, pin: null);
     await pumpApp(tester);
 
-    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
-        findsOneWidget);
+    // Signed out, so: the street, with "Se connecter" — and never the code
+    // screen, since there is no code to ask for.
+    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.text('Se connecter'), findsOneWidget);
     expect(find.text('Entrez votre code'), findsNothing);
   });
 
@@ -315,8 +358,7 @@ void main() {
     // build has no backend, so the window says so — but it is the window
     // that says it, not the sign-in gate.
     await pumpApp(tester);
-    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
-        findsOneWidget);
+    expect(find.text('Les vitrines'), findsOneWidget);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     (app.routerConfig as GoRouter).go('/s/boutique-esperance');

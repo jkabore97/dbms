@@ -402,6 +402,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_storefront_directory.sql
 
+      # The welcome page: the window says where the shop is; only the
+      # platform puts an article à la une; the street sees the featured
+      # articles of open vitrines only, and a spot ends by itself.
+      - name: Prove the welcome page shows the paid spots and nothing else
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_marketplace.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
