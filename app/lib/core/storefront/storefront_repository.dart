@@ -102,6 +102,26 @@ class StorefrontRepository {
         .toList();
   }
 
+  /// One search across every window (059): the published articles of open
+  /// vitrines whose name contains [query], accents and case ignored. With a
+  /// position, each hit says how far its shop is and the nearer answer of a
+  /// tie comes first. Under two letters the server answers nothing.
+  Future<List<ProductHit>> searchProducts(
+    String query, {
+    double? lat,
+    double? lng,
+  }) async {
+    final here = lat != null && lng != null;
+    final rows = await _requireClient().rpc('search_products', params: {
+      'p_query': query,
+      if (here) 'p_lat': lat,
+      if (here) 'p_lng': lng,
+    }) as List<dynamic>;
+    return rows
+        .map((r) => ProductHit.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.
@@ -205,6 +225,51 @@ class FeaturedItem {
         shopSlug: (row['shop_slug'] as String?) ?? '',
         photoKey: row['photo_key'] as String?,
         currency: (row['currency'] as String?) ?? 'XOF',
+      );
+}
+
+/// One answer of the search across every window (059): an article, the shop
+/// whose window it is in, and — when the shopper said where they are — how
+/// far that shop is.
+class ProductHit {
+  const ProductHit({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.inStock,
+    required this.shopName,
+    required this.shopSlug,
+    this.photoKey,
+    this.currency = 'XOF',
+    this.shopLat,
+    this.shopLng,
+    this.distanceKm,
+  });
+
+  final String id;
+  final String name;
+  final double price;
+  final bool inStock;
+  final String shopName;
+  final String shopSlug;
+  final String? photoKey;
+  final String currency;
+  final double? shopLat;
+  final double? shopLng;
+  final double? distanceKm;
+
+  factory ProductHit.fromRow(Map<String, dynamic> row) => ProductHit(
+        id: row['id'] as String,
+        name: row['name'] as String,
+        price: _num(row['sale_price']) ?? 0.0,
+        inStock: row['in_stock'] == true,
+        shopName: (row['shop_name'] as String?) ?? '',
+        shopSlug: (row['shop_slug'] as String?) ?? '',
+        photoKey: row['photo_key'] as String?,
+        currency: (row['currency'] as String?) ?? 'XOF',
+        shopLat: _num(row['shop_lat']),
+        shopLng: _num(row['shop_lng']),
+        distanceKm: _num(row['distance_km']),
       );
 }
 
