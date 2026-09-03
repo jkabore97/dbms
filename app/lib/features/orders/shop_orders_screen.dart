@@ -318,8 +318,20 @@ class _OrderCard extends StatelessWidget {
             ),
             if ((order.address ?? '').isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text('Livraison : ${order.address}',
-                  style: theme.textTheme.bodySmall),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('Livraison : ${order.address}',
+                        style: theme.textTheme.bodySmall),
+                  ),
+                  if (order.hasDropPin)
+                    TextButton(
+                      onPressed: () => onOpen(
+                          directionsUrl(order.dropLat!, order.dropLng!)),
+                      child: const Text('Itinéraire'),
+                    ),
+                ],
+              ),
             ],
             if ((order.courierName ?? '').isNotEmpty) ...[
               const SizedBox(height: 4),

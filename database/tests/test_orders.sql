@@ -97,6 +97,41 @@ begin
         if sqlerrm like 'FAIL:%' then raise; end if;
         raise notice 'PASS: an empty order was refused — %', sqlerrm;
     end;
+    begin
+        perform place_order('commande-a-28',
+            '[{"product_id":"28aaaaaa-0000-0000-0000-000000000001","quantity":1}]'::jsonb,
+            'delivery', null, 'Dassasgho', null, 'cash', 12.37, null);
+        raise exception 'FAIL: half a delivery pin was accepted';
+    exception when others then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+        raise notice 'PASS: half a pin is no pin — %', sqlerrm;
+    end;
+end $$;
+rollback;
+
+-- The pin itself (058): stored for a delivery, discarded for a pickup.
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = :customer;
+do $$
+declare v_id uuid; v_lat double precision; v_lng double precision;
+begin
+    v_id := place_order('commande-a-28',
+        '[{"product_id":"28aaaaaa-0000-0000-0000-000000000001","quantity":1}]'::jsonb,
+        'delivery', null, 'Dassasgho, en face de la pharmacie', null, 'cash',
+        12.3901, -1.4877);
+    select drop_lat, drop_lng into v_lat, v_lng from orders where id = v_id;
+    if v_lat is distinct from 12.3901 or v_lng is distinct from -1.4877 then
+        raise exception 'FAIL: the delivery pin was not kept (% / %)', v_lat, v_lng;
+    end if;
+    v_id := place_order('commande-a-28',
+        '[{"product_id":"28aaaaaa-0000-0000-0000-000000000001","quantity":1}]'::jsonb,
+        'pickup', null, null, null, 'cash', 12.3901, -1.4877);
+    select drop_lat, drop_lng into v_lat, v_lng from orders where id = v_id;
+    if v_lat is not null or v_lng is not null then
+        raise exception 'FAIL: a pickup kept a pin (% / %)', v_lat, v_lng;
+    end if;
+    raise notice 'PASS: a delivery keeps its pin; a pickup''s destination is the shop';
 end $$;
 rollback;
 

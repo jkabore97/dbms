@@ -59,6 +59,8 @@ class StorefrontRepository {
     String? address,
     String? phone,
     String payment = 'cash',
+    double? dropLat,
+    double? dropLng,
   }) async {
     final id = await _requireClient().rpc('place_order', params: {
       'p_slug': slug,
@@ -71,6 +73,8 @@ class StorefrontRepository {
       'p_address': address,
       'p_phone': phone,
       'p_payment': payment,
+      'p_drop_lat': dropLat,
+      'p_drop_lng': dropLng,
     });
     return id as String;
   }

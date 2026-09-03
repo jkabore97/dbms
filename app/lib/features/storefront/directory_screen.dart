@@ -301,7 +301,11 @@ class _AccountCorner extends StatelessWidget {
                   icon: Icon(member
                       ? Icons.store_outlined
                       : Icons.add_business_outlined),
-                  onPressed: () => context.go(member
+                  // `replace`, not `go`: entering the business world takes
+                  // the street's place in history, so back from the picker,
+                  // the console or a store never falls out onto the public
+                  // page — the owner found that jarring, and it was.
+                  onPressed: () => context.replace(member
                       ? (open != null ? Routes.org(open) : Routes.picker)
                       : Routes.join),
                 ),
