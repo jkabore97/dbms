@@ -290,7 +290,8 @@ $$;
 -- ------------------------------------------------------------
 -- Reading, with the lines folded in
 -- ------------------------------------------------------------
-create or replace function my_orders()
+drop function if exists my_orders();
+create function my_orders()
 returns table (
     id         uuid,
     org_id     uuid,
@@ -324,7 +325,8 @@ as $$
               o.created_at desc;
 $$;
 
-create or replace function shop_orders(p_org_id uuid)
+drop function if exists shop_orders(uuid);
+create function shop_orders(p_org_id uuid)
 returns table (
     id            uuid,
     customer_name text,

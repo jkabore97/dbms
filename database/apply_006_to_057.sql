@@ -14479,7 +14479,8 @@ as $$
       and o.suspended_at is null;
 $$;
 
-create or replace function storefront(p_slug text)
+drop function if exists storefront(text);
+create function storefront(p_slug text)
 returns table (
     org_id   uuid,
     name     text,
@@ -15188,7 +15189,8 @@ $$;
 -- ------------------------------------------------------------
 -- Reading, with the lines folded in
 -- ------------------------------------------------------------
-create or replace function my_orders()
+drop function if exists my_orders();
+create function my_orders()
 returns table (
     id         uuid,
     org_id     uuid,
@@ -15222,7 +15224,8 @@ as $$
               o.created_at desc;
 $$;
 
-create or replace function shop_orders(p_org_id uuid)
+drop function if exists shop_orders(uuid);
+create function shop_orders(p_org_id uuid)
 returns table (
     id            uuid,
     customer_name text,
@@ -15494,7 +15497,8 @@ $$;
 -- Ready deliveries nobody carries yet, of shops that still stand. The
 -- customer's door is on the card because a courier decides by distance;
 -- couriers are vetted by the platform before they can see this at all.
-create or replace function available_deliveries()
+drop function if exists available_deliveries();
+create function available_deliveries()
 returns table (
     order_id     uuid,
     shop_name    text,
@@ -15623,7 +15627,8 @@ end;
 $$;
 
 -- The courier's own jobs, running first.
-create or replace function courier_deliveries()
+drop function if exists courier_deliveries();
+create function courier_deliveries()
 returns table (
     order_id      uuid,
     shop_name     text,
@@ -15877,7 +15882,7 @@ alter table orders add column if not exists paid_at timestamptz;
 -- The 055 signature must go first: two place_order overloads whose extra
 -- arguments all have defaults would make every short call ambiguous.
 drop function if exists place_order(text, jsonb, text, text, text, text);
-create function place_order(
+create or replace function place_order(
     p_slug       text,
     p_lines      jsonb,
     p_fulfilment text default 'pickup',

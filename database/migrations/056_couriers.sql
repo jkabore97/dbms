@@ -197,7 +197,8 @@ $$;
 -- Ready deliveries nobody carries yet, of shops that still stand. The
 -- customer's door is on the card because a courier decides by distance;
 -- couriers are vetted by the platform before they can see this at all.
-create or replace function available_deliveries()
+drop function if exists available_deliveries();
+create function available_deliveries()
 returns table (
     order_id     uuid,
     shop_name    text,
@@ -326,7 +327,8 @@ end;
 $$;
 
 -- The courier's own jobs, running first.
-create or replace function courier_deliveries()
+drop function if exists courier_deliveries();
+create function courier_deliveries()
 returns table (
     order_id      uuid,
     shop_name     text,
