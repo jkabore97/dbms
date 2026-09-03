@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
+import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import 'shop_style.dart';
 
@@ -15,9 +16,10 @@ import 'shop_style.dart';
 /// Opened from a link on WhatsApp by somebody with no account, so it asks for
 /// nothing: no sign-in, no PIN, no business. It shows what the shop chose to
 /// show — its name, a few words, the articles with a photo and a price — and
-/// one way to act on it: contact the shop. Nothing is bought here. Phase one
-/// of the vitrine is a window, not a till; the till comes when shoppers are
-/// actually pulling on the door.
+/// the ways to act on it: contact the shop, go there, or (055) put articles
+/// in a basket and send the shop a réservation. Ordering is the one act that
+/// needs a name, so "Commander" walks a stranger through sign-in and brings
+/// them straight back to this vitrine to order.
 ///
 /// The look is the settled one for selling goods online (see [ShopStyle]):
 /// white page, a quiet header, the shop's name large over a warm band, then
@@ -30,6 +32,7 @@ class StorefrontScreen extends StatefulWidget {
     required this.slug,
     required this.storefront,
     required this.capture,
+    required this.session,
   });
 
   final String slug;
@@ -37,6 +40,9 @@ class StorefrontScreen extends StatefulWidget {
 
   /// For the photos, served publicly by the uploads Worker per key.
   final CaptureRepository capture;
+
+  /// Who is holding the phone: ordering needs a signed-in person.
+  final SessionController session;
 
   @override
   State<StorefrontScreen> createState() => _StorefrontScreenState();
@@ -46,7 +52,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   PublicShop? _shop;
   List<PublicItem> _items = const [];
   bool _loading = true;
+  bool _sending = false;
   String? _error;
+
+  /// The basket: product id → quantity. Local until "Commander" sends it.
+  final Map<String, double> _basket = {};
 
   @override
   void initState() {
@@ -94,9 +104,99 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _directory() => context.go(Routes.directory);
 
+  void _add(PublicItem item) =>
+      setState(() => _basket[item.id] = (_basket[item.id] ?? 0) + 1);
+
+  void _remove(PublicItem item) => setState(() {
+        final q = (_basket[item.id] ?? 0) - 1;
+        if (q <= 0) {
+          _basket.remove(item.id);
+        } else {
+          _basket[item.id] = q;
+        }
+      });
+
+  double get _total => _items.fold(
+      0, (sum, i) => sum + (_basket[i.id] ?? 0) * i.price);
+
+  int get _count =>
+      _basket.values.fold(0, (sum, q) => sum + q.round());
+
+  /// "Commander": the one act that needs a name. A stranger is sent through
+  /// sign-in and brought back to this very vitrine to pick again — the
+  /// basket itself does not survive the trip, and saying so here beats
+  /// pretending otherwise in a comment.
+  Future<void> _order() async {
+    switch (widget.session.phase) {
+      case SessionPhase.signedOut:
+        widget.session.stashReturnTo(Routes.storefront(widget.slug));
+        context.go(Routes.signIn);
+        return;
+      case SessionPhase.locked:
+      case SessionPhase.choosingPin:
+        widget.session.stashReturnTo(Routes.storefront(widget.slug));
+        context.go(Routes.pin);
+        return;
+      case SessionPhase.booting:
+      case SessionPhase.resolving:
+        return;
+      case SessionPhase.noOrg:
+      case SessionPhase.picking:
+      case SessionPhase.ready:
+        break;
+    }
+
+    final sent = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => Theme(
+        data: ShopStyle.theme(sheet),
+        child: _OrderSheet(
+          items: _items,
+          basket: Map.of(_basket),
+          currency: _shop?.currency ?? 'XOF',
+          onSubmit: _send,
+        ),
+      ),
+    );
+    if (sent == true && mounted) {
+      setState(_basket.clear);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Commande envoyée. La boutique vous répondra ici.'),
+      ));
+      context.go(Routes.myOrders);
+    }
+  }
+
+  Future<String?> _send({
+    required Map<String, double> lines,
+    required String fulfilment,
+    String? note,
+    String? address,
+    String? phone,
+  }) async {
+    setState(() => _sending = true);
+    try {
+      await widget.storefront.placeOrder(
+        widget.slug,
+        lines: lines,
+        fulfilment: fulfilment,
+        note: note,
+        address: address,
+        phone: phone,
+      );
+      return null;
+    } catch (_) {
+      return "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final shop = _shop;
+    final money = moneyFormat(shop?.currency ?? 'XOF');
 
     return ShopPage(
       title: shop?.name ?? 'Vitrine',
@@ -105,6 +205,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
+      bottom: _basket.isEmpty
+          ? null
+          : _BasketBar(
+              count: _count,
+              total: money.format(_total),
+              sending: _sending,
+              onOrder: _order,
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -124,9 +232,275 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                       shop: shop,
                       items: _items,
                       capture: widget.capture,
+                      basket: _basket,
                       onOpen: _open,
                       onDirectory: _directory,
+                      onAdd: _add,
+                      onRemove: _remove,
                     ),
+    );
+  }
+}
+
+/// The basket, pinned under the page: how many, how much, one button.
+class _BasketBar extends StatelessWidget {
+  const _BasketBar({
+    required this.count,
+    required this.total,
+    required this.sending,
+    required this.onOrder,
+  });
+
+  final int count;
+  final String total;
+  final bool sending;
+  final VoidCallback onOrder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: ShopStyle.paper,
+        border: Border(top: BorderSide(color: ShopStyle.line)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('$count article${count > 1 ? 's' : ''}',
+                      style: const TextStyle(
+                          fontSize: 13, color: ShopStyle.mist)),
+                  Text(total,
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: ShopStyle.ink)),
+                ],
+              ),
+            ),
+            FilledButton(
+              onPressed: sending ? null : onOrder,
+              child: sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: ShopStyle.paper))
+                  : const Text('Commander'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The last step: what is in the basket, how it reaches the customer, and
+/// the button that sends it. Kept as one sheet so the thumb never leaves
+/// the page it was shopping on.
+class _OrderSheet extends StatefulWidget {
+  const _OrderSheet({
+    required this.items,
+    required this.basket,
+    required this.currency,
+    required this.onSubmit,
+  });
+
+  final List<PublicItem> items;
+  final Map<String, double> basket;
+  final String currency;
+  final Future<String?> Function({
+    required Map<String, double> lines,
+    required String fulfilment,
+    String? note,
+    String? address,
+    String? phone,
+  }) onSubmit;
+
+  @override
+  State<_OrderSheet> createState() => _OrderSheetState();
+}
+
+class _OrderSheetState extends State<_OrderSheet> {
+  String _fulfilment = 'pickup';
+  final _note = TextEditingController();
+  final _address = TextEditingController();
+  final _phone = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    _address.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
+      setState(() => _error = 'Indiquez où livrer.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final error = await widget.onSubmit(
+      lines: widget.basket,
+      fulfilment: _fulfilment,
+      note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+      address: _address.text.trim().isEmpty ? null : _address.text.trim(),
+      phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+    );
+    if (!mounted) return;
+    if (error != null) {
+      setState(() {
+        _busy = false;
+        _error = error;
+      });
+      return;
+    }
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(widget.currency);
+    final lines = [
+      for (final item in widget.items)
+        if ((widget.basket[item.id] ?? 0) > 0) item,
+    ];
+    final total = lines.fold<double>(
+        0, (sum, i) => sum + widget.basket[i.id]! * i.price);
+
+    return Padding(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Votre commande',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.ink)),
+            const SizedBox(height: 14),
+            for (final item in lines)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                          '${widget.basket[item.id]!.round()} × ${item.name}',
+                          style: const TextStyle(
+                              fontSize: 15, color: ShopStyle.ink)),
+                    ),
+                    Text(money.format(widget.basket[item.id]! * item.price),
+                        style: const TextStyle(
+                            fontSize: 14, color: ShopStyle.mist)),
+                  ],
+                ),
+              ),
+            const Divider(height: 20),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Total',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: ShopStyle.ink)),
+                ),
+                Text(money.format(total),
+                    style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: ShopStyle.ink)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                    value: 'pickup',
+                    label: Text('Retrait'),
+                    icon: Icon(Icons.storefront_outlined)),
+                ButtonSegment(
+                    value: 'delivery',
+                    label: Text('Livraison'),
+                    icon: Icon(Icons.delivery_dining_outlined)),
+              ],
+              selected: {_fulfilment},
+              onSelectionChanged: (s) =>
+                  setState(() => _fulfilment = s.first),
+            ),
+            if (_fulfilment == 'delivery') ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _address,
+                decoration: const InputDecoration(
+                  labelText: 'Où livrer ?',
+                  hintText: 'Quartier, repère, en face de…',
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _phone,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Votre numéro (facultatif)',
+                hintText: '+226 70 00 00 00',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _note,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Un mot pour la boutique (facultatif)',
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(_error!,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error)),
+            ],
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: ShopStyle.paper))
+                    : const Text('Envoyer la commande'),
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Rien à payer maintenant : vous payez à la boutique, '
+              'au retrait ou à la livraison.',
+              style: TextStyle(fontSize: 13, color: ShopStyle.mist),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -136,15 +510,21 @@ class _Window extends StatelessWidget {
     required this.shop,
     required this.items,
     required this.capture,
+    required this.basket,
     required this.onOpen,
     required this.onDirectory,
+    required this.onAdd,
+    required this.onRemove,
   });
 
   final PublicShop shop;
   final List<PublicItem> items;
   final CaptureRepository capture;
+  final Map<String, double> basket;
   final Future<void> Function(String url) onOpen;
   final VoidCallback onDirectory;
+  final void Function(PublicItem) onAdd;
+  final void Function(PublicItem) onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +540,7 @@ class _Window extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        // The band: who this is, in a word or two, and the one thing to do.
+        // The band: who this is, in a word or two, and the ways to act.
         ColoredBox(
           color: ShopStyle.stone,
           child: ShopWidth(
@@ -242,6 +622,13 @@ class _Window extends StatelessWidget {
                     ? null
                     : '${items.length} article${items.length > 1 ? 's' : ''}',
               ),
+              if (items.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                const Text(
+                  'Touchez un article pour le commander.',
+                  style: TextStyle(fontSize: 13, color: ShopStyle.mist),
+                ),
+              ],
               const SizedBox(height: 18),
               if (items.isEmpty)
                 const Padding(
@@ -263,8 +650,14 @@ class _Window extends StatelessWidget {
                     childAspectRatio: wide ? 0.70 : 0.62,
                   ),
                   itemCount: items.length,
-                  itemBuilder: (context, i) =>
-                      _ItemTile(item: items[i], money: money, capture: capture),
+                  itemBuilder: (context, i) => _ItemTile(
+                    item: items[i],
+                    money: money,
+                    capture: capture,
+                    quantity: basket[items[i].id] ?? 0,
+                    onAdd: () => onAdd(items[i]),
+                    onRemove: () => onRemove(items[i]),
+                  ),
                 ),
               ShopFooter(onDirectory: onDirectory),
             ],
@@ -276,65 +669,124 @@ class _Window extends StatelessWidget {
 }
 
 /// One article: the photograph on its square, then the name and the price
-/// in small type. No frame, no shadow — the square is the frame. Out of
-/// stock fades the picture and says so under the price, rather than
-/// shouting over it in red.
+/// in small type. No frame, no shadow — the square is the frame. Tapping
+/// an article in stock puts one in the basket; once there, a small stepper
+/// sits on the photo. Out of stock fades the picture and says so under the
+/// price, rather than shouting over it in red.
 class _ItemTile extends StatelessWidget {
   const _ItemTile({
     required this.item,
     required this.money,
     required this.capture,
+    required this.quantity,
+    required this.onAdd,
+    required this.onRemove,
   });
 
   final PublicItem item;
   final dynamic money;
   final CaptureRepository capture;
+  final double quantity;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AspectRatio(
-          aspectRatio: 1,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: ColoredBox(
-              color: ShopStyle.stone,
-              child: Opacity(
-                opacity: item.inStock ? 1 : 0.45,
-                child: _Photo(photoKey: item.photoKey, capture: capture),
+    return InkWell(
+      onTap: item.inStock ? onAdd : null,
+      borderRadius: BorderRadius.circular(6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ColoredBox(
+                    color: ShopStyle.stone,
+                    child: Opacity(
+                      opacity: item.inStock ? 1 : 0.45,
+                      child: _Photo(photoKey: item.photoKey, capture: capture),
+                    ),
+                  ),
+                  if (quantity > 0)
+                    Positioned(
+                      right: 8,
+                      bottom: 8,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: ShopStyle.ink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _StepButton(
+                                icon: Icons.remove, onTap: onRemove),
+                            Text('${quantity.round()}',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: ShopStyle.paper)),
+                            _StepButton(icon: Icons.add, onTap: onAdd),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          item.name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 1.25,
-              color: ShopStyle.ink),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          money.format(item.price),
-          style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
-        ),
-        if (!item.inStock)
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Text('Épuisé',
-                style: TextStyle(
-                    fontSize: 12,
-                    letterSpacing: 0.6,
-                    fontWeight: FontWeight.w600,
-                    color: ShopStyle.mist)),
+          const SizedBox(height: 10),
+          Text(
+            item.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+                color: ShopStyle.ink),
           ),
-      ],
+          const SizedBox(height: 3),
+          Text(
+            money.format(item.price),
+            style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
+          ),
+          if (!item.inStock)
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Text('Épuisé',
+                  style: TextStyle(
+                      fontSize: 12,
+                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w600,
+                      color: ShopStyle.mist)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepButton extends StatelessWidget {
+  const _StepButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, size: 16, color: ShopStyle.paper),
+      ),
     );
   }
 }

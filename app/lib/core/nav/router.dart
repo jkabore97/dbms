@@ -16,6 +16,8 @@ import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
 import '../../features/admin/featured_screen.dart';
+import '../../features/orders/my_orders_screen.dart';
+import '../../features/orders/shop_orders_screen.dart';
 import '../../features/admin/platform_people_screen.dart';
 import '../../features/admin/platform_audit_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
@@ -105,6 +107,7 @@ abstract final class Routes {
   static const consolePeople = '/console/personnes';
   static const consoleAudit = '/console/activite';
   static const consoleFeatured = '/console/a-la-une';
+  static const myOrders = '/mes-commandes';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -199,6 +202,7 @@ GoRouter buildRouter(SessionController session) {
         // the things somebody in that position does need are all reachable.
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
+            at(Routes.myOrders) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -230,6 +234,7 @@ GoRouter buildRouter(SessionController session) {
         }
         if (at(Routes.picker) ||
             at(Routes.myProfile) ||
+            at(Routes.myOrders) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -251,6 +256,7 @@ GoRouter buildRouter(SessionController session) {
         }
         if (at(Routes.picker) ||
             at(Routes.myProfile) ||
+            at(Routes.myOrders) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
             at(Routes.console) ||
@@ -293,8 +299,18 @@ GoRouter buildRouter(SessionController session) {
             slug: state.pathParameters['slug'] ?? '',
             storefront: StorefrontRepository(scope.auth.client),
             capture: scope.capture,
+            session: scope.session,
           );
         },
+      ),
+
+      // A customer's own orders (055). Needs a signed-in person: the
+      // redirect sends a stranger through sign-in and back here.
+      GoRoute(
+        path: Routes.myOrders,
+        builder: (context, state) => MyOrdersScreen(
+          storefront: StorefrontRepository(AppScope.of(context).auth.client),
+        ),
       ),
 
       // Every open vitrine: a list, a map, and "près de moi". Public for the
@@ -693,6 +709,15 @@ GoRouter buildRouter(SessionController session) {
                 ],
               ),
             ],
+          ),
+          // The orders customers sent from the vitrine (055).
+          GoRoute(
+            path: 'commandes',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => ShopOrdersScreen(org: org, retail: scope.retail),
+            ),
           ),
           GoRoute(
             path: 'factures',

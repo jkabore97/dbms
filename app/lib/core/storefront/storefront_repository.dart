@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../orders/orders.dart';
+
 /// The shop window, read by anyone (052).
 ///
 /// A shopper has no account, so every call here is one of the SECURITY
@@ -40,6 +42,49 @@ class StorefrontRepository {
     return rows
         .map((r) => PublicItem.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
+  }
+
+  // ----------------------------------------------------------------
+  // Orders (055): the customer's side. All three need a signed-in caller;
+  // the server refuses anyone else.
+  // ----------------------------------------------------------------
+
+  /// Sends a réservation to the shop at [slug]. [lines] maps a product id
+  /// to a quantity. Returns the new order's id.
+  Future<String> placeOrder(
+    String slug, {
+    required Map<String, double> lines,
+    required String fulfilment,
+    String? note,
+    String? address,
+    String? phone,
+  }) async {
+    final id = await _requireClient().rpc('place_order', params: {
+      'p_slug': slug,
+      'p_lines': [
+        for (final e in lines.entries)
+          {'product_id': e.key, 'quantity': e.value},
+      ],
+      'p_fulfilment': fulfilment,
+      'p_note': note,
+      'p_address': address,
+      'p_phone': phone,
+    });
+    return id as String;
+  }
+
+  /// This customer's orders, newest first.
+  Future<List<CustomerOrder>> myOrders() async {
+    final rows = await _requireClient().rpc('my_orders') as List<dynamic>;
+    return rows
+        .map((r) => CustomerOrder.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Withdraws an order that the shop has not yet answered.
+  Future<void> cancelOrder(String orderId) async {
+    await _requireClient()
+        .rpc('cancel_order', params: {'p_order_id': orderId});
   }
 
   /// The articles à la une (054): the paid spots on the welcome page.

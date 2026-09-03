@@ -123,6 +123,7 @@ class ShopPage extends StatelessWidget {
     this.leading,
     this.trailing,
     this.floatingActionButton,
+    this.bottom,
   });
 
   final String title;
@@ -132,6 +133,9 @@ class ShopPage extends StatelessWidget {
   /// The one thing allowed at the right of the header: the account corner.
   final Widget? trailing;
   final Widget? floatingActionButton;
+
+  /// A bar pinned under the body — the basket, when there is one.
+  final Widget? bottom;
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +159,7 @@ class ShopPage extends StatelessWidget {
           ),
         ),
         floatingActionButton: floatingActionButton,
+        bottomNavigationBar: bottom,
         body: body,
       ),
     );

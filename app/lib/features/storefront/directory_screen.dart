@@ -301,6 +301,8 @@ class _AccountCorner extends StatelessWidget {
                   case 'become':
                   case 'join':
                     context.go(Routes.join);
+                  case 'orders':
+                    context.go(Routes.myOrders);
                   case 'profile':
                     context.go(Routes.myProfile);
                   case 'out':
@@ -334,6 +336,13 @@ class _AccountCorner extends StatelessWidget {
                     ),
                   ),
                 ],
+                const PopupMenuItem(
+                  value: 'orders',
+                  child: ListTile(
+                    leading: Icon(Icons.receipt_long_outlined),
+                    title: Text('Mes commandes'),
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'profile',
                   child: ListTile(
