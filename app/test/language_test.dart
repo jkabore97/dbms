@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
@@ -56,6 +57,16 @@ void main() {
     ));
     // The session boots against the database; give it real time to answer.
     for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+    }
+    await tester.pump();
+    // The front door is the street now; the language is asserted on the
+    // sign-in page, which is where the words under test live.
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    (app.routerConfig as GoRouter).go('/connexion');
+    for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 100));
       await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 20)));

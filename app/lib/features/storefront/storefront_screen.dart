@@ -196,7 +196,7 @@ class _Window extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 14, color: ShopStyle.mist)),
                 ],
-                if (whatsapp != null || phone.isNotEmpty) ...[
+                if (whatsapp != null || phone.isNotEmpty || shop.hasLocation) ...[
                   const SizedBox(height: 22),
                   Wrap(
                     spacing: 12,
@@ -212,6 +212,15 @@ class _Window extends StatelessWidget {
                         OutlinedButton(
                           onPressed: () => onOpen('tel:$phone'),
                           child: const Text('Appeler'),
+                        ),
+                      // The way there, in the maps app the phone already
+                      // has: turn-by-turn, no key, no bill (054).
+                      if (shop.hasLocation)
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              onOpen(directionsUrl(shop.lat!, shop.lng!)),
+                          icon: const Icon(Icons.directions_outlined, size: 18),
+                          label: const Text('Itinéraire'),
                         ),
                     ],
                   ),

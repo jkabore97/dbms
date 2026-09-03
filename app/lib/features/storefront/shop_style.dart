@@ -121,12 +121,16 @@ class ShopPage extends StatelessWidget {
     required this.title,
     required this.body,
     this.leading,
+    this.trailing,
     this.floatingActionButton,
   });
 
   final String title;
   final Widget body;
   final Widget? leading;
+
+  /// The one thing allowed at the right of the header: the account corner.
+  final Widget? trailing;
   final Widget? floatingActionButton;
 
   @override
@@ -136,6 +140,7 @@ class ShopPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           leading: leading,
+          actions: trailing == null ? null : [trailing!],
           automaticallyImplyLeading: false,
           title: Text(
             title,

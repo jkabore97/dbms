@@ -15,6 +15,7 @@ import '../../features/admin/org_colours_screen.dart';
 import '../../features/admin/org_settings_screen.dart';
 import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
+import '../../features/admin/featured_screen.dart';
 import '../../features/admin/platform_people_screen.dart';
 import '../../features/admin/platform_audit_screen.dart';
 import '../../features/analytics/owner_analytics_screen.dart';
@@ -103,6 +104,7 @@ abstract final class Routes {
   static const trainers = '/console/formateurs';
   static const consolePeople = '/console/personnes';
   static const consoleAudit = '/console/activite';
+  static const consoleFeatured = '/console/a-la-une';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -174,6 +176,10 @@ GoRouter buildRouter(SessionController session) {
 
       case SessionPhase.signedOut:
         if (at(Routes.signIn)) return null;
+        // The front door is the street: a fresh visit lands on the welcome
+        // page — the vitrines, with "Se connecter" in the corner — not on a
+        // gate. Only a deep address still goes through sign-in, below.
+        if (here == '/' || at(Routes.splash)) return Routes.directory;
         // Remember where this reload was headed. The sign-in page is a gate,
         // not a destination: once the person is back in, the redirect below
         // returns them here instead of to the home it would otherwise pick.
@@ -199,7 +205,10 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.applications)) {
           return null;
         }
-        return Routes.join;
+        // A signed-in person with no business is a shopper: their home is
+        // the street. Becoming a seller, or joining a business with a code,
+        // is behind the account corner there (Routes.join).
+        return Routes.directory;
 
       case SessionPhase.picking:
         // A gate we just came through may have interrupted a deep address —
@@ -292,9 +301,14 @@ GoRouter buildRouter(SessionController session) {
       // same reason as a single vitrine — the shopper has no account.
       GoRoute(
         path: Routes.directory,
-        builder: (context, state) => DirectoryScreen(
-          storefront: StorefrontRepository(AppScope.of(context).auth.client),
-        ),
+        builder: (context, state) {
+          final scope = AppScope.of(context);
+          return DirectoryScreen(
+            storefront: StorefrontRepository(scope.auth.client),
+            capture: scope.capture,
+            session: scope.session,
+          );
+        },
       ),
 
       GoRoute(
@@ -464,6 +478,13 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.consoleAudit,
         builder: (context, _) =>
             PlatformAuditScreen(console: AppScope.of(context).console),
+      ),
+
+      // The paid spots on the welcome page: a platform decision (054).
+      GoRoute(
+        path: Routes.consoleFeatured,
+        builder: (context, _) =>
+            FeaturedScreen(admin: AppScope.of(context).admin),
       ),
 
       GoRoute(
