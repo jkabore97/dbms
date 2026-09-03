@@ -107,6 +107,9 @@ dependencies:
   # a business was a setState -- so back from inside a business left the app
   # entirely rather than returning to the picker.
   go_router: ^17.5.0
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/rates/currency_rates.dart';
+import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/nav/router.dart';
 
@@ -69,6 +71,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   bool _storefrontEnabled = false;
   final _blurbController = TextEditingController();
 
+  /// Where the shop is on the vitrine map (053). Text, not doubles, so the
+  /// field can be typed into, pasted from a Google Maps link, or filled from
+  /// the phone's own position — and cleared to lift the pin.
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
+  bool _locating = false;
+
   /// The vitrine's address: on the web, this very site; elsewhere, the site
   /// the shop is known at. What the shop pastes into a WhatsApp status.
   String get _storefrontUrl {
@@ -91,6 +100,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _nameController.dispose();
     _waveController.dispose();
     _blurbController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     super.dispose();
   }
 
@@ -116,6 +127,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _theme = org['theme'] as String?;
         _storefrontEnabled = storefront.enabled;
         _blurbController.text = storefront.blurb ?? '';
+        _latController.text = storefront.lat?.toString() ?? '';
+        _lngController.text = storefront.lng?.toString() ?? '';
         _loading = false;
       });
     } catch (error) {
@@ -132,6 +145,27 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     if (name.isEmpty) {
       setState(() => _error = "Le nom de l'activité ne peut pas être vide.");
       return;
+    }
+
+    // The pin is both numbers or neither — half a position is no position,
+    // and the database refuses it too (053).
+    final latText = _latController.text.trim().replaceAll(',', '.');
+    final lngText = _lngController.text.trim().replaceAll(',', '.');
+    double? lat;
+    double? lng;
+    if (latText.isNotEmpty || lngText.isNotEmpty) {
+      lat = double.tryParse(latText);
+      lng = double.tryParse(lngText);
+      if (lat == null ||
+          lng == null ||
+          lat < -90 ||
+          lat > 90 ||
+          lng < -180 ||
+          lng > 180) {
+        setState(() => _error =
+            'Indiquez la latitude et la longitude, ou aucune des deux.');
+        return;
+      }
     }
 
     setState(() {
@@ -152,6 +186,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         enabled: _storefrontEnabled,
         blurb: _blurbController.text.trim(),
       );
+      await widget.admin.setStorefrontLocation(widget.orgId, lat: lat, lng: lng);
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
@@ -260,6 +295,90 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _togglingSuspend = false;
       });
     }
+  }
+
+  /// Fill the pin from where the phone is right now — the shopkeeper is
+  /// standing in the shop, which is the one place the position is certain.
+  /// Nothing is saved until "Enregistrer": the numbers can still be edited.
+  Future<void> _useMyPosition() async {
+    setState(() => _locating = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Sans autorisation, tapez la position ou collez '
+              'un lien Google Maps.'),
+        ));
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _latController.text = position.latitude.toStringAsFixed(6);
+        _lngController.text = position.longitude.toStringAsFixed(6);
+      });
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
+      ));
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  /// A shop already on Google Maps pastes its own link; the numbers come
+  /// out of it. Short links carry none, and the dialog says what to do then.
+  Future<void> _pasteMapsLink() async {
+    final controller = TextEditingController();
+    final text = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Lien Google Maps'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'https://www.google.com/maps/place/...@12.37,-1.52,17z',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Utiliser'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (text == null || !mounted) return;
+    final position = parseGoogleMapsLink(text);
+    if (position == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Ce lien ne contient pas de position. Ouvrez-le dans '
+            "Google Maps et copiez l'adresse complète."),
+      ));
+      return;
+    }
+    setState(() {
+      _latController.text = position.lat.toString();
+      _lngController.text = position.lng.toString();
+    });
   }
 
   Future<void> _openColours() async {
@@ -392,6 +511,72 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ),
                   const SizedBox(height: 10),
                   _LinkRow(url: _storefrontUrl),
+                  const SizedBox(height: 16),
+                  Text('Position sur la carte',
+                      style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Pour que les clients vous trouvent dans l'annuaire, "
+                    '« près de moi » et sur la carte. Facultatif.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _latController,
+                          enabled: !_saving && !_locating,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Latitude',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _lngController,
+                          enabled: !_saving && !_locating,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Longitude',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed:
+                            (_saving || _locating) ? null : _useMyPosition,
+                        icon: _locating
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location),
+                        label: const Text('Utiliser ma position'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed:
+                            (_saving || _locating) ? null : _pasteMapsLink,
+                        icon: const Icon(Icons.link),
+                        label: const Text('Coller un lien Google Maps'),
+                      ),
+                    ],
+                  ),
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),

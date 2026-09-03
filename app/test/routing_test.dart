@@ -327,6 +327,20 @@ void main() {
         findsNothing);
   });
 
+  testWidgets('the directory of vitrines opens without signing in',
+      (tester) async {
+    // "Près de moi" is for a shopper walking down the street, not a member.
+    await pumpApp(tester);
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    (app.routerConfig as GoRouter).go('/vitrines');
+    await flush(tester);
+
+    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.text("L'annuaire a besoin d'une connexion."), findsOneWidget);
+    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
+        findsNothing);
+  });
+
   group('a refresh keeps your place', () {
     // The complaint, verbatim: "when I refresh the webpage it takes me to a
     // different page." On a device with a code, reloading a deep page sent

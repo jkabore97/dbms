@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
+import '../../core/nav/router.dart';
 import '../../core/storefront/storefront_repository.dart';
 
 /// A shop's window, for the street.
@@ -88,7 +90,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     final shop = _shop;
 
     return Scaffold(
-      appBar: AppBar(title: Text(shop?.name ?? 'Vitrine')),
+      appBar: AppBar(
+        title: Text(shop?.name ?? 'Vitrine'),
+        actions: [
+          IconButton(
+            tooltip: 'Toutes les vitrines',
+            icon: const Icon(Icons.storefront_outlined),
+            onPressed: () => context.go(Routes.directory),
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

@@ -43,6 +43,7 @@ import '../../features/farm/livestock_screen.dart';
 import '../../features/farm/stock_screen.dart';
 import '../../features/home/business_shell.dart';
 import '../../features/invoicing/billing_details_screen.dart';
+import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../storefront/storefront_repository.dart';
 import '../../features/invoicing/invoice_document_screen.dart';
@@ -113,6 +114,9 @@ abstract final class Routes {
 
   /// A shop's public vitrine — reachable signed out, by anyone with the link.
   static String storefront(String slug) => '/s/$slug';
+
+  /// Every open vitrine, as a list or a map — the street's front door.
+  static const directory = '/vitrines';
   static String inside(String id, String rest) => '/o/$id/$rest';
 }
 
@@ -142,9 +146,11 @@ GoRouter buildRouter(SessionController session) {
         at(Routes.faq) ||
         at(Routes.privacy) ||
         at(Routes.terms) ||
-        // A shop's vitrine is for the street: the person opening it is a
-        // shopper with no account, sent the link on WhatsApp, and must never
-        // be bounced to a sign-in page for looking in a shop window.
+        // A shop's vitrine and the directory of them are for the street: the
+        // person opening either is a shopper with no account, sent a link on
+        // WhatsApp, and must never be bounced to a sign-in page for looking
+        // in a shop window.
+        at(Routes.directory) ||
         here.startsWith('/s/')) {
       return null;
     }
@@ -280,6 +286,15 @@ GoRouter buildRouter(SessionController session) {
             capture: scope.capture,
           );
         },
+      ),
+
+      // Every open vitrine: a list, a map, and "près de moi". Public for the
+      // same reason as a single vitrine — the shopper has no account.
+      GoRoute(
+        path: Routes.directory,
+        builder: (context, state) => DirectoryScreen(
+          storefront: StorefrontRepository(AppScope.of(context).auth.client),
+        ),
       ),
 
       GoRoute(

@@ -4,6 +4,13 @@
          camera app through an intent, which carries its own permission. -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- The vitrine map: "utiliser ma position" places a shop on the map
+         from where the phone is, and "près de moi" sorts the directory by
+         distance. Asked for only when one of those is tapped, never at
+         start-up; the app is fully usable with it refused. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- A phone with no camera can still do everything else in the app: the
          gallery, the ledger, the reports. Required="false" keeps it
          installable on one rather than being filtered out of the store. -->
