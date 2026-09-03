@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../rates/currency_rates.dart';
+import '../orders/orders.dart';
 import 'models.dart';
 
 /// The shop's reads and writes.
@@ -26,6 +27,36 @@ class RetailRepository {
   bool get isConfigured => _client != null;
 
   String? get currentUserId => _client?.auth.currentUser?.id;
+
+  // ----------------------------------------------------------------
+  // Orders sent from the vitrine (055). Reading needs membership,
+  // answering needs write access — both said by the server.
+  // ----------------------------------------------------------------
+
+  /// The shop's orders, open first, newest first.
+  Future<List<ShopOrder>> shopOrders(String orgId) async {
+    final rows = await _requireClient()
+        .rpc('shop_orders', params: {'p_org_id': orgId}) as List<dynamic>;
+    return rows
+        .map((r) => ShopOrder.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// How many are still waiting for an answer — the badge on the till.
+  Future<int> pendingOrders(String orgId) async {
+    final n = await _requireClient()
+        .rpc('shop_pending_orders', params: {'p_org_id': orgId});
+    return (n as num?)?.toInt() ?? 0;
+  }
+
+  /// Moves an order along: accepted, refused, ready, picked_up, delivered,
+  /// cancelled. The server refuses any move not drawn in 055.
+  Future<void> decideOrder(String orderId, String status) async {
+    await _requireClient().rpc('decide_order', params: {
+      'p_order_id': orderId,
+      'p_status': status,
+    });
+  }
 
   // ----------------------------------------------------------------
   // What is on the shelves

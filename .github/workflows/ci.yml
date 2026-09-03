@@ -410,6 +410,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_marketplace.sql
 
+      # A réservation is a promise, not a sale: only a signed-in customer
+      # makes one, only of what the street can see, the total is the
+      # shelf's, only the shop answers, only along the drawn lines, and
+      # nothing here ever moves stock.
+      - name: Prove an order is a promise the right people can make and keep
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_orders.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

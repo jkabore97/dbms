@@ -81,6 +81,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
   StoreDay _day = const StoreDay();
   List<ExpiringProduct> _expiring = const [];
+  int _pendingOrders = 0;
   List<Product> _products = const [];
   double _lossesAvoided = 0;
   int _photosWaiting = 0;
@@ -114,6 +115,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       final expiring = await retail.expiring(widget.org.id);
       final products = await retail.products(widget.org.id);
       final avoided = await retail.lossesAvoided(widget.org.id);
+      // A database one migration behind has no orders; the badge stays
+      // quiet rather than failing the home screen.
+      var pending = 0;
+      try {
+        pending = await retail.pendingOrders(widget.org.id);
+      } catch (_) {
+        pending = 0;
+      }
 
       // Photographs taken before there was signal go now, quietly. Failing to
       // send them must not fail the home screen — the bytes are still on the
@@ -132,6 +141,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       if (!mounted) return;
       setState(() {
         _day = day;
+        _pendingOrders = pending;
         _expiring = expiring;
         _products = products;
         _lossesAvoided = avoided;
@@ -236,6 +246,22 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
               tooltip: Strings.of(context).invoices,
               onPressed: () =>
                   context.push(Routes.inside(widget.org.id, 'factures')),
+            ),
+          // Orders sent from the vitrine (055), with how many are waiting
+          // for an answer. Only shown once the shop has opened its window —
+          // before that there is nothing a customer could have ordered from.
+          if (widget.retail != null && widget.access.canSee('orders'))
+            IconButton(
+              icon: Badge(
+                isLabelVisible: _pendingOrders > 0,
+                label: Text('$_pendingOrders'),
+                child: const Icon(Icons.shopping_bag_outlined),
+              ),
+              tooltip: 'Commandes',
+              onPressed: () async {
+                await context.push(Routes.inside(widget.org.id, 'commandes'));
+                if (mounted) await _load();
+              },
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
