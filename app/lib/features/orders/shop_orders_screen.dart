@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../../core/nav/url_tabs.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/auth_repository.dart';
@@ -26,7 +28,11 @@ class ShopOrdersScreen extends StatefulWidget {
   State<ShopOrdersScreen> createState() => _ShopOrdersScreenState();
 }
 
-class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
+class _ShopOrdersScreenState extends State<ShopOrdersScreen>
+    with SingleTickerProviderStateMixin, UrlTabsMixin {
+  @override
+  List<String> get tabSlugs => const ['a-traiter', 'historique'];
+
   List<ShopOrder> _orders = const [];
   bool _loading = true;
   String? _error;
@@ -118,9 +124,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
     final open = _orders.where((o) => o.isOpen).toList();
     final past = _orders.where((o) => !o.isOpen).toList();
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('Commandes'),
           actions: [
@@ -130,7 +134,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
               icon: const Icon(Icons.refresh),
             ),
           ],
-          bottom: TabBar(tabs: [
+          bottom: TabBar(controller: tabs, tabs: [
             Tab(text: 'À traiter${open.isEmpty ? '' : ' (${open.length})'}'),
             const Tab(text: 'Historique'),
           ]),
@@ -153,7 +157,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
                       ),
                     ),
                   )
-                : TabBarView(children: [
+                : TabBarView(controller: tabs, children: [
                     _List(
                       orders: open,
                       empty: 'Aucune commande à traiter. Les clients '
@@ -172,7 +176,6 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen> {
                       onSetPaid: _setPaid,
                     ),
                   ]),
-      ),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/nav/url_tabs.dart';
+
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/db/local_db.dart';
@@ -27,7 +29,7 @@ import 'device_tab.dart';
 /// otherwise — but hiding it is a courtesy, not the protection. Every function
 /// behind here is gated on `is_org_admin()` server-side and returns nothing to
 /// anybody else, so a non-admin who arrived here anyway sees empty lists.
-class ConsoleScreen extends StatelessWidget {
+class ConsoleScreen extends StatefulWidget {
   const ConsoleScreen({
     super.key,
     required this.console,
@@ -40,27 +42,35 @@ class ConsoleScreen extends StatelessWidget {
   final OrgSummary org;
 
   @override
+  State<ConsoleScreen> createState() => _ConsoleScreenState();
+}
+
+class _ConsoleScreenState extends State<ConsoleScreen>
+    with SingleTickerProviderStateMixin, UrlTabsMixin {
+  @override
+  List<String> get tabSlugs => const ['activite', 'donnees', 'appareil'];
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Console'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.history), text: 'Activité'),
-              Tab(icon: Icon(Icons.storage_outlined), text: 'Données'),
-              Tab(icon: Icon(Icons.phone_android), text: 'Appareil'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            ActivityLogTab(console: console, org: org),
-            DatabaseTab(console: console, org: org),
-            DeviceTab(db: db, org: org),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Console'),
+        bottom: TabBar(
+          controller: tabs,
+          tabs: const [
+            Tab(icon: Icon(Icons.history), text: 'Activité'),
+            Tab(icon: Icon(Icons.storage_outlined), text: 'Données'),
+            Tab(icon: Icon(Icons.phone_android), text: 'Appareil'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: tabs,
+        children: [
+          ActivityLogTab(console: widget.console, org: widget.org),
+          DatabaseTab(console: widget.console, org: widget.org),
+          DeviceTab(db: widget.db, org: widget.org),
+        ],
       ),
     );
   }

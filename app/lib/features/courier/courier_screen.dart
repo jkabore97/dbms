@@ -7,6 +7,7 @@ import '../../core/courier/courier_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/orders/orders.dart';
 import '../../core/nav/router.dart';
+import '../../core/nav/url_tabs.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_style.dart';
 
@@ -28,7 +29,11 @@ class CourierScreen extends StatefulWidget {
   State<CourierScreen> createState() => _CourierScreenState();
 }
 
-class _CourierScreenState extends State<CourierScreen> {
+class _CourierScreenState extends State<CourierScreen>
+    with SingleTickerProviderStateMixin, UrlTabsMixin {
+  @override
+  List<String> get tabSlugs => const ['disponibles', 'courses'];
+
   String? _status;
   List<DeliveryJob> _board = const [];
   List<DeliveryJob> _mine = const [];
@@ -151,13 +156,11 @@ class _CourierScreenState extends State<CourierScreen> {
                       text: 'Votre accès livreur est suspendu. '
                           'Contactez la plateforme.',
                     ),
-                  _ => DefaultTabController(
-                      length: 2,
-                      child: Column(
+                  _ => Column(
                         children: [
                           Material(
                             color: ShopStyle.paper,
-                            child: TabBar(tabs: [
+                            child: TabBar(controller: tabs, tabs: [
                               Tab(
                                   text:
                                       'Disponibles${_board.isEmpty ? '' : ' (${_board.length})'}'),
@@ -167,7 +170,7 @@ class _CourierScreenState extends State<CourierScreen> {
                             ]),
                           ),
                           Expanded(
-                            child: TabBarView(children: [
+                            child: TabBarView(controller: tabs, children: [
                               _JobList(
                                 jobs: _board,
                                 empty: 'Aucune livraison à prendre pour le '
@@ -235,7 +238,6 @@ class _CourierScreenState extends State<CourierScreen> {
                           ),
                         ],
                       ),
-                    ),
                 },
     );
   }
