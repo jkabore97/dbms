@@ -275,6 +275,24 @@ class CaptureRepository {
     return response.bodyBytes;
   }
 
+  /// A vitrine photo, for anyone: no token, because the shop chose to show
+  /// this article to the street. The Worker still asks Postgres, per key,
+  /// that the picture is of a published article on an open vitrine (052) —
+  /// a key that is not gets a 404, exactly like one that does not exist.
+  Future<Uint8List> publicObjectBytes(String key) async {
+    if (_uploads.isEmpty) {
+      throw const CaptureException(
+          'Les photos ne sont pas disponibles sur cette installation.');
+    }
+    final response = await _http.get(
+      Uri.parse('$_uploads/v1/public/objects/${Uri.encodeComponent(key)}'),
+    );
+    if (response.statusCode != 200) {
+      throw CaptureException(_messageFrom(response));
+    }
+    return response.bodyBytes;
+  }
+
   Future<List<CapturedDocument>> documents(
     String orgId, {
     String? kind,

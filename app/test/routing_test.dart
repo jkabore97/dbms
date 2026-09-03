@@ -309,6 +309,24 @@ void main() {
     expect(find.text('Entrez votre code'), findsNothing);
   });
 
+  testWidgets("a shop's vitrine opens without signing in", (tester) async {
+    // A shopper sent the link on WhatsApp has no account. The redirect must
+    // not bounce them to the sign-in page for looking in a shop window. This
+    // build has no backend, so the window says so — but it is the window
+    // that says it, not the sign-in gate.
+    await pumpApp(tester);
+    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
+        findsOneWidget);
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    (app.routerConfig as GoRouter).go('/s/boutique-esperance');
+    await flush(tester);
+
+    expect(find.text("La vitrine a besoin d'une connexion."), findsOneWidget);
+    expect(find.text('Connectez-vous pour ouvrir votre activité.'),
+        findsNothing);
+  });
+
   group('a refresh keeps your place', () {
     // The complaint, verbatim: "when I refresh the webpage it takes me to a
     // different page." On a device with a code, reloading a deep page sent

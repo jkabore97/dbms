@@ -343,6 +343,7 @@ class RetailRepository {
     double? lowStockAt,
     bool? isActive,
     bool? isIngredient,
+    bool? isPublished,
   }) async {
     final client = _requireClient();
     // `.select()` turns a silent no-op into a fact we can check. A PostgREST
@@ -361,6 +362,7 @@ class RetailRepository {
           if (lowStockAt != null) 'low_stock_at': lowStockAt,
           if (isActive != null) 'is_active': isActive,
           if (isIngredient != null) 'is_ingredient': isIngredient,
+          if (isPublished != null) 'is_published': isPublished,
         })
         .eq('id', productId)
         .select('id');

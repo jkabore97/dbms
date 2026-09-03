@@ -72,6 +72,15 @@ export default {
         return withCors(await put(request, env, upload[1]), cors);
       }
 
+      // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
+      // the shop chose to show this article to the street. Postgres still
+      // decides, per key, that the picture is of a published article on an
+      // open vitrine (052) — the Worker only ever performs.
+      const pub = url.pathname.match(/^\/v1\/public\/objects\/(.+)$/);
+      if (pub && (request.method === "GET" || request.method === "HEAD")) {
+        return withCors(await getPublic(request, env, decodeURIComponent(pub[1])), cors);
+      }
+
       // GET /v1/objects/<key> — the gallery, and the full-size view.
       const object = url.pathname.match(/^\/v1\/objects\/(.+)$/);
       if (object && (request.method === "GET" || request.method === "HEAD")) {
@@ -336,6 +345,61 @@ async function get(request, env, key) {
     return new Response(null, { status: 200, headers });
   }
   return new Response(object.body, { status: 200, headers });
+}
+
+// ------------------------------------------------------------
+// Reading, for the street (the vitrine)
+// ------------------------------------------------------------
+
+async function getPublic(request, env, key) {
+  if (!key.startsWith("org/")) {
+    return problem(404, "No such object.");
+  }
+
+  // Authorised by Postgres, as an anonymous caller — exactly what a shopper
+  // is. storefront_photo_allowed() (052) says yes only for a photo of a
+  // published article on an open vitrine of a live business. Anything else
+  // is a 404, never a 403: a 403 would confirm which keys exist.
+  if (!(await rpcAnon(env, "storefront_photo_allowed", { p_key: key }))) {
+    return problem(404, "No such object.");
+  }
+
+  const object = await env.UPLOADS.get(key);
+  if (!object) {
+    return problem(404, "No such object.");
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  // Public on purpose — this is the shop window — and cacheable, because a
+  // vitrine gets opened many times by many people on slow connections.
+  headers.set("Cache-Control", "public, max-age=3600");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
+
+  if (request.method === "HEAD") {
+    return new Response(null, { status: 200, headers });
+  }
+  return new Response(object.body, { status: 200, headers });
+}
+
+/// An RPC as the anonymous role: the publishable key is both the project and
+/// the bearer, which is precisely what an unsigned-in browser would send.
+async function rpcAnon(env, fn, params) {
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: env.SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+  if (!response.ok) return false;
+  const value = await response.json();
+  return value === true;
 }
 
 // ------------------------------------------------------------

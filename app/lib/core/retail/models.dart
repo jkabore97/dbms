@@ -20,6 +20,7 @@ class Product {
     this.expiresOn,
     this.lowStockAt,
     this.isIngredient = false,
+    this.isPublished = false,
   });
 
   final String id;
@@ -38,6 +39,10 @@ class Product {
   /// Cooked with, not sold: hidden from the sale picker, surfaced first in
   /// the production picker. A signpost, not a rule — see migration 028.
   final bool isIngredient;
+
+  /// Shown on the shop's public vitrine (052), when the shop has opened one.
+  /// Off by default: the shop picks each article it puts in the window.
+  final bool isPublished;
 
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
@@ -63,6 +68,8 @@ class Product {
       expiresOn: expires == null ? null : DateTime.parse(expires),
       lowStockAt: low == null ? null : parse(low),
       isIngredient: row['is_ingredient'] == true,
+      // Absent before 052: an app ahead of its database reads "not shown".
+      isPublished: row['is_published'] == true,
     );
   }
 }
