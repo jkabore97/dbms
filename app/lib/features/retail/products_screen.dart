@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +12,7 @@ import '../../core/retail/models.dart';
 import 'convert_dialog.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
+import '../capture/capture_action.dart';
 import '../../core/errors.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
@@ -128,6 +131,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         retail: widget.retail,
         org: widget.org,
         product: product,
+        capture: widget.capture,
         // The archive button belongs to the person who answers for the
         // business; the server refuses everyone else anyway.
         canArchive: widget.org.isAdmin,
@@ -484,12 +488,17 @@ class _EditProductSheet extends StatefulWidget {
     required this.retail,
     required this.org,
     required this.product,
+    this.capture,
     this.canArchive = false,
   });
 
   final RetailRepository retail;
   final OrgSummary org;
   final Product product;
+
+  /// For the article's photograph. Null hides the photo section, the same
+  /// courtesy as the scan button: no camera, no dead button.
+  final CaptureRepository? capture;
 
   /// Owner/admin only. Hiding the button for everyone else is a courtesy;
   /// `archive_product()` makes the real check server-side.
@@ -520,8 +529,86 @@ class _EditProductSheetState extends State<_EditProductSheet> {
   bool _busy = false;
   String? _error;
 
+  /// The article's picture, as the vitrine will show it: what is already on
+  /// the server at first, the newly taken one after. Loading it is
+  /// best-effort — a placeholder is not an error.
+  Uint8List? _photoBytes;
+  bool _photoKnown = false;
+  bool _photoBusy = false;
+
   static String _plain(double v) =>
       v == v.roundToDouble() ? v.round().toString() : '$v';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhoto();
+  }
+
+  Future<void> _loadPhoto() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+    try {
+      final key =
+          await capture.productPhotoKey(widget.org.id, widget.product.id);
+      if (key == null) {
+        if (mounted) setState(() => _photoKnown = true);
+        return;
+      }
+      final bytes = await capture.objectBytes(key);
+      if (!mounted) return;
+      setState(() {
+        _photoBytes = bytes;
+        _photoKnown = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _photoKnown = true);
+    }
+  }
+
+  /// Take or choose the article's picture, send it, and hang it on the
+  /// article — from then on it is the photo the vitrine and the search show.
+  Future<void> _changePhoto() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+    final picked = await CaptureAction.pick(context);
+    if (picked == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _photoBusy = true);
+    try {
+      final id = await capture.capture(
+        orgId: widget.org.id,
+        bytes: picked.bytes,
+        contentType: picked.contentType,
+        kind: 'product_photo',
+        caption: widget.product.name,
+      );
+      if (id == null) {
+        // Queued for later: the bytes are safe, but with no server id there
+        // is nothing to hang on the article yet. Filing it from Documents
+        // once it lands is the honest path, so say exactly that.
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Photo gardée, en attente de réseau. Une fois '
+              'envoyée, liez-la à l\'article depuis Documents.'),
+        ));
+        return;
+      }
+      await capture.file(documentId: id, productId: widget.product.id);
+      if (!mounted) return;
+      setState(() {
+        _photoBytes = picked.bytes;
+        _photoKnown = true;
+      });
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Photo de l\'article enregistrée.'),
+      ));
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -699,6 +786,65 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               subtitle: const Text(
                   'Caché de la vente, proposé en premier en production.'),
             ),
+            // The article's picture: the newest photo hung on the article is
+            // what the vitrine, the à-la-une strip and the search all show.
+            if (widget.capture != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: ColoredBox(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: _photoBytes != null
+                            ? Image.memory(_photoBytes!, fit: BoxFit.cover)
+                            : Icon(
+                                _photoKnown
+                                    ? Icons.image_outlined
+                                    : Icons.hourglass_empty,
+                                size: 26,
+                                color: theme.colorScheme.outline,
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed:
+                              _busy || _photoBusy ? null : _changePhoto,
+                          icon: _photoBusy
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                )
+                              : const Icon(Icons.photo_camera_outlined,
+                                  size: 18),
+                          label: Text(_photoBytes == null
+                              ? 'Ajouter une photo'
+                              : 'Changer la photo'),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'La photo paraît sur la vitrine et dans la '
+                          'recherche.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+            ],
             // The shop window: this article, visible to anyone with the
             // vitrine link — once the administrator has opened the vitrine in
             // the business settings. Off by default; the shop picks each one.
