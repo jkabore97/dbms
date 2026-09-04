@@ -71,6 +71,11 @@ dependencies:
   # on both ship targets — an intent on Android, a new tab on web.
   url_launcher: ^6.3.0
 
+  # The browser's Notification API, for the shop's order doorbell: a system
+  # banner that reaches past a background tab. Web only, by conditional
+  # import; the Android build compiles the silent stub instead.
+  web: ^1.1.1
+
   # Prints an invoice: the system print dialog on Android, the browser's on
   # the web. The page is the same pixels the share button captures — pdf only
   # wraps that image, so the printed document always matches the sent one.
