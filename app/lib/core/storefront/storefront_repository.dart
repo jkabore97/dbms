@@ -314,6 +314,43 @@ class PublicItem {
   }
 }
 
+/// Lower-cased and stripped of the accents French names carry — the same
+/// folding the server's street search does (059), so filtering inside one
+/// shop answers exactly like searching the whole street: "cafe" finds Café.
+String foldSearchText(String text) {
+  const accents = {
+    'à': 'a', 'â': 'a', 'ä': 'a', 'á': 'a', 'ã': 'a',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'í': 'i', 'î': 'i', 'ï': 'i',
+    'ó': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+    'ç': 'c', 'ñ': 'n',
+  };
+  final lower = text.toLowerCase();
+  final out = StringBuffer();
+  // split('') walks UTF-16 units, which holds for every accent above —
+  // all of them live in the basic plane.
+  for (final ch in lower.split('')) {
+    out.write(accents[ch] ?? ch);
+  }
+  return out.toString();
+}
+
+/// The public address of a vitrine, fit to be sent to anyone. On the web
+/// the running origin is the truth (a preview stays a preview); in the
+/// Android app there is no origin, so the production site is the address.
+String publicShopUrl(String slug) {
+  final origin = Uri.base.scheme.startsWith('http')
+      ? Uri.base.origin
+      : 'https://dbms.kabore-boss.workers.dev';
+  return '$origin/s/$slug';
+}
+
+/// A WhatsApp link that opens the "send to…" picker with [text] already
+/// typed — how a vitrine travels from one phone to the next here.
+String whatsappShareUrl(String text) =>
+    'https://wa.me/?text=${Uri.encodeComponent(text)}';
+
 /// The WhatsApp link for a phone number, or null when there is none to link.
 /// Numbers are stored as E.164 (+226 70 00 00 00); wa.me wants only digits.
 String? whatsappUrl(String? phone) {
