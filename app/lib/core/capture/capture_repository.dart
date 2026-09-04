@@ -313,6 +313,18 @@ class CaptureRepository {
         .toList();
   }
 
+  /// The article's current photograph — the same one the vitrine and the
+  /// search show: the newest document linked to this product, whatever it
+  /// was filed as. Looks through the shop's recent documents; null when
+  /// none of them is the article's.
+  Future<String?> productPhotoKey(String orgId, String productId) async {
+    final docs = await documents(orgId, limit: 200);
+    for (final d in docs) {
+      if (d.productId == productId) return d.key;
+    }
+    return null;
+  }
+
   /// The pile on the counter: captured, and still about nothing.
   Future<List<CapturedDocument>> unfiled(String orgId, {int limit = 60}) async {
     final client = _requireClient();
