@@ -10,6 +10,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/theme/motion.dart';
 import 'shop_style.dart';
 
 /// A shop's window, for the street.
@@ -827,13 +828,21 @@ class _Window extends StatelessWidget {
                     childAspectRatio: wide ? 0.70 : 0.62,
                   ),
                   itemCount: items.length,
-                  itemBuilder: (context, i) => _ItemTile(
-                    item: items[i],
-                    money: money,
-                    capture: capture,
-                    quantity: basket[items[i].id] ?? 0,
-                    onAdd: () => onAdd(items[i]),
-                    onRemove: () => onRemove(items[i]),
+                  itemBuilder: (context, i) => Reveal(
+                    delay: KajMotion.stagger(i),
+                    child: Lift(
+                      // Steady while the basket is open: a tile with the
+                      // stepper on it must not slide under the thumb.
+                      enabled: (basket[items[i].id] ?? 0) == 0,
+                      child: _ItemTile(
+                        item: items[i],
+                        money: money,
+                        capture: capture,
+                        quantity: basket[items[i].id] ?? 0,
+                        onAdd: () => onAdd(items[i]),
+                        onRemove: () => onRemove(items[i]),
+                      ),
+                    ),
                   ),
                 ),
               ShopFooter(onDirectory: onDirectory),

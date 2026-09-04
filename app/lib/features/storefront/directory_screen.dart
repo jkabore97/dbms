@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
+import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import 'shop_style.dart';
@@ -609,11 +610,16 @@ class _Street extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: featured.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 14),
-                    itemBuilder: (context, i) => _FeaturedTile(
-                      item: featured[i],
-                      capture: capture,
-                      onTap: () =>
-                          context.go(Routes.storefront(featured[i].shopSlug)),
+                    itemBuilder: (context, i) => Reveal(
+                      delay: KajMotion.stagger(i),
+                      child: Lift(
+                        child: _FeaturedTile(
+                          item: featured[i],
+                          capture: capture,
+                          onTap: () => context
+                              .go(Routes.storefront(featured[i].shopSlug)),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -679,10 +685,15 @@ class _Street extends StatelessWidget {
                     childAspectRatio: 0.82,
                   ),
                   itemCount: entries.length,
-                  itemBuilder: (context, i) => _ShopTile(
-                    entry: entries[i],
-                    located: located,
-                    onOpen: () => onOpen(entries[i]),
+                  itemBuilder: (context, i) => Reveal(
+                    delay: KajMotion.stagger(i),
+                    child: Lift(
+                      child: _ShopTile(
+                        entry: entries[i],
+                        located: located,
+                        onOpen: () => onOpen(entries[i]),
+                      ),
+                    ),
                   ),
                 ),
               const ShopFooter(),
@@ -752,11 +763,17 @@ class _SearchResults extends StatelessWidget {
               childAspectRatio: wide ? 0.66 : 0.58,
             ),
             itemCount: hits.length,
-            itemBuilder: (context, i) => _HitTile(
-              hit: hits[i],
-              located: located,
-              capture: capture,
-              onTap: () => context.go(Routes.storefront(hits[i].shopSlug)),
+            itemBuilder: (context, i) => Reveal(
+              delay: KajMotion.stagger(i),
+              child: Lift(
+                child: _HitTile(
+                  hit: hits[i],
+                  located: located,
+                  capture: capture,
+                  onTap: () =>
+                      context.go(Routes.storefront(hits[i].shopSlug)),
+                ),
+              ),
             ),
           ),
         const ShopFooter(),
