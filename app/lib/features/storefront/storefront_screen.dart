@@ -60,10 +60,29 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// The basket: product id → quantity. Local until "Commander" sends it.
   final Map<String, double> _basket = {};
 
+  /// The shelf filter: instant, on the list already fetched, accent-blind
+  /// like the street's search — at forty articles three typed letters beat
+  /// any amount of scrolling, and it costs no network at all.
+  final _filter = TextEditingController();
+
+  List<PublicItem> get _visible {
+    final q = foldSearchText(_filter.text.trim());
+    if (q.isEmpty) return _items;
+    return _items
+        .where((i) => foldSearchText(i.name).contains(q))
+        .toList();
+  }
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _filter.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -239,7 +258,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                     )
                   : _Window(
                       shop: shop,
-                      items: _items,
+                      items: _visible,
+                      totalCount: _items.length,
+                      filter: _filter,
+                      onFilterChanged: (_) => setState(() {}),
                       capture: widget.capture,
                       basket: _basket,
                       onOpen: _open,
@@ -687,6 +709,9 @@ class _Window extends StatelessWidget {
   const _Window({
     required this.shop,
     required this.items,
+    required this.totalCount,
+    required this.filter,
+    required this.onFilterChanged,
     required this.capture,
     required this.basket,
     required this.onOpen,
@@ -697,6 +722,12 @@ class _Window extends StatelessWidget {
 
   final PublicShop shop;
   final List<PublicItem> items;
+
+  /// How many articles the window really holds — [items] is the filtered
+  /// view of them.
+  final int totalCount;
+  final TextEditingController filter;
+  final void Function(String) onFilterChanged;
   final CaptureRepository capture;
   final Map<String, double> basket;
   final Future<void> Function(String url) onOpen;
@@ -754,7 +785,9 @@ class _Window extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 14, color: ShopStyle.mist)),
                 ],
-                if (whatsapp != null || phone.isNotEmpty || shop.hasLocation) ...[
+                // Always shown: even a shop with no phone and no pin can be
+                // passed along, and Partager is how that happens.
+                ...[
                   const SizedBox(height: 22),
                   Wrap(
                     spacing: 12,
@@ -780,6 +813,16 @@ class _Window extends StatelessWidget {
                           icon: const Icon(Icons.directions_outlined, size: 18),
                           label: const Text('Itinéraire'),
                         ),
+                      // A vitrine travels the way news does here: sent on
+                      // WhatsApp from one phone to the next. The shop's
+                      // customers are its advertisers.
+                      OutlinedButton.icon(
+                        onPressed: () => onOpen(whatsappShareUrl(
+                            'Découvrez ${shop.name} sur Kaj : '
+                            '${publicShopUrl(shop.slug)}')),
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        label: const Text('Partager'),
+                      ),
                     ],
                   ),
                 ],
@@ -796,23 +839,74 @@ class _Window extends StatelessWidget {
               const SizedBox(height: 32),
               ShopSectionLabel(
                 'Les articles',
-                note: items.isEmpty
+                note: totalCount == 0
                     ? null
-                    : '${items.length} article${items.length > 1 ? 's' : ''}',
+                    : items.length == totalCount
+                        ? '$totalCount article${totalCount > 1 ? 's' : ''}'
+                        : '${items.length} sur $totalCount',
               ),
-              if (items.isNotEmpty) ...[
+              if (totalCount > 0) ...[
                 const SizedBox(height: 6),
                 const Text(
                   'Touchez un article pour le commander.',
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
               ],
+              // The shelf filter, once the shelf is long enough to need
+              // one — on six articles a search box is furniture.
+              if (totalCount > 6) ...[
+                const SizedBox(height: 14),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: TextField(
+                    controller: filter,
+                    onChanged: onFilterChanged,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Chercher dans la boutique…',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: filter.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Effacer',
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                filter.clear();
+                                onFilterChanged('');
+                              },
+                            ),
+                      filled: true,
+                      fillColor: ShopStyle.stone,
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(999),
+                        borderSide: const BorderSide(
+                            color: ShopStyle.ink, width: 1.4),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
-              if (items.isEmpty)
+              if (totalCount == 0)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),
                   child: Text('Aucun article affiché pour le moment.',
                       style: TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                )
+              else if (items.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    'Aucun article ne répond à « ${filter.text.trim()} » '
+                    'dans cette boutique.',
+                    style:
+                        const TextStyle(fontSize: 15, color: ShopStyle.mist),
+                  ),
                 )
               else
                 GridView.builder(
@@ -828,9 +922,8 @@ class _Window extends StatelessWidget {
                     childAspectRatio: wide ? 0.70 : 0.62,
                   ),
                   itemCount: items.length,
-                  itemBuilder: (context, i) => Reveal(
-                    delay: KajMotion.stagger(i),
-                    child: Lift(
+                  itemBuilder: (context, i) {
+                    final tile = Lift(
                       // Steady while the basket is open: a tile with the
                       // stepper on it must not slide under the thumb.
                       enabled: (basket[items[i].id] ?? 0) == 0,
@@ -842,8 +935,13 @@ class _Window extends StatelessWidget {
                         onAdd: () => onAdd(items[i]),
                         onRemove: () => onRemove(items[i]),
                       ),
-                    ),
-                  ),
+                    );
+                    // The entrance plays when the shelf appears — not on
+                    // every keystroke of the filter, which rebuilds these
+                    // tiles: a page that re-enters as you type flickers.
+                    if (filter.text.isNotEmpty) return tile;
+                    return Reveal(delay: KajMotion.stagger(i), child: tile);
+                  },
                 ),
               ShopFooter(onDirectory: onDirectory),
             ],
