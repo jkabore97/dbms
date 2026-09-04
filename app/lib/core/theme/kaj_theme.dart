@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'motion.dart';
+
 /// What the app looks like, and why it looks like more than one thing.
 ///
 /// Until now there was a single `ColorScheme.fromSeed` on one muted green, and
@@ -342,6 +344,25 @@ ThemeData kajTheme(KajPalette palette) {
     scaffoldBackgroundColor: kPaper,
     canvasColor: kPaper,
     dividerColor: kLine,
+
+    // The motion the owner asked for by name: the goods sites answer a
+    // touch with a quiet change of tone, never a spreading ripple — a
+    // ripple reads as "an app", and this reads as a page. And every page,
+    // on every platform, walks in the same way: a quick fade with a small
+    // rise, instead of Android's slide here and the web's zoom there.
+    splashFactory: NoSplash.splashFactory,
+    splashColor: Colors.transparent,
+    highlightColor: kInk.withValues(alpha: 0.06),
+    hoverColor: kInk.withValues(alpha: 0.04),
+    focusColor: kInk.withValues(alpha: 0.08),
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: PaperPageTransitionsBuilder(),
+      TargetPlatform.iOS: PaperPageTransitionsBuilder(),
+      TargetPlatform.linux: PaperPageTransitionsBuilder(),
+      TargetPlatform.macOS: PaperPageTransitionsBuilder(),
+      TargetPlatform.windows: PaperPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: PaperPageTransitionsBuilder(),
+    }),
 
     textTheme: base.textTheme.copyWith(
       bodyMedium: base.textTheme.bodyMedium?.copyWith(fontSize: 16, color: kInk),
