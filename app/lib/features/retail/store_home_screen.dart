@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
+import '../../core/orders/order_alert.dart';
 
 import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
@@ -89,9 +92,77 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   bool _loading = true;
   String? _error;
 
+  /// The doorbell (see OrderAlert): while this screen is open the pending
+  /// count is re-read quietly, and a rise rings — a system banner where the
+  /// browser allows it, always the badge. A shopkeeper serving the counter
+  /// does not refresh pages; the page has to come to her.
+  Timer? _doorbell;
+  bool _alertsOn = OrderAlert.granted;
+
+  static const _doorbellEvery = Duration(seconds: 90);
+
+  @override
+  void dispose() {
+    _doorbell?.cancel();
+    super.dispose();
+  }
+
+  void _armDoorbell() {
+    if (_doorbell != null) return;
+    final retail = widget.retail;
+    if (retail == null || !retail.isConfigured) return;
+    if (!widget.access.canSee('orders')) return;
+    _doorbell = Timer.periodic(_doorbellEvery, (_) => _listenForOrders());
+  }
+
+  Future<void> _listenForOrders() async {
+    final retail = widget.retail;
+    if (retail == null || !mounted) return;
+    final int pending;
+    try {
+      pending = await retail.pendingOrders(widget.org.id);
+    } catch (_) {
+      return; // No signal is not news; the next tick tries again.
+    }
+    if (!mounted) return;
+    final rose = pending > _pendingOrders;
+    setState(() => _pendingOrders = pending);
+    if (!rose) return;
+    OrderAlert.show(
+      'Nouvelle commande — ${widget.org.name}',
+      '$pending commande${pending > 1 ? 's' : ''} à traiter sur la vitrine.',
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+          'Nouvelle commande : $pending à traiter sur la vitrine.'),
+      action: SnackBarAction(
+        label: 'Voir',
+        onPressed: () =>
+            context.push(Routes.inside(widget.org.id, 'commandes')),
+      ),
+    ));
+  }
+
+  /// The browser only grants a notification from a person's own gesture,
+  /// so this hangs off a button — never off a page load.
+  Future<void> _enableAlerts() async {
+    final granted = await OrderAlert.request();
+    if (!mounted) return;
+    setState(() => _alertsOn = granted);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(granted
+          ? 'Alertes activées : une commande sonnera même si cet onglet '
+              'est en arrière-plan.'
+          : "Le navigateur a refusé les alertes. Elles s'activent dans "
+              'ses paramètres de notifications.'),
+    ));
+  }
+
   @override
   void initState() {
     super.initState();
+    _armDoorbell();
     _load();
   }
 
@@ -257,7 +328,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           // Orders sent from the vitrine (055), with how many are waiting
           // for an answer. Only shown once the shop has opened its window —
           // before that there is nothing a customer could have ordered from.
-          if (widget.retail != null && widget.access.canSee('orders'))
+          if (widget.retail != null && widget.access.canSee('orders')) ...[
+            // The doorbell's switch: only where a browser can carry the
+            // ring, and gone once it is granted — a setting that is done
+            // has no business staying on the till bar.
+            if (OrderAlert.supported && !_alertsOn)
+              IconButton(
+                icon: const Icon(Icons.notifications_active_outlined),
+                tooltip: 'Activer les alertes de commande',
+                onPressed: _enableAlerts,
+              ),
             IconButton(
               icon: Badge(
                 isLabelVisible: _pendingOrders > 0,
@@ -270,6 +350,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                 if (mounted) await _load();
               },
             ),
+          ],
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -57,8 +59,41 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   bool _sending = false;
   String? _error;
 
-  /// The basket: product id → quantity. Local until "Commander" sends it.
+  /// The basket: product id → quantity. Kept on the device between visits
+  /// (see [_restoreBasket]) until "Commander" sends it.
   final Map<String, double> _basket = {};
+
+  /// Where this shop's basket sleeps on the device. Per shop, so filling a
+  /// basket at the tailor's never spills into the grocer's.
+  String get _basketKey => 'street_basket_${widget.slug}';
+
+  /// A basket is a promise the shopper made to themselves; a page refresh
+  /// or the walk through sign-in must not break it. Restored only onto an
+  /// empty basket, and only for articles still in the window — prices are
+  /// never stored, they are read fresh from the shelf.
+  Future<void> _restoreBasket(List<PublicItem> items) async {
+    if (_basket.isNotEmpty) return;
+    final raw = await widget.session.db.readPref(_basketKey);
+    if (raw == null || !mounted) return;
+    try {
+      final saved = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      final onShelf = {for (final i in items) i.id};
+      setState(() {
+        for (final e in saved.entries) {
+          final q = (e.value as num).toDouble();
+          if (q > 0 && onShelf.contains(e.key)) _basket[e.key] = q;
+        }
+      });
+    } catch (_) {
+      // A basket that cannot be read is an empty basket, not an error.
+    }
+  }
+
+  void _keepBasket() {
+    final db = widget.session.db;
+    unawaited(db.writePref(
+        _basketKey, _basket.isEmpty ? null : jsonEncode(_basket)));
+  }
 
   /// The shelf filter: instant, on the list already fetched, accent-blind
   /// like the street's search — at forty articles three typed letters beat
@@ -108,6 +143,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         _items = items;
         _loading = false;
       });
+      await _restoreBasket(items);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -125,17 +161,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _directory() => context.go(Routes.directory);
 
-  void _add(PublicItem item) =>
-      setState(() => _basket[item.id] = (_basket[item.id] ?? 0) + 1);
+  void _add(PublicItem item) {
+    setState(() => _basket[item.id] = (_basket[item.id] ?? 0) + 1);
+    _keepBasket();
+  }
 
-  void _remove(PublicItem item) => setState(() {
-        final q = (_basket[item.id] ?? 0) - 1;
-        if (q <= 0) {
-          _basket.remove(item.id);
-        } else {
-          _basket[item.id] = q;
-        }
-      });
+  void _remove(PublicItem item) {
+    setState(() {
+      final q = (_basket[item.id] ?? 0) - 1;
+      if (q <= 0) {
+        _basket.remove(item.id);
+      } else {
+        _basket[item.id] = q;
+      }
+    });
+    _keepBasket();
+  }
 
   double get _total => _items.fold(
       0, (sum, i) => sum + (_basket[i.id] ?? 0) * i.price);
@@ -144,9 +185,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       _basket.values.fold(0, (sum, q) => sum + q.round());
 
   /// "Commander": the one act that needs a name. A stranger is sent through
-  /// sign-in and brought back to this very vitrine to pick again — the
-  /// basket itself does not survive the trip, and saying so here beats
-  /// pretending otherwise in a comment.
+  /// sign-in and brought back to this very vitrine — and the basket now
+  /// survives the trip: it sleeps on the device (_keepBasket) and is
+  /// restored when the page comes back, so the picking is done once.
   Future<void> _order() async {
     switch (widget.session.phase) {
       case SessionPhase.signedOut:
@@ -183,6 +224,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     );
     if (sent == true && mounted) {
       setState(_basket.clear);
+      _keepBasket(); // The promise is kept; the device forgets it.
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Commande envoyée. La boutique vous répondra ici.'),
       ));

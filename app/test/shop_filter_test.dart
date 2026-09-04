@@ -98,6 +98,13 @@ void main() {
       ));
       await tester.pump();
       await tester.pump();
+      // The basket restore reads the real (async) device database, which
+      // only advances in real time — alternate, the routing tests' way.
+      for (var i = 0; i < 4; i++) {
+        await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)));
+        await tester.pump();
+      }
       // Let the entrance settle so every tile is fully placed.
       await tester.pump(const Duration(milliseconds: 800));
     }
@@ -145,6 +152,25 @@ void main() {
     testWidgets('the shop can always be passed along', (tester) async {
       await pumpShop(tester, count: 5);
       expect(find.text('Partager'), findsOneWidget);
+    });
+
+    testWidgets('the basket survives leaving and coming back',
+        (tester) async {
+      await pumpShop(tester, count: 5);
+      expect(find.text('Commander'), findsNothing);
+
+      // One savon in the basket: the bar appears, and the device remembers.
+      await tester.tap(find.text('Savon n°1'));
+      await tester.pump();
+      expect(find.text('Commander'), findsOneWidget);
+      // Let the write land on the real (async) database.
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
+
+      // A refresh, a sign-in round-trip: a brand-new screen, same device.
+      await tester.pumpWidget(const SizedBox());
+      await pumpShop(tester, count: 5);
+      expect(find.text('Commander'), findsOneWidget);
     });
   });
 }
