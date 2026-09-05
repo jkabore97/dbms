@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/notify/push_client.dart';
 import '../../core/orders/order_alert.dart';
 
 import '../../l10n/strings.dart';
@@ -146,14 +148,33 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
   /// The browser only grants a notification from a person's own gesture,
   /// so this hangs off a button — never off a page load.
+  ///
+  /// Two rings in one yes: the doorbell for a background tab (OrderAlert),
+  /// and — where the build has a push Worker — the subscription that
+  /// reaches this browser with the app closed (PushClient), saved under
+  /// the account so the bell's rows find it.
   Future<void> _enableAlerts() async {
+    // Read before the first await: a context is not for after a gap.
+    final notify = AppScope.maybeOf(context)?.notify;
     final granted = await OrderAlert.request();
+    if (!mounted) return;
+    var reach = 'même si cet onglet est en arrière-plan';
+    if (granted && PushClient.available) {
+      final sub = await PushClient.subscribe();
+      if (sub != null && notify != null && notify.isConfigured) {
+        try {
+          await notify.savePushSubscription(sub);
+          reach = "même l'application fermée";
+        } catch (_) {
+          // The tab still rings; the closed-app ring waits for signal.
+        }
+      }
+    }
     if (!mounted) return;
     setState(() => _alertsOn = granted);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(granted
-          ? 'Alertes activées : une commande sonnera même si cet onglet '
-              'est en arrière-plan.'
+          ? 'Alertes activées : une commande sonnera $reach.'
           : "Le navigateur a refusé les alertes. Elles s'activent dans "
               'ses paramètres de notifications.'),
     ));

@@ -1,0 +1,9 @@
+{
+  "name": "kaj-push",
+  "private": true,
+  "type": "module",
+  "description": "Carries the bell to a closed app: Supabase notifications insert -> Web Push.",
+  "scripts": {
+    "test": "node --test test"
+  }
+}
