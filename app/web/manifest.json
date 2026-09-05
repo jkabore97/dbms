@@ -1,12 +1,16 @@
 {
-    "name": "kaj_app",
-    "short_name": "kaj_app",
-    "start_url": ".",
+    "id": "/",
+    "name": "Kaj — vitrines, boutiques et livraisons",
+    "short_name": "Kaj",
+    "description": "Les boutiques près de vous : leurs articles, leurs prix, leurs livraisons. Et pour les commerçants, la caisse, le stock et la vitrine en ligne.",
+    "lang": "fr",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FFFFFF",
+    "theme_color": "#FFFFFF",
+    "orientation": "any",
+    "categories": ["shopping", "business", "food"],
     "prefer_related_applications": false,
     "icons": [
         {

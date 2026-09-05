@@ -35,9 +35,46 @@ class CaptureRepository {
     required LocalDb db,
     String uploadsUrl = '',
     http.Client? httpClient,
+    int photoCacheBudget = 24 * 1024 * 1024,
   })  : _db = db,
         _uploads = _trimSlash(uploadsUrl),
-        _http = httpClient ?? http.Client();
+        _http = httpClient ?? http.Client(),
+        _photoBudget = photoCacheBudget;
+
+  // ----------------------------------------------------------------
+  // Photographs already fetched
+  // ----------------------------------------------------------------
+  // Walking street → shop → street used to refetch every picture over a
+  // market's connection, because each tile held its own bytes for its own
+  // life. One repository serves the whole app, so this is the one place a
+  // picture needs to be remembered. Least recently seen goes first once
+  // the budget is passed; insertion order is the recency order.
+  final _photos = <String, Uint8List>{};
+  int _photoBytes = 0;
+  final int _photoBudget;
+
+  Uint8List? _remembered(String key) {
+    final hit = _photos.remove(key);
+    if (hit == null) return null;
+    _photos[key] = hit; // Seen again: back to the newest end.
+    return hit;
+  }
+
+  void _remember(String key, Uint8List bytes) {
+    // One oversized file must not evict the whole street to fit itself.
+    if (bytes.length > _photoBudget ~/ 4) return;
+    final old = _photos.remove(key);
+    if (old != null) _photoBytes -= old.length;
+    _photos[key] = bytes;
+    _photoBytes += bytes.length;
+    while (_photoBytes > _photoBudget && _photos.isNotEmpty) {
+      final oldest = _photos.keys.first;
+      _photoBytes -= _photos.remove(oldest)!.length;
+    }
+  }
+
+  /// How many pictures are held right now — for tests and diagnostics.
+  int get cachedPhotos => _photos.length;
 
   final SupabaseClient? _client;
   final LocalDb _db;
@@ -264,6 +301,8 @@ class CaptureRepository {
   /// authorised: the request carries the caller's token, and a browser's
   /// `<img>` tag cannot send one.
   Future<Uint8List> objectBytes(String key) async {
+    final held = _remembered(key);
+    if (held != null) return held;
     final response = await _http.get(
       Uri.parse('$_uploads/v1/objects/${Uri.encodeComponent(key)}'),
       headers: {'Authorization': 'Bearer ${_requireToken()}'},
@@ -272,6 +311,7 @@ class CaptureRepository {
     if (response.statusCode != 200) {
       throw CaptureException(_messageFrom(response));
     }
+    _remember(key, response.bodyBytes);
     return response.bodyBytes;
   }
 
@@ -284,12 +324,15 @@ class CaptureRepository {
       throw const CaptureException(
           'Les photos ne sont pas disponibles sur cette installation.');
     }
+    final held = _remembered(key);
+    if (held != null) return held;
     final response = await _http.get(
       Uri.parse('$_uploads/v1/public/objects/${Uri.encodeComponent(key)}'),
     );
     if (response.statusCode != 200) {
       throw CaptureException(_messageFrom(response));
     }
+    _remember(key, response.bodyBytes);
     return response.bodyBytes;
   }
 
