@@ -72,12 +72,29 @@ class RetailRepository {
   // ----------------------------------------------------------------
 
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async {
+    // is_published was missing from this list for a while: the edit sheet
+    // then read every article as "not on the vitrine", showed the switch
+    // off, and saving the sheet — any edit, a price — quietly unpublished
+    // an article that was in the window. The row must carry everything the
+    // sheet can write back.
+    const columns = 'id, name, barcode, serial, cost_price, sale_price, '
+        'quantity, expires_on, low_stock_at, is_ingredient, is_published';
+    try {
+      return await _products(orgId, '$columns, description',
+          activeOnly: activeOnly);
+    } on PostgrestException catch (error) {
+      // The app deploys before the owner pastes the bundle; between the two
+      // the column of 064 is not there yet. A shelf with no descriptions
+      // beats no shelf at all.
+      if (error.code != '42703') rethrow;
+      return _products(orgId, columns, activeOnly: activeOnly);
+    }
+  }
+
+  Future<List<Product>> _products(String orgId, String columns,
+      {required bool activeOnly}) async {
     final client = _requireClient();
-    var query = client
-        .from('products')
-        .select('id, name, barcode, serial, cost_price, sale_price, quantity, '
-            'expires_on, low_stock_at, is_ingredient')
-        .eq('org_id', orgId);
+    var query = client.from('products').select(columns).eq('org_id', orgId);
     if (activeOnly) query = query.eq('is_active', true);
 
     final rows = await query.order('name');
@@ -384,6 +401,7 @@ class RetailRepository {
     bool? isActive,
     bool? isIngredient,
     bool? isPublished,
+    String? description,
   }) async {
     final client = _requireClient();
     // `.select()` turns a silent no-op into a fact we can check. A PostgREST
@@ -403,6 +421,11 @@ class RetailRepository {
           'is_active': ?isActive,
           'is_ingredient': ?isIngredient,
           'is_published': ?isPublished,
+          // An emptied field clears the description rather than keeping the
+          // old words on the vitrine: null, not the empty string.
+          if (description != null)
+            'description':
+                description.trim().isEmpty ? null : description.trim(),
         })
         .eq('id', productId)
         .select('id');

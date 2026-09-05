@@ -303,6 +303,7 @@ class PublicItem {
     required this.price,
     required this.inStock,
     this.photoKey,
+    this.description,
   });
 
   final String id;
@@ -313,6 +314,11 @@ class PublicItem {
   /// The R2 key of the newest photo the shop took of it, served publicly by
   /// the uploads Worker; null when there is none.
   final String? photoKey;
+
+  /// What the shop wrote about it for the street (064); null when nothing.
+  final String? description;
+
+  bool get hasDescription => description != null && description!.isNotEmpty;
 
   factory PublicItem.fromRow(Map<String, dynamic> row) {
     final raw = row['sale_price'];
@@ -325,6 +331,10 @@ class PublicItem {
       price: price,
       inStock: row['in_stock'] == true,
       photoKey: row['photo_key'] as String?,
+      // Absent from a database before 064: no description, not an error.
+      description: (row['description'] as String?)?.trim().isEmpty == true
+          ? null
+          : row['description'] as String?,
     );
   }
 }

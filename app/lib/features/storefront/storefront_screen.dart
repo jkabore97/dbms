@@ -1040,8 +1040,12 @@ class _Window extends StatelessWidget {
                     mainAxisSpacing: wide ? 36 : 26,
                     // Room under the square for a two-line name, the price
                     // and an "Épuisé" — measured, not guessed: 0.74 clipped
-                    // the last line on a 390px phone.
-                    childAspectRatio: wide ? 0.70 : 0.62,
+                    // the last line on a 390px phone. Two more lines when
+                    // any article carries a description (064): the shelf is
+                    // one grid, so every tile gets the taller cell.
+                    childAspectRatio: items.any((i) => i.hasDescription)
+                        ? (wide ? 0.60 : 0.52)
+                        : (wide ? 0.70 : 0.62),
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, i) {
@@ -1106,6 +1110,7 @@ class _ItemTile extends StatelessWidget {
     final label = [
       item.name,
       money.format(item.price),
+      if (item.hasDescription) item.description!,
       if (!item.inStock) 'épuisé',
       if (count > 0) '$count dans le panier',
     ].join(', ');
@@ -1197,6 +1202,22 @@ class _ItemTile extends StatelessWidget {
                     style:
                         const TextStyle(fontSize: 14, color: ShopStyle.mist),
                   ),
+                  // The two lines the shopkeeper would say across the
+                  // counter (064). Two lines and no more: a tile that
+                  // scrolls is a tile nobody reads.
+                  if (item.hasDescription)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        item.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.3,
+                            color: ShopStyle.mist),
+                      ),
+                    ),
                   if (!item.inStock)
                     const Padding(
                       padding: EdgeInsets.only(top: 2),
