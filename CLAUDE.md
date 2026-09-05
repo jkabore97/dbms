@@ -50,3 +50,10 @@ in this project. Follow them without being asked again.
   `security_invoker = on`. Every view added to this schema needs that
   explicitly — one view shipped without it and quietly leaked every org's
   data to anyone holding the public key.
+- Since 063 a new function is born closed to `anon` and `PUBLIC`
+  (default privileges), and every SECURITY DEFINER function outside the
+  street is revoked from `anon`. A function the signed-out storefront
+  must call needs an explicit `grant execute … to anon`. A function an
+  RLS policy calls must stay executable by every role the policy applies
+  to — the policy runs it as the caller — and `test_least_privilege.sql`
+  pins the six that are.

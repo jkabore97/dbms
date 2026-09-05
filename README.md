@@ -559,9 +559,9 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `048` up to date, paste
-`database/apply_006_to_048.sql` into the Supabase SQL editor and run it once.
-It is `006` through `041` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `063` up to date, paste
+`database/apply_006_to_063.sql` into the Supabase SQL editor and run it once.
+It is `006` through `063` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -627,3 +627,18 @@ a real Supabase database.
 
 No live key, token, or service-account file belongs in this repo or in any chat.
 Secrets go in GitHub Actions secrets and Cloudflare Worker secrets only.
+
+**What the public key can run.** Since `063`, a SECURITY DEFINER function
+is executable by `anon` only if it is part of the street — the storefront
+readers, `search_products`, `delivery_quote`, `storefront_photo_allowed`
+(the uploads Worker's check) and `invitation_preview` — or one of the six
+helpers RLS policies call (`is_org_member`, `is_org_admin`, `can_write_org`,
+`has_full_visibility`, `feature_access`, `my_org_ids`), which must run as
+any caller for a policy to answer at all. Everything else is refused by
+the database before the function runs, and a function created after
+`063` is born that way: the default privileges no longer grant `anon` or
+`PUBLIC`. A new function meant for the street must say so with an explicit
+`grant execute … to anon`, and `database/tests/test_least_privilege.sql`
+will fail if a policy starts calling a helper that is not on the list.
+Supabase's security advisor (Dashboard → Advisors) is the place to check
+this holds after a migration.
