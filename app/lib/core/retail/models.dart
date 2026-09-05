@@ -21,6 +21,7 @@ class Product {
     this.lowStockAt,
     this.isIngredient = false,
     this.isPublished = false,
+    this.description,
   });
 
   final String id;
@@ -43,6 +44,11 @@ class Product {
   /// Shown on the shop's public vitrine (052), when the shop has opened one.
   /// Off by default: the shop picks each article it puts in the window.
   final bool isPublished;
+
+  /// The two lines a shopkeeper would say across the counter — size, taste,
+  /// origin — shown under the name on the vitrine (064). Null when the shop
+  /// wrote nothing.
+  final String? description;
 
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
@@ -70,6 +76,9 @@ class Product {
       isIngredient: row['is_ingredient'] == true,
       // Absent before 052: an app ahead of its database reads "not shown".
       isPublished: row['is_published'] == true,
+      description: (row['description'] as String?)?.trim().isEmpty == true
+          ? null
+          : row['description'] as String?,
     );
   }
 }

@@ -303,12 +303,39 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       if (p.expiresOn != null)
                         'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
                     ].join(' · ')),
-                    trailing: p.isLow
-                        ? Chip(
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (p.isLow)
+                          Chip(
                             label: const Text('bas'),
                             backgroundColor: theme.colorScheme.errorContainer,
-                          )
-                        : null,
+                          ),
+                        // The door to the vitrine, drawn on the row: the
+                        // long press below is a gesture nobody discovers,
+                        // and "how do I put this in the window?" was the
+                        // question. Filled when the article is already
+                        // there, outlined when it is not; either way it
+                        // opens the same sheet, where the switch and the
+                        // photo are.
+                        IconButton(
+                          tooltip: p.isPublished
+                              ? 'Sur la vitrine — modifier'
+                              : 'Mettre sur la vitrine',
+                          icon: Icon(
+                            p.isPublished
+                                ? Icons.storefront
+                                : Icons.storefront_outlined,
+                            color: p.isPublished
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: widget.access.canEdit('products')
+                              ? () => _edit(p)
+                              : null,
+                        ),
+                      ],
+                    ),
                     // Long press, not tap, on purpose: a thumb scrolling the
                     // shelves must not fall into a sheet that changes prices.
                     // And only for those the owner lets edit at all.
@@ -526,6 +553,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
   late DateTime? _expiresOn = widget.product.expiresOn;
   late bool _isIngredient = widget.product.isIngredient;
   late bool _isPublished = widget.product.isPublished;
+  late final _description =
+      TextEditingController(text: widget.product.description ?? '');
 
   bool _busy = false;
   String? _error;
@@ -617,6 +646,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     _price.dispose();
     _cost.dispose();
     _low.dispose();
+    _description.dispose();
     super.dispose();
   }
 
@@ -638,6 +668,12 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         expiresOn: _expiresOn,
         isIngredient: _isIngredient,
         isPublished: _isPublished,
+        // Sent only when it changed: before the database is on 064 the
+        // column does not exist, and a price edit must still save.
+        description: _description.text.trim() ==
+                (widget.product.description ?? '')
+            ? null
+            : _description.text,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -862,6 +898,23 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               subtitle: const Text(
                   'Visible du public, avec sa photo et son prix, si la '
                   'vitrine de la boutique est ouverte.'),
+            ),
+            // What the shopkeeper would say across the counter, under the
+            // name on the vitrine. Two sentences at most (300 characters,
+            // the database's own limit); a tile that scrolls is a tile
+            // nobody reads.
+            const SizedBox(height: 8),
+            TextField(
+              controller: _description,
+              enabled: !_busy,
+              maxLines: 3,
+              maxLength: 300,
+              decoration: const InputDecoration(
+                labelText: 'Description pour la vitrine (facultatif)',
+                hintText: 'Taille, goût, origine — ce que le client demande '
+                    'au comptoir.',
+                border: OutlineInputBorder(),
+              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),

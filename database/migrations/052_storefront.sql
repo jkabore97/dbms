@@ -111,7 +111,11 @@ $$;
 -- to come, not how many are on the shelf. The photo is the newest one the
 -- shop took of that article, by its R2 key; the uploads Worker serves it
 -- publicly only after asking storefront_photo_allowed() below.
-create or replace function storefront_products(p_slug text)
+-- Dropped first, not replaced: 064 widens this row with a description, and
+-- a `create or replace` cannot narrow a return table back (42P13) — which
+-- is what re-running the bundle on a database already at 064 would do here.
+drop function if exists storefront_products(text);
+create function storefront_products(p_slug text)
 returns table (
     id         uuid,
     name       text,
