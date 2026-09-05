@@ -154,3 +154,25 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Hard-reload it: a Flutter web build registers a service worker" >> "$GITHUB_STEP_SUMMARY"
           echo "that serves the previous bundle from cache." >> "$GITHUB_STEP_SUMMARY"
+          # The optional addresses are compiled in; an empty one silently
+          # removes a feature from the build (the camera, the admin account
+          # actions, crash reports, push). Say which, here, where the person
+          # deploying will read it — a build shipped for days with the camera
+          # gone was only explained by digging into this job's env block.
+          {
+            echo ""
+            echo "### What this build can do"
+            echo ""
+            for pair in "UPLOADS_URL:photos (camera, article pictures)" \
+                        "ACCOUNT_ADMIN_URL:admin password reset and account deletion" \
+                        "SENTRY_DSN:crash reports" \
+                        "PUSH_URL:push notifications"; do
+              name="${pair%%:*}"; what="${pair#*:}"
+              if [ -n "${!name}" ]; then
+                echo "- ✅ $what — \`$name\` set"
+              else
+                echo "- ⛔ $what — \`$name\` is EMPTY, so this build has no $what."
+                echo "::warning::$name is empty: this build ships without $what. Set the repository variable and re-run this workflow."
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -35,6 +35,11 @@ class _Camera extends CaptureRepository {
 
   List<CapturedDocument> shoebox = const [];
 
+  /// A build compiled with the upload Worker's address: the one the photo
+  /// section is offered in.
+  @override
+  bool get isConfigured => true;
+
   @override
   Future<List<CapturedDocument>> documents(
     String orgId, {
@@ -124,6 +129,20 @@ void main() {
       // thumbnail stays a placeholder — but the section must survive the
       // failure with its button offered, not vanish or crash.
       expect(find.text('Ajouter une photo'), findsOneWidget);
+    });
+
+    testWidgets('a build without UPLOADS_URL hides the section too',
+        (tester) async {
+      // The live site was compiled with the variable empty, and the button
+      // it still drew queued a photo nothing would ever send, then said "en
+      // attente de réseau" — the report "I cannot add pictures". A camera
+      // path with nowhere to post is no camera path.
+      await openSheet(tester, capture: CaptureRepository(null, db: db));
+      expect(find.text('Ajouter une photo'), findsNothing);
+      expect(
+        find.text('La photo paraît sur la vitrine et dans la recherche.'),
+        findsNothing,
+      );
     });
 
     testWidgets('no camera path, no photo section', (tester) async {

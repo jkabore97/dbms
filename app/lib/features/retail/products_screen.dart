@@ -789,7 +789,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             ),
             // The article's picture: the newest photo hung on the article is
             // what the vitrine, the à-la-une strip and the search all show.
-            if (widget.capture != null) ...[
+            // Offered only in a build that knows where to send it: a button
+            // that queues a photo nothing will ever send is a broken button.
+            if (widget.capture != null && widget.capture!.isConfigured) ...[
               const SizedBox(height: 12),
               Row(
                 children: [

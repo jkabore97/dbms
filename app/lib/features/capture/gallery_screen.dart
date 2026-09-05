@@ -168,11 +168,15 @@ class _GalleryScreenState extends State<GalleryScreen> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _capture,
-        icon: const Icon(Icons.photo_camera),
-        label: const Text('Photo'),
-      ),
+      // Same posture as the store home: the camera is drawn only in a build
+      // compiled with the upload Worker's address (UPLOADS_URL).
+      floatingActionButton: widget.capture.isConfigured
+          ? FloatingActionButton.extended(
+              onPressed: _capture,
+              icon: const Icon(Icons.photo_camera),
+              label: const Text('Photo'),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
