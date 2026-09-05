@@ -384,13 +384,20 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.pin,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          final creating = scope.session.phase == SessionPhase.choosingPin;
-          return PinScreen(
-            purpose: creating ? PinPurpose.create : PinPurpose.unlock,
-            identity: scope.session.identity!,
-            onPinAccepted: (pin) =>
-                creating ? scope.session.setPin(pin) : scope.session.unlock(),
-            onSignOut: scope.session.signOut,
+          return _Live(
+            session: scope.session,
+            builder: () {
+              final creating =
+                  scope.session.phase == SessionPhase.choosingPin;
+              return PinScreen(
+                purpose: creating ? PinPurpose.create : PinPurpose.unlock,
+                identity: scope.session.identity!,
+                onPinAccepted: (pin) => creating
+                    ? scope.session.setPin(pin)
+                    : scope.session.unlock(),
+                onSignOut: scope.session.signOut,
+              );
+            },
           );
         },
       ),
@@ -404,28 +411,34 @@ GoRouter buildRouter(SessionController session) {
           // keeps the old screen, which says so and offers a retry.
           // A cold reload can build this page a frame before the session has
           // read the identity off the device; a null-check here was a white
-          // screen on refresh. The splash holds the door for that frame.
-          final identity = scope.session.identity;
-          if (identity == null) return const _Splash();
-          if (!scope.auth.hasLiveSession) {
-            return NoOrgScreen(
-              identity: identity,
-              onRetry: scope.session.resolveOrgs,
-              onSignOut: scope.session.signOut,
-              // The bootstrap case: the person who runs the platform, before
-              // any business exists.
-              onCreateBusiness: scope.session.isPlatformAdmin
-                  ? () => context.push(Routes.newBusiness)
-                  : null,
-            );
-          }
-          return JoinOrApplyScreen(
-            identity: scope.session.identity!,
-            onboarding: scope.onboarding,
-            admin: scope.admin,
-            onRetry: scope.session.resolveOrgs,
-            onSignOut: scope.session.signOut,
-            checking: scope.session.phase == SessionPhase.resolving,
+          // screen on refresh. The splash holds the door for that frame —
+          // and, through _Live, steps aside when the identity lands.
+          return _Live(
+            session: scope.session,
+            builder: () {
+              final identity = scope.session.identity;
+              if (identity == null) return const _Splash();
+              if (!scope.auth.hasLiveSession) {
+                return NoOrgScreen(
+                  identity: identity,
+                  onRetry: scope.session.resolveOrgs,
+                  onSignOut: scope.session.signOut,
+                  // The bootstrap case: the person who runs the platform,
+                  // before any business exists.
+                  onCreateBusiness: scope.session.isPlatformAdmin
+                      ? () => context.push(Routes.newBusiness)
+                      : null,
+                );
+              }
+              return JoinOrApplyScreen(
+                identity: identity,
+                onboarding: scope.onboarding,
+                admin: scope.admin,
+                onRetry: scope.session.resolveOrgs,
+                onSignOut: scope.session.signOut,
+                checking: scope.session.phase == SessionPhase.resolving,
+              );
+            },
           );
         },
       ),
@@ -434,28 +447,32 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.picker,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return OrgPickerScreen(
-            orgs: scope.session.orgs,
-            // A cold load lands here mid-resolve with an empty list; show a
-            // spinner rather than a blank page until my_orgs() answers.
-            loading: scope.session.phase == SessionPhase.booting ||
-                scope.session.phase == SessionPhase.resolving,
-            // The escape hatch if that resolve never returns.
-            onRetry: scope.session.resolveOrgs,
-            // `push`, not `go`: opening a business is a step *into* the
-            // app, so the picker has to stay underneath it. `go` replaces the
-            // location, which is what left back with nowhere to return to and
-            // dropped people out of the app entirely.
-            onSelected: (org) => context.push(Routes.org(org.id)),
-            onSignOut: scope.session.signOut,
-            onCreateBusiness:
-                scope.session.isPlatformAdmin && scope.auth.hasLiveSession
-                    ? () => context.push(Routes.newBusiness)
-                    : null,
-            onBusinesses:
-                scope.session.isPlatformAdmin && scope.auth.hasLiveSession
-                    ? () => context.push(Routes.console)
-                    : null,
+          return _Live(
+            session: scope.session,
+            builder: () => OrgPickerScreen(
+              orgs: scope.session.orgs,
+              // A cold load lands here mid-resolve with an empty list; show a
+              // spinner rather than a blank page until my_orgs() answers —
+              // and the list, when it does, through _Live.
+              loading: scope.session.phase == SessionPhase.booting ||
+                  scope.session.phase == SessionPhase.resolving,
+              // The escape hatch if that resolve never returns.
+              onRetry: scope.session.resolveOrgs,
+              // `push`, not `go`: opening a business is a step *into* the
+              // app, so the picker has to stay underneath it. `go` replaces
+              // the location, which is what left back with nowhere to return
+              // to and dropped people out of the app entirely.
+              onSelected: (org) => context.push(Routes.org(org.id)),
+              onSignOut: scope.session.signOut,
+              onCreateBusiness:
+                  scope.session.isPlatformAdmin && scope.auth.hasLiveSession
+                      ? () => context.push(Routes.newBusiness)
+                      : null,
+              onBusinesses:
+                  scope.session.isPlatformAdmin && scope.auth.hasLiveSession
+                      ? () => context.push(Routes.console)
+                      : null,
+            ),
           );
         },
       ),
@@ -1145,26 +1162,63 @@ Widget _withOrg(
   Widget Function(AppScope scope, OrgSummary org) build,
 ) {
   final scope = AppScope.of(context);
-  final org = scope.session.orgById(state.pathParameters['orgId']);
-  if (org == null) {
-    final phase = scope.session.phase;
-    if (phase == SessionPhase.booting || phase == SessionPhase.resolving) {
-      return const _Splash();
-    }
-    return const _MissingContext(backTo: Routes.picker);
-  }
-  // The business's colours, on every page inside it — not just the home
-  // screen. Each `/o/<id>/...` route is a page of its own (they replace the
-  // shell rather than nest under it), so the palette has to be applied here,
-  // at the one place they all pass through, or a business's settings, product
-  // list and reports all open in the app's default teal instead of the colour
-  // it chose. `homeScreenFor` wraps the home screen the same way; the wash is
-  // idempotent, so the home route carrying both is harmless.
-  return ProfileTheme(
-    profile: org.profile,
-    theme: org.theme,
-    child: build(scope, org),
+  // Listening here, and not only through the router: go_router keeps a
+  // page's widget until the *address* changes. A reload with a live token
+  // lands on `/o/<id>/…` already, so when the org list arrives the address
+  // is the same, the redirect returns null, and the router never asks this
+  // builder again — the spinner it drew while resolving stayed up forever
+  // (the report: "every reload, the loading icon never stops"). With the
+  // session as a listenable the gate below redraws itself the moment the
+  // phase moves, whatever the router does.
+  return _Live(
+    session: scope.session,
+    builder: () {
+      final org = scope.session.orgById(state.pathParameters['orgId']);
+      if (org == null) {
+        final phase = scope.session.phase;
+        if (phase == SessionPhase.booting || phase == SessionPhase.resolving) {
+          return const _Splash();
+        }
+        return const _MissingContext(backTo: Routes.picker);
+      }
+      // The business's colours, on every page inside it — not just the home
+      // screen. Each `/o/<id>/...` route is a page of its own (they replace
+      // the shell rather than nest under it), so the palette has to be
+      // applied here, at the one place they all pass through, or a
+      // business's settings, product list and reports all open in the app's
+      // default teal instead of the colour it chose. `homeScreenFor` wraps
+      // the home screen the same way; the wash is idempotent, so the home
+      // route carrying both is harmless.
+      return ProfileTheme(
+        profile: org.profile,
+        theme: org.theme,
+        child: build(scope, org),
+      );
+    },
   );
+}
+
+/// A page that reads the session redraws when the session changes.
+///
+/// The router re-runs a route's builder only when the match list changes —
+/// a different address, a pushed page. A session phase moving from
+/// `resolving` to `ready` under an unchanged address is invisible to it, so
+/// every builder that decides what to show from `session.phase`,
+/// `session.identity` or `session.orgs` goes through this: the decision is
+/// made inside a [ListenableBuilder] on the session, not once at the door.
+class _Live extends StatelessWidget {
+  const _Live({required this.session, required this.builder});
+
+  final SessionController session;
+  final Widget Function() builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: session,
+      builder: (_, _) => builder(),
+    );
+  }
 }
 
 /// What a page shows when it was opened cold and the thing it was meant to
