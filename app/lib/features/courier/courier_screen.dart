@@ -12,6 +12,7 @@ import '../../core/orders/orders.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/url_tabs.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../storefront/shop_skeleton.dart';
 import '../storefront/shop_style.dart';
 
 /// The livreur's whole world on one page.
@@ -204,7 +205,7 @@ class _CourierScreenState extends State<CourierScreen>
             )
           : null,
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? ShopSkeleton.list(rows: 3)
           : _error != null
               ? ShopNotice(
                   text: _error!,
