@@ -252,6 +252,15 @@ class _CourierScreenState extends State<CourierScreen>
                                 onOpen: _open,
                                 actionsFor: (job) => switch (job.status) {
                                   'ready' => [
+                                      // The course on a map: my dot, the
+                                      // shop, the door, and the leg ahead.
+                                      OutlinedButton.icon(
+                                        onPressed: () => context.push(
+                                            Routes.courierJob(job.orderId)),
+                                        icon: const Icon(Icons.map_outlined,
+                                            size: 18),
+                                        label: const Text('Carte'),
+                                      ),
                                       FilledButton(
                                         onPressed: _busy
                                             ? null
@@ -274,6 +283,13 @@ class _CourierScreenState extends State<CourierScreen>
                                       ),
                                     ],
                                   'in_transit' => [
+                                      OutlinedButton.icon(
+                                        onPressed: () => context.push(
+                                            Routes.courierJob(job.orderId)),
+                                        icon: const Icon(Icons.map_outlined,
+                                            size: 18),
+                                        label: const Text('Carte'),
+                                      ),
                                       FilledButton(
                                         onPressed: _busy
                                             ? null

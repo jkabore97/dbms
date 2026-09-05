@@ -131,6 +131,7 @@ dev_dependencies:
   # tests exercise the same schema and queries the phone does rather than a
   # mock that agrees with whatever the code happens to do.
   sqflite_common_ffi: ^2.3.3
+  plugin_platform_interface: ^2.1.8
 
 flutter:
   uses-material-design: true
