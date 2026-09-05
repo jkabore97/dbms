@@ -40,6 +40,7 @@ class _CourierScreenState extends State<CourierScreen>
   String? _status;
   List<DeliveryJob> _board = const [];
   List<DeliveryJob> _mine = const [];
+  List<CourierEarnings> _earnings = const [];
   bool _loading = true;
   bool _busy = false;
   String? _error;
@@ -66,17 +67,27 @@ class _CourierScreenState extends State<CourierScreen>
       final status = await widget.courier.status();
       var board = const <DeliveryJob>[];
       var mine = const <DeliveryJob>[];
+      var earnings = const <CourierEarnings>[];
       if (status == 'approved') {
-        final results =
-            await Future.wait([widget.courier.available(), widget.courier.mine()]);
-        board = results[0];
-        mine = results[1];
+        final results = await Future.wait([
+          widget.courier.available(),
+          widget.courier.mine(),
+          // The tally is a strip, not the page: if it fails, the board
+          // still shows and the strip is simply absent.
+          widget.courier
+              .earnings()
+              .catchError((_) => const <CourierEarnings>[]),
+        ]);
+        board = results[0] as List<DeliveryJob>;
+        mine = results[1] as List<DeliveryJob>;
+        earnings = results[2] as List<CourierEarnings>;
       }
       if (!mounted) return;
       setState(() {
         _status = status;
         _board = board;
         _mine = mine;
+        _earnings = earnings;
         _loading = false;
       });
     } catch (_) {
@@ -212,6 +223,14 @@ class _CourierScreenState extends State<CourierScreen>
                     ),
                   _ => Column(
                         children: [
+                          // What today paid (062): the one strip on the
+                          // page a courier reads before anything else.
+                          if (_earnings.isNotEmpty)
+                            _EarningsStrip(
+                                earnings: _earnings,
+                                currency: _mine.isNotEmpty
+                                    ? _mine.first.currency
+                                    : 'XOF'),
                           Material(
                             color: ShopStyle.paper,
                             child: TabBar(controller: tabs, tabs: [
@@ -309,6 +328,78 @@ class _CourierScreenState extends State<CourierScreen>
                         ],
                       ),
                 },
+    );
+  }
+}
+
+/// Today, this week, this month — courses, money, kilometres — on the
+/// stone band the street uses for what matters most. Today is written
+/// large; the week and the month sit beside it in small type.
+class _EarningsStrip extends StatelessWidget {
+  const _EarningsStrip({required this.earnings, required this.currency});
+
+  final List<CourierEarnings> earnings;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(currency);
+    final today = earnings.where((e) => e.period == 'today').firstOrNull;
+    final rest = earnings.where((e) => e.period != 'today').toList();
+    return ColoredBox(
+      color: ShopStyle.stone,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("AUJOURD'HUI",
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.4,
+                          color: ShopStyle.mist)),
+                  const SizedBox(height: 2),
+                  Text(money.format(today?.fees ?? 0),
+                      style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                          color: ShopStyle.ink)),
+                  Text(
+                      '${today?.courses ?? 0} course${(today?.courses ?? 0) > 1 ? 's' : ''}'
+                      ' · ${(today?.km ?? 0).toStringAsFixed(1)} km',
+                      style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                ],
+              ),
+            ),
+            for (final e in rest)
+              Padding(
+                padding: const EdgeInsets.only(left: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(CourierEarnings.label(e.period),
+                        style: const TextStyle(
+                            fontSize: 11, color: ShopStyle.mist)),
+                    Text(money.format(e.fees),
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ShopStyle.ink)),
+                    Text('${e.courses} · ${e.km.toStringAsFixed(0)} km',
+                        style: const TextStyle(
+                            fontSize: 12, color: ShopStyle.mist)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

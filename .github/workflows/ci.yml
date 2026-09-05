@@ -460,6 +460,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_delivery_fee.sql
 
+      # What today paid: a courier reads their own delivered courses by
+      # the day they finished them — never another's, never one still on
+      # the road — and nobody else reads them at all.
+      - name: Prove a courier's earnings are their own and add up
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_courier_earnings.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

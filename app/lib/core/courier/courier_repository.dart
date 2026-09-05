@@ -46,6 +46,15 @@ class CourierRepository {
         .toList();
   }
 
+  /// Today, this week, this month: courses delivered, fees carried, km
+  /// ridden — about this courier alone (062).
+  Future<List<CourierEarnings>> earnings() async {
+    final rows = await _requireClient().rpc('courier_earnings') as List<dynamic>;
+    return rows
+        .map((r) => CourierEarnings.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   Future<void> take(String orderId) async {
     await _requireClient()
         .rpc('take_delivery', params: {'p_order_id': orderId});
@@ -63,6 +72,36 @@ class CourierRepository {
       'p_status': status,
     });
   }
+}
+
+/// What the courier has earned (062): one row per period, about themselves.
+class CourierEarnings {
+  const CourierEarnings({
+    required this.period,
+    required this.courses,
+    required this.fees,
+    required this.km,
+  });
+
+  /// 'today' | 'week' | 'month'.
+  final String period;
+  final int courses;
+  final double fees;
+  final double km;
+
+  factory CourierEarnings.fromRow(Map<String, dynamic> row) => CourierEarnings(
+        period: (row['period'] as String?) ?? '',
+        courses: DeliveryJob._num(row['courses'])?.toInt() ?? 0,
+        fees: DeliveryJob._num(row['fees']) ?? 0,
+        km: DeliveryJob._num(row['km']) ?? 0,
+      );
+
+  static String label(String period) => switch (period) {
+        'today' => "Aujourd'hui",
+        'week' => 'Cette semaine',
+        'month' => 'Ce mois',
+        _ => period,
+      };
 }
 
 /// One delivery as the courier sees it: where to collect, where to bring,
