@@ -362,7 +362,8 @@ class _ThumbnailState extends State<_Thumbnail> {
     final theme = Theme.of(context);
 
     if (_bytes != null) {
-      return Image.memory(_bytes!, fit: BoxFit.cover);
+      return Image.memory(_bytes!,
+          fit: BoxFit.cover, semanticLabel: widget.document.title);
     }
     return Container(
       color: theme.colorScheme.surfaceContainerHighest,
@@ -521,7 +522,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 color: theme.colorScheme.surfaceContainerHighest,
                 alignment: Alignment.center,
                 child: _bytes != null
-                    ? InteractiveViewer(child: Image.memory(_bytes!))
+                    ? InteractiveViewer(
+                        child: Image.memory(_bytes!,
+                            semanticLabel: document.title))
                     : _imageError != null
                         ? Padding(
                             padding: const EdgeInsets.all(16),

@@ -54,7 +54,8 @@ Each milestone ends with something demonstrable.
 | Platform console: search, filter and page across thousands of businesses | built, 8 assertions |
 | A business chooses its own colours, previewed before saving | built, 13 + 13 assertions |
 | Every screen is a real page: back, refresh and bookmarks all work | built, 12 assertions |
-| Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions — entry path + every home screen, hubs and admin tiles |
+| Languages: French and English live, per device; Mooré and Dioula scaffolded for a translator | built, 11 assertions — entry path + every home screen, hubs and admin tiles. The switcher offers only French and English (`enabledLocales`); the two draft locales stay hidden until a speaker reviews them. Honest gap: the screens built since (vitrine, orders, courier) are French-only — an English device reads them in French. See M12. |
+| Accessibility: every street tile is one labelled button to a screen reader, the basket stepper is two named 40 px buttons, photos carry alt text, every icon button has a tooltip, and "reduce motion" on the device stills every entrance | built, 8 assertions |
 | The credit book (M8): sales à crédit, repayments, qui-me-doit-combien | built, 11 assertions |
 | Tontines (M13): members, rounds, whose turn, close-the-round contract | built, 8 assertions |
 | Production (transformation): ingredients become a product, cost moves with them, one unit's cost computed | built, 9 assertions |
@@ -504,8 +505,11 @@ cash.
 ### M12 — Languages phase 3
 
 > Extract the remaining deep sheets (recording forms, invoice composer,
-> staff, gallery, livestock, console) — mechanical, the pattern is
-> established. Commission the Mooré and Dioula reviews of `app_mos.arb` /
+> staff, gallery, livestock, console) and everything built since the
+> languages milestone — the vitrine, the street and its search, orders,
+> the courier's board and map, delivery fees — none of which reads
+> `Strings` yet (20 files do; about 130 carry French sentences directly).
+> Mechanical, the pattern is established. Commission the Mooré and Dioula reviews of `app_mos.arb` /
 > `app_dyu.arb` from paid native speakers — the files are ready and the
 > fallback is safe, so enabling each is one line. Server messages move from
 > French sentences to error codes the app translates; the migrations keep

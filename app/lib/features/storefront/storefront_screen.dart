@@ -1097,100 +1097,154 @@ class _ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final count = quantity.round();
+    // To a screen reader the tile is one button — "Savon, 450 F, ajouter au
+    // panier" — and, once something is in the basket, the two stepper
+    // buttons on the photo stand on their own beside it, each saying what
+    // it does to which article.
+    final label = [
+      item.name,
+      money.format(item.price),
+      if (!item.inStock) 'épuisé',
+      if (count > 0) '$count dans le panier',
+    ].join(', ');
+    return Semantics(
+      container: true,
+      button: item.inStock,
+      label: label,
+      hint: item.inStock ? 'Ajouter au panier' : null,
       onTap: item.inStock ? onAdd : null,
-      borderRadius: BorderRadius.circular(6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ColoredBox(
-                    color: ShopStyle.stone,
-                    child: Opacity(
-                      opacity: item.inStock ? 1 : 0.45,
-                      child: _Photo(photoKey: item.photoKey, capture: capture),
-                    ),
-                  ),
-                  if (quantity > 0)
-                    Positioned(
-                      right: 8,
-                      bottom: 8,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: ShopStyle.ink,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _StepButton(
-                                icon: Icons.remove, onTap: onRemove),
-                            Text('${quantity.round()}',
-                                style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: ShopStyle.paper)),
-                            _StepButton(icon: Icons.add, onTap: onAdd),
-                          ],
+      child: InkWell(
+        onTap: item.inStock ? onAdd : null,
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ExcludeSemantics(
+                      child: ColoredBox(
+                        color: ShopStyle.stone,
+                        child: Opacity(
+                          opacity: item.inStock ? 1 : 0.45,
+                          child: _Photo(
+                              photoKey: item.photoKey, capture: capture),
                         ),
                       ),
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: ShopStyle.ink,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _StepButton(
+                                icon: Icons.remove,
+                                label: 'Retirer un ${item.name}',
+                                onTap: onRemove,
+                              ),
+                              ExcludeSemantics(
+                                child: Text('$count',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: ShopStyle.paper)),
+                              ),
+                              _StepButton(
+                                icon: Icons.add,
+                                label: 'Ajouter un ${item.name}',
+                                onTap: onAdd,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                        color: ShopStyle.ink),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    money.format(item.price),
+                    style:
+                        const TextStyle(fontSize: 14, color: ShopStyle.mist),
+                  ),
+                  if (!item.inStock)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Text('Épuisé',
+                          style: TextStyle(
+                              fontSize: 12,
+                              letterSpacing: 0.6,
+                              fontWeight: FontWeight.w600,
+                              color: ShopStyle.mist)),
                     ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            item.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                height: 1.25,
-                color: ShopStyle.ink),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            money.format(item.price),
-            style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
-          ),
-          if (!item.inStock)
-            const Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: Text('Épuisé',
-                  style: TextStyle(
-                      fontSize: 12,
-                      letterSpacing: 0.6,
-                      fontWeight: FontWeight.w600,
-                      color: ShopStyle.mist)),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
+/// One half of the stepper on a basketed tile. 40 px a side: the icon is
+/// small so the chip stays quiet on the photo, but the target under the
+/// thumb is not — a plus you keep missing is a basket you give up on.
 class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.onTap});
+  const _StepButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Semantics(
+      button: true,
+      label: label,
       onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Icon(icon, size: 16, color: ShopStyle.paper),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(child: Icon(icon, size: 16, color: ShopStyle.paper)),
+        ),
       ),
     );
   }
@@ -1225,7 +1279,8 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes, fit: BoxFit.cover);
+        return Image.memory(bytes,
+            fit: BoxFit.cover, semanticLabel: "Photo de l'article");
       },
     );
   }
