@@ -25,6 +25,7 @@ import 'core/l10n/locale_controller.dart';
 import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/notify/notifications_repository.dart';
+import 'core/observability/crash_reporting.dart';
 import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
@@ -58,12 +59,21 @@ const uploadsUrl = String.fromEnvironment('UPLOADS_URL');
 /// are always available.
 const accountAdminUrl = String.fromEnvironment('ACCOUNT_ADMIN_URL');
 
-Future<void> main() async {
+/// The app's own version, for the crash reporter's release tag. Kept in one
+/// place next to pubspec's `version:` — bump both together.
+const appVersion = '0.1.0';
+
+Future<void> main() => CrashReporting.run(_boot, version: appVersion);
+
+Future<void> _boot() async {
   // Anything thrown before `runApp` leaves the browser showing a blank white
-  // page with the reason buried in the console. Catch it and put it on screen.
+  // page with the reason buried in the console. Catch it and put it on
+  // screen — and tell the reporter, because a startup failure is the one
+  // error no user can describe.
   try {
     await _startup();
   } catch (error, stack) {
+    await CrashReporting.report(error, stack);
     runApp(StartupErrorApp(error: error, stack: stack));
   }
 }

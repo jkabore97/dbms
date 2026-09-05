@@ -373,6 +373,20 @@ any phone) and `app-release.aab` (what the Play Console takes). Without the
 secrets it still builds, signed with the debug key — fine for testing on a
 phone, refused by the store, and the run's summary says which one you got.
 
+### Crash reporting
+
+An error in production used to be invisible unless a user described it.
+The app now reports uncaught errors to Sentry — stack traces only, no
+personal data, no performance traces — when a build carries a DSN:
+
+1. Create a free project at sentry.io (platform: Flutter) and copy its DSN.
+2. Set `SENTRY_DSN` as a repository Actions *variable* (it is public by
+   design: it ships in every client and can only send).
+
+Both "Deploy to Cloudflare" and "Build App" pass it as
+`--dart-define=SENTRY_DSN`. Without it the reporter is a no-op, so local
+builds and forks report nothing anywhere.
+
 ### The live site
 
 The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`
