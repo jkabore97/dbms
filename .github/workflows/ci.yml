@@ -468,6 +468,17 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_courier_earnings.sql
 
+      # The street may look, nobody else may knock: a stranger with the
+      # public key reads the directory, a shop, the search and a quote and
+      # is refused at the door by every other definer function; a new
+      # function is born closed to anon; every function has a pinned
+      # search path. Runs last so it sees the grants every suite above
+      # made and proves 063 is what stands after all of them.
+      - name: Prove the public key opens only the street
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_least_privilege.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
