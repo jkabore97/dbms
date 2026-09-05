@@ -19,6 +19,7 @@ import '../../core/courier/courier_repository.dart';
 import '../../features/admin/couriers_screen.dart';
 import '../../features/admin/featured_screen.dart';
 import '../../features/courier/courier_screen.dart';
+import '../../features/courier/job_map_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
 import '../../features/orders/shop_orders_screen.dart';
 import '../../features/admin/platform_people_screen.dart';
@@ -112,6 +113,8 @@ abstract final class Routes {
   static const consoleFeatured = '/console/a-la-une';
   static const myOrders = '/mes-commandes';
   static const courier = '/livreur';
+  /// One running course on a map, for its courier.
+  static String courierJob(String orderId) => '/livreur/course/$orderId';
   static const consoleCouriers = '/console/livreurs';
   static const applications = '/demandes';
   static const language = '/langue';
@@ -338,6 +341,13 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.courier,
         builder: (context, state) => CourierScreen(
+          courier: CourierRepository(AppScope.of(context).auth.client),
+        ),
+      ),
+      GoRoute(
+        path: '${Routes.courier}/course/:id',
+        builder: (context, state) => JobMapScreen(
+          orderId: state.pathParameters['id']!,
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),

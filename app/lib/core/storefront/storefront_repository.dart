@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../orders/orders.dart';
@@ -419,6 +421,19 @@ class DirectoryEntry {
       distanceKm: num_(row['distance_km']),
     );
   }
+}
+
+/// Great-circle distance in km between two points — the same haversine the
+/// database uses for the directory and the delivery fee (061), so what a
+/// courier reads on the map agrees with what the fee was priced on.
+double distanceKm(double lat1, double lng1, double lat2, double lng2) {
+  const r = 6371.0;
+  double rad(double d) => d * math.pi / 180;
+  final dLat = rad(lat2 - lat1);
+  final dLng = rad(lng2 - lng1);
+  final a = math.pow(math.sin(dLat / 2), 2) +
+      math.cos(rad(lat1)) * math.cos(rad(lat2)) * math.pow(math.sin(dLng / 2), 2);
+  return r * 2 * math.asin(math.sqrt(a));
 }
 
 /// A distance a shopper reads at a glance: metres under a kilometre, one
