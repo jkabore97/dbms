@@ -489,6 +489,7 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                     ),
                     if (_rows.length > 1)
                       IconButton(
+                        tooltip: 'Retirer cet ingrédient',
                         icon: const Icon(Icons.close),
                         onPressed: _busy
                             ? null

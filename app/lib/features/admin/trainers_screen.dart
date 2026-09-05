@@ -412,6 +412,7 @@ class _BusinessPickerState extends State<_BusinessPicker> {
               hintText: 'Rechercher une entreprise…',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
+                tooltip: 'Rechercher',
                 icon: const Icon(Icons.arrow_forward),
                 onPressed: _search,
               ),

@@ -29,6 +29,13 @@ class KajMotion {
   /// is a texture, not a queue.
   static Duration stagger(int index) =>
       Duration(milliseconds: 45 * (index % 8));
+
+  /// Whether the person asked their device for less motion (Android's
+  /// "remove animations", the browser's prefers-reduced-motion). When they
+  /// did, every gesture in this file plays at once instead of over time:
+  /// the same page, arriving still.
+  static bool reduced(BuildContext context) =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 }
 
 /// The page transition: a quick fade with a small rise, the same on every
@@ -47,6 +54,7 @@ class PaperPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget? child,
   ) {
+    if (KajMotion.reduced(context)) return child ?? const SizedBox.shrink();
     final eased = CurvedAnimation(
       parent: animation,
       curve: KajMotion.ease,
@@ -93,7 +101,7 @@ class _LiftState extends State<Lift> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = !widget.enabled
+    final scale = !widget.enabled || KajMotion.reduced(context)
         ? 1.0
         : _pressed
             ? 0.985
@@ -158,10 +166,15 @@ class _RevealState extends State<Reveal> {
 
   @override
   Widget build(BuildContext context) {
+    // Less motion asked for: already in place, no wait, no fade.
+    if (KajMotion.reduced(context)) return widget.child;
     return AnimatedOpacity(
       opacity: _in ? 1 : 0,
       duration: KajMotion.settle,
       curve: KajMotion.ease,
+      // A screen reader must find the content while it is still invisible:
+      // the entrance is for the eye, and the eye is not the only reader.
+      alwaysIncludeSemantics: true,
       child: AnimatedSlide(
         offset: _in ? Offset.zero : const Offset(0, 0.06),
         duration: KajMotion.settle,

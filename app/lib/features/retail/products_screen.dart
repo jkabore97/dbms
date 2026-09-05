@@ -264,6 +264,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   suffixIcon: _search.text.isEmpty
                       ? null
                       : IconButton(
+                          tooltip: 'Effacer',
                           icon: const Icon(Icons.close),
                           onPressed: () => setState(_search.clear),
                         ),
@@ -800,7 +801,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                       child: ColoredBox(
                         color: theme.colorScheme.surfaceContainerHighest,
                         child: _photoBytes != null
-                            ? Image.memory(_photoBytes!, fit: BoxFit.cover)
+                            ? Image.memory(_photoBytes!,
+                                fit: BoxFit.cover,
+                                semanticLabel: "Photo de l'article")
                             : Icon(
                                 _photoKnown
                                     ? Icons.image_outlined

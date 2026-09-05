@@ -96,6 +96,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
+                        tooltip: 'Effacer',
                         icon: const Icon(Icons.close),
                         onPressed: () {
                           _search.clear();

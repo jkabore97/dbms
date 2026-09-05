@@ -445,6 +445,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             suffixIcon: _searchController.text.isEmpty
                 ? null
                 : IconButton(
+                    tooltip: 'Effacer',
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       _searchController.clear();

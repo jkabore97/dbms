@@ -802,49 +802,64 @@ class _HitTile extends StatelessWidget {
     final money = moneyFormat(hit.currency);
     final distance = distanceLabel(hit.distanceKm);
     final shopLine = distance == null ? hit.shopName : '${hit.shopName} · $distance';
-    return InkWell(
+    // One button to a screen reader, read in the order a sighted shopper
+    // reads it: the article, its price, whether there is any, the shop.
+    return Semantics(
+      button: true,
+      label: [
+        hit.name,
+        money.format(hit.price),
+        if (!hit.inStock) 'épuisé',
+        'chez ${hit.shopName}',
+        if (distance != null) 'à $distance',
+      ].join(', '),
+      hint: 'Ouvrir la vitrine',
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 1.15,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: ColoredBox(
-                color: ShopStyle.stone,
-                child: Opacity(
-                  opacity: hit.inStock ? 1 : 0.45,
-                  child: _Photo(photoKey: hit.photoKey, capture: capture),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.15,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: ColoredBox(
+                  color: ShopStyle.stone,
+                  child: Opacity(
+                    opacity: hit.inStock ? 1 : 0.45,
+                    child: _Photo(photoKey: hit.photoKey, capture: capture),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(hit.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  height: 1.25,
-                  color: ShopStyle.ink)),
-          const SizedBox(height: 2),
-          Text(
-            hit.inStock
-                ? money.format(hit.price)
-                : '${money.format(hit.price)} · Épuisé',
-            style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
-          ),
-          Text(shopLine,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: ShopStyle.mist)),
-        ],
+            const SizedBox(height: 8),
+            Text(hit.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
+                    color: ShopStyle.ink)),
+            const SizedBox(height: 2),
+            Text(
+              hit.inStock
+                  ? money.format(hit.price)
+                  : '${money.format(hit.price)} · Épuisé',
+              style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+            ),
+            Text(shopLine,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: ShopStyle.mist)),
+          ],
+        ),
       ),
     );
   }
@@ -868,45 +883,58 @@ class _FeaturedTile extends StatelessWidget {
     final money = moneyFormat(item.currency);
     return SizedBox(
       width: 156,
-      child: InkWell(
+      child: Semantics(
+        button: true,
+        label: [
+          item.name,
+          money.format(item.price),
+          if (!item.inStock) 'épuisé',
+          'chez ${item.shopName}',
+          'à la une',
+        ].join(', '),
+        hint: 'Ouvrir la vitrine',
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: ColoredBox(
-                  color: ShopStyle.stone,
-                  child: Opacity(
-                    opacity: item.inStock ? 1 : 0.45,
-                    child: _Photo(photoKey: item.photoKey, capture: capture),
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: ColoredBox(
+                    color: ShopStyle.stone,
+                    child: Opacity(
+                      opacity: item.inStock ? 1 : 0.45,
+                      child: _Photo(photoKey: item.photoKey, capture: capture),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(item.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.25,
-                    color: ShopStyle.ink)),
-            const SizedBox(height: 2),
-            Text(money.format(item.price),
-                style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
-            Text(item.shopName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: ShopStyle.mist)),
-          ],
+              const SizedBox(height: 8),
+              Text(item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                      color: ShopStyle.ink)),
+              const SizedBox(height: 2),
+              Text(money.format(item.price),
+                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+              Text(item.shopName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: ShopStyle.mist)),
+            ],
+          ),
         ),
       ),
     );
@@ -942,7 +970,8 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes, fit: BoxFit.cover);
+        return Image.memory(bytes,
+            fit: BoxFit.cover, semanticLabel: "Photo de l'article");
       },
     );
   }
@@ -969,84 +998,97 @@ class _ShopTile extends StatelessWidget {
     final distance = distanceLabel(entry.distanceKm);
     final initial =
         entry.name.trim().isEmpty ? '·' : entry.name.trim()[0].toUpperCase();
+    final second = line.isNotEmpty
+        ? line
+        : (located && !entry.hasLocation
+            ? 'Position non renseignée'
+            : _labelFor(entry.profile));
 
-    return InkWell(
+    return Semantics(
+      button: true,
+      label: [
+        entry.name,
+        if (line.isNotEmpty) _labelFor(entry.profile),
+        second,
+        if (distance != null) 'à $distance',
+      ].join(', '),
+      hint: 'Ouvrir la vitrine',
       onTap: onOpen,
-      borderRadius: BorderRadius.circular(6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 1.15,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: ColoredBox(
-                color: ShopStyle.stone,
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 56,
-                          fontWeight: FontWeight.w700,
-                          color: ShopStyle.line,
-                          height: 1,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 12,
-                      bottom: 10,
-                      child: Icon(_iconFor(entry.profile),
-                          size: 18, color: ShopStyle.mist),
-                    ),
-                    if (distance != null)
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: ShopStyle.ink,
-                            borderRadius: BorderRadius.circular(999),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.15,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: ColoredBox(
+                  color: ShopStyle.stone,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontSize: 56,
+                            fontWeight: FontWeight.w700,
+                            color: ShopStyle.line,
+                            height: 1,
                           ),
-                          child: Text(distance,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: ShopStyle.paper)),
                         ),
                       ),
-                  ],
+                      Positioned(
+                        left: 12,
+                        bottom: 10,
+                        child: Icon(_iconFor(entry.profile),
+                            size: 18, color: ShopStyle.mist),
+                      ),
+                      if (distance != null)
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: ShopStyle.ink,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(distance,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: ShopStyle.paper)),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            entry.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                height: 1.25,
-                color: ShopStyle.ink),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            line.isNotEmpty
-                ? line
-                : (located && !entry.hasLocation
-                    ? 'Position non renseignée'
-                    : _labelFor(entry.profile)),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              entry.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.25,
+                  color: ShopStyle.ink),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              second,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1098,11 +1140,14 @@ class _MapView extends StatelessWidget {
                 point: here!,
                 width: 22,
                 height: 22,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: ShopStyle.ink,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: ShopStyle.paper, width: 3),
+                child: Semantics(
+                  label: 'Ma position',
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: ShopStyle.ink,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: ShopStyle.paper, width: 3),
+                    ),
                   ),
                 ),
               ),
@@ -1115,34 +1160,41 @@ class _MapView extends StatelessWidget {
                 point: LatLng(e.lat!, e.lng!),
                 width: 150,
                 height: 68,
-                child: GestureDetector(
+                child: Semantics(
+                  button: true,
+                  label: e.name,
+                  hint: 'Voir la boutique sur la carte',
                   onTap: () => onPin(e),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.location_on,
-                          size: 34, color: ShopStyle.ink),
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 146),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: ShopStyle.paper,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: ShopStyle.line),
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    onTap: () => onPin(e),
+                    behavior: HitTestBehavior.opaque,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.location_on,
+                            size: 34, color: ShopStyle.ink),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 146),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: ShopStyle.paper,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: ShopStyle.line),
+                          ),
+                          child: Text(
+                            e.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: ShopStyle.ink),
+                          ),
                         ),
-                        child: Text(
-                          e.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ShopStyle.ink),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
