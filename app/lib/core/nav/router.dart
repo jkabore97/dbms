@@ -297,19 +297,19 @@ GoRouter buildRouter(SessionController session) {
     refreshListenable: session,
     redirect: redirect,
     routes: [
-      GoRoute(path: '/', builder: (_, __) => const _Splash()),
+      GoRoute(path: '/', builder: (_, _) => const _Splash()),
       // Reachable from every phase — see the redirect, which never blocks it.
       // The person who most needs this screen is the one who cannot read the
       // sign-in page, so gating it behind sign-in would be absurd.
       GoRoute(
-          path: Routes.language, builder: (_, __) => const LanguageScreen()),
-      GoRoute(path: Routes.splash, builder: (_, __) => const _Splash()),
+          path: Routes.language, builder: (_, _) => const LanguageScreen()),
+      GoRoute(path: Routes.splash, builder: (_, _) => const _Splash()),
 
       // The static legal and help pages. Top-level so they open with no signal
       // and can be linked from anywhere, signed in or not.
-      GoRoute(path: Routes.privacy, builder: (_, __) => const PrivacyScreen()),
-      GoRoute(path: Routes.terms, builder: (_, __) => const TermsScreen()),
-      GoRoute(path: Routes.faq, builder: (_, __) => const FaqScreen()),
+      GoRoute(path: Routes.privacy, builder: (_, _) => const PrivacyScreen()),
+      GoRoute(path: Routes.terms, builder: (_, _) => const TermsScreen()),
+      GoRoute(path: Routes.faq, builder: (_, _) => const FaqScreen()),
 
       // A shop's public vitrine. Top-level and never redirected — see the
       // redirect above — because the person opening it is a shopper with no

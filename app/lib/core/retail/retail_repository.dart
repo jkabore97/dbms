@@ -158,8 +158,8 @@ class RetailRepository {
       'p_lines': lines.map((l) => l.toJson()).toList(),
       'p_method': method,
       if (note != null && note.isNotEmpty) 'p_note': note,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
-      if (deviceId != null) 'p_device_id': deviceId,
+      'p_client_uuid': ?clientUuid,
+      'p_device_id': ?deviceId,
       if (customerName != null && customerName.isNotEmpty)
         'p_customer_name': customerName,
       if (customerPhone != null && customerPhone.isNotEmpty)
@@ -317,8 +317,8 @@ class RetailRepository {
     final id = await client.rpc('ensure_product', params: {
       'p_org_id': orgId,
       'p_name': name,
-      if (salePrice != null) 'p_sale_price': salePrice,
-      if (costPrice != null) 'p_cost_price': costPrice,
+      'p_sale_price': ?salePrice,
+      'p_cost_price': ?costPrice,
       if (barcode != null && barcode.isNotEmpty) 'p_barcode': barcode,
       if (expiresOn != null) 'p_expires_on': _date(expiresOn),
       if (currentUserId != null) 'p_actor': currentUserId,
@@ -341,10 +341,10 @@ class RetailRepository {
       'p_org_id': orgId,
       'p_product_id': productId,
       'p_quantity': quantity,
-      if (unitCost != null) 'p_unit_cost': unitCost,
+      'p_unit_cost': ?unitCost,
       if (expiresOn != null) 'p_expires_on': _date(expiresOn),
       'p_method': method,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
+      'p_client_uuid': ?clientUuid,
     });
   }
 
@@ -396,13 +396,13 @@ class RetailRepository {
         .from('products')
         .update({
           if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-          if (salePrice != null) 'sale_price': salePrice,
-          if (costPrice != null) 'cost_price': costPrice,
+          'sale_price': ?salePrice,
+          'cost_price': ?costPrice,
           if (expiresOn != null) 'expires_on': _date(expiresOn),
-          if (lowStockAt != null) 'low_stock_at': lowStockAt,
-          if (isActive != null) 'is_active': isActive,
-          if (isIngredient != null) 'is_ingredient': isIngredient,
-          if (isPublished != null) 'is_published': isPublished,
+          'low_stock_at': ?lowStockAt,
+          'is_active': ?isActive,
+          'is_ingredient': ?isIngredient,
+          'is_published': ?isPublished,
         })
         .eq('id', productId)
         .select('id');

@@ -69,7 +69,7 @@ class AccountingRepository {
     await client.from('accounts').update({
       if (name != null) 'name': name.trim(),
       if (description != null) 'description': description.trim(),
-      if (isActive != null) 'is_active': isActive,
+      'is_active': ?isActive,
     }).eq('id', accountId);
   }
 

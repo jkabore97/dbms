@@ -143,7 +143,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
   /// map that re-frames on every GPS tick cannot be dragged.
   void _frame() {
     final points = [
-      if (_me != null) _me!,
+      ?_me,
       if (_job?.shopHasPin ?? false) LatLng(_job!.shopLat!, _job!.shopLng!),
       if (_job?.hasDropPin ?? false) LatLng(_job!.dropLat!, _job!.dropLng!),
     ];

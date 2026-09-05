@@ -610,7 +610,7 @@ class _Street extends StatelessWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: featured.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 14),
+                    separatorBuilder: (_, _) => const SizedBox(width: 14),
                     itemBuilder: (context, i) => Reveal(
                       delay: KajMotion.stagger(i),
                       child: Lift(

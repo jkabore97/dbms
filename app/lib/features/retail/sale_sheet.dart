@@ -440,7 +440,7 @@ class _SaleSheetState extends State<SaleSheet> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _pickable.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
                       final product = _pickable[i];
                       return ChoiceChip(

@@ -319,7 +319,7 @@ class _StructureSheetState extends State<_StructureSheet> {
                     : ListView.separated(
                         controller: controller,
                         itemCount: _columns.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) =>
                             _ColumnTile(column: _columns[index]),
                       ),

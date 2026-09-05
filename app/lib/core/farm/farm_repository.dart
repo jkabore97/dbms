@@ -111,7 +111,7 @@ class FarmRepository {
       'p_batch_code': batchCode.trim(),
       'p_bird_count': birdCount,
       if (breed != null && breed.trim().isNotEmpty) 'p_breed': breed.trim(),
-      if (entityId != null) 'p_entity_id': entityId,
+      'p_entity_id': ?entityId,
       if (arrivedOn != null) 'p_arrived_on': _date(arrivedOn),
     });
     return id as String;
@@ -266,7 +266,7 @@ class FarmRepository {
       'p_quantity': quantity,
       if (occurredOn != null) 'p_occurred_on': _date(occurredOn),
       if (note != null && note.isNotEmpty) 'p_note': note,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
+      'p_client_uuid': ?clientUuid,
     });
     return id as String;
   }
@@ -304,7 +304,7 @@ class FarmRepository {
       if (variety != null && variety.isNotEmpty) 'p_variety': variety,
       if (plantedOn != null) 'p_planted_on': _date(plantedOn),
       if (expectedOn != null) 'p_expected_on': _date(expectedOn),
-      if (expectedYield != null) 'p_expected_yield': expectedYield,
+      'p_expected_yield': ?expectedYield,
       'p_unit': unit,
     });
     return id as String;
@@ -332,7 +332,7 @@ class FarmRepository {
       'p_grade': grade,
       if (harvestedOn != null) 'p_harvested_on': _date(harvestedOn),
       if (note != null && note.isNotEmpty) 'p_note': note,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
+      'p_client_uuid': ?clientUuid,
     });
     return id as String;
   }
@@ -389,9 +389,9 @@ class FarmRepository {
     final client = _requireClient();
     await client.rpc('update_flock_event', params: {
       'p_event_id': eventId,
-      if (quantity != null) 'p_quantity': quantity,
-      if (kind != null) 'p_kind': kind,
-      if (note != null) 'p_note': note,
+      'p_quantity': ?quantity,
+      'p_kind': ?kind,
+      'p_note': ?note,
       if (occurredAt != null) 'p_occurred_at': occurredAt.toIso8601String(),
     });
   }
@@ -406,9 +406,9 @@ class FarmRepository {
     final client = _requireClient();
     await client.rpc('update_herd_event', params: {
       'p_event_id': eventId,
-      if (quantity != null) 'p_quantity': quantity,
-      if (kind != null) 'p_kind': kind,
-      if (note != null) 'p_note': note,
+      'p_quantity': ?quantity,
+      'p_kind': ?kind,
+      'p_note': ?note,
       if (occurredOn != null) 'p_occurred_on': _date(occurredOn),
     });
   }
@@ -423,9 +423,9 @@ class FarmRepository {
     final client = _requireClient();
     await client.rpc('update_harvest', params: {
       'p_harvest_id': harvestId,
-      if (quantity != null) 'p_quantity': quantity,
-      if (grade != null) 'p_grade': grade,
-      if (note != null) 'p_note': note,
+      'p_quantity': ?quantity,
+      'p_grade': ?grade,
+      'p_note': ?note,
       if (harvestedOn != null) 'p_harvested_on': _date(harvestedOn),
     });
   }

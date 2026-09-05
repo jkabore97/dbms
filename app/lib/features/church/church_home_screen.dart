@@ -521,8 +521,8 @@ class _EntryTile extends StatelessWidget {
       subtitle: Text(
         [
           DateFormat.Hm().format(time),
-          if (categoryNote != null) categoryNote,
-          if (memberName != null) memberName,
+          ?categoryNote,
+          ?memberName,
           if (reversed) 'corrigé',
         ].join(' · '),
       ),

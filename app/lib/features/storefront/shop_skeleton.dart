@@ -164,7 +164,7 @@ class _Grid extends StatelessWidget {
         childAspectRatio: wide ? 0.70 : 0.62,
       ),
       itemCount: tiles,
-      itemBuilder: (_, __) => _TileBone(aspectRatio: aspectRatio),
+      itemBuilder: (_, _) => _TileBone(aspectRatio: aspectRatio),
     );
   }
 }

@@ -128,7 +128,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
                       itemCount: _trainers.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (_, i) {
                         final t = _trainers[i];
                         return Card(

@@ -216,8 +216,8 @@ class StaffRepository {
       if (employment != null && employment.isNotEmpty)
         'p_employment': employment,
       if (kind != null && kind.isNotEmpty) 'p_kind': kind,
-      if (salary != null) 'p_salary': salary,
-      if (hourlyRate != null) 'p_hourly_rate': hourlyRate,
+      'p_salary': ?salary,
+      'p_hourly_rate': ?hourlyRate,
       if (nationalId != null && nationalId.isNotEmpty)
         'p_national_id': nationalId,
       if (emergencyContact != null && emergencyContact.isNotEmpty)
@@ -287,8 +287,8 @@ class StaffRepository {
       'p_org_id': orgId,
       'p_full_name': fullName,
       'p_kind': kind,
-      if (hourlyRate != null) 'p_hourly_rate': hourlyRate,
-      if (salary != null) 'p_salary': salary,
+      'p_hourly_rate': ?hourlyRate,
+      'p_salary': ?salary,
       if (phone != null && phone.isNotEmpty) 'p_phone': phone,
       if (roleTitle != null && roleTitle.isNotEmpty) 'p_role_title': roleTitle,
       if (currentUserId != null) 'p_actor': currentUserId,
@@ -313,7 +313,7 @@ class StaffRepository {
       'p_hours': hours,
       if (workedOn != null) 'p_worked_on': _date(workedOn),
       if (note != null && note.isNotEmpty) 'p_note': note,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
+      'p_client_uuid': ?clientUuid,
     });
     return id as String;
   }
@@ -333,10 +333,10 @@ class StaffRepository {
     final id = await client.rpc('pay_employee', params: {
       'p_org_id': orgId,
       'p_employee_id': employeeId,
-      if (amount != null) 'p_amount': amount,
+      'p_amount': ?amount,
       if (label != null && label.isNotEmpty) 'p_label': label,
       'p_method': method,
-      if (clientUuid != null) 'p_client_uuid': clientUuid,
+      'p_client_uuid': ?clientUuid,
     });
     return id as String;
   }
