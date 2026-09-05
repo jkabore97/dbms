@@ -7,6 +7,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/orders/orders.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../storefront/shop_skeleton.dart';
 import '../storefront/shop_style.dart';
 
 /// A customer's orders: what they asked for, where each one stands, and
@@ -130,7 +131,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         onPressed: () => context.go(Routes.directory),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? ShopSkeleton.list()
           : _error != null
               ? ShopNotice(
                   text: _error!,

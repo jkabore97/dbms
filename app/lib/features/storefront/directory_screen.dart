@@ -14,6 +14,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
+import 'shop_skeleton.dart';
 import 'shop_style.dart';
 
 /// The front door: every open vitrine, the articles à la une, a map with the
@@ -288,7 +289,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       title: 'Les vitrines',
       trailing: _AccountCorner(session: widget.session),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShopSkeleton.street()
           : _error != null
               ? ShopNotice(
                   text: _error!,
@@ -740,10 +741,7 @@ class _SearchResults extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         if (hunting)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 48),
-            child: Center(child: CircularProgressIndicator()),
-          )
+          ShopSkeleton.grid(tiles: 3)
         else if (hits.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),

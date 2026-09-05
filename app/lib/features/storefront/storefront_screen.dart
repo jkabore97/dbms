@@ -13,6 +13,7 @@ import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/motion.dart';
+import 'shop_skeleton.dart';
 import 'shop_style.dart';
 
 /// A shop's window, for the street.
@@ -286,7 +287,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               onOrder: _order,
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ShopSkeleton.shelf()
           : _error != null
               ? ShopNotice(
                   text: _error!,

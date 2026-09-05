@@ -10,6 +10,7 @@ import '../../core/format/money.dart';
 import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../storefront/shop_skeleton.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -140,7 +141,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
           ]),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? ShopSkeleton.list()
             : _error != null
                 ? Center(
                     child: Padding(
