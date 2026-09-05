@@ -7,6 +7,17 @@ import 'package:kaj_app/core/db/local_db.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+/// A build compiled with a Worker address nothing answers at: configured,
+/// so capture() files the photograph and tries; the try then dies the way
+/// a dead network kills it.
+class _Configured extends CaptureRepository {
+  _Configured({required super.db})
+      : super(null, uploadsUrl: 'https://uploads.example.com');
+
+  @override
+  bool get isConfigured => true;
+}
+
 /// The property M5's capture half stands on: **a photograph taken with no
 /// signal is not lost.**
 ///
@@ -166,15 +177,28 @@ void main() {
       expect(capture.isConfigured, isFalse);
     });
 
-    test('a failed send leaves the photograph on the device', () async {
-      // A null client cannot send anything, which is the same shape as the
-      // network being down. The photograph must still be here afterwards, and
-      // capture() must report queued rather than throwing.
-      final capture = CaptureRepository(
-        null,
-        db: db,
-        uploadsUrl: 'https://uploads.example.com',
+    test('a build with nowhere to post refuses at once, and queues nothing',
+        () async {
+      // Neither a client nor a Worker address: capture() must not file the
+      // photograph on the device, because no drain will ever send it, and
+      // the "en attente de réseau" that would follow is a lie — the network
+      // is fine, the build has no address. It says the true thing instead.
+      final capture = CaptureRepository(null, db: db);
+      await expectLater(
+        capture.capture(
+            orgId: 'org-1', bytes: photo(), contentType: 'image/jpeg'),
+        throwsA(isA<CaptureException>().having((e) => e.message, 'message',
+            contains("n'est pas configuré"))),
       );
+      expect((await capture.queueHealth('org-1')).waiting, 0);
+    });
+
+    test('a failed send leaves the photograph on the device', () async {
+      // A configured build whose send dies — the network is down, or here,
+      // a Worker address nothing answers at. The photograph must still be
+      // here afterwards, and capture() must report queued rather than
+      // throwing.
+      final capture = _Configured(db: db);
 
       final id = await capture.capture(
         orgId: 'org-1',

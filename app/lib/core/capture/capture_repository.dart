@@ -112,6 +112,15 @@ class CaptureRepository {
     String? ocrText,
     DateTime? capturedAt,
   }) async {
+    // A build compiled without the upload Worker's address can never send
+    // this, so queueing it would be a promise the device cannot keep — and
+    // the "en attente de réseau" that follows would be a lie: the network is
+    // fine, the app has nowhere to post. Say the true thing at once.
+    if (!isConfigured) {
+      throw const CaptureException(
+          "L'envoi de photos n'est pas configuré dans cette version de "
+          "l'application.");
+    }
     final clientUuid = await _db.queueCapture(
       orgId: orgId,
       bytes: bytes,
