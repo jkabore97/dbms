@@ -59,6 +59,9 @@ jobs:
       # than offering ones that cannot work. Set it once the account Worker
       # has been deployed.
       ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+      # Crash reporting (README: "Crash reporting"). The DSN ships in every
+      # client and can only send, so a variable is fine; empty means off.
+      SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -128,7 +131,8 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
           # --pwa-strategy none stops registering a service worker, but the
           # tool still plants an empty file under this name. Phones that
           # installed the old offline-first worker re-fetch this URL and get

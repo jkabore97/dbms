@@ -52,6 +52,9 @@ jobs:
       # camera and the account actions rather than failing the build.
       UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
       ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+      # Crash reporting (README: "Crash reporting"). The DSN ships in every
+      # client and can only send, so a variable is fine; empty means off.
+      SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
       # The Android upload key (README: "Signing the Android app"). Empty
       # means a debug-signed build, and the job summary says so.
       KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
@@ -139,12 +142,14 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
           flutter build appbundle --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -170,6 +175,9 @@ jobs:
       # camera and the account actions rather than failing the build.
       UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
       ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+      # Crash reporting (README: "Crash reporting"). The DSN ships in every
+      # client and can only send, so a variable is fine; empty means off.
+      SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
       # The Android upload key (README: "Signing the Android app"). Empty
       # means a debug-signed build, and the job summary says so.
       KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
@@ -232,7 +240,8 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
 
       - uses: actions/upload-artifact@v4
         with:

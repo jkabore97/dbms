@@ -116,6 +116,12 @@ dependencies:
   latlong2: ^0.10.1
   geolocator: ^14.0.3
 
+  # Crash reporting. Until this, an error in production was invisible
+  # unless a user described it. Armed only by --dart-define=SENTRY_DSN;
+  # without one it is a no-op, so a local build reports nothing anywhere.
+  # See core/observability/crash_reporting.dart for what is and is not sent.
+  sentry_flutter: ^8.14.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
