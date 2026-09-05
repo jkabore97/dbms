@@ -86,6 +86,11 @@ class AppScope extends InheritedWidget {
     return scope!;
   }
 
+  /// For a screen that also lives in a bare test tree: null there, the
+  /// scope everywhere the real app builds it.
+  static AppScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppScope>();
+
   @override
   bool updateShouldNotify(AppScope oldWidget) => false;
 }

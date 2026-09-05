@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'push_client.dart';
+
 /// One ring of the bell.
 class NotificationRow {
   const NotificationRow({
@@ -47,6 +49,22 @@ class NotificationsRepository {
           "Cette version de l'application a été compilée sans serveur.");
     }
     return c;
+  }
+
+  /// This browser said yes to push (060): its address goes under the
+  /// signed-in account, where the push Worker will find it.
+  Future<void> savePushSubscription(PushSubscriptionInfo sub) async {
+    await _c.rpc('save_push_subscription', params: {
+      'p_endpoint': sub.endpoint,
+      'p_p256dh': sub.p256dh,
+      'p_auth': sub.auth,
+      'p_user_agent': sub.userAgent,
+    });
+  }
+
+  /// This browser said no again.
+  Future<void> removePushSubscription(String endpoint) async {
+    await _c.rpc('remove_push_subscription', params: {'p_endpoint': endpoint});
   }
 
   /// The most recent rings, newest first. Unread count is derived from the

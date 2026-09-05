@@ -62,6 +62,9 @@ jobs:
       # Crash reporting (README: "Crash reporting"). The DSN ships in every
       # client and can only send, so a variable is fine; empty means off.
       SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
+      # The push Worker's origin (README: "Push notifications"). A public
+      # hostname, so a variable; empty means the app offers no push alerts.
+      PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -132,7 +135,8 @@ jobs:
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
             --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
-            --dart-define=SENTRY_DSN="$SENTRY_DSN"
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=PUSH_URL="$PUSH_URL"
           # --pwa-strategy none stops registering a service worker, but the
           # tool still plants an empty file under this name. Phones that
           # installed the old offline-first worker re-fetch this URL and get

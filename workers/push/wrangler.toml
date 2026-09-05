@@ -1,0 +1,25 @@
+# Carries the bell to a closed app. See src/index.js for the two doors it
+# has and why it is the one Worker holding a privileged key.
+#
+# Deployed by workflows/deploy-push.yml, which writes the [vars] below from
+# repository variables and sets the secrets with `wrangler secret put`:
+#
+#   secrets   SUPABASE_SERVICE_ROLE_KEY   VAPID_PRIVATE_KEY   PUSH_WEBHOOK_SECRET
+#   vars      SUPABASE_URL  VAPID_PUBLIC_KEY  PUSH_SUBJECT  APP_ORIGIN  ALLOWED_ORIGINS
+
+name = "kaj-push"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Gives kaj-push.<subdomain>.workers.dev, which the app is compiled to talk
+# to (PUSH_URL) and the database webhook posts to.
+workers_dev = true
+
+[vars]
+SUPABASE_URL = ""
+VAPID_PUBLIC_KEY = ""
+PUSH_SUBJECT = "mailto:kabore.boss@gmail.com"
+APP_ORIGIN = "https://dbms.kabore-boss.workers.dev"
+# Who may ask for the public key from a browser. The webhook door needs no
+# origin — it is called by the database, with the shared secret.
+ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"

@@ -425,7 +425,7 @@ building on top of an app no real person has used.
 
 ### M7 — Production week (operational, small)
 
-> 1. Run `database/apply_006_to_059.sql` in the Supabase SQL editor (manual,
+> 1. Run `database/apply_006_to_060.sql` in the Supabase SQL editor (manual,
 >    the owner does this once). This bundle carries the 032 security
 >    hardening — critically, the fix that stops any sign-up from making
 >    themselves a platform admin — so applying it is not optional. It also

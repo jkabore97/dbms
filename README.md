@@ -387,6 +387,41 @@ Both "Deploy to Cloudflare" and "Build App" pass it as
 `--dart-define=SENTRY_DSN`. Without it the reporter is a no-op, so local
 builds and forks report nothing anywhere.
 
+### Push notifications
+
+The bell used to ring only inside the app. With this set up, an order, a
+delivery taken or a job on the board reaches a **closed** app on the web
+(Chrome and Firefox on Android and desktop; Safari from iOS 16.4 when the
+site is added to the home screen). The pieces: migration 060 (the address
+book), `workers/push` (the sender), `web/push_sw.js` (the receiver), and a
+database webhook that wakes the Worker on every bell row.
+
+One-time setup:
+
+1. **The site's push identity.** Run once, never again (a new pair silently
+   orphans every subscriber):
+
+       node workers/push/scripts/make-vapid.mjs
+
+   Store the public line as the repository *variable* `VAPID_PUBLIC_KEY`
+   and the private line as the repository *secret* `VAPID_PRIVATE_KEY`.
+2. **Two more secrets.** `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project
+   Settings → API — the push Worker is the only component that holds it,
+   and it uses it for exactly two functions granted to that role alone) and
+   `PUSH_WEBHOOK_SECRET` (any long random string, e.g. `openssl rand -hex 32`).
+3. **Deploy the Worker**: the "Deploy the push Worker" workflow. Its summary
+   prints the Worker's origin — set that as the repository variable
+   `PUSH_URL` and re-run *Deploy to Cloudflare*; the app then shows the
+   push toggle on the store home and the courier screen.
+4. **The webhook.** Supabase → Database → Webhooks → Create: table
+   `notifications`, event `INSERT`, HTTP `POST` to `<PUSH_URL>/v1/notify`,
+   HTTP header `Authorization: Bearer <PUSH_WEBHOOK_SECRET>`.
+
+Until every step is done nothing rings — and nothing breaks: the app hides
+the toggle without a `PUSH_URL`, and the Worker answers a wrong secret with
+401. Android with the app closed needs FCM (a Firebase project) and is not
+covered here.
+
 ### The live site
 
 The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`

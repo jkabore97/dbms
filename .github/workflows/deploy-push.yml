@@ -1,0 +1,97 @@
+name: Deploy the push Worker
+
+# Publishes workers/push — the Worker that turns a notifications row into a
+# Web Push to a closed app. See README "Push notifications" for the one-time
+# setup: the VAPID pair, the webhook secret, and the database webhook.
+#
+# Kept apart from "Deploy to Cloudflare" like the upload Worker is: this one
+# holds the service-role key as a Worker secret, and a mistake in its setup
+# must not be able to stop the app itself going out.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/push/**'
+      - '.github/workflows/deploy-push.yml'
+
+concurrency:
+  group: cloudflare-push
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      # Secrets: the three things that must never be in a browser or a log.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+      PUSH_WEBHOOK_SECRET: ${{ secrets.PUSH_WEBHOOK_SECRET }}
+      # Variables: public by nature.
+      VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}
+      PUSH_SUBJECT: ${{ vars.PUSH_SUBJECT || 'mailto:kabore.boss@gmail.com' }}
+      APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://dbms.kabore-boss.workers.dev' }}
+      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check what this needs is present
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || missing="$missing SUPABASE_SERVICE_ROLE_KEY(secret)"
+          [ -n "$VAPID_PRIVATE_KEY" ] || missing="$missing VAPID_PRIVATE_KEY(secret)"
+          [ -n "$VAPID_PUBLIC_KEY" ] || missing="$missing VAPID_PUBLIC_KEY(variable)"
+          [ -n "$PUSH_WEBHOOK_SECRET" ] || missing="$missing PUSH_WEBHOOK_SECRET(secret)"
+          if [ -n "$missing" ]; then
+            echo "Empty at deploy time:$missing" >&2
+            echo "README, section 'Push notifications', lists how to make each one." >&2
+            exit 1
+          fi
+
+      - name: The Worker's own tests
+        run: node --test workers/push/test/*.test.mjs
+
+      - name: Check the Cloudflare token is one Cloudflare accepts
+        run: |
+          body=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify) || true
+          case "$body" in
+            *'"success":true'*) echo "Token accepted by Cloudflare." ;;
+            *) echo "Cloudflare rejected CLOUDFLARE_API_TOKEN." >&2; echo "$body" >&2; exit 1 ;;
+          esac
+
+      - name: Deploy
+        run: |
+          npx --yes wrangler@4 deploy \
+            --config workers/push/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "VAPID_PUBLIC_KEY:$VAPID_PUBLIC_KEY" \
+            --var "PUSH_SUBJECT:$PUSH_SUBJECT" \
+            --var "APP_ORIGIN:$APP_ORIGIN" \
+            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+
+      # Secrets go in after the script exists, through wrangler's secret
+      # store — never as --var, which would print them in the deploy log.
+      - name: Install the secrets
+        run: |
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/push/wrangler.toml
+          printf '%s' "$VAPID_PRIVATE_KEY"         | npx --yes wrangler@4 secret put VAPID_PRIVATE_KEY         --config workers/push/wrangler.toml
+          printf '%s' "$PUSH_WEBHOOK_SECRET"       | npx --yes wrangler@4 secret put PUSH_WEBHOOK_SECRET       --config workers/push/wrangler.toml
+
+      - name: Say what is left to do
+        run: |
+          {
+            echo "### Push Worker deployed"
+            echo
+            echo "1. Set the repository variable \`PUSH_URL\` to the kaj-push Worker origin above and re-run *Deploy to Cloudflare* — the app then offers push alerts."
+            echo "2. In Supabase: Database → Webhooks → Create: table \`notifications\`, event INSERT, HTTP POST to \`<PUSH_URL>/v1/notify\`, header \`Authorization: Bearer <PUSH_WEBHOOK_SECRET>\`."
+            echo
+            echo "Until both are done nothing rings — nothing breaks either."
+          } >> "$GITHUB_STEP_SUMMARY"

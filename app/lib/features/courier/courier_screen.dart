@@ -5,6 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/courier/courier_repository.dart';
 import '../../core/format/money.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/notify/push_client.dart';
+import '../../core/orders/order_alert.dart';
 import '../../core/orders/orders.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/url_tabs.dart';
@@ -114,6 +117,42 @@ class _CourierScreenState extends State<CourierScreen>
     }
   }
 
+  /// Whether this browser already carries the ring. Read once at build:
+  /// the bell button stays until the person says yes.
+  bool _alertsOn = OrderAlert.granted;
+
+  /// Asked from the bell button — the browser grants a notification from
+  /// a person's own gesture only. Two rings in one yes: the tab in the
+  /// background (OrderAlert) and, where the build has a push Worker, the
+  /// closed app (PushClient), saved under the account so a new job on the
+  /// board reaches this phone.
+  Future<void> _enableAlerts() async {
+    // Read before the first await: a context is not for after a gap.
+    final notify = AppScope.maybeOf(context)?.notify;
+    final granted = await OrderAlert.request();
+    if (!mounted) return;
+    var reach = 'quand cet onglet est en arrière-plan';
+    if (granted && PushClient.available) {
+      final sub = await PushClient.subscribe();
+      if (sub != null && notify != null && notify.isConfigured) {
+        try {
+          await notify.savePushSubscription(sub);
+          reach = "même l'application fermée";
+        } catch (_) {
+          // The tab still rings; the closed-app ring waits for signal.
+        }
+      }
+    }
+    if (!mounted) return;
+    setState(() => _alertsOn = granted);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(granted
+          ? 'Alertes activées : une nouvelle livraison sonnera $reach.'
+          : "Le navigateur a refusé les alertes. Elles s'activent dans "
+              'ses paramètres de notifications.'),
+    ));
+  }
+
   Future<void> _open(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
@@ -132,10 +171,25 @@ class _CourierScreenState extends State<CourierScreen>
         onPressed: () => context.go(Routes.directory),
       ),
       trailing: _status == 'approved'
-          ? IconButton(
-              tooltip: 'Actualiser',
-              icon: const Icon(Icons.refresh),
-              onPressed: _loading || _busy ? null : _load,
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // The ring on a moto in traffic: a job on the board, a
+                // customer's pin, reaches a closed app once this browser
+                // has said yes. Offered only where the build can keep the
+                // promise, and gone once it is kept.
+                if (OrderAlert.supported && !_alertsOn)
+                  IconButton(
+                    tooltip: 'Recevoir les alertes de livraison',
+                    icon: const Icon(Icons.notifications_active_outlined),
+                    onPressed: _busy ? null : _enableAlerts,
+                  ),
+                IconButton(
+                  tooltip: 'Actualiser',
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loading || _busy ? null : _load,
+                ),
+              ],
             )
           : null,
       body: _loading
