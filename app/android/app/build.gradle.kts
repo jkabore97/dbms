@@ -63,6 +63,14 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // No R8 shrinking. The first release build ever made of this app
+            // failed in minifyReleaseWithR8 — the camera and text-reading
+            // plugins need keep rules the project never had, because every
+            // build before was a debug one. A larger APK that installs beats
+            // a smaller one that does not build; the keep rules are a
+            // follow-up with a device to test them on.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
