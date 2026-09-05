@@ -142,7 +142,7 @@ class _JournalScreenState extends State<JournalScreen> {
                 },
                 child: ListView.separated(
                   itemCount: _rows.length + 1,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     if (index == _rows.length) return _footer();
                     return _JournalTile(row: _rows[index], money: money);

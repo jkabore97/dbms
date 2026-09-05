@@ -748,7 +748,7 @@ class _Banner extends StatelessWidget {
           Icon(icon, size: 20),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
-          if (action != null) action!,
+          ?action,
         ],
       ),
     );

@@ -29,7 +29,7 @@ class AnalyticsRepository {
   Future<OwnerAnalytics> owner(String orgId, {int? days = 30}) async {
     final client = _requireClient();
     final since = _since(days);
-    final params = {'p_org_id': orgId, if (since != null) 'p_since': since};
+    final params = {'p_org_id': orgId, 'p_since': ?since};
 
     final results = await Future.wait([
       client.rpc('org_sales_headline', params: params),
@@ -65,7 +65,7 @@ class AnalyticsRepository {
     final client = _requireClient();
     final since = _since(days);
     final rows = await client.rpc('platform_analytics_headline',
-        params: {if (since != null) 'p_since': since}) as List<dynamic>;
+        params: {'p_since': ?since}) as List<dynamic>;
     return rows.isEmpty
         ? PlatformHeadline.empty
         : PlatformHeadline.fromRow(Map<String, dynamic>.from(rows.first as Map));
@@ -76,7 +76,7 @@ class AnalyticsRepository {
     final client = _requireClient();
     final since = _since(days);
     final rows = await client.rpc('platform_business_performance',
-        params: {if (since != null) 'p_since': since}) as List<dynamic>;
+        params: {'p_since': ?since}) as List<dynamic>;
     return rows
         .map((r) => BusinessPerformance.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();

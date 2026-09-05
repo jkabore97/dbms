@@ -125,7 +125,7 @@ class ProductionRepository {
   }) async {
     await _c.rpc('update_production_run', params: {
       'p_run_id': runId,
-      if (quantity != null) 'p_quantity': quantity,
+      'p_quantity': ?quantity,
       if (productName != null && productName.isNotEmpty)
         'p_product_name': productName,
       if (note != null && note.isNotEmpty) 'p_note': note,

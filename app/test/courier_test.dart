@@ -28,7 +28,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/livreur',
-          builder: (_, __) => CourierScreen(courier: _ApprovedCourier()),
+          builder: (_, _) => CourierScreen(courier: _ApprovedCourier()),
         ),
       ],
     );

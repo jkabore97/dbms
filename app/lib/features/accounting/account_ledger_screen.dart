@@ -122,7 +122,7 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
                   : 'Aucun mouvement sur ce compte pour cette période.',
               child: ListView.separated(
                 itemCount: _movements.length + 1,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   if (index == 0) return _header(theme, money);
                   return _MovementTile(

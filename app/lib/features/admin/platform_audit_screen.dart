@@ -127,7 +127,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: _events.length + 1,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (context, i) {
                             if (i == _events.length) return _footer(theme);
                             return _tile(theme, _events[i]);

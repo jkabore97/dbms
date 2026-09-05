@@ -742,7 +742,7 @@ class _EventTile extends StatelessWidget {
         ].join(' · '),
       ),
       trailing: Text(
-        [trimQuantity(quantity), if (unit != null) unit].join(' '),
+        [trimQuantity(quantity), ?unit].join(' '),
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
           fontSize: 16,

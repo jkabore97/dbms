@@ -283,7 +283,7 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
         onRefresh: _load,
         child: ListView.separated(
           itemCount: _events.length + 1,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, index) {
             if (index == _events.length) {
               return _loadingMore

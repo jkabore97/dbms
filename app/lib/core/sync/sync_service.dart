@@ -22,10 +22,9 @@ class SyncService {
     // Supabase client. Both default to the real client in the app.
     @visibleForTesting
     Future<dynamic> Function(String action, Map<String, dynamic> params)? post,
-    @visibleForTesting String? Function()? currentUserId,
+    @visibleForTesting this._currentUserId,
     this.rpcTimeout = const Duration(seconds: 20),
-  })  : _postOverride = post,
-        _currentUserId = currentUserId;
+  })  : _postOverride = post;
 
   final LocalDb _db;
   final SupabaseClient _supabase;

@@ -32,12 +32,11 @@ import 'notebook_reading.dart';
 class CaptureRepository {
   CaptureRepository(
     this._client, {
-    required LocalDb db,
+    required this._db,
     String uploadsUrl = '',
     http.Client? httpClient,
     int photoCacheBudget = 24 * 1024 * 1024,
-  })  : _db = db,
-        _uploads = _trimSlash(uploadsUrl),
+  })  : _uploads = _trimSlash(uploadsUrl),
         _http = httpClient ?? http.Client(),
         _photoBudget = photoCacheBudget;
 
@@ -398,8 +397,8 @@ class CaptureRepository {
       'p_document_id': documentId,
       if (caption != null && caption.isNotEmpty) 'p_caption': caption,
       if (kind != null && kind.isNotEmpty) 'p_kind': kind,
-      if (entryId != null) 'p_entry_id': entryId,
-      if (productId != null) 'p_product_id': productId,
+      'p_entry_id': ?entryId,
+      'p_product_id': ?productId,
     });
   }
 

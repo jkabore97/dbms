@@ -29,7 +29,7 @@ class ProfilePendingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(org.name),
-        actions: [if (accountAction != null) accountAction!],
+        actions: [?accountAction],
       ),
       body: Center(
         child: ConstrainedBox(

@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -54,7 +54,7 @@ dependencies:
   intl: ^0.20.2
 
   # Detects when the connection comes back so sync can fire automatically.
-  connectivity_plus: ^6.0.3
+  connectivity_plus: ^7.3.1
 
   # Renders an invitation code as a QR. Most of the people being invited are
   # standing next to the person inviting them, so the fastest handover is one
@@ -104,14 +104,14 @@ dependencies:
   # and there is not going to be one, so nothing outside
   # core/capture/text_reader_mobile.dart may import this: the web build must
   # never see it. See text_reader.dart for how that is arranged.
-  google_mlkit_text_recognition: ^0.16.0
+  google_mlkit_text_recognition: ^0.17.1
 
   # Every screen is a real page with its own address, so the browser back
   # button, a refresh and a bookmark all mean what they say. Before this, the
   # whole app lived at "/" and moving between sign-in, the business picker and
   # a business was a setState -- so back from inside a business left the app
   # entirely rather than returning to the picker.
-  go_router: ^17.5.0
+  go_router: ^18.0.1
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
   geolocator: ^14.0.3
@@ -125,7 +125,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
   # Runs the real SQLite engine inside `flutter test`, so the auth and org
   # tests exercise the same schema and queries the phone does rather than a

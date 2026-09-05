@@ -131,7 +131,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: _people.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 8),
                           itemBuilder: (context, i) =>
                               _tile(context, _people[i]),

@@ -54,9 +54,9 @@ class ConsoleRepository {
     final client = _requireClient();
     final rows = await client.rpc('search_orgs', params: {
       if (query != null && query.trim().isNotEmpty) 'p_query': query.trim(),
-      if (profile != null) 'p_profile': profile,
+      'p_profile': ?profile,
       'p_status': status,
-      if (activity != null) 'p_activity': activity,
+      'p_activity': ?activity,
       'p_sort': sort,
       'p_limit': limit,
       'p_offset': offset,
@@ -96,10 +96,10 @@ class ConsoleRepository {
     final rows = await client.rpc('audit_log_page', params: {
       'p_org_id': orgId,
       'p_limit': limit,
-      if (before != null) 'p_before': before,
-      if (table != null) 'p_table': table,
-      if (actorId != null) 'p_actor': actorId,
-      if (action != null) 'p_action': action,
+      'p_before': ?before,
+      'p_table': ?table,
+      'p_actor': ?actorId,
+      'p_action': ?action,
     }) as List<dynamic>;
 
     return rows
@@ -251,10 +251,10 @@ class ConsoleRepository {
     final client = _requireClient();
     final rows = await client.rpc('platform_audit_page', params: {
       'p_limit': limit,
-      if (before != null) 'p_before': before,
-      if (orgId != null) 'p_org_id': orgId,
-      if (action != null) 'p_action': action,
-      if (table != null) 'p_table': table,
+      'p_before': ?before,
+      'p_org_id': ?orgId,
+      'p_action': ?action,
+      'p_table': ?table,
     }) as List<dynamic>;
     return rows
         .map((r) =>
