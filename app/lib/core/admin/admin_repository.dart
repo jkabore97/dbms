@@ -639,7 +639,8 @@ class AdminRepository {
   /// The vitrine switch and its blurb (052). A database that has not run 052
   /// yet reads as "closed" — the same posture as the Wave column, because the
   /// app runs one migration ahead of the database by design.
-  Future<({bool enabled, String? blurb, double? lat, double? lng})> storefront(
+  Future<({bool enabled, String? blurb, double? lat, double? lng,
+      double? deliveryBase, double? deliveryPerKm})> storefront(
       String orgId) async {
     final client = _requireClient();
     double? num_(Object? v) =>
@@ -647,7 +648,8 @@ class AdminRepository {
     try {
       final row = await client
           .from('orgs')
-          .select('storefront_enabled, storefront_blurb, lat, lng')
+          .select('storefront_enabled, storefront_blurb, lat, lng, '
+              'delivery_base, delivery_per_km')
           .eq('id', orgId)
           .maybeSingle();
       return (
@@ -655,11 +657,20 @@ class AdminRepository {
         blurb: row?['storefront_blurb'] as String?,
         lat: num_(row?['lat']),
         lng: num_(row?['lng']),
+        deliveryBase: num_(row?['delivery_base']),
+        deliveryPerKm: num_(row?['delivery_per_km']),
       );
     } on PostgrestException catch (error) {
-      // 052 or 053 not run yet: closed, unplaced.
+      // 052, 053 or 061 not run yet: closed, unplaced, platform rates.
       if (error.code == '42703') {
-        return (enabled: false, blurb: null, lat: null, lng: null);
+        return (
+          enabled: false,
+          blurb: null,
+          lat: null,
+          lng: null,
+          deliveryBase: null,
+          deliveryPerKm: null,
+        );
       }
       rethrow;
     }
@@ -681,6 +692,18 @@ class AdminRepository {
   /// Places the shop on the vitrine map, or lifts it off with both nulls.
   /// Admin-only, both-or-neither and inside the world — all enforced by
   /// set_storefront_location() (053).
+  /// The shop's own delivery rates (061): a base and a per-km amount, or
+  /// both null to go back to the platform's defaults.
+  Future<void> setDeliveryRates(String orgId,
+      {double? base, double? perKm}) async {
+    final client = _requireClient();
+    await client.rpc('set_delivery_rates', params: {
+      'p_org_id': orgId,
+      'p_base': base,
+      'p_per_km': perKm,
+    });
+  }
+
   Future<void> setStorefrontLocation(String orgId,
       {double? lat, double? lng}) async {
     final client = _requireClient();

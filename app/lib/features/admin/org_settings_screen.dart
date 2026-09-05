@@ -76,6 +76,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// the phone's own position — and cleared to lift the pin.
   final _latController = TextEditingController();
   final _lngController = TextEditingController();
+  // The shop's own delivery rates (061); empty means the platform's.
+  final _deliveryBaseController = TextEditingController();
+  final _deliveryPerKmController = TextEditingController();
   bool _locating = false;
 
   /// The vitrine's address: on the web, this very site; elsewhere, the site
@@ -102,8 +105,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _blurbController.dispose();
     _latController.dispose();
     _lngController.dispose();
+    _deliveryBaseController.dispose();
+    _deliveryPerKmController.dispose();
     super.dispose();
   }
+
+  static String _plain(double? v) => v == null
+      ? ''
+      : (v == v.roundToDouble() ? v.round().toString() : '$v');
 
   Future<void> _load() async {
     setState(() {
@@ -129,6 +138,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _blurbController.text = storefront.blurb ?? '';
         _latController.text = storefront.lat?.toString() ?? '';
         _lngController.text = storefront.lng?.toString() ?? '';
+        _deliveryBaseController.text = _plain(storefront.deliveryBase);
+        _deliveryPerKmController.text = _plain(storefront.deliveryPerKm);
         _loading = false;
       });
     } catch (error) {
@@ -168,6 +179,26 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
     }
 
+    // The delivery rates are both or neither, never negative — the
+    // database refuses the same (061).
+    final baseText = _deliveryBaseController.text.trim().replaceAll(',', '.');
+    final perKmText = _deliveryPerKmController.text.trim().replaceAll(',', '.');
+    double? deliveryBase;
+    double? deliveryPerKm;
+    if (baseText.isNotEmpty || perKmText.isNotEmpty) {
+      deliveryBase = double.tryParse(baseText);
+      deliveryPerKm = double.tryParse(perKmText);
+      if (deliveryBase == null ||
+          deliveryPerKm == null ||
+          deliveryBase < 0 ||
+          deliveryPerKm < 0) {
+        setState(() => _error =
+            'Indiquez la base et le prix par km de livraison, ou aucun des '
+            'deux pour garder ceux de la plateforme.');
+        return;
+      }
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -187,6 +218,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         blurb: _blurbController.text.trim(),
       );
       await widget.admin.setStorefrontLocation(widget.orgId, lat: lat, lng: lng);
+      await widget.admin.setDeliveryRates(widget.orgId,
+          base: deliveryBase, perKm: deliveryPerKm);
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
@@ -512,6 +545,48 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   const SizedBox(height: 10),
                   _LinkRow(url: _storefrontUrl),
                   const SizedBox(height: 16),
+                  Text('Frais de livraison', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Une base pour la course, plus un prix par kilomètre '
+                    'entre votre boutique et la porte du client. Vide : les '
+                    'tarifs de la plateforme (500 + 150 F/km). Le montant '
+                    "est annoncé au client avant qu'il commande, et payé au "
+                    'livreur à la porte.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _deliveryBaseController,
+                          enabled: !_saving,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Base',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _deliveryPerKmController,
+                          enabled: !_saving,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Par km',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
                   Text('Position sur la carte',
                       style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),

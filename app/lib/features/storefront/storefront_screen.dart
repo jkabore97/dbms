@@ -219,6 +219,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           currency: _shop?.currency ?? 'XOF',
           waveMerchant: _shop?.waveMerchant,
           onSubmit: _send,
+          quote: (lat, lng) =>
+              widget.storefront.deliveryQuote(widget.slug, lat: lat, lng: lng),
         ),
       ),
     );
@@ -383,6 +385,7 @@ class _OrderSheet extends StatefulWidget {
     required this.basket,
     required this.currency,
     required this.onSubmit,
+    required this.quote,
     this.waveMerchant,
   });
 
@@ -405,6 +408,10 @@ class _OrderSheet extends StatefulWidget {
     double? dropLng,
   }) onSubmit;
 
+  /// What a delivery to a pin would cost (061) — asked the moment the
+  /// customer pins their door, so the price is on the sheet before "Commander".
+  final Future<double?> Function(double lat, double lng) quote;
+
   @override
   State<_OrderSheet> createState() => _OrderSheetState();
 }
@@ -418,6 +425,12 @@ class _OrderSheetState extends State<_OrderSheet> {
   double? _dropLat;
   double? _dropLng;
   bool _locating = false;
+
+  /// The delivery's price for the pinned door: a number, null when none
+  /// could be fixed ("à discuter"), and unknown while the question is out.
+  double? _fee;
+  bool _quoting = false;
+  bool _feeKnown = false;
   final _note = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
@@ -430,6 +443,33 @@ class _OrderSheetState extends State<_OrderSheet> {
     _address.dispose();
     _phone.dispose();
     super.dispose();
+  }
+
+  /// Asks the shop what the run to the pin costs. Answered in words when
+  /// there is no number: a customer told nothing decides nothing.
+  Future<void> _refreshQuote() async {
+    final lat = _dropLat;
+    final lng = _dropLng;
+    if (lat == null || lng == null) {
+      setState(() {
+        _fee = null;
+        _feeKnown = false;
+      });
+      return;
+    }
+    setState(() => _quoting = true);
+    double? fee;
+    try {
+      fee = await widget.quote(lat, lng);
+    } catch (_) {
+      fee = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      _fee = fee;
+      _feeKnown = true;
+      _quoting = false;
+    });
   }
 
   /// Where the customer is standing, once. Refusal loses nothing — the
@@ -460,6 +500,7 @@ class _OrderSheetState extends State<_OrderSheet> {
         _dropLat = position.latitude;
         _dropLng = position.longitude;
       });
+      await _refreshQuote();
     } catch (_) {
       messenger.showSnackBar(const SnackBar(
         content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
@@ -512,6 +553,7 @@ class _OrderSheetState extends State<_OrderSheet> {
       _dropLat = position.lat;
       _dropLng = position.lng;
     });
+    await _refreshQuote();
   }
 
   Future<void> _submit() async {
@@ -587,6 +629,39 @@ class _OrderSheetState extends State<_OrderSheet> {
                 ),
               ),
             const Divider(height: 20),
+            // The delivery's price sits above the total, said before the
+            // customer commits: a number once the door is pinned, "à
+            // discuter" when none can be fixed, and a hint until then.
+            if (_fulfilment == 'delivery') ...[
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('Livraison',
+                        style: TextStyle(fontSize: 15, color: ShopStyle.ink)),
+                  ),
+                  if (_quoting)
+                    const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                  else
+                    Text(
+                      !_feeKnown
+                          ? 'épinglez votre porte pour le prix'
+                          : _fee == null
+                              ? 'à discuter avec la boutique'
+                              : money.format(_fee!),
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: _fee == null
+                              ? FontWeight.w400
+                              : FontWeight.w600,
+                          color: _fee == null ? ShopStyle.mist : ShopStyle.ink),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+            ],
             Row(
               children: [
                 const Expanded(
@@ -596,7 +671,9 @@ class _OrderSheetState extends State<_OrderSheet> {
                           fontWeight: FontWeight.w600,
                           color: ShopStyle.ink)),
                 ),
-                Text(money.format(total),
+                Text(
+                    money.format(total +
+                        (_fulfilment == 'delivery' ? (_fee ?? 0) : 0)),
                     style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -689,6 +766,8 @@ class _OrderSheetState extends State<_OrderSheet> {
                       onPressed: () => setState(() {
                         _dropLat = null;
                         _dropLng = null;
+                        _fee = null;
+                        _feeKnown = false;
                       }),
                     ),
                   ],

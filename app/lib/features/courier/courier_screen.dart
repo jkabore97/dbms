@@ -495,11 +495,29 @@ class _JobCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 6),
+            // What the run pays (061), before the courier takes it: the
+            // fee and the distance it was priced on. A far job is worth
+            // taking when its price says so, instead of rotting on the board.
+            Text(
+                job.deliveryFee == null
+                    ? 'Course : prix à convenir'
+                    : 'Course : ${money.format(job.deliveryFee!)}'
+                        '${job.distanceKm == null ? '' : ' · ${job.distanceKm!.toStringAsFixed(1)} km'}',
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.ink)),
+            const SizedBox(height: 4),
             Text(
                 job.isPaid
-                    ? 'Déjà payé (${paymentLabel(job.paymentMethod)}) — '
-                        'rien à encaisser'
-                    : 'À encaisser à la porte : ${money.format(job.total)}',
+                    ? (job.deliveryFee == null
+                        ? 'Marchandise déjà payée (${paymentLabel(job.paymentMethod)}) '
+                            '— seule la course est à encaisser'
+                        : 'Marchandise déjà payée (${paymentLabel(job.paymentMethod)}) '
+                            '— à encaisser : ${money.format(job.deliveryFee!)} (course)')
+                    : 'À encaisser à la porte : '
+                        '${money.format(job.total + (job.deliveryFee ?? 0))}'
+                        '${job.deliveryFee == null ? '' : ' (dont course ${money.format(job.deliveryFee!)})'}',
                 style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
