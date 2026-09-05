@@ -253,6 +253,25 @@ class _OrderCard extends StatelessWidget {
               ),
             ),
           const Divider(height: 18),
+          // The delivery's price (061), fixed when the order was placed and
+          // handed to the courier at the door — shown apart from the goods,
+          // which may have been paid another way.
+          if (order.fulfilment == 'delivery') ...[
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Livraison',
+                      style: TextStyle(fontSize: 14, color: ShopStyle.mist)),
+                ),
+                Text(
+                    order.deliveryFee == null
+                        ? 'à discuter'
+                        : '${money.format(order.deliveryFee!)} au livreur',
+                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
+              ],
+            ),
+            const SizedBox(height: 4),
+          ],
           Row(
             children: [
               const Expanded(
@@ -262,7 +281,7 @@ class _OrderCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: ShopStyle.ink)),
               ),
-              Text(money.format(order.total),
+              Text(money.format(order.grandTotal),
                   style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

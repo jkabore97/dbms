@@ -122,6 +122,19 @@ class StorefrontRepository {
         .toList();
   }
 
+  /// What bringing an order from the shop at [slug] to a pin would cost
+  /// (061): a number, or null when no price can be fixed — the shop has no
+  /// pin, or no rate exists for its currency. Anyone may ask.
+  Future<double?> deliveryQuote(String slug,
+      {required double lat, required double lng}) async {
+    final v = await _requireClient().rpc('delivery_quote', params: {
+      'p_slug': slug,
+      'p_lat': lat,
+      'p_lng': lng,
+    });
+    return _num(v);
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.

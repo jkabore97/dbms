@@ -319,6 +319,15 @@ class _OrderCard extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.w700)),
               ],
             ),
+            // What the courier collects for the run (061): the shop sees it
+            // so a "why did he ask for 800?" has an answer at the counter.
+            if (order.fulfilment == 'delivery')
+              Text(
+                  order.deliveryFee == null
+                      ? 'Livraison : prix à convenir avec le livreur'
+                      : 'Livraison : ${money.format(order.deliveryFee!)} '
+                          'au livreur, à la porte',
+                  style: theme.textTheme.bodySmall),
             if ((order.address ?? '').isNotEmpty) ...[
               const SizedBox(height: 6),
               Row(

@@ -451,6 +451,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_push.sql
 
+      # What a delivery costs, said before anyone commits: base + per km
+      # between the two pins, rounded to 25, the shop's own numbers over
+      # the platform's, nothing when there is no pin, and the fee fixed on
+      # the order for every reader.
+      - name: Prove a delivery has a price, or honestly none
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_delivery_fee.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

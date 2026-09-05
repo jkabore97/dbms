@@ -86,6 +86,8 @@ class DeliveryJob {
     this.status,
     this.paymentMethod = 'cash',
     this.paidAt,
+    this.deliveryFee,
+    this.distanceKm,
   });
 
   final String orderId;
@@ -110,6 +112,12 @@ class DeliveryJob {
   final double total;
   final String currency;
   final DateTime createdAt;
+
+  /// What the run pays (061): the fee the customer hands the courier at
+  /// the door, and the shop-to-door distance it was computed from. Null
+  /// when no price could be fixed — the card then says "à discuter".
+  final double? deliveryFee;
+  final double? distanceKm;
 
   bool get shopHasPin => shopLat != null && shopLng != null;
   bool get hasDropPin => dropLat != null && dropLng != null;
@@ -138,6 +146,8 @@ class DeliveryJob {
         currency: (row['currency'] as String?) ?? 'XOF',
         createdAt: DateTime.tryParse('${row['created_at']}')?.toLocal() ??
             DateTime.now(),
+        deliveryFee: _num(row['delivery_fee']),
+        distanceKm: _num(row['distance_km']),
       );
 
   static double? _num(Object? v) =>

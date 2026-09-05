@@ -94,6 +94,7 @@ class CustomerOrder {
     this.paymentMethod = 'cash',
     this.paidAt,
     this.shopWave,
+    this.deliveryFee,
   });
 
   final String id;
@@ -118,8 +119,16 @@ class CustomerOrder {
   final DateTime? paidAt;
   final String? shopWave;
 
+  /// What the delivery costs (061), fixed when the order was placed and
+  /// paid to the courier at the door. Null on a pickup, or when no price
+  /// could be computed — the app then says "à discuter".
+  final double? deliveryFee;
+
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
+
+  /// Goods plus the delivery, which is what changes hands.
+  double get grandTotal => total + (deliveryFee ?? 0);
 
   /// The customer can pay now: a Wave order the shop has accepted (paying
   /// before the shop says yes would be money in limbo) and not yet
@@ -149,6 +158,7 @@ class CustomerOrder {
             ? null
             : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
         shopWave: row['shop_wave'] as String?,
+        deliveryFee: _num(row['delivery_fee']),
         lines: _lines(row['lines']),
       );
 }
@@ -172,6 +182,7 @@ class ShopOrder {
     this.paidAt,
     this.dropLat,
     this.dropLng,
+    this.deliveryFee,
   });
 
   final String id;
@@ -196,6 +207,9 @@ class ShopOrder {
   /// The customer's own pin (058), when they shared one with a delivery.
   final double? dropLat;
   final double? dropLng;
+
+  /// The delivery's price (061), fixed at order time; null on a pickup.
+  final double? deliveryFee;
 
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
@@ -234,6 +248,7 @@ class ShopOrder {
             : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
         dropLat: _num(row['drop_lat']),
         dropLng: _num(row['drop_lng']),
+        deliveryFee: _num(row['delivery_fee']),
         lines: _lines(row['lines']),
       );
 }
