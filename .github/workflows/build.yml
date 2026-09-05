@@ -47,6 +47,17 @@ jobs:
       PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
       PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
       PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
+      # The Workers' origins, exactly as deploy-cloudflare.yml sources them:
+      # public hostnames, so repository variables; missing ones hide the
+      # camera and the account actions rather than failing the build.
+      UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
+      ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+      # The Android upload key (README: "Signing the Android app"). Empty
+      # means a debug-signed build, and the job summary says so.
+      KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
+      KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
+      KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
+      KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -91,30 +102,56 @@ jobs:
         with:
           channel: stable
 
-      # The repo holds only lib/ and pubspec.yaml. This generates the
-      # android/ scaffolding without touching existing files. Once the
-      # platform folders are committed, this step can be dropped.
-      - name: Scaffold platform folders
-        working-directory: app
-        run: flutter create --platforms=android --project-name kaj_app .
-
       - name: Install dependencies
         working-directory: app
         run: flutter pub get
 
-      # Debug build: installable on any phone with no signing key.
-      # A Play Store release needs an upload keystore, which comes later.
-      - name: Build APK
+      # The upload key, from four repository secrets (README: "Signing the
+      # Android app"). Written to the two gitignored files Gradle reads and
+      # never printed. Without them the release build falls back to the
+      # debug key: still installable for testing, never publishable — and
+      # the summary below says which of the two this run produced.
+      - name: Install the upload key
+        if: env.KAJ_KEYSTORE_BASE64 != ''
+        working-directory: app/android
+        run: |
+          echo "$KAJ_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+          {
+            echo "storeFile=upload-keystore.jks"
+            echo "storePassword=$KAJ_KEYSTORE_PASSWORD"
+            echo "keyAlias=$KAJ_KEY_ALIAS"
+            echo "keyPassword=$KAJ_KEY_PASSWORD"
+          } > key.properties
+          echo "Upload key installed; this run is publishable." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Note an unsigned build
+        if: env.KAJ_KEYSTORE_BASE64 == ''
+        run: |
+          echo "No KAJ_KEYSTORE_BASE64 secret — signed with the debug key: installable for testing, not publishable." >> "$GITHUB_STEP_SUMMARY"
+
+      # Every --dart-define the web deploy passes, or the phone gets an app
+      # with no camera and no account admin — a build that compiles and
+      # then quietly lacks half its features.
+      - name: Build APK and App Bundle
         working-directory: app
         run: |
-          flutter build apk --debug \
+          flutter build apk --release \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
+          flutter build appbundle --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
 
       - uses: actions/upload-artifact@v4
         with:
           name: kaj-app-android
-          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          path: |
+            app/build/app/outputs/flutter-apk/app-release.apk
+            app/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
   build-web:
@@ -128,6 +165,17 @@ jobs:
       PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
       PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
       PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
+      # The Workers' origins, exactly as deploy-cloudflare.yml sources them:
+      # public hostnames, so repository variables; missing ones hide the
+      # camera and the account actions rather than failing the build.
+      UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
+      ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+      # The Android upload key (README: "Signing the Android app"). Empty
+      # means a debug-signed build, and the job summary says so.
+      KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
+      KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
+      KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
+      KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -167,18 +215,12 @@ jobs:
         with:
           channel: stable
 
-      - name: Scaffold platform folders
-        working-directory: app
-        run: flutter create --platforms=web --project-name kaj_app .
-
       - name: Install dependencies
         working-directory: app
         run: flutter pub get
 
-      # sqflite runs on SQLite compiled to wasm in the browser. The wasm binary
-      # and its worker are generated, not checked in, and the scaffold step
-      # above recreates web/ from scratch — without this the bundle builds fine
-      # and then fails to open its database at runtime.
+      # sqflite runs on SQLite compiled to wasm in the browser; this keeps
+      # the checked-in worker and wasm current with the package version.
       - name: Install sqflite web assets
         working-directory: app
         run: dart run sqflite_common_ffi_web:setup
@@ -186,9 +228,11 @@ jobs:
       - name: Build web
         working-directory: app
         run: |
-          flutter build web --release \
+          flutter build web --release --pwa-strategy none \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL"
 
       - uses: actions/upload-artifact@v4
         with:

@@ -345,6 +345,34 @@ ran — add them and re-run the workflow, then reinstall the artifact.
 The publishable key is designed to ship inside clients; RLS is what protects
 the data. The service_role key never goes into a build.
 
+### Signing the Android app
+
+The app's identity on a phone is `bf.kaj.app`. A release build is signed
+with an *upload key* that lives in exactly two places: the keystore file
+on the machine that made it, and four repository Actions secrets. It is
+never committed, never pasted anywhere — a leaked upload key cannot be
+rotated on a published app.
+
+Make it once, on your own computer (Java's `keytool` ships with Android
+Studio and with any JDK):
+
+    keytool -genkey -v -keystore upload-keystore.jks -storetype JKS \
+      -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+Answer the prompts (the passwords are yours to choose and keep), then set
+these under Settings > Secrets and variables > Actions > Repository secrets:
+
+    KAJ_KEYSTORE_BASE64      base64 -w0 upload-keystore.jks   (one line)
+    KAJ_KEYSTORE_PASSWORD    the keystore password you chose
+    KAJ_KEY_ALIAS            upload
+    KAJ_KEY_PASSWORD         the key password you chose
+
+Keep `upload-keystore.jks` somewhere safe and backed up. From then on the
+"Build App" workflow produces a signed `app-release.apk` (installable on
+any phone) and `app-release.aab` (what the Play Console takes). Without the
+secrets it still builds, signed with the debug key — fine for testing on a
+phone, refused by the store, and the run's summary says which one you got.
+
 ### The live site
 
 The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`
