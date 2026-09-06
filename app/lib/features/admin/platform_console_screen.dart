@@ -617,6 +617,16 @@ class _StatStrip extends StatelessWidget {
           selected: activity == 'never',
           onTap: () => onSelect('never', 'active'),
         ),
+        // The first revenue number (065). Tapping it lists the businesses
+        // behind it, the way every other tile does.
+        _StatTile(
+          label: 'Kaj Pro',
+          value: number.format(overview.pro),
+          hint: overview.pro == 0 ? 'aucune encore' : 'payantes',
+          colour: const Color(0xFF2E7D5B),
+          selected: activity == 'pro',
+          onTap: () => onSelect('pro', 'active'),
+        ),
         _StatTile(
           label: 'Archivées',
           value: number.format(overview.archived),

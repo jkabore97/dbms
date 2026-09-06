@@ -636,6 +636,55 @@ class AdminRepository {
         params: {'p_org_id': orgId, 'p_suspend': suspend});
   }
 
+  /// Which plan a business is on (065), as the platform set it: the raw plan,
+  /// its paid-until date and the platform's note. The *effective* plan — a
+  /// lapsed Pro reads free — comes from `my_orgs()` on the org summary; this
+  /// is the form's view, which needs the date to show and edit it. A database
+  /// that has not run 065 has only free businesses.
+  Future<({String plan, DateTime? until, String? note})> orgPlan(
+      String orgId) async {
+    final client = _requireClient();
+    try {
+      final row = await client
+          .from('orgs')
+          .select('plan, plan_until, plan_note')
+          .eq('id', orgId)
+          .maybeSingle();
+      final until = row?['plan_until'] as String?;
+      return (
+        plan: (row?['plan'] as String?) ?? 'free',
+        until: until == null ? null : DateTime.tryParse(until),
+        note: row?['plan_note'] as String?,
+      );
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') return (plan: 'free', until: null, note: null);
+      rethrow;
+    }
+  }
+
+  /// Puts a business on a plan (065). Platform admin only — the server
+  /// refuses anyone else. [until] is the paid-until date for Pro and is
+  /// dropped by the server on Free; [note] is for the platform's own memory
+  /// ("Wave 25 000 F le 12/09").
+  Future<void> setOrgPlan(
+    String orgId, {
+    required String plan,
+    DateTime? until,
+    String? note,
+  }) async {
+    final client = _requireClient();
+    await client.rpc('set_org_plan', params: {
+      'p_org_id': orgId,
+      'p_plan': plan,
+      'p_until': until == null
+          ? null
+          : '${until.year.toString().padLeft(4, '0')}-'
+              '${until.month.toString().padLeft(2, '0')}-'
+              '${until.day.toString().padLeft(2, '0')}',
+      'p_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+    });
+  }
+
   /// The vitrine switch and its blurb (052). A database that has not run 052
   /// yet reads as "closed" — the same posture as the Wave column, because the
   /// app runs one migration ahead of the database by design.
