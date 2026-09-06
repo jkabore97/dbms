@@ -28,6 +28,9 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile, default_currency) values
     (:shop,  'Boutique 90',  'boutique-90',  'retail', 'XOF'),
     (:other, 'Boutique 90b', 'boutique-90b', 'retail', 'XOF');
+-- Tontines are Kaj Pro since 066; this suite is about the rounds, not the
+-- plan, so both businesses are on Pro. The plan is proven in test_pro_gates.
+update orgs set plan = 'pro' where id in (:shop, :other);
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id) values
     (:shop,  :owner,    'owner', 'org', :shop),

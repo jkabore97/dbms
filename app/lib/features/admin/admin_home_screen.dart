@@ -7,7 +7,9 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/db/local_db.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../account/pro_sheet.dart';
 
 /// The administration hub.
 ///
@@ -43,6 +45,7 @@ class AdminHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scope = AppScope.maybeOf(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -100,12 +103,30 @@ class AdminHomeScreen extends StatelessWidget {
             onTap: () =>
                 context.push(Routes.inside(org.id, 'administration/structure')),
           ),
+          // The dial is a Pro tool (066): on a Free business it is drawn
+          // with the badge and opens the door to pay. Reading the scope
+          // softly — this screen also lives in bare test trees.
           _AdminTile(
             icon: Icons.key_outlined,
             title: "Accès de l'équipe",
             subtitle: 'Qui voit quoi, qui modifie quoi',
-            onTap: () =>
-                context.push(Routes.inside(org.id, 'administration/acces')),
+            pro: scope?.session.accessFor(org.id).isProLocked('team_access') ??
+                false,
+            onTap: () {
+              final s = scope;
+              if (s != null &&
+                  s.session.accessFor(org.id).isProLocked('team_access')) {
+                ProSheet.open(
+                  context,
+                  org: org,
+                  terms: s.session.planTerms,
+                  admin: admin,
+                  canRequest: org.isAdmin,
+                );
+                return;
+              }
+              context.push(Routes.inside(org.id, 'administration/acces'));
+            },
           ),
           _AdminTile(
             icon: Icons.settings_outlined,
@@ -148,6 +169,7 @@ class _AdminTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.pro = false,
   });
 
   final IconData icon;
@@ -155,18 +177,36 @@ class _AdminTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
+  /// Behind Kaj Pro on this business (066): badged, never hidden.
+  final bool pro;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: theme.colorScheme.surfaceContainerHighest,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Icon(icon, size: 28),
+        leading: Icon(icon,
+            size: 28, color: pro ? theme.colorScheme.onSurfaceVariant : null),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: pro
+            ? Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('Pro',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w700)),
+              )
+            : const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
     );

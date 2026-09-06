@@ -54,8 +54,8 @@ class OrgSummary {
   /// The plan the platform put this business on (065): 'free' or 'pro', as
   /// `org_plan()` decides it — a Pro past its paid-until date already reads
   /// 'free' here. Rides the cached org list like [suspended], so the badge
-  /// on the settings screen is right with no signal. Nothing is gated on it
-  /// in this build; that is block 2 of M10.
+  /// on the settings screen is right with no signal. Since 066 the Pro tools
+  /// carry a badge on a Free business and the server holds the line.
   final String plan;
 
   bool get isPro => plan == 'pro';

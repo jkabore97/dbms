@@ -32,6 +32,10 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 
 insert into orgs (id, name, slug, profile, default_currency)
 values (:org, 'Boutique Devises', 'boutique-devises-17', 'retail', 'XOF');
+-- Foreign currencies are Kaj Pro since 066; this suite is about the rates,
+-- so the business is on Pro. test_pro_gates.sql proves a Free owner cannot
+-- set one.
+update orgs set plan = 'pro' where id = :org;
 select seed_retail_accounts(:org);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:org, :owner, 'owner',    'org', :org, 'full'),

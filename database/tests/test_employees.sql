@@ -42,6 +42,10 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 
 insert into orgs (id, name, slug, profile, default_currency) values
     ('79000000-0000-0000-0000-000000000001', 'Boutique Paie', 'boutique-paie', 'retail', 'XOF');
+-- Shifts and wages are Kaj Pro since 066; this suite is about payroll, not
+-- about the plan, so its business is on Pro. The plan itself is proven in
+-- test_pro_gates.sql.
+update orgs set plan = 'pro' where id = '79000000-0000-0000-0000-000000000001';
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id) values
     ('79000000-0000-0000-0000-000000000001', :owner, 'owner',    'org', '79000000-0000-0000-0000-000000000001'),

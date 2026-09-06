@@ -7,6 +7,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
 import '../admin/invite_generator_sheet.dart';
+import 'pro_sheet.dart';
 import 'support.dart';
 
 /// One screen for everything that used to be scattered across a long popup
@@ -37,6 +38,18 @@ class CompteScreen extends StatelessWidget {
     final identity = session.identity;
 
     String inside(String rest) => Routes.inside(org.id, rest);
+
+    // The door to pay (066): every badged tool opens it, and so does the
+    // Kaj Pro tile below. Only an admin of the business may say "J'ai payé".
+    void openPro() => ProSheet.open(
+          context,
+          org: org,
+          terms: session.planTerms,
+          admin: scope.admin,
+          canRequest: org.isAdmin,
+        );
+    VoidCallback gated(String feature, VoidCallback go) =>
+        access.isProLocked(feature) ? openPro : go;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
@@ -124,13 +137,17 @@ class CompteScreen extends StatelessWidget {
               _Tile(
                 icon: Icons.insights_outlined,
                 title: 'Analyses',
-                onTap: () => context.push(inside('rapports/analyse')),
+                pro: access.isProLocked('analytics'),
+                onTap: gated('analytics',
+                    () => context.push(inside('rapports/analyse'))),
               ),
             if (access.canSee('reports'))
               _Tile(
                 icon: Icons.menu_book_outlined,
                 title: Strings.of(context).accounting,
-                onTap: () => context.push(inside('comptabilite')),
+                pro: access.isProLocked('accounting'),
+                onTap: gated(
+                    'accounting', () => context.push(inside('comptabilite'))),
               ),
             // Undo a sale or a purchase entered by mistake — or test data.
             // Owner/admin only, and only where there are sales and deliveries
@@ -151,7 +168,9 @@ class CompteScreen extends StatelessWidget {
               _Tile(
                 icon: Icons.group_outlined,
                 title: Strings.of(context).tontines,
-                onTap: () => context.push(inside('tontines')),
+                pro: access.isProLocked('tontines'),
+                onTap:
+                    gated('tontines', () => context.push(inside('tontines'))),
               ),
             if (access.canSee('production'))
               _Tile(
@@ -172,6 +191,17 @@ class CompteScreen extends StatelessWidget {
                 onTap: () => InviteGeneratorSheet.open(context,
                     orgId: org.id, onboarding: scope.onboarding),
               ),
+            // The plan, said plainly (066): what this business is on, and
+            // the door to the other one. Drawn for every member so an
+            // employee who meets a badge knows what it is.
+            _Tile(
+              icon: Icons.workspace_premium_outlined,
+              title: org.isPro ? 'Kaj Pro' : 'Passer à Kaj Pro',
+              subtitle: org.isPro
+                  ? 'Formule active'
+                  : 'Paie, analyses, comptabilité, équipe sans limite…',
+              onTap: openPro,
+            ),
             if (!session.isPlatformAdmin)
               _Tile(
                 icon: Icons.business_center_outlined,
@@ -373,6 +403,7 @@ class _Tile extends StatelessWidget {
     required this.title,
     required this.onTap,
     this.subtitle,
+    this.pro = false,
   });
 
   final IconData icon;
@@ -380,14 +411,47 @@ class _Tile extends StatelessWidget {
   final String? subtitle;
   final VoidCallback onTap;
 
+  /// The tool is behind Kaj Pro on this business (066): drawn, greyed, with
+  /// the badge — never hidden. The tap opens the door to pay.
+  final bool pro;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
+      leading: Icon(icon,
+          color: pro ? theme.colorScheme.onSurfaceVariant : null),
+      title: Text(title,
+          style: pro
+              ? TextStyle(color: theme.colorScheme.onSurfaceVariant)
+              : null),
       subtitle: subtitle == null ? null : Text(subtitle!),
-      trailing: const Icon(Icons.chevron_right, size: 20),
+      trailing: pro
+          ? const _ProBadge()
+          : const Icon(Icons.chevron_right, size: 20),
       onTap: onTap,
+    );
+  }
+}
+
+/// The small "Pro" mark on a tool the plan holds (066).
+class _ProBadge extends StatelessWidget {
+  const _ProBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text('Pro',
+          style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4)),
     );
   }
 }

@@ -30,6 +30,10 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 
 insert into orgs (id, name, slug, profile, default_currency) values
     (:shop, 'Boutique 95', 'boutique-95', 'retail', 'XOF');
+-- The dial is Kaj Pro since 066; this suite is about what the dial does,
+-- not about the plan, so the business is on Pro. test_pro_gates.sql proves
+-- a Free owner cannot turn it.
+update orgs set plan = 'pro' where id = :shop;
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id) values
     (:shop, :owner, 'owner',      'org', :shop),
