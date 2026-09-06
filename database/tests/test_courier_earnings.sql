@@ -43,10 +43,17 @@ insert into couriers (user_id, phone, status) values
 -- they were finished. Two today (2 km each, 800 F), one ten days ago
 -- (10 km, 2000 F), one delivered by somebody else today, and one of
 -- Moussa's still on the road.
+--
+-- The second of today's courses is stamped at the start of today in
+-- Ouagadougou, not "an hour ago": CI once ran at 00:14 UTC and an hour
+-- ago was yesterday, so today counted one course and the suite failed
+-- on a documentation change. Midnight today is today whatever the clock
+-- says, and it stays two kilometres and 800 F.
 insert into orders (org_id, customer_id, customer_name, status, fulfilment, address,
                     total, currency, courier_id, drop_lat, drop_lng, delivery_fee, updated_at) values
     (:shop, :customer, 'Awa', 'delivered',  'delivery', 'Dassasgho', 17500, 'XOF', :moussa, 12.3894, -1.5197,  800, now()),
-    (:shop, :customer, 'Awa', 'delivered',  'delivery', 'Dassasgho',   450, 'XOF', :moussa, 12.3894, -1.5197,  800, now() - interval '1 hour'),
+    (:shop, :customer, 'Awa', 'delivered',  'delivery', 'Dassasgho',   450, 'XOF', :moussa, 12.3894, -1.5197,  800,
+        date_trunc('day', now() at time zone 'Africa/Ouagadougou') at time zone 'Africa/Ouagadougou'),
     (:shop, :customer, 'Awa', 'delivered',  'delivery', 'Loin',       3200, 'XOF', :moussa, 12.4614, -1.5197, 2000, now() - interval '10 days'),
     (:shop, :customer, 'Awa', 'delivered',  'delivery', 'Dassasgho',   450, 'XOF', :other,  12.3894, -1.5197,  800, now()),
     (:shop, :customer, 'Awa', 'in_transit', 'delivery', 'Dassasgho',   450, 'XOF', :moussa, 12.3894, -1.5197,  800, now());

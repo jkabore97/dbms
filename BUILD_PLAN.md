@@ -426,16 +426,16 @@ building on top of an app no real person has used.
 
 ### M7 — Production week (operational, small)
 
-> 1. Run `database/apply_006_to_064.sql` in the Supabase SQL editor (manual,
->    the owner does this once). This bundle carries the 032 security
->    hardening — critically, the fix that stops any sign-up from making
->    themselves a platform admin — so applying it is not optional. It also
->    carries 041, which lets the platform admin edit the businesses they run
->    from the console but do not belong to, and the platform moderation set
->    (047 people directory, 048 activity log, 049 suspend/freeze — a suspended
->    business goes read-only through `can_write_org` without losing its data).
-> 2. Set `UPLOADS_URL` in the repo's Actions variables and redeploy, then put
->    one real photograph through the uploads Worker end to end.
+> 1. **Done (September 2026):** the live database is at 064 — each new
+>    bundle `database/apply_006_to_0NN.sql` is run by the owner in the
+>    Supabase SQL editor once, and it is re-runnable. The bundle carries the
+>    032 security hardening — critically, the fix that stops any sign-up
+>    from making themselves a platform admin — as well as 041 (the platform
+>    admin edits the businesses they run), the moderation set (047, 048,
+>    049) and 063 (least privilege: the public key runs only the street).
+> 2. **Done:** `UPLOADS_URL` is set in the repo's Actions variables and the
+>    build deployed with it. Still to do: put one real photograph through
+>    the uploads Worker end to end and confirm `record_document` in the logs.
 > 3. Verify email sign-up against the real project with "Confirm email" both
 >    on and off; keep whichever setting matches the app's wording.
 > 4. Put the app in one real business's hands for a week. Watch
@@ -478,16 +478,118 @@ cash.
 
 **Demo after M9:** an invoice is paid from a phone and the books already know.
 
-### M10 — Kaj gets paid (subscriptions)
+### M10 — Kaj gets paid: the freemium plan (September 2026)
 
-> Same rails as M9, platform side. A `subscriptions` table: org, plan,
-> paid-until, grace state. A monthly payment link sent to owners; the
-> webhook extends paid-until. Grace, never a cliff: an unpaid business goes
-> read-only after a long warning, it never loses data — trust is the
-> product. Free tier decision (e.g. churches free, businesses pay) is a
-> flag per org, changeable by the platform admin from the console.
+One person builds this, so it is cut into blocks that each ship alone,
+each leaves the app better even if the next never comes, and none of
+them waits on a payment aggregator. Money is collected by hand first
+and automated only once ten businesses have actually paid — automating
+a loop nobody has walked is the most expensive way to learn it was wrong.
 
-**Demo after M10:** the first franc of recurring revenue arrives.
+**The decision.** Two plans, not three: **Kaj** (free, forever) and
+**Kaj Pro** (paid). The line is drawn where a business is visibly making
+money with the app, never where it is still deciding whether to trust it.
+
+| Free, forever — the daily habit | Pro — what a grown business needs |
+|---|---|
+| Stock, sales, returns, expiry alerts | Staff beyond three accounts, shifts and payroll |
+| The credit book (qui me doit combien) | The access dial per tool per tier |
+| The vitrine, the street, the search, orders, delivery quotes | Analytics: charts, sales by hour and weekday, product performance, losses avoided |
+| The shopper pays nothing, ever | Accounting: journal, résultat, bilan, grand livre, balance |
+| One owner and up to three staff | Invoices beyond twenty a month |
+| Photos, up to fifty per business | History beyond twelve months in reports |
+| Contributions and expenses for an association | Multi-currency till and rates; tontines for an association |
+| Notifications, in-app and push | |
+
+Lapsing Pro is never a cliff: the business drops back to Free, its Pro
+tools become view-only, nothing is deleted, nothing goes read-only that
+was free before. Trust is the product.
+
+**Price to test, not to trust:** 2 500 F CFA a month or 25 000 F CFA a
+year, paid by Wave or Orange Money to the platform's own number. One
+price. Adjust after the first twenty conversations, not before.
+
+#### Block 1 — The plan flag (migration 065, one PR)
+
+> `orgs.plan` (`free` | `pro`, default `free`), `orgs.plan_until` (date,
+> null = no end), `orgs.plan_note`. `set_org_plan(org, plan, until, note)`
+> — platform admin only, SECURITY DEFINER like `set_org_suspended`,
+> written to the activity log. `org_plan(org)` answers the *effective*
+> plan: `pro` while `plan_until` is null or not yet past, `free` after.
+> Console: a **Plan** card on the business admin screen (current plan,
+> paid until, a form to set it) and a count of Pro businesses on the
+> home tiles. Suite: only the platform sets a plan; a past `plan_until`
+> reads `free`; the change is in the log.
+
+**Demo after block 1:** you set a business to Pro from the console and
+it reads Pro in its settings.
+
+#### Block 2 — The gates (migration 066 + app, one or two PRs)
+
+> The line lives in `platform_settings`, not in code, so it moves without
+> a migration: `pro_features` (a JSON list of tool names), `free_max_staff`
+> (3), `free_max_invoices_month` (20), `free_max_photos` (50),
+> `free_history_months` (12). `feature_access()` gains one layer *after*
+> the owner's dial: on a Free business a tool in `pro_features` answers
+> `view`, never `hidden` — the owner keeps seeing the tool, greyed, with
+> what it would give them. The caps are enforced where it is cheap and
+> matters: `add_employee` and the invoice function raise a code beyond
+> the cap; the photo cap is checked in `record_document`. The platform
+> admin is never gated. The app draws a small **Pro** badge on gated
+> tools and one paywall sheet: what Pro is, the price, the platform's
+> Wave number, and a **"J'ai payé"** button that writes a `plan_requests`
+> row (org, amount said, when) the console lists. Suite: Free gets `view`
+> on a Pro tool and `edit` on everything else; Pro gets `edit`; a lapsed
+> Pro reads `view` and loses no row; the fourth staff account is refused
+> on Free and accepted on Pro; the dial still wins below the plan (a Pro
+> owner can still hide payroll from a clerk).
+
+**Demo after block 2:** a Free business sees Analyses greyed with a Pro
+badge, taps it, reads the price, and its "J'ai payé" appears in the
+console.
+
+#### Block 3 — The manual money loop (no code)
+
+> An owner pays by Wave to the platform number and taps "J'ai payé". You
+> see it in the console, check the Wave app, set the plan Pro for a year.
+> Every week, count: businesses active, businesses at a cap, requests,
+> conversions. This block ends when ten businesses have paid, or when
+> twenty have hit a cap and none paid — which is the signal to move the
+> line, not to build more.
+
+**Demo after block 3:** the first franc of recurring revenue, on paper
+you can show.
+
+#### Block 4 — The delivery cut (migration 067, one PR)
+
+> The second stream, and the one that fits the market better than any
+> subscription: pay when you earned. `platform_settings.delivery_share`
+> (start at 10 %). At order time `orders.platform_fee` is computed from
+> the fixed `delivery_fee` and stored beside it; the courier's earnings
+> show the net. Until money moves through the platform, the cut is a
+> monthly settlement: a console report per courier of fees earned and
+> share owed, settled by Wave. Only worth switching on with couriers you
+> know personally, or once M9 lets the platform hold the money for a
+> moment and keep its share.
+
+**Demo after block 4:** the console says what each courier owes this
+month, and the number matches their earnings tally.
+
+#### Block 5 — Automate what block 3 proved (after M9)
+
+> A payment link for Kaj Pro on the paywall sheet; the M9 Worker's
+> webhook calls `set_org_plan` with `plan_until` moved a month or a year.
+> A push (060) seven days before a lapse, and one on the day. The
+> **Revenus** tab of M11: MRR, Free vs Pro, lapses this week — each a
+> phone call. `plan_requests` stays for the people who still pay by hand.
+
+**Demo after M10:** a business renews from its phone and the console
+knows before you do.
+
+Order for one person: block 1 and 2 are two or three working sessions
+and ship before anyone is asked for money; block 3 is calendar time, not
+build time; block 4 is one session, when the couriers exist; block 5 is
+whenever M9 lands. Nothing here blocks M11 or M12.
 
 ### M11 — The platform dashboard grows up
 
@@ -529,7 +631,8 @@ cash.
 > creates value until M7–M10 proved somebody wants the thing distributed.
 
 Parallelism: M8 and M11 touch disjoint code and can run side by side. M9
-blocks M10; M10 blocks the Revenus tab only. M12 can fill any idle week.
+blocks only block 5 of M10 — blocks 1 to 4 collect money by hand first;
+M10 blocks the Revenus tab only. M12 can fill any idle week.
 
 ## What matters more than any of this
 
