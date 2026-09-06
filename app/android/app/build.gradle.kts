@@ -69,8 +69,15 @@ android {
             // build before was a debug one. A larger APK that installs beats
             // a smaller one that does not build; the keep rules are a
             // follow-up with a device to test them on.
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8: strip the code and resources nobody calls. Half of what
+            // the fat APK weighed was library code the app never reaches;
+            // the rules in proguard-rules.pro keep what reflection needs.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
