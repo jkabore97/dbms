@@ -25,6 +25,14 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+  # A pull request that touches the app builds the Android app too, so a
+  # change to the Gradle setup or the shrinker rules is proven before it
+  # merges — this sandbox has no Android SDK, and CI's Flutter tests do
+  # not compile Kotlin. Nothing is published from a pull request.
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
 
 # The Android job publishes the APKs to a GitHub release so a shop can
 # download the app from a public link (README: "Installing and updating
