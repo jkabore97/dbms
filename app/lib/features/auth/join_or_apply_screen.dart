@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -61,24 +63,41 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
   bool _profileComplete = false;
   bool _loading = true;
   bool _busy = false;
+  bool _rechecking = false;
   String? _error;
   String? _message;
+
+  /// The waiting screen checks for itself whether the wait is over.
+  ///
+  /// The report: an applicant approved by the platform stayed on this page
+  /// until they reinstalled the app. Approval creates their business and
+  /// their membership server-side (017), so `my_orgs()` now returns it —
+  /// but the running app had fetched that list once, at launch, and never
+  /// again. Nothing told the phone the answer had changed. So while somebody
+  /// waits here, the screen quietly re-reads its own application and
+  /// re-resolves the org list; the moment the business appears the session
+  /// turns `ready` and the router carries them straight into it, this page
+  /// disposed and the timer with it. No reinstall, no button to know to tap.
+  Timer? _poll;
+  static const _pollEvery = Duration(seconds: 12);
 
   @override
   void initState() {
     super.initState();
     _code.addListener(() => setState(() {}));
     _load();
+    _poll = Timer.periodic(_pollEvery, (_) => _recheck());
   }
 
   @override
   void dispose() {
+    _poll?.cancel();
     _code.dispose();
     super.dispose();
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) setState(() => _loading = true);
     final complete = await widget.onboarding.isProfileComplete();
     final application = await widget.onboarding.myApplication();
     if (!mounted) return;
@@ -87,6 +106,24 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
       _application = application;
       _loading = false;
     });
+  }
+
+  /// One quiet check that the wait is over: refresh the application card,
+  /// then re-resolve the org list. Skipped while the person is mid-action
+  /// (typing a code, applying) so it never fights what they are doing, and
+  /// silent on any failure — no signal is not news, the next tick tries
+  /// again. When [onRetry] finds the business, the router leaves this page.
+  Future<void> _recheck() async {
+    if (!mounted || _busy || _rechecking) return;
+    _rechecking = true;
+    try {
+      await _load(silent: true);
+      await widget.onRetry();
+    } catch (_) {
+      // Deliberately quiet: the timer will try again.
+    } finally {
+      _rechecking = false;
+    }
   }
 
   Future<void> _editProfile({String? intro, String? nextLabel}) async {
@@ -392,9 +429,22 @@ class _ApplicationCard extends StatelessWidget {
           ],
           if (application.isApproved) ...[
             const SizedBox(height: 8),
-            Text(
-              'Ouvrez-la depuis l’écran d’accueil. Vous en êtes propriétaire.',
-              style: theme.textTheme.bodySmall,
+            Row(
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'C’est validé — vous en êtes propriétaire. '
+                    'Ouverture de votre entreprise…',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
             ),
           ],
         ],
