@@ -81,20 +81,37 @@ class CourierEarnings {
     required this.courses,
     required this.fees,
     required this.km,
-  });
+    this.share = 0,
+    double? net,
+  }) : net = net ?? fees;
 
   /// 'today' | 'week' | 'month'.
   final String period;
   final int courses;
+
+  /// What the customers paid at the door for these courses.
   final double fees;
   final double km;
 
-  factory CourierEarnings.fromRow(Map<String, dynamic> row) => CourierEarnings(
-        period: (row['period'] as String?) ?? '',
-        courses: DeliveryJob._num(row['courses'])?.toInt() ?? 0,
-        fees: DeliveryJob._num(row['fees']) ?? 0,
-        km: DeliveryJob._num(row['km']) ?? 0,
-      );
+  /// The platform's part of those fees (067), settled monthly. Zero on a
+  /// database before 067, where every franc was the courier's.
+  final double share;
+
+  /// What the courier keeps: [fees] minus [share].
+  final double net;
+
+  factory CourierEarnings.fromRow(Map<String, dynamic> row) {
+    final fees = DeliveryJob._num(row['fees']) ?? 0;
+    final share = DeliveryJob._num(row['share']) ?? 0;
+    return CourierEarnings(
+      period: (row['period'] as String?) ?? '',
+      courses: DeliveryJob._num(row['courses'])?.toInt() ?? 0,
+      fees: fees,
+      km: DeliveryJob._num(row['km']) ?? 0,
+      share: share,
+      net: DeliveryJob._num(row['net']) ?? (fees - share),
+    );
+  }
 
   static String label(String period) => switch (period) {
         'today' => "Aujourd'hui",

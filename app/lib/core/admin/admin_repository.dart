@@ -145,6 +145,21 @@ class AdminRepository {
         .toList();
   }
 
+  /// What each courier owes the platform for one month (067): the courses
+  /// they delivered in it, the fees, the platform's share and what they
+  /// kept. Platform only; the server refuses anyone else.
+  Future<List<CourierSettlement>> deliverySettlement(DateTime month) async {
+    final rows = await _requireClient().rpc('platform_delivery_settlement',
+        params: {
+          'p_month': '${month.year.toString().padLeft(4, '0')}-'
+              '${month.month.toString().padLeft(2, '0')}-01',
+        }) as List<dynamic>;
+    return rows
+        .map((r) =>
+            CourierSettlement.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// 'approved', 'suspended' or back to 'pending'. Platform only,
   /// said by the server.
   Future<void> decideCourier(String userId, String status) async {
@@ -1011,6 +1026,43 @@ class FeaturedCandidate {
 }
 
 /// One courier as the platform sees them (056).
+/// One courier's month, for the settlement (067).
+class CourierSettlement {
+  const CourierSettlement({
+    required this.courierId,
+    required this.name,
+    required this.courses,
+    required this.fees,
+    required this.share,
+    required this.net,
+    this.phone,
+  });
+
+  final String courierId;
+  final String name;
+  final String? phone;
+  final int courses;
+  final double fees;
+
+  /// What this courier owes the platform for the month.
+  final double share;
+  final double net;
+
+  factory CourierSettlement.fromRow(Map<String, dynamic> row) {
+    double num_(Object? v) =>
+        v == null ? 0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0);
+    return CourierSettlement(
+      courierId: row['courier_id'] as String,
+      name: (row['name'] as String?) ?? 'Sans nom',
+      phone: row['phone'] as String?,
+      courses: num_(row['courses']).toInt(),
+      fees: num_(row['fees']),
+      share: num_(row['share']),
+      net: num_(row['net']),
+    );
+  }
+}
+
 class PlatformCourier {
   const PlatformCourier({
     required this.userId,

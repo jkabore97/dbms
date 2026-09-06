@@ -508,6 +508,16 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_pro_gates.sql
 
+      # The platform's part of a delivery fee (067, M10 block 4): fixed with
+      # the fee in whole francs, none on a pickup, a new percentage changes
+      # the next order and never one already placed, the courier's tally
+      # shows fees, share and net that add up, and the platform reads one
+      # settlement row per courier per month — nobody else does.
+      - name: Prove the delivery share is fixed with the fee and settles per courier
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_delivery_share.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

@@ -365,7 +365,10 @@ class _EarningsStrip extends StatelessWidget {
                           letterSpacing: 1.4,
                           color: ShopStyle.mist)),
                   const SizedBox(height: 2),
-                  Text(money.format(today?.fees ?? 0),
+                  // What the courier keeps (067): the fees minus the
+                  // platform's part, said beside it so settlement day
+                  // never surprises.
+                  Text(money.format(today?.net ?? 0),
                       style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -373,7 +376,8 @@ class _EarningsStrip extends StatelessWidget {
                           color: ShopStyle.ink)),
                   Text(
                       '${today?.courses ?? 0} course${(today?.courses ?? 0) > 1 ? 's' : ''}'
-                      ' · ${(today?.km ?? 0).toStringAsFixed(1)} km',
+                      ' · ${(today?.km ?? 0).toStringAsFixed(1)} km'
+                      '${(today?.share ?? 0) > 0 ? ' · part Kaj ${money.format(today!.share)}' : ''}',
                       style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
                 ],
               ),
@@ -387,7 +391,7 @@ class _EarningsStrip extends StatelessWidget {
                     Text(CourierEarnings.label(e.period),
                         style: const TextStyle(
                             fontSize: 11, color: ShopStyle.mist)),
-                    Text(money.format(e.fees),
+                    Text(money.format(e.net),
                         style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

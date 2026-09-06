@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/nav/router.dart';
 
 /// The platform decides who carries (056). Applications first; a switch of
 /// two verbs per row — approve, suspend — because handing a stranger goods,
@@ -73,6 +75,12 @@ class _CouriersScreenState extends State<CouriersScreen> {
       appBar: AppBar(
         title: const Text('Livreurs'),
         actions: [
+          // What each courier owes for the month (067).
+          IconButton(
+            tooltip: 'Règlement du mois',
+            onPressed: () => context.push(Routes.consoleSettlement),
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+          ),
           IconButton(
             tooltip: 'Actualiser',
             onPressed: _loading ? null : _load,
