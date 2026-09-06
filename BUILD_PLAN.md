@@ -70,6 +70,7 @@ Each milestone ends with something demonstrable.
 | Security hardening (032): closed a full-audit finding list — the critical one let any sign-up set is_platform_admin on their own row (RLS gates rows, not columns); locked by a column-scoped grant AND a guard trigger that survives a Supabase re-grant, plus membership checks added to the definer functions (receive_products, pay_employee, record_shift, record_return) that wrote where the caller's RLS would have refused | built, 10 assertions |
 | The plan flag (065, M10 block 1): Free or Pro per business with a paid-until date, set only by the platform, effective plan decided in one place (a lapsed Pro reads Free and nothing else moves), carried on `my_orgs()` and the cached org list, a Formule card on the business settings, a Kaj Pro tile and filter on the console, the change in the activity log | built, 5 SQL tests + 8 Flutter tests |
 | The gates (066, M10 block 2): the Free/Pro line in `platform_settings`; `feature_access()` answers `view` on a Pro tool for a Free business, after the dial and never below it; payroll, tontines, the dial and the currency rates held server-side; caps on staff, invoices a month and photos as BEFORE INSERT triggers; every refusal starts "Kaj Pro :" and the app opens the door to pay; a Pro badge on Analyses, Comptabilité, Tontines and Accès de l'équipe; one paywall sheet with the price, the platform's Wave number and "J'ai payé"; a Kaj Pro console page listing the requests and setting the number and prices. Honest gap: the read-only Pro tools (analytics, the accounting hub) are held in the app, not by the database — an owner calling those functions by hand reads their own figures | built, 8 SQL tests + Flutter tests |
+| The delivery cut (067, M10 block 4): `delivery_share_pct` in `platform_settings` (10 to start); `orders.platform_fee` fixed with the fee by a trigger, whole francs, none on a pickup, none on orders placed before 067; a new percentage changes the next order and never one already placed; the courier's tally shows fees, share and net; `platform_delivery_settlement(month)` says what each courier owes; a Règlement des livreurs console page with the month stepper, the total due and the rate. The share is a debt settled by Wave until M9 lets the platform hold the money | built, 4 SQL tests + Flutter tests |
 
 **Not built**
 
@@ -562,7 +563,7 @@ console.
 **Demo after block 3:** the first franc of recurring revenue, on paper
 you can show.
 
-#### Block 4 — The delivery cut (migration 067, one PR)
+#### Block 4 — The delivery cut (migration 067, one PR) — **built**
 
 > The second stream, and the one that fits the market better than any
 > subscription: pay when you earned. `platform_settings.delivery_share`

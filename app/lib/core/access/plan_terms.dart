@@ -17,6 +17,7 @@ class PlanTerms {
     this.currency = 'XOF',
     this.wave = '',
     this.waveName = '',
+    this.deliverySharePct = 10,
   });
 
   /// What 066 seeds, so a build ahead of its database badges the same tools.
@@ -49,6 +50,10 @@ class PlanTerms {
   final String wave;
   final String waveName;
 
+  /// The platform's part of every delivery fee, in percent (067). Fixed
+  /// on each order when its fee is; this is the rate for the next one.
+  final int deliverySharePct;
+
   bool get hasWave => wave.trim().isNotEmpty;
 
   factory PlanTerms.fromJson(Map<String, dynamic> json) {
@@ -75,6 +80,7 @@ class PlanTerms {
       currency: s('pro_currency').isEmpty ? 'XOF' : s('pro_currency'),
       wave: s('platform_wave'),
       waveName: s('platform_wave_name'),
+      deliverySharePct: n('delivery_share_pct', 10),
     );
   }
 

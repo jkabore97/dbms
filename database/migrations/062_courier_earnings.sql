@@ -16,7 +16,12 @@
 -- ridden.
 -- ============================================================
 
-create or replace function courier_earnings()
+-- Dropped first, not replaced: 067 widens this row with the platform's
+-- share, and a `create or replace` cannot narrow a return table back
+-- (42P13) — which is what re-running the bundle on a database already at
+-- 067 would do here.
+drop function if exists courier_earnings();
+create function courier_earnings()
 returns table (
     period   text,
     courses  int,
