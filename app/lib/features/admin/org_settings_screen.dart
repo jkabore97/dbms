@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
@@ -30,10 +31,20 @@ class OrgSettingsScreen extends StatefulWidget {
     this.onSaved,
     this.canSuspend = false,
     this.suspended = false,
+    this.canSetPlan = false,
+    this.plan = 'free',
   });
 
   final AdminRepository admin;
   final String orgId;
+
+  /// Whether to show the platform's plan form (065). True only for a platform
+  /// admin; the server refuses `set_org_plan` to anyone else regardless.
+  final bool canSetPlan;
+
+  /// The effective plan as the org list last reported ('free' or 'pro'):
+  /// what every member reads on this screen, with no signal.
+  final String plan;
 
   /// Lets whoever opened this refresh the org list — the name shown in the app
   /// bar and the picker comes from `my_orgs()`, not from this screen.
@@ -67,6 +78,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   late bool _suspended = widget.suspended;
   bool _togglingSuspend = false;
+
+  // The plan as the platform set it (065): raw plan, paid-until, note. The
+  // effective plan shown to members is `widget.plan`, from the org list.
+  String _planRaw = 'free';
+  DateTime? _planUntil;
+  final _planNoteController = TextEditingController();
+  bool _savingPlan = false;
+  String? _planMessage;
 
   bool _storefrontEnabled = false;
   final _blurbController = TextEditingController();
@@ -107,6 +126,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _lngController.dispose();
     _deliveryBaseController.dispose();
     _deliveryPerKmController.dispose();
+    _planNoteController.dispose();
     super.dispose();
   }
 
@@ -124,8 +144,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final wave = await widget.admin.waveMerchant(widget.orgId);
       final rates = await widget.admin.currencyRates(widget.orgId);
       final storefront = await widget.admin.storefront(widget.orgId);
+      // Only the platform edits the plan, so only the platform pays for the
+      // read; members show what the org list already says.
+      final plan = widget.canSetPlan
+          ? await widget.admin.orgPlan(widget.orgId)
+          : (plan: widget.plan, until: null, note: null);
       if (!mounted) return;
       setState(() {
+        _planRaw = plan.plan;
+        _planUntil = plan.until;
+        _planNoteController.text = plan.note ?? '';
         _nameController.text = (org['name'] as String?) ?? '';
         _waveController.text = wave ?? '';
         _rates = rates;
@@ -268,6 +296,76 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             SnackBar(content: Text(AuthRepository.describeError(error))));
       }
     }
+  }
+
+  /// Put the business on a plan (065). Platform only; the server checks too.
+  /// The org list is refreshed afterwards so the Formule row every member
+  /// reads — and the cached copy — says the new plan at once.
+  Future<void> _savePlan() async {
+    if (_planRaw == 'pro' && _planUntil == null) {
+      // A Pro with no end is allowed (a partner, a test), but it should be a
+      // decision, not a forgotten field — so it is asked, not assumed.
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Kaj Pro sans date de fin ?'),
+          content: const Text(
+              'Sans date, cette entreprise reste Pro jusqu\'à ce que vous '
+              'changiez sa formule à la main. Pour un paiement, indiquez '
+              'plutôt la date de fin.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sans date de fin'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    setState(() {
+      _savingPlan = true;
+      _planMessage = null;
+    });
+    try {
+      await widget.admin.setOrgPlan(
+        widget.orgId,
+        plan: _planRaw,
+        until: _planRaw == 'pro' ? _planUntil : null,
+        note: _planNoteController.text,
+      );
+      widget.onSaved?.call();
+      if (!mounted) return;
+      setState(() {
+        if (_planRaw == 'free') _planUntil = null;
+        _savingPlan = false;
+        _planMessage = _planRaw == 'pro'
+            ? 'Entreprise passée sur Kaj Pro.'
+            : 'Entreprise repassée sur Kaj (gratuit).';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _savingPlan = false;
+        _planMessage = AuthRepository.describeError(error);
+      });
+    }
+  }
+
+  Future<void> _pickPlanUntil() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _planUntil ?? DateTime(now.year + 1, now.month, now.day),
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 10),
+      helpText: 'Payé jusqu\'au',
+    );
+    if (picked != null && mounted) setState(() => _planUntil = picked);
   }
 
   /// Freeze the business, or thaw it. Suspending is guarded by a confirmation
@@ -705,6 +803,82 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 const SizedBox(height: 12),
                 _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
                 _ReadOnlyRow(label: "Type d'activité", value: _profile),
+                // Which plan this business is on (065). Every member reads
+                // it; only the platform changes it, below. Nothing is gated
+                // on it in this build — the row says what was paid for.
+                _ReadOnlyRow(
+                  label: 'Formule',
+                  value: widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
+                ),
+                if (widget.canSetPlan) ...[
+                  const SizedBox(height: 40),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Text('Formule (plateforme)',
+                      style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kaj Pro se règle à la main pour l\'instant : quand le '
+                    'paiement est arrivé sur Wave, passez l\'entreprise en '
+                    'Pro jusqu\'à la date payée. Passée cette date elle '
+                    'redevient gratuite, sans rien perdre.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'free', label: Text('Kaj')),
+                      ButtonSegment(value: 'pro', label: Text('Kaj Pro')),
+                    ],
+                    selected: {_planRaw},
+                    onSelectionChanged: _savingPlan
+                        ? null
+                        : (s) => setState(() => _planRaw = s.first),
+                  ),
+                  if (_planRaw == 'pro') ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _savingPlan ? null : _pickPlanUntil,
+                      icon: const Icon(Icons.event_outlined),
+                      label: Text(_planUntil == null
+                          ? 'Payé jusqu\'au… (sans date = sans fin)'
+                          : 'Payé jusqu\'au '
+                              '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}'),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _planNoteController,
+                    enabled: !_savingPlan,
+                    decoration: const InputDecoration(
+                      labelText: 'Note (pour la plateforme)',
+                      hintText: 'Wave 25 000 F le 12/09, partenaire, test…',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  if (_planMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_planMessage!, style: theme.textTheme.bodySmall),
+                  ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 52,
+                    child: FilledButton.tonalIcon(
+                      onPressed: _savingPlan ? null : _savePlan,
+                      icon: _savingPlan
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.workspace_premium_outlined),
+                      label: const Text('Enregistrer la formule',
+                          style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
                 if (widget.canSuspend) ...[
                   const SizedBox(height: 40),
                   const Divider(),

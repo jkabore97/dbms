@@ -17,6 +17,7 @@ class OrgSummary {
     this.visibility = 'full',
     this.theme,
     this.suspended = false,
+    this.plan = 'free',
   });
 
   final String id;
@@ -49,6 +50,15 @@ class OrgSummary {
   /// The flag rides the cached org list, so the read-only state is known the
   /// instant a business opens, offline included.
   final bool suspended;
+
+  /// The plan the platform put this business on (065): 'free' or 'pro', as
+  /// `org_plan()` decides it — a Pro past its paid-until date already reads
+  /// 'free' here. Rides the cached org list like [suspended], so the badge
+  /// on the settings screen is right with no signal. Nothing is gated on it
+  /// in this build; that is block 2 of M10.
+  final String plan;
+
+  bool get isPro => plan == 'pro';
 
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
@@ -104,6 +114,8 @@ class OrgSummary {
       // Absent before 049. A database that has not run it yet freezes nothing,
       // so the safe default is "not suspended" rather than a missing-key crash.
       suspended: (row['suspended'] as bool?) ?? false,
+      // Absent before 065: a database that has no plans has only free ones.
+      plan: (row['plan'] as String?) ?? 'free',
     );
   }
 
@@ -121,6 +133,8 @@ class OrgSummary {
       // SQLite has no boolean: stored as 1/0, read back the same way. A row
       // written before this column existed reads null, which is "not frozen".
       suspended: (row['suspended'] as int? ?? 0) == 1,
+      // A row written before the column existed reads null, which is free.
+      plan: (row['plan'] as String?) ?? 'free',
     );
   }
 
@@ -134,6 +148,7 @@ class OrgSummary {
         'visibility': visibility,
         'theme': theme,
         'suspended': suspended ? 1 : 0,
+        'plan': plan,
       };
 }
 

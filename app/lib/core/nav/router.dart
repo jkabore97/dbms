@@ -757,6 +757,10 @@ GoRouter buildRouter(SessionController session) {
                     // regardless.
                     canSuspend: scope.session.isPlatformAdmin,
                     suspended: org.suspended,
+                    // The plan is the platform's to set too (065); every
+                    // member reads which one they are on.
+                    canSetPlan: scope.session.isPlatformAdmin,
+                    plan: org.plan,
                   ),
                 ),
                 routes: [

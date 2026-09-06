@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -111,6 +111,15 @@ class LocalDb {
         if (oldVersion >= 2 && oldVersion < 10) {
           await db.execute(
               'ALTER TABLE cached_orgs ADD COLUMN suspended INTEGER NOT NULL DEFAULT 0');
+        }
+        // v10 -> v11: which plan the platform put the business on (065).
+        // Cached with the org row so the settings screen says "Kaj Pro"
+        // with no signal. Same `>= 2` guard as the two columns above, for
+        // the same reason: a device from v1 has just been given the whole
+        // table, column included.
+        if (oldVersion >= 2 && oldVersion < 11) {
+          await db.execute(
+              "ALTER TABLE cached_orgs ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'");
         }
       },
     );
@@ -268,7 +277,8 @@ class LocalDb {
         roles      TEXT,
         visibility TEXT,
         theme      TEXT,
-        suspended  INTEGER NOT NULL DEFAULT 0
+        suspended  INTEGER NOT NULL DEFAULT 0,
+        plan       TEXT NOT NULL DEFAULT 'free'
       )
     ''');
   }

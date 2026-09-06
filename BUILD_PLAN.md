@@ -68,6 +68,7 @@ Each milestone ends with something demonstrable.
 | The glass restyle: aurora wash behind every page in the business's own palette, frosted surfaces, soft geometry — no blur, so it runs on cheap phones | built |
 | Team access (M-rights): the owner's dial per tool per tier — hidden/view/edit, server-enforced on prices, credit and production | built, 8 assertions |
 | Security hardening (032): closed a full-audit finding list — the critical one let any sign-up set is_platform_admin on their own row (RLS gates rows, not columns); locked by a column-scoped grant AND a guard trigger that survives a Supabase re-grant, plus membership checks added to the definer functions (receive_products, pay_employee, record_shift, record_return) that wrote where the caller's RLS would have refused | built, 10 assertions |
+| The plan flag (065, M10 block 1): Free or Pro per business with a paid-until date, set only by the platform, effective plan decided in one place (a lapsed Pro reads Free and nothing else moves), carried on `my_orgs()` and the cached org list, a Formule card on the business settings, a Kaj Pro tile and filter on the console, the change in the activity log | built, 5 SQL tests + 8 Flutter tests. Nothing gated yet — that is block 2 |
 
 **Not built**
 
@@ -509,7 +510,7 @@ was free before. Trust is the product.
 year, paid by Wave or Orange Money to the platform's own number. One
 price. Adjust after the first twenty conversations, not before.
 
-#### Block 1 — The plan flag (migration 065, one PR)
+#### Block 1 — The plan flag (migration 065, one PR) — **built**
 
 > `orgs.plan` (`free` | `pro`, default `free`), `orgs.plan_until` (date,
 > null = no end), `orgs.plan_note`. `set_org_plan(org, plan, until, note)`

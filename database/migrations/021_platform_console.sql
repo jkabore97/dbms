@@ -102,7 +102,11 @@ create index if not exists orgs_by_profile    on orgs (profile);
 -- ------------------------------------------------------------
 -- What the console leads with. None of these return a business; they answer
 -- "is anything wrong today" in a single round trip.
-create or replace function platform_overview()
+-- Dropped first, not replaced: 065 widens this row with the Pro count, and
+-- a `create or replace` cannot narrow a return table back (42P13) — which
+-- is what re-running the bundle on a database already at 065 would do here.
+drop function if exists platform_overview();
+create function platform_overview()
 returns table (
     total          int,
     active         int,

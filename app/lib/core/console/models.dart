@@ -209,6 +209,7 @@ class PlatformOverview {
     this.active7d = 0,
     this.silent30d = 0,
     this.neverActive = 0,
+    this.pro = 0,
   });
 
   final int total;
@@ -231,6 +232,10 @@ class PlatformOverview {
   /// this one belongs to whoever signed them up.
   final int neverActive;
 
+  /// On Kaj Pro today (065): the effective plan, so a lapsed Pro is not
+  /// counted. The console's first revenue number.
+  final int pro;
+
   factory PlatformOverview.fromRow(Map<String, dynamic> row) {
     int n(String k) => (row[k] as num?)?.toInt() ?? 0;
     return PlatformOverview(
@@ -245,6 +250,8 @@ class PlatformOverview {
       active7d: n('active_7d'),
       silent30d: n('silent_30d'),
       neverActive: n('never_active'),
+      // Absent before 065: no plans, so nobody is on Pro.
+      pro: n('pro'),
     );
   }
 }
