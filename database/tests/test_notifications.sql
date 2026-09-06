@@ -36,6 +36,9 @@ update profiles set is_platform_admin = true
 insert into orgs (id, name, slug, profile, default_currency) values
     (:shop,  'Boutique 94', 'boutique-94', 'retail', 'XOF'),
     (:other, 'Boutique 94b', 'boutique-94b', 'retail', 'XOF');
+-- One of the five events below is a wage paid, which is Kaj Pro since 066;
+-- this suite is about the bell, so both businesses are on Pro.
+update orgs set plan = 'pro' where id in (:shop, :other);
 
 -- Owner and stranger only; the clerk joins later, as a test.
 insert into memberships (org_id, user_id, role, scope_kind, scope_id) values

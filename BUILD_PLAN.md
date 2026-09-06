@@ -68,7 +68,8 @@ Each milestone ends with something demonstrable.
 | The glass restyle: aurora wash behind every page in the business's own palette, frosted surfaces, soft geometry — no blur, so it runs on cheap phones | built |
 | Team access (M-rights): the owner's dial per tool per tier — hidden/view/edit, server-enforced on prices, credit and production | built, 8 assertions |
 | Security hardening (032): closed a full-audit finding list — the critical one let any sign-up set is_platform_admin on their own row (RLS gates rows, not columns); locked by a column-scoped grant AND a guard trigger that survives a Supabase re-grant, plus membership checks added to the definer functions (receive_products, pay_employee, record_shift, record_return) that wrote where the caller's RLS would have refused | built, 10 assertions |
-| The plan flag (065, M10 block 1): Free or Pro per business with a paid-until date, set only by the platform, effective plan decided in one place (a lapsed Pro reads Free and nothing else moves), carried on `my_orgs()` and the cached org list, a Formule card on the business settings, a Kaj Pro tile and filter on the console, the change in the activity log | built, 5 SQL tests + 8 Flutter tests. Nothing gated yet — that is block 2 |
+| The plan flag (065, M10 block 1): Free or Pro per business with a paid-until date, set only by the platform, effective plan decided in one place (a lapsed Pro reads Free and nothing else moves), carried on `my_orgs()` and the cached org list, a Formule card on the business settings, a Kaj Pro tile and filter on the console, the change in the activity log | built, 5 SQL tests + 8 Flutter tests |
+| The gates (066, M10 block 2): the Free/Pro line in `platform_settings`; `feature_access()` answers `view` on a Pro tool for a Free business, after the dial and never below it; payroll, tontines, the dial and the currency rates held server-side; caps on staff, invoices a month and photos as BEFORE INSERT triggers; every refusal starts "Kaj Pro :" and the app opens the door to pay; a Pro badge on Analyses, Comptabilité, Tontines and Accès de l'équipe; one paywall sheet with the price, the platform's Wave number and "J'ai payé"; a Kaj Pro console page listing the requests and setting the number and prices. Honest gap: the read-only Pro tools (analytics, the accounting hub) are held in the app, not by the database — an owner calling those functions by hand reads their own figures | built, 8 SQL tests + Flutter tests |
 
 **Not built**
 
@@ -525,7 +526,7 @@ price. Adjust after the first twenty conversations, not before.
 **Demo after block 1:** you set a business to Pro from the console and
 it reads Pro in its settings.
 
-#### Block 2 — The gates (migration 066 + app, one or two PRs)
+#### Block 2 — The gates (migration 066 + app, one or two PRs) — **built**
 
 > The line lives in `platform_settings`, not in code, so it moves without
 > a migration: `pro_features` (a JSON list of tool names), `free_max_staff`

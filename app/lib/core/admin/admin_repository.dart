@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../access/plan_terms.dart';
+import '../errors.dart';
 import '../rates/currency_rates.dart';
 import 'models.dart';
 
@@ -683,6 +685,57 @@ class AdminRepository {
               '${until.day.toString().padLeft(2, '0')}',
       'p_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
     });
+  }
+
+  /// The line between Kaj and Kaj Pro (066): which tools carry the badge,
+  /// the caps, the price and the Wave number. One round trip per session.
+  /// No client, no signal, or a database before 066: the seeded defaults.
+  Future<PlanTerms> planTerms() async {
+    final client = _client;
+    if (client == null) return PlanTerms.defaults;
+    try {
+      final json = await client.rpc('plan_terms');
+      if (json is Map) return PlanTerms.fromJson(Map<String, dynamic>.from(json));
+      return PlanTerms.defaults;
+    } on PostgrestException catch (error) {
+      if (isSchemaOutOfDate(error)) return PlanTerms.defaults;
+      rethrow;
+    }
+  }
+
+  /// "J'ai payé" (066): an admin of the business says the money was sent.
+  /// One open request per business; saying it twice updates the first.
+  Future<void> requestPro(String orgId, {double? amount, String? note}) async {
+    final client = _requireClient();
+    await client.rpc('request_pro', params: {
+      'p_org_id': orgId,
+      'p_amount': amount,
+      'p_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+    });
+  }
+
+  /// The platform's open requests, oldest first. Platform admin only; the
+  /// server answers nothing to anyone else.
+  Future<List<PlanRequest>> planRequestsOpen() async {
+    final client = _requireClient();
+    final rows = await client.rpc('plan_requests_open') as List<dynamic>;
+    return rows
+        .map((r) => PlanRequest.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  Future<void> handlePlanRequest(String id) async {
+    final client = _requireClient();
+    await client.rpc('handle_plan_request', params: {'p_id': id});
+  }
+
+  /// One platform setting (061): the Wave number, a price, a cap. Platform
+  /// admin only. [value] is sent as JSON — a string stays a string, a number
+  /// a number — which is how the settings are read back.
+  Future<void> setPlatformSetting(String key, Object? value) async {
+    final client = _requireClient();
+    await client.rpc('set_platform_setting',
+        params: {'p_key': key, 'p_value': value});
   }
 
   /// The vitrine switch and its blurb (052). A database that has not run 052

@@ -56,6 +56,12 @@ bool isSchemaOutOfDate(Object error) =>
     ((error.code ?? '') == 'PGRST202' ||
         error.message.contains('Could not find the function'));
 
+/// True when the server refused because the business is on the free plan and
+/// the tool or the cap is Kaj Pro's (066). Every such refusal starts with
+/// "Kaj Pro :" on purpose, so a screen can open the door to pay instead of
+/// showing a wall.
+bool isProRefusal(Object error) => describeError(error).startsWith('Kaj Pro');
+
 String _postgrest(PostgrestException error) {
   final code = error.code ?? '';
   final message = error.message;

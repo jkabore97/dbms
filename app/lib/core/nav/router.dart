@@ -17,6 +17,7 @@ import '../../features/admin/people_screen.dart';
 import '../../features/admin/platform_console_screen.dart';
 import '../../core/courier/courier_repository.dart';
 import '../../features/admin/couriers_screen.dart';
+import '../../features/admin/pro_console_screen.dart';
 import '../../features/admin/featured_screen.dart';
 import '../../features/courier/courier_screen.dart';
 import '../../features/courier/job_map_screen.dart';
@@ -116,6 +117,9 @@ abstract final class Routes {
   /// One running course on a map, for its courier.
   static String courierJob(String orderId) => '/livreur/course/$orderId';
   static const consoleCouriers = '/console/livreurs';
+  /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
+  /// number and prices the paywall says (066).
+  static const consolePro = '/console/kaj-pro';
   static const applications = '/demandes';
   static const language = '/langue';
   static const privacy = '/confidentialite';
@@ -569,6 +573,13 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.consoleCouriers,
         builder: (context, _) =>
             CouriersScreen(admin: AppScope.of(context).admin),
+      ),
+
+      // Who said they paid, and what the paywall says (066).
+      GoRoute(
+        path: Routes.consolePro,
+        builder: (context, _) =>
+            ProConsoleScreen(admin: AppScope.of(context).admin),
       ),
 
       GoRoute(

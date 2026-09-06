@@ -328,6 +328,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             tooltip: 'Livreurs',
           ),
           IconButton(
+            onPressed: () => context.push(Routes.consolePro),
+            icon: const Icon(Icons.workspace_premium_outlined),
+            tooltip: 'Kaj Pro',
+          ),
+          IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',

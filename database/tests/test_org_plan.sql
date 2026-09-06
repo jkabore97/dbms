@@ -76,25 +76,29 @@ rollback;
 begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '37373737-0000-0000-0000-000000000001';
+-- Other suites leave Pro businesses behind on a shared cluster, so the
+-- count is measured as a difference, not an absolute.
+create temp table before_plan as select pro from platform_overview();
 select set_org_plan('37000000-0000-0000-0000-000000000001', 'pro',
                     current_date + 30, '  Wave 25 000 F  ');
 do $$
-declare v_pro int; v_rows int; v_note text;
+declare v_pro int; v_before int; v_rows int; v_note text;
 begin
     if org_plan('37000000-0000-0000-0000-000000000001') <> 'pro' then
         raise exception 'FAIL: org_plan() does not read pro after set_org_plan';
     end if;
+    select pro into v_before from before_plan;
     select pro into v_pro from platform_overview();
-    if v_pro <> 1 then
-        raise exception 'FAIL: platform_overview counts % pro businesses, expected 1', v_pro;
+    if v_pro <> v_before + 1 then
+        raise exception 'FAIL: platform_overview went from % to % pro businesses, expected +1', v_before, v_pro;
     end if;
-    select count(*) into v_rows from search_orgs(null, null, 'active', 'pro');
-    if v_rows <> 1 then
-        raise exception 'FAIL: the pro filter lists % businesses, expected 1', v_rows;
-    end if;
-    if not exists (select 1 from search_orgs(null, null, 'active', 'pro')
+    if not exists (select 1 from search_orgs(null, null, 'active', 'pro', 'name', 200)
                     where name = 'Boutique Plan') then
-        raise exception 'FAIL: the pro filter lists the wrong business';
+        raise exception 'FAIL: the pro filter does not list the business';
+    end if;
+    if exists (select 1 from search_orgs(null, null, 'active', 'pro', 'name', 200)
+                where name = 'Ferme Libre') then
+        raise exception 'FAIL: the pro filter lists a free business';
     end if;
     select plan_note into v_note from orgs
      where id = '37000000-0000-0000-0000-000000000001';
@@ -121,16 +125,22 @@ rollback;
 begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '37373737-0000-0000-0000-000000000001';
+create temp table before_lapse as select pro from platform_overview();
 select set_org_plan('37000000-0000-0000-0000-000000000001', 'pro', current_date - 1, null);
 do $$
-declare v_pro int; v_name text; v_susp timestamptz; v_arch timestamptz; v_raw text;
+declare v_pro int; v_before int; v_name text; v_susp timestamptz; v_arch timestamptz; v_raw text;
 begin
     if org_plan('37000000-0000-0000-0000-000000000001') <> 'free' then
         raise exception 'FAIL: a lapsed pro still reads pro';
     end if;
+    select pro into v_before from before_lapse;
     select pro into v_pro from platform_overview();
-    if v_pro <> 0 then
-        raise exception 'FAIL: a lapsed pro is still counted (% pro)', v_pro;
+    if v_pro <> v_before then
+        raise exception 'FAIL: a lapsed pro is still counted (% -> % pro)', v_before, v_pro;
+    end if;
+    if exists (select 1 from search_orgs(null, null, 'active', 'pro', 'name', 200)
+                where name = 'Boutique Plan') then
+        raise exception 'FAIL: the pro filter still lists a lapsed business';
     end if;
     -- Lapsing is not a cliff: the row is untouched but for the plan columns.
     select name, suspended_at, archived_at, plan

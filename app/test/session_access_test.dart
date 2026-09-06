@@ -73,9 +73,15 @@ void main() {
   });
 
   test('an admin is never dialled down, and needs no fetch', () async {
+    // On Pro: the dial never lowers an owner, and neither does the plan.
+    // A Free owner is a different case — see the test below.
     await db.cacheOrgs([
       const OrgSummary(
-          id: 'o1', name: 'Boutique', profile: 'retail', roles: ['owner']),
+          id: 'o1',
+          name: 'Boutique',
+          profile: 'retail',
+          roles: ['owner'],
+          plan: 'pro'),
     ]);
     final admin = _FakeAdmin({'tontines': 'hidden'});
     final session = SessionController(
@@ -92,5 +98,40 @@ void main() {
     expect(access.canSee('tontines'), isTrue);
     expect(access.canEdit('tontines'), isTrue);
     expect(admin.calls, 0, reason: 'an admin needs no rules fetched');
+  });
+
+  test('an owner on Free reads a Pro tool at view, badged, before any fetch',
+      () async {
+    // The plan layer (066): the owner keeps seeing tontines — never hidden —
+    // but cannot edit, and the badge says why. Known from the cached org row
+    // and the default terms, so it is right before the network answers, and
+    // the load then confirms it without a second emit.
+    await db.cacheOrgs([
+      const OrgSummary(
+          id: 'o1', name: 'Boutique', profile: 'retail', roles: ['owner']),
+    ]);
+    final admin = _FakeAdmin({});
+    final session = SessionController(
+      db: db,
+      auth: AuthRepository(null),
+      admin: admin,
+      accounting: AccountingRepository(null),
+    );
+    var emits = 0;
+    session.addListener(() => emits++);
+
+    await session.resolveOrgs();
+    final before = session.accessFor('o1');
+    final emitsAfterResolve = emits;
+    await Future<void>.delayed(Duration.zero);
+    final after = session.accessFor('o1');
+
+    expect(before.canSee('tontines'), isTrue);
+    expect(before.canEdit('tontines'), isFalse);
+    expect(before.isProLocked('tontines'), isTrue);
+    expect(before.canEdit('products'), isTrue);
+    expect(after, equals(before));
+    expect(emits, emitsAfterResolve,
+        reason: 'the load confirmed what was already shown: no emit');
   });
 }

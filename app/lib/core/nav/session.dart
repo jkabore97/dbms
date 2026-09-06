@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../access/org_access.dart';
+import '../access/plan_terms.dart';
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
 import '../auth/auth_repository.dart';
@@ -104,18 +105,48 @@ class SessionController extends ChangeNotifier {
     final loaded = _access[orgId];
     if (loaded != null) return loaded;
     final org = orgById(orgId);
-    if (org == null || org.isAdmin) return OrgAccess.allEdit;
-    return const OrgAccess.forTier({});
+    if (org == null) return OrgAccess.allEdit;
+    // The plan lock is known before any fetch — from the cached org row and
+    // the default terms — so what screens see first is what the load will
+    // confirm, and an owner's load emits nothing (see _loadAccess).
+    final locked = _lockedFor(org);
+    if (org.isAdmin) {
+      return locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
+    }
+    return OrgAccess.forTier(const {}, proLocked: locked);
   }
 
+  /// Which tools the plan locks for this business: none on Pro, none for
+  /// the platform admin, the Pro list otherwise. The server decides the
+  /// same way (pro_locked); this only says where to draw the badge.
+  Set<String> _lockedFor(OrgSummary org) => (org.isPro || _isPlatformAdmin)
+      ? const <String>{}
+      : _terms.proFeatures.toSet();
+
+  /// The line between Kaj and Kaj Pro (066), fetched once per session. The
+  /// defaults are what 066 seeds, so a build with no signal badges the same
+  /// tools it would online.
+  PlanTerms _terms = PlanTerms.defaults;
+  bool _termsLoaded = false;
+  PlanTerms get planTerms => _terms;
+
   Future<void> _loadAccess(OrgSummary org) async {
+    if (!_termsLoaded) {
+      try {
+        _terms = await admin.planTerms();
+        _termsLoaded = true;
+      } catch (_) {
+        // Offline, or a database before 066: the defaults stand.
+      }
+    }
+    final locked = _lockedFor(org);
     final OrgAccess next;
     if (org.isAdmin) {
-      next = OrgAccess.allEdit;
+      next = locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
     } else {
       final rules =
           await admin.featureRulesForTier(org.id, OrgAccess.tierOf(org.roles));
-      next = OrgAccess.forTier(rules);
+      next = OrgAccess.forTier(rules, proLocked: locked);
     }
     // Emit only if this changes what screens already see — an unchanged dial
     // (an admin, an untouched business, an offline fetch that came back empty)

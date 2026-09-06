@@ -804,8 +804,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
                 _ReadOnlyRow(label: "Type d'activité", value: _profile),
                 // Which plan this business is on (065). Every member reads
-                // it; only the platform changes it, below. Nothing is gated
-                // on it in this build — the row says what was paid for.
+                // it; only the platform changes it, below. Since 066 the
+                // Pro tools are badged and held on a Free business.
                 _ReadOnlyRow(
                   label: 'Formule',
                   value: widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
