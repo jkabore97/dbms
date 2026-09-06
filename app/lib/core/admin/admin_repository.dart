@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../access/plan_terms.dart';
 import '../errors.dart';
 import '../rates/currency_rates.dart';
+import '../storefront/storefront_repository.dart' show StorefrontStyle;
 import 'models.dart';
 
 /// Everything the admin screens do with the server, behind one door.
@@ -803,6 +804,38 @@ class AdminRepository {
       'p_org_id': orgId,
       'p_enabled': enabled,
       'p_blurb': blurb ?? '',
+    });
+  }
+
+  /// The Pro dressing of the vitrine as the shop wrote it (068), whatever
+  /// its plan today — the form shows what is kept even while lapsed. A
+  /// database before 068 has none.
+  Future<StorefrontStyle> storefrontStyle(String orgId) async {
+    final client = _requireClient();
+    try {
+      final row = await client
+          .from('orgs')
+          .select('storefront_style')
+          .eq('id', orgId)
+          .maybeSingle();
+      final raw = row?['storefront_style'];
+      return raw is Map
+          ? StorefrontStyle.fromJson(Map<String, dynamic>.from(raw))
+          : StorefrontStyle.none;
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') return StorefrontStyle.none;
+      rethrow;
+    }
+  }
+
+  /// Dresses the window (068). Admin-only and Pro-only, both said by the
+  /// server: a Free business gets the "Kaj Pro :" refusal the screens turn
+  /// into the door to pay.
+  Future<void> setStorefrontStyle(String orgId, StorefrontStyle style) async {
+    final client = _requireClient();
+    await client.rpc('set_storefront_style', params: {
+      'p_org_id': orgId,
+      'p_style': style.toJson(),
     });
   }
 

@@ -43,11 +43,19 @@ class ShopStyle {
   static int columnsFor(double width) =>
       width < 560 ? 2 : (width < 900 ? 3 : 4);
 
-  static ThemeData theme(BuildContext context) {
+  /// The one colour a Kaj Pro shop may choose (068): its buttons. Dark
+  /// text on a light accent, light text on a dark one, decided by the
+  /// colour itself rather than trusted to the shopkeeper's eye.
+  static Color onAccent(Color accent) =>
+      accent.computeLuminance() > 0.5 ? ink : paper;
+
+  static ThemeData theme(BuildContext context, {Color? accent}) {
     final base = Theme.of(context);
-    const scheme = ColorScheme.light(
-      primary: ink,
-      onPrimary: paper,
+    final primary = accent ?? ink;
+    final onPrimary = accent == null ? paper : onAccent(accent);
+    final scheme = ColorScheme.light(
+      primary: primary,
+      onPrimary: onPrimary,
       secondary: ink,
       onSecondary: paper,
       surface: paper,
@@ -56,7 +64,7 @@ class ShopStyle {
       surfaceContainerHighest: stone,
       outline: line,
       outlineVariant: line,
-      error: Color(0xFFB3261E),
+      error: const Color(0xFFB3261E),
       onError: paper,
     );
     final text = base.textTheme.apply(bodyColor: ink, displayColor: ink);
@@ -85,8 +93,8 @@ class ShopStyle {
       dividerTheme: const DividerThemeData(color: line, thickness: 1, space: 1),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ink,
-          foregroundColor: paper,
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
           textStyle: button,
@@ -124,11 +132,15 @@ class ShopPage extends StatelessWidget {
     this.trailing,
     this.floatingActionButton,
     this.bottom,
+    this.accent,
   });
 
   final String title;
   final Widget body;
   final Widget? leading;
+
+  /// A Pro shop's button colour (068); null is the street's ink.
+  final Color? accent;
 
   /// The one thing allowed at the right of the header: the account corner.
   final Widget? trailing;
@@ -140,7 +152,7 @@ class ShopPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ShopStyle.theme(context),
+      data: ShopStyle.theme(context, accent: accent),
       child: Scaffold(
         appBar: AppBar(
           leading: leading,

@@ -137,7 +137,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       final shop = await widget.storefront.shop(widget.slug);
       final items = shop == null
           ? const <PublicItem>[]
-          : await widget.storefront.items(widget.slug);
+          // A Pro shop's shelf order (068): pinned first, out-of-stock
+          // left off when it asked. The street reads it, the shop set it.
+          : shop.style.arrange(await widget.storefront.items(widget.slug));
       if (!mounted) return;
       setState(() {
         _shop = shop;
@@ -273,6 +275,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
     return ShopPage(
       title: shop?.name ?? 'Vitrine',
+      // A Pro shop's button colour (068) — the order bar, WhatsApp, the
+      // stepper — decided by the shop, read by the street.
+      accent: shop?.style.accent,
       leading: IconButton(
         tooltip: 'Toutes les vitrines',
         icon: const Icon(Icons.arrow_back),
@@ -864,6 +869,7 @@ class _Window extends StatelessWidget {
     final phone = (shop.phone ?? '').trim();
     final address = (shop.address ?? '').trim();
     final blurb = (shop.blurb ?? '').trim();
+    final style = shop.style;
     final width = MediaQuery.sizeOf(context).width;
     final columns = ShopStyle.columnsFor(width);
     final wide = width >= 560;
@@ -871,6 +877,20 @@ class _Window extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        // A Pro shop's cover (068): one of its own photographs, wide and
+        // quiet, over the band. The band itself does not change.
+        if (style.coverKey != null)
+          AspectRatio(
+            aspectRatio: wide ? 3.2 : 1.9,
+            child: ColoredBox(
+              color: ShopStyle.stone,
+              child: _Photo(
+                photoKey: style.coverKey,
+                capture: capture,
+                label: 'Photo de ${shop.name}',
+              ),
+            ),
+          ),
         // The band: who this is, in a word or two, and the ways to act.
         ColoredBox(
           color: ShopStyle.stone,
@@ -890,6 +910,20 @@ class _Window extends StatelessWidget {
                     color: ShopStyle.ink,
                   ),
                 ),
+                // The tagline (068): one line, in the shop's colour when
+                // it chose one.
+                if (style.tagline != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    style.tagline!,
+                    style: TextStyle(
+                      fontSize: wide ? 20 : 17,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                      color: style.accent ?? ShopStyle.ink,
+                    ),
+                  ),
+                ],
                 if (blurb.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   ConstrainedBox(
@@ -906,6 +940,22 @@ class _Window extends StatelessWidget {
                   Text(address,
                       style: const TextStyle(
                           fontSize: 14, color: ShopStyle.mist)),
+                ],
+                // Opening hours (068), the question every caller asks.
+                if (style.hours != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_outlined,
+                          size: 15, color: ShopStyle.mist),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(style.hours!,
+                            style: const TextStyle(
+                                fontSize: 14, color: ShopStyle.mist)),
+                      ),
+                    ],
+                  ),
                 ],
                 // Always shown: even a shop with no phone and no pin can be
                 // passed along, and Partager is how that happens.
@@ -1275,10 +1325,15 @@ class _StepButton extends StatelessWidget {
 /// The article's photo, fetched once through the public read and held for
 /// the life of the tile — a rebuild must not refetch a picture on a slow link.
 class _Photo extends StatefulWidget {
-  const _Photo({required this.photoKey, required this.capture});
+  const _Photo({
+    required this.photoKey,
+    required this.capture,
+    this.label = "Photo de l'article",
+  });
 
   final String? photoKey;
   final CaptureRepository capture;
+  final String label;
 
   @override
   State<_Photo> createState() => _PhotoState();
@@ -1301,8 +1356,7 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes,
-            fit: BoxFit.cover, semanticLabel: "Photo de l'article");
+        return Image.memory(bytes, fit: BoxFit.cover, semanticLabel: widget.label);
       },
     );
   }
