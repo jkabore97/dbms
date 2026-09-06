@@ -6,7 +6,10 @@ import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
+import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
+import '../../core/retail/retail_repository.dart';
+import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/nav/router.dart';
@@ -33,10 +36,17 @@ class OrgSettingsScreen extends StatefulWidget {
     this.suspended = false,
     this.canSetPlan = false,
     this.plan = 'free',
+    this.retail,
+    this.capture,
   });
 
   final AdminRepository admin;
   final String orgId;
+
+  /// For the vitrine's Pro dressing (068): the articles to pin and the
+  /// photographs to choose a cover from. Null in a build with no server.
+  final RetailRepository? retail;
+  final CaptureRepository? capture;
 
   /// Whether to show the platform's plan form (065). True only for a platform
   /// admin; the server refuses `set_org_plan` to anyone else regardless.
@@ -642,6 +652,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ),
                   const SizedBox(height: 10),
                   _LinkRow(url: _storefrontUrl),
+                  const SizedBox(height: 20),
+                  // The Pro dressing (068): badged and held for a Free
+                  // business, a form for a Pro one.
+                  VitrinePlusCard(
+                    orgId: widget.orgId,
+                    admin: widget.admin,
+                    retail: widget.retail,
+                    capture: widget.capture,
+                  ),
                   const SizedBox(height: 16),
                   Text('Frais de livraison', style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Color;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -154,6 +155,104 @@ class StorefrontRepository {
 }
 
 /// One shop's window: who they are and how to reach them.
+/// The Pro dressing of a window (068): what a paying shop may change
+/// within the street's one design. Read from `storefront()`, which sends
+/// `{}` for a Free or lapsed business, and written through
+/// `set_storefront_style()`, which validates every key.
+class StorefrontStyle {
+  const StorefrontStyle({
+    this.tagline,
+    this.hours,
+    this.accent,
+    this.coverKey,
+    this.pinned = const [],
+    this.hideOutOfStock = false,
+  });
+
+  static const none = StorefrontStyle();
+
+  /// One line under the name, 80 characters at most.
+  final String? tagline;
+
+  /// "Lun–Sam 8h–19h", 120 characters at most.
+  final String? hours;
+
+  /// The buttons' colour.
+  final Color? accent;
+
+  /// One of the shop's own photographs, over the band.
+  final String? coverKey;
+
+  /// Up to six article ids held at the top of the shelf, in this order.
+  final List<String> pinned;
+
+  /// Out-of-stock articles left off the shelf rather than greyed.
+  final bool hideOutOfStock;
+
+  bool get isEmpty =>
+      tagline == null &&
+      hours == null &&
+      accent == null &&
+      coverKey == null &&
+      pinned.isEmpty &&
+      !hideOutOfStock;
+
+  factory StorefrontStyle.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return none;
+    String? s(String key) {
+      final v = json[key];
+      if (v is! String) return null;
+      final t = v.trim();
+      return t.isEmpty ? null : t;
+    }
+
+    final pinned = json['pinned'];
+    return StorefrontStyle(
+      tagline: s('tagline'),
+      hours: s('hours'),
+      accent: colorFromHex(s('accent')),
+      coverKey: s('cover_key'),
+      pinned: pinned is List ? pinned.map((e) => e.toString()).toList() : const [],
+      hideOutOfStock: json['hide_out_of_stock'] == true,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+        if (tagline != null) 'tagline': tagline,
+        if (hours != null) 'hours': hours,
+        if (accent != null) 'accent': hexOf(accent!),
+        if (coverKey != null) 'cover_key': coverKey,
+        if (pinned.isNotEmpty) 'pinned': pinned,
+        if (hideOutOfStock) 'hide_out_of_stock': true,
+      };
+
+  /// '#RRGGBB' → a colour; anything else → null.
+  static Color? colorFromHex(String? hex) {
+    if (hex == null) return null;
+    final m = RegExp(r'^#([0-9A-Fa-f]{6})$').firstMatch(hex.trim());
+    if (m == null) return null;
+    return Color(0xFF000000 | int.parse(m.group(1)!, radix: 16));
+  }
+
+  static String hexOf(Color c) =>
+      '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+
+  /// The shelf as the style orders it: pinned articles first, in their
+  /// order, then the rest as they came; out-of-stock left off when asked.
+  List<PublicItem> arrange(List<PublicItem> items) {
+    final kept = hideOutOfStock ? items.where((i) => i.inStock).toList() : items;
+    if (pinned.isEmpty) return kept;
+    final rank = {for (var i = 0; i < pinned.length; i++) pinned[i]: i};
+    final first = <PublicItem>[];
+    final rest = <PublicItem>[];
+    for (final item in kept) {
+      (rank.containsKey(item.id) ? first : rest).add(item);
+    }
+    first.sort((a, b) => rank[a.id]!.compareTo(rank[b.id]!));
+    return [...first, ...rest];
+  }
+}
+
 class PublicShop {
   const PublicShop({
     required this.orgId,
@@ -168,7 +267,11 @@ class PublicShop {
     this.lat,
     this.lng,
     this.waveMerchant,
+    this.style = StorefrontStyle.none,
   });
+
+  /// The Pro dressing (068); [StorefrontStyle.none] for everyone else.
+  final StorefrontStyle style;
 
   final String orgId;
   final String name;
@@ -202,6 +305,11 @@ class PublicShop {
         lat: _num(row['lat']),
         lng: _num(row['lng']),
         waveMerchant: row['wave_merchant'] as String?,
+        // Absent before 068, or a Free shop: the common design.
+        style: row['style'] is Map
+            ? StorefrontStyle.fromJson(
+                Map<String, dynamic>.from(row['style'] as Map))
+            : StorefrontStyle.none,
       );
 }
 

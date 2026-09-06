@@ -25,6 +25,21 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+  # A pull request that touches the app builds the Android app too, so a
+  # change to the Gradle setup or the shrinker rules is proven before it
+  # merges — this sandbox has no Android SDK, and CI's Flutter tests do
+  # not compile Kotlin. Nothing is published from a pull request.
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
+
+# The Android job publishes the APKs to a GitHub release so a shop can
+# download the app from a public link (README: "Installing and updating
+# the Android app"). That needs write access to releases; nothing else
+# here writes anything.
+permissions:
+  contents: write
 
 jobs:
   build-android:
@@ -138,10 +153,23 @@ jobs:
       # Every --dart-define the web deploy passes, or the phone gets an app
       # with no camera and no account admin — a build that compiles and
       # then quietly lacks half its features.
-      - name: Build APK and App Bundle
+      #
+      # --split-per-abi: one APK per processor instead of one carrying all
+      # three. Nearly every phone in the field is arm64; the 32-bit one is
+      # for the older ones. Neither carries the other's engine, which is
+      # what made the single APK weigh what it did. The bundle still holds
+      # every ABI — the Play Store splits it itself.
+      #
+      # BUILD_SHA: the commit this build is made from. The web deploy writes
+      # the same commit into version.json, and the app compares the two to
+      # know a newer build exists (core/update).
+      - name: Build APKs and App Bundle
         working-directory: app
         run: |
-          flutter build apk --release \
+          flutter build apk --release --split-per-abi \
+            --target-platform android-arm,android-arm64 \
+            --build-number="$GITHUB_RUN_NUMBER" \
+            --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
@@ -149,20 +177,67 @@ jobs:
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=PUSH_URL="$PUSH_URL"
           flutter build appbundle --release \
+            --build-number="$GITHUB_RUN_NUMBER" \
+            --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
             --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=PUSH_URL="$PUSH_URL"
+          # Stable names, so the release's "latest" links never change.
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   out/kaj-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk out/kaj-armeabi-v7a.apk
+          cp build/app/outputs/bundle/release/app-release.aab          out/kaj.aab
+
+      - name: Say what it weighs
+        working-directory: app
+        run: |
+          {
+            echo "### Sizes"
+            echo ""
+            echo "| File | Size |"
+            echo "|---|---|"
+            for f in out/kaj-arm64-v8a.apk out/kaj-armeabi-v7a.apk out/kaj.aab; do
+              echo "| $(basename "$f") | $(du -h "$f" | cut -f1) |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
           name: kaj-app-android
-          path: |
-            app/build/app/outputs/flutter-apk/app-release.apk
-            app/build/app/outputs/bundle/release/app-release.aab
+          path: app/out/*
           if-no-files-found: error
+
+      # The public download link. Every push to main makes one release,
+      # tagged by run number and marked latest, so
+      #   https://github.com/<owner>/<repo>/releases/latest/download/kaj-arm64-v8a.apk
+      # is always the newest build — the address version.json hands to a
+      # phone on an older one. A manual run of this workflow does not
+      # publish: it is for trying a branch, not for shipping it.
+      - name: Publish the release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="android-${GITHUB_RUN_NUMBER}"
+          notes="$(printf '%s\n\n%s\n%s' \
+            "Build ${GITHUB_RUN_NUMBER} from ${GITHUB_SHA}." \
+            "Most phones: kaj-arm64-v8a.apk. Older 32-bit phones: kaj-armeabi-v7a.apk." \
+            "kaj.aab is what the Play Console takes.")"
+          gh release create "$tag" \
+            --title "Kaj Android build ${GITHUB_RUN_NUMBER}" \
+            --notes "$notes" \
+            --latest \
+            out/kaj-arm64-v8a.apk out/kaj-armeabi-v7a.apk out/kaj.aab
+          {
+            echo ""
+            echo "### Published"
+            echo ""
+            echo "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/kaj-arm64-v8a.apk"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build-web:
     runs-on: ubuntu-latest
@@ -245,6 +320,7 @@ jobs:
         working-directory: app
         run: |
           flutter build web --release --pwa-strategy none \
+            --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \

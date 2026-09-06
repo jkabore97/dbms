@@ -131,6 +131,7 @@ jobs:
           # warm cache to fall back on). Serving it same-origin removes the
           # dependency entirely and makes every first paint faster.
           flutter build web --release --pwa-strategy none --no-web-resources-cdn \
+            --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
@@ -142,6 +143,20 @@ jobs:
           # installed the old offline-first worker re-fetch this URL and get
           # the self-destruct from web/, which evicts their stale cache.
           cp web/flutter_service_worker.js build/web/flutter_service_worker.js
+          # Which build is deployed, for the app's own update check
+          # (core/update): every build carries BUILD_SHA, this file says the
+          # deployed one, and a phone on an older APK — or a tab open since
+          # before this deploy — is told. The APK link is the latest GitHub
+          # release, which the Build App workflow publishes from the same
+          # commit a few minutes after this.
+          cat > build/web/version.json <<EOF
+          {
+            "sha": "$GITHUB_SHA",
+            "apk": "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/kaj-arm64-v8a.apk",
+            "apk_32bit": "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/kaj-armeabi-v7a.apk",
+            "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
 
       - name: Deploy
         run: npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml

@@ -783,6 +783,10 @@ GoRouter buildRouter(SessionController session) {
                     // member reads which one they are on.
                     canSetPlan: scope.session.isPlatformAdmin,
                     plan: org.plan,
+                    // The vitrine's Pro dressing (068) picks from the
+                    // shop's articles and photographs.
+                    retail: scope.retail,
+                    capture: scope.capture,
                   ),
                 ),
                 routes: [

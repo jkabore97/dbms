@@ -373,6 +373,36 @@ any phone) and `app-release.aab` (what the Play Console takes). Without the
 secrets it still builds, signed with the debug key — fine for testing on a
 phone, refused by the store, and the run's summary says which one you got.
 
+### Installing and updating the Android app
+
+The web app is whatever was deployed last, every time it loads. A phone is
+whatever APK was installed the day it was installed — and for a while
+nothing told it a newer one existed, so every fix shipped only reached the
+phones somebody reinstalled by hand. Two things close that gap:
+
+- **A public download link.** Every push to `main` builds the app and
+  publishes it as a GitHub release marked *latest*, so this address is
+  always the newest build:
+
+      https://github.com/jkabore97/dbms/releases/latest/download/kaj-arm64-v8a.apk
+
+  That is the file for nearly every phone. `kaj-armeabi-v7a.apk` on the
+  same release is for older 32-bit phones; `kaj.aab` is what the Play
+  Console takes. Send the link on WhatsApp; the phone downloads and
+  installs over the old version, keeping its data.
+
+- **The app knows when it is old.** Every build carries the commit it was
+  made from (`--dart-define=BUILD_SHA`), and the web deploy writes the
+  deployed commit into `version.json` beside the app. The app looks once at
+  start and every six hours; when the two differ, a banner says so and
+  offers the download on a phone, or a reload in a browser tab that has
+  been open since before a deploy.
+
+The APK is one per processor (`--split-per-abi`) and shrunk by R8, which is
+roughly half of what the single all-architectures package weighed; the
+run's summary prints the sizes. A manual run of "Build App" on a branch
+builds without publishing.
+
 ### Crash reporting
 
 An error in production used to be invisible unless a user described it.
@@ -559,9 +589,9 @@ yet. That failure looks like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `067` up to date, paste
-`database/apply_006_to_067.sql` into the Supabase SQL editor and run it once.
-It is `006` through `067` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `068` up to date, paste
+`database/apply_006_to_068.sql` into the Supabase SQL editor and run it once.
+It is `006` through `068` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

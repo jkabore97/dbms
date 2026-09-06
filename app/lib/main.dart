@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -33,6 +36,8 @@ import 'core/reports/reports_repository.dart';
 import 'core/sync/sync_service.dart';
 import 'core/tontine/tontine_repository.dart';
 import 'core/theme/kaj_theme.dart';
+import 'core/update/update_banner.dart';
+import 'core/update/update_check.dart';
 
 /// Supplied at build time so no credentials live in the source:
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
@@ -245,9 +250,21 @@ class _KajAppState extends State<KajApp> {
   late final GoRouter _router;
   late final LocaleController _locale;
 
+  /// Whether a newer build is out (core/update). One look at start, then
+  /// every six hours while the app stays open — a shop's tab or a courier's
+  /// phone does stay open — so the banner reaches people who never reload.
+  late final UpdateCheck _update;
+  Timer? _updateTimer;
+
   @override
   void initState() {
     super.initState();
+    _update = UpdateCheck(
+      fetch: (uri) async => (await http.get(uri)).body,
+    );
+    unawaited(_update.check());
+    _updateTimer = Timer.periodic(
+        const Duration(hours: 6), (_) => unawaited(_update.check()));
     _locale = widget.locale ?? LocaleController(widget.db);
     _session = SessionController(
       db: widget.db,
@@ -264,6 +281,8 @@ class _KajAppState extends State<KajApp> {
 
   @override
   void dispose() {
+    _updateTimer?.cancel();
+    _update.dispose();
     _session.dispose();
     super.dispose();
   }
@@ -313,9 +332,14 @@ class _KajAppState extends State<KajApp> {
           // The app's wash behind every page. Scaffolds are transparent in
           // the glass theme, so this is the ground they stand on; inside a
           // business, ProfileTheme paints its own wash over this one.
+          // The update banner sits above every page, inside the wash, so a
+          // phone on an old APK hears about the new one wherever it is.
           builder: (context, child) => KajBackground(
             palette: kajPalette,
-            child: child ?? const SizedBox.shrink(),
+            child: UpdateBanner(
+              check: _update,
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
           locale: _locale.effective,
           supportedLocales: enabledLocales,

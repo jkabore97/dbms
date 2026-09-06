@@ -28,6 +28,7 @@ class PlanTerms {
     'accounting',
     'currencies',
     'tontines',
+    'vitrine_plus',
   ];
 
   static const defaults = PlanTerms();
@@ -94,6 +95,9 @@ class PlanTerms {
         'accounting' => 'Comptabilité : journal, résultat, bilan, grand livre',
         'currencies' => 'Devises : encaisser et compter en plusieurs monnaies',
         'tontines' => 'Tontines',
+        'vitrine_plus' =>
+          'Vitrine personnalisée : photo de couverture, horaires, couleur, '
+              'articles épinglés',
         _ => feature,
       };
 }
