@@ -223,10 +223,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="android-${GITHUB_RUN_NUMBER}"
-          notes="Build ${GITHUB_RUN_NUMBER} from ${GITHUB_SHA}.
-
-Most phones: kaj-arm64-v8a.apk. Older 32-bit phones: kaj-armeabi-v7a.apk.
-kaj.aab is what the Play Console takes."
+          notes="$(printf '%s\n\n%s\n%s' \
+            "Build ${GITHUB_RUN_NUMBER} from ${GITHUB_SHA}." \
+            "Most phones: kaj-arm64-v8a.apk. Older 32-bit phones: kaj-armeabi-v7a.apk." \
+            "kaj.aab is what the Play Console takes.")"
           gh release create "$tag" \
             --title "Kaj Android build ${GITHUB_RUN_NUMBER}" \
             --notes "$notes" \
