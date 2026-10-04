@@ -13,6 +13,7 @@ import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
+import '../home/home_nav.dart';
 import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
@@ -207,7 +208,11 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
+    final nav = _nav();
+    return nav.frame(context, Scaffold(
+      // The name, the sync count, the bell and the account. Every tool has
+      // its place, with its word, on the bar at the foot (HomeNav).
+      bottomNavigationBar: nav.bar(context),
       appBar: AppBar(
         title: Text(widget.orgName),
         actions: [
@@ -221,48 +226,6 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                   visualDensity: VisualDensity.compact,
                 ),
               ),
-            ),
-          if (widget.invoicing != null && widget.org != null)
-            IconButton(
-              icon: const Icon(Icons.receipt_long_outlined),
-              tooltip: Strings.of(context).invoices,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org!.id, 'factures')),
-            ),
-          if (widget.reports != null && widget.org != null)
-            IconButton(
-              icon: const Icon(Icons.assessment_outlined),
-              tooltip: Strings.of(context).reports,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org!.id, 'rapports')),
-            ),
-          // A peer of Rapports rather than something to be found three taps
-          // down inside Comptabilité: "when did we record that" is a question
-          // any member asks, not an accounting exercise. Absent for an
-          // observer on 'summary' visibility, whose grant is the totals and
-          // for whom this screen would only ever be an empty list with an
-          // explanation — see journal_page, which returns them no rows.
-          if (widget.onHistory != null && widget.org?.visibility != 'summary')
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: Strings.of(context).history,
-              onPressed: widget.onHistory,
-            ),
-          if (widget.capture != null &&
-              widget.capture!.isConfigured &&
-              widget.org != null)
-            IconButton(
-              icon: const Icon(Icons.photo_camera_outlined),
-              tooltip: Strings.of(context).photos,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org!.id, 'photos')),
-            ),
-          if (widget.staff != null && widget.org != null && widget.org!.isAdmin)
-            IconButton(
-              icon: const Icon(Icons.groups_outlined),
-              tooltip: Strings.of(context).staffLabel,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org!.id, 'personnel')),
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
@@ -372,6 +335,70 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           ),
         ],
       ),
+    ));
+  }
+
+  /// The association's five: Accueil (this screen), Historique,
+  /// Rapports, Factures, and Plus.
+  HomeNav _nav() {
+    final s = Strings.of(context);
+    final org = widget.org;
+    return HomeNav(
+      home: HomeDestination(
+        icon: Icons.volunteer_activism_outlined,
+        selectedIcon: Icons.volunteer_activism,
+        // Not "Aujourd'hui": that is already the heading of the day's list
+        // on this page, and one word twice on a screen reads as two places.
+        label: 'Accueil',
+        onTap: () {},
+      ),
+      primary: [
+        // A peer of Rapports rather than something to be found three taps
+        // down inside Comptabilité: "when did we record that" is a question
+        // any member asks, not an accounting exercise. Absent for an
+        // observer on 'summary' visibility, whose grant is the totals and
+        // for whom this screen would only ever be an empty list with an
+        // explanation — see journal_page, which returns them no rows.
+        if (widget.onHistory != null && org?.visibility != 'summary')
+          HomeDestination(
+            icon: Icons.history,
+            label: s.history,
+            onTap: widget.onHistory!,
+          ),
+        if (widget.reports != null && org != null)
+          HomeDestination(
+            icon: Icons.assessment_outlined,
+            label: s.reports,
+            onTap: () => context.push(Routes.inside(org.id, 'rapports')),
+          ),
+        if (widget.invoicing != null && org != null)
+          HomeDestination(
+            icon: Icons.receipt_long_outlined,
+            label: s.invoices,
+            onTap: () => context.push(Routes.inside(org.id, 'factures')),
+          ),
+      ],
+      more: [
+        if (org != null) ...[
+          if (widget.capture != null && widget.capture!.isConfigured)
+            HomeDestination(
+              icon: Icons.photo_library_outlined,
+              label: s.photos,
+              onTap: () => context.push(Routes.inside(org.id, 'photos')),
+            ),
+          if (widget.staff != null && org.isAdmin)
+            HomeDestination(
+              icon: Icons.groups_outlined,
+              label: s.staffLabel,
+              onTap: () => context.push(Routes.inside(org.id, 'personnel')),
+            ),
+          HomeDestination(
+            icon: Icons.account_circle_outlined,
+            label: s.account,
+            onTap: () => context.push(Routes.inside(org.id, 'compte')),
+          ),
+        ],
+      ],
     );
   }
 }

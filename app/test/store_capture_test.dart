@@ -67,7 +67,10 @@ void main() {
     await pump(tester, CaptureRepository(client, db: db));
 
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsNothing);
-    expect(find.byIcon(Icons.photo_library_outlined), findsNothing);
+    // Nor a gallery under Plus.
+    await tester.tap(find.text('Plus'));
+    await tester.pumpAndSettle();
+    expect(find.text('Photos'), findsNothing);
   });
 
   testWidgets('configured, the camera is the primary action', (tester) async {
@@ -87,8 +90,11 @@ void main() {
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsOneWidget);
     expect(find.byIcon(Icons.photo_camera), findsOneWidget);
 
-    // And the way back to what has already been photographed.
-    expect(find.byIcon(Icons.photo_library_outlined), findsOneWidget);
+    // And the way back to what has already been photographed, by name,
+    // under Plus.
+    await tester.tap(find.text('Plus'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ListTile, 'Photos'), findsOneWidget);
   });
 
   testWidgets('with a till and a camera, the sale is the headline button',

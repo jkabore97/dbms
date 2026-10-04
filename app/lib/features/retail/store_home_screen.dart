@@ -18,6 +18,7 @@ import '../../core/retail/staff.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
+import '../home/home_nav.dart';
 import 'sale_sheet.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
@@ -298,83 +299,17 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         widget.capture != null && widget.capture!.isConfigured;
     final atRisk = _expiring.fold<double>(0, (sum, p) => sum + p.valueAtRisk);
 
-    return Scaffold(
+    final nav = _nav(canPhotograph);
+    return nav.frame(context, Scaffold(
+      // The name, the bell and the account — nothing else. Every tool has
+      // its place, with its word, on the bar at the foot (HomeNav).
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
-          // The one door out to the public side, asked for by name: the
-          // street, deliberately — never by falling backwards into it.
-          IconButton(
-            icon: const Icon(Icons.storefront_outlined),
-            tooltip: 'Les vitrines',
-            onPressed: () => context.go(Routes.directory),
-          ),
-          // The bar carries only what a till reaches for many times a day.
-          // Analyses, the carnet and the personnel are consulted, not worked
-          // in, so they live under Compte instead of crowding this row.
-          if (widget.access.canSee('production'))
-            IconButton(
-              icon: const Icon(Icons.soup_kitchen_outlined),
-              tooltip: Strings.of(context).production,
-              onPressed: () async {
-                await context.push(Routes.inside(widget.org.id, 'production'));
-                if (mounted) await _load();
-              },
-            ),
-          if (widget.access.canSee('products'))
-          IconButton(
-            icon: const Icon(Icons.inventory_2_outlined),
-            tooltip: Strings.of(context).productsLabel,
-            onPressed: widget.retail == null
-                ? null
-                : () async {
-                    await context
-                        .push(Routes.inside(widget.org.id, 'produits'));
-                    if (mounted) await _load();
-                  },
-          ),
-          if (canPhotograph && widget.access.canSee('photos'))
-            IconButton(
-              icon: const Icon(Icons.photo_library_outlined),
-              tooltip: Strings.of(context).photos,
-              onPressed: _openGallery,
-            ),
-          if (widget.invoicing != null && widget.access.canSee('invoices'))
-            IconButton(
-              icon: const Icon(Icons.receipt_long_outlined),
-              tooltip: Strings.of(context).invoices,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'factures')),
-            ),
-          // Orders sent from the vitrine (055), with how many are waiting
-          // for an answer. Only shown once the shop has opened its window —
-          // before that there is nothing a customer could have ordered from.
-          if (widget.retail != null && widget.access.canSee('orders')) ...[
-            // The doorbell's switch: only where a browser can carry the
-            // ring, and gone once it is granted — a setting that is done
-            // has no business staying on the till bar.
-            if (OrderAlert.supported && !_alertsOn)
-              IconButton(
-                icon: const Icon(Icons.notifications_active_outlined),
-                tooltip: 'Activer les alertes de commande',
-                onPressed: _enableAlerts,
-              ),
-            IconButton(
-              icon: Badge(
-                isLabelVisible: _pendingOrders > 0,
-                label: Text('$_pendingOrders'),
-                child: const Icon(Icons.shopping_bag_outlined),
-              ),
-              tooltip: 'Commandes',
-              onPressed: () async {
-                await context.push(Routes.inside(widget.org.id, 'commandes'));
-                if (mounted) await _load();
-              },
-            ),
-          ],
           if (widget.accountAction != null) widget.accountAction!,
         ],
       ),
+      bottomNavigationBar: nav.bar(context),
       // Selling is what a till does all day, so the sale is the big, filled,
       // labelled button — impossible to miss and sized for a thumb in a hurry.
       // The camera keeps its place for the shop that also photographs its
@@ -478,6 +413,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+            ],
+
+            if (widget.retail != null &&
+                widget.access.canSee('orders') &&
+                OrderAlert.supported &&
+                !_alertsOn) ...[
+              _AlertsCard(onEnable: _enableAlerts),
               const SizedBox(height: 16),
             ],
 
@@ -602,6 +545,114 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             const SizedBox(height: 80),
           ],
         ),
+      ),
+    ));
+  }
+
+  Future<void> _openThenReload(String rest) async {
+    await context.push(Routes.inside(widget.org.id, rest));
+    if (mounted) await _load();
+  }
+
+  /// The shop's five: Vente (this screen), Articles, Commandes, Factures,
+  /// and Plus for what is consulted rather than worked in.
+  HomeNav _nav(bool canPhotograph) {
+    final s = Strings.of(context);
+    final slug = widget.org.slug;
+    return HomeNav(
+      home: HomeDestination(
+        icon: Icons.payments_outlined,
+        selectedIcon: Icons.payments,
+        label: s.sale,
+        onTap: () {},
+      ),
+      primary: [
+        if (widget.retail != null && widget.access.canSee('products'))
+          HomeDestination(
+            icon: Icons.sell_outlined,
+            label: s.productsLabel,
+            onTap: () => _openThenReload('produits'),
+          ),
+        // Orders sent from the vitrine (055), with how many are waiting.
+        if (widget.retail != null && widget.access.canSee('orders'))
+          HomeDestination(
+            icon: Icons.inbox_outlined,
+            label: 'Commandes',
+            badge: _pendingOrders,
+            onTap: () => _openThenReload('commandes'),
+          ),
+        if (widget.invoicing != null && widget.access.canSee('invoices'))
+          HomeDestination(
+            icon: Icons.receipt_long_outlined,
+            label: s.invoices,
+            onTap: () => context.push(Routes.inside(widget.org.id, 'factures')),
+          ),
+      ],
+      more: [
+        if (widget.access.canSee('production'))
+          HomeDestination(
+            icon: Icons.precision_manufacturing_outlined,
+            label: s.production,
+            onTap: () => _openThenReload('production'),
+          ),
+        if (canPhotograph && widget.access.canSee('photos'))
+          HomeDestination(
+            icon: Icons.photo_library_outlined,
+            label: s.photos,
+            onTap: _openGallery,
+          ),
+        // The doors out to the public side, said in words: going to the
+        // street is a choice, never something to fall into backwards.
+        if (slug != null && slug.isNotEmpty)
+          HomeDestination(
+            icon: Icons.visibility_outlined,
+            label: 'Voir ma vitrine',
+            onTap: () => context.go(Routes.storefront(slug)),
+          ),
+        HomeDestination(
+          icon: Icons.storefront_outlined,
+          label: 'Voir le marché',
+          onTap: () => context.go(Routes.directory),
+        ),
+        HomeDestination(
+          icon: Icons.account_circle_outlined,
+          label: s.account,
+          onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
+        ),
+      ],
+    );
+  }
+}
+
+/// Asks once whether the till may ring for a new order. A one-time choice,
+/// so it is a card on the page that goes away when answered — not a button
+/// that sits on the bar and then vanishes from it.
+class _AlertsCard extends StatelessWidget {
+  const _AlertsCard({required this.onEnable});
+
+  final VoidCallback onEnable;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Panel(
+      colour: theme.colorScheme.primaryContainer,
+      child: Row(
+        children: [
+          Icon(Icons.notifications_active_outlined,
+              color: theme.colorScheme.onPrimaryContainer),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Soyez prévenu à chaque commande de la vitrine.',
+              style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+            ),
+          ),
+          FilledButton.tonal(
+            onPressed: onEnable,
+            child: const Text('Activer'),
+          ),
+        ],
       ),
     );
   }
