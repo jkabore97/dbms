@@ -245,7 +245,7 @@ class KajApp extends StatefulWidget {
   State<KajApp> createState() => _KajAppState();
 }
 
-class _KajAppState extends State<KajApp> {
+class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   late final SessionController _session;
   late final GoRouter _router;
   late final LocaleController _locale;
@@ -255,6 +255,12 @@ class _KajAppState extends State<KajApp> {
   /// phone does stay open — so the banner reaches people who never reload.
   late final UpdateCheck _update;
   Timer? _updateTimer;
+
+  /// Keeps an open app current (SessionController.refresh): what the server
+  /// says about this person is re-read every few minutes and whenever the
+  /// app comes back to the foreground, so a change made on another phone or
+  /// in the console arrives without a restart.
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -277,10 +283,23 @@ class _KajAppState extends State<KajApp> {
     // Kicks the state machine off. The router is already listening, so the
     // first phase it settles on is the first address the person sees.
     _session.boot();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshTimer = Timer.periodic(SessionController.refreshEvery,
+        (_) => unawaited(_session.refresh(force: true)));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_session.refresh());
+      unawaited(_update.check());
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _refreshTimer?.cancel();
     _updateTimer?.cancel();
     _update.dispose();
     _session.dispose();
