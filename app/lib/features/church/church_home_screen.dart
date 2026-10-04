@@ -5,6 +5,7 @@ import '../../l10n/strings.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/staff.dart';
@@ -43,6 +44,7 @@ class ChurchHomeScreen extends StatefulWidget {
     this.staff,
     this.accountAction,
     this.onHistory,
+    this.access = OrgAccess.allEdit,
   });
 
   final LocalDb db;
@@ -83,6 +85,10 @@ class ChurchHomeScreen extends StatefulWidget {
   /// server, and null once the token has expired: the list is paginated by the
   /// database and there is nothing offline to page through.
   final VoidCallback? onHistory;
+
+  /// The owner's dial from 031: which tools this member is shown. Until 069
+  /// this screen was never given it, so every member saw every tool.
+  final OrgAccess access;
 
   @override
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
@@ -359,19 +365,25 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
         // observer on 'summary' visibility, whose grant is the totals and
         // for whom this screen would only ever be an empty list with an
         // explanation — see journal_page, which returns them no rows.
-        if (widget.onHistory != null && org?.visibility != 'summary')
+        if (widget.onHistory != null &&
+            org?.visibility != 'summary' &&
+            widget.access.canSee('reports'))
           HomeDestination(
             icon: Icons.history,
             label: s.history,
             onTap: widget.onHistory!,
           ),
-        if (widget.reports != null && org != null)
+        if (widget.reports != null &&
+            org != null &&
+            widget.access.canSee('reports'))
           HomeDestination(
             icon: Icons.assessment_outlined,
             label: s.reports,
             onTap: () => context.push(Routes.inside(org.id, 'rapports')),
           ),
-        if (widget.invoicing != null && org != null)
+        if (widget.invoicing != null &&
+            org != null &&
+            widget.access.canSee('invoices'))
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
@@ -380,7 +392,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       ],
       more: [
         if (org != null) ...[
-          if (widget.capture != null && widget.capture!.isConfigured)
+          if (widget.capture != null &&
+              widget.capture!.isConfigured &&
+              widget.access.canSee('photos'))
             HomeDestination(
               icon: Icons.photo_library_outlined,
               label: s.photos,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -46,15 +48,40 @@ class _CourierScreenState extends State<CourierScreen>
   bool _busy = false;
   String? _error;
 
+  /// The page re-checks itself (the #110 lesson, here for couriers): an
+  /// applicant waiting on "à l'étude" is carried in when the platform says
+  /// yes, and an approved courier's board fills without pulling to refresh.
+  /// Approval rings the bell, but this page has no bell — so it asks.
+  Timer? _poll;
+  int _ticks = 0;
+  static const _pollEvery = Duration(seconds: 20);
+
   @override
   void initState() {
     super.initState();
     _load();
+    _poll = Timer.periodic(_pollEvery, (_) => _recheck());
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  /// Every tick while waiting for approval; every third (a minute) on the
+  /// board. Silent, and never while the courier is mid-action.
+  Future<void> _recheck() async {
+    if (!mounted || _busy || _loading || !widget.courier.isConfigured) return;
+    _ticks++;
+    if (_status == 'approved' && _ticks % 3 != 0) return;
+    if (_status == 'suspended') return;
+    await _load(silent: true);
+  }
+
+  Future<void> _load({bool silent = false}) async {
     setState(() {
-      _loading = true;
+      if (!silent) _loading = true;
       _error = null;
     });
     if (!widget.courier.isConfigured) {
@@ -93,6 +120,7 @@ class _CourierScreenState extends State<CourierScreen>
       });
     } catch (_) {
       if (!mounted) return;
+      if (silent) return; // No signal is not news: what is on screen stays.
       setState(() {
         _error = "L'espace livreur n'a pas pu être chargé. Vérifiez le réseau.";
         _loading = false;

@@ -261,6 +261,7 @@ class _SaleSheetState extends State<SaleSheet> {
       setState(() => _error = 'Entrez le nom du client pour un crédit.');
       return;
     }
+    if (!await _stockAllows()) return;
     if (_method == 'wave') {
       return _saveWave();
     }
@@ -318,6 +319,56 @@ class _SaleSheetState extends State<SaleSheet> {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  /// Selling past the shelf, asked once (the audit: ELIM SHOP had 7 articles
+  /// below zero, sold with no word said). Only for an article that has stock
+  /// and that this sale would take below zero: a shop that does not count
+  /// its stock sits at zero or below already, and is never nagged.
+  Future<bool> _stockAllows() async {
+    final sold = <String, double>{};
+    for (final line in _lines) {
+      final id = line.productId;
+      if (id != null) sold[id] = (sold[id] ?? 0) + line.quantity;
+    }
+    final short = <String>[];
+    for (final entry in sold.entries) {
+      Product? product;
+      for (final p in widget.products) {
+        if (p.id == entry.key) {
+          product = p;
+          break;
+        }
+      }
+      if (product == null || product.quantity <= 0) continue;
+      if (entry.value > product.quantity) {
+        short.add('${product.name} : ${_qty(product.quantity)} en stock, '
+            '${_qty(entry.value)} vendu${entry.value > 1 ? 's' : ''}');
+      }
+    }
+    if (short.isEmpty) return true;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Stock insuffisant'),
+        content: Text('${short.join('\n')}\n\nLe stock passera sous zéro. '
+            'Vendre quand même ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: const Text('Corriger'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: const Text('Vendre quand même'),
+          ),
+        ],
+      ),
+    );
+    return go == true && mounted;
+  }
+
+  static String _qty(double q) =>
+      q == q.roundToDouble() ? q.toStringAsFixed(0) : q.toStringAsFixed(1);
 
   /// The Wave path: show the QR for the customer to scan, take the sender's
   /// name, record the sale, confirm it, and hand back a receipt. Nothing is

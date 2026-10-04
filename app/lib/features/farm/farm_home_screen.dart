@@ -406,7 +406,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           label: s.flocks,
           onTap: () => _push(Routes.inside(id, 'bandes')),
         ),
-        if (widget.invoicing != null)
+        if (widget.invoicing != null && widget.access.canSee('invoices'))
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
@@ -426,7 +426,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
             label: s.production,
             onTap: () => context.push(Routes.inside(id, 'production')),
           ),
-        if (widget.capture != null && widget.capture!.isConfigured)
+        if (widget.capture != null &&
+            widget.capture!.isConfigured &&
+            widget.access.canSee('photos'))
           HomeDestination(
             icon: Icons.photo_library_outlined,
             label: s.photos,

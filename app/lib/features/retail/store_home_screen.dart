@@ -262,7 +262,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         orgName: widget.org.name,
         retail: retail,
         currency: widget.org.currency,
-        capture: widget.capture,
+        capture: widget.access.canEdit('photos') ? widget.capture : null,
         products: _products,
         canCredit: widget.access.canEdit('credits'),
       ),
@@ -295,11 +295,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final canPhotograph =
+    final cameraReady =
         widget.capture != null && widget.capture!.isConfigured;
+    // Taking a photo needs 'edit' on Photos — the server says the same since
+    // 069; looking at the gallery needs only that it is not hidden.
+    final canPhotograph = cameraReady && widget.access.canEdit('photos');
     final atRisk = _expiring.fold<double>(0, (sum, p) => sum + p.valueAtRisk);
 
-    final nav = _nav(canPhotograph);
+    final nav = _nav(cameraReady);
     return nav.frame(context, Scaffold(
       // The name, the bell and the account — nothing else. Every tool has
       // its place, with its word, on the bar at the foot (HomeNav).
@@ -556,7 +559,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
   /// The shop's five: Vente (this screen), Articles, Commandes, Factures,
   /// and Plus for what is consulted rather than worked in.
-  HomeNav _nav(bool canPhotograph) {
+  HomeNav _nav(bool cameraReady) {
     final s = Strings.of(context);
     final slug = widget.org.slug;
     return HomeNav(
@@ -595,7 +598,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             label: s.production,
             onTap: () => _openThenReload('production'),
           ),
-        if (canPhotograph && widget.access.canSee('photos'))
+        if (cameraReady && widget.access.canSee('photos'))
           HomeDestination(
             icon: Icons.photo_library_outlined,
             label: s.photos,

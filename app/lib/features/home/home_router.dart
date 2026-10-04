@@ -58,6 +58,7 @@ Widget homeScreenFor({
           staff: staff,
           accountAction: accountAction,
           onHistory: onHistory,
+          access: access,
         ),
       'farm' => FarmHomeScreen(
           invoicing: invoicing,
