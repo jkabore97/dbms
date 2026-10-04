@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
+import '../common/owned_controller.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
@@ -108,6 +110,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   // The shop's own delivery rates (061); empty means the platform's.
   final _deliveryBaseController = TextEditingController();
   final _deliveryPerKmController = TextEditingController();
+  // How far the shop delivers (069); empty means the platform's 15 km.
+  final _deliveryReachController = TextEditingController();
   bool _locating = false;
 
   /// The vitrine's address: on the web, this very site; elsewhere, the site
@@ -136,6 +140,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _lngController.dispose();
     _deliveryBaseController.dispose();
     _deliveryPerKmController.dispose();
+    _deliveryReachController.dispose();
     _planNoteController.dispose();
     super.dispose();
   }
@@ -154,6 +159,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final wave = await widget.admin.waveMerchant(widget.orgId);
       final rates = await widget.admin.currencyRates(widget.orgId);
       final storefront = await widget.admin.storefront(widget.orgId);
+      // The reach is one optional field: failing to read it must not cost
+      // the owner the rest of the settings.
+      double? reach;
+      try {
+        reach = await widget.admin.deliveryReach(widget.orgId);
+      } catch (_) {
+        reach = null;
+      }
       // Only the platform edits the plan, so only the platform pays for the
       // read; members show what the org list already says.
       final plan = widget.canSetPlan
@@ -178,6 +191,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _lngController.text = storefront.lng?.toString() ?? '';
         _deliveryBaseController.text = _plain(storefront.deliveryBase);
         _deliveryPerKmController.text = _plain(storefront.deliveryPerKm);
+        _deliveryReachController.text = _plain(reach);
         _loading = false;
       });
     } catch (error) {
@@ -237,6 +251,19 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
     }
 
+    // The reach: empty for the platform's, else 1 to 200 km (069).
+    final reachText = _deliveryReachController.text.trim().replaceAll(',', '.');
+    double? deliveryReach;
+    if (reachText.isNotEmpty) {
+      deliveryReach = double.tryParse(reachText);
+      if (deliveryReach == null || deliveryReach <= 0 || deliveryReach > 200) {
+        setState(() => _error =
+            'La distance de livraison va de 1 à 200 km, ou vide pour celle '
+            'de la plateforme (15 km).');
+        return;
+      }
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -258,6 +285,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       await widget.admin.setStorefrontLocation(widget.orgId, lat: lat, lng: lng);
       await widget.admin.setDeliveryRates(widget.orgId,
           base: deliveryBase, perKm: deliveryPerKm);
+      try {
+        await widget.admin.setDeliveryReach(widget.orgId, deliveryReach);
+      } on PostgrestException catch (e) {
+        // A database before 069 has no reach to set; the rest is saved.
+        if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      }
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
@@ -480,33 +513,35 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// A shop already on Google Maps pastes its own link; the numbers come
   /// out of it. Short links carry none, and the dialog says what to do then.
   Future<void> _pasteMapsLink() async {
-    final controller = TextEditingController();
+    // The dialog owns its field (OwnedController): disposed after the
+    // dialog has left the screen, not while it animates out.
     final text = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Lien Google Maps'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'https://www.google.com/maps/place/...@12.37,-1.52,17z',
+      builder: (context) => OwnedController(
+        builder: (context, controller) => AlertDialog(
+          title: const Text('Lien Google Maps'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'https://www.google.com/maps/place/...@12.37,-1.52,17z',
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('Utiliser'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('Utiliser'),
-          ),
-        ],
       ),
     );
-    controller.dispose();
     if (text == null || !mounted) return;
     final position = parseGoogleMapsLink(text);
     if (position == null) {
@@ -702,6 +737,19 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _deliveryReachController,
+                    enabled: !_saving,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Distance maximale (km)',
+                      helperText: 'Au-delà, la livraison n\'est pas proposée. '
+                          'Vide : 15 km.',
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Text('Position sur la carte',
