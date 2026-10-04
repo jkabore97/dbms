@@ -854,6 +854,33 @@ class AdminRepository {
     });
   }
 
+  /// How far the shop delivers, in km (069); null means the platform's
+  /// default. Read on its own so a database before 069 costs only this
+  /// field, never the rest of the vitrine settings.
+  Future<double?> deliveryReach(String orgId) async {
+    try {
+      final row = await _requireClient()
+          .from('orgs')
+          .select('delivery_max_km')
+          .eq('id', orgId)
+          .maybeSingle();
+      final v = row?['delivery_max_km'];
+      return v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') return null;
+      rethrow;
+    }
+  }
+
+  /// Sets how far the shop delivers (1–200 km), or null for the platform's
+  /// default. Admin-only, enforced by set_delivery_reach() (069).
+  Future<void> setDeliveryReach(String orgId, double? km) async {
+    await _requireClient().rpc('set_delivery_reach', params: {
+      'p_org_id': orgId,
+      'p_km': km,
+    });
+  }
+
   Future<void> setStorefrontLocation(String orgId,
       {double? lat, double? lng}) async {
     final client = _requireClient();

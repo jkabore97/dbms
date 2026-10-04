@@ -174,7 +174,7 @@ class CompteScreen extends StatelessWidget {
               ),
             if (access.canSee('production'))
               _Tile(
-                icon: Icons.soup_kitchen_outlined,
+                icon: Icons.precision_manufacturing_outlined,
                 title: Strings.of(context).production,
                 onTap: () => context.push(inside('production')),
               ),

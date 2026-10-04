@@ -14,6 +14,7 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
+import '../home/home_nav.dart';
 import 'farm_sheets.dart';
 import '../../core/nav/router.dart';
 
@@ -227,7 +228,11 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
+    final nav = _nav();
+    return nav.frame(context, Scaffold(
+      // The name, the sync count, the bell and the account. Every tool has
+      // its place, with its word, on the bar at the foot (HomeNav).
+      bottomNavigationBar: nav.bar(context),
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [
@@ -241,34 +246,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                   visualDensity: VisualDensity.compact,
                 ),
               ),
-            ),
-          if (widget.access.canSee('credits'))
-            IconButton(
-              icon: const Icon(Icons.handshake_outlined),
-              tooltip: Strings.of(context).creditBook,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'credits')),
-            ),
-          if (widget.access.canSee('production'))
-            IconButton(
-              icon: const Icon(Icons.soup_kitchen_outlined),
-              tooltip: Strings.of(context).production,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'production')),
-            ),
-          if (widget.capture != null && widget.capture!.isConfigured)
-            IconButton(
-              icon: const Icon(Icons.photo_camera_outlined),
-              tooltip: Strings.of(context).photos,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'photos')),
-            ),
-          if (widget.staff != null && widget.org.isAdmin)
-            IconButton(
-              icon: const Icon(Icons.groups_outlined),
-              tooltip: Strings.of(context).staffLabel,
-              onPressed: () =>
-                  context.push(Routes.inside(widget.org.id, 'personnel')),
             ),
           if (widget.accountAction != null) widget.accountAction!,
         ],
@@ -309,44 +286,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                     const SizedBox(height: 12),
                     _StaleBanner(theme: theme),
                   ],
-
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _NavCard(
-                          icon: Icons.inventory_2_outlined,
-                          label: Strings.of(context).stock,
-                          onTap: () =>
-                              _push(Routes.inside(widget.org.id, 'stock')),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _NavCard(
-                          icon: Icons.pets_outlined,
-                          label: Strings.of(context).flocks,
-                          onTap: () =>
-                              _push(Routes.inside(widget.org.id, 'bandes')),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _NavCard(
-                          icon: Icons.receipt_long_outlined,
-                          label: Strings.of(context).invoices,
-                          // The shared screen since 020. The farm-only one was
-                          // built on outstanding_invoices(), so an invoice
-                          // vanished from the app the moment it was paid and
-                          // nobody could re-send a copy.
-                          onTap: widget.invoicing == null
-                              ? () {}
-                              : () => _push(
-                                  Routes.inside(widget.org.id, 'factures')),
-                        ),
-                      ),
-                    ],
-                  ),
 
                   const SizedBox(height: 24),
                   Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
@@ -433,12 +372,81 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Future<void> _push(String location) async {
     await context.push(location);
     if (mounted) await _refresh();
+  }
+
+  /// The farm's five: Accueil (this screen), Stock, Bandes, Factures,
+  /// and Plus. Stock, Bandes and Factures were tiles in the middle of the
+  /// page; they are on the bar now, where they are always in reach.
+  HomeNav _nav() {
+    final s = Strings.of(context);
+    final id = widget.org.id;
+    return HomeNav(
+      home: HomeDestination(
+        icon: Icons.agriculture_outlined,
+        selectedIcon: Icons.agriculture,
+        // Not "Aujourd'hui": that is already the heading of the day's list
+        // on this page, and one word twice on a screen reads as two places.
+        label: 'Accueil',
+        onTap: () {},
+      ),
+      primary: [
+        HomeDestination(
+          icon: Icons.inventory_2_outlined,
+          label: s.stock,
+          onTap: () => _push(Routes.inside(id, 'stock')),
+        ),
+        HomeDestination(
+          icon: Icons.pets_outlined,
+          label: s.flocks,
+          onTap: () => _push(Routes.inside(id, 'bandes')),
+        ),
+        if (widget.invoicing != null && widget.access.canSee('invoices'))
+          HomeDestination(
+            icon: Icons.receipt_long_outlined,
+            label: s.invoices,
+            onTap: () => _push(Routes.inside(id, 'factures')),
+          ),
+      ],
+      more: [
+        if (widget.access.canSee('credits'))
+          HomeDestination(
+            icon: Icons.handshake_outlined,
+            label: s.creditBook,
+            onTap: () => context.push(Routes.inside(id, 'credits')),
+          ),
+        if (widget.access.canSee('production'))
+          HomeDestination(
+            icon: Icons.precision_manufacturing_outlined,
+            label: s.production,
+            onTap: () => context.push(Routes.inside(id, 'production')),
+          ),
+        if (widget.capture != null &&
+            widget.capture!.isConfigured &&
+            widget.access.canSee('photos'))
+          HomeDestination(
+            icon: Icons.photo_library_outlined,
+            label: s.photos,
+            onTap: () => context.push(Routes.inside(id, 'photos')),
+          ),
+        if (widget.staff != null && widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.groups_outlined,
+            label: s.staffLabel,
+            onTap: () => context.push(Routes.inside(id, 'personnel')),
+          ),
+        HomeDestination(
+          icon: Icons.account_circle_outlined,
+          label: s.account,
+          onTap: () => context.push(Routes.inside(id, 'compte')),
+        ),
+      ],
+    );
   }
 }
 
@@ -626,67 +634,6 @@ class _StaleBanner extends StatelessWidget {
     );
   }
 }
-
-/// One of the square shortcuts under the day's figures.
-///
-/// These were six identical grey rectangles told apart only by a small icon
-/// and a smaller word, which on a cheap screen in daylight means reading all
-/// six. Each carries its own colour now, fixed by its position in the row, so
-/// the one you want is found by where it is and what colour it is before its
-/// label is read at all.
-class _NavCard extends StatelessWidget {
-  const _NavCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // The business's one accent on a stone tile, not a rotation of six
-    // colours: the tiles are told apart by their icon and their word.
-    final colour = theme.colorScheme.primary;
-
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: colour.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 24, color: colour),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EventTile extends StatelessWidget {
   const _EventTile({required this.event});
 

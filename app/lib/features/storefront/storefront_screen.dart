@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/capture/capture_repository.dart';
@@ -13,6 +14,7 @@ import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/motion.dart';
+import '../common/owned_controller.dart';
 import 'shop_skeleton.dart';
 import 'shop_style.dart';
 
@@ -216,14 +218,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       isScrollControlled: true,
       builder: (sheet) => Theme(
         data: ShopStyle.theme(sheet),
-        child: _OrderSheet(
+        child: OrderSheet(
           items: _items,
           basket: Map.of(_basket),
           currency: _shop?.currency ?? 'XOF',
           waveMerchant: _shop?.waveMerchant,
           onSubmit: _send,
           quote: (lat, lng) =>
-              widget.storefront.deliveryQuote(widget.slug, lat: lat, lng: lng),
+              widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
         ),
       ),
     );
@@ -261,6 +263,12 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         dropLng: dropLng,
       );
       return null;
+    } on PostgrestException catch (e) {
+      // A refusal the shop's rules made (069: beyond its reach) is said in
+      // the server's words; only a failure to reach the server is "network".
+      return e.code == 'P0001'
+          ? e.message
+          : "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
     } catch (_) {
       return "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
     } finally {
@@ -385,8 +393,9 @@ class _BasketBar extends StatelessWidget {
 /// The last step: what is in the basket, how it reaches the customer, and
 /// the button that sends it. Kept as one sheet so the thumb never leaves
 /// the page it was shopping on.
-class _OrderSheet extends StatefulWidget {
-  const _OrderSheet({
+class OrderSheet extends StatefulWidget {
+  const OrderSheet({
+    super.key,
     required this.items,
     required this.basket,
     required this.currency,
@@ -414,15 +423,16 @@ class _OrderSheet extends StatefulWidget {
     double? dropLng,
   }) onSubmit;
 
-  /// What a delivery to a pin would cost (061) — asked the moment the
-  /// customer pins their door, so the price is on the sheet before "Commander".
-  final Future<double?> Function(double lat, double lng) quote;
+  /// What a delivery to a pin would cost and whether the shop goes that far
+  /// (061, 069) — asked the moment the customer pins their door, so the
+  /// answer is on the sheet before "Commander".
+  final Future<DeliveryCheck?> Function(double lat, double lng) quote;
 
   @override
-  State<_OrderSheet> createState() => _OrderSheetState();
+  State<OrderSheet> createState() => _OrderSheetState();
 }
 
-class _OrderSheetState extends State<_OrderSheet> {
+class _OrderSheetState extends State<OrderSheet> {
   String _fulfilment = 'pickup';
   String _payment = 'cash';
 
@@ -437,6 +447,11 @@ class _OrderSheetState extends State<_OrderSheet> {
   double? _fee;
   bool _quoting = false;
   bool _feeKnown = false;
+
+  /// The door is beyond the shop's reach (069): no delivery to it.
+  bool _tooFar = false;
+  double? _distanceKm;
+  double? _maxKm;
   final _note = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
@@ -460,19 +475,23 @@ class _OrderSheetState extends State<_OrderSheet> {
       setState(() {
         _fee = null;
         _feeKnown = false;
+        _tooFar = false;
       });
       return;
     }
     setState(() => _quoting = true);
-    double? fee;
+    DeliveryCheck? check;
     try {
-      fee = await widget.quote(lat, lng);
+      check = await widget.quote(lat, lng);
     } catch (_) {
-      fee = null;
+      check = null;
     }
     if (!mounted) return;
     setState(() {
-      _fee = fee;
+      _fee = check?.fee;
+      _tooFar = check?.tooFar ?? false;
+      _distanceKm = check?.distanceKm;
+      _maxKm = check?.maxKm;
       _feeKnown = true;
       _quoting = false;
     });
@@ -519,33 +538,35 @@ class _OrderSheetState extends State<_OrderSheet> {
   /// A link out of Google Maps, for the customer marking a door they are
   /// not standing at. Short goo.gl links carry nothing; the message says so.
   Future<void> _pasteMapsLink() async {
-    final controller = TextEditingController();
+    // The dialog owns its field (OwnedController): disposed after the
+    // dialog has left the screen, not while it animates out.
     final text = await showDialog<String>(
       context: context,
       builder: (dialog) => Theme(
         data: ShopStyle.theme(dialog),
-        child: AlertDialog(
-          title: const Text('Lien Google Maps'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'https://www.google.com/maps/...@12.37,-1.52,17z',
+        child: OwnedController(
+          builder: (context, controller) => AlertDialog(
+            title: const Text('Lien Google Maps'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'https://www.google.com/maps/...@12.37,-1.52,17z',
+              ),
             ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Annuler')),
+              FilledButton(
+                  onPressed: () => Navigator.of(context).pop(controller.text),
+                  child: const Text('Utiliser')),
+            ],
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.of(dialog).pop(),
-                child: const Text('Annuler')),
-            FilledButton(
-                onPressed: () => Navigator.of(dialog).pop(controller.text),
-                child: const Text('Utiliser')),
-          ],
         ),
       ),
     );
-    controller.dispose();
     if (text == null || !mounted) return;
     final position = parseGoogleMapsLink(text);
     if (position == null) {
@@ -565,6 +586,10 @@ class _OrderSheetState extends State<_OrderSheet> {
   Future<void> _submit() async {
     if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
       setState(() => _error = 'Indiquez où livrer.');
+      return;
+    }
+    if (_fulfilment == 'delivery' && _tooFar) {
+      setState(() => _error = _tooFarSentence);
       return;
     }
     setState(() {
@@ -590,6 +615,16 @@ class _OrderSheetState extends State<_OrderSheet> {
       return;
     }
     Navigator.of(context).pop(true);
+  }
+
+  /// "Trop loin" said with its numbers, and the way out.
+  String get _tooFarSentence {
+    final km = _distanceKm == null ? '' : ' (${_distanceKm!.toStringAsFixed(1)} km';
+    final max = _maxKm == null
+        ? (km.isEmpty ? '' : ')')
+        : '${km.isEmpty ? ' (' : ', '}livraison jusqu\'à ${_maxKm!.toStringAsFixed(0)} km)';
+    return 'Cette boutique ne livre pas aussi loin$km$max. '
+        'Choisissez le retrait en boutique.';
   }
 
   @override
@@ -654,18 +689,31 @@ class _OrderSheetState extends State<_OrderSheet> {
                     Text(
                       !_feeKnown
                           ? 'épinglez votre porte pour le prix'
-                          : _fee == null
-                              ? 'à discuter avec la boutique'
-                              : money.format(_fee!),
+                          : _tooFar
+                              ? 'trop loin'
+                              : _fee == null
+                                  ? 'à discuter avec la boutique'
+                                  : money.format(_fee!),
                       style: TextStyle(
                           fontSize: 14,
-                          fontWeight: _fee == null
+                          fontWeight: _fee == null && !_tooFar
                               ? FontWeight.w400
                               : FontWeight.w600,
-                          color: _fee == null ? ShopStyle.mist : ShopStyle.ink),
+                          color: _tooFar
+                              ? Theme.of(context).colorScheme.error
+                              : _fee == null
+                                  ? ShopStyle.mist
+                                  : ShopStyle.ink),
                     ),
                 ],
               ),
+              if (_tooFar) ...[
+                const SizedBox(height: 4),
+                Text(_tooFarSentence,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.error)),
+              ],
               const SizedBox(height: 6),
             ],
             Row(
@@ -679,7 +727,9 @@ class _OrderSheetState extends State<_OrderSheet> {
                 ),
                 Text(
                     money.format(total +
-                        (_fulfilment == 'delivery' ? (_fee ?? 0) : 0)),
+                        (_fulfilment == 'delivery' && !_tooFar
+                            ? (_fee ?? 0)
+                            : 0)),
                     style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -774,6 +824,7 @@ class _OrderSheetState extends State<_OrderSheet> {
                         _dropLng = null;
                         _fee = null;
                         _feeKnown = false;
+                        _tooFar = false;
                       }),
                     ),
                   ],
@@ -806,7 +857,10 @@ class _OrderSheetState extends State<_OrderSheet> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _busy ? null : _submit,
+                onPressed:
+                    _busy || (_fulfilment == 'delivery' && _tooFar)
+                        ? null
+                        : _submit,
                 child: _busy
                     ? const SizedBox(
                         width: 18,
@@ -1361,3 +1415,4 @@ class _PhotoState extends State<_Photo> {
     );
   }
 }
+

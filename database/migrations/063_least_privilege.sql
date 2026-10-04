@@ -55,6 +55,7 @@ declare
         'storefront_photo_allowed',
         'search_products',
         'delivery_quote',
+        'delivery_check',      -- 069: the basket's "how far, how far may it go"
         'invitation_preview'
     ];
     -- The functions RLS itself calls. A policy expression runs as the

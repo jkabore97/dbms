@@ -115,7 +115,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
           ? null
           : FloatingActionButton.extended(
         onPressed: _create,
-        icon: const Icon(Icons.soup_kitchen_outlined),
+        icon: const Icon(Icons.precision_manufacturing_outlined),
         label: Text(strings.newProduction),
       ),
       body: _loading
@@ -622,7 +622,7 @@ class _ProductPickerState extends State<_ProductPicker> {
                         return ListTile(
                           title: Text(p.name),
                           trailing: p.isIngredient
-                              ? const Icon(Icons.soup_kitchen_outlined,
+                              ? const Icon(Icons.precision_manufacturing_outlined,
                                   size: 18)
                               : null,
                           onTap: () => Navigator.pop(context, p),

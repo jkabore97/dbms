@@ -39,7 +39,7 @@ class _Feature {
 const _features = [
   _Feature('products', Icons.inventory_2_outlined, 'Articles',
       'Les prix, les noms, les entrées de stock'),
-  _Feature('production', Icons.soup_kitchen_outlined, 'Production',
+  _Feature('production', Icons.precision_manufacturing_outlined, 'Production',
       'Transformer des ingrédients en produits'),
   _Feature('credits', Icons.handshake_outlined, 'Carnet de crédit',
       'Vendre à crédit et encaisser les remboursements'),

@@ -6,6 +6,7 @@ import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
+import '../common/owned_controller.dart';
 
 /// Undoing a transaction the honest way.
 ///
@@ -73,10 +74,13 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
     required String detail,
     required Future<void> Function(String? reason) run,
   }) async {
-    final reason = TextEditingController();
-    final ok = await showDialog<bool>(
+    // Null for "Annuler", the reason (maybe empty) for "Corriger". The
+    // dialog owns its field (OwnedController): it is read before the pop,
+    // and disposed after the dialog has left the screen.
+    final reason = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => OwnedController(
+        builder: (ctx, controller) => AlertDialog(
         title: Text(title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -91,7 +95,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: reason,
+              controller: controller,
               decoration: const InputDecoration(
                 labelText: 'Raison (facultatif)',
                 hintText: 'ex. données de test',
@@ -103,21 +107,21 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Annuler'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(ctx, controller.text),
             child: const Text('Corriger'),
           ),
         ],
       ),
+      ),
     );
-    reason.dispose();
-    if (ok != true) return;
+    if (reason == null) return;
 
     try {
-      await run(reason.text);
+      await run(reason);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Correction enregistrée.')),

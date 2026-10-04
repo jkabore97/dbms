@@ -138,6 +138,28 @@ class StorefrontRepository {
     return _num(v);
   }
 
+  /// The basket's question about a pinned door, in numbers (069): the fee
+  /// (null when none can be fixed), how far the door is, how far this shop
+  /// delivers, and whether it is too far. Null when the shop has no pin.
+  /// A database from before 069 has no delivery_check(); the old quote then
+  /// answers, with no distance and never "too far".
+  Future<DeliveryCheck?> deliveryCheck(String slug,
+      {required double lat, required double lng}) async {
+    try {
+      final rows = await _requireClient().rpc('delivery_check', params: {
+        'p_slug': slug,
+        'p_lat': lat,
+        'p_lng': lng,
+      }) as List<dynamic>;
+      if (rows.isEmpty) return null;
+      return DeliveryCheck.fromRow(Map<String, dynamic>.from(rows.first as Map));
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      final fee = await deliveryQuote(slug, lat: lat, lng: lng);
+      return DeliveryCheck(fee: fee);
+    }
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.
@@ -318,6 +340,33 @@ double? _num(Object? v) =>
 
 /// An article à la une (054): one of the paid spots on the welcome page,
 /// with the shop it belongs to so a tap can open that shop's window.
+/// What delivery_check() says about one pinned door (069).
+class DeliveryCheck {
+  const DeliveryCheck({
+    this.fee,
+    this.distanceKm,
+    this.maxKm,
+    this.tooFar = false,
+  });
+
+  factory DeliveryCheck.fromRow(Map<String, dynamic> row) => DeliveryCheck(
+        fee: _num(row['fee']),
+        distanceKm: _num(row['distance_km']),
+        maxKm: _num(row['max_km']),
+        tooFar: row['too_far'] == true,
+      );
+
+  /// The price of the run; null when none can be fixed ("à discuter").
+  final double? fee;
+  final double? distanceKm;
+
+  /// How far this shop delivers; null on a database before 069.
+  final double? maxKm;
+
+  /// Beyond the shop's reach: the order would be refused.
+  final bool tooFar;
+}
+
 class FeaturedItem {
   const FeaturedItem({
     required this.id,

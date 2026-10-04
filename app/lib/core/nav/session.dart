@@ -479,6 +479,123 @@ class SessionController extends ChangeNotifier {
     }
   }
 
+  // ----------------------------------------------------------------
+  // Keeping an open app current
+  // ----------------------------------------------------------------
+
+  /// The audit's finding: what the server says about this person — their
+  /// businesses, role in each, plan, team access, suspension — was read at
+  /// launch, sign-in and unlock, and never again. An Android app stays open
+  /// for days, so a Pro upgrade, a role change, a new business or an owner's
+  /// new dial reached that phone only when it was closed and reopened
+  /// (#110 fixed the one case of the waiting screen; this is all the rest).
+  ///
+  /// [refresh] asks again, quietly. Called when the app comes back to the
+  /// foreground and every [refreshEvery] while it is open (KajApp). It never
+  /// shows a spinner and never fails loudly: no signal leaves everything as
+  /// it is. It emits only when the answer changed, and moves the person only
+  /// when they must move — the business they had open is no longer theirs
+  /// (to the picker), or they had none and now have one (the usual resolve).
+  static const refreshEvery = Duration(minutes: 5);
+
+  bool _refreshing = false;
+  DateTime? _lastRefresh;
+
+  /// True while a refresh is in flight (tests, and nothing else).
+  @visibleForTesting
+  bool get refreshing => _refreshing;
+
+  Future<void> refresh({bool force = false}) async {
+    if (_refreshing || _disposed || !auth.hasLiveSession) return;
+    if (!_settled) return;
+    // A burst of resumes (switching apps back and forth) asks once.
+    final last = _lastRefresh;
+    if (!force &&
+        last != null &&
+        DateTime.now().difference(last) < const Duration(seconds: 30)) {
+      return;
+    }
+    _refreshing = true;
+    try {
+      var platformAdmin = _isPlatformAdmin;
+      try {
+        platformAdmin = await admin.isPlatformAdmin().timeout(resolveTimeout);
+      } catch (_) {}
+      try {
+        await admin.claimMyInvitations().timeout(resolveTimeout);
+      } catch (_) {}
+      final List<OrgSummary> orgs;
+      try {
+        orgs = await auth.fetchOrgs().timeout(resolveTimeout);
+      } catch (_) {
+        return; // No signal is not news: everything stays as it is.
+      }
+      _lastRefresh = DateTime.now();
+      // Signed out, locked or re-resolving while we asked: theirs to decide.
+      if (_disposed || !_settled) return;
+      try {
+        await db.cacheOrgs(orgs);
+      } catch (_) {}
+
+      if (_phase == SessionPhase.noOrg) {
+        // Nothing open, and now something to open: the normal resolve picks
+        // where to land, exactly as at launch.
+        if (orgs.isNotEmpty) await resolveOrgs();
+        return;
+      }
+
+      final changed = !_sameOrgs(_orgs, orgs) ||
+          platformAdmin != _isPlatformAdmin ||
+          _orgsFromCache;
+      if (changed) {
+        _orgs = orgs;
+        _isPlatformAdmin = platformAdmin;
+        _orgsFromCache = false;
+        _notice = null;
+        // A business no longer in the list takes its dial with it.
+        _access.removeWhere((id, _) => orgById(id) == null);
+        if (orgs.isEmpty) {
+          _lastOrgId = null;
+          _phase = SessionPhase.noOrg;
+        } else if (_phase == SessionPhase.ready && orgById(_lastOrgId) == null) {
+          // The open business is no longer theirs.
+          _lastOrgId = orgs.length == 1 ? orgs.first.id : null;
+          _phase = orgs.length == 1 ? SessionPhase.ready : SessionPhase.picking;
+          unawaited(db.writePref(_lastOrgKey, _lastOrgId));
+        }
+        _emit();
+      }
+
+      // The open business's dial and plan lock, re-read either way: an owner
+      // may have changed the dial without the org list changing at all.
+      // _loadAccess emits only if what screens see would change.
+      final open = orgById(_lastOrgId);
+      if (open != null && _phase == SessionPhase.ready) {
+        _termsLoaded = false;
+        await _loadAccess(open);
+      }
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  /// The phases a refresh may touch: somebody inside the app, not at a gate
+  /// and not mid-resolve.
+  bool get _settled =>
+      _phase == SessionPhase.ready ||
+      _phase == SessionPhase.picking ||
+      _phase == SessionPhase.noOrg;
+
+  static bool _sameOrgs(List<OrgSummary> a, List<OrgSummary> b) {
+    if (a.length != b.length) return false;
+    final byId = {for (final o in a) o.id: o.toCache()};
+    for (final o in b) {
+      final before = byId[o.id];
+      if (before == null || !mapEquals(before, o.toCache())) return false;
+    }
+    return true;
+  }
+
   /// Which business is open. Called by the router when a `/o/:orgId` route is
   /// entered, so the URL is what decides — not a tap that happened earlier.
   void openOrg(String orgId) {

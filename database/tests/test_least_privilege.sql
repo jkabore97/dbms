@@ -43,7 +43,8 @@ begin
     select count(*) into v from search_products('savon', null, null);
     perform storefront('nulle-part');
     perform delivery_quote('nulle-part', 12.37, -1.52);
-    raise notice 'PASS: directory, search, storefront and quote answer a stranger';
+    select count(*) into v from delivery_check('nulle-part', 12.37, -1.52);
+    raise notice 'PASS: directory, search, storefront, quote and reach answer a stranger';
 end $$;
 rollback;
 
@@ -100,7 +101,8 @@ begin
        and p.proname not in ('storefront', 'storefront_products', 'storefront_featured',
                              'storefront_directory', 'storefront_open',
                              'storefront_photo_allowed', 'search_products',
-                             'delivery_quote', 'invitation_preview')
+                             'delivery_quote', 'delivery_check',
+                             'invitation_preview')
        and p.proname not in (select fn from helpers)
        and has_function_privilege('anon', p.oid, 'execute');
     if v_open is not null then
