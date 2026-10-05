@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:flutter/services.dart';
@@ -560,7 +561,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     )
                   else
                     ..._members.map(
-                      (m) => Card(
+                      (m) => KajCard(
                         elevation: 0,
                         color: theme.colorScheme.surfaceContainerHighest,
                         margin: const EdgeInsets.only(bottom: 8),
@@ -599,7 +600,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     )
                   else
                     ...open.map(
-                      (i) => Card(
+                      (i) => KajCard(
                         elevation: 0,
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(

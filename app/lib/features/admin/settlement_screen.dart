@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
@@ -155,7 +156,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
           const SizedBox(height: 12),
           if (_loading) const LinearProgressIndicator(minHeight: 2),
           if (_error != null)
-            Card(
+            KajCard(
               color: theme.colorScheme.errorContainer,
               child: ListTile(
                 leading: const Icon(Icons.error_outline),
@@ -165,7 +166,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
               ),
             ),
           if (!_loading && _error == null) ...[
-            Card(
+            KajCard(
               elevation: 0,
               color: theme.colorScheme.primaryContainer,
               child: ListTile(
@@ -184,7 +185,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                 child: Text('Aucune livraison ce mois-ci.'),
               ),
             for (final r in _rows)
-              Card(
+              KajCard(
                 elevation: 0,
                 margin: const EdgeInsets.only(bottom: 8),
                 color: theme.colorScheme.surfaceContainerHighest,

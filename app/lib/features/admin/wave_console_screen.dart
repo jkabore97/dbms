@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/errors.dart';
@@ -87,7 +88,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 if (!_pay!.compiledIn)
-                  Card(
+                  KajCard(
                     color: theme.colorScheme.tertiaryContainer,
                     child: const ListTile(
                       leading: Icon(Icons.info_outline),
@@ -146,7 +147,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                     child: Text('Aucun paiement Wave pour le moment.'),
                   ),
                 for (final r in _rows)
-                  Card(
+                  KajCard(
                     color: r.payoutStatus == 'failed'
                         ? theme.colorScheme.errorContainer
                         : null,

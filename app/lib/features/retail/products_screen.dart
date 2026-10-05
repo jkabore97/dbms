@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../core/theme/kaj_card.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -260,7 +261,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   VoidCallback? _editGesture(Product p) =>
       widget.access.canEdit('products') ? () => _edit(p) : null;
 
-  Widget _row(Product p, ThemeData theme) => Card(
+  Widget _row(Product p, ThemeData theme) => KajCard(
         key: ValueKey('product-row-${p.id}'),
         elevation: 0,
         color: theme.colorScheme.surfaceContainerHighest,
@@ -290,7 +291,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
       );
 
-  Widget _card(Product p, ThemeData theme) => Card(
+  Widget _card(Product p, ThemeData theme) => KajCard(
         key: ValueKey('product-card-${p.id}'),
         elevation: 0,
         clipBehavior: Clip.antiAlias,

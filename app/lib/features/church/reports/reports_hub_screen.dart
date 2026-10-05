@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/kaj_card.dart';
 import '../../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
@@ -109,7 +110,7 @@ class _ReportTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return KajCard(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       color: Theme.of(context).colorScheme.surfaceContainerHighest,

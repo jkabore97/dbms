@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
@@ -134,7 +135,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                       children: [
                         for (final r in _runs)
-                          Card(
+                          KajCard(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                               child: Column(

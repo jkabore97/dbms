@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -183,7 +184,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                             ),
                           ),
                           for (final row in _rows)
-                            Card(
+                            KajCard(
                               child: ListTile(
                                 title: Text(row.name,
                                     style: const TextStyle(
@@ -343,7 +344,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                       ),
                     ),
                     for (final debt in _rows)
-                      Card(
+                      KajCard(
                         child: ListTile(
                           title: Text(debt.label),
                           subtitle: Text(

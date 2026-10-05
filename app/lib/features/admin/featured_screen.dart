@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -112,7 +113,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
       ),
       const SizedBox(height: 8),
       for (final a in _asks)
-        Card(
+        KajCard(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
             child: Column(
@@ -220,7 +221,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                         ),
                         const SizedBox(height: 12),
                         for (final row in _rows)
-                          Card(
+                          KajCard(
                             child: SwitchListTile(
                               value: row.live,
                               onChanged: _busyId != null

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
@@ -121,7 +122,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
               emptyMessage: 'Rien enregistré sur cette période.',
               child: ListView(
                 children: [
-                  Card(
+                  KajCard(
                     elevation: 0,
                     margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     color: theme.colorScheme.surfaceContainerHighest,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
@@ -131,7 +132,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (_, i) {
                         final t = _trainers[i];
-                        return Card(
+                        return KajCard(
                           elevation: 0,
                           color: theme.colorScheme.surfaceContainerHighest,
                           child: ListTile(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -86,7 +87,7 @@ class _SpotsCardState extends State<SpotsCard> {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
-    return Card(
+    return KajCard(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -542,7 +543,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       ),
       const SizedBox(height: 8),
       if (_terms.hasWave)
-        Card(
+        KajCard(
           elevation: 0,
           color: theme.colorScheme.surfaceContainerHighest,
           child: ListTile(
@@ -601,7 +602,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   List<Widget> _doneView(ThemeData theme) {
     final free = _asked?.status == 'approved';
     return [
-      Card(
+      KajCard(
         elevation: 0,
         color: theme.colorScheme.primaryContainer,
         child: ListTile(

@@ -17,6 +17,7 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
 import '../../core/theme/kaj_theme.dart';
+import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
 import '../home/home_nav.dart';
@@ -787,15 +788,19 @@ class _Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: gradient == null ? colour : null,
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(16),
+    // Each panel of the day rises as it comes into view, as the street's
+    // blocks do.
+    return ScrollReveal(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: gradient == null ? colour : null,
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }

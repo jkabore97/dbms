@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -294,7 +295,7 @@ class _DocumentTile extends StatelessWidget {
     final theme = Theme.of(context);
     final when = document.capturedAt;
 
-    return Card(
+    return KajCard(
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         leading: SizedBox(

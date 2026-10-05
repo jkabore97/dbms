@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 
 import '../../l10n/strings.dart';
@@ -471,7 +472,7 @@ class _TodayCard extends StatelessWidget {
     // the same wash measures 4.99 or better.
     final on = KajTheme.of(context).ink;
 
-    return Card(
+    return KajCard(
       elevation: 0,
       child: Container(
         decoration: BoxDecoration(gradient: kajGradient(KajTheme.of(context))),
@@ -751,7 +752,7 @@ class _FarmShapeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
+    return KajCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

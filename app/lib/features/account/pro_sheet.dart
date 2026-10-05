@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -206,7 +207,7 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
                   ),
                 const SizedBox(height: 8),
                 if (terms.hasWave)
-                  Card(
+                  KajCard(
                     elevation: 0,
                     color: theme.colorScheme.surfaceContainerHighest,
                     child: ListTile(
@@ -234,7 +235,7 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
                   ),
                 const SizedBox(height: 16),
                 if (_sent)
-                  Card(
+                  KajCard(
                     elevation: 0,
                     color: theme.colorScheme.primaryContainer,
                     child: const ListTile(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/nav/url_tabs.dart';
 import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
@@ -194,7 +195,7 @@ class _LivestockScreenState extends State<LivestockScreen>
           if (_loading) const LinearProgressIndicator(),
           if (_error != null) _errorBox(theme),
           for (final herd in _herds)
-            Card(
+            KajCard(
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -294,7 +295,7 @@ class _LivestockScreenState extends State<LivestockScreen>
           if (_loading) const LinearProgressIndicator(),
           if (_error != null) _errorBox(theme),
           for (final cycle in _crops)
-            Card(
+            KajCard(
               margin: const EdgeInsets.only(bottom: 12),
               // A crop that should have been lifted a fortnight ago is the
               // one thing on this screen worth interrupting somebody for.

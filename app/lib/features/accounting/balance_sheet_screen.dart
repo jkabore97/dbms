@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/accounting/accounting_repository.dart';
@@ -105,7 +106,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
         emptyMessage: 'Rien enregistré pour le moment.',
         child: ListView(
           children: [
-            Card(
+            KajCard(
               elevation: 0,
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               color: balanced

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -144,7 +145,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 if (_error != null)
-                  Card(
+                  KajCard(
                     color: theme.colorScheme.errorContainer,
                     child: ListTile(
                       leading: const Icon(Icons.error_outline),
@@ -170,7 +171,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                     child: Text('Aucune demande en attente.'),
                   ),
                 for (final r in _requests)
-                  Card(
+                  KajCard(
                     elevation: 0,
                     margin: const EdgeInsets.only(bottom: 10),
                     color: theme.colorScheme.surfaceContainerHighest,

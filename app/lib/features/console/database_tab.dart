@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_repository.dart';
@@ -119,7 +120,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          KajCard(
             elevation: 0,
             color: theme.colorScheme.primaryContainer,
             child: Padding(
@@ -148,7 +149,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
           ),
           const SizedBox(height: 8),
           for (final table in _tables)
-            Card(
+            KajCard(
               elevation: 0,
               margin: const EdgeInsets.only(top: 8),
               color: theme.colorScheme.surfaceContainerHighest,

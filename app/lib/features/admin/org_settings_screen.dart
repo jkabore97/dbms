@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -1617,7 +1618,7 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return KajCard(
       elevation: 0,
       margin: EdgeInsets.zero,
       color: theme.colorScheme.surfaceContainerHighest,

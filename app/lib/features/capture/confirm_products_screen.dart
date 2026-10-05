@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:uuid/uuid.dart';
 
@@ -264,7 +265,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
   }
 
   Widget _lineCard(_Row row, ThemeData theme) {
-    return Card(
+    return KajCard(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 16, 16),

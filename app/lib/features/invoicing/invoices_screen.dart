@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -150,7 +151,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                       // sent: a document with no address and no tax number is
                       // one the customer's accountant hands straight back.
                       if (widget.org.isAdmin && _billing.isEmpty)
-                        Card(
+                        KajCard(
                           color: theme.colorScheme.tertiaryContainer,
                           child: ListTile(
                             leading: const Icon(Icons.info_outline),
@@ -166,7 +167,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
                       if (owed > 0) ...[
                         const SizedBox(height: 8),
-                        Card(
+                        KajCard(
                           color: theme.colorScheme.primaryContainer,
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -261,7 +262,7 @@ class _InvoiceTile extends StatelessWidget {
       _ => (theme.colorScheme.primary, 'À encaisser'),
     };
 
-    return Card(
+    return KajCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         onTap: onTap,

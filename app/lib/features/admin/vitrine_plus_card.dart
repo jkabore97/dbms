@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -193,7 +194,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         ),
         const SizedBox(height: 10),
         if (locked)
-          Card(
+          KajCard(
             elevation: 0,
             color: theme.colorScheme.surfaceContainerHighest,
             child: ListTile(

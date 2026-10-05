@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:go_router/go_router.dart';
 
@@ -99,7 +100,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                       children: [
                         for (final t in _rows)
-                          Card(
+                          KajCard(
                             child: ListTile(
                               title: Text(t.name,
                                   style: const TextStyle(
@@ -234,7 +235,7 @@ class _TontineScreenState extends State<TontineScreen> {
                             style: theme.textTheme.titleLarge),
                       ),
                     for (final m in _members)
-                      Card(
+                      KajCard(
                         color: m.isTaker
                             ? theme.colorScheme.primaryContainer
                             : null,

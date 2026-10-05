@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 
 import '../../l10n/strings.dart';
@@ -436,7 +437,7 @@ class _TodayCard extends StatelessWidget {
     // form. The palette's ink on it, not white: the wash is pale by design
     // and white measured well under the readable threshold on it.
     final on = KajTheme.of(context).ink;
-    return Card(
+    return KajCard(
       elevation: 0,
       child: Container(
         decoration: BoxDecoration(gradient: kajGradient(KajTheme.of(context))),
