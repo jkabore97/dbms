@@ -93,6 +93,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   double _lossesAvoided = 0;
   int _photosWaiting = 0;
 
+  /// Sales kept on this phone for want of signal (package 7).
+  int _salesWaiting = 0;
+
   /// The vitrine's checklist (070), for an owner whose window is open and
   /// unfinished: the nudge card. Null hides it.
   VitrineChecklist? _vitrine;
@@ -196,6 +199,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   Future<void> _load() async {
     // Read before the first await: a context is not for after a gap.
     final scopeAdmin = AppScope.read(context)?.admin;
+    final sync = AppScope.read(context)?.sync;
     final retail = widget.retail;
     if (retail == null || !retail.isConfigured) {
       setState(() {
@@ -209,6 +213,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       _loading = true;
       _error = null;
     });
+
+    // The phone's own count first: it answers with no signal at all, which
+    // is exactly when it matters. A drain is tried on the way.
+    try {
+      await sync?.syncNow();
+      final waiting = await retail.pendingSales(widget.org.id);
+      if (mounted) setState(() => _salesWaiting = waiting);
+    } catch (_) {}
 
     try {
       final day = await retail.day(widget.org.id);
@@ -412,6 +424,32 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             // Pictures this phone is still holding. Not an error: taking one
             // with no signal is the module working, and calling it a failure
             // would teach her to stop taking them exactly when they matter.
+            if (_salesWaiting > 0) ...[
+              _Panel(
+                colour: theme.colorScheme.secondaryContainer,
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_upload_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$_salesWaiting vente${_salesWaiting > 1 ? 's' : ''} '
+                        "en attente d'envoi. Elle${_salesWaiting > 1 ? 's' : ''} "
+                        'partira${_salesWaiting > 1 ? 'nt' : ''} dès le retour '
+                        'du réseau ; le total du jour la${_salesWaiting > 1 ? 's' : ''} '
+                        'comptera alors.',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _load,
+                      child: Text(Strings.of(context).send),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             if (_photosWaiting > 0) ...[
               _Panel(
                 colour: theme.colorScheme.secondaryContainer,

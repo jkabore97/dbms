@@ -50,10 +50,21 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   /// The clocks move on their own: a quiet re-read every minute.
   Timer? _poll;
 
+  /// A new or moved order arrives as it happens (074).
+  void Function()? _unwatch;
+  Timer? _settle;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _unwatch = widget.retail.watchOrders(widget.org.id, () {
+      // A burst of changes (the order, then its event) is one re-read.
+      _settle?.cancel();
+      _settle = Timer(const Duration(milliseconds: 600), () {
+        if (mounted && _busyId == null) _load(silent: true);
+      });
+    });
     _poll = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted && !_loading && _busyId == null) _load(silent: true);
     });
@@ -62,6 +73,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   @override
   void dispose() {
     _poll?.cancel();
+    _settle?.cancel();
+    _unwatch?.call();
     super.dispose();
   }
 

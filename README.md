@@ -452,6 +452,30 @@ the toggle without a `PUSH_URL`, and the Worker answers a wrong secret with
 401. Android with the app closed needs FCM (a Firebase project) and is not
 covered here.
 
+### What only the owner can switch on
+
+Three things the code is ready for and that need the owner's own accounts.
+None is pasted anywhere but GitHub's secrets page.
+
+1. **Crash reports** — create a Sentry project (Flutter), copy its DSN into
+   the repository variable `SENTRY_DSN`, re-run *Deploy to Cloudflare*.
+   Five minutes; the app then reports crashes and slow screens.
+2. **The Play Store** — make the upload key once (`keytool -genkey -v
+   -keystore kaj-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias
+   kaj`), keep the file and both passwords somewhere safe, and set the four
+   secrets `KAJ_KEYSTORE_BASE64` (`base64 -w0 kaj-upload.jks`),
+   `KAJ_KEYSTORE_PASSWORD`, `KAJ_KEY_ALIAS` (`kaj`) and `KAJ_KEY_PASSWORD`
+   ("Signing the Android app" above). The next *build-android* run produces
+   a release-signed `.aab`; upload it in the Play Console to the **internal
+   testing** track first (one-time 25 USD developer account, store listing,
+   privacy policy URL — the site's `/confidentialite` page).
+3. **Alerts on a closed Android app** — create a Firebase project, add an
+   Android app with the package name `bf.kaj.app`, and
+   send me `google-services.json` through a repository secret
+   (`GOOGLE_SERVICES_JSON`, base64) — not in chat. Wiring Firebase Cloud
+   Messaging into the app and the push Worker is then a code change on our
+   side; web push already works without it.
+
 ### The live site
 
 The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`
@@ -581,17 +605,27 @@ there would let any page a signed-in person opens read their photographs.
 
 ## Keeping the live database up to date
 
-Migrations are applied to Supabase by hand — nothing deploys them. The app and
-the database therefore version separately, and the app is the one that moves
-first: a deploy can ship screens calling functions the database does not have
-yet. That failure looks like this on a phone, and it is not a bug in the app:
+**By CI, once one secret is set.** The *Apply migrations* workflow
+(`.github/workflows/migrate.yml`) runs `scripts/apply-migrations.sh` on every
+push to `main` that touches `database/migrations/`: each migration the live
+database has not had runs in its own transaction, and lands with its row in
+`kaj_migrations` or not at all. It stays dormant — green, with a notice —
+until the repository secret `SUPABASE_DB_URL` exists (Supabase → Project
+Settings → Database → Connection string → URI, session pooler, password
+filled in). The live ledger is already seeded through the last migration
+applied by hand, so the first run applies only what is new.
+
+Until then, migrations are applied by hand, and the app and the database
+version separately. The app is the one that moves first: a deploy can ship
+screens calling functions the database does not have yet. That failure looks
+like this on a phone, and it is not a bug in the app:
 
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `070` up to date, paste
-`database/apply_006_to_073.sql` into the Supabase SQL editor and run it once.
-It is `006` through `070` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `074` up to date, paste
+`database/apply_006_to_074.sql` into the Supabase SQL editor and run it once.
+It is `006` through `074` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

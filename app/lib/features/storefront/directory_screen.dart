@@ -963,6 +963,9 @@ class _ShopTile extends StatelessWidget {
         second,
         if (distance != null) 'à $distance',
         if (sponsored) 'sponsorisé',
+        // What the square shows a sighted shopper (070), said too.
+        if (previews.isNotEmpty)
+          'vend ${previews.map((p) => p.name).join(', ')}',
       ].join(', '),
       hint: 'Ouvrir la vitrine',
       onTap: onOpen,

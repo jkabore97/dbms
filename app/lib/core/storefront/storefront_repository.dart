@@ -107,6 +107,29 @@ class StorefrontRepository {
     }
   }
 
+  /// Calls [onChange] whenever one of this shopper's orders moves (074).
+  /// Returns the way to stop listening; a no-op when signed out.
+  void Function() watchMyOrders(void Function() onChange) {
+    final client = _client;
+    final me = client?.auth.currentUser?.id;
+    if (client == null || me == null) return () {};
+    final channel = client
+        .channel('my-orders-$me')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'customer_id',
+            value: me,
+          ),
+          callback: (_) => onChange(),
+        )
+        .subscribe();
+    return () => client.removeChannel(channel);
+  }
+
   /// Withdraws an order that the shop has not yet answered.
   Future<void> cancelOrder(String orderId) async {
     await _requireClient()

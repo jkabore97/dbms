@@ -109,6 +109,11 @@ class SyncService {
               'p_reason': payload['p_reason'],
             });
             await _db.markSynced(clientUuid);
+          } else if (action == 'record_sale') {
+            // The till's queued sale (package 7): record_sale takes its
+            // seller from the token, not from a parameter.
+            await _post(action, payload);
+            await _db.markSynced(clientUuid);
           } else {
             final serverId =
                 await _post(action, {...payload, 'p_recorded_by': userId});
