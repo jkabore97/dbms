@@ -18,6 +18,7 @@ import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
+import 'package:kaj_app/features/account/security_screen.dart';
 import 'package:kaj_app/features/account/two_step_screen.dart';
 import 'package:kaj_app/main.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -82,6 +83,16 @@ class _Step extends TwoStep {
   bool logged = false;
   final codes = <String>[];
 
+  /// The platform's switch (078), and what Sécurité set it to.
+  bool on = false;
+  final switched = <bool>[];
+
+  @override
+  Future<void> setRequired(bool value) async {
+    switched.add(value);
+    on = value;
+  }
+
   @override
   Future<TwoStepStatus> status() async {
     if (fails) throw Exception('no signal');
@@ -89,6 +100,7 @@ class _Step extends TwoStep {
       required: required,
       enrolled: enrolled,
       passed: passed,
+      on: on,
     );
   }
 
@@ -275,6 +287,57 @@ void main() {
       await tester.pumpAndSettle();
       expect(passed, 1);
       expect(step.logged, isFalse, reason: 'only enrolling is an event');
+    });
+  });
+
+  group('the switch in Sécurité', () {
+    Future<void> pumpSecurity(
+      WidgetTester tester,
+      _Step step, {
+      required bool admin,
+    }) async {
+      tester.view.physicalSize = const Size(1080, 3200);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SecurityScreen(twoStep: step, platformAdmin: admin),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('off by default; switching it on asks first', (tester) async {
+      final step = _Step(required: false);
+      await pumpSecurity(tester, step, admin: true);
+
+      final tile = find.byKey(const Key('two-step-switch'));
+      expect(tile, findsOneWidget);
+      expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+      expect(find.textContaining('Désactivée'), findsOneWidget);
+
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+      expect(step.switched, isEmpty, reason: 'cancelled: nothing changes');
+
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Activer'));
+      await tester.pumpAndSettle();
+      expect(step.switched, [true]);
+      expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+
+      // Off again: no dialog, straight through.
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(step.switched, [true, false]);
+    });
+
+    testWidgets('only the platform admin sees it', (tester) async {
+      await pumpSecurity(tester, _Step(required: false), admin: false);
+      expect(find.byKey(const Key('two-step-switch')), findsNothing);
     });
   });
 

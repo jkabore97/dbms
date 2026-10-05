@@ -1,8 +1,10 @@
 -- ============================================================
--- test_two_step.sql — a platform admin passes two steps (077).
+-- test_two_step.sql — a platform admin passes two steps (077, 078).
 -- Phone block 48.
 --
--- The claims: the gate lets the street, the worker and an ordinary
+-- The claims: off by default (078) — the admin goes through on the
+-- password and the device code alone, until the platform switches it on;
+-- then the gate lets the street, the worker and an ordinary
 -- account through untouched; it refuses a platform admin below aal2
 -- everywhere except my_two_step(), and lets them through at aal2;
 -- my_two_step() says what to ask; the street can run the hook.
@@ -25,6 +27,7 @@ grant usage on schema public to authenticated, anon;
 -- grants skipped them. On Supabase they exist first; apply 077 again (it is
 -- idempotent) so what is checked is what it grants.
 \ir ../migrations/077_two_step.sql
+\ir ../migrations/078_two_step_optional.sql
 
 insert into auth.users (id, phone, raw_user_meta_data) values
     (:admin,  '+22648000001', '{"full_name": "Plateforme"}'),
@@ -54,6 +57,25 @@ end $$;
 rollback;
 
 \echo ''
+\echo '--- TEST 1b: switched off (the default), the admin is not stopped ---'
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '48484848-0000-0000-0000-000000000001';
+set local "request.jwt.claims" = '{"aal": "aal1"}';
+set local "request.path" = '/rpc/platform_wave_payments';
+select two_step_gate();
+do $$ begin
+    if my_two_step() <> '{"required": false, "enrolled": false, "passed": false, "on": false}'::jsonb then
+        raise exception 'FAIL: switched off, my_two_step says %', my_two_step();
+    end if;
+    raise notice 'PASS: off by default — password and device code are enough';
+end $$;
+rollback;
+
+-- From here on the platform has switched it on.
+update platform_settings set value = 'true' where key = 'admin_two_step';
+
+\echo ''
 \echo '--- TEST 2: an admin below aal2 is refused, but may ask what to do ---'
 begin;
 set local role authenticated;
@@ -80,7 +102,7 @@ select two_step_gate();
 do $$
 declare s jsonb := my_two_step();
 begin
-    if s <> '{"required": true, "enrolled": false, "passed": false}'::jsonb then
+    if s <> '{"required": true, "enrolled": false, "passed": false, "on": true}'::jsonb then
         raise exception 'FAIL: my_two_step says %', s;
     end if;
     raise notice 'PASS: refused on tables and functions; my_two_step answers: enrol';
@@ -95,7 +117,7 @@ set local role authenticated;
 set local "request.jwt.claim.sub" = '48484848-0000-0000-0000-000000000001';
 set local "request.jwt.claims" = '{"aal": "aal1"}';
 do $$ begin
-    if my_two_step() <> '{"required": true, "enrolled": true, "passed": false}'::jsonb then
+    if my_two_step() <> '{"required": true, "enrolled": true, "passed": false, "on": true}'::jsonb then
         raise exception 'FAIL: an enrolled admin is not asked for the code';
     end if;
 end $$;
@@ -123,6 +145,8 @@ do $$ begin
     end if;
     raise notice 'PASS: anon and authenticated run the gate; my_two_step is closed to anon';
 end $$;
+
+update platform_settings set value = 'false' where key = 'admin_two_step';
 
 \echo ''
 \echo 'test_two_step: all passed'

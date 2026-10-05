@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/auth/two_step.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/security/security_repository.dart';
@@ -14,11 +15,19 @@ import '../../core/security/security_settings.dart';
 /// day's money hidden at the counter), the password and the places the
 /// account is signed in, and the account's recent security history.
 class SecurityScreen extends StatefulWidget {
-  const SecurityScreen({super.key, this.settings, this.api});
+  const SecurityScreen({
+    super.key,
+    this.settings,
+    this.api,
+    this.twoStep,
+    this.platformAdmin,
+  });
 
   /// Taken from the app scope when not given (tests give them).
   final SecuritySettings? settings;
   final SecurityRepository? api;
+  final TwoStep? twoStep;
+  final bool? platformAdmin;
 
   @override
   State<SecurityScreen> createState() => _SecurityScreenState();
@@ -29,6 +38,15 @@ class _SecurityScreenState extends State<SecurityScreen> {
       widget.settings ?? AppScope.read(context)?.security;
   late final SecurityRepository? _api =
       widget.api ?? AppScope.read(context)?.securityApi;
+  late final TwoStep? _twoStep =
+      widget.twoStep ?? AppScope.read(context)?.session.twoStep;
+  late final bool _platformAdmin =
+      widget.platformAdmin ??
+      (AppScope.read(context)?.session.isPlatformAdmin ?? false);
+
+  /// The platform's second-step switch (078); null until read, and for
+  /// anybody who is not the platform admin.
+  bool? _twoStepOn;
 
   List<SignInSession> _sessions = const [];
   List<SecurityEvent> _events = const [];
@@ -53,6 +71,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
   }
 
   Future<void> _load() async {
+    final step = _twoStep;
+    if (_platformAdmin && step != null) {
+      step.status().then((s) {
+        if (mounted) setState(() => _twoStepOn = s.on);
+      }, onError: (_) {});
+    }
     final api = _api;
     if (api == null || !api.isConfigured) {
       if (mounted) setState(() => _loading = false);
@@ -108,6 +132,58 @@ class _SecurityScreenState extends State<SecurityScreen> {
     if (done == true) {
       _say('Mot de passe changé.');
       await _load();
+    }
+  }
+
+  /// Switching the platform's second step on or off. On, Kaj goes
+  /// straight to adding the authenticator app: from then on the server
+  /// refuses this account anything without the code.
+  Future<void> _setTwoStep(bool on) async {
+    final step = _twoStep;
+    if (step == null) return;
+    if (on) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Activer la validation en deux étapes ?'),
+          content: const Text(
+            'Le compte de la plateforme demandera, à chaque connexion, un '
+            'code à 6 chiffres de Google Authenticator ou Microsoft '
+            "Authenticator. Kaj vous montre tout de suite comment l'ajouter. "
+            'Les comptes des boutiques ne changent pas : mot de passe, puis '
+            "le code de l'appareil.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Activer'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    if (!mounted) return;
+    final session = AppScope.read(context)?.session;
+    setState(() => _busy = 'two-step');
+    try {
+      await step.setRequired(on);
+      if (!mounted) return;
+      setState(() => _twoStepOn = on);
+      if (on) {
+        // The resolve now stops at the code screen, which enrols.
+        await session?.resolveOrgs();
+      } else {
+        _say('Validation en deux étapes désactivée.');
+      }
+    } catch (e) {
+      _say(describeError(e));
+    } finally {
+      if (mounted) setState(() => _busy = null);
     }
   }
 
@@ -304,6 +380,28 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 ),
             ],
           ),
+          if (_platformAdmin && _twoStep != null && _twoStepOn != null)
+            _Group(
+              title: 'Plateforme',
+              children: [
+                SwitchListTile(
+                  key: const Key('two-step-switch'),
+                  value: _twoStepOn!,
+                  onChanged: _busy != null ? null : _setTwoStep,
+                  secondary: const Icon(Icons.verified_user_outlined),
+                  title: const Text('Validation en deux étapes'),
+                  subtitle: Text(
+                    _twoStepOn!
+                        ? 'Activée : un code de votre application '
+                              "d'authentification est demandé à chaque "
+                              'connexion du compte de la plateforme.'
+                        : 'Désactivée : le compte de la plateforme '
+                              "s'ouvre avec le mot de passe, puis le code "
+                              "de l'appareil.",
+                  ),
+                ),
+              ],
+            ),
           _Group(
             title: 'Activité du compte',
             children: [

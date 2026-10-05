@@ -664,9 +664,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `077` up to date, paste
-`database/apply_006_to_077.sql` into the Supabase SQL editor and run it once.
-It is `006` through `077` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `078` up to date, paste
+`database/apply_006_to_078.sql` into the Supabase SQL editor and run it once.
+It is `006` through `078` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -748,17 +748,17 @@ will fail if a policy starts calling a helper that is not on the list.
 Supabase's security advisor (Dashboard → Advisors) is the place to check
 this holds after a migration.
 
-**Two steps for the platform admin.** Since `077` a platform admin signs
-in with the password *and* a six-digit code from an authenticator app
-(Google Authenticator, Microsoft Authenticator). The database enforces it,
-not the app: `two_step_gate()` is PostgREST's pre-request hook
-(`alter role authenticator set pgrst.db_pre_request`), and a platform
-admin's token below `aal2` is refused on every request but
-`my_two_step()`. Nobody else is touched. The first sign-in after `077`
-shows how to add the app; every sign-in after asks the code once, and the
-session keeps it until it is signed out. Enrolling signs the account's
-other devices out. **Lost the phone:** Supabase dashboard → Authentication
-→ Users → the account → delete its MFA factor; the next sign-in offers to
-add a new one. To switch the gate off in an emergency, run
-`alter role authenticator reset pgrst.db_pre_request; notify pgrst, 'reload config';`
-in the SQL editor.
+**Two steps for the platform admin — optional, off.** `077` built a
+second step for the platform admin: the password *and* a six-digit code
+from an authenticator app (Google Authenticator, Microsoft Authenticator),
+enforced by the database — `two_step_gate()` is PostgREST's pre-request
+hook, and with the switch on, a platform admin's token below `aal2` is
+refused on every request but `my_two_step()`. Since `078` it is **off by
+default**: every account, the platform's included, signs in with the
+password once and the device code after. The platform admin switches it on
+in Compte › Sécurité › Plateforme; Kaj then shows how to add the app, and
+asks the code once per sign-in. Switching it off again needs the code.
+Shops and shoppers are never asked. **Lost the phone with it on:**
+Supabase SQL editor → `update platform_settings set value = 'false' where
+key = 'admin_two_step';` (or delete the account's MFA factor under
+Authentication → Users).
