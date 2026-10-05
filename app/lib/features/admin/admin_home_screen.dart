@@ -133,7 +133,7 @@ class AdminHomeScreen extends StatelessWidget {
             title: Strings.of(context).orgSettingsTitle,
             subtitle: Strings.of(context).orgSettingsSubtitle,
             onTap: () => context
-                .push(Routes.inside(org.id, 'administration/parametres')),
+                .push(Routes.orgSettings(org.id)),
           ),
 
           // Last, and behind the narrower role test. Everything above is

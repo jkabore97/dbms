@@ -478,7 +478,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                 list: _vitrine!,
                 onTap: () async {
                   await context
-                      .push(Routes.inside(widget.org.id, 'parametres'));
+                      .push(Routes.orgSettings(widget.org.id));
                   if (mounted) await _load();
                 },
               ),

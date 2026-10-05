@@ -152,6 +152,11 @@ abstract final class Routes {
   /// Every open vitrine, as a list or a map — the street's front door.
   static const directory = '/vitrines';
   static String inside(String id, String rest) => '/o/$id/$rest';
+
+  /// A business's settings. Named once here: the vitrine card on the shop
+  /// home once typed it by hand as `parametres`, lost the `administration/`
+  /// in front, and opened a red « Page Not Found ».
+  static String orgSettings(String id) => inside(id, 'administration/parametres');
 }
 
 /// Builds the router. Called once, from `main()`.
@@ -331,6 +336,9 @@ GoRouter buildRouter(SessionController session) {
     initialLocation: Routes.splash,
     refreshListenable: session,
     redirect: redirect,
+    // An address that matches nothing — a stale bookmark, a mistyped link —
+    // gets a calm page with the way home, never the router's red debug page.
+    errorBuilder: (context, state) => const NotFoundScreen(),
     routes: [
       GoRoute(path: '/', builder: (_, _) => const _Splash()),
       // Reachable from every phase — see the redirect, which never blocks it.
@@ -1355,6 +1363,47 @@ class _MissingContext extends StatelessWidget {
                 child: const Text('Voir la liste'),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The page for an address the app does not have.
+class NotFoundScreen extends StatelessWidget {
+  const NotFoundScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const KajMark(size: 64),
+                const SizedBox(height: 24),
+                Text('Cette page n\'existe pas',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  'Le lien est peut-être ancien ou incomplet.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => context.go('/'),
+                  child: const Text("Retour à l'accueil"),
+                ),
+              ],
+            ),
           ),
         ),
       ),

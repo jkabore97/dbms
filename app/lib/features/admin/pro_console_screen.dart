@@ -210,8 +210,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton.icon(
-                                onPressed: () => context.push(Routes.inside(
-                                    r.orgId, 'administration/parametres')),
+                                onPressed: () => context.push(Routes.orgSettings(r.orgId)),
                                 icon: const Icon(Icons.workspace_premium_outlined,
                                     size: 18),
                                 label: const Text('Ouvrir la formule'),
