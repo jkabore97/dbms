@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -14,6 +13,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
+import 'directory_map.dart';
 import 'shop_skeleton.dart';
 import 'shop_style.dart';
 
@@ -63,7 +63,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   List<FeaturedItem> _featured = const [];
   bool _loading = true;
   bool _locating = false;
-  bool _map = false;
   String? _error;
 
   /// Where the shopper is, once they said so. Null until "près de moi".
@@ -236,66 +235,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   /// A pin was tapped: the shop's name, where it is, how far, and the two
   /// things to do about it — look in the window, or go there.
-  Future<void> _showShop(DirectoryEntry entry) async {
-    final line = (entry.address ?? '').trim().isNotEmpty
-        ? entry.address!.trim()
-        : (entry.blurb ?? '').trim();
-    final distance = distanceLabel(entry.distanceKm);
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (sheet) => Theme(
-        data: ShopStyle.theme(sheet),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(entry.name,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                      color: ShopStyle.ink)),
-              if (line.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(line,
-                    style: const TextStyle(
-                        fontSize: 15, color: ShopStyle.mist)),
-              ],
-              if (distance != null) ...[
-                const SizedBox(height: 4),
-                Text('À $distance',
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ShopStyle.ink)),
-              ],
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: [
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.of(sheet).pop();
-                      _open(entry);
-                    },
-                    child: const Text('Voir la vitrine'),
-                  ),
-                  if (entry.hasLocation)
-                    OutlinedButton.icon(
-                      onPressed: () => _directions(entry.lat!, entry.lng!),
-                      icon: const Icon(Icons.directions_outlined, size: 18),
-                      label: const Text('Itinéraire'),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+  /// The map, full screen (package 3): the list stays the page, the map is
+  /// a place you go and come back from.
+  Future<void> _openMap() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => DirectoryMapPage(
+        entries: _entries,
+        previews: _previews,
+        here: _here,
+        fallback: _ouaga,
+        onOpen: (e) {
+          Navigator.of(context).pop();
+          _open(e);
+        },
+        onDirections: (e) => _directions(e.lat!, e.lng!),
       ),
-    );
+    ));
   }
 
   @override
@@ -318,12 +273,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   capture: widget.capture,
                   here: _here,
                   fallback: _ouaga,
-                  map: _map,
                   locating: _locating,
                   onNearMe: _nearMe,
-                  onToggleMap: () => setState(() => _map = !_map),
+                  onToggleMap: _openMap,
                   onOpen: _open,
-                  onPin: _showShop,
                   search: _search,
                   query: _query,
                   hits: _hits,
@@ -456,12 +409,10 @@ class _Street extends StatelessWidget {
     required this.capture,
     required this.here,
     required this.fallback,
-    required this.map,
     required this.locating,
     required this.onNearMe,
     required this.onToggleMap,
     required this.onOpen,
-    required this.onPin,
     required this.search,
     required this.query,
     required this.hits,
@@ -476,12 +427,10 @@ class _Street extends StatelessWidget {
   final CaptureRepository capture;
   final LatLng? here;
   final LatLng fallback;
-  final bool map;
   final bool locating;
   final VoidCallback onNearMe;
   final VoidCallback onToggleMap;
   final void Function(DirectoryEntry) onOpen;
-  final void Function(DirectoryEntry) onPin;
 
   final TextEditingController search;
   final String query;
@@ -495,9 +444,7 @@ class _Street extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= 560;
     final columns = ShopStyle.columnsFor(width);
-    final placed = entries.where((e) => e.hasLocation).toList();
     final located = here != null;
-    final unplaced = entries.length - placed.length;
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -505,33 +452,30 @@ class _Street extends StatelessWidget {
         ColoredBox(
           color: ShopStyle.stone,
           child: ShopWidth(
+            // Compact (package 3): the audit measured this band at 480 px
+            // on a phone — with the map open, the shops started below the
+            // fold. One line of title, one of explanation, then the tools.
             padding: EdgeInsets.symmetric(
-                horizontal: 20, vertical: wide ? 56 : 36),
+                horizontal: 20, vertical: wide ? 36 : 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Les boutiques,\nprès de vous.',
+                  'Les boutiques près de vous',
                   style: TextStyle(
-                    fontSize: wide ? 40 : 30,
-                    height: 1.1,
+                    fontSize: wide ? 32 : 24,
+                    height: 1.15,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -0.6,
+                    letterSpacing: -0.4,
                     color: ShopStyle.ink,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: const Text(
-                    'Chaque vitrine est tenue par la boutique elle-même : '
-                    'ses articles, ses prix, son numéro. Dites où vous êtes '
-                    'et les plus proches passent en premier.',
-                    style: TextStyle(
-                        fontSize: 17, height: 1.45, color: ShopStyle.ink),
-                  ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Articles, prix et numéro, tenus par chaque boutique.',
+                  style: TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 16),
                 Wrap(
                   spacing: 12,
                   runSpacing: 10,
@@ -552,10 +496,8 @@ class _Street extends StatelessWidget {
                     ),
                     OutlinedButton.icon(
                       onPressed: entries.isEmpty ? null : onToggleMap,
-                      icon: Icon(
-                          map ? Icons.grid_view_outlined : Icons.map_outlined,
-                          size: 18),
-                      label: Text(map ? 'Masquer la carte' : 'Voir la carte'),
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      label: const Text('Voir la carte'),
                     ),
                   ],
                 ),
@@ -641,42 +583,6 @@ class _Street extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-              ],
-              if (map) ...[
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: wide ? 460 : 340,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: placed.isEmpty
-                        ? const ColoredBox(
-                            color: ShopStyle.stone,
-                            child: ShopNotice(
-                              text: "Aucune vitrine n'a encore indiqué sa "
-                                  'position. Les boutiques la renseignent '
-                                  'dans leurs paramètres.',
-                            ),
-                          )
-                        : _MapView(
-                            entries: placed,
-                            here: here,
-                            fallback: fallback,
-                            onPin: onPin,
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  placed.isEmpty
-                      ? 'Touchez un repère pour voir la boutique et y aller.'
-                      : unplaced == 0
-                          ? 'Touchez un repère pour voir la boutique et y aller.'
-                          : 'Touchez un repère pour voir la boutique et y aller. '
-                              '$unplaced vitrine${unplaced > 1 ? 's' : ''} sans '
-                              "position n'apparaî${unplaced > 1 ? 'ssent' : 't'} "
-                              'que dans la liste.',
-                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
               ],
               const SizedBox(height: 32),
@@ -995,8 +901,8 @@ class _PhotoState extends State<_Photo> {
   }
 }
 
-/// One shop: a warm square with its initial, the name, one line about it,
-/// and — once the shopper said where they are — how far.
+/// One shop: a square showing what it sells (_ShopFace), the name, one line
+/// about it, and — once the shopper said where they are — how far.
 class _ShopTile extends StatelessWidget {
   const _ShopTile({
     required this.entry,
@@ -1119,107 +1025,6 @@ class _ShopTile extends StatelessWidget {
       };
 }
 
-class _MapView extends StatelessWidget {
-  const _MapView({
-    required this.entries,
-    required this.here,
-    required this.fallback,
-    required this.onPin,
-  });
-
-  final List<DirectoryEntry> entries;
-  final LatLng? here;
-  final LatLng fallback;
-  final void Function(DirectoryEntry) onPin;
-
-  @override
-  Widget build(BuildContext context) {
-    final centre = here ??
-        (entries.isNotEmpty
-            ? LatLng(entries.first.lat!, entries.first.lng!)
-            : fallback);
-
-    return FlutterMap(
-      options: MapOptions(initialCenter: centre, initialZoom: 13),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.kaj.app',
-        ),
-        MarkerLayer(
-          markers: [
-            if (here != null)
-              Marker(
-                point: here!,
-                width: 22,
-                height: 22,
-                child: Semantics(
-                  label: 'Ma position',
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: ShopStyle.ink,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: ShopStyle.paper, width: 3),
-                    ),
-                  ),
-                ),
-              ),
-            // Each pin carries the shop's name under it. The widget is 68px
-            // tall with the 34px icon at the top, so the widget's centre —
-            // where flutter_map puts the point — is the tip of the pin, and
-            // the label hangs below the spot rather than covering it.
-            for (final e in entries)
-              Marker(
-                point: LatLng(e.lat!, e.lng!),
-                width: 150,
-                height: 68,
-                child: Semantics(
-                  button: true,
-                  label: e.name,
-                  hint: 'Voir la boutique sur la carte',
-                  onTap: () => onPin(e),
-                  excludeSemantics: true,
-                  child: GestureDetector(
-                    onTap: () => onPin(e),
-                    behavior: HitTestBehavior.opaque,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.location_on,
-                            size: 34, color: ShopStyle.ink),
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 146),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: ShopStyle.paper,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: ShopStyle.line),
-                          ),
-                          child: Text(
-                            e.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: ShopStyle.ink),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const RichAttributionWidget(
-          attributions: [TextSourceAttribution('OpenStreetMap contributors')],
-        ),
-      ],
-    );
-  }
-}
 
 /// A directory card's square (070). Photographs: the first large, two
 /// small beside it. No photographs: the articles and their prices, set
