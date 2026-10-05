@@ -91,3 +91,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // The AppCompat theme the fingerprint dialog needs (styles.xml).
+    implementation("androidx.appcompat:appcompat:1.7.0")
+}

@@ -63,6 +63,7 @@ import '../../features/production/production_screen.dart';
 import '../../features/retail/corrections_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
+import '../../features/account/security_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../../features/tontine/tontines_screen.dart';
 import '../theme/kaj_theme.dart';
@@ -126,6 +127,7 @@ abstract final class Routes {
   static const consoleSettlement = '/console/livreurs/reglement';
   static const applications = '/demandes';
   static const language = '/langue';
+  static const security = '/securite';
   static const privacy = '/confidentialite';
   static const terms = '/conditions';
   static const faq = '/aide';
@@ -311,6 +313,8 @@ GoRouter buildRouter(SessionController session) {
       // sign-in page, so gating it behind sign-in would be absurd.
       GoRoute(
           path: Routes.language, builder: (_, _) => const LanguageScreen()),
+      GoRoute(
+          path: Routes.security, builder: (_, _) => const SecurityScreen()),
       GoRoute(path: Routes.splash, builder: (_, _) => const _Splash()),
 
       // The static legal and help pages. Top-level so they open with no signal
@@ -404,6 +408,11 @@ GoRouter buildRouter(SessionController session) {
                     ? scope.session.setPin(pin)
                     : scope.session.unlock(),
                 onSignOut: scope.session.signOut,
+                onBiometric: !creating &&
+                        (scope.security?.biometric ?? false) &&
+                        (scope.security?.biometricReady ?? false)
+                    ? scope.security!.unlockWithBiometrics
+                    : null,
               );
             },
           );

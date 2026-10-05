@@ -563,11 +563,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _money.format(_day.netSales),
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: KajTheme.of(context).ink,
+                  // Hidden at the counter when asked (Compte › Sécurité):
+                  // a touch shows it, another hides it again.
+                  _Discreet(
+                    hidden: AppScope.read(context)?.security?.hideAmounts ?? false,
+                    child: Text(
+                      _money.format(_day.netSales),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: KajTheme.of(context).ink,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -791,6 +796,49 @@ class _Panel extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: child,
+    );
+  }
+}
+
+
+/// A figure that can be kept from the customer's eyes: dots until touched.
+class _Discreet extends StatefulWidget {
+  const _Discreet({required this.hidden, required this.child});
+
+  final bool hidden;
+  final Widget child;
+
+  @override
+  State<_Discreet> createState() => _DiscreetState();
+}
+
+class _DiscreetState extends State<_Discreet> {
+  bool _shown = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.hidden) return widget.child;
+    return Semantics(
+      button: true,
+      label: _shown ? null : 'Montant caché, toucher pour afficher',
+      child: InkWell(
+        onTap: () => setState(() => _shown = !_shown),
+        borderRadius: BorderRadius.circular(8),
+        child: _shown
+            ? widget.child
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('• • • • •',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: KajTheme.of(context).ink)),
+                  const SizedBox(width: 10),
+                  Icon(Icons.visibility_outlined,
+                      color: KajTheme.of(context).ink),
+                ],
+              ),
+      ),
     );
   }
 }
