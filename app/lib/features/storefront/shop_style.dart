@@ -239,16 +239,33 @@ class ShopFooter extends StatelessWidget {
         const SizedBox(height: 48),
         const Divider(),
         const SizedBox(height: 28),
-        const Text('KAJ',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 4,
-                color: ShopStyle.ink)),
-        const SizedBox(height: 8),
-        const Text('Des vitrines de quartier, tenues par les boutiques.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+        // « Powered by KAJ », with the mark: the owner's words, in place of
+        // the old wordmark and tagline.
+        Semantics(
+          label: 'Powered by KAJ',
+          child: ExcludeSemantics(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Powered by',
+                    style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset('assets/brand/kaj_logo.png',
+                      key: const Key('kaj-logo'), width: 22, height: 22),
+                ),
+                const SizedBox(width: 6),
+                const Text('KAJ',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 3,
+                        color: ShopStyle.ink)),
+              ],
+            ),
+          ),
+        ),
         if (onDirectory != null) ...[
           const SizedBox(height: 6),
           TextButton(
