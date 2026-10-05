@@ -46,6 +46,8 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled,
     (:shop,   'Boutique Portée', 'portee-41', 'retail',      'XOF', true, 12.3714, -1.5197),
     (:church, 'Assemblée 41',    'assemblee-41', 'association', 'XOF', false, null, null);
 select seed_retail_accounts(:shop);
+-- Delivery is Kaj Pro since 081: the shops these claims deliver for are Pro.
+update orgs set plan = 'pro' where profile = 'retail' and plan is distinct from 'pro' and slug ~ '^portee-';
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop,   :owner, 'owner',    'org', :shop,   'full'),
     (:shop,   :clerk, 'employee', 'org', :shop,   'full'),

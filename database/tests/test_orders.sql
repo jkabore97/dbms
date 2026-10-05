@@ -42,6 +42,8 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled)
     (:shop_b, 'Boutique Fermee',    'commande-b-28', 'retail', 'XOF', false);
 select seed_retail_accounts(:shop_a);
 select seed_retail_accounts(:shop_b);
+-- Delivery is Kaj Pro since 081: the shops these claims deliver for are Pro.
+update orgs set plan = 'pro' where profile = 'retail' and plan is distinct from 'pro' and slug ~ '^commande-';
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop_a, :owner_a, 'owner',    'org', :shop_a, 'full'),

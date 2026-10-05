@@ -287,6 +287,7 @@ class StorefrontStyle {
     this.pinned = const [],
     this.hideOutOfStock = false,
     this.logoKey,
+    this.delivers = false,
   });
 
   static const none = StorefrontStyle();
@@ -312,6 +313,10 @@ class StorefrontStyle {
   /// The shop's own logo (080), for every plan — not a Pro dressing, so it
   /// counts for neither [isEmpty] nor [toJson]: set_org_logo() sets it.
   final String? logoKey;
+
+  /// Whether the shop delivers (081): Kaj Pro and pinned on the map, said
+  /// by storefront() for every plan. Like the logo, no dressing.
+  final bool delivers;
 
   bool get isEmpty =>
       tagline == null &&
@@ -339,6 +344,7 @@ class StorefrontStyle {
       pinned: pinned is List ? pinned.map((e) => e.toString()).toList() : const [],
       hideOutOfStock: json['hide_out_of_stock'] == true,
       logoKey: s('logo_key'),
+      delivers: json['delivers'] == true,
     );
   }
 
@@ -416,6 +422,9 @@ class PublicShop {
   final String? waveMerchant;
 
   bool get hasLocation => lat != null && lng != null;
+
+  /// Delivery is offered (081): the shop is Pro and on the map.
+  bool get delivers => hasLocation && style.delivers;
 
   factory PublicShop.fromRow(Map<String, dynamic> row) => PublicShop(
         orgId: row['org_id'] as String,

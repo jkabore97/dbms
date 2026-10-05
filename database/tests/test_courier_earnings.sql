@@ -33,6 +33,8 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile, default_currency, storefront_enabled, lat, lng) values
     (:shop, 'Boutique Esperance', 'gains-34', 'retail', 'XOF', true, 12.3714, -1.5197);
 select seed_retail_accounts(:shop);
+-- Delivery is Kaj Pro since 081: the shops these claims deliver for are Pro.
+update orgs set plan = 'pro' where profile = 'retail' and plan is distinct from 'pro' and slug ~ '^gains-';
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop, :owner, 'owner', 'org', :shop, 'full');
 insert into couriers (user_id, phone, status) values

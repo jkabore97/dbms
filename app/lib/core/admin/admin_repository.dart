@@ -1000,6 +1000,33 @@ class AdminRepository {
     }
   }
 
+  /// The kilometres the delivery base covers (081): null is the platform's
+  /// (0 to start, the plain per-km price). Read alone, like the reach.
+  Future<double?> deliveryIncludedKm(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final row = await client
+          .from('orgs')
+          .select('delivery_included_km')
+          .eq('id', orgId)
+          .maybeSingle();
+      final v = row?['delivery_included_km'];
+      return v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 0 for « prix au km » from the door; 1 to 50 for a minimum covering
+  /// that many kilometres; null for the platform's. Admins (081).
+  Future<void> setDeliveryIncludedKm(String orgId, double? km) async {
+    await _requireClient().rpc('set_delivery_included_km', params: {
+      'p_org_id': orgId,
+      'p_km': km,
+    });
+  }
+
   /// How far the shop delivers, in km (069); null means the platform's
   /// default. Read on its own so a database before 069 costs only this
   /// field, never the rest of the vitrine settings.
