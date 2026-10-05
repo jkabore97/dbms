@@ -13,6 +13,8 @@ import 'convert_dialog.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
 import '../capture/capture_action.dart';
+import '../admin/spots_card.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/errors.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
@@ -899,6 +901,29 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                   'Visible du public, avec sa photo et son prix, si la '
                   'vitrine de la boutique est ouverte.'),
             ),
+            // A spot on the street for this article (071), for the person
+            // who pays for it; the sheet checks photo, price and stock.
+            if (widget.org.isAdmin &&
+                widget.product.isPublished &&
+                AppScope.maybeOf(context) != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () {
+                          final scope = AppScope.read(context)!;
+                          SpotSheet.open(context,
+                              orgId: widget.org.id,
+                              admin: scope.admin,
+                              retail: widget.retail,
+                              isPro: widget.org.isPro,
+                              productId: widget.product.id);
+                        },
+                  icon: const Icon(Icons.campaign_outlined),
+                  label: const Text('Mettre cet article en avant'),
+                ),
+              ),
             // What the shopkeeper would say across the counter, under the
             // name on the vitrine. Two sentences at most (300 characters,
             // the database's own limit); a tile that scrolls is a tile

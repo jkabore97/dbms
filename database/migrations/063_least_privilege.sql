@@ -57,6 +57,9 @@ declare
         'delivery_quote',
         'delivery_check',      -- 069: the basket's "how far, how far may it go"
         'storefront_previews', -- 070: three articles per card in the directory
+        'record_visit',          -- 071: the street counts what it sees
+        'record_seen',           -- 071: the strip, counted in one call
+        'storefront_spotlights', -- 071: the shops paying for the top of the list
         'invitation_preview'
     ];
     -- The functions RLS itself calls. A policy expression runs as the

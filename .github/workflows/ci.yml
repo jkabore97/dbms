@@ -546,6 +546,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_vitrine_sells.sql
 
+      # Spots for sale (071): the street counts and orders count themselves;
+      # an admin asks for a ready article, once; paid and approved before it
+      # shows, first in À la une; a full strip queues; Pro's free spot once
+      # a month; the report counts the spot's own days; strangers see none.
+      - name: Prove a spot is bought, queued and counted
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_spots.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

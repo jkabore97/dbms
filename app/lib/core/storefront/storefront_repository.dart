@@ -181,6 +181,42 @@ class StorefrontRepository {
     }
   }
 
+  /// The shops paying for the top of the directory right now (071). Empty
+  /// on a database before 071, or with no signal: the list is still the list.
+  Future<Set<String>> spotlights() async {
+    try {
+      final rows =
+          await _requireClient().rpc('storefront_spotlights') as List<dynamic>;
+      return {for (final r in rows) '${(r as Map)['slug']}'};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Counts a look at the street (071): 'opened' (a window, or with
+  /// [productId] an article's sheet), 'seen', or 'added' to a basket. Never
+  /// awaited by a screen and never fails one: the numbers are indicative.
+  Future<void> recordVisit(String slug, String kind, {String? productId}) async {
+    final client = _client;
+    if (client == null) return;
+    try {
+      await client.rpc('record_visit', params: {
+        'p_slug': slug,
+        'p_kind': kind,
+        'p_product_id': productId,
+      });
+    } catch (_) {}
+  }
+
+  /// Counts the articles of a strip as seen, in one call (071).
+  Future<void> recordSeen(List<String> productIds) async {
+    final client = _client;
+    if (client == null || productIds.isEmpty) return;
+    try {
+      await client.rpc('record_seen', params: {'p_product_ids': productIds});
+    } catch (_) {}
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.
