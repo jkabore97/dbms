@@ -90,6 +90,23 @@ class StorefrontRepository {
         .toList();
   }
 
+  /// Where an order is (073): the timeline, the courier once on the road,
+  /// the shop's phone and, for its shopper, the handover code. Null on a
+  /// database before 073 or for somebody the order is not about.
+  Future<OrderTracking?> tracking(String orderId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client
+          .rpc('order_tracking', params: {'p_order_id': orderId});
+      if (v is! Map) return null;
+      return OrderTracking.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+  }
+
   /// Withdraws an order that the shop has not yet answered.
   Future<void> cancelOrder(String orderId) async {
     await _requireClient()

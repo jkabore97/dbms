@@ -58,6 +58,86 @@ class RetailRepository {
     });
   }
 
+  /// How long each open order has sat in its state, and which are stuck
+  /// (073). Keyed by order id; empty on a database before 073.
+  Future<Map<String, OrderClock>> orderClocks(String orgId) async {
+    final client = _client;
+    if (client == null) return const {};
+    try {
+      final rows = await client
+          .rpc('shop_order_clocks', params: {'p_org_id': orgId}) as List<dynamic>;
+      return {
+        for (final r in rows)
+          '${(r as Map)['order_id']}':
+              OrderClock.fromRow(Map<String, dynamic>.from(r)),
+      };
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const {};
+      rethrow;
+    }
+  }
+
+  /// "Je livre moi-même" (073): a delivery nobody took, carried by the shop.
+  Future<void> deliverSelf(String orderId) async {
+    await _requireClient()
+        .rpc('shop_deliver_self', params: {'p_order_id': orderId});
+  }
+
+  /// Cash orders couriers delivered and have not handed over yet (073).
+  Future<List<CashOwed>> cashOwed(String orgId) async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client
+          .rpc('shop_cash_owed', params: {'p_org_id': orgId}) as List<dynamic>;
+      return rows
+          .map((r) => CashOwed.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
+  /// The shop's word that a courier handed over an order's cash (073).
+  Future<void> confirmCashReceived(String orderId) async {
+    await _requireClient()
+        .rpc('confirm_cash_received', params: {'p_order_id': orderId});
+  }
+
+  /// The shop's own couriers (073).
+  Future<List<OrgCourier>> orgCouriers(String orgId) async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client
+          .rpc('org_courier_list', params: {'p_org_id': orgId}) as List<dynamic>;
+      return rows
+          .map((r) => OrgCourier.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
+  /// Names an approved courier, found by phone, as the shop's own; returns
+  /// their name.
+  Future<String> addOrgCourier(String orgId, String phone) async {
+    final v = await _requireClient().rpc('add_org_courier', params: {
+      'p_org_id': orgId,
+      'p_phone': phone,
+    });
+    return '$v';
+  }
+
+  Future<void> removeOrgCourier(String orgId, String userId) async {
+    await _requireClient().rpc('remove_org_courier', params: {
+      'p_org_id': orgId,
+      'p_user_id': userId,
+    });
+  }
+
   /// The shop's word that the money arrived (057) — or that a tap was a
   /// mistake. Only the shop's writers may say either.
   Future<void> setOrderPaid(String orderId, bool paid) async {

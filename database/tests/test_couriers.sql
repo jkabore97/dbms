@@ -249,7 +249,8 @@ begin
         raise notice 'PASS: collect first — %', sqlerrm;
     end;
     perform courier_mark(v_id, 'in_transit');
-    perform courier_mark(v_id, 'delivered');
+    -- 073: the door needs the shopper's code.
+    perform courier_deliver(v_id, (select handover_code from orders where id = v_id));
     if (select count(*) from courier_deliveries() d
          where d.status = 'delivered') <> 1 then
         raise exception 'FAIL: the courier''s own list does not show the delivered job';
