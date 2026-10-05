@@ -12,6 +12,7 @@ import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
 import 'pin_preview.dart';
+import 'spots_card.dart';
 import 'vitrine_checklist_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
@@ -701,6 +702,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   const SizedBox(height: 16),
                   // What the window has and lacks (070), and "Tout publier".
                   VitrineChecklistCard(
+                    orgId: widget.orgId,
+                    admin: widget.admin,
+                    retail: widget.retail,
+                  ),
+                  const SizedBox(height: 12),
+                  // Spots for sale on the street (071).
+                  SpotsCard(
                     orgId: widget.orgId,
                     admin: widget.admin,
                     retail: widget.retail,

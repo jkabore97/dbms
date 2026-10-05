@@ -5,7 +5,11 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/format/money.dart';
 
-/// The paid spots on the welcome page — "à la une" — chosen by the platform.
+/// The paid spots on the welcome page — "à la une".
+///
+/// Since 071 a shop buys its own spot from its settings; the top of this
+/// screen is the platform's queue of those (check the Wave payment, then
+/// Valider or Refuser). Below it, the platform's own hand-picked spots.
 ///
 /// Every article currently in a window is listed with its shop; a switch
 /// puts it à la une for thirty days or takes it down. The money changes
@@ -23,6 +27,9 @@ class FeaturedScreen extends StatefulWidget {
 
 class _FeaturedScreenState extends State<FeaturedScreen> {
   List<FeaturedCandidate> _rows = const [];
+
+  /// Spots bought by shops (071): waiting on the platform, then running.
+  List<PlatformPromotion> _asks = const [];
   bool _loading = true;
   String? _error;
   String? _busyId;
@@ -44,9 +51,13 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
     });
     try {
       final rows = await widget.admin.featuredCandidates();
+      final asks = await widget.admin
+          .platformPromotions()
+          .catchError((_) => const <PlatformPromotion>[]);
       if (!mounted) return;
       setState(() {
         _rows = rows;
+        _asks = asks;
         _loading = false;
       });
     } catch (error) {
@@ -71,6 +82,84 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
     } finally {
       if (mounted) setState(() => _busyId = null);
     }
+  }
+
+  Future<void> _decide(PlatformPromotion ask, bool approve) async {
+    setState(() => _busyId = ask.id);
+    try {
+      await widget.admin.decidePromotion(ask.id, approve: approve);
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  List<Widget> _askSection(ThemeData theme) {
+    if (_asks.isEmpty) return const [];
+    final date = DateFormat('d MMM', 'fr_FR');
+    return [
+      Text('Mises en avant achetées', style: theme.textTheme.titleMedium),
+      const SizedBox(height: 4),
+      Text(
+        'Vérifiez le paiement Wave, puis validez : la période commence '
+        'aussitôt, ou dès qu\'une place se libère.',
+        style: theme.textTheme.bodySmall
+            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+      const SizedBox(height: 8),
+      for (final a in _asks)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${a.orgName} · ${a.label}',
+                    style: theme.textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text([
+                  '${a.days} jours',
+                  a.free
+                      ? 'offerte (Pro)'
+                      : moneyFormat(a.currency).format(a.price),
+                  switch (a.status) {
+                    'paid_claimed' => 'dit avoir payé',
+                    'requested' => 'pas encore payé',
+                    _ => a.startsAt != null && a.endsAt != null
+                        ? 'du ${date.format(a.startsAt!)} au ${date.format(a.endsAt!)}'
+                        : 'en cours',
+                  },
+                  if ((a.note ?? '').isNotEmpty) '« ${a.note} »',
+                ].join(' · ')),
+                if (a.waiting)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed:
+                            _busyId != null ? null : () => _decide(a, false),
+                        child: const Text('Refuser'),
+                      ),
+                      const SizedBox(width: 4),
+                      FilledButton(
+                        onPressed:
+                            _busyId != null ? null : () => _decide(a, true),
+                        child: const Text('Valider'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      const SizedBox(height: 20),
+      Text('Choix de la plateforme', style: theme.textTheme.titleMedium),
+      const SizedBox(height: 4),
+    ];
   }
 
   @override
@@ -106,7 +195,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                     ),
                   ),
                 )
-              : _rows.isEmpty
+              : _rows.isEmpty && _asks.isEmpty
                   ? const Center(
                       child: Padding(
                         padding: EdgeInsets.all(32),
@@ -121,6 +210,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                       children: [
+                        ..._askSection(theme),
                         Text(
                           'Les articles cochés apparaissent sur la page '
                           "d'accueil, toutes boutiques confondues, pendant "

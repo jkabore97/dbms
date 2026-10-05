@@ -61,6 +61,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// never in its way: a card without previews still names the shop.
   Map<String, List<ShopPreview>> _previews = const {};
   List<FeaturedItem> _featured = const [];
+
+  /// The shops paying for the top of the list right now (071).
+  Set<String> _spotlights = const {};
   bool _loading = true;
   bool _locating = false;
   String? _error;
@@ -161,13 +164,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         widget.storefront
             .featured()
             .catchError((_) => const <FeaturedItem>[]),
+        widget.storefront.spotlights(),
       ]);
       if (!mounted) return;
+      final spotlights = results[2] as Set<String>;
+      final entries = results[0] as List<DirectoryEntry>;
       setState(() {
-        _entries = results[0] as List<DirectoryEntry>;
+        // A paid shop leads the list, the rest keep the server's order
+        // (nearest first, or by name).
+        _entries = [
+          ...entries.where((e) => spotlights.contains(e.slug)),
+          ...entries.where((e) => !spotlights.contains(e.slug)),
+        ];
+        _spotlights = spotlights;
         _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
+      // The strip is what a spot buys: count it as seen, in one call.
+      unawaited(widget.storefront
+          .recordSeen([for (final f in _featured) f.id]));
       unawaited(_loadPreviews());
     } catch (_) {
       if (!mounted) return;
@@ -270,6 +285,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   entries: _entries,
                   previews: _previews,
                   featured: _featured,
+                  spotlights: _spotlights,
                   capture: widget.capture,
                   here: _here,
                   fallback: _ouaga,
@@ -406,6 +422,7 @@ class _Street extends StatelessWidget {
     required this.entries,
     required this.previews,
     required this.featured,
+    this.spotlights = const {},
     required this.capture,
     required this.here,
     required this.fallback,
@@ -424,6 +441,7 @@ class _Street extends StatelessWidget {
   final List<DirectoryEntry> entries;
   final Map<String, List<ShopPreview>> previews;
   final List<FeaturedItem> featured;
+  final Set<String> spotlights;
   final CaptureRepository capture;
   final LatLng? here;
   final LatLng fallback;
@@ -563,7 +581,7 @@ class _Street extends StatelessWidget {
               // The paid spots, when there are any: a strip, not the page.
               if (featured.isNotEmpty) ...[
                 const SizedBox(height: 32),
-                const ShopSectionLabel('À la une', note: 'Sélection'),
+                const ShopSectionLabel('À la une', note: 'Sponsorisé'),
                 const SizedBox(height: 14),
                 SizedBox(
                   height: 244,
@@ -617,6 +635,7 @@ class _Street extends StatelessWidget {
                         entry: entries[i],
                         located: located,
                         previews: previews[entries[i].slug] ?? const [],
+                        sponsored: spotlights.contains(entries[i].slug),
                         capture: capture,
                         onOpen: () => onOpen(entries[i]),
                       ),
@@ -910,9 +929,13 @@ class _ShopTile extends StatelessWidget {
     required this.onOpen,
     required this.capture,
     this.previews = const [],
+    this.sponsored = false,
   });
 
   final DirectoryEntry entry;
+
+  /// Paid for the top of the list (071), and said so on the card.
+  final bool sponsored;
   final bool located;
   final VoidCallback onOpen;
   final CaptureRepository capture;
@@ -939,6 +962,7 @@ class _ShopTile extends StatelessWidget {
         if (line.isNotEmpty) _labelFor(entry.profile),
         second,
         if (distance != null) 'à $distance',
+        if (sponsored) 'sponsorisé',
       ].join(', '),
       hint: 'Ouvrir la vitrine',
       onTap: onOpen,
@@ -965,6 +989,12 @@ class _ShopTile extends StatelessWidget {
                           previews: previews,
                           capture: capture,
                           profileIcon: _iconFor(entry.profile)),
+                      if (sponsored)
+                        const Positioned(
+                          left: 10,
+                          top: 10,
+                          child: SponsoredTag(),
+                        ),
                       if (distance != null)
                         Positioned(
                           right: 10,
@@ -1139,6 +1169,30 @@ class _MiniLabel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// "Sponsorisé" on a paid place (071): a spot is bought, and the street
+/// says which ones are.
+class SponsoredTag extends StatelessWidget {
+  const SponsoredTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: ShopStyle.paper.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text('Sponsorisé',
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+              color: ShopStyle.ink)),
     );
   }
 }

@@ -8,6 +8,9 @@ import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../storefront/storefront_repository.dart' show StorefrontStyle;
 import 'models.dart';
+import 'spots.dart';
+
+export 'spots.dart';
 
 /// Everything the admin screens do with the server, behind one door.
 ///
@@ -851,6 +854,81 @@ class AdminRepository {
       'p_org_id': orgId,
       'p_base': base,
       'p_per_km': perKm,
+    });
+  }
+
+  /// The spot price list (071); the defaults on a database before 071.
+  Future<SpotTerms> spotTerms() async {
+    final client = _client;
+    if (client == null) return const SpotTerms();
+    try {
+      final v = await client.rpc('spot_terms');
+      if (v is! Map) return const SpotTerms();
+      return SpotTerms.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const SpotTerms();
+      rethrow;
+    }
+  }
+
+  /// Asks for a spot: [productId] for an article in À la une, null for the
+  /// whole shop at the top of the directory. Admin only (071).
+  Future<String> requestPromotion(String orgId,
+      {String? productId, required int days}) async {
+    final v = await _requireClient().rpc('request_promotion', params: {
+      'p_org_id': orgId,
+      'p_product_id': productId,
+      'p_days': days,
+    });
+    return '$v';
+  }
+
+  /// "J'ai payé" for a spot.
+  Future<void> claimPromotionPaid(String promotionId, {String? note}) async {
+    await _requireClient().rpc('claim_promotion_paid', params: {
+      'p_promotion_id': promotionId,
+      'p_note': (note == null || note.trim().isEmpty) ? null : note.trim(),
+    });
+  }
+
+  /// The shop's spots, newest first, with what each earned; empty on a
+  /// database before 071.
+  Future<List<Promotion>> myPromotions(String orgId) async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client
+          .rpc('my_promotions', params: {'p_org_id': orgId}) as List<dynamic>;
+      return rows
+          .map((r) => Promotion.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
+  /// The console's queue: spots waiting on the platform, then running ones.
+  Future<List<PlatformPromotion>> platformPromotions() async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client.rpc('platform_promotions') as List<dynamic>;
+      return rows
+          .map((r) =>
+              PlatformPromotion.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
+  /// The platform's yes or no on a spot.
+  Future<void> decidePromotion(String promotionId, {required bool approve}) async {
+    await _requireClient().rpc('decide_promotion', params: {
+      'p_promotion_id': promotionId,
+      'p_approve': approve,
     });
   }
 

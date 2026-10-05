@@ -148,6 +148,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         _items = items;
         _loading = false;
       });
+      // The street's counter (071): a window opened. Never in the way.
+      if (shop != null) {
+        unawaited(widget.storefront.recordVisit(widget.slug, 'opened'));
+      }
       await _restoreBasket(items);
     } catch (error) {
       if (!mounted) return;
@@ -167,6 +171,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   void _directory() => context.go(Routes.directory);
 
   void _add(PublicItem item) {
+    if ((_basket[item.id] ?? 0) == 0) {
+      unawaited(widget.storefront
+          .recordVisit(widget.slug, 'added', productId: item.id));
+    }
     setState(() => _basket[item.id] = (_basket[item.id] ?? 0) + 1);
     _keepBasket();
   }
@@ -338,6 +346,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   Future<void> _details(PublicItem item) async {
     final shop = _shop;
     if (shop == null) return;
+    unawaited(widget.storefront
+        .recordVisit(widget.slug, 'opened', productId: item.id));
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
