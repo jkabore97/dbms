@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/kaj_mark.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/accounting/account_ledger_screen.dart';
@@ -1366,7 +1367,23 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    // The mark, and a hairline of progress under it: the first thing every
+    // launch shows is who made the app, not a bare spinner.
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KajMark(size: 80),
+            SizedBox(height: 28),
+            SizedBox(
+              width: 120,
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -141,3 +141,4 @@ flutter:
   # the foot of every street page.
   assets:
     - assets/brand/kaj_logo.png
+    - assets/brand/kaj_mark.png

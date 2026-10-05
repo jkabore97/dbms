@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_mark.dart';
 import '../../l10n/strings.dart';
 
 import '../../core/auth/models.dart';
@@ -215,13 +216,7 @@ class _PinScreenState extends State<PinScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          widget.purpose == PinPurpose.create
-                              ? Icons.lock_outline
-                              : Icons.lock_open_outlined,
-                          size: 44,
-                          color: theme.colorScheme.primary,
-                        ),
+                        const KajMark(size: 56),
                         const SizedBox(height: 20),
                         Text(_title, style: theme.textTheme.headlineSmall),
                         const SizedBox(height: 8),
