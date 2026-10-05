@@ -269,6 +269,24 @@ abstract class Strings {
   /// **'Connexion refusée. Réessayez.'**
   String get signInRefused;
 
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In fr, this message translates to:
+  /// **'ou'**
+  String get orDivider;
+
+  /// No description provided for @googleCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'La connexion Google n\'a pas abouti. Réessayez, ou utilisez votre e-mail.'**
+  String get googleCancelled;
+
   /// No description provided for @accountCreated.
   ///
   /// In fr, this message translates to:

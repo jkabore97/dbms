@@ -419,6 +419,8 @@ GoRouter buildRouter(SessionController session) {
             // phone it collects, the moment the account exists.
             onboarding: scope.onboarding,
             onSignedIn: scope.session.handleSignedIn,
+            onGoogle: scope.session.signInWithGoogle,
+            initialError: scope.session.takeSignInProblem(),
           );
         },
       ),

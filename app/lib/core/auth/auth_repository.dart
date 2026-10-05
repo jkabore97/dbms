@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models.dart';
@@ -13,9 +17,21 @@ import '../errors.dart' as errors;
 /// backend at all, and the app is still expected to run against the local
 /// database; every method here fails politely rather than throwing a null.
 class AuthRepository {
-  AuthRepository(this._client);
+  AuthRepository(
+    this._client, {
+    this.authUrl,
+    this.apiKey,
+    http.Client? httpClient,
+  }) : _http = httpClient;
 
   final SupabaseClient? _client;
+
+  /// `<project>/auth/v1` and the publishable key, to ask which sign-in
+  /// providers the project has switched on. Null in tests and in a build
+  /// with no server: no Google button.
+  final String? authUrl;
+  final String? apiKey;
+  final http.Client? _http;
 
   /// The raw client, for repositories built at the scope rather than in
   /// main(). Null in a build with no server, like everything else here.
@@ -75,6 +91,61 @@ class AuthRepository {
     return client.auth.signInWithPassword(email: email, password: password);
   }
 
+  // ----------------------------------------------------------------
+  // Google
+  // ----------------------------------------------------------------
+
+  /// Where Google sends an Android phone back: the intent filter in
+  /// AndroidManifest.xml catches it, and supabase_flutter swaps the code in
+  /// it for a session. Must be in the project's Redirect URLs.
+  static const androidCallback = 'bf.kaj.app://login-callback';
+
+  bool? _googleOn;
+
+  /// Whether the project has Google switched on (Supabase dashboard ›
+  /// Authentication › Providers). Asked once: a button for a provider that is
+  /// off would send people to an error page at Google's door.
+  Future<bool> googleAvailable() async {
+    final known = _googleOn;
+    if (known != null) return known;
+    final url = authUrl, key = apiKey;
+    if (!isConfigured || url == null || key == null) return false;
+    try {
+      final client = _http ?? http.Client();
+      final r = await client
+          .get(Uri.parse('$url/settings'), headers: {'apikey': key})
+          .timeout(const Duration(seconds: 8));
+      if (r.statusCode != 200) return false;
+      final body = jsonDecode(r.body);
+      final on =
+          body is Map &&
+          body['external'] is Map &&
+          (body['external'] as Map)['google'] == true;
+      return _googleOn = on;
+    } catch (_) {
+      return false; // Offline: asked again next time.
+    }
+  }
+
+  /// Sends the person to Google. On the web the page leaves and comes back
+  /// to /connexion with a code that Supabase.initialize turns into a session
+  /// before the app starts; on Android the browser hands back to the app
+  /// through [androidCallback] and the session arrives as an auth event.
+  /// Either way, an account that did not exist is created — named from
+  /// Google — and one with the same verified e-mail is the same account.
+  Future<void> signInWithGoogle() async {
+    final client = _requireClient();
+    final launched = await client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: kIsWeb ? '${Uri.base.origin}/connexion' : androidCallback,
+      // Several Google accounts on one phone are common: let them choose.
+      queryParams: const {'prompt': 'select_account'},
+    );
+    if (!launched) {
+      throw StateError("La page de connexion Google n'a pas pu s'ouvrir.");
+    }
+  }
+
   /// Creates an account from an email and a password.
   ///
   /// Returns a response whose `session` is null when the project has email
@@ -120,7 +191,8 @@ class AuthRepository {
       await client.auth.updateUser(UserAttributes(data: {'full_name': name}));
       await client
           .from('profiles')
-          .update({'full_name': name}).eq('id', userId);
+          .update({'full_name': name})
+          .eq('id', userId);
     } catch (_) {
       // Offline, or the profile row has not been mirrored across yet. The
       // account is what matters and the account is already made.

@@ -94,6 +94,16 @@ class StringsEn extends Strings {
   String get signInRefused => 'Sign-in refused. Try again.';
 
   @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get orDivider => 'or';
+
+  @override
+  String get googleCancelled =>
+      'Google sign-in did not complete. Try again, or use your email.';
+
+  @override
   String get accountCreated => 'Account created';
 
   @override
