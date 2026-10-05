@@ -119,8 +119,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   /// The pin as typed, when both fields read as a position on the planet.
   (double, double)? get _pin {
-    final lat = double.tryParse(_latController.text.trim().replaceAll(',', '.'));
-    final lng = double.tryParse(_lngController.text.trim().replaceAll(',', '.'));
+    final lat = double.tryParse(
+      _latController.text.trim().replaceAll(',', '.'),
+    );
+    final lng = double.tryParse(
+      _lngController.text.trim().replaceAll(',', '.'),
+    );
     if (lat == null || lng == null) return null;
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
     return (lat, lng);
@@ -157,9 +161,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     super.dispose();
   }
 
-  static String _plain(double? v) => v == null
-      ? ''
-      : (v == v.roundToDouble() ? v.round().toString() : '$v');
+  static String _plain(double? v) =>
+      v == null ? '' : (v == v.roundToDouble() ? v.round().toString() : '$v');
 
   Future<void> _load() async {
     setState(() {
@@ -237,8 +240,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           lat > 90 ||
           lng < -180 ||
           lng > 180) {
-        setState(() => _error =
-            'Indiquez la latitude et la longitude, ou aucune des deux.');
+        setState(
+          () => _error =
+              'Indiquez la latitude et la longitude, ou aucune des deux.',
+        );
         return;
       }
     }
@@ -256,9 +261,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           deliveryPerKm == null ||
           deliveryBase < 0 ||
           deliveryPerKm < 0) {
-        setState(() => _error =
-            'Indiquez la base et le prix par km de livraison, ou aucun des '
-            'deux pour garder ceux de la plateforme.');
+        setState(
+          () => _error =
+              'Indiquez la base et le prix par km de livraison, ou aucun des '
+              'deux pour garder ceux de la plateforme.',
+        );
         return;
       }
     }
@@ -269,9 +276,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     if (reachText.isNotEmpty) {
       deliveryReach = double.tryParse(reachText);
       if (deliveryReach == null || deliveryReach <= 0 || deliveryReach > 200) {
-        setState(() => _error =
-            'La distance de livraison va de 1 à 200 km, ou vide pour celle '
-            'de la plateforme (15 km).');
+        setState(
+          () => _error =
+              'La distance de livraison va de 1 à 200 km, ou vide pour celle '
+              'de la plateforme (15 km).',
+        );
         return;
       }
     }
@@ -288,15 +297,25 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         currency: _currency,
       );
       final wave = _waveController.text.trim();
-      await widget.admin.setWaveMerchant(widget.orgId, wave.isEmpty ? null : wave);
+      await widget.admin.setWaveMerchant(
+        widget.orgId,
+        wave.isEmpty ? null : wave,
+      );
       await widget.admin.setStorefront(
         widget.orgId,
         enabled: _storefrontEnabled,
         blurb: _blurbController.text.trim(),
       );
-      await widget.admin.setStorefrontLocation(widget.orgId, lat: lat, lng: lng);
-      await widget.admin.setDeliveryRates(widget.orgId,
-          base: deliveryBase, perKm: deliveryPerKm);
+      await widget.admin.setStorefrontLocation(
+        widget.orgId,
+        lat: lat,
+        lng: lng,
+      );
+      await widget.admin.setDeliveryRates(
+        widget.orgId,
+        base: deliveryBase,
+        perKm: deliveryPerKm,
+      );
       try {
         await widget.admin.setDeliveryReach(widget.orgId, deliveryReach);
       } on PostgrestException catch (e) {
@@ -306,9 +325,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       widget.onSaved?.call();
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enregistré')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enregistré')));
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -336,7 +355,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AuthRepository.describeError(error))));
+          SnackBar(content: Text(AuthRepository.describeError(error))),
+        );
       }
     }
   }
@@ -348,7 +368,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AuthRepository.describeError(error))));
+          SnackBar(content: Text(AuthRepository.describeError(error))),
+        );
       }
     }
   }
@@ -365,9 +386,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         builder: (context) => AlertDialog(
           title: const Text('Kaj Pro sans date de fin ?'),
           content: const Text(
-              'Sans date, cette entreprise reste Pro jusqu\'à ce que vous '
-              'changiez sa formule à la main. Pour un paiement, indiquez '
-              'plutôt la date de fin.'),
+            'Sans date, cette entreprise reste Pro jusqu\'à ce que vous '
+            'changiez sa formule à la main. Pour un paiement, indiquez '
+            'plutôt la date de fin.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -469,9 +491,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(freezing
-              ? 'Entreprise suspendue'
-              : 'Entreprise réactivée'),
+          content: Text(
+            freezing ? 'Entreprise suspendue' : 'Entreprise réactivée',
+          ),
         ),
       );
     } catch (error) {
@@ -496,10 +518,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Sans autorisation, tapez la position ou collez '
-              'un lien Google Maps.'),
-        ));
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Sans autorisation, tapez la position ou collez '
+              'un lien Google Maps.',
+            ),
+          ),
+        );
         return;
       }
       final position = await Geolocator.getCurrentPosition(
@@ -514,9 +540,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _lngController.text = position.longitude.toStringAsFixed(6);
       });
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
-      ));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Position introuvable. Vérifiez que le GPS est activé.',
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -557,10 +587,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     if (text == null || !mounted) return;
     final position = parseGoogleMapsLink(text);
     if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Ce lien ne contient pas de position. Ouvrez-le dans '
-            "Google Maps et copiez l'adresse complète."),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ce lien ne contient pas de position. Ouvrez-le dans '
+            "Google Maps et copiez l'adresse complète.",
+          ),
+        ),
+      );
       return;
     }
     setState(() {
@@ -571,472 +605,779 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   Future<void> _openColours() async {
     await context.push(
-        Routes.inside(widget.orgId, 'administration/parametres/couleurs'));
+      Routes.inside(widget.orgId, 'administration/parametres/couleurs'),
+    );
     // Re-read rather than trusting what was passed back: the colour screen
     // saves on its own, and this row has to agree with the server whether it
     // saved once, three times, or not at all.
     if (mounted) await _load();
   }
 
+  /// The parts of the settings (the audit: one scroll of everything). Each
+  /// opens on its own page; the fields live in this one State, so moving
+  /// between parts loses nothing typed.
+  _Part? _open;
+
+  List<Widget> _identity(ThemeData theme) => [
+    Text('Nom', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 8),
+    TextField(
+      controller: _nameController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.words,
+      decoration: const InputDecoration(border: OutlineInputBorder()),
+    ),
+    const SizedBox(height: 24),
+    Text('Monnaie', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 8),
+    DropdownButtonFormField<String>(
+      initialValue: _currency,
+      decoration: const InputDecoration(border: OutlineInputBorder()),
+      items: [
+        for (final c in _currencies) DropdownMenuItem(value: c, child: Text(c)),
+      ],
+      onChanged: _saving ? null : (v) => setState(() => _currency = v!),
+    ),
+    const SizedBox(height: 24),
+    Text('Couleurs', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 8),
+    _ColourRow(
+      palette: paletteFor(_profile, theme: _theme),
+      label: paletteNamed(_theme)?.label ?? 'Couleur par défaut',
+      onTap: _saving ? null : _openColours,
+    ),
+    const SizedBox(height: 32),
+    Text('Non modifiable ici', style: theme.textTheme.titleSmall),
+    const SizedBox(height: 4),
+    Text(
+      "L'adresse web et le type d'activité changent ce que voient "
+      'tous les membres. Contactez Kaj-consulting pour les '
+      'modifier.',
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    const SizedBox(height: 12),
+    _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
+    _ReadOnlyRow(
+      label: "Type d'activité",
+      value: switch (_profile) {
+        'retail' => 'Boutique',
+        'farm' => 'Ferme',
+        'association' || 'church' => 'Association',
+        _ => _profile,
+      },
+    ),
+    // Which plan this business is on (065). Every member reads
+    // it; only the platform changes it, below. Since 066 the
+    // Pro tools are badged and held on a Free business.
+    _ReadOnlyRow(
+      label: 'Formule',
+      value: widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
+    ),
+  ];
+
+  List<Widget> _payments(ThemeData theme) => [
+    Text('Paiement Wave', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 8),
+    TextField(
+      controller: _waveController,
+      enabled: !_saving,
+      keyboardType: TextInputType.text,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        hintText: '+226 70 00 00 00',
+        prefixIcon: Icon(Icons.qr_code_2),
+        helperText:
+            'Le numéro Wave du commerce. Laissez vide pour '
+            'ne pas proposer Wave à la vente.',
+        helperMaxLines: 2,
+      ),
+    ),
+    const SizedBox(height: 24),
+    Text('Taux de change', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 4),
+    Text(
+      'Pour encaisser une vente dans une autre monnaie. Les '
+      'livres restent en ${_currency == 'XOF' ? 'FCFA' : _currency}.',
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    const SizedBox(height: 8),
+    for (final r in _rates)
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.currency_exchange),
+        title: Text(rateLabel(r.currency, r.rate, _currency)),
+        subtitle: Text(knownCurrencies[r.currency] ?? ''),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          tooltip: 'Retirer',
+          onPressed: _saving ? null : () => _removeRate(r),
+        ),
+        onTap: _saving ? null : () => _editRate(r),
+      ),
+    Align(
+      alignment: Alignment.centerLeft,
+      child: OutlinedButton.icon(
+        onPressed: _saving ? null : () => _editRate(),
+        icon: const Icon(Icons.add),
+        label: const Text('Ajouter une monnaie'),
+      ),
+    ),
+  ];
+
+  List<Widget> _vitrine(ThemeData theme) => [
+    Text('Vitrine en ligne', style: theme.textTheme.labelLarge),
+    const SizedBox(height: 4),
+    Text(
+      'Une page publique de la boutique, avec les articles que vous '
+      "choisissez d'afficher — photo et prix — à partager sur "
+      "WhatsApp. Rien ne s'y vend : le client vous contacte.",
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      value: _storefrontEnabled,
+      onChanged: _saving ? null : (v) => setState(() => _storefrontEnabled = v),
+      title: const Text('Ouvrir la vitrine'),
+    ),
+    if (_storefrontEnabled) ...[
+      TextField(
+        controller: _blurbController,
+        enabled: !_saving,
+        maxLines: 2,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Quelques mots sur la boutique (facultatif)',
+        ),
+      ),
+      const SizedBox(height: 10),
+      _LinkRow(url: _storefrontUrl),
+      const SizedBox(height: 16),
+      // What the window has and lacks (070), and "Tout publier".
+      VitrineChecklistCard(
+        orgId: widget.orgId,
+        admin: widget.admin,
+        retail: widget.retail,
+      ),
+      const SizedBox(height: 12),
+      // Spots for sale on the street (071).
+      SpotsCard(
+        orgId: widget.orgId,
+        admin: widget.admin,
+        retail: widget.retail,
+      ),
+      const SizedBox(height: 20),
+      // The Pro dressing (068): badged and held for a Free
+      // business, a form for a Pro one.
+      VitrinePlusCard(
+        orgId: widget.orgId,
+        admin: widget.admin,
+        retail: widget.retail,
+        capture: widget.capture,
+      ),
+    ],
+  ];
+
+  List<Widget> _delivery(ThemeData theme) => [
+    if (!_storefrontEnabled) _ClosedNote(theme: theme),
+    Text('Frais de livraison', style: theme.textTheme.titleSmall),
+    const SizedBox(height: 4),
+    Text(
+      'Une base pour la course, plus un prix par kilomètre '
+      'entre votre boutique et la porte du client. Vide : les '
+      'tarifs de la plateforme (500 + 150 F/km). Le montant '
+      "est annoncé au client avant qu'il commande, et payé au "
+      'livreur à la porte.',
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    const SizedBox(height: 10),
+    Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _deliveryBaseController,
+            enabled: !_saving,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Base',
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: TextField(
+            controller: _deliveryPerKmController,
+            enabled: !_saving,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Par km',
+            ),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 10),
+    TextField(
+      controller: _deliveryReachController,
+      enabled: !_saving,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        labelText: 'Distance maximale (km)',
+        helperText:
+            'Au-delà, la livraison n\'est pas proposée. '
+            'Vide : 15 km.',
+      ),
+    ),
+  ];
+
+  List<Widget> _position(ThemeData theme) => [
+    Text('Position sur la carte', style: theme.textTheme.titleSmall),
+    const SizedBox(height: 4),
+    Text(
+      "Pour que les clients vous trouvent dans l'annuaire, "
+      '« près de moi » et sur la carte. Facultatif.',
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    const SizedBox(height: 10),
+    Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _latController,
+            onChanged: (_) => setState(() {}),
+            enabled: !_saving && !_locating,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Latitude',
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: TextField(
+            controller: _lngController,
+            onChanged: (_) => setState(() {}),
+            enabled: !_saving && !_locating,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Longitude',
+            ),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 8),
+    Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        OutlinedButton.icon(
+          onPressed: (_saving || _locating) ? null : _useMyPosition,
+          icon: _locating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.my_location),
+          label: const Text('Utiliser ma position'),
+        ),
+        OutlinedButton.icon(
+          onPressed: (_saving || _locating) ? null : _pasteMapsLink,
+          icon: const Icon(Icons.link),
+          label: const Text('Coller un lien Google Maps'),
+        ),
+      ],
+    ),
+    // The pin, seen before saving (package 3).
+    if (_pin != null) ...[
+      const SizedBox(height: 12),
+      PinPreview(
+        lat: _pin!.$1,
+        lng: _pin!.$2,
+        currency: _currency,
+        onMove: (lat, lng) => setState(() {
+          _latController.text = lat.toStringAsFixed(6);
+          _lngController.text = lng.toStringAsFixed(6);
+        }),
+      ),
+    ],
+  ];
+
+  List<Widget> _platform(ThemeData theme) => [
+    if (widget.canSetPlan) ...[
+      const SizedBox(height: 40),
+      const Divider(),
+      const SizedBox(height: 16),
+      Text('Formule (plateforme)', style: theme.textTheme.titleSmall),
+      const SizedBox(height: 4),
+      Text(
+        'Kaj Pro se règle à la main pour l\'instant : quand le '
+        'paiement est arrivé sur Wave, passez l\'entreprise en '
+        'Pro jusqu\'à la date payée. Passée cette date elle '
+        'redevient gratuite, sans rien perdre.',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 12),
+      SegmentedButton<String>(
+        segments: const [
+          ButtonSegment(value: 'free', label: Text('Kaj')),
+          ButtonSegment(value: 'pro', label: Text('Kaj Pro')),
+        ],
+        selected: {_planRaw},
+        onSelectionChanged: _savingPlan
+            ? null
+            : (s) => setState(() => _planRaw = s.first),
+      ),
+      if (_planRaw == 'pro') ...[
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _savingPlan ? null : _pickPlanUntil,
+          icon: const Icon(Icons.event_outlined),
+          label: Text(
+            _planUntil == null
+                ? 'Payé jusqu\'au… (sans date = sans fin)'
+                : 'Payé jusqu\'au '
+                      '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}',
+          ),
+        ),
+      ],
+      const SizedBox(height: 12),
+      TextField(
+        controller: _planNoteController,
+        enabled: !_savingPlan,
+        decoration: const InputDecoration(
+          labelText: 'Note (pour la plateforme)',
+          hintText: 'Wave 25 000 F le 12/09, partenaire, test…',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      if (_planMessage != null) ...[
+        const SizedBox(height: 8),
+        Text(_planMessage!, style: theme.textTheme.bodySmall),
+      ],
+      const SizedBox(height: 12),
+      SizedBox(
+        height: 52,
+        child: FilledButton.tonalIcon(
+          onPressed: _savingPlan ? null : _savePlan,
+          icon: _savingPlan
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.workspace_premium_outlined),
+          label: const Text(
+            'Enregistrer la formule',
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+      ),
+    ],
+    if (widget.canSuspend) ...[
+      const SizedBox(height: 40),
+      const Divider(),
+      const SizedBox(height: 16),
+      Text('Modération de la plateforme', style: theme.textTheme.titleSmall),
+      const SizedBox(height: 4),
+      Text(
+        _suspended
+            ? 'Cette entreprise est suspendue : ses membres peuvent '
+                  'consulter mais rien enregistrer. Réactivez-la pour '
+                  'rétablir les opérations.'
+            : 'Suspendre gèle toutes les écritures sans rien '
+                  'supprimer. À utiliser pour un impayé, un litige ou '
+                  'un abus, le temps de le régler.',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        height: 52,
+        child: OutlinedButton.icon(
+          onPressed: _togglingSuspend ? null : _toggleSuspend,
+          icon: _togglingSuspend
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  _suspended ? Icons.lock_open_outlined : Icons.lock_outline,
+                ),
+          label: Text(
+            _suspended ? 'Réactiver' : 'Suspendre',
+            style: const TextStyle(fontSize: 16),
+          ),
+          style: _suspended
+              ? null
+              : OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                  side: BorderSide(color: theme.colorScheme.error),
+                ),
+        ),
+      ),
+    ],
+  ];
+
+  List<Widget> _saveBar(ThemeData theme) => [
+    if (_error != null) ...[
+      const SizedBox(height: 16),
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          _error!,
+          style: TextStyle(color: theme.colorScheme.onErrorContainer),
+        ),
+      ),
+    ],
+    const SizedBox(height: 24),
+    SizedBox(
+      height: 52,
+      child: FilledButton(
+        onPressed: _saving ? null : _save,
+        child: _saving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+      ),
+    ),
+  ];
+
+  List<Widget> _partBody(_Part part, ThemeData theme) => switch (part) {
+    _Part.identity => [..._identity(theme), ..._saveBar(theme)],
+    _Part.payments => [..._payments(theme), ..._saveBar(theme)],
+    _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
+    _Part.delivery => [..._delivery(theme), ..._saveBar(theme)],
+    _Part.position => [..._position(theme), ..._saveBar(theme)],
+    _Part.platform => _platform(theme),
+  };
+
+  /// One line under each row: where that part stands, so the index alone
+  /// answers most questions.
+  String _stateOf(_Part part) {
+    final money = _currency == 'XOF' ? 'FCFA' : _currency;
+    switch (part) {
+      case _Part.identity:
+        final name = _nameController.text.trim();
+        return [if (name.isNotEmpty) name, money].join(' · ');
+      case _Part.payments:
+        final wave = _waveController.text.trim();
+        return [
+          wave.isEmpty ? 'Wave non configuré' : 'Wave configuré',
+          if (_rates.isNotEmpty)
+            '${_rates.length} autre${_rates.length > 1 ? 's' : ''} monnaie${_rates.length > 1 ? 's' : ''}',
+        ].join(' · ');
+      case _Part.vitrine:
+        return _storefrontEnabled ? 'Ouverte' : 'Fermée';
+      case _Part.delivery:
+        final base = _deliveryBaseController.text.trim();
+        final perKm = _deliveryPerKmController.text.trim();
+        final reach = _deliveryReachController.text.trim();
+        return [
+          base.isEmpty && perKm.isEmpty
+              ? 'Tarifs de la plateforme'
+              : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
+          '${reach.isEmpty ? '15' : reach} km',
+        ].join(' · ');
+      case _Part.position:
+        final pin = _pin;
+        if (pin == null) return 'Non renseignée';
+        return pinLooksMisplaced(pin.$1, pin.$2, _currency)
+            ? 'Loin de la zone de la monnaie'
+            : 'Placée sur la carte';
+      case _Part.platform:
+        return [
+          widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
+          if (widget.canSuspend) _suspended ? 'suspendue' : 'active',
+        ].join(' · ');
+    }
+  }
+
+  bool _warns(_Part part) {
+    final pin = _pin;
+    return part == _Part.position &&
+        pin != null &&
+        pinLooksMisplaced(pin.$1, pin.$2, _currency);
+  }
+
+  List<_Part> get _parts => [
+    _Part.identity,
+    _Part.payments,
+    _Part.vitrine,
+    _Part.delivery,
+    _Part.position,
+    if (widget.canSetPlan || widget.canSuspend) _Part.platform,
+  ];
+
+  Widget _index(ThemeData theme, {required bool wide}) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      children: [
+        _Group(
+          children: [
+            for (final part in _parts.where((p) => p != _Part.platform))
+              _PartRow(
+                part: part,
+                state: _stateOf(part),
+                warn: _warns(part),
+                selected: wide && _open == part,
+                onTap: () => setState(() => _open = part),
+              ),
+          ],
+        ),
+        // The team's access is its own screen (031); a row here so the
+        // owner finds it where the rest of the business is set.
+        const SizedBox(height: 16),
+        _Group(
+          children: [
+            _PartRow.link(
+              icon: Icons.groups_outlined,
+              label: 'Équipe et accès',
+              state: 'Qui voit et modifie quoi',
+              onTap: () => context.push(
+                Routes.inside(widget.orgId, 'administration/acces'),
+              ),
+            ),
+          ],
+        ),
+        if (_parts.contains(_Part.platform)) ...[
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              'PLATEFORME',
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.2,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          _Group(
+            children: [
+              _PartRow(
+                part: _Part.platform,
+                state: _stateOf(_Part.platform),
+                selected: wide && _open == _Part.platform,
+                onTap: () => setState(() => _open = _Part.platform),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _page(_Part part, ThemeData theme) => ListView(
+    key: ValueKey(part),
+    padding: const EdgeInsets.all(24),
+    children: _partBody(part, theme),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final open = _open;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text("Paramètres de l'activité")),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                Text('Nom', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _nameController,
-                  enabled: !_saving,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('Monnaie', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: _currency,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    for (final c in _currencies)
-                      DropdownMenuItem(value: c, child: Text(c)),
-                  ],
-                  onChanged:
-                      _saving ? null : (v) => setState(() => _currency = v!),
-                ),
-                const SizedBox(height: 24),
-                Text('Paiement Wave', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _waveController,
-                  enabled: !_saving,
-                  keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: '+226 70 00 00 00',
-                    prefixIcon: Icon(Icons.qr_code_2),
-                    helperText: 'Le numéro Wave du commerce. Laissez vide pour '
-                        'ne pas proposer Wave à la vente.',
-                    helperMaxLines: 2,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('Taux de change', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                Text(
-                  'Pour encaisser une vente dans une autre monnaie. Les '
-                  'livres restent en ${_currency == 'XOF' ? 'FCFA' : _currency}.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 8),
-                for (final r in _rates)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.currency_exchange),
-                    title: Text(rateLabel(r.currency, r.rate, _currency)),
-                    subtitle: Text(knownCurrencies[r.currency] ?? ''),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip: 'Retirer',
-                      onPressed: _saving ? null : () => _removeRate(r),
-                    ),
-                    onTap: _saving ? null : () => _editRate(r),
-                  ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    onPressed: _saving ? null : () => _editRate(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Ajouter une monnaie'),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('Couleurs', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                _ColourRow(
-                  palette: paletteFor(_profile, theme: _theme),
-                  label: paletteNamed(_theme)?.label ?? 'Couleur par défaut',
-                  onTap: _saving ? null : _openColours,
-                ),
-                const SizedBox(height: 24),
-                Text('Vitrine en ligne', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                Text(
-                  'Une page publique de la boutique, avec les articles que vous '
-                  "choisissez d'afficher — photo et prix — à partager sur "
-                  "WhatsApp. Rien ne s'y vend : le client vous contacte.",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _storefrontEnabled,
-                  onChanged: _saving
-                      ? null
-                      : (v) => setState(() => _storefrontEnabled = v),
-                  title: const Text('Ouvrir la vitrine'),
-                ),
-                if (_storefrontEnabled) ...[
-                  TextField(
-                    controller: _blurbController,
-                    enabled: !_saving,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Quelques mots sur la boutique (facultatif)',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _LinkRow(url: _storefrontUrl),
-                  const SizedBox(height: 16),
-                  // What the window has and lacks (070), and "Tout publier".
-                  VitrineChecklistCard(
-                    orgId: widget.orgId,
-                    admin: widget.admin,
-                    retail: widget.retail,
-                  ),
-                  const SizedBox(height: 12),
-                  // Spots for sale on the street (071).
-                  SpotsCard(
-                    orgId: widget.orgId,
-                    admin: widget.admin,
-                    retail: widget.retail,
-                  ),
-                  const SizedBox(height: 20),
-                  // The Pro dressing (068): badged and held for a Free
-                  // business, a form for a Pro one.
-                  VitrinePlusCard(
-                    orgId: widget.orgId,
-                    admin: widget.admin,
-                    retail: widget.retail,
-                    capture: widget.capture,
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Frais de livraison', style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Une base pour la course, plus un prix par kilomètre '
-                    'entre votre boutique et la porte du client. Vide : les '
-                    'tarifs de la plateforme (500 + 150 F/km). Le montant '
-                    "est annoncé au client avant qu'il commande, et payé au "
-                    'livreur à la porte.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _deliveryBaseController,
-                          enabled: !_saving,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Base',
-                          ),
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // A desk: the index on the left, the open part beside it.
+    if (wide) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: 380, child: _index(theme, wide: true)),
+            const VerticalDivider(width: 1),
+            Expanded(
+              child: open == null
+                  ? Center(
+                      child: Text(
+                        'Choisissez une rubrique à gauche.',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: _deliveryPerKmController,
-                          enabled: !_saving,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Par km',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _deliveryReachController,
-                    enabled: !_saving,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Distance maximale (km)',
-                      helperText: 'Au-delà, la livraison n\'est pas proposée. '
-                          'Vide : 15 km.',
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text('Position sur la carte',
-                      style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Pour que les clients vous trouvent dans l'annuaire, "
-                    '« près de moi » et sur la carte. Facultatif.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _latController,
-                          onChanged: (_) => setState(() {}),
-                          enabled: !_saving && !_locating,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Latitude',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: _lngController,
-                          onChanged: (_) => setState(() {}),
-                          enabled: !_saving && !_locating,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Longitude',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed:
-                            (_saving || _locating) ? null : _useMyPosition,
-                        icon: _locating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.my_location),
-                        label: const Text('Utiliser ma position'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed:
-                            (_saving || _locating) ? null : _pasteMapsLink,
-                        icon: const Icon(Icons.link),
-                        label: const Text('Coller un lien Google Maps'),
-                      ),
-                    ],
-                  ),
-                  // The pin, seen before saving (package 3).
-                  if (_pin != null) ...[
-                    const SizedBox(height: 12),
-                    PinPreview(
-                      lat: _pin!.$1,
-                      lng: _pin!.$2,
-                      currency: _currency,
-                      onMove: (lat, lng) => setState(() {
-                        _latController.text = lat.toStringAsFixed(6);
-                        _lngController.text = lng.toStringAsFixed(6);
-                      }),
-                    ),
-                  ],
-                ],
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _error!,
-                      style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Enregistrer',
-                            style: TextStyle(fontSize: 17),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                const Divider(),
-                const SizedBox(height: 16),
-                Text(
-                  'Non modifiable ici',
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "L'adresse web et le type d'activité changent ce que voient "
-                  'tous les membres. Contactez Kaj-consulting pour les '
-                  'modifier.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
-                _ReadOnlyRow(label: "Type d'activité", value: _profile),
-                // Which plan this business is on (065). Every member reads
-                // it; only the platform changes it, below. Since 066 the
-                // Pro tools are badged and held on a Free business.
-                _ReadOnlyRow(
-                  label: 'Formule',
-                  value: widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
-                ),
-                if (widget.canSetPlan) ...[
-                  const SizedBox(height: 40),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  Text('Formule (plateforme)',
-                      style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Kaj Pro se règle à la main pour l\'instant : quand le '
-                    'paiement est arrivé sur Wave, passez l\'entreprise en '
-                    'Pro jusqu\'à la date payée. Passée cette date elle '
-                    'redevient gratuite, sans rien perdre.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'free', label: Text('Kaj')),
-                      ButtonSegment(value: 'pro', label: Text('Kaj Pro')),
-                    ],
-                    selected: {_planRaw},
-                    onSelectionChanged: _savingPlan
-                        ? null
-                        : (s) => setState(() => _planRaw = s.first),
-                  ),
-                  if (_planRaw == 'pro') ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _savingPlan ? null : _pickPlanUntil,
-                      icon: const Icon(Icons.event_outlined),
-                      label: Text(_planUntil == null
-                          ? 'Payé jusqu\'au… (sans date = sans fin)'
-                          : 'Payé jusqu\'au '
-                              '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}'),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _planNoteController,
-                    enabled: !_savingPlan,
-                    decoration: const InputDecoration(
-                      labelText: 'Note (pour la plateforme)',
-                      hintText: 'Wave 25 000 F le 12/09, partenaire, test…',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  if (_planMessage != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_planMessage!, style: theme.textTheme.bodySmall),
-                  ],
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
-                    child: FilledButton.tonalIcon(
-                      onPressed: _savingPlan ? null : _savePlan,
-                      icon: _savingPlan
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.workspace_premium_outlined),
-                      label: const Text('Enregistrer la formule',
-                          style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ],
-                if (widget.canSuspend) ...[
-                  const SizedBox(height: 40),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  Text('Modération de la plateforme',
-                      style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    _suspended
-                        ? 'Cette entreprise est suspendue : ses membres peuvent '
-                            'consulter mais rien enregistrer. Réactivez-la pour '
-                            'rétablir les opérations.'
-                        : 'Suspendre gèle toutes les écritures sans rien '
-                            'supprimer. À utiliser pour un impayé, un litige ou '
-                            'un abus, le temps de le régler.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      onPressed: _togglingSuspend ? null : _toggleSuspend,
-                      icon: _togglingSuspend
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Icon(_suspended
-                              ? Icons.lock_open_outlined
-                              : Icons.lock_outline),
-                      label: Text(
-                        _suspended ? 'Réactiver' : 'Suspendre',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      style: _suspended
-                          ? null
-                          : OutlinedButton.styleFrom(
-                              foregroundColor: theme.colorScheme.error,
-                              side: BorderSide(color: theme.colorScheme.error),
-                            ),
-                    ),
-                  ),
-                ],
-              ],
+                    )
+                  : _page(open, theme),
             ),
+          ],
+        ),
+      );
+    }
+
+    // A phone: the index, or one part on its own page. Back returns to the
+    // index, not out of the settings.
+    if (open == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        body: _index(theme, wide: false),
+      );
+    }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _open = null);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Retour aux paramètres',
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => setState(() => _open = null),
+          ),
+          title: Text(open.label),
+        ),
+        body: _page(open, theme),
+      ),
     );
   }
+}
+
+/// The parts of the business settings, as the index names them.
+enum _Part {
+  identity('Identité', Icons.badge_outlined),
+  payments('Paiements', Icons.payments_outlined),
+  vitrine('Vitrine', Icons.storefront_outlined),
+  delivery('Livraison', Icons.delivery_dining_outlined),
+  position('Position', Icons.place_outlined),
+  platform('Formule et modération', Icons.admin_panel_settings_outlined);
+
+  const _Part(this.label, this.icon);
+  final String label;
+  final IconData icon;
+}
+
+/// A rounded card of rows with hairlines between them.
+class _Group extends StatelessWidget {
+  const _Group({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.surfaceContainerHighest,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const Divider(height: 1, indent: 56),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PartRow extends StatelessWidget {
+  const _PartRow({
+    required _Part this.part,
+    required this.state,
+    required this.onTap,
+    this.warn = false,
+    this.selected = false,
+  }) : icon = null,
+       label = null;
+
+  const _PartRow.link({
+    required IconData this.icon,
+    required String this.label,
+    required this.state,
+    required this.onTap,
+  }) : part = null,
+       warn = false,
+       selected = false;
+
+  final _Part? part;
+  final IconData? icon;
+  final String? label;
+  final String state;
+  final bool warn;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      selected: selected,
+      leading: Icon(part?.icon ?? icon),
+      title: Text(
+        part?.label ?? label!,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        state,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: warn ? TextStyle(color: theme.colorScheme.error) : null,
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
+
+/// Delivery belongs to an open vitrine: said, rather than hidden.
+class _ClosedNote extends StatelessWidget {
+  const _ClosedNote({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Text(
+      'La vitrine est fermée : ces réglages servent dès son ouverture '
+      '(rubrique Vitrine).',
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+  );
 }
 
 /// The current palette, shown as itself rather than named.
@@ -1118,9 +1459,9 @@ class _LinkRow extends StatelessWidget {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: url));
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Lien copié')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Lien copié')));
               }
             },
           ),
@@ -1188,14 +1529,14 @@ class RateDialog extends StatefulWidget {
 
 class _RateDialogState extends State<RateDialog> {
   late final _rateController = TextEditingController(
-      text: widget.existing == null ? '' : '${widget.existing!.rate}');
+    text: widget.existing == null ? '' : '${widget.existing!.rate}',
+  );
   late String? _code = widget.existing?.currency;
 
   List<String> get _choices => [
-        for (final code in knownCurrencies.keys)
-          if (code != widget.homeCurrency && !widget.taken.contains(code))
-            code,
-      ];
+    for (final code in knownCurrencies.keys)
+      if (code != widget.homeCurrency && !widget.taken.contains(code)) code,
+  ];
 
   double? get _rate =>
       double.tryParse(_rateController.text.trim().replaceAll(',', '.'));
@@ -1224,9 +1565,9 @@ class _RateDialogState extends State<RateDialog> {
   Widget build(BuildContext context) {
     final home = widget.homeCurrency == 'XOF' ? 'FCFA' : widget.homeCurrency;
     return AlertDialog(
-      title: Text(widget.existing == null
-          ? 'Ajouter une monnaie'
-          : 'Modifier le taux'),
+      title: Text(
+        widget.existing == null ? 'Ajouter une monnaie' : 'Modifier le taux',
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1279,8 +1620,9 @@ class _RateDialogState extends State<RateDialog> {
           child: const Text('Annuler'),
         ),
         FilledButton(
-          onPressed:
-              _canSave ? () => Navigator.of(context).pop((_code!, _rate!)) : null,
+          onPressed: _canSave
+              ? () => Navigator.of(context).pop((_code!, _rate!))
+              : null,
           child: const Text('Enregistrer'),
         ),
       ],
