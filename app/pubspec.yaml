@@ -137,3 +137,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  # The KAJ mark (KAJ Consulting's K, kaj-consulting.com), beside
+  # « Powered by KAJ » under every vitrine.
+  assets:
+    - assets/brand/kaj_logo.png

@@ -239,21 +239,22 @@ class ShopFooter extends StatelessWidget {
         const SizedBox(height: 48),
         const Divider(),
         const SizedBox(height: 28),
-        // « Powered by KAJ »: the owner's words, in place of the old
-        // wordmark and tagline. The word is the original KAJ lettering; the
-        // owner's logo (kaj-consulting.com) goes beside it once the file is
-        // in assets/brand — the app's icon was put there first, and is not it.
+        // « Powered by KAJ », with the owner's mark — KAJ Consulting's K
+        // (kaj-consulting.com) — in place of the old wordmark and tagline.
         Semantics(
           label: 'Powered by KAJ',
-          child: const ExcludeSemantics(
+          child: ExcludeSemantics(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Powered by',
+                const Text('Powered by',
                     style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
-                SizedBox(width: 8),
-                Text('KAJ',
+                const SizedBox(width: 8),
+                Image.asset('assets/brand/kaj_logo.png',
+                    key: const Key('kaj-logo'), height: 36),
+                const SizedBox(width: 6),
+                const Text('KAJ',
                     key: Key('kaj-wordmark'),
                     style: TextStyle(
                         fontSize: 13,
