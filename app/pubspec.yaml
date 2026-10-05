@@ -137,3 +137,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  # The KAJ mark, for « Powered by KAJ » under every vitrine. The same
+  # picture as the app's icon (web/icons), so the street sees one brand.
+  assets:
+    - assets/brand/kaj_logo.png
