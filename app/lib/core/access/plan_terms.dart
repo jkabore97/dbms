@@ -29,6 +29,8 @@ class PlanTerms {
     'currencies',
     'tontines',
     'vitrine_plus',
+    'delivery',
+    'online_payment',
   ];
 
   static const defaults = PlanTerms();
@@ -98,6 +100,10 @@ class PlanTerms {
         'vitrine_plus' =>
           'Vitrine personnalisée : photo de couverture, horaires, couleur, '
               'articles épinglés',
+        'delivery' =>
+          'Livraison depuis la vitrine : prix selon la distance, livreurs, suivi',
+        'online_payment' =>
+          'Paiement en ligne des commandes : Wave ou carte, versé sur votre numéro',
         _ => feature,
       };
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/kaj_mark.dart';
+import '../../features/pro/pro_strip.dart';
+import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/accounting/account_ledger_screen.dart';
@@ -960,6 +962,20 @@ GoRouter buildRouter(SessionController session) {
               (scope, org) => CompteScreen(org: org),
             ),
           ),
+          // Kaj and Kaj Pro side by side: the « Pro » strip, every badged
+          // tool and Compte open it.
+          GoRoute(
+            path: 'kaj-pro',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => ProPlansScreen(
+                org: org,
+                terms: scope.session.planTerms,
+                admin: scope.admin,
+              ),
+            ),
+          ),
           GoRoute(
             path: 'rapports',
             builder: (context, state) => _withOrg(
@@ -1293,7 +1309,9 @@ Widget _withOrg(
       return ProfileTheme(
         profile: org.profile,
         theme: org.theme,
-        child: build(scope, org),
+        // The small « Pro » on every page of a business not on Kaj Pro,
+        // for its owner and admins (ProStrip decides).
+        child: ProStrip(org: org, child: build(scope, org)),
       );
     },
   );
