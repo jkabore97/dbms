@@ -37,6 +37,57 @@ class CourierRepository {
         .toList();
   }
 
+  /// The board (073): nearest shop first from [lat]/[lng] when given, the
+  /// courier's own shops first of all. Falls back to [available] on a
+  /// database before 073.
+  Future<List<DeliveryJob>> board({double? lat, double? lng}) async {
+    if (_client == null) return available();
+    try {
+      final rows = await _requireClient().rpc('delivery_board', params: {
+        'p_lat': lat,
+        'p_lng': lng,
+      }) as List<dynamic>;
+      return rows
+          .map((r) => DeliveryJob.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return available();
+      rethrow;
+    }
+  }
+
+  /// Closes a delivery at the door with the shopper's four digits (073).
+  Future<void> deliver(String orderId, String code) async {
+    await _requireClient().rpc('courier_deliver', params: {
+      'p_order_id': orderId,
+      'p_code': code.trim(),
+    });
+  }
+
+  /// The door did not open (073): 'absent', 'refused', 'unreachable' or
+  /// 'other'. The order is cancelled and the goods go back to the shop.
+  Future<void> fail(String orderId, String reason) async {
+    await _requireClient().rpc('courier_fail', params: {
+      'p_order_id': orderId,
+      'p_reason': reason,
+    });
+  }
+
+  /// Cash collected at doors and not yet handed to the shops (073). Empty
+  /// on a database before 073.
+  Future<List<CashHeld>> cash() async {
+    if (_client == null) return const [];
+    try {
+      final rows = await _requireClient().rpc('courier_cash') as List<dynamic>;
+      return rows
+          .map((r) => CashHeld.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
   /// The courier's own jobs, running first.
   Future<List<DeliveryJob>> mine() async {
     final rows =
@@ -72,6 +123,41 @@ class CourierRepository {
       'p_status': status,
     });
   }
+}
+
+/// A cash order delivered and not yet handed to its shop (073).
+class CashHeld {
+  const CashHeld({
+    required this.orderId,
+    required this.shopName,
+    required this.total,
+    this.shopPhone,
+    this.customerName,
+    this.currency = 'XOF',
+    this.deliveredAt,
+  });
+
+  factory CashHeld.fromRow(Map<String, dynamic> r) => CashHeld(
+        orderId: '${r['order_id']}',
+        shopName: '${r['shop_name'] ?? ''}',
+        shopPhone: r['shop_phone'] as String?,
+        customerName: r['customer_name'] as String?,
+        total: DeliveryJob._num(r['total']) ?? 0,
+        currency: '${r['currency'] ?? 'XOF'}',
+        deliveredAt: r['delivered_at'] == null
+            ? null
+            : DateTime.tryParse('${r['delivered_at']}')?.toLocal(),
+      );
+
+  final String orderId;
+  final String shopName;
+  final String? shopPhone;
+  final String? customerName;
+
+  /// The goods' price: the shop's money. The course stays the courier's.
+  final double total;
+  final String currency;
+  final DateTime? deliveredAt;
 }
 
 /// What the courier has earned (062): one row per period, about themselves.
@@ -144,6 +230,8 @@ class DeliveryJob {
     this.paidAt,
     this.deliveryFee,
     this.distanceKm,
+    this.toShopKm,
+    this.ownShop = false,
   });
 
   final String orderId;
@@ -175,6 +263,12 @@ class DeliveryJob {
   final double? deliveryFee;
   final double? distanceKm;
 
+  /// From where the courier stands to the shop (073's board), when known.
+  final double? toShopKm;
+
+  /// One of the shops that named this courier as its own (073).
+  final bool ownShop;
+
   bool get shopHasPin => shopLat != null && shopLng != null;
   bool get hasDropPin => dropLat != null && dropLng != null;
   bool get isPaid => paidAt != null;
@@ -204,6 +298,8 @@ class DeliveryJob {
             DateTime.now(),
         deliveryFee: _num(row['delivery_fee']),
         distanceKm: _num(row['distance_km']),
+        toShopKm: _num(row['to_shop_km']),
+        ownShop: row['own_shop'] == true,
       );
 
   static double? _num(Object? v) =>

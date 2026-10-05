@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +10,7 @@ import '../../core/nav/router.dart';
 import '../../core/orders/orders.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_skeleton.dart';
+import 'order_tracking_panel.dart';
 import '../storefront/shop_style.dart';
 
 /// A customer's orders: what they asked for, where each one stands, and
@@ -27,15 +30,37 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   String? _error;
   String? _busyId;
 
+  /// While an order is open the page keeps up by itself (073): every
+  /// thirty seconds, silently, the list and each card's timeline.
+  Timer? _poll;
+  int _tick = 0;
+  static const _pollEvery = Duration(seconds: 30);
+
   @override
   void initState() {
     super.initState();
     _load();
+    _poll = Timer.periodic(_pollEvery, (_) {
+      if (!mounted || _loading || _busyId != null) return;
+      if (!_orders.any((o) => o.isOpen)) return;
+      _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _call(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null) await launchUrl(uri);
+  }
+
+  Future<void> _load({bool silent = false}) async {
     setState(() {
-      _loading = true;
+      if (!silent) _loading = true;
       _error = null;
     });
     if (!widget.storefront.isConfigured) {
@@ -51,9 +76,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       setState(() {
         _orders = orders;
         _loading = false;
+        _tick++;
       });
     } catch (_) {
       if (!mounted) return;
+      if (silent) return;
       setState(() {
         _error = "Vos commandes n'ont pas pu être chargées. Vérifiez le réseau.";
         _loading = false;
@@ -168,6 +195,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                     onPay: o.canPayNow
                                         ? () => _payWithWave(o)
                                         : null,
+                                    tracking: OrderTrackingPanel(
+                                      key: ValueKey('track-${o.id}'),
+                                      orderId: o.id,
+                                      storefront: widget.storefront,
+                                      onCall: _call,
+                                      refreshKey: _tick,
+                                    ),
                                   ),
                                 const SizedBox(height: 28),
                               ],
@@ -194,10 +228,14 @@ class _OrderCard extends StatelessWidget {
     required this.busy,
     this.onCancel,
     this.onPay,
+    this.tracking,
   });
 
   final CustomerOrder order;
   final bool busy;
+
+  /// The open order's timeline (073).
+  final Widget? tracking;
   final VoidCallback? onCancel;
   final VoidCallback? onPay;
 
@@ -304,6 +342,7 @@ class _OrderCard extends StatelessWidget {
             Text('Note : ${order.note}',
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
+          ?tracking,
           if (onPay != null) ...[
             const SizedBox(height: 12),
             FilledButton.icon(

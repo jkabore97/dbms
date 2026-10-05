@@ -277,3 +277,164 @@ List<OrderLine> _lines(Object? raw) {
 
 double? _num(Object? v) =>
     v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+
+DateTime? _when(Object? v) =>
+    v == null ? null : DateTime.tryParse('$v')?.toLocal();
+double _amount(Object? v) =>
+    v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
+
+/// How long an order has sat where it is (073), and whether that is too long.
+class OrderClock {
+  const OrderClock({
+    this.since,
+    this.stuck = false,
+    this.selfDelivered = false,
+    this.outcome,
+  });
+
+  factory OrderClock.fromRow(Map<String, dynamic> r) => OrderClock(
+        since: _when(r['since']),
+        stuck: r['stuck'] == true,
+        selfDelivered: r['self_delivered'] == true,
+        outcome: r['outcome'] as String?,
+      );
+
+  final DateTime? since;
+  final bool stuck;
+  final bool selfDelivered;
+
+  /// Why a delivery failed: absent, refused, unreachable, other.
+  final String? outcome;
+
+  /// "depuis 25 min", "depuis 2 h 10".
+  String sinceLabel([DateTime? now]) {
+    final at = since;
+    if (at == null) return '';
+    final d = (now ?? DateTime.now()).difference(at);
+    if (d.inMinutes < 1) return "à l'instant";
+    if (d.inMinutes < 60) return 'depuis ${d.inMinutes} min';
+    final m = d.inMinutes % 60;
+    if (d.inHours < 24) {
+      return 'depuis ${d.inHours} h${m == 0 ? '' : ' ${m.toString().padLeft(2, '0')}'}';
+    }
+    return 'depuis ${d.inDays} j';
+  }
+}
+
+/// Why a door did not open, in the shop's and shopper's words.
+String deliveryOutcomeLabel(String? outcome) => switch (outcome) {
+      'absent' => 'client absent',
+      'refused' => 'refusée par le client',
+      'unreachable' => 'client injoignable',
+      'other' => 'autre raison',
+      _ => '',
+    };
+
+/// Cash a courier holds for the shop (073).
+class CashOwed {
+  const CashOwed({
+    required this.orderId,
+    required this.courierName,
+    required this.total,
+    this.courierPhone,
+    this.customerName,
+    this.currency = 'XOF',
+    this.deliveredAt,
+  });
+
+  factory CashOwed.fromRow(Map<String, dynamic> r) => CashOwed(
+        orderId: '${r['order_id']}',
+        courierName: '${r['courier_name'] ?? 'Livreur'}',
+        courierPhone: r['courier_phone'] as String?,
+        customerName: r['customer_name'] as String?,
+        total: _amount(r['total']),
+        currency: '${r['currency'] ?? 'XOF'}',
+        deliveredAt: _when(r['delivered_at']),
+      );
+
+  final String orderId;
+  final String courierName;
+  final String? courierPhone;
+  final String? customerName;
+  final double total;
+  final String currency;
+  final DateTime? deliveredAt;
+}
+
+/// A courier a shop named as its own (073).
+class OrgCourier {
+  const OrgCourier({required this.userId, required this.name, this.phone});
+
+  factory OrgCourier.fromRow(Map<String, dynamic> r) => OrgCourier(
+        userId: '${r['user_id']}',
+        name: '${r['name'] ?? 'Livreur'}',
+        phone: r['phone'] as String?,
+      );
+
+  final String userId;
+  final String name;
+  final String? phone;
+}
+
+/// The shopper's view of where an order is (073).
+class OrderTracking {
+  const OrderTracking({
+    required this.status,
+    this.fulfilment = 'pickup',
+    this.outcome,
+    this.selfDelivered = false,
+    this.since,
+    this.shopName = '',
+    this.shopPhone,
+    this.courierName,
+    this.courierPhone,
+    this.code,
+    this.events = const [],
+  });
+
+  factory OrderTracking.fromJson(Map<String, dynamic> j) {
+    final shop = j['shop'] is Map ? Map<String, dynamic>.from(j['shop']) : const {};
+    final courier =
+        j['courier'] is Map ? Map<String, dynamic>.from(j['courier']) : null;
+    return OrderTracking(
+      status: '${j['status']}',
+      fulfilment: '${j['fulfilment'] ?? 'pickup'}',
+      outcome: j['outcome'] as String?,
+      selfDelivered: j['self'] == true,
+      since: _when(j['since']),
+      shopName: '${shop['name'] ?? ''}',
+      shopPhone: shop['phone'] as String?,
+      courierName: courier?['name'] as String?,
+      courierPhone: courier?['phone'] as String?,
+      code: j['code'] as String?,
+      events: [
+        if (j['events'] is List)
+          for (final e in j['events'] as List)
+            if (e is Map && _when(e['at']) != null)
+              (status: '${e['status']}', at: _when(e['at'])!),
+      ],
+    );
+  }
+
+  final String status;
+  final String fulfilment;
+  final String? outcome;
+  final bool selfDelivered;
+  final DateTime? since;
+  final String shopName;
+  final String? shopPhone;
+  final String? courierName;
+  final String? courierPhone;
+
+  /// The four digits the shopper gives the courier at the door.
+  final String? code;
+  final List<({String status, DateTime at})> events;
+
+  /// When the order reached [status], if it did.
+  DateTime? reached(String status) {
+    for (final e in events.reversed) {
+      if (e.status == status) return e.at;
+    }
+    return null;
+  }
+}

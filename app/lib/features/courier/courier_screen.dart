@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,6 +45,9 @@ class _CourierScreenState extends State<CourierScreen>
   List<DeliveryJob> _board = const [];
   List<DeliveryJob> _mine = const [];
   List<CourierEarnings> _earnings = const [];
+
+  /// Cash collected at doors, not yet handed to the shops (073).
+  List<CashHeld> _cash = const [];
   bool _loading = true;
   bool _busy = false;
   String? _error;
@@ -96,19 +100,25 @@ class _CourierScreenState extends State<CourierScreen>
       var board = const <DeliveryJob>[];
       var mine = const <DeliveryJob>[];
       var earnings = const <CourierEarnings>[];
+      var cash = const <CashHeld>[];
       if (status == 'approved') {
+        final here = _here;
         final results = await Future.wait([
-          widget.courier.available(),
+          // Nearest shop first from where the phone last was (073), once
+          // known; the first load never waits for it.
+          widget.courier.board(lat: here?.latitude, lng: here?.longitude),
           widget.courier.mine(),
           // The tally is a strip, not the page: if it fails, the board
           // still shows and the strip is simply absent.
           widget.courier
               .earnings()
               .catchError((_) => const <CourierEarnings>[]),
+          widget.courier.cash().catchError((_) => const <CashHeld>[]),
         ]);
         board = results[0] as List<DeliveryJob>;
         mine = results[1] as List<DeliveryJob>;
         earnings = results[2] as List<CourierEarnings>;
+        cash = results[3] as List<CashHeld>;
       }
       if (!mounted) return;
       setState(() {
@@ -116,8 +126,12 @@ class _CourierScreenState extends State<CourierScreen>
         _board = board;
         _mine = mine;
         _earnings = earnings;
+        _cash = cash;
         _loading = false;
       });
+      if (status == 'approved' && _here == null && !_locating) {
+        unawaited(_locate());
+      }
     } catch (_) {
       if (!mounted) return;
       if (silent) return; // No signal is not news: what is on screen stays.
@@ -126,6 +140,89 @@ class _CourierScreenState extends State<CourierScreen>
         _loading = false;
       });
     }
+  }
+
+  Position? _here;
+  bool _locating = false;
+
+  /// Learns where the phone last was, then re-sorts the board nearest first.
+  Future<void> _locate() async {
+    _locating = true;
+    final here = await _lastKnown();
+    if (!mounted || here == null) return;
+    _here = here;
+    try {
+      final board = await widget.courier
+          .board(lat: here.latitude, lng: here.longitude);
+      if (mounted) setState(() => _board = board);
+    } catch (_) {}
+  }
+
+  /// Where the phone last was, without asking: null when unknown, refused
+  /// or on a platform without the plugin.
+  static Future<Position?> _lastKnown() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return null;
+      }
+      return await Geolocator.getLastKnownPosition()
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// "Livré" (073): the shopper's four digits close the delivery.
+  Future<void> _deliver(DeliveryJob job) async {
+    final code = await showDialog<String>(
+      context: context,
+      builder: (_) => const _CodeDialog(),
+    );
+    if (code == null) return;
+    await _act(() => widget.courier.deliver(job.orderId, code),
+        "Code refusé : demandez au client les 4 chiffres affichés dans sa commande.");
+  }
+
+  /// "Échec" (073): why the door did not open.
+  Future<void> _fail(DeliveryJob job) async {
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text('Pourquoi la livraison échoue ?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            for (final (key, label) in const [
+              ('absent', 'Client absent'),
+              ('unreachable', 'Client injoignable'),
+              ('refused', 'Le client refuse la commande'),
+              ('other', 'Autre raison'),
+            ])
+              ListTile(
+                title: Text(label),
+                onTap: () => Navigator.of(sheet).pop(key),
+              ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 4, 20, 16),
+              child: Text(
+                  'La commande est annulée et vous rapportez le colis à la '
+                  'boutique. La boutique et le client sont prévenus.',
+                  style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (reason == null) return;
+    await _act(() => widget.courier.fail(job.orderId, reason),
+        "L'échec n'a pas pu être enregistré.");
   }
 
   Future<void> _register() async {
@@ -260,6 +357,7 @@ class _CourierScreenState extends State<CourierScreen>
                                 currency: _mine.isNotEmpty
                                     ? _mine.first.currency
                                     : 'XOF'),
+                          if (_cash.isNotEmpty) _CashStrip(cash: _cash),
                           Material(
                             color: ShopStyle.paper,
                             child: TabBar(controller: tabs, tabs: [
@@ -339,14 +437,14 @@ class _CourierScreenState extends State<CourierScreen>
                                         label: const Text('Carte'),
                                       ),
                                       FilledButton(
-                                        onPressed: _busy
-                                            ? null
-                                            : () => _act(
-                                                () => widget.courier.mark(
-                                                    job.orderId, 'delivered'),
-                                                "La livraison n'a pas pu "
-                                                'être enregistrée.'),
+                                        onPressed:
+                                            _busy ? null : () => _deliver(job),
                                         child: const Text('Livré'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed:
+                                            _busy ? null : () => _fail(job),
+                                        child: const Text('Échec'),
                                       ),
                                     ],
                                   _ => const [],
@@ -580,6 +678,20 @@ class _JobCard extends StatelessWidget {
                         color: ShopStyle.ink)),
               ],
             ),
+            if (job.ownShop || job.toShopKm != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                [
+                  if (job.ownShop) 'Votre boutique',
+                  if (job.toShopKm != null)
+                    'à ${job.toShopKm!.toStringAsFixed(1)} km de vous',
+                ].join(' · '),
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: job.ownShop ? ShopStyle.ink : ShopStyle.mist),
+              ),
+            ],
             const SizedBox(height: 10),
             _Leg(
               icon: Icons.storefront_outlined,
@@ -711,6 +823,136 @@ class _Leg extends StatelessWidget {
         if (onRoute != null)
           TextButton(onPressed: onRoute, child: const Text('Itinéraire')),
       ],
+    );
+  }
+}
+
+
+/// The four digits the shopper sees in their order (073).
+class _CodeDialog extends StatefulWidget {
+  const _CodeDialog();
+
+  @override
+  State<_CodeDialog> createState() => _CodeDialogState();
+}
+
+class _CodeDialogState extends State<_CodeDialog> {
+  final _code = TextEditingController();
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Code du client'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Demandez au client les 4 chiffres affichés dans sa '
+              'commande : ils prouvent que le colis est bien arrivé.'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _code,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 28, letterSpacing: 10),
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(), counterText: ''),
+            onChanged: (_) => setState(() {}),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _code.text.trim().length == 4
+              ? () => Navigator.of(context).pop(_code.text.trim())
+              : null,
+          child: const Text('Valider la livraison'),
+        ),
+      ],
+    );
+  }
+}
+
+/// The shops' money in the courier's pocket (073): one line, the detail on
+/// a tap. The course stays the courier's; the goods' price is the shop's.
+class _CashStrip extends StatelessWidget {
+  const _CashStrip({required this.cash});
+
+  final List<CashHeld> cash;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(cash.first.currency);
+    final total = cash.fold<double>(0, (s, c) => s + c.total);
+    final shops = <String, double>{};
+    for (final c in cash) {
+      shops[c.shopName] = (shops[c.shopName] ?? 0) + c.total;
+    }
+    return Material(
+      color: ShopStyle.paper,
+      child: InkWell(
+        onTap: () => showModalBottomSheet<void>(
+          context: context,
+          showDragHandle: true,
+          builder: (_) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text('À remettre aux boutiques',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                ),
+                for (final e in shops.entries)
+                  ListTile(
+                    title: Text(e.key),
+                    trailing: Text(money.format(e.value),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 4, 20, 16),
+                  child: Text(
+                      'La boutique confirme dans Kaj quand elle a reçu '
+                      "l'argent ; la ligne disparaît alors d'ici.",
+                      style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          child: Row(
+            children: [
+              const Icon(Icons.payments_outlined, size: 20, color: ShopStyle.ink),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                    'À remettre aux boutiques : ${money.format(total)}',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ShopStyle.ink)),
+              ),
+              const Icon(Icons.chevron_right, color: ShopStyle.mist),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -35,30 +37,61 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   List<String> get tabSlugs => const ['a-traiter', 'historique'];
 
   List<ShopOrder> _orders = const [];
+
+  /// How long each open order has sat, and which are stuck (073).
+  Map<String, OrderClock> _clocks = const {};
+
+  /// Cash couriers hold for the shop (073).
+  List<CashOwed> _cash = const [];
   bool _loading = true;
   String? _error;
   String? _busyId;
+
+  /// The clocks move on their own: a quiet re-read every minute.
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _poll = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && !_loading && _busyId == null) _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
     setState(() {
-      _loading = true;
+      if (!silent) _loading = true;
       _error = null;
     });
     try {
-      final orders = await widget.retail.shopOrders(widget.org.id);
+      final results = await Future.wait([
+        widget.retail.shopOrders(widget.org.id),
+        // The clocks and the cash are lines on the cards, not the page: if
+        // they fail, the orders still show.
+        widget.retail
+            .orderClocks(widget.org.id)
+            .catchError((_) => const <String, OrderClock>{}),
+        widget.retail
+            .cashOwed(widget.org.id)
+            .catchError((_) => const <CashOwed>[]),
+      ]);
       if (!mounted) return;
       setState(() {
-        _orders = orders;
+        _orders = results[0] as List<ShopOrder>;
+        _clocks = results[1] as Map<String, OrderClock>;
+        _cash = results[2] as List<CashOwed>;
         _loading = false;
       });
     } catch (error) {
       if (!mounted) return;
+      if (silent) return;
       setState(() {
         _error = AuthRepository.describeError(error);
         _loading = false;
@@ -114,6 +147,57 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     }
   }
 
+  /// "Je livre moi-même" (073): nobody took it; the shop carries it.
+  Future<void> _deliverSelf(ShopOrder order) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Livrer vous-même ?'),
+        content: Text("La commande de ${order.customerName} passe « en route ». "
+            'Vous encaissez la livraison ; marquez-la livrée une fois remise.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Retour')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Je livre moi-même')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _busyId = order.id);
+    try {
+      await widget.retail.deliverSelf(order.id);
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  Future<void> _showCash() async {
+    final changed = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => _CashSheet(cash: _cash, retail: widget.retail),
+    );
+    if (changed == true) await _load();
+  }
+
+  Future<void> _showCouriers() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => _CouriersSheet(orgId: widget.org.id, retail: widget.retail),
+    );
+  }
+
   Future<void> _open(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
@@ -129,6 +213,12 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
         appBar: AppBar(
           title: const Text('Commandes'),
           actions: [
+            if (widget.org.isAdmin)
+              IconButton(
+                tooltip: 'Mes livreurs',
+                onPressed: _showCouriers,
+                icon: const Icon(Icons.sports_motorsports_outlined),
+              ),
             IconButton(
               tooltip: 'Actualiser',
               onPressed: _loading ? null : _load,
@@ -167,6 +257,11 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       onMove: _move,
                       onOpen: _open,
                       onSetPaid: _setPaid,
+                      clocks: _clocks,
+                      onDeliverSelf: _deliverSelf,
+                      header: _cash.isEmpty
+                          ? null
+                          : _CashBanner(cash: _cash, onTap: _showCash),
                     ),
                     _List(
                       orders: past,
@@ -175,6 +270,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       onMove: _move,
                       onOpen: _open,
                       onSetPaid: _setPaid,
+                      clocks: _clocks,
+                      onDeliverSelf: _deliverSelf,
                     ),
                   ]),
     );
@@ -189,7 +286,16 @@ class _List extends StatelessWidget {
     required this.onMove,
     required this.onOpen,
     required this.onSetPaid,
+    this.clocks = const {},
+    this.onDeliverSelf,
+    this.header,
   });
+
+  final Map<String, OrderClock> clocks;
+  final Future<void> Function(ShopOrder)? onDeliverSelf;
+
+  /// Above the cards: the cash couriers hold (073).
+  final Widget? header;
 
   final List<ShopOrder> orders;
   final String empty;
@@ -200,7 +306,7 @@ class _List extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) {
+    if (orders.isEmpty && header == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -210,16 +316,21 @@ class _List extends StatelessWidget {
         ),
       );
     }
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      itemCount: orders.length,
-      itemBuilder: (context, i) => _OrderCard(
-        order: orders[i],
-        busy: busyId == orders[i].id,
-        onMove: onMove,
-        onOpen: onOpen,
-        onSetPaid: onSetPaid,
-      ),
+      children: [
+        ?header,
+        for (final o in orders)
+          _OrderCard(
+            order: o,
+            busy: busyId == o.id,
+            onMove: onMove,
+            onOpen: onOpen,
+            onSetPaid: onSetPaid,
+            clock: clocks[o.id],
+            onDeliverSelf: onDeliverSelf,
+          ),
+      ],
     );
   }
 }
@@ -231,7 +342,12 @@ class _OrderCard extends StatelessWidget {
     required this.onMove,
     required this.onOpen,
     required this.onSetPaid,
+    this.clock,
+    this.onDeliverSelf,
   });
+
+  final OrderClock? clock;
+  final Future<void> Function(ShopOrder)? onDeliverSelf;
 
   final ShopOrder order;
   final bool busy;
@@ -273,6 +389,57 @@ class _OrderCard extends StatelessWidget {
                 '${order.isPaid ? ' · payé' : ''}',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            // The state's clock (073): "Prête depuis 25 min".
+            if (order.isOpen && clock?.since != null)
+              Text(
+                  '${orderStatusLabel(order.status)} ${clock!.sinceLabel()}'
+                  '${clock!.selfDelivered ? ' · vous livrez' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: clock!.stuck
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant)),
+            if (!order.isOpen && (clock?.outcome ?? '').isNotEmpty)
+              Text('Livraison échouée : ${deliveryOutcomeLabel(clock!.outcome)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.error)),
+            if (clock?.stuck == true) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        switch (order.status) {
+                          'pending' => 'Le client attend votre réponse.',
+                          'ready' => "Aucun livreur ne l'a prise. Appelez un "
+                              'de vos livreurs, ou livrez-la vous-même.',
+                          _ => 'Cette livraison est en route depuis longtemps : '
+                              'appelez le livreur.',
+                        },
+                        style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer)),
+                    if (order.status == 'ready' &&
+                        order.fulfilment == 'delivery' &&
+                        onDeliverSelf != null) ...[
+                      const SizedBox(height: 6),
+                      FilledButton.tonalIcon(
+                        onPressed: busy ? null : () => onDeliverSelf!(order),
+                        icon: const Icon(Icons.directions_bike_outlined,
+                            size: 18),
+                        label: const Text('Je livre moi-même'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
             if (phone.isNotEmpty) ...[
               const SizedBox(height: 6),
               Row(
@@ -411,4 +578,242 @@ class _OrderCard extends StatelessWidget {
 
   static String _qty(double q) =>
       q == q.roundToDouble() ? q.toInt().toString() : q.toString();
+}
+
+
+/// "Argent chez les livreurs" (073): one line above the orders.
+class _CashBanner extends StatelessWidget {
+  const _CashBanner({required this.cash, required this.onTap});
+
+  final List<CashOwed> cash;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = cash.fold<double>(0, (s, c) => s + c.total);
+    return Card(
+      color: theme.colorScheme.tertiaryContainer,
+      child: ListTile(
+        leading: const Icon(Icons.payments_outlined),
+        title: Text(
+            'Argent chez les livreurs : ${moneyFormat(cash.first.currency).format(total)}'),
+        subtitle: Text('${cash.length} commande${cash.length > 1 ? 's' : ''} '
+            'payée${cash.length > 1 ? 's' : ''} en espèces à la porte'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _CashSheet extends StatefulWidget {
+  const _CashSheet({required this.cash, required this.retail});
+
+  final List<CashOwed> cash;
+  final RetailRepository retail;
+
+  @override
+  State<_CashSheet> createState() => _CashSheetState();
+}
+
+class _CashSheetState extends State<_CashSheet> {
+  late final _left = [...widget.cash];
+  String? _busy;
+  bool _changed = false;
+
+  Future<void> _received(CashOwed c) async {
+    setState(() => _busy = c.orderId);
+    try {
+      await widget.retail.confirmCashReceived(c.orderId);
+      setState(() {
+        _left.remove(c);
+        _changed = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final day = DateFormat('d MMM, HH:mm', 'fr_FR');
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.of(context).pop(_changed);
+      },
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Argent chez les livreurs',
+                  style: theme.textTheme.titleLarge),
+              const SizedBox(height: 4),
+              Text("Touchez « Reçu » quand le livreur vous a remis l'argent "
+                  'de la commande.',
+                  style: theme.textTheme.bodySmall),
+              const SizedBox(height: 8),
+              if (_left.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Tout est réglé.', textAlign: TextAlign.center),
+                ),
+              for (final c in _left)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('${c.courierName} · '
+                      '${moneyFormat(c.currency).format(c.total)}'),
+                  subtitle: Text([
+                    if ((c.customerName ?? '').isNotEmpty) c.customerName!,
+                    if (c.deliveredAt != null) day.format(c.deliveredAt!),
+                    if ((c.courierPhone ?? '').isNotEmpty) c.courierPhone!,
+                  ].join(' · ')),
+                  trailing: FilledButton.tonal(
+                    onPressed: _busy != null ? null : () => _received(c),
+                    child: const Text('Reçu'),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The shop's own couriers (073): its ready orders are theirs for the first
+/// minutes, before the street's.
+class _CouriersSheet extends StatefulWidget {
+  const _CouriersSheet({required this.orgId, required this.retail});
+
+  final String orgId;
+  final RetailRepository retail;
+
+  @override
+  State<_CouriersSheet> createState() => _CouriersSheetState();
+}
+
+class _CouriersSheetState extends State<_CouriersSheet> {
+  final _phone = TextEditingController();
+  List<OrgCourier> _list = const [];
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _phone.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await widget.retail.orgCouriers(widget.orgId);
+      if (mounted) setState(() => _list = list);
+    } catch (_) {}
+  }
+
+  Future<void> _add() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.retail.addOrgCourier(widget.orgId, _phone.text);
+      _phone.clear();
+      await _load();
+    } catch (error) {
+      if (mounted) setState(() => _error = AuthRepository.describeError(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _remove(OrgCourier c) async {
+    setState(() => _busy = true);
+    try {
+      await widget.retail.removeOrgCourier(widget.orgId, c.userId);
+      await _load();
+    } catch (error) {
+      if (mounted) setState(() => _error = AuthRepository.describeError(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+            16, 0, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Mes livreurs', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+                'Vos commandes prêtes leur sont proposées en premier, seuls, '
+                'pendant 10 minutes ; ensuite à tous les livreurs Kaj.',
+                style: theme.textTheme.bodySmall),
+            const SizedBox(height: 8),
+            for (final c in _list)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.sports_motorsports_outlined),
+                title: Text(c.name),
+                subtitle: c.phone == null ? null : Text(c.phone!),
+                trailing: IconButton(
+                  tooltip: 'Retirer ${c.name}',
+                  icon: const Icon(Icons.close),
+                  onPressed: _busy ? null : () => _remove(c),
+                ),
+              ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _phone,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Numéro du livreur',
+                      hintText: 'Inscrit et validé comme livreur Kaj',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _busy ? null : _add,
+                  child: const Text('Ajouter'),
+                ),
+              ],
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 6),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
