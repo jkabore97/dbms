@@ -326,7 +326,44 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                       onDirectory: _directory,
                       onAdd: _add,
                       onRemove: _remove,
+                      onDetails: _details,
                     ),
+    );
+  }
+
+  /// The article on its own (070): the large photo, the words the shop
+  /// wrote, the stock, the stepper, and a question by WhatsApp — the page a
+  /// shopper wants before deciding, which used to be one tap straight into
+  /// the basket.
+  Future<void> _details(PublicItem item) async {
+    final shop = _shop;
+    if (shop == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheet) => Theme(
+        data: ShopStyle.theme(sheet, accent: shop.style.accent),
+        child: StatefulBuilder(
+          builder: (sheet, setSheet) => ArticleSheet(
+            item: item,
+            shopName: shop.name,
+            currency: shop.currency,
+            phone: shop.phone,
+            capture: widget.capture,
+            quantity: _basket[item.id] ?? 0,
+            onAdd: () {
+              _add(item);
+              setSheet(() {});
+            },
+            onRemove: () {
+              _remove(item);
+              setSheet(() {});
+            },
+            onOpen: _open,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -899,6 +936,7 @@ class _Window extends StatelessWidget {
     required this.onDirectory,
     required this.onAdd,
     required this.onRemove,
+    required this.onDetails,
   });
 
   final PublicShop shop;
@@ -915,6 +953,7 @@ class _Window extends StatelessWidget {
   final VoidCallback onDirectory;
   final void Function(PublicItem) onAdd;
   final void Function(PublicItem) onRemove;
+  final void Function(PublicItem) onDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -950,7 +989,7 @@ class _Window extends StatelessWidget {
           color: ShopStyle.stone,
           child: ShopWidth(
             padding: EdgeInsets.symmetric(
-                horizontal: 20, vertical: wide ? 56 : 36),
+                horizontal: 20, vertical: wide ? 40 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -989,12 +1028,21 @@ class _Window extends StatelessWidget {
                             color: ShopStyle.ink)),
                   ),
                 ],
-                if (address.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(address,
-                      style: const TextStyle(
-                          fontSize: 14, color: ShopStyle.mist)),
-                ],
+                // The facts a shopper looks for first, on one quiet line:
+                // what kind of place, where, and how the goods reach them.
+                // A fact the shop has not given is left out, never shown
+                // empty (070).
+                const SizedBox(height: 10),
+                Text(
+                  [
+                    _kindOf(shop.profile),
+                    if (address.isNotEmpty) address,
+                    shop.hasLocation
+                        ? 'Retrait ou livraison'
+                        : 'Retrait en boutique',
+                  ].join(' · '),
+                  style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
+                ),
                 // Opening hours (068), the question every caller asks.
                 if (style.hours != null) ...[
                   const SizedBox(height: 6),
@@ -1074,7 +1122,7 @@ class _Window extends StatelessWidget {
               if (totalCount > 0) ...[
                 const SizedBox(height: 6),
                 const Text(
-                  'Touchez un article pour le commander.',
+                  'Touchez un article pour le voir, « + » pour l\'ajouter.',
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
               ],
@@ -1135,21 +1183,26 @@ class _Window extends StatelessWidget {
                   ),
                 )
               else
-                GridView.builder(
+                LayoutBuilder(builder: (context, box) {
+                  final gap = wide ? 24.0 : 14.0;
+                  final cell = (box.maxWidth - gap * (columns - 1)) / columns;
+                  return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
-                    crossAxisSpacing: wide ? 24 : 14,
-                    mainAxisSpacing: wide ? 36 : 26,
-                    // Room under the square for a two-line name, the price
-                    // and an "Épuisé" — measured, not guessed: 0.74 clipped
-                    // the last line on a 390px phone. Two more lines when
-                    // any article carries a description (064): the shelf is
-                    // one grid, so every tile gets the taller cell.
-                    childAspectRatio: items.any((i) => i.hasDescription)
-                        ? (wide ? 0.60 : 0.52)
-                        : (wide ? 0.70 : 0.62),
+                    crossAxisSpacing: gap,
+                    mainAxisSpacing: wide ? 28 : 20,
+                    // The cell is the square plus the text under it, added
+                    // up rather than guessed as a ratio: the ratio left a
+                    // band of empty space under every row on a phone (the
+                    // audit's screenshot), and clipped when names ran long.
+                    mainAxisExtent: cell +
+                        _ItemTile.textHeight(
+                          context,
+                          description: items.any((i) => i.hasDescription),
+                          soldOut: items.any((i) => !i.inStock),
+                        ),
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, i) {
@@ -1162,8 +1215,10 @@ class _Window extends StatelessWidget {
                         money: money,
                         capture: capture,
                         quantity: basket[items[i].id] ?? 0,
+                        accent: shop.style.accent,
                         onAdd: () => onAdd(items[i]),
                         onRemove: () => onRemove(items[i]),
+                        onOpen: () => onDetails(items[i]),
                       ),
                     );
                     // The entrance plays when the shelf appears — not on
@@ -1172,7 +1227,8 @@ class _Window extends StatelessWidget {
                     if (filter.text.isNotEmpty) return tile;
                     return Reveal(delay: KajMotion.stagger(i), child: tile);
                   },
-                ),
+                );
+                }),
               ShopFooter(onDirectory: onDirectory),
             ],
           ),
@@ -1182,11 +1238,18 @@ class _Window extends StatelessWidget {
   }
 }
 
-/// One article: the photograph on its square, then the name and the price
-/// in small type. No frame, no shadow — the square is the frame. Tapping
-/// an article in stock puts one in the basket; once there, a small stepper
-/// sits on the photo. Out of stock fades the picture and says so under the
-/// price, rather than shouting over it in red.
+/// What kind of place this is, in the word a shopper uses.
+String _kindOf(String profile) => switch (profile) {
+      'farm' => 'Ferme',
+      'association' || 'church' => 'Association',
+      _ => 'Boutique',
+    };
+
+/// One article: its square — the photograph, or the name set large when
+/// there is none — then the name and the price in small type. Tapping the
+/// tile opens the article (ArticleSheet); the round « + » on the square
+/// puts one in the basket without opening anything, and once there a
+/// stepper takes its place. Out of stock fades the square and says so.
 class _ItemTile extends StatelessWidget {
   const _ItemTile({
     required this.item,
@@ -1195,6 +1258,8 @@ class _ItemTile extends StatelessWidget {
     required this.quantity,
     required this.onAdd,
     required this.onRemove,
+    required this.onOpen,
+    this.accent,
   });
 
   final PublicItem item;
@@ -1203,14 +1268,26 @@ class _ItemTile extends StatelessWidget {
   final double quantity;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
+  final VoidCallback onOpen;
+  final Color? accent;
+
+  /// The height of everything under the square, measured from the type
+  /// sizes below and the text scale in force — so the grid's cells fit
+  /// their tiles exactly, with no band of white under each row.
+  static double textHeight(BuildContext context,
+      {required bool description, required bool soldOut}) {
+    final k = MediaQuery.textScalerOf(context).scale(1);
+    var h = 10.0; // gap under the square
+    h += 15 * 1.25 * 2 * k; // name, two lines
+    h += 3 + 14 * 1.4 * k; // price
+    if (description) h += 4 + 13 * 1.3 * 2 * k;
+    if (soldOut) h += 2 + 12 * 1.4 * k;
+    return h + 4;
+  }
 
   @override
   Widget build(BuildContext context) {
     final count = quantity.round();
-    // To a screen reader the tile is one button — "Savon, 450 F, ajouter au
-    // panier" — and, once something is in the basket, the two stepper
-    // buttons on the photo stand on their own beside it, each saying what
-    // it does to which article.
     final label = [
       item.name,
       money.format(item.price),
@@ -1220,12 +1297,12 @@ class _ItemTile extends StatelessWidget {
     ].join(', ');
     return Semantics(
       container: true,
-      button: item.inStock,
+      button: true,
       label: label,
-      hint: item.inStock ? 'Ajouter au panier' : null,
-      onTap: item.inStock ? onAdd : null,
+      hint: "Voir l'article",
+      onTap: onOpen,
       child: InkWell(
-        onTap: item.inStock ? onAdd : null,
+        onTap: onOpen,
         excludeFromSemantics: true,
         borderRadius: BorderRadius.circular(6),
         child: Column(
@@ -1239,47 +1316,28 @@ class _ItemTile extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     ExcludeSemantics(
-                      child: ColoredBox(
-                        color: ShopStyle.stone,
-                        child: Opacity(
-                          opacity: item.inStock ? 1 : 0.45,
-                          child: _Photo(
-                              photoKey: item.photoKey, capture: capture),
-                        ),
+                      child: Opacity(
+                        opacity: item.inStock ? 1 : 0.45,
+                        child: item.photoKey == null
+                            ? NoPhotoPanel(name: item.name, accent: accent)
+                            : ColoredBox(
+                                color: ShopStyle.stone,
+                                child: _Photo(
+                                    photoKey: item.photoKey, capture: capture),
+                              ),
                       ),
                     ),
-                    if (count > 0)
+                    if (item.inStock)
                       Positioned(
                         right: 8,
                         bottom: 8,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: ShopStyle.ink,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _StepButton(
-                                icon: Icons.remove,
-                                label: 'Retirer un ${item.name}',
-                                onTap: onRemove,
-                              ),
-                              ExcludeSemantics(
-                                child: Text('$count',
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: ShopStyle.paper)),
-                              ),
-                              _StepButton(
-                                icon: Icons.add,
-                                label: 'Ajouter un ${item.name}',
-                                onTap: onAdd,
-                              ),
-                            ],
-                          ),
-                        ),
+                        child: count > 0
+                            ? _Stepper(
+                                name: item.name,
+                                count: count,
+                                onAdd: onAdd,
+                                onRemove: onRemove)
+                            : _QuickAdd(name: item.name, onAdd: onAdd),
                       ),
                   ],
                 ),
@@ -1306,9 +1364,6 @@ class _ItemTile extends StatelessWidget {
                     style:
                         const TextStyle(fontSize: 14, color: ShopStyle.mist),
                   ),
-                  // The two lines the shopkeeper would say across the
-                  // counter (064). Two lines and no more: a tile that
-                  // scrolls is a tile nobody reads.
                   if (item.hasDescription)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -1335,6 +1390,259 @@ class _ItemTile extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The square of an article with no photograph (070): the name, set in
+/// type on a soft wash of the shop's colour — a label, not a missing
+/// picture. The audit found one photo in seventy articles; the grey icon
+/// this replaces made every one of the other sixty-nine read as broken.
+class NoPhotoPanel extends StatelessWidget {
+  const NoPhotoPanel({super.key, required this.name, this.accent, this.large = false});
+
+  final String name;
+  final Color? accent;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = accent ?? ShopStyle.ink;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(tint.withValues(alpha: 0.07), ShopStyle.stone),
+        border: Border(left: BorderSide(color: tint.withValues(alpha: 0.55), width: 3)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(large ? 28 : 14),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Text(
+            name,
+            maxLines: large ? 3 : 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: large ? 30 : 19,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: Color.alphaBlend(tint.withValues(alpha: 0.75), ShopStyle.ink),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The round « + » on an article's square: one in the basket, nothing opened.
+class _QuickAdd extends StatelessWidget {
+  const _QuickAdd({required this.name, required this.onAdd});
+
+  final String name;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      container: true,
+      button: true,
+      label: 'Ajouter un $name au panier',
+      excludeSemantics: true,
+      onTap: onAdd,
+      child: Material(
+        color: scheme.primary,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onAdd,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(Icons.add, size: 20, color: scheme.onPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// − count + on a basketed article.
+class _Stepper extends StatelessWidget {
+  const _Stepper({
+    required this.name,
+    required this.count,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final String name;
+  final int count;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ShopStyle.ink,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StepButton(
+              icon: Icons.remove, label: 'Retirer un $name', onTap: onRemove),
+          ExcludeSemantics(
+            child: Text('$count',
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.paper)),
+          ),
+          _StepButton(icon: Icons.add, label: 'Ajouter un $name', onTap: onAdd),
+        ],
+      ),
+    );
+  }
+}
+
+/// One article on its own (070): what a shopper wants before deciding —
+/// the photograph large (or the name, large), the price, the shop's own
+/// words, whether there is any, the stepper, and a question to the shop on
+/// WhatsApp naming the article.
+class ArticleSheet extends StatelessWidget {
+  const ArticleSheet({
+    super.key,
+    required this.item,
+    required this.shopName,
+    required this.currency,
+    required this.capture,
+    required this.quantity,
+    required this.onAdd,
+    required this.onRemove,
+    required this.onOpen,
+    this.phone,
+  });
+
+  final PublicItem item;
+  final String shopName;
+  final String currency;
+  final String? phone;
+  final CaptureRepository capture;
+  final double quantity;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+  final Future<void> Function(String url) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(currency);
+    final count = quantity.round();
+    final ask = whatsappUrl(phone, text:
+        'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Kaj.');
+    final accent = Theme.of(context).colorScheme.primary;
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 360),
+              child: AspectRatio(
+                // A photograph gets room; a name on a wash needs little.
+                aspectRatio: item.photoKey == null ? 3 : 1.25,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Opacity(
+                    opacity: item.inStock ? 1 : 0.5,
+                    child: item.photoKey == null
+                        ? NoPhotoPanel(
+                            name: item.name,
+                            accent: accent == ShopStyle.ink ? null : accent)
+                        : ColoredBox(
+                            color: ShopStyle.stone,
+                            child: _Photo(
+                                photoKey: item.photoKey,
+                                capture: capture,
+                                label: 'Photo de ${item.name}'),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(item.name,
+                style: const TextStyle(
+                    fontSize: 22,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.ink)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text(money.format(item.price),
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: ShopStyle.ink)),
+                const SizedBox(width: 10),
+                Text(item.inStock ? 'En stock' : 'Épuisé',
+                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
+              ],
+            ),
+            if (item.hasDescription) ...[
+              const SizedBox(height: 12),
+              Text(item.description!,
+                  style: const TextStyle(
+                      fontSize: 15, height: 1.45, color: ShopStyle.ink)),
+            ],
+            const SizedBox(height: 20),
+            if (item.inStock)
+              count == 0
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: onAdd,
+                        child: const Text('Ajouter au panier'),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        _Stepper(
+                            name: item.name,
+                            count: count,
+                            onAdd: onAdd,
+                            onRemove: onRemove),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text('$count dans le panier',
+                              style: const TextStyle(
+                                  fontSize: 15, color: ShopStyle.ink)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Continuer'),
+                        ),
+                      ],
+                    ),
+            if (ask != null) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => onOpen(ask),
+                  icon: const Icon(Icons.chat_outlined, size: 18),
+                  label: const Text('Poser une question sur WhatsApp'),
+                ),
+              ),
+            ],
           ],
         ),
       ),

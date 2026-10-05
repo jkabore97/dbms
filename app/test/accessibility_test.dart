@@ -216,22 +216,31 @@ void main() {
     }
 
     testWidgets(
-        'an article is one button that offers the basket; épuisé is not',
+        'an article is one button that opens it; the basket has its own named button',
         (tester) async {
       final handle = tester.ensureSemantics();
       await pumpShop(tester);
 
+      // Since 070 the tile opens the article (photo, words, stock) and the
+      // round « + » on its square puts one in the basket — two acts, each
+      // its own button with its own name.
       expectReads(
-        tester.getSemantics(find.bySemanticsLabel(RegExp('^Café Touba'))),
+        tester.getSemantics(find.bySemanticsLabel(RegExp('^Café Touba, '))),
         button: true,
         label: 'Café Touba, ${f(450)}',
-        hint: 'Ajouter au panier',
+        hint: "Voir l'article",
       );
+      expect(find.bySemanticsLabel('Ajouter un Café Touba au panier'),
+          findsOneWidget);
+      // Épuisé still opens (the shopper may want to read about it), and
+      // offers no basket at all.
       expectReads(
-        tester.getSemantics(find.bySemanticsLabel(RegExp('^Savon'))),
-        button: false,
+        tester.getSemantics(find.bySemanticsLabel(RegExp('^Savon, '))),
+        button: true,
         label: 'Savon, ${f(300)}, épuisé',
+        hint: "Voir l'article",
       );
+      expect(find.bySemanticsLabel('Ajouter un Savon au panier'), findsNothing);
       handle.dispose();
     });
 
@@ -240,11 +249,13 @@ void main() {
       final handle = tester.ensureSemantics();
       await pumpShop(tester);
 
-      await tester.tap(find.text('Café Touba'));
+      // As a screen reader does it: the node's own tap action.
+      tester.semantics
+          .tap(find.semantics.byLabel('Ajouter un Café Touba au panier'));
       await tester.pump();
 
       expectReads(
-        tester.getSemantics(find.bySemanticsLabel(RegExp('^Café Touba'))),
+        tester.getSemantics(find.bySemanticsLabel(RegExp('^Café Touba, '))),
         button: true,
         label: 'Café Touba, ${f(450)}, 1 dans le panier',
       );

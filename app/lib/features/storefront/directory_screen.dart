@@ -56,6 +56,10 @@ class DirectoryScreen extends StatefulWidget {
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
   List<DirectoryEntry> _entries = const [];
+
+  /// Three articles per shop for the cards (070). Loaded after the list and
+  /// never in its way: a card without previews still names the shop.
+  Map<String, List<ShopPreview>> _previews = const {};
   List<FeaturedItem> _featured = const [];
   bool _loading = true;
   bool _locating = false;
@@ -165,12 +169,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
+      unawaited(_loadPreviews());
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = "L'annuaire n'a pas pu être chargé. Vérifiez le réseau.";
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadPreviews() async {
+    try {
+      final previews = await widget.storefront
+          .previews([for (final e in _entries) e.slug]);
+      if (mounted) setState(() => _previews = previews);
+    } catch (_) {
+      // The cards keep their names; the goods simply do not show.
     }
   }
 
@@ -298,6 +313,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 )
               : _Street(
                   entries: _entries,
+                  previews: _previews,
                   featured: _featured,
                   capture: widget.capture,
                   here: _here,
@@ -435,6 +451,7 @@ class _AccountCorner extends StatelessWidget {
 class _Street extends StatelessWidget {
   const _Street({
     required this.entries,
+    required this.previews,
     required this.featured,
     required this.capture,
     required this.here,
@@ -454,6 +471,7 @@ class _Street extends StatelessWidget {
   });
 
   final List<DirectoryEntry> entries;
+  final Map<String, List<ShopPreview>> previews;
   final List<FeaturedItem> featured;
   final CaptureRepository capture;
   final LatLng? here;
@@ -692,6 +710,8 @@ class _Street extends StatelessWidget {
                       child: _ShopTile(
                         entry: entries[i],
                         located: located,
+                        previews: previews[entries[i].slug] ?? const [],
+                        capture: capture,
                         onOpen: () => onOpen(entries[i]),
                       ),
                     ),
@@ -982,11 +1002,17 @@ class _ShopTile extends StatelessWidget {
     required this.entry,
     required this.located,
     required this.onOpen,
+    required this.capture,
+    this.previews = const [],
   });
 
   final DirectoryEntry entry;
   final bool located;
   final VoidCallback onOpen;
+  final CaptureRepository capture;
+
+  /// Up to three of the shop's articles (070), photographed first.
+  final List<ShopPreview> previews;
 
   @override
   Widget build(BuildContext context) {
@@ -994,8 +1020,6 @@ class _ShopTile extends StatelessWidget {
         ? entry.address!.trim()
         : (entry.blurb ?? '').trim();
     final distance = distanceLabel(entry.distanceKm);
-    final initial =
-        entry.name.trim().isEmpty ? '·' : entry.name.trim()[0].toUpperCase();
     final second = line.isNotEmpty
         ? line
         : (located && !entry.hasLocation
@@ -1026,24 +1050,15 @@ class _ShopTile extends StatelessWidget {
                 child: ColoredBox(
                   color: ShopStyle.stone,
                   child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Center(
-                        child: Text(
-                          initial,
-                          style: const TextStyle(
-                            fontSize: 56,
-                            fontWeight: FontWeight.w700,
-                            color: ShopStyle.line,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 12,
-                        bottom: 10,
-                        child: Icon(_iconFor(entry.profile),
-                            size: 18, color: ShopStyle.mist),
-                      ),
+                      // What the shop sells, not its initial (070): its
+                      // photographs when it has some, else its articles
+                      // and prices like a menu board.
+                      _ShopFace(
+                          previews: previews,
+                          capture: capture,
+                          profileIcon: _iconFor(entry.profile)),
                       if (distance != null)
                         Positioned(
                           right: 10,
@@ -1202,6 +1217,123 @@ class _MapView extends StatelessWidget {
           attributions: [TextSourceAttribution('OpenStreetMap contributors')],
         ),
       ],
+    );
+  }
+}
+
+/// A directory card's square (070). Photographs: the first large, two
+/// small beside it. No photographs: the articles and their prices, set
+/// like a menu board. Nothing at all: the kind of place, quietly.
+class _ShopFace extends StatelessWidget {
+  const _ShopFace({
+    required this.previews,
+    required this.capture,
+    required this.profileIcon,
+  });
+
+  final List<ShopPreview> previews;
+  final CaptureRepository capture;
+  final IconData profileIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = previews.where((p) => p.photoKey != null).toList();
+    if (photos.isNotEmpty) {
+      final rest = previews.where((p) => p != photos.first).take(2).toList();
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 2,
+            child: _Photo(photoKey: photos.first.photoKey, capture: capture),
+          ),
+          if (rest.isNotEmpty) ...[
+            const SizedBox(width: 2),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < rest.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 2),
+                    Expanded(
+                      child: rest[i].photoKey != null
+                          ? _Photo(photoKey: rest[i].photoKey, capture: capture)
+                          : _MiniLabel(name: rest[i].name),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+    if (previews.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            for (final p in previews)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(p.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: ShopStyle.ink)),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      p.price == p.price.roundToDouble()
+                          ? '${p.price.toStringAsFixed(0)} F'
+                          : '${p.price} F',
+                      style:
+                          const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    return Center(child: Icon(profileIcon, size: 34, color: ShopStyle.line));
+  }
+}
+
+class _MiniLabel extends StatelessWidget {
+  const _MiniLabel({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: ShopStyle.line,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          // One line, shrunk to fit rather than broken mid-word.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.bottomLeft,
+            child: Text(name,
+                maxLines: 1,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.ink)),
+          ),
+        ),
+      ),
     );
   }
 }

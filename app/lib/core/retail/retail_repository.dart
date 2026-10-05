@@ -185,6 +185,15 @@ class RetailRepository {
     return id as String;
   }
 
+  /// "Tout publier" (070): every active, priced, non-ingredient article on
+  /// the vitrine at once. Returns how many were published. Refused unless
+  /// the articles dial lets this person edit.
+  Future<int> publishAll(String orgId) async {
+    final v = await _requireClient()
+        .rpc('publish_all_products', params: {'p_org_id': orgId});
+    return (v as num?)?.toInt() ?? 0;
+  }
+
   // ----------------------------------------------------------------
   // Corrections (042). Undoing a transaction the honest way: a reversal that
   // cancels it in both the stock count and the ledger, so accounting and

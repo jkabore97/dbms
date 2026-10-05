@@ -537,6 +537,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_reach_and_locks.sql
 
+      # A vitrine that is never empty (070): new articles published unless
+      # hidden, ingredients never; Tout publier by the right person only; an
+      # empty open window unlisted; three previews per card, photographed
+      # first; the checklist for members only.
+      - name: Prove a vitrine is never an empty window
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_vitrine_sells.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

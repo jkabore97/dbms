@@ -44,6 +44,7 @@ begin
     perform storefront('nulle-part');
     perform delivery_quote('nulle-part', 12.37, -1.52);
     select count(*) into v from delivery_check('nulle-part', 12.37, -1.52);
+    select count(*) into v from storefront_previews(array['nulle-part']);
     raise notice 'PASS: directory, search, storefront, quote and reach answer a stranger';
 end $$;
 rollback;
@@ -102,6 +103,7 @@ begin
                              'storefront_directory', 'storefront_open',
                              'storefront_photo_allowed', 'search_products',
                              'delivery_quote', 'delivery_check',
+                             'storefront_previews',
                              'invitation_preview')
        and p.proname not in (select fn from helpers)
        and has_function_privilege('anon', p.oid, 'execute');

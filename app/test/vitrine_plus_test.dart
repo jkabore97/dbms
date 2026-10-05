@@ -212,8 +212,10 @@ void main() {
       expect(find.text('Gâteau'), findsNothing);
       expect(find.text('3 articles'), findsOneWidget);
       // Savon first: pinned.
-      final savon = tester.getTopLeft(find.text('Savon'));
-      final sucre = tester.getTopLeft(find.text('Sucre'));
+      // .last: the name under the square (with no photo the square shows
+      // it too, 070).
+      final savon = tester.getTopLeft(find.text('Savon').last);
+      final sucre = tester.getTopLeft(find.text('Sucre').last);
       expect(savon.dy <= sucre.dy && savon.dx <= sucre.dx, isTrue,
           reason: 'the pinned article comes first on the shelf');
       // The accent reaches the page's theme, and so every filled button.

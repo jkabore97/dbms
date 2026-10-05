@@ -91,6 +91,12 @@ class AppScope extends InheritedWidget {
   static AppScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppScope>();
 
+  /// The scope without subscribing to it — safe from initState, where a
+  /// subscribing lookup is not allowed. The scope never changes
+  /// (updateShouldNotify is false), so nothing is missed.
+  static AppScope? read(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<AppScope>();
+
   @override
   bool updateShouldNotify(AppScope oldWidget) => false;
 }
