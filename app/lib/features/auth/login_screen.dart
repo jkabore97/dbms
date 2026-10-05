@@ -48,7 +48,19 @@ class LoginScreen extends StatefulWidget {
     required this.auth,
     required this.onSignedIn,
     this.onboarding,
+    this.onGoogle,
+    this.initialError,
   });
+
+  /// Leaves for Google (SessionController.signInWithGoogle). The session
+  /// comes back on its own — on the web as a reload, on Android as the
+  /// browser returns — and the controller takes it from there, so this
+  /// screen never sees the user. Null hides the button; so does a project
+  /// with Google switched off.
+  final Future<void> Function()? onGoogle;
+
+  /// A problem from the way back from Google, said once.
+  final String? initialError;
 
   final AuthRepository auth;
 
@@ -114,6 +126,24 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _error;
 
   bool get _isSignUp => _intent == _Intent.signUp;
+
+  /// Whether to draw « Continuer avec Google »: the project has it on.
+  bool _google = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _error = widget.initialError;
+    if (widget.onGoogle != null) {
+      widget.auth.googleAvailable().then((on) {
+        if (mounted && on) setState(() => _google = true);
+      });
+    }
+  }
+
+  Future<void> _continueWithGoogle() => _run(() async {
+        await widget.onGoogle!();
+      });
 
   @override
   void dispose() {
@@ -485,8 +515,62 @@ class _LoginScreenState extends State<LoginScreen> {
     ];
   }
 
+  /// One tap, for sign-in and sign-up alike: Google says who this is, and
+  /// the device code is chosen right after, as with a password.
+  List<Widget> _googleStep(ThemeData theme) {
+    if (!_google || widget.onGoogle == null) return const [];
+    return [
+      SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: OutlinedButton(
+          key: const Key('google-sign-in'),
+          onPressed: _busy ? null : _continueWithGoogle,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'G',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4285F4),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Shrinks before it overflows: a narrow phone at a large text
+              // size is the usual phone here.
+              Flexible(
+                child: Text(
+                  Strings.of(context).continueWithGoogle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              Strings.of(context).orDivider,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          const Expanded(child: Divider()),
+        ],
+      ),
+      const SizedBox(height: 16),
+    ];
+  }
+
   List<Widget> _emailStep(ThemeData theme) {
     return [
+      ..._googleStep(theme),
       ..._nameField(theme),
       TextField(
         controller: _emailController,

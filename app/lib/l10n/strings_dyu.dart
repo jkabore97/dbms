@@ -96,6 +96,16 @@ class StringsDyu extends Strings {
   String get signInRefused => 'Connexion refusée. Réessayez.';
 
   @override
+  String get continueWithGoogle => 'Continuer avec Google';
+
+  @override
+  String get orDivider => 'ou';
+
+  @override
+  String get googleCancelled =>
+      'La connexion Google n\'a pas abouti. Réessayez, ou utilisez votre e-mail.';
+
+  @override
   String get accountCreated => 'Compte créé';
 
   @override

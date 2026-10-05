@@ -493,6 +493,33 @@ One-time setup, in order:
 Until step 5 nothing changes for anyone: the shop's own Wave link and
 « J'ai payé » stay as they are.
 
+### Google sign-in
+
+« Continuer avec Google » sits above the e-mail form, for signing in and
+signing up alike, and appears only once the project has Google switched on —
+the app asks `/auth/v1/settings` and draws nothing otherwise. Google says who
+the person is (an account is created on the first visit, named from Google;
+an existing account with the same verified e-mail is the same account), and
+then the device code is chosen exactly as after a password. From there on,
+the code is all anyone types.
+
+To switch it on (owner, once — no secret goes in the repository or in chat):
+
+1. **Google Cloud Console** → APIs & Services → OAuth consent screen: app
+   name « Kaj », support e-mail, the live site as authorised domain;
+   publish it (External).
+2. Credentials → Create OAuth client ID → **Web application**. Authorised
+   redirect URI: `https://dkrtntrcbhuuouctfyug.supabase.co/auth/v1/callback`.
+   Keep the client ID and secret.
+3. **Supabase dashboard** → Authentication → Providers → Google: on, paste
+   the client ID and secret, save.
+4. Authentication → URL Configuration → Redirect URLs, add both:
+   `https://dbms.kabore-boss.workers.dev/**` (the web app comes back to
+   `/connexion`) and `bf.kaj.app://login-callback` (the Android app; the
+   intent filter in `AndroidManifest.xml` catches it).
+5. Open the live site signed out: the button is there. On Android, Google
+   opens in the browser and hands back to the app.
+
 ### What only the owner can switch on
 
 Three things the code is ready for and that need the owner's own accounts.

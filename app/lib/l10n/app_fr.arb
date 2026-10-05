@@ -34,6 +34,9 @@
   "enterValidEmail": "Entrez une adresse e-mail valide.",
   "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
   "signInRefused": "Connexion refusée. Réessayez.",
+  "continueWithGoogle": "Continuer avec Google",
+  "orDivider": "ou",
+  "googleCancelled": "La connexion Google n'a pas abouti. Réessayez, ou utilisez votre e-mail.",
   "accountCreated": "Compte créé",
   "confirmEmailSent": "Un message a été envoyé à {email}. Ouvrez le lien qu'il contient, puis revenez vous connecter.",
   "@confirmEmailSent": {

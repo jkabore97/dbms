@@ -136,7 +136,11 @@ Future<void> _startup() async {
   runApp(KajApp(
     locale: locale,
     db: db,
-    auth: AuthRepository(client),
+    auth: AuthRepository(
+      client,
+      authUrl: client == null ? null : '$supabaseUrl/auth/v1',
+      apiKey: client == null ? null : supabasePublishableKey,
+    ),
     admin: AdminRepository(client, accountAdminUrl: accountAdminUrl),
     reports: ReportsRepository(client),
     accounting: AccountingRepository(client),

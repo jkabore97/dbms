@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show User;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthChangeEvent, AuthState, User;
 
 import '../access/org_access.dart';
 import '../access/plan_terms.dart';
@@ -61,7 +62,16 @@ class SessionController extends ChangeNotifier {
     this.sync,
     this.twoStep,
     this.resolveTimeout = const Duration(seconds: 12),
-  });
+  }) {
+    // Google hands the session back on its own schedule — on Android, as
+    // the browser returns to the app — so the controller listens for it
+    // rather than waiting on the button that started it.
+    _authEvents = auth.onAuthStateChange?.listen((AuthState s) {
+      if (s.event == AuthChangeEvent.signedIn) unawaited(adoptGoogleSession());
+    }, onError: (_) {});
+  }
+
+  StreamSubscription<AuthState>? _authEvents;
 
   final LocalDb db;
   final AuthRepository auth;
@@ -232,6 +242,7 @@ class SessionController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    unawaited(_authEvents?.cancel());
     super.dispose();
   }
 
@@ -251,6 +262,12 @@ class SessionController extends ChangeNotifier {
   }
 
   Future<void> boot() async {
+    // Back from Google on the web: the page reloaded with the session
+    // already in hand (Supabase.initialize swapped the code for it), and
+    // nothing on the device knows who this is yet.
+    try {
+      if (await adoptGoogleSession()) return;
+    } catch (_) {}
     try {
       // Bounded like the network steps: this is a local read and should be
       // instant, but a wedged web IndexedDB (a version-change blocked by another
@@ -303,7 +320,94 @@ class SessionController extends ChangeNotifier {
   // Signing in
   // ----------------------------------------------------------------
 
-  Future<void> handleSignedIn(User user) async {
+  /// One sign-in at a time, per person: the password route calls this
+  /// itself, and the auth event it raises must not start a second one.
+  Future<void>? _signingIn;
+  String? _signingInAs;
+
+  Future<void> handleSignedIn(User user) {
+    final inFlight = _signingIn;
+    if (inFlight != null && _signingInAs == user.id) return inFlight;
+    _signingInAs = user.id;
+    final run = _handleSignedIn(user);
+    _signingIn = run;
+    return run.whenComplete(() {
+      if (identical(_signingIn, run)) {
+        _signingIn = null;
+        _signingInAs = null;
+      }
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // Google
+  // ----------------------------------------------------------------
+
+  /// Set on the device before leaving for Google, so the session that comes
+  /// back is known for what it is — and so a password sign-in, which raises
+  /// the same auth event, is never taken for one. A web page reload wipes
+  /// memory, hence the device. Stale after a quarter of an hour.
+  static const _googleKey = 'google_pending';
+  static const _googleFresh = Duration(minutes: 15);
+
+  /// The sign-in screen's Google button.
+  Future<void> signInWithGoogle() async {
+    await db.writePref(_googleKey, DateTime.now().toIso8601String());
+    try {
+      await auth.signInWithGoogle();
+    } catch (_) {
+      await db.writePref(_googleKey, null);
+      rethrow;
+    }
+  }
+
+  /// What went wrong on the way back from Google, for the sign-in screen
+  /// to say once. Taken, not read.
+  String? _signInProblem;
+  String? takeSignInProblem() {
+    final p = _signInProblem;
+    _signInProblem = null;
+    return p;
+  }
+
+  /// Takes the session Google handed back and carries on exactly as a
+  /// password sign-in does: the identity on the device, then the code to
+  /// choose (or the one already there), then the businesses. Returns
+  /// whether it did. Nothing happens without the device's note that this
+  /// person went to Google, or while somebody is already inside.
+  Future<bool> adoptGoogleSession() async {
+    if (_signingIn != null) return false;
+    String? since;
+    try {
+      since = await db.readPref(_googleKey);
+    } catch (_) {}
+    if (since == null) return false;
+    final at = DateTime.tryParse(since);
+    if (at == null || DateTime.now().difference(at) > _googleFresh) {
+      await db.writePref(_googleKey, null);
+      return false;
+    }
+    final user = auth.currentUser;
+    // Not back yet (the browser is still open), or came back with nothing.
+    if (user == null || !auth.hasLiveSession) return false;
+    await db.writePref(_googleKey, null);
+    if (_phase != SessionPhase.booting && _phase != SessionPhase.signedOut) {
+      return false;
+    }
+    try {
+      await handleSignedIn(user);
+    } catch (error) {
+      _signInProblem = AuthRepository.describeError(error);
+      _phase = SessionPhase.signedOut;
+      _emit();
+    }
+    return true;
+  }
+
+  Future<void> _handleSignedIn(User user) async {
+    try {
+      await db.writePref(_googleKey, null);
+    } catch (_) {}
     final previous = await db.loadIdentity();
 
     // A second person signing in on the same phone while the first still has
