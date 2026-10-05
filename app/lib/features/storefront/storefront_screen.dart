@@ -212,6 +212,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         widget.session.stashReturnTo(Routes.storefront(widget.slug));
         context.go(Routes.pin);
         return;
+      case SessionPhase.twoStep:
+        widget.session.stashReturnTo(Routes.storefront(widget.slug));
+        context.go(Routes.twoStep);
+        return;
       case SessionPhase.booting:
       case SessionPhase.resolving:
         return;

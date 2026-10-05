@@ -327,6 +327,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     'new_device' => Icons.devices_other_outlined,
     'password_changed' => Icons.password_outlined,
     'pin_changed' => Icons.pin_outlined,
+    'two_step_enabled' => Icons.verified_user_outlined,
     'lock_changed' => Icons.lock_clock_outlined,
     'signed_out_by_admin' => Icons.admin_panel_settings_outlined,
     _ => Icons.logout,

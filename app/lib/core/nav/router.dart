@@ -75,6 +75,7 @@ import '../auth/models.dart';
 import '../capture/invoice_reading.dart';
 import '../capture/models.dart';
 import '../retail/models.dart';
+import '../../features/account/two_step_screen.dart';
 import 'app_scope.dart';
 import 'session.dart';
 
@@ -105,6 +106,7 @@ abstract final class Routes {
   static const splash = '/demarrage';
   static const signIn = '/connexion';
   static const pin = '/code';
+  static const twoStep = '/deux-etapes';
   static const join = '/rejoindre';
   static const myProfile = '/mon-profil';
   static const picker = '/entreprises';
@@ -192,7 +194,8 @@ GoRouter buildRouter(SessionController session) {
         here != '/' &&
         !at(Routes.splash) &&
         !at(Routes.signIn) &&
-        !at(Routes.pin);
+        !at(Routes.pin) &&
+        !at(Routes.twoStep);
 
     switch (session.phase) {
       case SessionPhase.booting:
@@ -222,6 +225,13 @@ GoRouter buildRouter(SessionController session) {
         // a code must unlock back into that page, not into the home screen.
         if (isDestination()) session.stashReturnTo(here);
         return Routes.pin;
+
+      case SessionPhase.twoStep:
+        // A platform admin's second step (077). Like the code screen, a
+        // gate: the page it interrupted is given back once it is passed.
+        if (at(Routes.twoStep)) return null;
+        if (isDestination()) session.stashReturnTo(here);
+        return Routes.twoStep;
 
       case SessionPhase.noOrg:
         // A gate may have interrupted a shopper's or a courier's page — a
@@ -436,6 +446,21 @@ GoRouter buildRouter(SessionController session) {
                     : null,
               );
             },
+          );
+        },
+      ),
+
+      GoRoute(
+        path: Routes.twoStep,
+        builder: (context, _) {
+          final scope = AppScope.of(context);
+          final step = scope.session.twoStep;
+          if (step == null) return const _Splash();
+          return TwoStepScreen(
+            twoStep: step,
+            enrolled: scope.session.twoStepEnrolled,
+            onPassed: scope.session.twoStepPassed,
+            onSignOut: scope.session.signOut,
           );
         },
       ),

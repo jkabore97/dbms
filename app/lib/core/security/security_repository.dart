@@ -191,6 +191,7 @@ class SecurityEvent {
         'new_device' => 'Nouvel appareil${detail == null ? '' : ' : $detail'}',
         'password_changed' => 'Mot de passe changé',
         'pin_changed' => 'Code de l\'appareil changé',
+        'two_step_enabled' => 'Validation en deux étapes activée',
         'lock_changed' => 'Verrouillage modifié${detail == null ? '' : ' : $detail'}',
         'session_closed' => 'Un appareil déconnecté',
         'signed_out_others' => 'Autres appareils déconnectés',

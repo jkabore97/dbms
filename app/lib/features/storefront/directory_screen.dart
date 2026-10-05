@@ -341,6 +341,14 @@ class _AccountCorner extends StatelessWidget {
                 child: const Text('Ouvrir'),
               ),
             );
+          case SessionPhase.twoStep:
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: () => context.go(Routes.twoStep),
+                child: const Text('Ouvrir'),
+              ),
+            );
           case SessionPhase.noOrg:
           case SessionPhase.picking:
           case SessionPhase.ready:

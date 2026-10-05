@@ -10,6 +10,7 @@ import '../admin/admin_repository.dart';
 import '../auth/auth_repository.dart';
 import '../auth/models.dart';
 import '../auth/pin_codec.dart';
+import '../auth/two_step.dart';
 import '../db/local_db.dart';
 import '../sync/sync_service.dart';
 
@@ -25,6 +26,10 @@ enum SessionPhase {
   locked,
   choosingPin,
   resolving,
+
+  /// A platform admin whose token has not passed the second step (077).
+  /// The server refuses them everywhere until it has; the app asks.
+  twoStep,
   noOrg,
   picking,
   ready,
@@ -54,6 +59,7 @@ class SessionController extends ChangeNotifier {
     required this.admin,
     required this.accounting,
     this.sync,
+    this.twoStep,
     this.resolveTimeout = const Duration(seconds: 12),
   });
 
@@ -62,6 +68,15 @@ class SessionController extends ChangeNotifier {
   final AdminRepository admin;
   final AccountingRepository accounting;
   final SyncService? sync;
+
+  /// The platform admin's second step. Null in tests and in a build with no
+  /// server: nobody is asked.
+  final TwoStep? twoStep;
+
+  /// At the code screen: whether an authenticator app is already enrolled
+  /// (ask its code) or not yet (show how to add one).
+  bool _twoStepEnrolled = false;
+  bool get twoStepEnrolled => _twoStepEnrolled;
 
   /// How long a single network step of a resolve may stall before it is
   /// treated as a dead connection. Long enough that a genuinely slow reply
@@ -368,6 +383,10 @@ class SessionController extends ChangeNotifier {
     return null;
   }
 
+  /// The code screen accepted the second step: the token is aal2 now, and
+  /// the resolve it interrupted goes on.
+  Future<void> twoStepPassed() => resolveOrgs();
+
   /// PinScreen has already checked the code against the stored hash. From here
   /// the offline path and the online path are the same.
   Future<void> unlock() => resolveOrgs();
@@ -400,6 +419,7 @@ class SessionController extends ChangeNotifier {
     _lastOrgId = null;
     _notice = null;
     _isPlatformAdmin = false;
+    _twoStepEnrolled = false;
     _phase = SessionPhase.signedOut;
     _emit();
   }
@@ -418,6 +438,23 @@ class SessionController extends ChangeNotifier {
     String? notice;
 
     if (auth.hasLiveSession) {
+      // A platform admin below aal2 is refused by the server on every call
+      // but this one (077), so it is asked first and the resolve stops at
+      // the code screen. A stall or an error falls through: the server is
+      // what enforces, and the next resolve asks again.
+      final step = twoStep;
+      if (step != null) {
+        try {
+          final status = await step.status().timeout(resolveTimeout);
+          if (status.mustAsk) {
+            _twoStepEnrolled = status.enrolled;
+            _phase = SessionPhase.twoStep;
+            _emit();
+            return;
+          }
+        } catch (_) {}
+      }
+
       // Every network call below is bounded by a timeout. On a market
       // connection a request can stall — the socket stays open and the reply
       // never comes, so the future neither completes nor throws. An unbounded
