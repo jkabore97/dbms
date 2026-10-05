@@ -225,9 +225,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         break;
     }
 
-    final sent = await showModalBottomSheet<bool>(
+    final sent = await showShopSheet<bool>(
       context: context,
-      isScrollControlled: true,
       builder: (sheet) => Theme(
         data: ShopStyle.theme(sheet),
         child: OrderSheet(
@@ -295,6 +294,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
     return ShopPage(
       title: shop?.name ?? 'Vitrine',
+      announcements: ShopPage.street,
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
       accent: shop?.style.accent,
@@ -352,9 +352,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (shop == null) return;
     unawaited(widget.storefront
         .recordVisit(widget.slug, 'opened', productId: item.id));
-    await showModalBottomSheet<void>(
+    await showShopSheet<void>(
       context: context,
-      isScrollControlled: true,
       showDragHandle: true,
       builder: (sheet) => Theme(
         data: ShopStyle.theme(sheet, accent: shop.style.accent),
@@ -999,7 +998,9 @@ class _Window extends StatelessWidget {
             ),
           ),
         // The band: who this is, in a word or two, and the ways to act.
-        ColoredBox(
+        // It settles in as the page opens.
+        Reveal(
+        child: ColoredBox(
           color: ShopStyle.stone,
           child: ShopWidth(
             padding: EdgeInsets.symmetric(
@@ -1145,6 +1146,7 @@ class _Window extends StatelessWidget {
             ),
           ),
         ),
+        ),
 
         // The goods.
         ShopWidth(
@@ -1248,6 +1250,8 @@ class _Window extends StatelessWidget {
                   itemCount: items.length,
                   itemBuilder: (context, i) {
                     final tile = Lift(
+                      // The photograph leans in (ZoomOnHover); the tile holds still.
+                      scale: 1.0,
                       // Steady while the basket is open: a tile with the
                       // stepper on it must not slide under the thumb.
                       enabled: (basket[items[i].id] ?? 0) == 0,
@@ -1266,7 +1270,10 @@ class _Window extends StatelessWidget {
                     // every keystroke of the filter, which rebuilds these
                     // tiles: a page that re-enters as you type flickers.
                     if (filter.text.isNotEmpty) return tile;
-                    return Reveal(delay: KajMotion.stagger(i), child: tile);
+                    // Each row rises as the reader reaches it, the tiles of a
+                    // row a beat apart (the goods sites' collection grid).
+                    return ScrollReveal(
+                        delay: KajMotion.stagger(i % columns), child: tile);
                   },
                 );
                 }),
@@ -1336,7 +1343,8 @@ class _ItemTile extends StatelessWidget {
       if (!item.inStock) 'épuisé',
       if (count > 0) '$count dans le panier',
     ].join(', ');
-    return Semantics(
+    return _HoverScope(
+      child: Semantics(
       container: true,
       button: true,
       label: label,
@@ -1378,7 +1386,8 @@ class _ItemTile extends StatelessWidget {
                                 count: count,
                                 onAdd: onAdd,
                                 onRemove: onRemove)
-                            : _QuickAdd(name: item.name, onAdd: onAdd),
+                            : _ShowOnHover(
+                                child: _QuickAdd(name: item.name, onAdd: onAdd)),
                       ),
                   ],
                 ),
@@ -1433,6 +1442,69 @@ class _ItemTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    ),
+    );
+  }
+}
+
+/// Whether the pointer is over an article's tile, for what should only
+/// show then: on a desk the « + » waits off the square and slides up under
+/// the pointer, as the goods sites' quick-add does. On a phone — no
+/// pointer to hover — it is always there.
+class _HoverScope extends StatefulWidget {
+  const _HoverScope({required this.child});
+
+  final Widget child;
+
+  static bool hovered(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_Hovered>()?.on ?? false;
+
+  @override
+  State<_HoverScope> createState() => _HoverScopeState();
+}
+
+class _HoverScopeState extends State<_HoverScope> {
+  bool _on = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+        onEnter: (_) => setState(() => _on = true),
+        onExit: (_) => setState(() => _on = false),
+        child: _Hovered(on: _on, child: widget.child),
+      );
+}
+
+class _Hovered extends InheritedWidget {
+  const _Hovered({required this.on, required super.child});
+
+  final bool on;
+
+  @override
+  bool updateShouldNotify(_Hovered old) => old.on != on;
+}
+
+class _ShowOnHover extends StatelessWidget {
+  const _ShowOnHover({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final desk = MediaQuery.sizeOf(context).width >= ShopStyle.deskWidth;
+    if (!desk || KajMotion.reduced(context)) return child;
+    final on = _HoverScope.hovered(context);
+    return AnimatedSlide(
+      offset: on ? Offset.zero : const Offset(0, 0.6),
+      duration: KajMotion.quick,
+      curve: KajMotion.ease,
+      child: AnimatedOpacity(
+        opacity: on ? 1 : 0,
+        duration: KajMotion.quick,
+        curve: KajMotion.ease,
+        // A keyboard or screen-reader user reaches it all the same.
+        alwaysIncludeSemantics: true,
+        child: child,
       ),
     );
   }
@@ -1763,7 +1835,12 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes, fit: widget.fit, semanticLabel: widget.label);
+        final image =
+            Image.memory(bytes, fit: widget.fit, semanticLabel: widget.label);
+        // A product photograph leans in under the pointer; a logo, shown
+        // whole, holds still.
+        if (widget.fit != BoxFit.cover) return image;
+        return ClipRect(child: ZoomOnHover(child: image));
       },
     );
   }

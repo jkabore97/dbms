@@ -272,6 +272,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget build(BuildContext context) {
     return ShopPage(
       title: 'Les vitrines',
+      announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
       body: _loading
           ? const ShopSkeleton.street()
@@ -475,7 +476,9 @@ class _Street extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        ColoredBox(
+        // The hero settles in as the page opens.
+        Reveal(
+          child: ColoredBox(
           color: ShopStyle.stone,
           child: ShopWidth(
             // Compact (package 3): the audit measured this band at 480 px
@@ -569,6 +572,7 @@ class _Street extends StatelessWidget {
             ),
           ),
         ),
+        ),
         // While a search is live the results are the page; the strip, the
         // map and the list wait behind the cross that clears it.
         if (query.length >= 2)
@@ -597,9 +601,11 @@ class _Street extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: featured.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 14),
-                    itemBuilder: (context, i) => Reveal(
+                    itemBuilder: (context, i) => ScrollReveal(
                       delay: KajMotion.stagger(i),
                       child: Lift(
+                        // The photograph leans in (ZoomOnHover); the tile holds still.
+                        scale: 1.0,
                         child: _FeaturedTile(
                           item: featured[i],
                           capture: capture,
@@ -636,9 +642,11 @@ class _Street extends StatelessWidget {
                     childAspectRatio: 0.82,
                   ),
                   itemCount: entries.length,
-                  itemBuilder: (context, i) => Reveal(
+                  itemBuilder: (context, i) => ScrollReveal(
                     delay: KajMotion.stagger(i),
                     child: Lift(
+                      // The photograph leans in (ZoomOnHover); the tile holds still.
+                      scale: 1.0,
                       child: _ShopTile(
                         entry: entries[i],
                         located: located,
@@ -714,9 +722,11 @@ class _SearchResults extends StatelessWidget {
               childAspectRatio: wide ? 0.66 : 0.58,
             ),
             itemCount: hits.length,
-            itemBuilder: (context, i) => Reveal(
+            itemBuilder: (context, i) => ScrollReveal(
               delay: KajMotion.stagger(i),
               child: Lift(
+                // The photograph leans in (ZoomOnHover); the tile holds still.
+                scale: 1.0,
                 child: _HitTile(
                   hit: hits[i],
                   located: located,
@@ -921,8 +931,13 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes,
-            fit: BoxFit.cover, semanticLabel: "Photo de l'article");
+        // The picture leans in under the pointer; its frame holds still.
+        return ClipRect(
+          child: ZoomOnHover(
+            child: Image.memory(bytes,
+                fit: BoxFit.cover, semanticLabel: "Photo de l'article"),
+          ),
+        );
       },
     );
   }

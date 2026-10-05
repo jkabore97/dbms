@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../core/theme/motion.dart';
 
 /// How the street side looks — the vitrine and the directory — and why it
 /// does not look like the rest of the app.
@@ -36,6 +40,9 @@ class ShopStyle {
   /// The page never grows wider than this on a desktop screen: a grid of
   /// eight tiny photos across a monitor sells nothing.
   static const maxWidth = 1120.0;
+
+  /// Wide enough to be a desk: a pointer to hover with, room for a drawer.
+  static const deskWidth = 900.0;
 
   /// How many tiles across, for the width there is. Two on a phone is the
   /// widest a thumb can still read a name under; four is the most a photo
@@ -123,7 +130,7 @@ class ShopStyle {
 
 /// A street-side page: the quiet header, the theme, and the body centred to
 /// [ShopStyle.maxWidth]. The header is a name and, at most, one way back.
-class ShopPage extends StatelessWidget {
+class ShopPage extends StatefulWidget {
   const ShopPage({
     super.key,
     required this.title,
@@ -133,6 +140,7 @@ class ShopPage extends StatelessWidget {
     this.floatingActionButton,
     this.bottom,
     this.accent,
+    this.announcements = const [],
   });
 
   final String title;
@@ -149,17 +157,68 @@ class ShopPage extends StatelessWidget {
   /// A bar pinned under the body — the basket, when there is one.
   final Widget? bottom;
 
+  /// The thin dark strip over the header, its lines taking turns. Empty:
+  /// no strip (the courier's pages, which are work, not a shop).
+  final List<String> announcements;
+
+  /// What the street says about itself, true of every shop on it.
+  static const street = [
+    'Retrait en boutique, ou livraison dans le quartier',
+    'Des boutiques de chez vous, tenues par leurs commerçants',
+    'Commandez en ligne, payez au retrait ou à la livraison',
+  ];
+
+  @override
+  State<ShopPage> createState() => _ShopPageState();
+}
+
+/// The header the goods sites use: white, the name in the middle, a
+/// hairline under it, and it steps out of the way — scrolling down into the
+/// page slides it up and off, the first movement back up brings it back.
+class _ShopPageState extends State<ShopPage> {
+  bool _shown = true;
+
+  bool _onScroll(ScrollUpdateNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    final delta = n.scrollDelta ?? 0;
+    // Near the top the header always shows: hiding it over the hero would
+    // hide the only way back.
+    final atTop = n.metrics.pixels < 80;
+    final next = atTop
+        ? true
+        : delta > 2
+            ? false
+            : delta < -2
+                ? true
+                : _shown;
+    if (next != _shown) setState(() => _shown = next);
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: ShopStyle.theme(context, accent: accent),
-      child: Scaffold(
-        appBar: AppBar(
-          leading: leading,
-          actions: trailing == null ? null : [trailing!],
+    final header = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.announcements.isNotEmpty)
+          ShopAnnouncement(lines: widget.announcements),
+        // An AppBar sizes itself only inside a Scaffold's slot; here, in a
+        // column, it is given its height: the toolbar, the hairline, and the
+        // status bar when no strip above has taken it.
+        SizedBox(
+          height: kToolbarHeight +
+              1 +
+              (widget.announcements.isEmpty
+                  ? MediaQuery.paddingOf(context).top
+                  : 0),
+          child: AppBar(
+          primary: widget.announcements.isEmpty,
+          leading: widget.leading,
+          actions: widget.trailing == null ? null : [widget.trailing!],
           automaticallyImplyLeading: false,
+          centerTitle: true,
           title: Text(
-            title,
+            widget.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -170,9 +229,117 @@ class ShopPage extends StatelessWidget {
             child: Divider(),
           ),
         ),
-        floatingActionButton: floatingActionButton,
-        bottomNavigationBar: bottom,
-        body: body,
+        ),
+      ],
+    );
+    final reduced = KajMotion.reduced(context);
+    return Theme(
+      data: ShopStyle.theme(context, accent: widget.accent),
+      child: Scaffold(
+        floatingActionButton: widget.floatingActionButton,
+        bottomNavigationBar: widget.bottom,
+        body: Column(
+          children: [
+            ClipRect(
+              child: AnimatedAlign(
+                alignment: Alignment.bottomCenter,
+                heightFactor: _shown ? 1 : 0,
+                duration: reduced ? Duration.zero : KajMotion.page,
+                curve: KajMotion.ease,
+                child: header,
+              ),
+            ),
+            Expanded(
+              child: NotificationListener<ScrollUpdateNotification>(
+                onNotification: _onScroll,
+                child: widget.body,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The strip over the header: one short line at a time, in small white
+/// type on ink, the next fading in every few seconds. Tapping it does
+/// nothing; it is a sign over the door, not a door.
+class ShopAnnouncement extends StatefulWidget {
+  const ShopAnnouncement({super.key, required this.lines});
+
+  final List<String> lines;
+
+  static const every = Duration(seconds: 5);
+
+  @override
+  State<ShopAnnouncement> createState() => _ShopAnnouncementState();
+}
+
+class _ShopAnnouncementState extends State<ShopAnnouncement> {
+  int _i = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.lines.length > 1) {
+      _timer = Timer.periodic(ShopAnnouncement.every, (_) {
+        if (mounted) setState(() => _i = (_i + 1) % widget.lines.length);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final line = widget.lines[_i % widget.lines.length];
+    return Material(
+      color: ShopStyle.ink,
+      child: SafeArea(
+        bottom: false,
+        child: SizedBox(
+          height: 34,
+          width: double.infinity,
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: KajMotion.reduced(context)
+                  ? Duration.zero
+                  : KajMotion.settle,
+              switchInCurve: KajMotion.ease,
+              switchOutCurve: KajMotion.leave,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                          begin: const Offset(0, 0.4), end: Offset.zero)
+                      .animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Padding(
+                key: ValueKey(line),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  line,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    letterSpacing: 0.4,
+                    fontWeight: FontWeight.w500,
+                    color: ShopStyle.paper,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -215,14 +382,16 @@ class ShopSectionLabel extends StatelessWidget {
       letterSpacing: 1.6,
       color: ShopStyle.ink,
     );
-    return Row(
+    // Every section rises as the reader reaches it.
+    return ScrollReveal(
+        child: Row(
       children: [
         Expanded(child: Text(text.toUpperCase(), style: style)),
         if (note != null)
           Text(note!,
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
       ],
-    );
+    ));
   }
 }
 
@@ -278,9 +447,10 @@ class ShopFooter extends StatelessWidget {
         const SizedBox(height: 8),
         if (onDirectory != null) ...[
           const SizedBox(height: 6),
-          TextButton(
-              onPressed: onDirectory,
-              child: const Text('Toutes les vitrines')),
+          UnderlineLink(
+              label: 'Toutes les vitrines',
+              onTap: onDirectory,
+              style: const TextStyle(fontSize: 14, color: ShopStyle.ink)),
         ],
         const SizedBox(height: 36),
       ],
@@ -312,4 +482,66 @@ class ShopNotice extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Opens a street sheet — the basket, an article — the way the goods sites
+/// do on each screen: from the bottom on a phone, where the thumb is; from
+/// the right on a desk, a drawer over a dimmed page, as their cart slides in.
+Future<T?> showShopSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool showDragHandle = false,
+}) {
+  final desk = MediaQuery.sizeOf(context).width >= ShopStyle.deskWidth;
+  if (!desk) {
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: showDragHandle,
+      builder: builder,
+    );
+  }
+  final reduced = KajMotion.reduced(context);
+  return showGeneralDialog<T>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Fermer',
+    barrierColor: const Color(0x66000000),
+    transitionDuration: reduced ? Duration.zero : KajMotion.settle,
+    pageBuilder: (dialog, _, _) => Align(
+      alignment: Alignment.centerRight,
+      child: Material(
+        color: ShopStyle.paper,
+        elevation: 0,
+        child: SizedBox(
+          width: 440,
+          height: double.infinity,
+          child: SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: 'Fermer',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(dialog).pop(),
+                  ),
+                ),
+                Expanded(child: Builder(builder: builder)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+    transitionBuilder: (_, animation, _, child) {
+      final eased = CurvedAnimation(
+          parent: animation, curve: KajMotion.ease, reverseCurve: KajMotion.leave);
+      return SlideTransition(
+        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(eased),
+        child: child,
+      );
+    },
+  );
 }
