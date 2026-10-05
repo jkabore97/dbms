@@ -20,12 +20,16 @@ class ProductPhoto extends StatefulWidget {
     this.photoKey,
     this.capture,
     this.letterSize = 22,
+    this.fit = BoxFit.cover,
   });
 
   final String name;
   final String? photoKey;
   final CaptureRepository? capture;
   final double letterSize;
+
+  /// Cover for an article's square; contain for a logo, shown whole.
+  final BoxFit fit;
 
   @override
   State<ProductPhoto> createState() => _ProductPhotoState();
@@ -67,7 +71,7 @@ class _ProductPhotoState extends State<ProductPhoto> {
     if (bytes != null) {
       return Image.memory(
         bytes,
-        fit: BoxFit.cover,
+        fit: widget.fit,
         gaplessPlayback: true,
         semanticLabel: widget.name,
         errorBuilder: (_, _, _) => _letter(context),

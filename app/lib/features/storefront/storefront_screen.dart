@@ -1007,15 +1007,42 @@ class _Window extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  shop.name,
-                  style: TextStyle(
-                    fontSize: wide ? 40 : 30,
-                    height: 1.1,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.6,
-                    color: ShopStyle.ink,
-                  ),
+                // The shop's logo (080) beside its name, for every plan.
+                Row(
+                  children: [
+                    if (style.logoKey != null) ...[
+                      Container(
+                        key: const Key('shop-logo'),
+                        width: wide ? 72 : 56,
+                        height: wide ? 72 : 56,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0x14000000)),
+                        ),
+                        child: _Photo(
+                          photoKey: style.logoKey,
+                          capture: capture,
+                          label: 'Logo de ${shop.name}',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      SizedBox(width: wide ? 18 : 14),
+                    ],
+                    Expanded(
+                      child: Text(
+                        shop.name,
+                        style: TextStyle(
+                          fontSize: wide ? 40 : 30,
+                          height: 1.1,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.6,
+                          color: ShopStyle.ink,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 // The tagline (068): one line, in the shop's colour when
                 // it chose one.
@@ -1705,11 +1732,15 @@ class _Photo extends StatefulWidget {
     required this.photoKey,
     required this.capture,
     this.label = "Photo de l'article",
+    this.fit = BoxFit.cover,
   });
 
   final String? photoKey;
   final CaptureRepository capture;
   final String label;
+
+  /// A logo is shown whole (contain); a photo fills its square (cover).
+  final BoxFit fit;
 
   @override
   State<_Photo> createState() => _PhotoState();
@@ -1732,7 +1763,7 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        return Image.memory(bytes, fit: BoxFit.cover, semanticLabel: widget.label);
+        return Image.memory(bytes, fit: widget.fit, semanticLabel: widget.label);
       },
     );
   }

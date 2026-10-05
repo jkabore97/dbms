@@ -286,6 +286,7 @@ class StorefrontStyle {
     this.coverKey,
     this.pinned = const [],
     this.hideOutOfStock = false,
+    this.logoKey,
   });
 
   static const none = StorefrontStyle();
@@ -307,6 +308,10 @@ class StorefrontStyle {
 
   /// Out-of-stock articles left off the shelf rather than greyed.
   final bool hideOutOfStock;
+
+  /// The shop's own logo (080), for every plan — not a Pro dressing, so it
+  /// counts for neither [isEmpty] nor [toJson]: set_org_logo() sets it.
+  final String? logoKey;
 
   bool get isEmpty =>
       tagline == null &&
@@ -333,6 +338,7 @@ class StorefrontStyle {
       coverKey: s('cover_key'),
       pinned: pinned is List ? pinned.map((e) => e.toString()).toList() : const [],
       hideOutOfStock: json['hide_out_of_stock'] == true,
+      logoKey: s('logo_key'),
     );
   }
 
