@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_mark.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
@@ -356,11 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: Text(Strings.of(context).languageName),
                   ),
                 ),
-                Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 56,
-                  color: theme.colorScheme.primary,
-                ),
+                const Center(child: KajMark(size: 72)),
                 const SizedBox(height: 20),
                 Text(
                   Strings.of(context).appTitle,
