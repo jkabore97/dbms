@@ -26,6 +26,7 @@ class TwoStep {
         required: v['required'] == true,
         enrolled: v['enrolled'] == true,
         passed: v['passed'] == true,
+        on: v['on'] == true,
       );
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST202' || e.code == '42883') return TwoStepStatus.none;
@@ -36,6 +37,7 @@ class TwoStep {
           required: true,
           enrolled: _hasVerifiedFactor(client),
           passed: false,
+          on: true,
         );
       }
       rethrow;
@@ -98,6 +100,15 @@ class TwoStep {
     );
   }
 
+  /// The platform's switch (078): whether a platform admin must pass the
+  /// second step at all. Off by default. Switching it off again is refused
+  /// by the gate below aal2, so it can only be undone by someone who has
+  /// passed — the switch is not a way round it.
+  Future<void> setRequired(bool on) async {
+    await _client!.rpc('set_platform_setting',
+        params: {'p_key': 'admin_two_step', 'p_value': on});
+  }
+
   /// Writes « Validation en deux étapes activée » into the account's history
   /// (075). Best-effort: the factor is what counts.
   Future<void> logEnabled() async {
@@ -115,7 +126,11 @@ class TwoStepStatus {
     required this.required,
     required this.enrolled,
     required this.passed,
+    this.on = false,
   });
+
+  /// Whether the platform has switched the second step on (078).
+  final bool on;
 
   static const none = TwoStepStatus(
     required: false,
