@@ -924,6 +924,31 @@ class AdminRepository {
     }
   }
 
+  /// The console's day (072); null for anyone but the platform, or on a
+  /// database before 072.
+  Future<PlatformToday?> platformToday() async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('platform_today');
+      if (v is! Map) return null;
+      return PlatformToday.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+  }
+
+  /// Writes to the admins of one business, or of every live one with a null
+  /// [orgId], through their bell. Returns how many people it reached.
+  Future<int> sendPlatformMessage(String? orgId, String message) async {
+    final v = await _requireClient().rpc('send_platform_message', params: {
+      'p_org_id': orgId,
+      'p_message': message.trim(),
+    });
+    return v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+  }
+
   /// The platform's yes or no on a spot.
   Future<void> decidePromotion(String promotionId, {required bool approve}) async {
     await _requireClient().rpc('decide_promotion', params: {

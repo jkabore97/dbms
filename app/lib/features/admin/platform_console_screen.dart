@@ -9,6 +9,7 @@ import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
+import 'console_today.dart';
 import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
 import '../../core/nav/router.dart';
 
@@ -79,6 +80,8 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   /// happen on the client, which is what 021 exists to stop — so the screen
   /// says so rather than pretending.
   bool _legacy = false;
+
+  final _todayKey = GlobalKey<ConsoleTodayState>();
 
   final _number = NumberFormat.decimalPattern('fr_FR');
   final _date = DateFormat('d MMM y', 'fr_FR');
@@ -293,47 +296,12 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         title: const Text('Console'),
         actions: [
           IconButton(
-            onPressed: () => context.go(Routes.directory),
-            icon: const Icon(Icons.storefront_outlined),
-            tooltip: 'Les vitrines',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.consolePeople),
-            icon: const Icon(Icons.people_outline),
-            tooltip: 'Personnes',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.consoleAudit),
-            icon: const Icon(Icons.history),
-            tooltip: 'Activité',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.platformAnalytics),
-            icon: const Icon(Icons.insights_outlined),
-            tooltip: 'Analyses',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.trainers),
-            icon: const Icon(Icons.school_outlined),
-            tooltip: 'Formateurs',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.consoleFeatured),
-            icon: const Icon(Icons.star_outline),
-            tooltip: 'À la une',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.consoleCouriers),
-            icon: const Icon(Icons.sports_motorsports_outlined),
-            tooltip: 'Livreurs',
-          ),
-          IconButton(
-            onPressed: () => context.push(Routes.consolePro),
-            icon: const Icon(Icons.workspace_premium_outlined),
-            tooltip: 'Kaj Pro',
-          ),
-          IconButton(
-            onPressed: _loading ? null : _load,
+            onPressed: _loading
+                ? null
+                : () {
+                    _todayKey.currentState?.reload();
+                    _load();
+                  },
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualiser',
           ),
@@ -351,6 +319,13 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
               children: [
+                // Today first (072), then the tools by name, then the
+                // businesses — the audit's "nine unlabelled icons" gone.
+                ConsoleToday(key: _todayKey, admin: widget.admin),
+                const _Tools(),
+                const SizedBox(height: 20),
+                Text('Entreprises', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
                 _StatStrip(
                   overview: _overview,
                   number: _number,
@@ -917,6 +892,54 @@ class _OrgRowTile extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+}
+
+
+/// The console's other screens, by name (072). They were nine icons in the
+/// app bar — on a phone, a row of pictures nobody could tell apart.
+class _Tools extends StatelessWidget {
+  const _Tools();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tools = <(IconData, String, VoidCallback)>[
+      (Icons.storefront_outlined, 'Les vitrines',
+          () => context.go(Routes.directory)),
+      (Icons.people_outline, 'Personnes',
+          () => context.push(Routes.consolePeople)),
+      (Icons.history, 'Activité', () => context.push(Routes.consoleAudit)),
+      (Icons.insights_outlined, 'Analyses',
+          () => context.push(Routes.platformAnalytics)),
+      (Icons.school_outlined, 'Formateurs',
+          () => context.push(Routes.trainers)),
+      (Icons.star_outline, 'À la une',
+          () => context.push(Routes.consoleFeatured)),
+      (Icons.sports_motorsports_outlined, 'Livreurs',
+          () => context.push(Routes.consoleCouriers)),
+      (Icons.workspace_premium_outlined, 'Kaj Pro',
+          () => context.push(Routes.consolePro)),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Outils', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (icon, label, go) in tools)
+              ActionChip(
+                avatar: Icon(icon, size: 18),
+                label: Text(label),
+                onPressed: go,
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -188,3 +188,49 @@ class PlatformPromotion {
   String get label =>
       kind == 'shop' ? 'Toute la boutique' : (productName ?? 'Article');
 }
+
+/// The platform's day (072): what waits, the month's money, growth, health.
+class PlatformToday {
+  const PlatformToday({
+    this.todo = const {},
+    this.money = const {},
+    this.growth = const {},
+    this.health = const {},
+  });
+
+  factory PlatformToday.fromJson(Map<String, dynamic> j) {
+    Map<String, num> block(Object? v) => {
+          if (v is Map)
+            for (final e in v.entries)
+              if (e.value is num) '${e.key}': e.value as num
+              else if (num.tryParse('${e.value}') != null)
+                '${e.key}': num.parse('${e.value}'),
+        };
+    return PlatformToday(
+      todo: block(j['todo']),
+      money: block(j['money']),
+      growth: block(j['growth']),
+      health: block(j['health']),
+    );
+  }
+
+  final Map<String, num> todo;
+  final Map<String, num> money;
+  final Map<String, num> growth;
+  final Map<String, num> health;
+
+  int count(Map<String, num> block, String key) => (block[key] ?? 0).toInt();
+
+  /// Everything waiting on the platform, added up.
+  int get waiting =>
+      count(todo, 'applications') +
+      count(todo, 'pro_requests') +
+      count(todo, 'spots') +
+      count(todo, 'couriers') +
+      count(todo, 'orders_stuck');
+
+  double get earnedMonth =>
+      (money['pro'] ?? 0).toDouble() +
+      (money['spots'] ?? 0).toDouble() +
+      (money['delivery_cut'] ?? 0).toDouble();
+}
