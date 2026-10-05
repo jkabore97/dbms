@@ -10,6 +10,8 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
+import '../capture/capture_action.dart';
+import '../retail/product_photo.dart';
 import '../common/owned_controller.dart';
 import 'pin_preview.dart';
 import 'spots_card.dart';
@@ -150,6 +152,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLockRule();
       _loadShopWave();
+      _loadLogo();
     });
   }
 
@@ -769,7 +772,137 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ];
   }
 
+  // ----------------------------------------------------------------
+  // The shop's logo (080)
+  // ----------------------------------------------------------------
+
+  /// The r2 key of the logo, or null.
+  String? _logoKey;
+  bool _logoBusy = false;
+
+  Future<void> _loadLogo() async {
+    final key = await widget.admin.orgLogoKey(widget.orgId);
+    if (mounted) setState(() => _logoKey = key);
+  }
+
+  /// Take or choose the picture, send it as one of the business's own
+  /// photographs, and hang it as the logo — saved at once, as an article's
+  /// photo is, not with the page's Enregistrer.
+  Future<void> _changeLogo() async {
+    final capture = widget.capture;
+    if (capture == null) return;
+    final picked = await CaptureAction.pick(context);
+    if (picked == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _logoBusy = true);
+    try {
+      final id = await capture.capture(
+        orgId: widget.orgId,
+        bytes: picked.bytes,
+        contentType: picked.contentType,
+        kind: 'logo',
+        caption: 'Logo',
+      );
+      if (id == null) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Logo gardé, en attente de réseau. Réessayez une '
+              'fois connecté pour le mettre sur la vitrine.'),
+        ));
+        return;
+      }
+      final docs = await capture.documents(widget.orgId, kind: 'logo', limit: 10);
+      final key = docs.where((d) => d.id == id).map((d) => d.key).firstOrNull;
+      if (key == null) throw StateError("Le logo envoyé n'a pas été retrouvé.");
+      await widget.admin.setOrgLogo(widget.orgId, key);
+      if (!mounted) return;
+      setState(() => _logoKey = key);
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Logo enregistré : il est sur la vitrine.')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    } finally {
+      if (mounted) setState(() => _logoBusy = false);
+    }
+  }
+
+  Future<void> _removeLogo() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _logoBusy = true);
+    try {
+      await widget.admin.setOrgLogo(widget.orgId, null);
+      if (mounted) setState(() => _logoKey = null);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    } finally {
+      if (mounted) setState(() => _logoBusy = false);
+    }
+  }
+
+  List<Widget> _logoRow(ThemeData theme) {
+    final capture = widget.capture;
+    final canUpload = capture != null && capture.isConfigured;
+    return [
+      Text('Logo', style: theme.textTheme.labelLarge),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Container(
+            key: const Key('org-logo-preview'),
+            width: 72,
+            height: 72,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: _logoKey == null
+                ? Icon(Icons.add_photo_alternate_outlined,
+                    color: theme.colorScheme.onSurfaceVariant)
+                : ProductPhoto(
+                    name: _nameController.text,
+                    photoKey: _logoKey,
+                    capture: capture,
+                    fit: BoxFit.contain,
+                  ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('org-logo-change'),
+                  onPressed: !canUpload || _logoBusy ? null : _changeLogo,
+                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  label: Text(_logoKey == null ? 'Ajouter un logo' : 'Changer'),
+                ),
+                if (_logoKey != null)
+                  TextButton(
+                    onPressed: _logoBusy ? null : _removeLogo,
+                    child: const Text('Retirer'),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      Text(
+        canUpload
+            ? 'Affiché à côté du nom sur votre vitrine. Une image carrée, '
+                'sur fond clair, se lit le mieux.'
+            : "L'envoi de photos n'est pas disponible sur cette installation.",
+        style: theme.textTheme.bodySmall
+            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+      const SizedBox(height: 24),
+    ];
+  }
+
   List<Widget> _identity(ThemeData theme) => [
+    ..._logoRow(theme),
     Text('Nom', style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     TextField(

@@ -58,6 +58,33 @@ class AdminRepository {
   static const _orgColumns =
       'id, name, slug, profile, default_currency, custom_domain';
 
+  /// The shop's logo (080): the r2 key of one of its own photos, or null.
+  /// Null too on a database before 080 — the row then offers to add one,
+  /// and saving says why it cannot yet.
+  Future<String?> orgLogoKey(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final row = await client
+          .from('orgs')
+          .select('logo_key')
+          .eq('id', orgId)
+          .maybeSingle();
+      return row?['logo_key'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Hangs one of the business's photographs as its logo, or clears it
+  /// with null. Administrators only; the server checks (set_org_logo).
+  Future<void> setOrgLogo(String orgId, String? key) async {
+    await _requireClient().rpc('set_org_logo', params: {
+      'p_org_id': orgId,
+      'p_key': key,
+    });
+  }
+
   Future<Map<String, dynamic>> fetchOrg(String orgId) async {
     final client = _requireClient();
     try {
