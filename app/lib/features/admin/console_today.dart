@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -101,7 +102,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
         _Heading('À traiter',
             trailing: today.waiting == 0 ? null : '${today.waiting}'),
         if (todo.isEmpty)
-          Card(
+          KajCard(
             elevation: 0,
             color: theme.colorScheme.surfaceContainerHighest,
             child: const ListTile(
@@ -111,7 +112,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
           )
         else
           for (final x in todo)
-            Card(
+            KajCard(
               elevation: 0,
               color: theme.colorScheme.secondaryContainer,
               margin: const EdgeInsets.only(bottom: 6),

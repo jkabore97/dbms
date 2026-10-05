@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
@@ -170,7 +171,7 @@ class _StructureScreenState extends State<StructureScreen> {
                       ),
                     ),
                   ..._entities.map(
-                    (entity) => Card(
+                    (entity) => KajCard(
                       elevation: 0,
                       margin: const EdgeInsets.only(bottom: 12),
                       color: theme.colorScheme.surfaceContainerHighest,

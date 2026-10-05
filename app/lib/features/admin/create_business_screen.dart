@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -257,7 +258,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             // the choice that cannot be undone from a phone afterwards.
             ..._profiles.map((p) {
               final selected = p.value == _profile;
-              return Card(
+              return KajCard(
                 elevation: 0,
                 margin: const EdgeInsets.only(bottom: 8),
                 color: selected

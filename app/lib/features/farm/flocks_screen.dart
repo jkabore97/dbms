@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
 
@@ -265,7 +266,7 @@ class _FlockCard extends StatelessWidget {
     // when it is not, and not before — an alarm that is always on is furniture.
     final worrying = flock.mortalityRate > 0.05;
 
-    return Card(
+    return KajCard(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       color: theme.colorScheme.surfaceContainerHighest,

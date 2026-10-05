@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -458,7 +459,7 @@ class _Group extends StatelessWidget {
               ),
             ),
           ),
-          Card(
+          KajCard(
             elevation: 0,
             margin: EdgeInsets.zero,
             color: theme.colorScheme.surfaceContainerHighest,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/kaj_card.dart';
 import '../../../core/format/money.dart';
 
 import '../../../core/auth/auth_repository.dart';
@@ -112,7 +113,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  Card(
+                  KajCard(
                     elevation: 0,
                     color: theme.colorScheme.primaryContainer,
                     child: Padding(
@@ -152,7 +153,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     )
                   else
                     ..._balances.map(
-                      (b) => Card(
+                      (b) => KajCard(
                         elevation: 0,
                         margin: const EdgeInsets.only(bottom: 8),
                         color: theme.colorScheme.surfaceContainerHighest,

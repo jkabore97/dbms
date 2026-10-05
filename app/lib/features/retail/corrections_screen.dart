@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
@@ -205,7 +206,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
 
   Widget _saleTile(SaleSummary s) {
     final theme = Theme.of(context);
-    return Card(
+    return KajCard(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 8),
@@ -249,7 +250,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
     final qty = d.quantity == d.quantity.roundToDouble()
         ? d.quantity.round().toString()
         : '${d.quantity}';
-    return Card(
+    return KajCard(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 8),

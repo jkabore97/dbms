@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -377,7 +378,7 @@ class _OrderCard extends StatelessWidget {
     final whatsapp = whatsappUrl(order.phone);
     final next = order.nextStatuses;
 
-    return Card(
+    return KajCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -605,7 +606,7 @@ class _CashBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final total = cash.fold<double>(0, (s, c) => s + c.total);
-    return Card(
+    return KajCard(
       color: theme.colorScheme.tertiaryContainer,
       child: ListTile(
         leading: const Icon(Icons.payments_outlined),

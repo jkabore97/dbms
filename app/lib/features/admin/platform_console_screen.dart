@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -340,7 +341,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 _controls(theme),
                 const SizedBox(height: 8),
                 if (_legacy)
-                  Card(
+                  KajCard(
                     color: theme.colorScheme.tertiaryContainer,
                     child: const ListTile(
                       leading: Icon(Icons.info_outline),
@@ -353,7 +354,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                     ),
                   ),
                 if (_error != null)
-                  Card(
+                  KajCard(
                     color: theme.colorScheme.errorContainer,
                     child: ListTile(
                       leading: const Icon(Icons.error_outline),
@@ -818,7 +819,7 @@ class _OrgRowTile extends StatelessWidget {
       ),
     );
 
-    return Card(
+    return KajCard(
       margin: const EdgeInsets.only(bottom: 4),
       elevation: 0,
       color: theme.colorScheme.surfaceContainerLow,

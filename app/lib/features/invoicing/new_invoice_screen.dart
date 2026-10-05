@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
@@ -227,7 +228,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
             ),
 
           const SizedBox(height: 16),
-          Card(
+          KajCard(
             color: theme.colorScheme.surfaceContainerHighest,
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -360,7 +361,7 @@ class _LineEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return KajCard(
       margin: const EdgeInsets.only(bottom: 12),
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       child: Padding(

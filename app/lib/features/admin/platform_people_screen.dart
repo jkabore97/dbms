@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -150,7 +151,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
       '${person.businessCount} entreprise${person.businessCount > 1 ? 's' : ''}',
     ].whereType<String>().join(' · ');
 
-    return Card(
+    return KajCard(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest,
       child: ListTile(

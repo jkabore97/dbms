@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -136,7 +137,7 @@ class OrgPickerScreen extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, i) {
         final org = orgs[i];
-        return Card(
+        return KajCard(
                 elevation: 0,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: ListTile(

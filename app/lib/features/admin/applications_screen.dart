@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/onboarding/onboarding_repository.dart';
@@ -152,7 +153,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
               ),
             ],
             for (final application in _applications)
-              Card(
+              KajCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Padding(
                   padding: const EdgeInsets.all(16),

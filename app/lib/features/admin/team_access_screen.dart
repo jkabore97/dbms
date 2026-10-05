@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 
@@ -172,7 +173,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                 ),
                 const SizedBox(height: 16),
                 for (final f in _features)
-                  Card(
+                  KajCard(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),

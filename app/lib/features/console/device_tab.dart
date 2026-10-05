@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -72,7 +73,7 @@ class _DeviceTabState extends State<DeviceTab> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          KajCard(
             elevation: 0,
             color: health.stuck > 0
                 ? theme.colorScheme.errorContainer
@@ -132,7 +133,7 @@ class _DeviceTabState extends State<DeviceTab> {
             for (final row in _failed) _FailureTile(row: row),
           ],
           const SizedBox(height: 24),
-          Card(
+          KajCard(
             elevation: 0,
             color: theme.colorScheme.surfaceContainerHighest,
             child: Padding(
@@ -218,7 +219,7 @@ class _FailureTile extends StatelessWidget {
       // rest of the tile still says everything that matters.
     }
 
-    return Card(
+    return KajCard(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
       color: theme.colorScheme.errorContainer,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -233,7 +234,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                   // not get asked again halfway through the other thing.
                   if (!_profileComplete) ...[
                     const SizedBox(height: 20),
-                    Card(
+                    KajCard(
                       color: theme.colorScheme.secondaryContainer,
                       child: ListTile(
                         leading: const Icon(Icons.badge_outlined),

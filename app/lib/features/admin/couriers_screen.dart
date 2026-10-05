@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -129,7 +130,7 @@ class _CouriersScreenState extends State<CouriersScreen> {
                         ),
                         const SizedBox(height: 12),
                         for (final row in _rows)
-                          Card(
+                          KajCard(
                             child: ListTile(
                               leading: Icon(
                                 switch (row.status) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:uuid/uuid.dart';
 
@@ -195,7 +196,7 @@ class _StaffScreenState extends State<StaffScreen> {
               ),
             ..._people.map((person) {
               final owed = _owedFor(person.id);
-              return Card(
+              return KajCard(
                 elevation: 0,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: ListTile(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
@@ -57,7 +58,7 @@ class CompteScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           // Who you are: one card, and the way to your profile.
-          Card(
+          KajCard(
             elevation: 0,
             margin: EdgeInsets.zero,
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -366,7 +367,7 @@ class _Group extends StatelessWidget {
               ),
             ),
           ),
-          Card(
+          KajCard(
             elevation: 0,
             margin: EdgeInsets.zero,
             color: theme.colorScheme.surfaceContainerHighest,

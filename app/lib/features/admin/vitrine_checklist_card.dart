@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/retail/retail_repository.dart';
@@ -76,7 +77,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
     if (list == null) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final score = list.score;
-    return Card(
+    return KajCard(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/kaj_card.dart';
 import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
@@ -61,7 +62,7 @@ class AdminHomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          KajCard(
             elevation: 0,
             color: theme.colorScheme.primaryContainer,
             child: Padding(
@@ -183,7 +184,7 @@ class _AdminTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return KajCard(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       color: theme.colorScheme.surfaceContainerHighest,
