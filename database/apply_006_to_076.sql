@@ -21787,7 +21787,9 @@ as $$
         'shop_ready', p_org_id is not null and exists (
             select 1 from orgs where id = p_org_id and wave_payout_number is not null),
         'card', coalesce((select (value #>> '{}')::boolean
-                            from platform_settings where key = 'wave_card'), false)
+                            from platform_settings where key = 'wave_card'), false),
+        'commission_pct', coalesce((select (value #>> '{}')::numeric
+                                      from platform_settings where key = 'wave_commission_pct'), 0)
     );
 $$;
 
@@ -21981,7 +21983,21 @@ revoke execute on function platform_wave_payments(integer)             from publ
 
 do $$
 begin
+    -- Supabase's default privileges grant every new function to
+    -- authenticated directly (063 closed only anon and PUBLIC), so the
+    -- Worker's four are taken back from it by name, as 060 does for push.
+    -- Without this any signed-in person could settle their own order.
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function wave_attach(uuid, text, text)               from anon;
+        revoke execute on function wave_settle(uuid, text, boolean, text)      from anon;
+        revoke execute on function wave_payout_done(uuid, boolean, text, text) from anon;
+        revoke execute on function wave_payout_queue()                         from anon;
+    end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke execute on function wave_attach(uuid, text, text)               from authenticated;
+        revoke execute on function wave_settle(uuid, text, boolean, text)      from authenticated;
+        revoke execute on function wave_payout_done(uuid, boolean, text, text) from authenticated;
+        revoke execute on function wave_payout_queue()                         from authenticated;
         grant execute on function set_wave_payout_number(uuid, text) to authenticated;
         grant execute on function set_wave_merchant_ref(uuid, text)  to authenticated;
         grant execute on function wave_begin(text, uuid, text, text) to authenticated;

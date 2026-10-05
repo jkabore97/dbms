@@ -199,19 +199,24 @@ rollback;
 
 \echo ''
 \echo '--- TEST 5: the Worker''s functions answer no app user ---'
--- An earlier suite grants every function to the app's roles; undo that
--- blanket grant (as test_security does for 032) so what is checked is what
--- 076 itself leaves: closed to PUBLIC, so to anon and authenticated.
-revoke execute on function wave_settle(uuid, text, boolean, text) from authenticated, anon;
-revoke execute on function wave_payout_queue()                    from authenticated, anon;
-revoke execute on function wave_attach(uuid, text, text)          from authenticated, anon;
+-- Every suite grants all functions to authenticated, as Supabase's default
+-- privileges do to a new function. Hand the Worker's four to both app
+-- roles on purpose, then apply 076 again (it is idempotent): what is
+-- checked is that the migration itself takes them back. An earlier version
+-- of this test revoked them by hand first, and so hid that it did not.
+grant execute on function wave_settle(uuid, text, boolean, text)      to authenticated, anon;
+grant execute on function wave_payout_queue()                         to authenticated, anon;
+grant execute on function wave_attach(uuid, text, text)               to authenticated, anon;
+grant execute on function wave_payout_done(uuid, boolean, text, text) to authenticated, anon;
+\ir ../migrations/076_wave_checkout.sql
 do $$ begin
     if has_function_privilege('anon', 'wave_settle(uuid, text, boolean, text)', 'execute') then
         raise exception 'FAIL: the signed-out street can settle a payment';
     end if;
     if has_function_privilege('authenticated', 'wave_settle(uuid, text, boolean, text)', 'execute')
        or has_function_privilege('authenticated', 'wave_payout_queue()', 'execute')
-       or has_function_privilege('authenticated', 'wave_attach(uuid, text, text)', 'execute') then
+       or has_function_privilege('authenticated', 'wave_attach(uuid, text, text)', 'execute')
+       or has_function_privilege('authenticated', 'wave_payout_done(uuid, boolean, text, text)', 'execute') then
         raise exception 'FAIL: an app user can settle or read payouts';
     end if;
     raise notice 'PASS: settle, attach and the payout queue are the Worker''s alone';
