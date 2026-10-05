@@ -43,6 +43,8 @@ insert into couriers (user_id, phone, status) values
 insert into orgs (id, name, slug, profile, default_currency, storefront_enabled, lat, lng, phone) values
     (:shop, 'Boutique Course', 'course-45', 'retail', 'XOF', true, 12.3714, -1.5197, '+22670000045'),
     (:far,  'Boutique Loin',   'loin-45',   'retail', 'XOF', true, 12.4500, -1.6000, null);
+-- Delivery is Kaj Pro since 081: the shops these claims deliver for are Pro.
+update orgs set plan = 'pro' where slug in ('course-45', 'loin-45');
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop, :owner, 'owner', 'org', :shop, 'full'),
     (:far,  :owner, 'owner', 'org', :far,  'full');

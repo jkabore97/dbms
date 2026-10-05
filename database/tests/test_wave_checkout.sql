@@ -71,6 +71,8 @@ rollback;
 -- From here on: switched on, the shop has a number and a merchant id, 10 %.
 update platform_settings set value = 'true' where key = 'wave_checkout';
 update platform_settings set value = '10'   where key = 'wave_commission_pct';
+-- Kaj's checkout for an order is Kaj Pro since 081: this shop is Pro.
+update orgs set plan = 'pro' where id = :shop;
 update orgs set wave_payout_number = '+22670470001', wave_merchant_ref = 'am-47'
  where id = :shop;
 
@@ -209,6 +211,10 @@ grant execute on function wave_payout_queue()                         to authent
 grant execute on function wave_attach(uuid, text, text)               to authenticated, anon;
 grant execute on function wave_payout_done(uuid, boolean, text, text) to authenticated, anon;
 \ir ../migrations/076_wave_checkout.sql
+-- 076 re-applied puts back its own wave_terms(); the later migrations that
+-- redefine it are applied again after it, so the suites that follow see
+-- the database as it really is.
+\ir ../migrations/081_delivery_pro.sql
 do $$ begin
     if has_function_privilege('anon', 'wave_settle(uuid, text, boolean, text)', 'execute') then
         raise exception 'FAIL: the signed-out street can settle a payment';

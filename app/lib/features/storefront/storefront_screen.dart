@@ -234,6 +234,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           basket: Map.of(_basket),
           currency: _shop?.currency ?? 'XOF',
           waveMerchant: _shop?.waveMerchant,
+          delivers: _shop?.delivers ?? false,
           onSubmit: _send,
           quote: (lat, lng) =>
               widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
@@ -452,7 +453,11 @@ class OrderSheet extends StatefulWidget {
     required this.onSubmit,
     required this.quote,
     this.waveMerchant,
+    this.delivers = true,
   });
+
+  /// Whether « Livraison » is offered at all (081: Kaj Pro shops on the
+  /// map). False: pickup is the only way, and no toggle is drawn.
 
   final List<PublicItem> items;
   final Map<String, double> basket;
@@ -461,6 +466,8 @@ class OrderSheet extends StatefulWidget {
   /// The shop's Wave link (057). Null means cash is the only choice and
   /// the payment row does not appear at all.
   final String? waveMerchant;
+
+  final bool delivers;
 
   final Future<String?> Function({
     required Map<String, double> lines,
@@ -787,6 +794,7 @@ class _OrderSheetState extends State<OrderSheet> {
               ],
             ),
             const SizedBox(height: 18),
+            if (widget.delivers)
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(
@@ -1079,7 +1087,7 @@ class _Window extends StatelessWidget {
                   [
                     _kindOf(shop.profile),
                     if (address.isNotEmpty) address,
-                    shop.hasLocation
+                    shop.delivers
                         ? 'Retrait ou livraison'
                         : 'Retrait en boutique',
                   ].join(' · '),

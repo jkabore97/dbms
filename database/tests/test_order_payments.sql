@@ -39,6 +39,8 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled,
               'https://pay.wave.com/m/esperance'),
     (:shop_b, 'Boutique Sans Wave', 'paiement-b-30', 'retail', 'XOF', true, null);
 select seed_retail_accounts(:shop_a);
+-- Delivery is Kaj Pro since 081: the shops these claims deliver for are Pro.
+update orgs set plan = 'pro' where profile = 'retail' and plan is distinct from 'pro' and slug ~ '^paiement-';
 select seed_retail_accounts(:shop_b);
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values

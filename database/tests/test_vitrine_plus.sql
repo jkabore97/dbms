@@ -72,7 +72,8 @@ begin
         end if;
     end;
     select style into v from storefront('libre-40');
-    if v <> '{}'::jsonb then
+    -- 'delivers' (081) is said for every plan, like the logo (080).
+    if v - 'delivers' <> '{}'::jsonb then
         raise exception 'FAIL: the Free window carries a style: %', v;
     end if;
     if not (plan_terms() -> 'pro_features') ? 'vitrine_plus' then
@@ -175,7 +176,7 @@ do $$
 declare v jsonb; v_kept jsonb;
 begin
     select style into v from storefront('pro-40');
-    if v <> '{}'::jsonb then
+    if v - 'delivers' <> '{}'::jsonb then
         raise exception 'FAIL: a lapsed Pro still dresses the street: %', v;
     end if;
     select storefront_style into v_kept from orgs

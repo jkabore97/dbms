@@ -76,7 +76,7 @@ do $$
 declare st jsonb;
 begin
     select style into st from storefront('style-50');
-    if st <> '{"logo_key": "org/50/logo.png"}'::jsonb then
+    if st - 'delivers' <> '{"logo_key": "org/50/logo.png"}'::jsonb then
         raise exception 'FAIL: a Free shop''s window style is %', st;
     end if;
     if not storefront_photo_allowed('org/50/logo.png') then

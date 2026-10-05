@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../core/admin/admin_repository.dart';
+import '../account/pro_sheet.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
@@ -120,6 +121,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   final _deliveryPerKmController = TextEditingController();
   // How far the shop delivers (069); empty means the platform's 15 km.
   final _deliveryReachController = TextEditingController();
+
+  /// « Minimum, puis au km » (081): the base covers the first
+  /// [_deliveryIncludedController] km. Off: « Prix au km » from the door.
+  bool _deliveryMinimum = false;
+  final _deliveryIncludedController = TextEditingController();
   bool _locating = false;
 
   /// The pin as typed, when both fields read as a position on the planet.
@@ -167,6 +173,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _deliveryBaseController.dispose();
     _deliveryPerKmController.dispose();
     _deliveryReachController.dispose();
+    _deliveryIncludedController.dispose();
     _planNoteController.dispose();
     _payoutController.dispose();
     _merchantRefController.dispose();
@@ -194,6 +201,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       } catch (_) {
         reach = null;
       }
+      final included = await widget.admin.deliveryIncludedKm(widget.orgId);
       // Only the platform edits the plan, so only the platform pays for the
       // read; members show what the org list already says.
       final plan = widget.canSetPlan
@@ -219,6 +227,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _deliveryBaseController.text = _plain(storefront.deliveryBase);
         _deliveryPerKmController.text = _plain(storefront.deliveryPerKm);
         _deliveryReachController.text = _plain(reach);
+        _deliveryMinimum = (included ?? 0) > 0;
+        _deliveryIncludedController.text =
+            (included ?? 0) > 0 ? _plain(included) : '';
         _loading = false;
       });
     } catch (error) {
@@ -282,6 +293,21 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
     }
 
+    // The kilometres the base covers (081): 0.5 to 50 in « minimum » mode.
+    double? deliveryIncluded;
+    if (_deliveryMinimum) {
+      deliveryIncluded = double.tryParse(
+          _deliveryIncludedController.text.trim().replaceAll(',', '.'));
+      if (deliveryIncluded == null ||
+          deliveryIncluded <= 0 ||
+          deliveryIncluded > 50) {
+        setState(() => _error =
+            'Indiquez jusqu\'à combien de kilomètres le minimum s\'applique '
+            '(de 0,5 à 50 km).');
+        return;
+      }
+    }
+
     // The reach: empty for the platform's, else 1 to 200 km (069).
     final reachText = _deliveryReachController.text.trim().replaceAll(',', '.');
     double? deliveryReach;
@@ -328,6 +354,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         base: deliveryBase,
         perKm: deliveryPerKm,
       );
+      try {
+        await widget.admin.setDeliveryIncludedKm(
+            widget.orgId, _deliveryMinimum ? deliveryIncluded : 0);
+      } on PostgrestException catch (e) {
+        // A database before 081 has no included kilometres; the rest is saved.
+        if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      }
       try {
         await widget.admin.setDeliveryReach(widget.orgId, deliveryReach);
       } on PostgrestException catch (e) {
@@ -773,6 +806,20 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ];
   }
 
+  /// The door to Kaj Pro, from a Pro tool on this page.
+  void _openPro() {
+    final scope = AppScope.maybeOf(context);
+    final org = scope?.session.orgById(widget.orgId);
+    if (scope == null || org == null) return;
+    ProSheet.open(
+      context,
+      org: org,
+      terms: scope.session.planTerms,
+      admin: widget.admin,
+      canRequest: org.isAdmin,
+    );
+  }
+
   // ----------------------------------------------------------------
   // The shop's logo (080)
   // ----------------------------------------------------------------
@@ -1070,14 +1117,49 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   List<Widget> _delivery(ThemeData theme) => [
     if (!_storefrontEnabled) _ClosedNote(theme: theme),
+    // Delivery is Kaj Pro (081): a Free shop may prepare its rates, and is
+    // told plainly that the vitrine offers pickup only until it is Pro.
+    if (widget.plan != 'pro') ...[
+      KajCard(
+        key: const Key('delivery-pro-note'),
+        child: ListTile(
+          leading: const Icon(Icons.workspace_premium_outlined),
+          title: const Text('La livraison fait partie de Kaj Pro'),
+          subtitle: const Text(
+              'Votre vitrine propose le retrait en boutique. Passez à Kaj '
+              'Pro pour livrer vos clients, avec le prix calculé selon la '
+              'distance.'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: _openPro,
+        ),
+      ),
+      const SizedBox(height: 12),
+    ],
     Text('Frais de livraison', style: theme.textTheme.titleSmall),
-    const SizedBox(height: 4),
+    const SizedBox(height: 8),
+    SegmentedButton<bool>(
+      key: const Key('delivery-mode'),
+      segments: const [
+        ButtonSegment(value: false, label: Text('Prix au km')),
+        ButtonSegment(value: true, label: Text('Minimum, puis au km')),
+      ],
+      selected: {_deliveryMinimum},
+      onSelectionChanged: _saving
+          ? null
+          : (s) => setState(() => _deliveryMinimum = s.first),
+    ),
+    const SizedBox(height: 8),
     Text(
-      'Une base pour la course, plus un prix par kilomètre '
-      'entre votre boutique et la porte du client. Vide : les '
-      'tarifs de la plateforme (500 + 150 F/km). Le montant '
-      "est annoncé au client avant qu'il commande, et payé au "
-      'livreur à la porte.',
+      _deliveryMinimum
+          ? 'Le minimum couvre toute course jusqu\'à la distance choisie ; '
+                'au-delà, chaque kilomètre ajoute le prix par km. Vide : '
+                'les tarifs de la plateforme (500 + 150 F/km). Le montant '
+                "est annoncé au client avant qu'il commande."
+          : 'Une base pour la course, plus un prix par kilomètre '
+                'entre votre boutique et la porte du client. Vide : les '
+                'tarifs de la plateforme (500 + 150 F/km). Le montant '
+                "est annoncé au client avant qu'il commande, et payé au "
+                'livreur à la porte.',
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1090,9 +1172,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             controller: _deliveryBaseController,
             enabled: !_saving,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Base',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: _deliveryMinimum ? 'Minimum' : 'Base',
             ),
           ),
         ),
@@ -1110,6 +1192,20 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         ),
       ],
     ),
+    if (_deliveryMinimum) ...[
+      const SizedBox(height: 10),
+      TextField(
+        key: const Key('delivery-included'),
+        controller: _deliveryIncludedController,
+        enabled: !_saving,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Minimum jusqu\'à (km)',
+          helperText: 'Ex. 3 : toute course de 0 à 3 km coûte le minimum.',
+        ),
+      ),
+    ],
     const SizedBox(height: 10),
     TextField(
       controller: _deliveryReachController,
@@ -1422,10 +1518,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         final base = _deliveryBaseController.text.trim();
         final perKm = _deliveryPerKmController.text.trim();
         final reach = _deliveryReachController.text.trim();
+        final included = _deliveryIncludedController.text.trim();
         return [
+          if (widget.plan != 'pro') 'Kaj Pro',
           base.isEmpty && perKm.isEmpty
               ? 'Tarifs de la plateforme'
-              : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
+              : _deliveryMinimum && included.isNotEmpty
+                  ? '$base F jusqu\'à $included km, puis ${perKm.isEmpty ? '0' : perKm} F/km'
+                  : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
           '${reach.isEmpty ? '15' : reach} km',
         ].join(' · ');
       case _Part.team:
