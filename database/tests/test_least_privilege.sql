@@ -108,7 +108,10 @@ begin
                              'delivery_quote', 'delivery_check',
                              'storefront_previews', 'record_visit', 'record_seen',
                              'storefront_spotlights',
-                             'invitation_preview')
+                             'invitation_preview',
+                             -- 077's pre-request hook runs on every request,
+                             -- the street's included; it reads nothing for anon.
+                             'two_step_gate')
        and p.proname not in (select fn from helpers)
        and has_function_privilege('anon', p.oid, 'execute');
     if v_open is not null then

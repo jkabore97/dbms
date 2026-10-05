@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/auth/two_step.dart';
 import 'core/nav/app_scope.dart';
 import 'core/nav/router.dart';
 import 'core/nav/session.dart';
@@ -225,6 +226,7 @@ class KajApp extends StatefulWidget {
     required this.capture,
     required this.onboarding,
     this.sync,
+    this.twoStep,
   });
 
   /// Null in tests that do not care about language; the app then behaves
@@ -244,6 +246,10 @@ class KajApp extends StatefulWidget {
   final CaptureRepository capture;
   final OnboardingRepository onboarding;
   final SyncService? sync;
+
+  /// The platform admin's second step (077). Built from [auth] when not
+  /// given; tests give a fake.
+  final TwoStep? twoStep;
 
   @override
   State<KajApp> createState() => _KajAppState();
@@ -303,6 +309,8 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       admin: widget.admin,
       accounting: widget.accounting,
       sync: widget.sync,
+      twoStep: widget.twoStep ??
+          (widget.auth.isConfigured ? TwoStep(widget.auth.client) : null),
     );
     _router = buildRouter(_session);
     // Kicks the state machine off. The router is already listening, so the
