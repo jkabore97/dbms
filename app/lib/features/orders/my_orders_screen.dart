@@ -10,6 +10,7 @@ import '../../core/nav/router.dart';
 import '../../core/orders/orders.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_skeleton.dart';
+import '../pay/wave_buttons.dart';
 import 'order_tracking_panel.dart';
 import '../storefront/shop_style.dart';
 
@@ -207,6 +208,16 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                     onPay: o.canPayNow
                                         ? () => _payWithWave(o)
                                         : null,
+                                    // Kaj's Wave checkout first (076); the
+                                    // shop's own link when it is not on.
+                                    wave: o.canPayByWave
+                                        ? WaveButtons(
+                                            kind: 'order',
+                                            ref: o.id,
+                                            orgId: o.orgId,
+                                            onUnavailable: null,
+                                          )
+                                        : null,
                                     tracking: OrderTrackingPanel(
                                       key: ValueKey('track-${o.id}'),
                                       orderId: o.id,
@@ -241,7 +252,12 @@ class _OrderCard extends StatelessWidget {
     this.onCancel,
     this.onPay,
     this.tracking,
+    this.wave,
   });
+
+  /// « Payer avec Wave / par carte » through Kaj (076). When it is not
+  /// offered it draws the shop's own link instead ([onPay]).
+  final Widget? wave;
 
   final CustomerOrder order;
   final bool busy;
@@ -355,13 +371,18 @@ class _OrderCard extends StatelessWidget {
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
           ?tracking,
-          if (onPay != null) ...[
+          if (wave != null || onPay != null) ...[
             const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: busy ? null : onPay,
-              icon: const Icon(Icons.phone_iphone_outlined, size: 18),
-              label: Text(
-                  'Payer avec Wave · ${moneyFormat(order.currency).format(order.total)}'),
+            _PayArea(
+              wave: wave,
+              fallback: onPay == null
+                  ? null
+                  : FilledButton.icon(
+                      onPressed: busy ? null : onPay,
+                      icon: const Icon(Icons.phone_iphone_outlined, size: 18),
+                      label: Text(
+                          'Payer avec Wave · ${moneyFormat(order.currency).format(order.total)}'),
+                    ),
             ),
           ],
           if (onCancel != null) ...[
@@ -405,5 +426,29 @@ class _StatusChip extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: open ? ShopStyle.paper : ShopStyle.mist)),
     );
+  }
+}
+
+
+/// Kaj's Wave checkout when it is offered, else the shop's own link.
+class _PayArea extends StatelessWidget {
+  const _PayArea({this.wave, this.fallback});
+
+  final Widget? wave;
+  final Widget? fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = wave;
+    if (w is WaveButtons) {
+      return WaveButtons(
+        key: w.key,
+        kind: w.kind,
+        ref: w.ref,
+        orgId: w.orgId,
+        onUnavailable: fallback,
+      );
+    }
+    return fallback ?? const SizedBox.shrink();
   }
 }

@@ -581,6 +581,15 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_account_security.sql
 
+      # Wave checkout (076): off until the platform says so; the amount is
+      # the database's, the order the caller's own; settled once, the shop's
+      # payout owed less the share, a repeated webhook asking nothing; Pro
+      # and spots activate themselves; the Worker's functions are its own.
+      - name: Prove a Wave payment is settled once and the shop is paid
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_wave_checkout.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
@@ -598,6 +607,12 @@ jobs:
       # decrypts what the Worker encrypted, and the push service that checks
       # the VAPID signature. Node's WebCrypto is the Worker's WebCrypto.
       - run: node --test workers/push/test/*.test.mjs
+      # The Wave Worker: the webhook signature, a session begun under the
+      # person's own token, settle → payout with the payment id as the
+      # idempotency key, a failed payout retried.
+      - run: node --check workers/pay/src/index.js
+      - run: node --check workers/pay/src/wave.js
+      - run: node --test workers/pay/test/*.test.mjs
 
   flutter-analyze:
     runs-on: ubuntu-latest

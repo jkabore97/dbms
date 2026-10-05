@@ -95,9 +95,13 @@ class CustomerOrder {
     this.paidAt,
     this.shopWave,
     this.deliveryFee,
+    this.orgId,
   });
 
   final String id;
+
+  /// The shop's id: whether its sales can be paid through Kaj's Wave (076).
+  final String? orgId;
   final String shopName;
   final String shopSlug;
   final String status;
@@ -139,6 +143,14 @@ class CustomerOrder {
       shopWave != null &&
       (status == 'accepted' || status == 'ready' || status == 'in_transit');
 
+  /// The same moment, through Kaj's Wave checkout (076): no shop link
+  /// needed, the shop is paid on its own number afterwards.
+  bool get canPayByWave =>
+      paymentMethod == 'wave' &&
+      !isPaid &&
+      orgId != null &&
+      (status == 'accepted' || status == 'ready' || status == 'in_transit');
+
   factory CustomerOrder.fromRow(Map<String, dynamic> row) => CustomerOrder(
         id: row['id'] as String,
         shopName: (row['shop_name'] as String?) ?? '',
@@ -159,6 +171,7 @@ class CustomerOrder {
             : DateTime.tryParse('${row['paid_at']}')?.toLocal(),
         shopWave: row['shop_wave'] as String?,
         deliveryFee: _num(row['delivery_fee']),
+        orgId: row['org_id'] as String?,
         lines: _lines(row['lines']),
       );
 }

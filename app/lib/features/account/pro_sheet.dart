@@ -6,6 +6,7 @@ import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
+import '../pay/wave_buttons.dart';
 
 /// The one door to Kaj Pro (066, M10 block 2).
 ///
@@ -60,6 +61,9 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
   final _note = TextEditingController();
   bool _busy = false;
   bool _sent = false;
+
+  /// Which period Wave checkout pays for (076).
+  String _period = 'year';
   String? _error;
 
   @override
@@ -176,6 +180,31 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
+                // Paid and switched on at once, by Wave or card (076) —
+                // when the platform has opened it, and for an admin only.
+                if (widget.canRequest)
+                  WaveButtons(
+                    kind: 'pro',
+                    ref: widget.org.id,
+                    period: _period,
+                    above: Center(
+                      child: SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                              value: 'month',
+                              label: Text('1 mois · ${_money(terms.priceMonth)}')),
+                          ButtonSegment(
+                              value: 'year',
+                              label: Text('1 an · ${_money(terms.priceYear)}')),
+                        ],
+                        selected: {_period},
+                        onSelectionChanged: (v) =>
+                            setState(() => _period = v.first),
+                      ),
+                    ),
+                    below: Text('Ou à la main :', style: muted),
+                  ),
+                const SizedBox(height: 8),
                 if (terms.hasWave)
                   Card(
                     elevation: 0,

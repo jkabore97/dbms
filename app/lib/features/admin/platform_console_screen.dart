@@ -921,6 +921,8 @@ class _Tools extends StatelessWidget {
           () => context.push(Routes.consoleCouriers)),
       (Icons.workspace_premium_outlined, 'Kaj Pro',
           () => context.push(Routes.consolePro)),
+      (Icons.account_balance_wallet_outlined, 'Paiements Wave',
+          () => context.push(Routes.consoleWave)),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

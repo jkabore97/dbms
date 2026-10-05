@@ -1,0 +1,9 @@
+{
+  "name": "kaj-pay",
+  "private": true,
+  "type": "module",
+  "description": "Wave checkout for Kaj: sessions, the signed webhook, payouts to shops.",
+  "scripts": {
+    "test": "node --test test"
+  }
+}

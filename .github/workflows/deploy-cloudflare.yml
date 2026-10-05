@@ -65,6 +65,8 @@ jobs:
       # The push Worker's origin (README: "Push notifications"). A public
       # hostname, so a variable; empty means the app offers no push alerts.
       PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
+      # The Wave Worker's origin (README "Wave checkout"); empty: no Wave button.
+      PAY_URL: ${{ vars.PAY_URL || secrets.PAY_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -137,7 +139,8 @@ jobs:
             --dart-define=UPLOADS_URL="$UPLOADS_URL" \
             --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
-            --dart-define=PUSH_URL="$PUSH_URL"
+            --dart-define=PUSH_URL="$PUSH_URL" \
+            --dart-define=PAY_URL="$PAY_URL"
           # --pwa-strategy none stops registering a service worker, but the
           # tool still plants an empty file under this name. Phones that
           # installed the old offline-first worker re-fetch this URL and get

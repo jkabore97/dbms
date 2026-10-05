@@ -64,6 +64,8 @@ import '../../features/retail/corrections_screen.dart';
 import '../../features/retail/products_screen.dart';
 import '../../features/retail/staff_screen.dart';
 import '../../features/account/security_screen.dart';
+import '../../features/admin/wave_console_screen.dart';
+import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../../features/tontine/tontines_screen.dart';
 import '../theme/kaj_theme.dart';
@@ -122,12 +124,18 @@ abstract final class Routes {
   /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
   /// number and prices the paywall says (066).
   static const consolePro = '/console/kaj-pro';
+  /// The platform's Wave switches and every payment with its payout (076).
+  static const consoleWave = '/console/wave';
   /// What each courier owes for the month: the platform's part of the
   /// delivery fees (067).
   static const consoleSettlement = '/console/livreurs/reglement';
   static const applications = '/demandes';
   static const language = '/langue';
   static const security = '/securite';
+  /// Where Wave sends the person back after paying (076): the payment's own
+  /// page, which waits for Wave's word and says what happened.
+  static const payment = '/paiement';
+  static String paymentOf(String id) => '/paiement/$id';
   static const privacy = '/confidentialite';
   static const terms = '/conditions';
   static const faq = '/aide';
@@ -228,6 +236,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
             at(Routes.security) ||
+            at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
@@ -263,6 +272,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
             at(Routes.security) ||
+            at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
@@ -291,6 +301,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
             at(Routes.security) ||
+            at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
@@ -318,6 +329,13 @@ GoRouter buildRouter(SessionController session) {
           path: Routes.language, builder: (_, _) => const LanguageScreen()),
       GoRoute(
           path: Routes.security, builder: (_, _) => const SecurityScreen()),
+      GoRoute(
+        path: '${Routes.payment}/:id',
+        builder: (_, state) => PaymentScreen(
+          paymentId: state.pathParameters['id']!,
+          issue: state.uri.queryParameters['issue'],
+        ),
+      ),
       GoRoute(path: Routes.splash, builder: (_, _) => const _Splash()),
 
       // The static legal and help pages. Top-level so they open with no signal
@@ -598,6 +616,11 @@ GoRouter buildRouter(SessionController session) {
             SettlementScreen(admin: AppScope.of(context).admin),
       ),
 
+      // Wave checkout's switches and payouts (076).
+      GoRoute(
+        path: Routes.consoleWave,
+        builder: (_, _) => const WaveConsoleScreen(),
+      ),
       // Who said they paid, and what the paywall says (066).
       GoRoute(
         path: Routes.consolePro,

@@ -1,0 +1,26 @@
+# Wave checkout for Kaj. See src/index.js for its three doors and why it is
+# the Worker that holds the Wave key.
+#
+# Deployed by workflows/deploy-pay.yml, which writes the [vars] below from
+# repository variables and sets the secrets with `wrangler secret put`:
+#
+#   secrets   SUPABASE_SERVICE_ROLE_KEY   WAVE_API_KEY   WAVE_WEBHOOK_SECRET
+#   vars      SUPABASE_URL  SUPABASE_PUBLISHABLE_KEY  APP_ORIGIN  ALLOWED_ORIGINS
+
+name = "kaj-pay"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# kaj-pay.<subdomain>.workers.dev: what the app is compiled to call (PAY_URL)
+# and where Wave posts its webhook (<PAY_URL>/v1/wave).
+workers_dev = true
+
+# Payouts that failed (Wave busy, a timeout) are tried again, five times.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+SUPABASE_URL = ""
+SUPABASE_PUBLISHABLE_KEY = ""
+APP_ORIGIN = "https://dbms.kabore-boss.workers.dev"
+ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"

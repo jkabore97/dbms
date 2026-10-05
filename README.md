@@ -452,6 +452,47 @@ the toggle without a `PUSH_URL`, and the Worker answers a wrong secret with
 401. Android with the app closed needs FCM (a Firebase project) and is not
 covered here.
 
+### Wave checkout
+
+Orders, Kaj Pro and spots paid by Wave — or by card on Wave's own page —
+and each shop paid on its own Wave number a moment later (migration 076,
+`workers/pay`). Kaj holds one Wave Business account registered as an
+**aggregator**; the shops need only an ordinary Wave number.
+
+How a payment goes: the app asks the kaj-pay Worker (with the person's own
+sign-in) → `wave_begin()` checks the order, plan or spot is theirs to pay
+and fixes the amount → the Worker opens a Wave checkout session → the
+person pays in Wave (or by card on Wave's page) → Wave posts a signed
+webhook to `<PAY_URL>/v1/wave` → `wave_settle()` marks it paid (Pro and
+spots switch themselves on) → for an order the Worker sends the goods'
+price, less the platform's share, to the shop's number through Wave's
+Payout API, the payment id as the idempotency key; failed payouts are
+retried every 15 minutes, five times, and shown in the console.
+
+One-time setup, in order:
+
+1. **Wave Business for Kaj in Burkina Faso** (a registered company: RCCM,
+   IFU). Ask Wave for API access with **Checkout**, **Payout** and
+   **Aggregated Merchants**, and to be registered as an aggregator.
+2. **The keys.** In the Wave Business portal → Developers: create an API
+   key with those scopes, and a webhook to `<PAY_URL>/v1/wave` for
+   `checkout.session.completed` and `checkout.session.payment_failed`.
+   Put the key in the repository secret `WAVE_API_KEY` and the webhook
+   secret in `WAVE_WEBHOOK_SECRET` — never in chat. (`SUPABASE_SERVICE_ROLE_KEY`
+   is already there for the push Worker.)
+3. **Deploy**: the "Deploy the Wave Worker" workflow. Set the repository
+   variable `PAY_URL` to its origin and re-run *Deploy to Cloudflare*.
+4. **Each shop**: Paramètres › Paiements › « Numéro Wave » (the shop's
+   own). For each shop Wave registers as an aggregated merchant, put the id
+   Wave gives in Paramètres › Formule et modération (platform only).
+5. **Try it**: a 100 F order to your own shop, paid from your phone. Then
+   Console › Paiements Wave: switch « Paiement Wave dans Kaj » on — and
+   « Payer par carte » only once Wave's page takes cards for the account.
+   Set the platform's share there (0 % by default).
+
+Until step 5 nothing changes for anyone: the shop's own Wave link and
+« J'ai payé » stay as they are.
+
 ### What only the owner can switch on
 
 Three things the code is ready for and that need the owner's own accounts.
@@ -623,9 +664,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `075` up to date, paste
-`database/apply_006_to_075.sql` into the Supabase SQL editor and run it once.
-It is `006` through `075` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `076` up to date, paste
+`database/apply_006_to_076.sql` into the Supabase SQL editor and run it once.
+It is `006` through `076` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
