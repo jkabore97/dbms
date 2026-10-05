@@ -33,6 +33,7 @@ import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
+import 'core/pay/wave_pay.dart';
 import 'core/security/security_repository.dart';
 import 'core/security/security_settings.dart';
 import 'core/sync/sync_service.dart';
@@ -271,6 +272,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   late final SecuritySettings _security = SecuritySettings(widget.db);
   late final SecurityRepository _securityApi =
       SecurityRepository(widget.auth.client);
+  late final WavePay _wavePay = WavePay(widget.auth.client);
   DateTime? _awayAt;
   bool _deviceRegistered = false;
 
@@ -378,6 +380,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       sync: widget.sync,
       security: _security,
       securityApi: _securityApi,
+      wavePay: _wavePay,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new
       // language with nothing reloaded and nothing lost.

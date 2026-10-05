@@ -19,6 +19,7 @@ import '../retail/retail_repository.dart';
 import '../retail/staff.dart';
 import '../sync/sync_service.dart';
 import '../tontine/tontine_repository.dart';
+import '../pay/wave_pay.dart';
 import '../security/security_repository.dart';
 import '../security/security_settings.dart';
 import 'session.dart';
@@ -60,6 +61,7 @@ class AppScope extends InheritedWidget {
     this.sync,
     this.security,
     this.securityApi,
+    this.wavePay,
     required super.child,
   });
 
@@ -88,6 +90,9 @@ class AppScope extends InheritedWidget {
   /// tests that do not need them.
   final SecuritySettings? security;
   final SecurityRepository? securityApi;
+
+  /// Wave checkout through the kaj-pay Worker (076). Null in tests.
+  final WavePay? wavePay;
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();

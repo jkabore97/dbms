@@ -1,0 +1,96 @@
+name: Deploy the Wave Worker
+
+# Publishes workers/pay — Wave checkout for orders, Kaj Pro and spots, and
+# the payouts that send each shop its money (migration 076). See README
+# "Wave checkout" for the one-time setup with Wave.
+#
+# Dormant until the owner has a Wave Business key: without WAVE_API_KEY and
+# WAVE_WEBHOOK_SECRET the job says so and succeeds, and nothing is deployed.
+# Kept apart from "Deploy to Cloudflare" like the push Worker: it holds the
+# service-role key and Kaj's Wave key, and a mistake in its setup must not
+# stop the app itself going out.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/pay/**'
+      - '.github/workflows/deploy-pay.yml'
+
+concurrency:
+  group: cloudflare-pay
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      WAVE_API_KEY: ${{ secrets.WAVE_API_KEY }}
+      WAVE_WEBHOOK_SECRET: ${{ secrets.WAVE_WEBHOOK_SECRET }}
+      APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://dbms.kabore-boss.workers.dev' }}
+      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The Worker's own tests
+        run: node --test workers/pay/test/*.test.mjs
+
+      - name: Say so when Wave is not set up yet
+        id: ready
+        run: |
+          if [ -z "$WAVE_API_KEY" ] || [ -z "$WAVE_WEBHOOK_SECRET" ]; then
+            echo "::notice::WAVE_API_KEY / WAVE_WEBHOOK_SECRET are not set: the Wave Worker was not deployed. README, 'Wave checkout'."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check the rest is present
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || missing="$missing SUPABASE_SERVICE_ROLE_KEY(secret)"
+          if [ -n "$missing" ]; then
+            echo "Empty at deploy time:$missing" >&2
+            exit 1
+          fi
+
+      - name: Deploy
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          npx --yes wrangler@4 deploy \
+            --config workers/pay/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
+            --var "APP_ORIGIN:$APP_ORIGIN" \
+            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+
+      # Secrets through wrangler's store — never as --var, which would print
+      # them in the deploy log.
+      - name: Install the secrets
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/pay/wrangler.toml
+          printf '%s' "$WAVE_API_KEY"              | npx --yes wrangler@4 secret put WAVE_API_KEY              --config workers/pay/wrangler.toml
+          printf '%s' "$WAVE_WEBHOOK_SECRET"       | npx --yes wrangler@4 secret put WAVE_WEBHOOK_SECRET       --config workers/pay/wrangler.toml
+
+      - name: Say what is left to do
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          {
+            echo "### Wave Worker deployed"
+            echo
+            echo "1. In the Wave Business portal, set the webhook URL to \`<kaj-pay origin>/v1/wave\` (events: checkout.session.completed, checkout.session.payment_failed)."
+            echo "2. Set the repository variable \`PAY_URL\` to the kaj-pay origin and re-run *Deploy to Cloudflare*."
+            echo "3. In the console, Paramètres de la plateforme: switch Wave checkout on; card too if Wave's page takes cards for the account."
+          } >> "$GITHUB_STEP_SUMMARY"

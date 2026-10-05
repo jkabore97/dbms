@@ -147,7 +147,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   void initState() {
     super.initState();
     _load();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadLockRule());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLockRule();
+      _loadShopWave();
+    });
   }
 
   @override
@@ -161,6 +164,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _deliveryPerKmController.dispose();
     _deliveryReachController.dispose();
     _planNoteController.dispose();
+    _payoutController.dispose();
+    _merchantRefController.dispose();
     super.dispose();
   }
 
@@ -626,6 +631,78 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   int? _lockRule;
   bool _savingLock = false;
 
+  // Kaj's Wave checkout (076): the number the shop's sales are sent to, and
+  // the merchant id Wave gave the shop (the platform's to set).
+  final _payoutController = TextEditingController();
+  final _merchantRefController = TextEditingController();
+  bool _savingPayout = false;
+
+  Future<void> _loadShopWave() async {
+    final pay = AppScope.read(context)?.wavePay;
+    if (pay == null) return;
+    final w = await pay.shopWave(widget.orgId);
+    if (!mounted) return;
+    setState(() {
+      _payoutController.text = w.number ?? '';
+      _merchantRefController.text = w.merchantRef ?? '';
+    });
+  }
+
+  Future<void> _savePayout({bool merchant = false}) async {
+    final pay = AppScope.read(context)?.wavePay;
+    if (pay == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _savingPayout = true);
+    try {
+      if (merchant) {
+        await pay.setMerchantRef(widget.orgId, _merchantRefController.text);
+      } else {
+        await pay.setPayoutNumber(widget.orgId, _payoutController.text);
+      }
+      await _loadShopWave();
+      messenger.showSnackBar(const SnackBar(content: Text('Enregistré')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    } finally {
+      if (mounted) setState(() => _savingPayout = false);
+    }
+  }
+
+  List<Widget> _waveReceive(ThemeData theme) => [
+        const SizedBox(height: 24),
+        Text('Recevoir les paiements des clients',
+            style: theme.textTheme.labelLarge),
+        const SizedBox(height: 4),
+        Text(
+            "Quand un client paie sa commande par Wave ou par carte dans Kaj, "
+            "l'argent est envoyé sur ce numéro Wave quelques instants après. "
+            "Un numéro Wave ordinaire suffit.",
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _payoutController,
+                enabled: !_savingPayout,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Numéro Wave',
+                  hintText: '+226 70 00 00 00',
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.tonal(
+              onPressed: _savingPayout ? null : () => _savePayout(),
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ];
+
   Future<void> _loadLockRule() async {
     try {
       final rule = await AppScope.read(context)
@@ -999,6 +1076,32 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   ];
 
   List<Widget> _platform(ThemeData theme) => [
+        Text('Wave (plateforme)', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+            "L'identifiant que Wave a donné à cette boutique (marchand "
+            'agrégé). Les paiements des commandes portent son nom chez Wave.',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: TextField(
+              controller: _merchantRefController,
+              enabled: !_savingPayout,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Identifiant marchand Wave'),
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.tonal(
+            onPressed:
+                _savingPayout ? null : () => _savePayout(merchant: true),
+            child: const Text('Enregistrer'),
+          ),
+        ]),
+        const SizedBox(height: 32),
     if (widget.canSetPlan) ...[
       const SizedBox(height: 40),
       const Divider(),
@@ -1151,7 +1254,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   List<Widget> _partBody(_Part part, ThemeData theme) => switch (part) {
     _Part.identity => [..._identity(theme), ..._saveBar(theme)],
-    _Part.payments => [..._payments(theme), ..._saveBar(theme)],
+    _Part.payments => [
+        ..._payments(theme),
+        ..._saveBar(theme),
+        ..._waveReceive(theme),
+      ],
     _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
     _Part.delivery => [..._delivery(theme), ..._saveBar(theme)],
     _Part.position => [..._position(theme), ..._saveBar(theme)],
@@ -1171,6 +1278,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         final wave = _waveController.text.trim();
         return [
           wave.isEmpty ? 'Wave non configuré' : 'Wave configuré',
+          if (_payoutController.text.trim().isNotEmpty) 'reçoit sur ${_payoutController.text.trim()}',
           if (_rates.isNotEmpty)
             '${_rates.length} autre${_rates.length > 1 ? 's' : ''} monnaie${_rates.length > 1 ? 's' : ''}',
         ].join(' · ');

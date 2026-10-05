@@ -8,6 +8,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
+import '../pay/wave_buttons.dart';
 
 /// "Mettre en avant" (071): the shop's spots on the street, and the door to
 /// buy one.
@@ -532,6 +533,14 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       Text('À payer : ${moneyFormat(spot.currency).format(spot.price)}',
           style: theme.textTheme.titleLarge),
       const SizedBox(height: 12),
+      // Paid and programmed at once, by Wave or card (076), when the
+      // platform has opened it.
+      WaveButtons(
+        kind: 'spot',
+        ref: spot.id,
+        below: Text('Ou à la main :', style: muted),
+      ),
+      const SizedBox(height: 8),
       if (_terms.hasWave)
         Card(
           elevation: 0,
