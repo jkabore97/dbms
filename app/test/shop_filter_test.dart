@@ -118,7 +118,9 @@ void main() {
           find.widgetWithText(TextField, 'Chercher dans la boutique…'),
           'cafe');
       await tester.pump();
-      expect(find.text('Café Touba'), findsOneWidget);
+      // findsWidgets: an article with no photo shows its name on its
+      // square as well as under it (070).
+      expect(find.text('Café Touba'), findsWidgets);
       expect(find.text('Savon n°1'), findsNothing);
       expect(find.text('1 sur 8'), findsOneWidget);
     });
@@ -139,7 +141,7 @@ void main() {
       await tester.tap(find.byTooltip('Effacer'));
       await tester.pump();
       expect(find.text('8 articles'), findsOneWidget);
-      expect(find.text('Café Touba'), findsOneWidget);
+      expect(find.text('Café Touba'), findsWidgets);
     });
 
     testWidgets('a short shelf gets no filter — six articles is browsing',
@@ -159,8 +161,9 @@ void main() {
       await pumpShop(tester, count: 5);
       expect(find.text('Commander'), findsNothing);
 
-      // One savon in the basket: the bar appears, and the device remembers.
-      await tester.tap(find.text('Savon n°1'));
+      // One savon in the basket, by its « + » (070: the tile itself opens
+      // the article): the bar appears, and the device remembers.
+      await tester.tap(find.byIcon(Icons.add).first);
       await tester.pump();
       expect(find.text('Commander'), findsOneWidget);
       // Let the write land on the real (async) database.

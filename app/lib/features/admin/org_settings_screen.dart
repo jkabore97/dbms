@@ -11,6 +11,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
+import 'vitrine_checklist_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
@@ -687,6 +688,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ),
                   const SizedBox(height: 10),
                   _LinkRow(url: _storefrontUrl),
+                  const SizedBox(height: 16),
+                  // What the window has and lacks (070), and "Tout publier".
+                  VitrineChecklistCard(
+                    orgId: widget.orgId,
+                    admin: widget.admin,
+                    retail: widget.retail,
+                  ),
                   const SizedBox(height: 20),
                   // The Pro dressing (068): badged and held for a Free
                   // business, a form for a Pro one.

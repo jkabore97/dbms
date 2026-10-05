@@ -10,6 +10,7 @@ import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/access/org_access.dart';
+import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/models.dart';
@@ -91,6 +92,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   List<Product> _products = const [];
   double _lossesAvoided = 0;
   int _photosWaiting = 0;
+
+  /// The vitrine's checklist (070), for an owner whose window is open and
+  /// unfinished: the nudge card. Null hides it.
+  VitrineChecklist? _vitrine;
 
   bool _loading = true;
   String? _error;
@@ -189,6 +194,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   }
 
   Future<void> _load() async {
+    // Read before the first await: a context is not for after a gap.
+    final scopeAdmin = AppScope.read(context)?.admin;
     final retail = widget.retail;
     if (retail == null || !retail.isConfigured) {
       setState(() {
@@ -231,8 +238,17 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         waiting = (await capture.queueHealth(widget.org.id)).waiting;
       }
 
+      // The owner's nudge (070): best-effort, never in the way of the day.
+      VitrineChecklist? vitrine;
+      if (widget.org.isAdmin) {
+        try {
+          vitrine = await scopeAdmin?.vitrineChecklist(widget.org.id);
+        } catch (_) {}
+      }
+
       if (!mounted) return;
       setState(() {
+        _vitrine = vitrine;
         _day = day;
         _pendingOrders = pending;
         _expiring = expiring;
@@ -415,6 +431,18 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            if (_vitrine != null && _vitrine!.open && _vitrine!.score < 100) ...[
+              _VitrineNudge(
+                list: _vitrine!,
+                onTap: () async {
+                  await context
+                      .push(Routes.inside(widget.org.id, 'parametres'));
+                  if (mounted) await _load();
+                },
               ),
               const SizedBox(height: 16),
             ],
@@ -623,6 +651,46 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
         ),
       ],
+    );
+  }
+}
+
+/// "Votre vitrine : 40 %" on the shop's home (070): what the window still
+/// lacks, one tap from the settings that fix it.
+class _VitrineNudge extends StatelessWidget {
+  const _VitrineNudge({required this.list, required this.onTap});
+
+  final VitrineChecklist list;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final next = list.steps.where((s) => !s.done).map((s) => s.label).first;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: _Panel(
+        colour: theme.colorScheme.secondaryContainer,
+        child: Row(
+          children: [
+            const Icon(Icons.storefront_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Votre vitrine : ${list.score} %',
+                      style: theme.textTheme.titleSmall),
+                  Text('À faire : $next',
+                      style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
     );
   }
 }

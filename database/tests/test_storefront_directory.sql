@@ -43,6 +43,12 @@ insert into orgs (id, name, slug, profile, default_currency, address, storefront
 select seed_retail_accounts(:shop_a);
 select seed_retail_accounts(:shop_b);
 select seed_retail_accounts(:shop_c);
+-- Since 070 the directory lists an open window only when its shelf has an
+-- article on it; each shop gets one so the listing rules are what is tested.
+insert into products (org_id, name, sale_price, quantity, is_active, is_published) values
+    (:shop_a, 'Savon', 450, 5, true, true),
+    (:shop_b, 'Sucre', 750, 5, true, true),
+    (:shop_c, 'Riz',   900, 5, true, true);
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop_a, :owner_a, 'owner',    'org', :shop_a, 'full'),

@@ -160,6 +160,27 @@ class StorefrontRepository {
     }
   }
 
+  /// Three articles per shop for the directory's cards (070), photographed
+  /// first. Keyed by slug; a shop with nothing to preview is simply absent.
+  /// A database before 070 has no previews: the cards fall back quietly.
+  Future<Map<String, List<ShopPreview>>> previews(List<String> slugs) async {
+    if (slugs.isEmpty) return const {};
+    try {
+      final rows = await _requireClient().rpc('storefront_previews', params: {
+        'p_slugs': slugs,
+      }) as List<dynamic>;
+      final out = <String, List<ShopPreview>>{};
+      for (final r in rows) {
+        final p = ShopPreview.fromRow(Map<String, dynamic>.from(r as Map));
+        out.putIfAbsent(p.slug, () => []).add(p);
+      }
+      return out;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const {};
+      rethrow;
+    }
+  }
+
   /// Every open vitrine (053). With a position, the placed shops come first,
   /// nearest first, each with its distance; the unplaced follow by name.
   /// Without one, all by name and no distance.
@@ -340,6 +361,31 @@ double? _num(Object? v) =>
 
 /// An article à la une (054): one of the paid spots on the welcome page,
 /// with the shop it belongs to so a tap can open that shop's window.
+/// One article on a directory card (070).
+class ShopPreview {
+  const ShopPreview({
+    required this.slug,
+    required this.productId,
+    required this.name,
+    required this.price,
+    this.photoKey,
+  });
+
+  factory ShopPreview.fromRow(Map<String, dynamic> row) => ShopPreview(
+        slug: row['slug'] as String,
+        productId: row['product_id'] as String,
+        name: row['name'] as String,
+        price: _num(row['sale_price']) ?? 0.0,
+        photoKey: row['photo_key'] as String?,
+      );
+
+  final String slug;
+  final String productId;
+  final String name;
+  final double price;
+  final String? photoKey;
+}
+
 /// What delivery_check() says about one pinned door (069).
 class DeliveryCheck {
   const DeliveryCheck({
@@ -535,11 +581,13 @@ String whatsappShareUrl(String text) =>
 
 /// The WhatsApp link for a phone number, or null when there is none to link.
 /// Numbers are stored as E.164 (+226 70 00 00 00); wa.me wants only digits.
-String? whatsappUrl(String? phone) {
+/// With [text], the message is typed already (an article's question, 070).
+String? whatsappUrl(String? phone, {String? text}) {
   if (phone == null) return null;
   final digits = phone.replaceAll(RegExp(r'\D'), '');
   if (digits.isEmpty) return null;
-  return 'https://wa.me/$digits';
+  final base = 'https://wa.me/$digits';
+  return text == null ? base : '$base?text=${Uri.encodeComponent(text)}';
 }
 
 /// One shop in the directory (053): the window, where it is, and — when the

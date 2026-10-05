@@ -56,6 +56,7 @@ declare
         'search_products',
         'delivery_quote',
         'delivery_check',      -- 069: the basket's "how far, how far may it go"
+        'storefront_previews', -- 070: three articles per card in the directory
         'invitation_preview'
     ];
     -- The functions RLS itself calls. A policy expression runs as the
