@@ -11,6 +11,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
+import 'pin_preview.dart';
 import 'vitrine_checklist_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
@@ -114,6 +115,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   // How far the shop delivers (069); empty means the platform's 15 km.
   final _deliveryReachController = TextEditingController();
   bool _locating = false;
+
+  /// The pin as typed, when both fields read as a position on the planet.
+  (double, double)? get _pin {
+    final lat = double.tryParse(_latController.text.trim().replaceAll(',', '.'));
+    final lng = double.tryParse(_lngController.text.trim().replaceAll(',', '.'));
+    if (lat == null || lng == null) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return (lat, lng);
+  }
 
   /// The vitrine's address: on the web, this very site; elsewhere, the site
   /// the shop is known at. What the shop pastes into a WhatsApp status.
@@ -775,6 +785,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                       Expanded(
                         child: TextField(
                           controller: _latController,
+                          onChanged: (_) => setState(() {}),
                           enabled: !_saving && !_locating,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: true),
@@ -788,6 +799,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                       Expanded(
                         child: TextField(
                           controller: _lngController,
+                          onChanged: (_) => setState(() {}),
                           enabled: !_saving && !_locating,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: true),
@@ -825,6 +837,19 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                       ),
                     ],
                   ),
+                  // The pin, seen before saving (package 3).
+                  if (_pin != null) ...[
+                    const SizedBox(height: 12),
+                    PinPreview(
+                      lat: _pin!.$1,
+                      lng: _pin!.$2,
+                      currency: _currency,
+                      onMove: (lat, lng) => setState(() {
+                        _latController.text = lat.toStringAsFixed(6);
+                        _lngController.text = lng.toStringAsFixed(6);
+                      }),
+                    ),
+                  ],
                 ],
                 if (_error != null) ...[
                   const SizedBox(height: 16),
