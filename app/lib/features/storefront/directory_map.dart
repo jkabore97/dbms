@@ -72,10 +72,10 @@ class DirectoryMapPage extends StatefulWidget {
 
 class _DirectoryMapPageState extends State<DirectoryMapPage> {
   final _map = MapController();
-  late final PageController _strip =
-      PageController(viewportFraction: 0.86);
-  late final List<DirectoryEntry> _placed =
-      widget.entries.where((e) => e.hasLocation).toList();
+  late final PageController _strip = PageController(viewportFraction: 0.86);
+  late final List<DirectoryEntry> _placed = widget.entries
+      .where((e) => e.hasLocation)
+      .toList();
   int _selected = 0;
   bool _ready = false;
 
@@ -122,8 +122,11 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
     if (fromStrip) {
       _map.move(_at(_placed[index]), math.max(_map.camera.zoom, 14));
     } else if (_strip.hasClients) {
-      _strip.animateToPage(index,
-          duration: const Duration(milliseconds: 280), curve: Curves.easeOut);
+      _strip.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -135,108 +138,128 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
             for (final e in _placed) _map.camera.projectAtZoom(_at(e)),
           ])
         : [
-            for (var i = 0; i < _placed.length; i++) [i]
+            for (var i = 0; i < _placed.length; i++) [i],
           ];
     for (final g in groups) {
       if (g.length == 1) {
         final i = g.single;
         final e = _placed[i];
         final on = i == _selected;
-        markers.add(Marker(
-          point: _at(e),
-          width: 160,
-          height: 72,
-          child: Semantics(
-            button: true,
-            label: e.name,
-            hint: 'Voir la boutique',
-            excludeSemantics: true,
-            onTap: () => _select(i),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+        markers.add(
+          Marker(
+            point: _at(e),
+            width: 160,
+            height: 72,
+            child: Semantics(
+              button: true,
+              label: e.name,
+              hint: 'Voir la boutique',
+              excludeSemantics: true,
               onTap: () => _select(i),
-              child: Column(
-                children: [
-                  Icon(Icons.location_on,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _select(i),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.location_on,
                       size: on ? 40 : 32,
-                      color: on ? ShopStyle.ink : ShopStyle.mist),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: on ? ShopStyle.ink : ShopStyle.paper,
-                      borderRadius: BorderRadius.circular(99),
-                      border: Border.all(color: ShopStyle.line),
+                      color: on ? ShopStyle.ink : ShopStyle.mist,
                     ),
-                    child: Text(e.name,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: on ? ShopStyle.ink : ShopStyle.paper,
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(color: ShopStyle.line),
+                      ),
+                      child: Text(
+                        e.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: on ? ShopStyle.paper : ShopStyle.ink)),
-                  ),
-                ],
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: on ? ShopStyle.paper : ShopStyle.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ));
+        );
       } else {
         final points = [for (final i in g) _at(_placed[i])];
-        final lat = points.map((p) => p.latitude).reduce((a, b) => a + b) /
+        final lat =
+            points.map((p) => p.latitude).reduce((a, b) => a + b) /
             points.length;
-        final lng = points.map((p) => p.longitude).reduce((a, b) => a + b) /
+        final lng =
+            points.map((p) => p.longitude).reduce((a, b) => a + b) /
             points.length;
-        markers.add(Marker(
-          point: LatLng(lat, lng),
-          width: 48,
-          height: 48,
-          child: Semantics(
-            button: true,
-            label: '${g.length} boutiques ici',
-            hint: 'Rapprocher la carte',
-            excludeSemantics: true,
-            child: GestureDetector(
-              onTap: () => _map.fitCamera(CameraFit.coordinates(
-                coordinates: points,
-                padding: const EdgeInsets.all(80),
-                maxZoom: 19,
-              )),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: ShopStyle.ink,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: ShopStyle.paper, width: 3),
+        markers.add(
+          Marker(
+            point: LatLng(lat, lng),
+            width: 48,
+            height: 48,
+            child: Semantics(
+              button: true,
+              label: '${g.length} boutiques ici',
+              hint: 'Rapprocher la carte',
+              excludeSemantics: true,
+              child: GestureDetector(
+                onTap: () => _map.fitCamera(
+                  CameraFit.coordinates(
+                    coordinates: points,
+                    padding: const EdgeInsets.all(80),
+                    maxZoom: 19,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Text('${g.length}',
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: ShopStyle.ink,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: ShopStyle.paper, width: 3),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${g.length}',
                     style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: ShopStyle.paper)),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: ShopStyle.paper,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ));
+        );
       }
     }
     final here = widget.here;
     if (here != null) {
-      markers.add(Marker(
-        point: here,
-        width: 22,
-        height: 22,
-        child: Semantics(
-          label: 'Ma position',
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F5FA8),
-              shape: BoxShape.circle,
-              border: Border.all(color: ShopStyle.paper, width: 3),
+      markers.add(
+        Marker(
+          point: here,
+          width: 22,
+          height: 22,
+          child: Semantics(
+            label: 'Ma position',
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1F5FA8),
+                shape: BoxShape.circle,
+                border: Border.all(color: ShopStyle.paper, width: 3),
+              ),
             ),
           ),
         ),
-      ));
+      );
     }
     return markers;
   }
@@ -247,96 +270,105 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
     return Theme(
       data: ShopStyle.theme(context),
       child: Scaffold(
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: FlutterMap(
-                mapController: _map,
-                options: _options,
-                children: [
-                  if (widget.tiles)
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.kaj.app',
-                    ),
-                  MarkerLayer(markers: _markers()),
-                ],
-              ),
-            ),
-            // The way back, and what this is.
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
+        // The whole screen, not the height of the top bar: a Stack with no
+        // size of its own takes its one unpositioned child's (the bar,
+        // 64 px), and the map and the cards were pinned inside that.
+        body: SizedBox.expand(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: FlutterMap(
+                  mapController: _map,
+                  options: _options,
                   children: [
-                    Material(
-                      color: ShopStyle.paper,
-                      shape: const CircleBorder(),
-                      elevation: 2,
-                      child: IconButton(
-                        tooltip: 'Retour à la liste',
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).pop(),
+                    if (widget.tiles)
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.kaj.app',
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Material(
-                        color: ShopStyle.paper,
-                        elevation: 2,
-                        borderRadius: BorderRadius.circular(99),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          child: Text(
-                            _placed.isEmpty
-                                ? "Aucune vitrine n'a indiqué sa position"
-                                : unplaced == 0
-                                    ? '${_placed.length} vitrine${_placed.length > 1 ? 's' : ''} sur la carte'
-                                    : '${_placed.length} sur la carte · $unplaced sans position',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: ShopStyle.ink),
-                          ),
-                        ),
-                      ),
-                    ),
+                    MarkerLayer(markers: _markers()),
                   ],
                 ),
               ),
-            ),
-            // The strip: one card per placed shop, in step with the pins.
-            if (_placed.isNotEmpty)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: SizedBox(
-                    height: 148,
-                    child: PageView.builder(
-                      controller: _strip,
-                      itemCount: _placed.length,
-                      onPageChanged: (i) => _select(i, fromStrip: true),
-                      itemBuilder: (context, i) => Padding(
-                        padding: const EdgeInsets.fromLTRB(6, 0, 6, 16),
-                        child: _MapCard(
-                          entry: _placed[i],
-                          previews: widget.previews[_placed[i].slug] ?? const [],
-                          onOpen: () => widget.onOpen(_placed[i]),
-                          onDirections: () => widget.onDirections(_placed[i]),
+              // The way back, and what this is.
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Material(
+                        color: ShopStyle.paper,
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: IconButton(
+                          tooltip: 'Retour à la liste',
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Material(
+                          color: ShopStyle.paper,
+                          elevation: 2,
+                          borderRadius: BorderRadius.circular(99),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            child: Text(
+                              _placed.isEmpty
+                                  ? "Aucune vitrine n'a indiqué sa position"
+                                  : unplaced == 0
+                                  ? '${_placed.length} vitrine${_placed.length > 1 ? 's' : ''} sur la carte'
+                                  : '${_placed.length} sur la carte · $unplaced sans position',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: ShopStyle.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // The strip: one card per placed shop, in step with the pins.
+              if (_placed.isNotEmpty)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
+                      height: 148,
+                      child: PageView.builder(
+                        controller: _strip,
+                        itemCount: _placed.length,
+                        onPageChanged: (i) => _select(i, fromStrip: true),
+                        itemBuilder: (context, i) => Padding(
+                          padding: const EdgeInsets.fromLTRB(6, 0, 6, 16),
+                          child: _MapCard(
+                            entry: _placed[i],
+                            previews:
+                                widget.previews[_placed[i].slug] ?? const [],
+                            onOpen: () => widget.onOpen(_placed[i]),
+                            onDirections: () => widget.onDirections(_placed[i]),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -378,26 +410,32 @@ class _MapCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.name,
+              Text(
+                entry.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: ShopStyle.ink,
+                ),
+              ),
+              if (line.isNotEmpty)
+                Text(
+                  line,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: ShopStyle.ink)),
-              if (line.isNotEmpty)
-                Text(line,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                ),
               if (goods.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text(goods,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(fontSize: 13, color: ShopStyle.ink)),
+                  child: Text(
+                    goods,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: ShopStyle.ink),
+                  ),
                 ),
               const Spacer(),
               Row(
@@ -406,10 +444,16 @@ class _MapCard extends StatelessWidget {
                     child: FilledButton(
                       onPressed: onOpen,
                       style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10)),
-                      child: const Text('Voir la vitrine',
-                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                      child: const Text(
+                        'Voir la vitrine',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/features/admin/pin_preview.dart';
 import 'package:kaj_app/features/storefront/directory_map.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 /// List first, map on demand (package 3).
@@ -121,6 +122,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('2'), findsOneWidget,
           reason: 'one bubble with the count, not one pin over the other');
+    });
+
+    testWidgets('the map fills the screen and the cards sit at the bottom',
+        (tester) async {
+      // The phone screenshot: the whole page squeezed into the top bar's
+      // 64 px, the cards over the back button, white below.
+      await pumpMap(tester);
+      final map = tester.getSize(find.byType(FlutterMap));
+      expect(map.height, 844);
+      final card = tester.getBottomLeft(find.text('Voir la vitrine').first);
+      expect(card.dy, greaterThan(844 - 148));
     });
 
     testWidgets('the way back is a labelled button', (tester) async {
