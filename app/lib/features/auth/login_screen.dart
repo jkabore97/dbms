@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/motion.dart';
 import '../../core/theme/kaj_mark.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
@@ -342,6 +343,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
+            // The door settles in as it opens, like every street page.
+            child: Reveal(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               children: [
@@ -396,6 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _ErrorBanner(message: _error!),
                 ],
               ],
+            ),
             ),
           ),
         ),

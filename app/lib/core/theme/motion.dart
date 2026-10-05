@@ -20,6 +20,13 @@ class KajMotion {
   /// Content settling in after a load.
   static const settle = Duration(milliseconds: 380);
 
+  /// A block rising into view as the reader scrolls to it.
+  static const reveal = Duration(milliseconds: 560);
+
+  /// A product photograph leaning in under the pointer: slow on purpose,
+  /// the picture breathes rather than jumps.
+  static const zoom = Duration(milliseconds: 700);
+
   /// One curve for everything that appears; its mirror for what leaves.
   static const ease = Curves.easeOutCubic;
   static const leave = Curves.easeInCubic;
@@ -180,6 +187,199 @@ class _RevealState extends State<Reveal> {
         duration: KajMotion.settle,
         curve: KajMotion.ease,
         child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Content that rises into place when it first scrolls into view — the
+/// way the goods sites lay a page out: each block arrives as the reader
+/// reaches it, not all at once behind the fold where nobody sees it. Once
+/// in, it stays in. With no scrolling ancestor, or less motion asked for,
+/// it is simply there.
+///
+/// [delay] staggers neighbours in a row (KajMotion.stagger).
+class ScrollReveal extends StatefulWidget {
+  const ScrollReveal({super.key, this.delay = Duration.zero, required this.child});
+
+  final Duration delay;
+  final Widget child;
+
+  @override
+  State<ScrollReveal> createState() => _ScrollRevealState();
+}
+
+class _ScrollRevealState extends State<ScrollReveal> {
+  bool _in = false;
+  ScrollPosition? _position;
+  Timer? _timer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (!identical(position, _position)) {
+      _position?.removeListener(_check);
+      _position = position;
+      _position?.addListener(_check);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  void _check() {
+    if (_in || !mounted) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return;
+    final screen = MediaQuery.sizeOf(context);
+    final top = box.localToGlobal(Offset.zero);
+    // In view once its top edge is inside the lower ninth of the screen,
+    // and (for a sideways strip) its left edge is on screen.
+    final visible = top.dy < screen.height * 0.92 &&
+        top.dy + box.size.height > 0 &&
+        top.dx < screen.width &&
+        top.dx + box.size.width > 0;
+    if (!visible) return;
+    _position?.removeListener(_check);
+    if (widget.delay == Duration.zero) {
+      setState(() => _in = true);
+    } else {
+      _timer = Timer(widget.delay, () {
+        if (mounted) setState(() => _in = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_check);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (KajMotion.reduced(context)) return widget.child;
+    return AnimatedOpacity(
+      opacity: _in ? 1 : 0,
+      duration: KajMotion.reveal,
+      curve: KajMotion.ease,
+      alwaysIncludeSemantics: true,
+      child: AnimatedSlide(
+        offset: _in ? Offset.zero : const Offset(0, 0.08),
+        duration: KajMotion.reveal,
+        curve: KajMotion.ease,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// A photograph that leans in, slowly, under the pointer — the product
+/// shot's own hover on the goods sites: the picture moves, the tile does
+/// not. Put it inside the clip that frames the picture. [hovered] lets a
+/// parent that already tracks the pointer drive it.
+class ZoomOnHover extends StatefulWidget {
+  const ZoomOnHover({
+    super.key,
+    required this.child,
+    this.hovered,
+    this.scale = 1.05,
+  });
+
+  final Widget child;
+  final bool? hovered;
+  final double scale;
+
+  @override
+  State<ZoomOnHover> createState() => _ZoomOnHoverState();
+}
+
+class _ZoomOnHoverState extends State<ZoomOnHover> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = (widget.hovered ?? _hovered) && !KajMotion.reduced(context);
+    final zoom = AnimatedScale(
+      scale: on ? widget.scale : 1,
+      duration: KajMotion.zoom,
+      curve: KajMotion.ease,
+      child: widget.child,
+    );
+    if (widget.hovered != null) return zoom;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: zoom,
+    );
+  }
+}
+
+/// A text link whose underline draws itself in from the left under the
+/// pointer, and stays drawn while focused.
+class UnderlineLink extends StatefulWidget {
+  const UnderlineLink({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.style,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+  final TextStyle? style;
+
+  @override
+  State<UnderlineLink> createState() => _UnderlineLinkState();
+}
+
+class _UnderlineLinkState extends State<UnderlineLink> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = (widget.style ?? DefaultTextStyle.of(context).style)
+        .copyWith(fontWeight: FontWeight.w600);
+    final colour = style.color ?? Theme.of(context).colorScheme.onSurface;
+    return Semantics(
+      link: true,
+      button: true,
+      label: widget.label,
+      excludeSemantics: true,
+      onTap: widget.onTap,
+      child: FocusableActionDetector(
+        mouseCursor: SystemMouseCursors.click,
+        onShowHoverHighlight: (v) => setState(() => _hovered = v),
+        onShowFocusHighlight: (v) => setState(() => _hovered = v),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) => widget.onTap?.call()),
+        },
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: IntrinsicWidth(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(widget.label, style: style, textAlign: TextAlign.center),
+                  const SizedBox(height: 3),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedFractionallySizedBox(
+                      widthFactor: _hovered ? 1 : 0.25,
+                      duration: KajMotion.page,
+                      curve: KajMotion.ease,
+                      child: Container(height: 1.4, color: colour),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

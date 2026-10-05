@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/theme/motion.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -165,6 +166,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
     return ShopPage(
       title: 'Mes commandes',
+      announcements: ShopPage.street,
       leading: IconButton(
         tooltip: 'Les vitrines',
         icon: const Icon(Icons.arrow_back),
@@ -198,8 +200,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                 ShopSectionLabel('En cours',
                                     note: '${open.length}'),
                                 const SizedBox(height: 12),
-                                for (final o in open)
-                                  _OrderCard(
+                                for (final (i, o) in open.indexed)
+                                  ScrollReveal(
+                                  delay: KajMotion.stagger(i),
+                                  child: _OrderCard(
                                     order: o,
                                     busy: _busyId == o.id,
                                     onCancel: o.status == 'pending'
@@ -226,14 +230,18 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                       refreshKey: _tick,
                                     ),
                                   ),
+                                  ),
                                 const SizedBox(height: 28),
                               ],
                               if (past.isNotEmpty) ...[
                                 ShopSectionLabel('Passées',
                                     note: '${past.length}'),
                                 const SizedBox(height: 12),
-                                for (final o in past)
-                                  _OrderCard(order: o, busy: false),
+                                for (final (i, o) in past.indexed)
+                                  ScrollReveal(
+                                    delay: KajMotion.stagger(i),
+                                    child: _OrderCard(order: o, busy: false),
+                                  ),
                               ],
                               const ShopFooter(),
                             ],
