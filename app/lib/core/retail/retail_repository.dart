@@ -534,6 +534,27 @@ class RetailRepository {
     });
   }
 
+  /// Every article's picture for a shop, product id → photo key (079): its
+  /// most recent photograph, PDFs left out. One call for the whole Articles
+  /// page instead of one per row. Empty on a database before 079, or with
+  /// no signal — the page then shows initials, as for an article with none.
+  Future<Map<String, String>> photoKeys(String orgId) async {
+    final client = _client;
+    if (client == null) return const {};
+    try {
+      final rows = await client.rpc('product_photo_keys', params: {
+        'p_org_id': orgId,
+      }) as List<dynamic>;
+      return {
+        for (final r in rows)
+          if (r is Map && r['product_id'] != null && r['photo_key'] != null)
+            '${r['product_id']}': '${r['photo_key']}',
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   /// The photographs of a product — the delivery note it arrived on, the
   /// picture of the thing itself. `documents.product_id` has existed since
   /// 013; this is what reads it back the other way round.

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
 import 'convert_dialog.dart';
+import 'product_photo.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
 import '../capture/capture_action.dart';
@@ -57,6 +59,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
   bool _loading = true;
   String? _error;
 
+  /// Each article's picture, product id → photo key (079). Loaded beside
+  /// the list, never in front of it: the shelves show first, the pictures
+  /// fill in.
+  Map<String, String> _photos = const {};
+
+  /// List or cards, the owner's choice, remembered on this device.
+  bool _cards = false;
+  static const _viewKey = 'products_view';
+
   /// The search box. Filtering happens on the device over the list already
   /// fetched — instant, and it works with no signal. At two hundred articles
   /// three typed letters beat any amount of scrolling.
@@ -78,6 +89,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void initState() {
     super.initState();
     _load();
+    _readView();
+  }
+
+  Future<void> _readView() async {
+    try {
+      final v = await AppScope.read(context)?.db.readPref(_viewKey);
+      if (mounted && v == 'cards') setState(() => _cards = true);
+    } catch (_) {}
+  }
+
+  void _toggleView() {
+    setState(() => _cards = !_cards);
+    try {
+      AppScope.read(context)?.db.writePref(_viewKey, _cards ? 'cards' : 'list');
+    } catch (_) {}
+  }
+
+  Future<void> _loadPhotos() async {
+    final photos = await widget.retail.photoKeys(widget.org.id);
+    if (mounted) setState(() => _photos = photos);
   }
 
   Future<void> _load() async {
@@ -92,6 +123,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _products = products;
         _loading = false;
       });
+      unawaited(_loadPhotos());
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -191,6 +223,134 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  String _details(Product p) => [
+        '${_trim(p.quantity)} en stock',
+        if (p.isIngredient) 'ingrédient',
+        if (p.salePrice > 0) _money.format(p.salePrice),
+        if (p.expiresOn != null)
+          'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
+      ].join(' · ');
+
+  /// The door to the vitrine, drawn on every article: the long press is a
+  /// gesture nobody discovers, and "how do I put this in the window?" was
+  /// the question. Filled when the article is already there, outlined when
+  /// it is not; either way it opens the same sheet, where the switch and
+  /// the photo are.
+  Widget _vitrineButton(Product p, ThemeData theme) => IconButton(
+        tooltip:
+            p.isPublished ? 'Sur la vitrine — modifier' : 'Mettre sur la vitrine',
+        icon: Icon(
+          p.isPublished ? Icons.storefront : Icons.storefront_outlined,
+          color: p.isPublished
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+        onPressed: widget.access.canEdit('products') ? () => _edit(p) : null,
+      );
+
+  Widget _lowChip(ThemeData theme) => Chip(
+        label: const Text('bas'),
+        visualDensity: VisualDensity.compact,
+        backgroundColor: theme.colorScheme.errorContainer,
+      );
+
+  // Long press, not tap, on purpose: a thumb scrolling the shelves must not
+  // fall into a sheet that changes prices. And only for those the owner lets
+  // edit at all.
+  VoidCallback? _editGesture(Product p) =>
+      widget.access.canEdit('products') ? () => _edit(p) : null;
+
+  Widget _row(Product p, ThemeData theme) => Card(
+        key: ValueKey('product-row-${p.id}'),
+        elevation: 0,
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: ListTile(
+          contentPadding: const EdgeInsets.only(left: 10, right: 4),
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox.square(
+              dimension: 52,
+              child: ProductPhoto(
+                name: p.name,
+                photoKey: _photos[p.id],
+                capture: widget.capture,
+              ),
+            ),
+          ),
+          title: Text(p.name),
+          subtitle: Text(_details(p)),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (p.isLow) _lowChip(theme),
+              _vitrineButton(p, theme),
+            ],
+          ),
+          onLongPress: _editGesture(p),
+        ),
+      );
+
+  Widget _card(Product p, ThemeData theme) => Card(
+        key: ValueKey('product-card-${p.id}'),
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: InkWell(
+          onLongPress: _editGesture(p),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ProductPhoto(
+                      name: p.name,
+                      photoKey: _photos[p.id],
+                      capture: widget.capture,
+                      letterSize: 40,
+                    ),
+                    if (p.isLow)
+                      Positioned(left: 6, top: 6, child: _lowChip(theme)),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 0, 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _details(p),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _vitrineButton(p, theme),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -201,11 +361,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
     // them — 12 articles can be 340 units of stock. The owner asked to see both.
     final totalItems =
         _products.fold<double>(0, (sum, p) => sum + p.quantity);
+    final visible = _visible;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Articles'),
         actions: [
+          IconButton(
+            key: const Key('products-view'),
+            onPressed: _toggleView,
+            icon: Icon(_cards ? Icons.view_list_outlined : Icons.grid_view),
+            tooltip: _cards ? 'Afficher en liste' : 'Afficher en cartes',
+          ),
           if (widget.access.canEdit('products'))
             IconButton(
               onPressed: _bulkAdd,
@@ -229,124 +396,108 @@ class _ProductsScreenState extends State<ProductsScreen> {
           : null,
       body: RefreshIndicator(
         onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null)
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            if (_products.isNotEmpty) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // The count the owner asked for: how many articles the shop
-                  // carries, and — next to it — how many items sit behind them
-                  // in total. While a search narrows the list the article part
-                  // says "shown / total" so the number on screen is never
-                  // mistaken for the whole shelf; the item total always counts
-                  // the whole shelf, not the filtered view.
-                  Text(
-                    '${_search.text.trim().isEmpty ? '${_products.length} article'
-                            '${_products.length > 1 ? 's' : ''}' : '${_visible.length} / ${_products.length} articles'}'
-                        ' · ${_trim(totalItems)} en stock',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  Text('Valeur : ${_money.format(stockValue)}',
-                      style: theme.textTheme.titleMedium),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _search,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Rechercher un article…',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _search.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: 'Effacer',
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(_search.clear),
-                        ),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (!_loading && _products.isEmpty && _error == null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Column(
-                  children: [
-                    Icon(Icons.inventory_2_outlined,
-                        size: 48, color: theme.colorScheme.outline),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Aucun article pour l'instant.\n"
-                      'Enregistrez une entrée de stock, ou vendez directement '
-                      "— l'article sera créé tout seul.",
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ..._visible.map((p) => Card(
-                  elevation: 0,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: ListTile(
-                    title: Text(p.name),
-                    subtitle: Text([
-                      '${_trim(p.quantity)} en stock',
-                      if (p.isIngredient) 'ingrédient',
-                      if (p.salePrice > 0) _money.format(p.salePrice),
-                      if (p.expiresOn != null)
-                        'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
-                    ].join(' · ')),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+        // Slivers, so a shop of two hundred articles builds — and fetches
+        // the pictures of — only the ones on screen.
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (_loading) const LinearProgressIndicator(),
+                  if (_error != null)
+                    Text(_error!,
+                        style: TextStyle(color: theme.colorScheme.error)),
+                  if (_products.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (p.isLow)
-                          Chip(
-                            label: const Text('bas'),
-                            backgroundColor: theme.colorScheme.errorContainer,
+                        // The count the owner asked for: how many articles
+                        // the shop carries, and — next to it — how many items
+                        // sit behind them in total. While a search narrows
+                        // the list the article part says "shown / total" so
+                        // the number on screen is never mistaken for the
+                        // whole shelf; the item total always counts the
+                        // whole shelf, not the filtered view.
+                        Flexible(
+                          child: Text(
+                            '${_search.text.trim().isEmpty ? '${_products.length} article'
+                                    '${_products.length > 1 ? 's' : ''}' : '${visible.length} / ${_products.length} articles'}'
+                                ' · ${_trim(totalItems)} en stock',
+                            style: theme.textTheme.titleMedium,
                           ),
-                        // The door to the vitrine, drawn on the row: the
-                        // long press below is a gesture nobody discovers,
-                        // and "how do I put this in the window?" was the
-                        // question. Filled when the article is already
-                        // there, outlined when it is not; either way it
-                        // opens the same sheet, where the switch and the
-                        // photo are.
-                        IconButton(
-                          tooltip: p.isPublished
-                              ? 'Sur la vitrine — modifier'
-                              : 'Mettre sur la vitrine',
-                          icon: Icon(
-                            p.isPublished
-                                ? Icons.storefront
-                                : Icons.storefront_outlined,
-                            color: p.isPublished
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: widget.access.canEdit('products')
-                              ? () => _edit(p)
-                              : null,
                         ),
+                        Text('Valeur : ${_money.format(stockValue)}',
+                            style: theme.textTheme.titleMedium),
                       ],
                     ),
-                    // Long press, not tap, on purpose: a thumb scrolling the
-                    // shelves must not fall into a sheet that changes prices.
-                    // And only for those the owner lets edit at all.
-                    onLongPress: widget.access.canEdit('products')
-                        ? () => _edit(p)
-                        : null,
-                  ),
-                )),
-            const SizedBox(height: 80),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _search,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Rechercher un article…',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _search.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Effacer',
+                                icon: const Icon(Icons.close),
+                                onPressed: () => setState(_search.clear),
+                              ),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (!_loading && _products.isEmpty && _error == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          Icon(Icons.inventory_2_outlined,
+                              size: 48, color: theme.colorScheme.outline),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Aucun article pour l'instant.\n"
+                            'Enregistrez une entrée de stock, ou vendez '
+                            "directement — l'article sera créé tout seul.",
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                ]),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: _cards
+                  ? SliverGrid(
+                      // Two across on a phone, more on a tablet or a desk.
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 0.74,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (_, i) => _card(visible[i], theme),
+                        childCount: visible.length,
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (_, i) => _row(visible[i], theme),
+                        childCount: visible.length,
+                      ),
+                    ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 96)),
           ],
         ),
       ),
