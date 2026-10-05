@@ -72,7 +72,20 @@ for (const check of checks) {
   // Playwright asks the most recently added route first: the catch-all
   // goes in first, the fixtures last.
   const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+  // Nothing leaves the machine. A default web build fetches Flutter's
+  // engine from Google's CDN; the build ships the same files under
+  // canvaskit/, so those requests are answered from there.
   await ctx.route(/^https?:\/\/(?!127\.0\.0\.1)/, (route) => route.abort());
+  await ctx.route(/^https:\/\/www\.gstatic\.com\/flutter-canvaskit\/[^/]+\/(.+)$/, async (route) => {
+    const rel = route.request().url().match(/flutter-canvaskit\/[^/]+\/(.+)$/)[1];
+    try {
+      const body = await readFile(join(root, 'canvaskit', rel));
+      route.fulfill({ status: 200, body, headers: { 'access-control-allow-origin': '*',
+        'content-type': types[extname(rel)] || 'application/octet-stream' } });
+    } catch {
+      route.abort();
+    }
+  });
   await ctx.route(/\/(rest|auth|storage|realtime)\/v1\//, (route) =>
     route.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: '[]' }));
   await ctx.route(/\/rest\/v1\/rpc\/([a-z_]+)/, (route) => {
@@ -82,7 +95,11 @@ for (const check of checks) {
   });
 
   await page.goto(origin + check.path, { waitUntil: 'load', timeout: 60000 });
-  await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 60000 });
+  try {
+    await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 60000 });
+  } catch {
+    errors.push('the app never started');
+  }
   // Flutter draws on a canvas; its semantics tree is what puts the words in
   // the page, and the placeholder button is how a screen reader turns it on.
   await page.evaluate(() => document.querySelector('flt-semantics-placeholder')?.click());
