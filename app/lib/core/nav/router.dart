@@ -227,6 +227,7 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.security) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
@@ -261,6 +262,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.security) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||
@@ -288,6 +290,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.security) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
             at(Routes.applyForBusiness) ||

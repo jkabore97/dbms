@@ -489,6 +489,19 @@ void main() {
           reason: 'a member reloading /rejoindre was bounced away');
     });
 
+    testWidgets('the security page opens for a member, not the street',
+        (tester) async {
+      // Shipped once without its place in the redirect's list: the
+      // Compte › Sécurité row bounced a signed-in member to the directory.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Boutique', profile: 'retail', roles: ['owner']),
+      ]);
+      await coldBootAt(tester, '/securite');
+      await enterPin(tester, '1379');
+      expect(find.text('Sécurité'), findsWidgets);
+      expect(find.text('VERROUILLAGE DU TÉLÉPHONE'), findsOneWidget);
+    });
+
     testWidgets("the livreur's page survives a reload", (tester) async {
       await seedDevice(tester);
       await coldBootAt(tester, '/livreur');
