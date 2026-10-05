@@ -198,6 +198,7 @@ void main() {
       _Admin admin, {
       required bool platform,
       String plan = 'free',
+      String? part,
     }) async {
       tester.view.physicalSize = const Size(800, 3200);
       tester.view.devicePixelRatio = 1.0;
@@ -212,6 +213,10 @@ void main() {
         ),
       ));
       await tester.pump();
+      await tester.pump();
+      // The settings open on their index; the plan lives in Identité for a
+      // member and in "Formule et modération" for the platform.
+      await tester.tap(find.text(part ?? (platform ? 'Formule et modération' : 'Identité')));
       await tester.pump();
     }
 

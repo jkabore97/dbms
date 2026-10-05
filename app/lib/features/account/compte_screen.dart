@@ -42,222 +42,248 @@ class CompteScreen extends StatelessWidget {
     // The door to pay (066): every badged tool opens it, and so does the
     // Kaj Pro tile below. Only an admin of the business may say "J'ai payé".
     void openPro() => ProSheet.open(
-          context,
-          org: org,
-          terms: session.planTerms,
-          admin: scope.admin,
-          canRequest: org.isAdmin,
-        );
+      context,
+      org: org,
+      terms: session.planTerms,
+      admin: scope.admin,
+      canRequest: org.isAdmin,
+    );
     VoidCallback gated(String feature, VoidCallback go) =>
         access.isProLocked(feature) ? openPro : go;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          // Who you are.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  child: Text(
-                    (identity?.label ?? '?').characters.first.toUpperCase(),
-                    style: const TextStyle(fontSize: 20),
-                  ),
+          // Who you are: one card, and the way to your profile.
+          Card(
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              contentPadding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+              leading: CircleAvatar(
+                radius: 24,
+                child: Text(
+                  (identity?.label ?? '?').characters.first.toUpperCase(),
+                  style: const TextStyle(fontSize: 20),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(identity?.label ?? '',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      if (identity?.phone != null)
-                        Text(identity!.phone!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant)),
-                    ],
+              ),
+              title: Text(
+                identity?.label ?? '',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              subtitle: Text(
+                [
+                  if (identity?.phone != null) identity!.phone!,
+                  if (live) Strings.of(context).myProfile,
+                ].join(' · '),
+              ),
+              trailing: live ? const Icon(Icons.chevron_right) : null,
+              onTap: live ? () => context.push(Routes.myProfile) : null,
+            ),
+          ),
+
+          _Group(
+            title: 'Mon compte',
+            children: [
+              if (live)
+                _Tile(
+                  icon: Icons.password_outlined,
+                  title: 'Changer mon mot de passe',
+                  onTap: () => _changeMyPassword(context, scope.auth),
+                ),
+              _Tile(
+                icon: Icons.language,
+                title: Strings.of(context).language,
+                onTap: () => context.push(Routes.language),
+              ),
+              if (live && !session.isPlatformAdmin)
+                _Tile(
+                  icon: Icons.business_center_outlined,
+                  title: Strings.of(context).applyForBusiness,
+                  onTap: () => context.push(Routes.applyForBusiness),
+                ),
+              if (session.orgs.length > 1)
+                _Tile(
+                  icon: Icons.swap_horiz,
+                  title: Strings.of(context).switchBusiness,
+                  onTap: () => context.go(Routes.picker),
+                ),
+            ],
+          ),
+
+          if (live)
+            _Group(
+              title: org.name,
+              children: [
+                if (admin)
+                  _Tile(
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: Strings.of(context).administration,
+                    onTap: () => context.push(inside('administration')),
                   ),
+                if (access.canSee('staff'))
+                  _Tile(
+                    icon: Icons.groups_outlined,
+                    title: Strings.of(context).staffLabel,
+                    onTap: () => context.push(inside('personnel')),
+                  ),
+                if (admin)
+                  _Tile(
+                    icon: Icons.person_add_alt,
+                    title: Strings.of(context).inviteSomeone,
+                    onTap: () => InviteGeneratorSheet.open(
+                      context,
+                      orgId: org.id,
+                      onboarding: scope.onboarding,
+                    ),
+                  ),
+                // The plan, said plainly (066): what this business is on, and
+                // the door to the other one. Drawn for every member so an
+                // employee who meets a badge knows what it is.
+                _Tile(
+                  icon: Icons.workspace_premium_outlined,
+                  title: org.isPro ? 'Kaj Pro' : 'Passer à Kaj Pro',
+                  subtitle: org.isPro
+                      ? 'Formule active'
+                      : 'Paie, analyses, comptabilité, équipe sans limite…',
+                  onTap: openPro,
                 ),
               ],
             ),
-          ),
 
-          // ---- Mon compte ----
-          const _Section(title: 'Mon compte'),
           if (live)
-            _Tile(
-              icon: Icons.badge_outlined,
-              title: Strings.of(context).myProfile,
-              onTap: () => context.push(Routes.myProfile),
+            _Group(
+              title: 'Outils',
+              children: [
+                // Owner-only, the same full visibility the server requires for
+                // the analytics functions themselves.
+                if (org.visibility == 'full' && org.profile == 'retail')
+                  _Tile(
+                    icon: Icons.insights_outlined,
+                    title: 'Analyses',
+                    pro: access.isProLocked('analytics'),
+                    onTap: gated(
+                      'analytics',
+                      () => context.push(inside('rapports/analyse')),
+                    ),
+                  ),
+                if (access.canSee('reports'))
+                  _Tile(
+                    icon: Icons.menu_book_outlined,
+                    title: Strings.of(context).accounting,
+                    pro: access.isProLocked('accounting'),
+                    onTap: gated(
+                      'accounting',
+                      () => context.push(inside('comptabilite')),
+                    ),
+                  ),
+                // Undo a sale or a purchase entered by mistake — or test data.
+                // Owner/admin only, and only where there are sales and deliveries
+                // to undo; the server refuses everyone else regardless.
+                if (admin && org.profile == 'retail')
+                  _Tile(
+                    icon: Icons.history_toggle_off_outlined,
+                    title: 'Corrections',
+                    onTap: () => context.push(inside('corrections')),
+                  ),
+                if (access.canSee('credits'))
+                  _Tile(
+                    icon: Icons.handshake_outlined,
+                    title: Strings.of(context).creditBook,
+                    onTap: () => context.push(inside('credits')),
+                  ),
+                if (access.canSee('tontines'))
+                  _Tile(
+                    icon: Icons.group_outlined,
+                    title: Strings.of(context).tontines,
+                    pro: access.isProLocked('tontines'),
+                    onTap: gated(
+                      'tontines',
+                      () => context.push(inside('tontines')),
+                    ),
+                  ),
+                if (access.canSee('production'))
+                  _Tile(
+                    icon: Icons.precision_manufacturing_outlined,
+                    title: Strings.of(context).production,
+                    onTap: () => context.push(inside('production')),
+                  ),
+              ],
             ),
-          if (live)
-            _Tile(
-              icon: Icons.password_outlined,
-              title: 'Changer mon mot de passe',
-              onTap: () => _changeMyPassword(context, scope.auth),
+
+          if (platform)
+            _Group(
+              title: 'Plateforme',
+              children: [
+                _Tile(
+                  icon: Icons.business_outlined,
+                  title: Strings.of(context).businesses,
+                  onTap: () => context.push(Routes.console),
+                ),
+                _Tile(
+                  icon: Icons.inbox_outlined,
+                  title: Strings.of(context).applications,
+                  onTap: () => context.push(Routes.applications),
+                ),
+                _Tile(
+                  icon: Icons.add_business_outlined,
+                  title: Strings.of(context).newBusiness,
+                  onTap: () => context.push(Routes.newBusiness),
+                ),
+              ],
             ),
-          _Tile(
-            icon: Icons.language,
-            title: Strings.of(context).language,
-            onTap: () => context.push(Routes.language),
-          ),
-          if (session.orgs.length > 1)
-            _Tile(
-              icon: Icons.swap_horiz,
-              title: Strings.of(context).switchBusiness,
-              onTap: () => context.go(Routes.picker),
-            ),
-          _Tile(
-            icon: Icons.logout,
-            title: Strings.of(context).signOut,
-            onTap: () => _confirmSignOut(context, scope, session),
+
+          _Group(
+            title: 'Aide',
+            children: [
+              _Tile(
+                icon: Icons.support_agent_outlined,
+                title: 'Contacter le support',
+                subtitle: 'Sur WhatsApp',
+                onTap: () => Support.openWhatsApp(context),
+              ),
+              _Tile(
+                icon: Icons.help_outline,
+                title: 'Questions fréquentes',
+                onTap: () => context.push(Routes.faq),
+              ),
+            ],
           ),
 
-          // ---- Mon entreprise ----
-          if (live) ...[
-            const _Section(title: 'Mon entreprise'),
-            if (admin)
+          _Group(
+            title: 'À propos',
+            children: [
               _Tile(
-                icon: Icons.admin_panel_settings_outlined,
-                title: Strings.of(context).administration,
-                onTap: () => context.push(inside('administration')),
+                icon: Icons.privacy_tip_outlined,
+                title: 'Politique de confidentialité',
+                onTap: () => context.push(Routes.privacy),
               ),
-            // Owner-only, the same full visibility the server requires for
-            // the analytics functions themselves.
-            if (org.visibility == 'full' && org.profile == 'retail')
               _Tile(
-                icon: Icons.insights_outlined,
-                title: 'Analyses',
-                pro: access.isProLocked('analytics'),
-                onTap: gated('analytics',
-                    () => context.push(inside('rapports/analyse'))),
+                icon: Icons.description_outlined,
+                title: "Conditions d'utilisation",
+                onTap: () => context.push(Routes.terms),
               ),
-            if (access.canSee('reports'))
-              _Tile(
-                icon: Icons.menu_book_outlined,
-                title: Strings.of(context).accounting,
-                pro: access.isProLocked('accounting'),
-                onTap: gated(
-                    'accounting', () => context.push(inside('comptabilite'))),
-              ),
-            // Undo a sale or a purchase entered by mistake — or test data.
-            // Owner/admin only, and only where there are sales and deliveries
-            // to undo; the server refuses everyone else regardless.
-            if (admin && org.profile == 'retail')
-              _Tile(
-                icon: Icons.history_toggle_off_outlined,
-                title: 'Corrections',
-                onTap: () => context.push(inside('corrections')),
-              ),
-            if (access.canSee('credits'))
-              _Tile(
-                icon: Icons.handshake_outlined,
-                title: Strings.of(context).creditBook,
-                onTap: () => context.push(inside('credits')),
-              ),
-            if (access.canSee('tontines'))
-              _Tile(
-                icon: Icons.group_outlined,
-                title: Strings.of(context).tontines,
-                pro: access.isProLocked('tontines'),
-                onTap:
-                    gated('tontines', () => context.push(inside('tontines'))),
-              ),
-            if (access.canSee('production'))
-              _Tile(
-                icon: Icons.precision_manufacturing_outlined,
-                title: Strings.of(context).production,
-                onTap: () => context.push(inside('production')),
-              ),
-            if (access.canSee('staff'))
-              _Tile(
-                icon: Icons.groups_outlined,
-                title: Strings.of(context).staffLabel,
-                onTap: () => context.push(inside('personnel')),
-              ),
-            if (admin)
-              _Tile(
-                icon: Icons.person_add_alt,
-                title: Strings.of(context).inviteSomeone,
-                onTap: () => InviteGeneratorSheet.open(context,
-                    orgId: org.id, onboarding: scope.onboarding),
-              ),
-            // The plan, said plainly (066): what this business is on, and
-            // the door to the other one. Drawn for every member so an
-            // employee who meets a badge knows what it is.
-            _Tile(
-              icon: Icons.workspace_premium_outlined,
-              title: org.isPro ? 'Kaj Pro' : 'Passer à Kaj Pro',
-              subtitle: org.isPro
-                  ? 'Formule active'
-                  : 'Paie, analyses, comptabilité, équipe sans limite…',
-              onTap: openPro,
-            ),
-            if (!session.isPlatformAdmin)
-              _Tile(
-                icon: Icons.business_center_outlined,
-                title: Strings.of(context).applyForBusiness,
-                onTap: () => context.push(Routes.applyForBusiness),
-              ),
-          ],
-
-          // ---- Plateforme (platform admin only) ----
-          if (platform) ...[
-            const _Section(title: 'Plateforme'),
-            _Tile(
-              icon: Icons.business_outlined,
-              title: Strings.of(context).businesses,
-              onTap: () => context.push(Routes.console),
-            ),
-            _Tile(
-              icon: Icons.inbox_outlined,
-              title: Strings.of(context).applications,
-              onTap: () => context.push(Routes.applications),
-            ),
-            _Tile(
-              icon: Icons.add_business_outlined,
-              title: Strings.of(context).newBusiness,
-              onTap: () => context.push(Routes.newBusiness),
-            ),
-          ],
-
-          // ---- Aide ----
-          const _Section(title: 'Aide'),
-          _Tile(
-            icon: Icons.support_agent_outlined,
-            title: 'Contacter le support',
-            subtitle: 'Sur WhatsApp',
-            onTap: () => Support.openWhatsApp(context),
-          ),
-          _Tile(
-            icon: Icons.help_outline,
-            title: 'Questions fréquentes',
-            onTap: () => context.push(Routes.faq),
+            ],
           ),
 
-          // ---- À propos ----
-          const _Section(title: 'À propos'),
-          _Tile(
-            icon: Icons.privacy_tip_outlined,
-            title: 'Politique de confidentialité',
-            onTap: () => context.push(Routes.privacy),
-          ),
-          _Tile(
-            icon: Icons.description_outlined,
-            title: "Conditions d'utilisation",
-            onTap: () => context.push(Routes.terms),
+          const SizedBox(height: 24),
+          // Leaving, alone and apart: never next to a tap meant for
+          // something else.
+          OutlinedButton.icon(
+            onPressed: () => _confirmSignOut(context, scope, session),
+            icon: const Icon(Icons.logout),
+            label: Text(Strings.of(context).signOut),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
           ),
           const Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: EdgeInsets.fromLTRB(4, 16, 4, 8),
             child: Text('Kaj', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
@@ -299,7 +325,10 @@ class CompteScreen extends StatelessWidget {
   /// Change your own password — self-service through Supabase, no Worker and no
   /// admin needed. Two fields that must agree, and a minimum length that
   /// matches what an admin reset requires.
-  Future<void> _changeMyPassword(BuildContext context, AuthRepository auth) async {
+  Future<void> _changeMyPassword(
+    BuildContext context,
+    AuthRepository auth,
+  ) async {
     final pw1 = TextEditingController();
     final pw2 = TextEditingController();
     String? error;
@@ -330,8 +359,10 @@ class CompteScreen extends StatelessWidget {
               ),
               if (error != null) ...[
                 const SizedBox(height: 8),
-                Text(error!,
-                    style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                ),
               ],
             ],
           ),
@@ -365,9 +396,9 @@ class CompteScreen extends StatelessWidget {
     try {
       await auth.updateMyPassword(password);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mot de passe changé.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Mot de passe changé.')));
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -377,21 +408,51 @@ class CompteScreen extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title});
+/// A titled card of rows with hairlines between them (the settings fold).
+/// Draws nothing when every row is conditional and none applies.
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.children});
+
   final String title;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 6),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w700,
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+            child: Text(
+              title.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                letterSpacing: 0.8,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+          ),
+          Card(
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            color: theme.colorScheme.surfaceContainerHighest,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, indent: 56),
+                  children[i],
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -419,12 +480,16 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon,
-          color: pro ? theme.colorScheme.onSurfaceVariant : null),
-      title: Text(title,
-          style: pro
-              ? TextStyle(color: theme.colorScheme.onSurfaceVariant)
-              : null),
+      leading: Icon(
+        icon,
+        color: pro ? theme.colorScheme.onSurfaceVariant : null,
+      ),
+      title: Text(
+        title,
+        style: pro
+            ? TextStyle(color: theme.colorScheme.onSurfaceVariant)
+            : null,
+      ),
       subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: pro
           ? const _ProBadge()
@@ -447,11 +512,14 @@ class _ProBadge extends StatelessWidget {
         color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text('Pro',
-          style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4)),
+      child: Text(
+        'Pro',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
+      ),
     );
   }
 }
