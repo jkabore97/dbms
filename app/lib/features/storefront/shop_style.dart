@@ -239,32 +239,43 @@ class ShopFooter extends StatelessWidget {
         const SizedBox(height: 48),
         const Divider(),
         const SizedBox(height: 28),
-        // « Powered by KAJ », with the owner's mark — KAJ Consulting's K
-        // (kaj-consulting.com) — in place of the old wordmark and tagline.
+        // « POWERED BY » over the owner's logo — KAJ Consulting's, in full,
+        // on a white card — as on the owner's example; in place of the old
+        // wordmark and tagline.
         Semantics(
-          label: 'Powered by KAJ',
+          label: 'Powered by KAJ Consulting',
           child: ExcludeSemantics(
-            child: Row(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('Powered by',
-                    style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
-                const SizedBox(width: 8),
-                Image.asset('assets/brand/kaj_logo.png',
-                    key: const Key('kaj-logo'), height: 36),
-                const SizedBox(width: 6),
-                const Text('KAJ',
-                    key: Key('kaj-wordmark'),
+                const Text('POWERED BY',
                     style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 4,
-                        color: ShopStyle.ink)),
+                        fontSize: 11,
+                        letterSpacing: 3,
+                        color: ShopStyle.mist)),
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0x14000000)),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x1A000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 4)),
+                    ],
+                  ),
+                  child: Image.asset('assets/brand/kaj_logo.png',
+                      key: const Key('kaj-logo'), height: 64),
+                ),
               ],
             ),
           ),
         ),
+        const SizedBox(height: 8),
         if (onDirectory != null) ...[
           const SizedBox(height: 6),
           TextButton(

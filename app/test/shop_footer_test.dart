@@ -9,11 +9,9 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: SingleChildScrollView(child: ShopFooter())),
     ));
-    expect(find.text('Powered by'), findsOneWidget);
-    expect(find.text('KAJ'), findsOneWidget);
-    expect(find.byKey(const Key('kaj-wordmark')), findsOneWidget);
+    expect(find.text('POWERED BY'), findsOneWidget);
     expect(find.byKey(const Key('kaj-logo')), findsOneWidget);
-    expect(find.bySemanticsLabel('Powered by KAJ'), findsOneWidget);
+    expect(find.bySemanticsLabel('Powered by KAJ Consulting'), findsOneWidget);
     expect(find.text('Des vitrines de quartier, tenues par les boutiques.'),
         findsNothing);
   });
