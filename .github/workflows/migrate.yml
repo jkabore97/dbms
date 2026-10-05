@@ -1,0 +1,52 @@
+name: Apply migrations
+
+# Brings the live database up to the migrations on main, each in its own
+# transaction, recorded in kaj_migrations (scripts/apply-migrations.sh).
+#
+# Dormant until the owner adds one repository secret, under Settings >
+# Secrets and variables > Actions:
+#
+#   SUPABASE_DB_URL   the database's connection string (Supabase > Project
+#                     Settings > Database > Connection string > URI, the
+#                     session pooler, with the database password filled in)
+#
+# Without it the job says so and succeeds: a fork or a fresh clone does not
+# go red for want of a production password. The ledger on the live database
+# is already seeded, so the first run applies only what is new.
+#
+# Order: the database first, then the app. This runs on every push to main
+# that touches a migration; the web deploy compiles meanwhile, and the app
+# already tolerates a database one migration behind (isSchemaOutOfDate).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'database/migrations/**'
+      - 'scripts/apply-migrations.sh'
+
+concurrency:
+  group: migrate-live
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Say so when the secret is missing
+        if: env.DATABASE_URL == ''
+        run: |
+          echo "::notice::SUPABASE_DB_URL is not set: migrations were not applied. Add it under Settings > Secrets and variables > Actions."
+
+      - name: Install psql
+        if: env.DATABASE_URL != ''
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Apply what the live database has not had
+        if: env.DATABASE_URL != ''
+        run: bash scripts/apply-migrations.sh

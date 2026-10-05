@@ -314,6 +314,27 @@ class _SaleSheetState extends State<SaleSheet> {
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
+      // No signal at the counter (package 7): the sale is kept on the phone
+      // and sent when the network returns. A foreign-currency sale is not —
+      // its receipt needs the server's answer.
+      if (isOffline(error) && widget.retail.canQueueSales && tender == null) {
+        try {
+          await widget.retail.queueSale(
+            orgId: widget.orgId,
+            lines: _lines,
+            method: _method,
+            clientUuid: _clientUuid,
+            customerName:
+                _method == 'credit' ? _customerController.text.trim() : null,
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
+              content: Text('Pas de réseau : vente gardée sur le téléphone. '
+                  'Elle partira dès le retour de la connexion.')));
+          Navigator.of(context).pop(true);
+          return;
+        } catch (_) {}
+      }
       if (mounted) setState(() => _error = describeError(error));
     } finally {
       if (mounted) setState(() => _busy = false);

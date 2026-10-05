@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
+import '../db/local_db.dart';
 import 'models.dart';
 
 /// The shop's reads and writes.
@@ -20,9 +21,23 @@ import 'models.dart';
 /// The screens say so rather than showing this phone's share as if it were the
 /// whole shop.
 class RetailRepository {
-  RetailRepository(this._client);
+  RetailRepository(this._client, {LocalDb? outbox, void Function()? onQueued})
+      // ignore: prefer_initializing_formals
+      : _outbox = outbox,
+        // ignore: prefer_initializing_formals
+        _onQueued = onQueued;
 
   final SupabaseClient? _client;
+
+  /// Where a sale goes when the network does not answer (package 7). Null
+  /// in tests and builds without a local database: the till then says
+  /// "pas de connexion" as before.
+  final LocalDb? _outbox;
+
+  /// Nudges the sync loop after a sale is queued.
+  final void Function()? _onQueued;
+
+  bool get canQueueSales => _outbox != null;
 
   bool get isConfigured => _client != null;
 
@@ -75,6 +90,29 @@ class RetailRepository {
       if (e.code == 'PGRST202' || e.code == '42883') return const {};
       rethrow;
     }
+  }
+
+  /// Calls [onChange] whenever one of the shop's orders is placed or moves
+  /// (074, Supabase Realtime under the orders' own row security). Returns
+  /// the way to stop listening; a no-op without a client.
+  void Function() watchOrders(String orgId, void Function() onChange) {
+    final client = _client;
+    if (client == null) return () {};
+    final channel = client
+        .channel('orders-$orgId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'org_id',
+            value: orgId,
+          ),
+          callback: (_) => onChange(),
+        )
+        .subscribe();
+    return () => client.removeChannel(channel);
   }
 
   /// "Je livre moi-même" (073): a delivery nobody took, carried by the shop.
@@ -264,6 +302,37 @@ class RetailRepository {
     });
     return id as String;
   }
+
+  /// Keeps a sale on the phone to be sent when the network returns, with
+  /// the same parameters [recordSale] would have sent and the same client
+  /// uuid, so a sale that did land is not sold twice.
+  Future<void> queueSale({
+    required String orgId,
+    required List<SaleLineDraft> lines,
+    required String clientUuid,
+    String method = 'cash',
+    String? note,
+    String? customerName,
+  }) async {
+    final outbox = _outbox;
+    if (outbox == null) {
+      throw StateError('Pas de connexion. Réessayez quand le réseau revient.');
+    }
+    await outbox.queueSale(orgId: orgId, clientUuid: clientUuid, params: {
+      'p_org_id': orgId,
+      'p_lines': lines.map((l) => l.toJson()).toList(),
+      'p_method': method,
+      if (note != null && note.isNotEmpty) 'p_note': note,
+      'p_client_uuid': clientUuid,
+      if (customerName != null && customerName.isNotEmpty)
+        'p_customer_name': customerName,
+    });
+    _onQueued?.call();
+  }
+
+  /// Sales on this phone waiting for the network, for [orgId].
+  Future<int> pendingSales(String orgId) async =>
+      await _outbox?.pendingSales(orgId) ?? 0;
 
   /// "Tout publier" (070): every active, priced, non-ingredient article on
   /// the vitrine at once. Returns how many were published. Refused unless

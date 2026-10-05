@@ -36,10 +36,20 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   int _tick = 0;
   static const _pollEvery = Duration(seconds: 30);
 
+  /// The shop's answer, the courier, the door — as they happen (074).
+  void Function()? _unwatch;
+  Timer? _settle;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _unwatch = widget.storefront.watchMyOrders(() {
+      _settle?.cancel();
+      _settle = Timer(const Duration(milliseconds: 600), () {
+        if (mounted && !_loading && _busyId == null) _load(silent: true);
+      });
+    });
     _poll = Timer.periodic(_pollEvery, (_) {
       if (!mounted || _loading || _busyId != null) return;
       if (!_orders.any((o) => o.isOpen)) return;
@@ -50,6 +60,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   @override
   void dispose() {
     _poll?.cancel();
+    _settle?.cancel();
+    _unwatch?.call();
     super.dispose();
   }
 

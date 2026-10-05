@@ -43,6 +43,14 @@ String describeError(Object error) {
   return text;
 }
 
+/// True when [error] is the transport failing — no signal, a dropped or
+/// stalled connection — rather than the server answering no. What the till
+/// keeps on the phone instead of refusing (073's package 7).
+bool isOffline(Object error) =>
+    error is! PostgrestException &&
+    error is! AuthException &&
+    _looksOffline(error.toString());
+
 /// True when the server does not have the function this build is calling —
 /// the app is ahead of its migrations.
 ///

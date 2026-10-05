@@ -328,6 +328,28 @@ jobs:
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=PUSH_URL="$PUSH_URL"
 
+      # A build that compiles is not a page that renders (CLAUDE.md). The
+      # street and one shop's window, opened in Chromium at phone size with
+      # the server answered from fixtures: the words a shopper should see
+      # must be on the page, and nothing may throw.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Open the public pages in a browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node scripts/smoke/smoke.mjs app/build/web
+
+      - name: Keep the smoke screenshots when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots
+          path: smoke-*.png
+          if-no-files-found: ignore
+
       - uses: actions/upload-artifact@v4
         with:
           name: kaj-app-web

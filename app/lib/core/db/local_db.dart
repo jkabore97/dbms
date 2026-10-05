@@ -1380,6 +1380,37 @@ class LocalDb {
     return streak;
   }
 
+  /// A sale the till could not send (package 7): kept as an outbox row,
+  /// sent by the sync loop with its client uuid, which `record_sale()` makes
+  /// idempotent — a sale that did land the first time is not sold twice.
+  Future<void> queueSale({
+    required String orgId,
+    required String clientUuid,
+    required Map<String, dynamic> params,
+  }) async {
+    await _db.insert(
+      'outbox',
+      {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'action': 'record_sale',
+        'payload': jsonEncode(params),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  /// Sales kept on this phone and not yet sent, for one business.
+  Future<int> pendingSales(String orgId) async {
+    final result = await _db.rawQuery(
+      "SELECT COUNT(*) AS c FROM outbox WHERE synced_at IS NULL "
+      "AND action = 'record_sale' AND org_id = ?",
+      [orgId],
+    );
+    return (result.first['c'] as int?) ?? 0;
+  }
+
   /// How many actions are still waiting for a connection. Shown in the UI so
   /// the user always knows whether their work has left the device.
   Future<int> pendingCount() async {
