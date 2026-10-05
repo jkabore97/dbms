@@ -19,6 +19,8 @@ import '../retail/retail_repository.dart';
 import '../retail/staff.dart';
 import '../sync/sync_service.dart';
 import '../tontine/tontine_repository.dart';
+import '../security/security_repository.dart';
+import '../security/security_settings.dart';
 import 'session.dart';
 
 /// The repositories, reachable from anywhere below the router.
@@ -56,6 +58,8 @@ class AppScope extends InheritedWidget {
     required this.notify,
     required this.analytics,
     this.sync,
+    this.security,
+    this.securityApi,
     required super.child,
   });
 
@@ -79,6 +83,11 @@ class AppScope extends InheritedWidget {
   final NotificationsRepository notify;
   final AnalyticsRepository analytics;
   final SyncService? sync;
+
+  /// This phone's security choices and the lock (Compte › Sécurité). Null in
+  /// tests that do not need them.
+  final SecuritySettings? security;
+  final SecurityRepository? securityApi;
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();

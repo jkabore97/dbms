@@ -33,6 +33,8 @@ import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
+import 'core/security/security_repository.dart';
+import 'core/security/security_settings.dart';
 import 'core/sync/sync_service.dart';
 import 'core/tontine/tontine_repository.dart';
 import 'core/theme/kaj_theme.dart';
@@ -263,9 +265,29 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   /// in the console arrives without a restart.
   Timer? _refreshTimer;
 
+  /// The lock (Compte › Sécurité): when the app went to the background, and
+  /// the choices that say how long it may stay there before the code is
+  /// asked again.
+  late final SecuritySettings _security = SecuritySettings(widget.db);
+  late final SecurityRepository _securityApi =
+      SecurityRepository(widget.auth.client);
+  DateTime? _awayAt;
+  bool _deviceRegistered = false;
+
+  void _onSession() {
+    if (_session.phase != SessionPhase.ready || _deviceRegistered) return;
+    _deviceRegistered = true;
+    unawaited(() async {
+      final id = await _security.deviceId();
+      await _securityApi.registerDevice(id, SecuritySettings.deviceLabel());
+      _security.setPolicy(await _securityApi.lockPolicy());
+    }());
+  }
+
   @override
   void initState() {
     super.initState();
+    unawaited(_security.load());
     _update = UpdateCheck(
       fetch: (uri) async => (await http.get(uri)).body,
     );
@@ -283,6 +305,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     _router = buildRouter(_session);
     // Kicks the state machine off. The router is already listening, so the
     // first phase it settles on is the first address the person sees.
+    _session.addListener(_onSession);
     _session.boot();
     WidgetsBinding.instance.addObserver(this);
     _refreshTimer = Timer.periodic(SessionController.refreshEvery,
@@ -291,9 +314,24 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _awayAt ??= DateTime.now();
+    }
     if (state == AppLifecycleState.resumed) {
+      final away = _awayAt;
+      _awayAt = null;
+      final lock = _security.effectiveLock;
+      if (away != null &&
+          lock != null &&
+          DateTime.now().difference(away) >= Duration(minutes: lock)) {
+        _session.lockNow();
+      }
       unawaited(_session.refresh());
       unawaited(_update.check());
+      unawaited(() async {
+        _security.setPolicy(await _securityApi.lockPolicy());
+      }());
     }
   }
 
@@ -303,7 +341,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     _refreshTimer?.cancel();
     _updateTimer?.cancel();
     _update.dispose();
+    _session.removeListener(_onSession);
     _session.dispose();
+    _security.dispose();
     super.dispose();
   }
 
@@ -336,6 +376,8 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       notify: NotificationsRepository(widget.auth.client),
       analytics: AnalyticsRepository(widget.auth.client),
       sync: widget.sync,
+      security: _security,
+      securityApi: _securityApi,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new
       // language with nothing reloaded and nothing lost.

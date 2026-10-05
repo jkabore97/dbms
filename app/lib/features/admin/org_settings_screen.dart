@@ -17,6 +17,8 @@ import 'vitrine_checklist_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
+import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 
 /// The business's own details.
@@ -145,6 +147,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   void initState() {
     super.initState();
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadLockRule());
   }
 
   @override
@@ -618,6 +621,77 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// between parts loses nothing typed.
   _Part? _open;
 
+  /// The team's lock rule (075): the code after at most this many minutes
+  /// on every member's phone. Null: no rule.
+  int? _lockRule;
+  bool _savingLock = false;
+
+  Future<void> _loadLockRule() async {
+    try {
+      final rule = await AppScope.read(context)
+          ?.securityApi
+          ?.orgLockPolicy(widget.orgId);
+      if (mounted) setState(() => _lockRule = rule);
+    } catch (_) {}
+  }
+
+  Future<void> _saveLockRule(int? minutes) async {
+    final api = AppScope.read(context)?.securityApi;
+    if (api == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _savingLock = true);
+    try {
+      await api.setOrgLockPolicy(widget.orgId, minutes);
+      if (!mounted) return;
+      setState(() => _lockRule = minutes);
+      messenger.showSnackBar(SnackBar(
+          content: Text(minutes == null
+              ? 'Règle retirée : chacun choisit son délai.'
+              : "Code exigé après $minutes min sur les téléphones de l'équipe.")));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    } finally {
+      if (mounted) setState(() => _savingLock = false);
+    }
+  }
+
+  List<Widget> _team(ThemeData theme) {
+    final muted = theme.textTheme.bodySmall
+        ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    return [
+      Text('Verrouillage des téléphones', style: theme.textTheme.titleSmall),
+      const SizedBox(height: 4),
+      Text(
+          "Chaque membre a un code sur son téléphone. Fixez le délai maximal "
+          "après lequel Kaj le redemande : personne de l'équipe ne pourra "
+          'choisir plus long, ni « Jamais ».',
+          style: muted),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<int?>(
+        initialValue: _lockRule,
+        isExpanded: true,
+        decoration: const InputDecoration(
+            border: OutlineInputBorder(), labelText: 'Délai maximal'),
+        items: const [
+          DropdownMenuItem(value: null, child: Text('Aucune règle')),
+          DropdownMenuItem(value: 1, child: Text('1 min')),
+          DropdownMenuItem(value: 5, child: Text('5 min (conseillé)')),
+          DropdownMenuItem(value: 15, child: Text('15 min')),
+          DropdownMenuItem(value: 60, child: Text('1 h')),
+        ],
+        onChanged: _savingLock ? null : _saveLockRule,
+      ),
+      const SizedBox(height: 24),
+      Text('Un téléphone perdu ou volé', style: theme.textTheme.titleSmall),
+      const SizedBox(height: 4),
+      Text(
+          "Ouvrez Équipe et accès, puis la personne, puis « Déconnecter "
+          "partout » : tous ses appareils devront se reconnecter avec le mot "
+          'de passe.',
+          style: muted),
+    ];
+  }
+
   List<Widget> _identity(ThemeData theme) => [
     Text('Nom', style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
@@ -1081,6 +1155,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
     _Part.delivery => [..._delivery(theme), ..._saveBar(theme)],
     _Part.position => [..._position(theme), ..._saveBar(theme)],
+    _Part.team => _team(theme),
     _Part.platform => _platform(theme),
   };
 
@@ -1111,6 +1186,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
           '${reach.isEmpty ? '15' : reach} km',
         ].join(' · ');
+      case _Part.team:
+        return _lockRule == null
+            ? 'Aucune règle de verrouillage'
+            : 'Code exigé après ${_lockRule == 60 ? '1 h' : '$_lockRule min'}';
       case _Part.position:
         final pin = _pin;
         if (pin == null) return 'Non renseignée';
@@ -1138,6 +1217,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _Part.vitrine,
     _Part.delivery,
     _Part.position,
+    _Part.team,
     if (widget.canSetPlan || widget.canSuspend) _Part.platform,
   ];
 
@@ -1279,6 +1359,7 @@ enum _Part {
   vitrine('Vitrine', Icons.storefront_outlined),
   delivery('Livraison', Icons.delivery_dining_outlined),
   position('Position', Icons.place_outlined),
+  team("Sécurité de l'équipe", Icons.shield_outlined),
   platform('Formule et modération', Icons.admin_panel_settings_outlined);
 
   const _Part(this.label, this.icon);

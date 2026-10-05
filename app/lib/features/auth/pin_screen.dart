@@ -31,7 +31,13 @@ class PinScreen extends StatefulWidget {
     required this.identity,
     required this.onPinAccepted,
     this.onSignOut,
+    this.onBiometric,
   });
+
+  /// Unlock with a fingerprint instead (Compte › Sécurité). Null when off,
+  /// unavailable, or when choosing a code. True from the system means in;
+  /// anything else leaves the keypad, which always works.
+  final Future<bool> Function()? onBiometric;
 
   final PinPurpose purpose;
   final LocalIdentity identity;
@@ -57,6 +63,25 @@ class _PinScreenState extends State<PinScreen> {
   bool _busy = false;
 
   bool get _confirming => _firstEntry != null;
+
+  bool get _canBiometric =>
+      widget.onBiometric != null && widget.purpose == PinPurpose.unlock;
+
+  @override
+  void initState() {
+    super.initState();
+    // Offered at once, as the phone's own lock screen does; dismissing it
+    // leaves the keypad.
+    if (_canBiometric) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _biometric());
+    }
+  }
+
+  Future<void> _biometric() async {
+    final ask = widget.onBiometric;
+    if (ask == null || _busy || !mounted) return;
+    if (await ask() && mounted) await _accept('');
+  }
 
   String get _title {
     if (widget.purpose == PinPurpose.create) {
@@ -221,7 +246,11 @@ class _PinScreenState extends State<PinScreen> {
                                       TextStyle(color: theme.colorScheme.error),
                                 ),
                         ),
-                        _Keypad(onDigit: _press, onBackspace: _backspace),
+                        _Keypad(
+                          onDigit: _press,
+                          onBackspace: _backspace,
+                          onBiometric: _canBiometric ? _biometric : null,
+                        ),
                         const SizedBox(height: 16),
                         if (widget.onSignOut != null &&
                             widget.purpose == PinPurpose.unlock)
@@ -275,10 +304,17 @@ class _Dots extends StatelessWidget {
 }
 
 class _Keypad extends StatelessWidget {
-  const _Keypad({required this.onDigit, required this.onBackspace});
+  const _Keypad({
+    required this.onDigit,
+    required this.onBackspace,
+    this.onBiometric,
+  });
 
   final void Function(String digit) onDigit;
   final VoidCallback onBackspace;
+
+  /// The fingerprint, in the keypad's empty corner.
+  final VoidCallback? onBiometric;
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +336,14 @@ class _Keypad extends StatelessWidget {
                   width: 88,
                   height: 68,
                   child: key.isEmpty
-                      ? const SizedBox.shrink()
+                      ? (onBiometric == null
+                          ? const SizedBox.shrink()
+                          : IconButton(
+                              onPressed: onBiometric,
+                              icon: const Icon(Icons.fingerprint),
+                              iconSize: 30,
+                              tooltip: 'Empreinte digitale',
+                            ))
                       : key == '<'
                           ? IconButton(
                               onPressed: onBackspace,

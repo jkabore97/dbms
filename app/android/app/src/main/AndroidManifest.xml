@@ -3,6 +3,8 @@
          needs this. The photo button does not: image_picker hands off to the
          camera app through an intent, which carries its own permission. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Unlock with a fingerprint instead of the code (Sécurité). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <!-- The vitrine map: "utiliser ma position" places a shop on the map
          from where the phone is, and "près de moi" sorts the directory by

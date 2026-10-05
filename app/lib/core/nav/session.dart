@@ -345,9 +345,50 @@ class SessionController extends ChangeNotifier {
     await resolveOrgs();
   }
 
+  /// Changes the device code from Compte › Sécurité: [current] must match,
+  /// [next] must be a code PinCodec accepts. Returns the problem in words,
+  /// or null when it is changed. Nothing leaves the phone.
+  Future<String?> changePin(String current, String next) async {
+    final identity = _identity;
+    final salt = identity?.pinSalt;
+    final hash = identity?.pinHash;
+    if (identity == null || salt == null || hash == null) {
+      return "Aucun code n'est enregistré sur ce téléphone.";
+    }
+    if (!PinCodec.verify(current, salt: salt, hash: hash)) {
+      return 'Code actuel incorrect.';
+    }
+    final problem = PinCodec.validate(next);
+    if (problem != null) return problem;
+    final fresh = PinCodec.newSalt();
+    final updated = identity.copyWith(
+        pinSalt: fresh, pinHash: PinCodec.hash(next, fresh));
+    await db.saveIdentity(updated);
+    _identity = updated;
+    return null;
+  }
+
   /// PinScreen has already checked the code against the stored hash. From here
   /// the offline path and the online path are the same.
   Future<void> unlock() => resolveOrgs();
+
+  /// The phone was away longer than its lock delay (Compte › Sécurité): the
+  /// code is asked again. Only from inside — a person still signing in,
+  /// choosing a code or already locked is left where they are — and only
+  /// when there is a code to ask for. The router stashes the page, and
+  /// unlocking returns to it.
+  bool lockNow() {
+    final identity = _identity;
+    if (identity == null || !identity.hasPin) return false;
+    if (_phase != SessionPhase.ready &&
+        _phase != SessionPhase.picking &&
+        _phase != SessionPhase.noOrg) {
+      return false;
+    }
+    _phase = SessionPhase.locked;
+    _emit();
+    return true;
+  }
 
   Future<void> signOut() async {
     await auth.signOut();

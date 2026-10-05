@@ -121,6 +121,7 @@ dependencies:
   # without one it is a no-op, so a local build reports nothing anywhere.
   # See core/observability/crash_reporting.dart for what is and is not sent.
   sentry_flutter: ^9.29.0
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:

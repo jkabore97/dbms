@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/auth/auth_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/security/security_settings.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
 import '../admin/invite_generator_sheet.dart';
@@ -91,9 +91,10 @@ class CompteScreen extends StatelessWidget {
             children: [
               if (live)
                 _Tile(
-                  icon: Icons.password_outlined,
-                  title: 'Changer mon mot de passe',
-                  onTap: () => _changeMyPassword(context, scope.auth),
+                  icon: Icons.shield_outlined,
+                  title: 'Sécurité',
+                  subtitle: _securityLine(scope),
+                  onTap: () => context.push(Routes.security),
                 ),
               _Tile(
                 icon: Icons.language,
@@ -321,95 +322,22 @@ class CompteScreen extends StatelessWidget {
     );
     if (confirmed == true) session.signOut();
   }
-
-  /// Change your own password — self-service through Supabase, no Worker and no
-  /// admin needed. Two fields that must agree, and a minimum length that
-  /// matches what an admin reset requires.
-  Future<void> _changeMyPassword(
-    BuildContext context,
-    AuthRepository auth,
-  ) async {
-    final pw1 = TextEditingController();
-    final pw2 = TextEditingController();
-    String? error;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setInner) => AlertDialog(
-          title: const Text('Changer mon mot de passe'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: pw1,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nouveau mot de passe',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: pw2,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirmer',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              if (error != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  error!,
-                  style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (pw1.text.length < 8) {
-                  setInner(() => error = 'Au moins 8 caractères.');
-                  return;
-                }
-                if (pw1.text != pw2.text) {
-                  setInner(() => error = 'Les deux ne correspondent pas.');
-                  return;
-                }
-                Navigator.pop(ctx, true);
-              },
-              child: const Text('Changer'),
-            ),
-          ],
-        ),
-      ),
-    );
-    final password = pw1.text;
-    pw1.dispose();
-    pw2.dispose();
-    if (ok != true || !context.mounted) return;
-    try {
-      await auth.updateMyPassword(password);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Mot de passe changé.')));
-    } catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AuthRepository.describeError(error))),
-      );
-    }
-  }
 }
 
 /// A titled card of rows with hairlines between them (the settings fold).
 /// Draws nothing when every row is conditional and none applies.
+/// "Verrouillé après 5 min · empreinte" — where the phone's lock stands.
+String _securityLine(AppScope scope) {
+  final s = scope.security;
+  if (s == null) return 'Code, appareils, mot de passe';
+  final lock = s.effectiveLock;
+  return [
+    lock == null ? 'Jamais verrouillé' : 'Verrouillé après ${SecuritySettings.label(lock)}',
+    if (s.biometric && s.biometricReady) 'empreinte',
+    if (s.hideAmounts) 'montants cachés',
+  ].join(' · ');
+}
+
 class _Group extends StatelessWidget {
   const _Group({required this.title, required this.children});
 

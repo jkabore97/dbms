@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -236,6 +239,14 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     title: const Text('Réinitialiser le mot de passe'),
                     onTap: () => Navigator.pop(ctx, 'password'),
                   ),
+                // A lost phone (075): every session of this person closed.
+                if (!isSelf && member.role != 'owner')
+                  ListTile(
+                    leading: const Icon(Icons.phonelink_erase_outlined),
+                    title: const Text('Déconnecter partout'),
+                    subtitle: const Text('Téléphone perdu ou volé'),
+                    onTap: () => Navigator.pop(ctx, 'signout'),
+                  ),
                 ListTile(
                   leading: const Icon(Icons.person_remove_outlined),
                   title: const Text("Retirer de l'entreprise"),
@@ -266,10 +277,49 @@ class _PeopleScreenState extends State<PeopleScreen> {
         await _changeRole(member);
       case 'password':
         await _resetPassword(member);
+      case 'signout':
+        await _signOutEverywhere(member);
       case 'remove':
         await _revokeMembership(member);
       case 'delete':
         await _deleteAccount(member);
+    }
+  }
+
+  /// A lost phone: closes every session of [member] (075). Their phone asks
+  /// for the password again within the hour; nothing they recorded is lost.
+  Future<void> _signOutEverywhere(Member member) async {
+    final api = AppScope.read(context)?.securityApi;
+    if (api == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Déconnecter ${member.label} partout ?'),
+        content: const Text(
+            'Tous ses téléphones et navigateurs devront se reconnecter avec '
+            'le mot de passe, au plus tard dans une heure. Ses accès à '
+            "l'entreprise ne changent pas : pour les retirer, utilisez "
+            "« Retirer de l'entreprise »."),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annuler')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Déconnecter')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final n = await api.signOutMember(widget.orgId, member.userId);
+      messenger.showSnackBar(SnackBar(
+          content: Text(n == 0
+              ? '${member.label} n\'était connecté nulle part.'
+              : '${member.label} est déconnecté de $n appareil${n > 1 ? 's' : ''}.')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
     }
   }
 
