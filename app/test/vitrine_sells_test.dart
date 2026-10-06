@@ -217,7 +217,9 @@ void main() {
       ));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Votre vitrine : 0 %'), findsOneWidget);
+      expect(find.text('0 %'), findsOneWidget);
+      expect(find.text('Remplissez votre vitrine'), findsOneWidget);
+      expect(find.byKey(const Key('vitrine-step-0')), findsOneWidget);
       expect(find.textContaining("n'apparaît pas dans l'annuaire"),
           findsOneWidget);
 

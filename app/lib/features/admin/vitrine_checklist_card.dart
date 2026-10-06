@@ -77,6 +77,15 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
     if (list == null) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final score = list.score;
+    const tiles = [
+      (Icons.inventory_2, 'Articles'),
+      (Icons.photo_camera, 'Photos'),
+      (Icons.short_text, 'Présentation'),
+      (Icons.call, 'Téléphone'),
+      (Icons.home_work, 'Adresse'),
+      (Icons.place, 'Carte'),
+    ];
+    final steps = list.steps;
     return KajCard(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -84,54 +93,93 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Not a list to choose from: a meter, and six pictures that
+            // light up as the window fills.
             Row(
               children: [
-                Expanded(
-                  child: Text('Votre vitrine : $score %',
-                      style: theme.textTheme.titleMedium),
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: CircularProgressIndicator(
+                          value: score / 100,
+                          strokeWidth: 6,
+                          backgroundColor:
+                              theme.colorScheme.primary.withValues(alpha: 0.12),
+                          semanticsLabel: 'Vitrine complète à $score pour cent',
+                        ),
+                      ),
+                      Text('$score %',
+                          key: const Key('vitrine-score'),
+                          style: theme.textTheme.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                    ],
+                  ),
                 ),
-                if (score == 100)
-                  Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                      score == 100 ? 'Vitrine complète' : 'Remplissez votre vitrine',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(99),
-              child: LinearProgressIndicator(
-                value: score / 100,
-                minHeight: 8,
-                semanticsLabel: 'Vitrine complète à $score pour cent',
-              ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                for (var k = 0; k < tiles.length && k < steps.length; k++)
+                  Expanded(
+                    child: Column(
+                      key: Key('vitrine-step-$k'),
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: steps[k].done
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(tiles[k].$1,
+                                  size: 22,
+                                  color: steps[k].done
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.colorScheme.onSurfaceVariant),
+                            ),
+                            if (steps[k].done)
+                              Positioned(
+                                right: -4,
+                                bottom: -4,
+                                child: CircleAvatar(
+                                  radius: 8,
+                                  backgroundColor: Colors.green.shade600,
+                                  child: const Icon(Icons.check,
+                                      size: 11, color: Colors.white),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(tiles[k].$2,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall),
+                      ],
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 12),
-            for (final step in list.steps)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    Icon(
-                      step.done
-                          ? Icons.check_circle_outline
-                          : Icons.radio_button_unchecked,
-                      size: 18,
-                      color: step.done
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(step.label,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: step.done
-                                ? theme.colorScheme.onSurfaceVariant
-                                : theme.colorScheme.onSurface,
-                            decoration:
-                                step.done ? TextDecoration.lineThrough : null,
-                          )),
-                    ),
-                  ],
-                ),
-              ),
             if (list.published == 0 && list.open) ...[
               const SizedBox(height: 8),
               Text(

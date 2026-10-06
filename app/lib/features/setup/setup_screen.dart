@@ -1,0 +1,707 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../../core/admin/admin_repository.dart';
+import '../../core/auth/models.dart';
+import '../../core/errors.dart';
+import '../../core/invoicing/invoicing_repository.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/phone/country_codes.dart';
+import '../../core/retail/retail_repository.dart';
+import '../../core/theme/mara_mark.dart';
+import '../../core/theme/motion.dart';
+import '../admin/pin_preview.dart';
+import '../common/phone_field.dart';
+
+/// What the first setup writes (091), apart so a test can stand in for it.
+abstract class SetupActions {
+  Future<void> rename(String orgId, String name, String currency);
+  Future<void> addArticle(String orgId,
+      {required String name, required double price, required double quantity});
+  Future<void> saveVitrine(String orgId,
+      {required bool open, required String blurb, required String phone, required String address});
+  Future<void> savePosition(String orgId, double lat, double lng);
+  Future<void> finish(String orgId);
+}
+
+class SupabaseSetupActions implements SetupActions {
+  SupabaseSetupActions(this.admin, this.retail, this.invoicing);
+
+  final AdminRepository admin;
+  final RetailRepository retail;
+  final InvoicingRepository invoicing;
+
+  @override
+  Future<void> rename(String orgId, String name, String currency) =>
+      admin.updateOrg(orgId: orgId, name: name, currency: currency);
+
+  @override
+  Future<void> addArticle(String orgId,
+      {required String name, required double price, required double quantity}) async {
+    final id = await retail.ensureProduct(orgId: orgId, name: name, salePrice: price);
+    if (quantity > 0) {
+      await retail.receive(orgId: orgId, productId: id, quantity: quantity);
+    }
+    await retail.updateProduct(id, isPublished: true);
+  }
+
+  @override
+  Future<void> saveVitrine(String orgId,
+      {required bool open, required String blurb, required String phone, required String address}) async {
+    await admin.setStorefront(orgId, enabled: open, blurb: blurb);
+    // The invoice header carries the same phone and address; what was
+    // there is kept, only these two lines are set.
+    final b = await invoicing.billingDetails(orgId);
+    await invoicing.saveBillingDetails(
+      orgId: orgId,
+      address: address,
+      phone: phone,
+      email: b.email,
+      taxId: b.taxId,
+      taxLabel: b.taxLabel,
+      footer: b.footer,
+    );
+  }
+
+  @override
+  Future<void> savePosition(String orgId, double lat, double lng) =>
+      admin.setStorefrontLocation(orgId, lat: lat, lng: lng);
+
+  @override
+  Future<void> finish(String orgId) => admin.finishSetup(orgId);
+}
+
+/// One step of the first setup: its picture, its name, one line.
+typedef _Step = ({IconData icon, String title, String line});
+
+/// A new shop's or farm's first minutes (091): four steps, each a big
+/// picture, a few words and the real form — the business is set up for
+/// real while its owner learns where everything is. The store opens once
+/// it has its first article; the position may wait (« Plus tard »), and
+/// earns no cauris until it is set.
+class SetupScreen extends StatefulWidget {
+  const SetupScreen({
+    super.key,
+    required this.org,
+    required this.actions,
+    required this.onDone,
+  });
+
+  final OrgSummary org;
+  final SetupActions actions;
+  final VoidCallback onDone;
+
+  @override
+  State<SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends State<SetupScreen> {
+  final _pages = PageController();
+  int _at = 0;
+  bool _busy = false;
+  String? _error;
+
+  late final _name = TextEditingController(text: widget.org.name);
+  final _article = TextEditingController();
+  final _price = TextEditingController();
+  final _quantity = TextEditingController();
+  int _articles = 0;
+  bool _open = true;
+  final _blurb = TextEditingController();
+  final _phone = TextEditingController();
+  final _address = TextEditingController();
+  CountryCode _country = defaultCountry;
+  (double, double)? _pin;
+  bool _done = false;
+
+  bool get _farm => widget.org.profile == 'farm';
+
+  List<_Step> get _steps => [
+        (
+          icon: _farm ? Icons.agriculture : Icons.storefront,
+          title: _farm ? 'Votre ferme' : 'Votre boutique',
+          line: 'Son nom, tel que vos clients le connaissent.',
+        ),
+        (
+          icon: Icons.inventory_2,
+          title: _farm ? 'Ce que vous vendez' : 'Votre premier article',
+          line: 'Un nom, un prix, combien vous en avez.',
+        ),
+        (
+          icon: Icons.storefront_outlined,
+          title: 'Votre vitrine',
+          line: 'Votre page, à partager sur WhatsApp.',
+        ),
+        (
+          icon: Icons.place,
+          title: 'Où vous trouver',
+          line: 'Vos clients vous voient sur la carte.',
+        ),
+      ];
+
+  @override
+  void dispose() {
+    for (final c in [_name, _article, _price, _quantity, _blurb, _phone, _address]) {
+      c.dispose();
+    }
+    _pages.dispose();
+    super.dispose();
+  }
+
+  double? _num(TextEditingController c) =>
+      double.tryParse(c.text.trim().replaceAll(RegExp(r'[\s ]'), '').replaceAll(',', '.'));
+
+  Future<void> _run(Future<void> Function() act, {bool advance = true}) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await act();
+      if (!mounted) return;
+      if (advance) _go(_at + 1);
+    } catch (e) {
+      if (mounted) setState(() => _error = describeError(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _go(int page) {
+    if (page >= _steps.length) {
+      _finish();
+      return;
+    }
+    _pages.animateToPage(page, duration: KajMotion.page, curve: KajMotion.ease);
+  }
+
+  Future<void> _finish() async {
+    await _run(() async {
+      await widget.actions.finish(widget.org.id);
+      if (mounted) setState(() => _done = true);
+    }, advance: false);
+  }
+
+  // ---- the four steps' own acts ----
+
+  Future<void> _saveName() async {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Le nom, s\'il vous plaît.');
+      return;
+    }
+    await _run(() => widget.actions.rename(widget.org.id, name, widget.org.currency));
+  }
+
+  Future<void> _addArticle() async {
+    final name = _article.text.trim();
+    final price = _num(_price);
+    final qty = _num(_quantity) ?? 0;
+    if (name.isEmpty || price == null || price <= 0) {
+      setState(() => _error = 'Un nom et un prix.');
+      return;
+    }
+    await _run(() async {
+      await widget.actions.addArticle(widget.org.id,
+          name: name, price: price, quantity: qty);
+      if (!mounted) return;
+      setState(() {
+        _articles++;
+        _article.clear();
+        _price.clear();
+        _quantity.clear();
+      });
+    }, advance: false);
+  }
+
+  Future<void> _saveVitrine() async {
+    final typed = _phone.text.trim();
+    final length = typed.isEmpty ? null : _country.lengthProblem(typed);
+    if (length != null) {
+      setState(() => _error = length);
+      return;
+    }
+    await _run(() => widget.actions.saveVitrine(widget.org.id,
+        open: _open,
+        blurb: _blurb.text.trim(),
+        phone: typed.isEmpty ? '' : _country.toE164(typed),
+        address: _address.text.trim()));
+  }
+
+  Future<void> _locate() async {
+    await _run(() async {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw 'Autorisez la position, ou choisissez « Plus tard ».';
+      }
+      final p = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      if (mounted) setState(() => _pin = (p.latitude, p.longitude));
+    }, advance: false);
+  }
+
+  Future<void> _savePosition() async {
+    final pin = _pin;
+    if (pin == null) return;
+    await _run(() => widget.actions.savePosition(widget.org.id, pin.$1, pin.$2));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_done) return _Ready(org: widget.org, onDone: widget.onDone);
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  const MaraMark(size: 32),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text('Mise en route',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                  ),
+                  Text('${_at + 1} / ${_steps.length}',
+                      key: const Key('setup-count'),
+                      style: theme.textTheme.labelLarge),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: Row(
+                children: [
+                  for (var i = 0; i < _steps.length; i++)
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: KajMotion.quick,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: i <= _at ? maraGold : maraIndigo.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: PageView(
+                key: const Key('setup-pages'),
+                controller: _pages,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (i) => setState(() {
+                  _at = i;
+                  _error = null;
+                }),
+                children: [
+                  _page(0, _identity(theme)),
+                  _page(1, _articleStep(theme)),
+                  _page(2, _vitrineStep(theme)),
+                  _page(3, _positionStep(theme)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _page(int i, List<Widget> body) {
+    final theme = Theme.of(context);
+    final s = _steps[i];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      children: [
+        Center(child: _Picture(icon: s.icon, key: ValueKey('setup-pic-$i'))),
+        const SizedBox(height: 16),
+        Text(s.title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 6),
+        Text(s.line, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+        const SizedBox(height: 22),
+        ...body,
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(_error!,
+              key: const Key('setup-error'),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: theme.colorScheme.error)),
+        ],
+      ],
+    );
+  }
+
+  Widget _primary(String label, VoidCallback? onPressed, {Key? key, IconData icon = Icons.arrow_forward}) =>
+      SizedBox(
+        height: 56,
+        child: FilledButton.icon(
+          key: key,
+          onPressed: _busy ? null : onPressed,
+          icon: _busy
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(icon),
+          label: Text(label, style: const TextStyle(fontSize: 17)),
+        ),
+      );
+
+  List<Widget> _identity(ThemeData theme) => [
+        TextField(
+          key: const Key('setup-name'),
+          controller: _name,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: _farm ? 'Nom de la ferme' : 'Nom de la boutique',
+            prefixIcon: const Icon(Icons.badge_outlined),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _primary('Continuer', _saveName, key: const Key('setup-next-0')),
+      ];
+
+  List<Widget> _articleStep(ThemeData theme) => [
+        // How it is done, before doing it: the three things an article
+        // needs, lit one after the other.
+        const _HowTo(items: [
+          (Icons.label_outline, 'Nom'),
+          (Icons.sell_outlined, 'Prix'),
+          (Icons.inventory_outlined, 'Stock'),
+        ]),
+        const SizedBox(height: 18),
+        TextField(
+          key: const Key('setup-article'),
+          controller: _article,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: _farm ? 'Ex. : Plateau d\'œufs' : 'Ex. : Sac de riz 25 kg',
+            prefixIcon: const Icon(Icons.label_outline),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('setup-price'),
+                controller: _price,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Prix (F)',
+                  prefixIcon: Icon(Icons.sell_outlined),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                key: const Key('setup-quantity'),
+                controller: _quantity,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'En stock',
+                  prefixIcon: Icon(Icons.inventory_outlined),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        if (_articles == 0)
+          _primary('Ajouter', _addArticle, key: const Key('setup-add'), icon: Icons.add)
+        else
+          OutlinedButton.icon(
+            key: const Key('setup-add'),
+            onPressed: _busy ? null : _addArticle,
+            icon: const Icon(Icons.add),
+            label: const Text('Ajouter encore'),
+          ),
+        if (_articles > 0) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle, color: maraGreen),
+              const SizedBox(width: 6),
+              Text('$_articles article${_articles > 1 ? 's' : ''} sur la vitrine',
+                  key: const Key('setup-articles'),
+                  style: theme.textTheme.titleSmall),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('Plus tard : Stock › « + ».',
+              textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 16),
+          _primary('Continuer', () => _go(2), key: const Key('setup-next-1')),
+        ],
+      ];
+
+  List<Widget> _vitrineStep(ThemeData theme) => [
+        SwitchListTile(
+          key: const Key('setup-open'),
+          value: _open,
+          onChanged: (v) => setState(() => _open = v),
+          secondary: const Icon(Icons.storefront),
+          title: const Text('Ouvrir ma vitrine'),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          key: const Key('setup-blurb'),
+          controller: _blurb,
+          maxLength: 80,
+          decoration: const InputDecoration(
+            labelText: 'En une phrase',
+            hintText: 'Ex. : Le riz et l\'huile du quartier',
+            prefixIcon: Icon(Icons.short_text),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 4),
+        PhoneField(
+          key: const Key('setup-phone'),
+          controller: _phone,
+          country: _country,
+          onCountry: (c) => setState(() => _country = c),
+          labelText: 'Téléphone des clients',
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          key: const Key('setup-address'),
+          controller: _address,
+          decoration: const InputDecoration(
+            labelText: 'Quartier, repère',
+            prefixIcon: Icon(Icons.home_work_outlined),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _primary('Continuer', _saveVitrine, key: const Key('setup-next-2')),
+      ];
+
+  List<Widget> _positionStep(ThemeData theme) => [
+        if (_pin == null)
+          OutlinedButton.icon(
+            key: const Key('setup-locate'),
+            onPressed: _busy ? null : _locate,
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+            icon: const Icon(Icons.my_location),
+            label: const Text('Utiliser ma position'),
+          )
+        else ...[
+          PinPreview(
+            lat: _pin!.$1,
+            lng: _pin!.$2,
+            currency: widget.org.currency,
+            onMove: (lat, lng) => setState(() => _pin = (lat, lng)),
+          ),
+          const SizedBox(height: 16),
+          _primary('Terminer', _savePosition,
+              key: const Key('setup-next-3'), icon: Icons.check),
+        ],
+        const SizedBox(height: 12),
+        TextButton(
+          key: const Key('setup-later'),
+          onPressed: _busy ? null : _finish,
+          child: const Text('Plus tard'),
+        ),
+        Text('Sans position, pas de cauris de vitrine complète.',
+            textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+      ];
+}
+
+/// The step's picture: a big tile that grows in.
+class _Picture extends StatelessWidget {
+  const _Picture({super.key, required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduced = KajMotion.reduced(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: reduced ? 1 : 0.6, end: 1),
+      duration: reduced ? Duration.zero : const Duration(milliseconds: 600),
+      curve: Curves.elasticOut,
+      builder: (context, v, child) => Transform.scale(scale: v, child: child),
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          color: maraIndigo,
+          borderRadius: BorderRadius.circular(36),
+        ),
+        child: Icon(icon, size: 64, color: maraGold),
+      ),
+    );
+  }
+}
+
+/// « How it is done »: a row of pictures lit one after another, on a loop.
+class _HowTo extends StatefulWidget {
+  const _HowTo({required this.items});
+
+  final List<(IconData, String)> items;
+
+  @override
+  State<_HowTo> createState() => _HowToState();
+}
+
+class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
+  late final _loop =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (KajMotion.reduced(context)) {
+      _loop.value = 1;
+    } else if (!_loop.isAnimating) {
+      _loop.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final n = widget.items.length;
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, _) {
+        final lit = (_loop.value * (n + 1)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < n; i++) ...[
+              if (i > 0)
+                Icon(Icons.arrow_forward,
+                    size: 18, color: i <= lit ? maraIndigo : maraIndigo.withValues(alpha: 0.2)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: KajMotion.quick,
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: i < lit ? maraGold : maraIndigo.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(widget.items[i].$1,
+                          color: i < lit ? maraIndigo : maraIndigo.withValues(alpha: 0.5)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(widget.items[i].$2, style: theme.textTheme.labelMedium),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// « C'est prêt ! »: the store opens.
+class _Ready extends StatelessWidget {
+  const _Ready({required this.org, required this.onDone});
+
+  final OrgSummary org;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: maraIndigo,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Center(child: _Picture(icon: Icons.celebration)),
+              const SizedBox(height: 20),
+              Text('C\'est prêt !',
+                  key: const Key('setup-ready'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium
+                      ?.copyWith(color: maraCream, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(org.name,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(color: maraGold)),
+              const SizedBox(height: 32),
+              SizedBox(
+                height: 56,
+                child: FilledButton.icon(
+                  key: const Key('setup-enter'),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: maraGold, foregroundColor: maraIndigo),
+                  onPressed: onDone,
+                  icon: const Icon(Icons.storefront),
+                  label: const Text('Ouvrir ma boutique', style: TextStyle(fontSize: 17)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Holds the home back until the first setup is done (091): the business's
+/// admins see the setup; an employee, or a business already set up, the
+/// home. Until the server has answered, the home shows — the app never
+/// blocks on a slow network.
+class SetupGate extends StatelessWidget {
+  const SetupGate({super.key, required this.org, required this.child});
+
+  final OrgSummary org;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.maybeOf(context);
+    if (scope == null || !org.isAdmin) return child;
+    return ListenableBuilder(
+      listenable: scope.session,
+      builder: (context, _) {
+        final f = scope.session.featuresFor(org.id);
+        if (f == null || f.setupDone) return child;
+        return SetupScreen(
+          org: org,
+          actions: SupabaseSetupActions(scope.admin, scope.retail, scope.invoicing),
+          onDone: () => scope.session.reloadFeatures(org.id),
+        );
+      },
+    );
+  }
+}

@@ -679,6 +679,11 @@ class AdminRepository {
   /// Freeze a business, or thaw it (049). Platform admin only — the server
   /// refuses anyone else. A frozen business goes read-only for its members;
   /// its data is untouched, and thawing restores writes exactly.
+  /// The first setup is done (091): the home opens from now on.
+  Future<void> finishSetup(String orgId) async {
+    await _requireClient().rpc('finish_setup', params: {'p_org_id': orgId});
+  }
+
   /// Mara's tick for Wave on one business (090); platform admins only.
   Future<void> setOrgWaveAllowed(String orgId, bool allowed) async {
     final client = _requireClient();
