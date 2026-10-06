@@ -284,6 +284,25 @@ class StorefrontRepository {
             DirectoryEntry.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
   }
+
+  Future<Set<String>>? _showcases;
+
+  /// The vitrines d'exemple on the street (094), by slug: « Pas à
+  /// proximité », and no order. Asked once per app run; a failure is no
+  /// showcase, never an error on the page.
+  Future<Set<String>> showcaseSlugs() {
+    final client = _client;
+    if (client == null) return Future.value(const {});
+    return _showcases ??= () async {
+      try {
+        final rows = await client.rpc('showcase_slugs') as List<dynamic>;
+        return {for (final r in rows) r is Map ? '${r.values.first}' : '$r'};
+      } catch (_) {
+        _showcases = null;
+        return <String>{};
+      }
+    }();
+  }
 }
 
 /// One shop's window: who they are and how to reach them.

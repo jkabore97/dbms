@@ -157,6 +157,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     }
     try {
       final shop = await widget.storefront.shop(widget.slug);
+      // A vitrine d'exemple (094): browsed, never ordered from.
+      final showcase =
+          shop != null &&
+          (await widget.storefront.showcaseSlugs()).contains(shop.slug);
       final items = shop == null
           ? const <PublicItem>[]
           // A Pro shop's shelf order (068): pinned first, out-of-stock
@@ -165,6 +169,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       if (!mounted) return;
       setState(() {
         _shop = shop;
+        _showcase = showcase;
         _items = items;
         _loading = false;
       });
@@ -240,7 +245,39 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// sign-in and brought back to this very vitrine — and the basket now
   /// survives the trip: it sleeps on the device (_keepBasket) and is
   /// restored when the page comes back, so the picking is done once.
+  /// A vitrine d'exemple (094): the shopper may look and fill a basket;
+  /// the order is refused here, before any sign-in, and by the server too.
+  bool _showcase = false;
+
+  Future<void> _farAway() => showDialog<void>(
+    context: context,
+    builder: (dialog) => AlertDialog(
+      key: const Key('showcase-far'),
+      icon: const Icon(Icons.location_off_outlined),
+      title: Text(dialog.tr('Pas à proximité')),
+      content: Text(
+        dialog.tr(
+          'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialog),
+          child: Text(dialog.tr('Compris')),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(dialog);
+            _directory();
+          },
+          child: Text(dialog.tr('Voir les autres vitrines')),
+        ),
+      ],
+    ),
+  );
+
   Future<void> _order() async {
+    if (_showcase) return _farAway();
     switch (widget.session.phase) {
       case SessionPhase.signedOut:
         widget.session.stashReturnTo(Routes.storefront(widget.slug));
@@ -405,6 +442,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                         child: basketBar(floating: false),
                       ),
                 shop: shop,
+                showcase: _showcase,
                 items: _visible,
                 totalCount: _items.length,
                 filter: _filter,
@@ -1253,6 +1291,7 @@ class _Window extends StatelessWidget {
   const _Window({
     this.basketCard,
     required this.shop,
+    this.showcase = false,
     required this.items,
     required this.totalCount,
     required this.filter,
@@ -1269,6 +1308,9 @@ class _Window extends StatelessWidget {
   /// The basket, in the page after the goods, before the footer.
   final Widget? basketCard;
   final PublicShop shop;
+
+  /// A vitrine d'exemple (094): « Pas à proximité » under the name.
+  final bool showcase;
   final List<PublicItem> items;
 
   /// How many articles the window really holds — [items] is the filtered
@@ -1464,6 +1506,11 @@ class _Window extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ],
+                  // A vitrine d'exemple (094): far from everyone, said plainly.
+                  if (showcase) ...[
+                    const SizedBox(height: 10),
+                    const FarBadge(key: Key('shop-far'), large: true),
                   ],
                   // « Ouvert maintenant » / « Fermé » (093, Pro): the server
                   // reads the schedule against Ouagadougou's clock.

@@ -16,6 +16,7 @@ import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import 'directory_map.dart';
 import 'shop_skeleton.dart';
+import 'open_badge.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -66,6 +67,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   /// The shops paying for the top of the list right now (071).
   Set<String> _spotlights = const {};
+
+  /// The vitrines d'exemple (094): after the real shops, « Pas à proximité ».
+  Set<String> _showcases = const {};
   bool _loading = true;
   bool _locating = false;
   String? _error;
@@ -167,18 +171,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             .featured()
             .catchError((_) => const <FeaturedItem>[]),
         widget.storefront.spotlights(),
+        widget.storefront.showcaseSlugs(),
       ]);
       if (!mounted) return;
       final spotlights = results[2] as Set<String>;
       final entries = results[0] as List<DirectoryEntry>;
+      final showcases = results[3] as Set<String>;
       setState(() {
         // A paid shop leads the list, the rest keep the server's order
-        // (nearest first, or by name).
+        // (nearest first, or by name); the vitrines d'exemple close it.
+        bool real(DirectoryEntry e) => !showcases.contains(e.slug);
         _entries = [
-          ...entries.where((e) => spotlights.contains(e.slug)),
-          ...entries.where((e) => !spotlights.contains(e.slug)),
+          ...entries.where((e) => real(e) && spotlights.contains(e.slug)),
+          ...entries.where((e) => real(e) && !spotlights.contains(e.slug)),
+          ...entries.where((e) => !real(e)),
         ];
         _spotlights = spotlights;
+        _showcases = showcases;
         _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
@@ -292,6 +301,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   previews: _previews,
                   featured: _featured,
                   spotlights: _spotlights,
+                  showcases: _showcases,
                   capture: widget.capture,
                   here: _here,
                   fallback: _ouaga,
@@ -437,6 +447,7 @@ class _Street extends StatelessWidget {
     required this.previews,
     required this.featured,
     this.spotlights = const {},
+    this.showcases = const {},
     required this.capture,
     required this.here,
     required this.fallback,
@@ -456,6 +467,7 @@ class _Street extends StatelessWidget {
   final Map<String, List<ShopPreview>> previews;
   final List<FeaturedItem> featured;
   final Set<String> spotlights;
+  final Set<String> showcases;
   final CaptureRepository capture;
   final LatLng? here;
   final LatLng fallback;
@@ -659,6 +671,7 @@ class _Street extends StatelessWidget {
                         located: located,
                         previews: previews[entries[i].slug] ?? const [],
                         sponsored: spotlights.contains(entries[i].slug),
+                        far: showcases.contains(entries[i].slug),
                         capture: capture,
                         onOpen: () => onOpen(entries[i]),
                       ),
@@ -960,9 +973,13 @@ class _ShopTile extends StatelessWidget {
     required this.capture,
     this.previews = const [],
     this.sponsored = false,
+    this.far = false,
   });
 
   final DirectoryEntry entry;
+
+  /// A vitrine d'exemple (094): « Pas à proximité » on the square.
+  final bool far;
 
   /// Paid for the top of the list (071), and said so on the card.
   final bool sponsored;
@@ -993,6 +1010,7 @@ class _ShopTile extends StatelessWidget {
         second,
         if (distance != null) 'à $distance',
         if (sponsored) 'sponsorisé',
+        if (far) 'pas à proximité',
         // What the square shows a sighted shopper (070), said too.
         if (previews.isNotEmpty)
           'vend ${previews.map((p) => p.name).join(', ')}',
@@ -1027,6 +1045,12 @@ class _ShopTile extends StatelessWidget {
                           left: 10,
                           top: 10,
                           child: SponsoredTag(),
+                        )
+                      else if (far)
+                        const Positioned(
+                          left: 10,
+                          top: 10,
+                          child: FarBadge(key: Key('tile-far')),
                         ),
                       if (distance != null)
                         Positioned(

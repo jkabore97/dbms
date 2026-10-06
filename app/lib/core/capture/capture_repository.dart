@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../site/site.dart';
 import 'invoice_reading.dart';
 import 'models.dart';
 import 'notebook_reading.dart';
@@ -311,6 +312,7 @@ class CaptureRepository {
   Future<Uint8List> objectBytes(String key) async {
     final held = _remembered(key);
     if (held != null) return held;
+    if (isShowcaseKey(key)) return _showcaseBytes(key);
     final response = await _http.get(
       Uri.parse('$_uploads/v1/objects/${Uri.encodeComponent(key)}'),
       headers: {'Authorization': 'Bearer ${_requireToken()}'},
@@ -328,6 +330,9 @@ class CaptureRepository {
   /// that the picture is of a published article on an open vitrine (052) —
   /// a key that is not gets a 404, exactly like one that does not exist.
   Future<Uint8List> publicObjectBytes(String key) async {
+    if (isShowcaseKey(key)) {
+      return _remembered(key) ?? await _showcaseBytes(key);
+    }
     if (_uploads.isEmpty) {
       throw const CaptureException(
           'Les photos ne sont pas disponibles sur cette installation.');
@@ -339,6 +344,26 @@ class CaptureRepository {
     );
     if (response.statusCode != 200) {
       throw CaptureException(_messageFrom(response));
+    }
+    _remember(key, response.bodyBytes);
+    return response.bodyBytes;
+  }
+
+  /// A photo of a vitrine d'exemple (094): shipped with the web app under
+  /// /showcase/…, read from the site — on the web this very origin, in the
+  /// Android app [siteOrigin] — rather than from the uploads Worker.
+  static bool isShowcaseKey(String key) => key.startsWith('showcase/');
+
+  static Uri showcaseUrl(String key, {Uri? base}) {
+    final here = base ?? Uri.base;
+    final origin = here.scheme.startsWith('http') ? here.origin : siteOrigin;
+    return Uri.parse('$origin/$key');
+  }
+
+  Future<Uint8List> _showcaseBytes(String key) async {
+    final response = await _http.get(showcaseUrl(key));
+    if (response.statusCode != 200) {
+      throw const CaptureException('Photo indisponible pour le moment.');
     }
     _remember(key, response.bodyBytes);
     return response.bodyBytes;

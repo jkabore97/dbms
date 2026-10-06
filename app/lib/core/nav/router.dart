@@ -30,6 +30,7 @@ import '../../features/admin/couriers_screen.dart';
 import '../../features/admin/pro_console_screen.dart';
 import '../../features/admin/settlement_screen.dart';
 import '../../features/admin/featured_screen.dart';
+import '../../features/admin/showcase_screen.dart';
 import '../../features/courier/courier_screen.dart';
 import '../../features/courier/job_map_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
@@ -129,6 +130,7 @@ abstract final class Routes {
   static const consolePeople = '/console/personnes';
   static const consoleAudit = '/console/activite';
   static const consoleFeatured = '/console/a-la-une';
+  static const consoleShowcase = '/console/vitrines-exemple';
   static const myOrders = '/mes-commandes';
   static const courier = '/livreur';
   /// One running course on a map, for its courier.
@@ -646,6 +648,13 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.consoleFeatured,
         builder: (context, _) =>
             FeaturedScreen(admin: AppScope.of(context).admin),
+      ),
+
+      // The platform's own vitrines d'exemple (094).
+      GoRoute(
+        path: Routes.consoleShowcase,
+        builder: (context, _) =>
+            ShowcaseScreen(admin: AppScope.of(context).admin),
       ),
 
       // Who may carry deliveries: also the platform's decision (056).

@@ -3020,4 +3020,26 @@ const enStrings = <String, String>{
       'Kaj Pro: other colours are part of Kaj Pro. Choose one of the six colours offered.',
   'La présentation est grille, grandes photos, liste ou menu':
       'The layout is grid, large photos, list or menu',
+  // 094: vitrines d'exemple.
+  'Les sept vitrines existent déjà.': 'All seven vitrines already exist.',
+  '{n} vitrine(s) recréée(s).': '{n} vitrine(s) recreated.',
+  'Vitrines d\'exemple': 'Example vitrines',
+  'Des boutiques de la plateforme, pour montrer à quoi ressemble une vitrine pleine. Elles ne sont pas sur la carte, affichent « Pas à proximité » et ne prennent aucune commande.':
+      'Shops run by the platform, to show what a full vitrine looks like. They are not on the map, show « Not nearby » and take no orders.',
+  '{items} articles · {photos} avec photo · {state}':
+      '{items} articles · {photos} with a photo · {state}',
+  'sur la rue': 'on the street',
+  'cachée': 'hidden',
+  'Gérer': 'Manage',
+  'Recréer les vitrines manquantes': 'Recreate the missing vitrines',
+  '« Gérer » vous en donne les clés : articles, photos, prix et « Habiller ma vitrine » s\'y modifient comme dans toute entreprise.':
+      '« Manage » gives you the keys: articles, photos, prices and « Dress my vitrine » are edited as in any business.',
+  'Pas à proximité': 'Not nearby',
+  'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.':
+      'This shop takes no orders near you. It is a Mara example vitrine: look, get inspired, and order from the shops in your neighbourhood.',
+  'Pas à proximité : cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara.':
+      'Not nearby: this shop takes no orders near you. It is a Mara example vitrine.',
+  'Réservé à l\'administration de la plateforme': 'For the platform administration only',
+  'Ce n\'est pas une vitrine d\'exemple': 'This is not an example vitrine',
+  'Photo indisponible pour le moment.': 'Photo unavailable for now.',
 };
