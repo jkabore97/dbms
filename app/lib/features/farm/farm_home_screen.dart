@@ -426,6 +426,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           label: 'Commandes',
           onTap: () => _push(Routes.inside(id, 'commandes')),
         ),
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.savings_outlined,
+            label: 'Mes cauris',
+            onTap: () => _push(Routes.inside(id, 'cauris')),
+          ),
         if (widget.access.canSee('credits'))
           HomeDestination(
             icon: Icons.handshake_outlined,

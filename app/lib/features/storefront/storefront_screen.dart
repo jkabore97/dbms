@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
@@ -169,6 +170,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // The street's counter (071): a window opened. Never in the way.
       if (shop != null) {
         unawaited(widget.storefront.recordVisit(widget.slug, 'opened'));
+        unawaited(_countVisitor());
       }
       await _restoreBasket(items);
     } catch (error) {
@@ -187,6 +189,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   }
 
   void _directory() => context.go(Routes.directory);
+
+  /// This phone, as one visitor of the street (084): a random id made once
+  /// and kept on the device — never a hardware id, never the person.
+  static const _visitorKey = 'street.visitor_id';
+
+  Future<void> _countVisitor() async {
+    try {
+      final db = widget.session.db;
+      var id = await db.readPref(_visitorKey);
+      if (id == null || id.length < 8) {
+        id = const Uuid().v4();
+        await db.writePref(_visitorKey, id);
+      }
+      await widget.storefront.recordVisitor(widget.slug, id);
+    } catch (_) {}
+  }
 
   void _add(PublicItem item) {
     if ((_basket[item.id] ?? 0) == 0) {
