@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../academy/academy_screen.dart';
 import '../../core/theme/kaj_card.dart';
 import 'farm_corrections.dart';
 import 'package:intl/intl.dart';
@@ -185,6 +187,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
       appBar: AppBar(
         title: const Text('Bandes'),
         actions: [
+          LessonHelpButton(
+              org: widget.org, lessonKey: 'farm_log', title: 'Tenir le cahier de la ferme'),
           IconButton(
             tooltip: _showClosed
                 ? 'Masquer les bandes clôturées'

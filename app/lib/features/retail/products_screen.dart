@@ -3,6 +3,8 @@ import '../../core/theme/kaj_card.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+
+import '../academy/academy_screen.dart';
 import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
@@ -368,6 +370,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
       appBar: AppBar(
         title: const Text('Articles'),
         actions: [
+          LessonHelpButton(
+              org: widget.org, lessonKey: 'first_article', title: 'Mettre un article en vente'),
           IconButton(
             key: const Key('products-view'),
             onPressed: _toggleView,

@@ -3,8 +3,10 @@ import '../theme/mara_mark.dart';
 import '../../features/pro/pro_strip.dart';
 import '../../features/cauris/cauris_screen.dart';
 import '../../features/cauris/league_screen.dart';
+import '../../features/academy/academy_screen.dart';
 import '../../features/farm/for_sale_screen.dart';
 import '../cauris/cauris_repository.dart';
+import '../academy/academy_repository.dart';
 import '../../features/pay/stripe_button.dart';
 import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -1126,6 +1128,18 @@ GoRouter buildRouter(SessionController session) {
               (scope, org) => LeagueScreen(
                 org: org,
                 cauris: CaurisRepository(scope.auth.client),
+              ),
+            ),
+          ),
+          // Académie Mara (087): lessons to watch, missions to live.
+          GoRoute(
+            path: 'academie',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => AcademyScreen(
+                org: org,
+                academy: AcademyRepository(scope.auth.client),
               ),
             ),
           ),

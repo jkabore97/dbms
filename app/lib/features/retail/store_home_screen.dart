@@ -685,6 +685,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             label: 'Mes cauris',
             onTap: () => _openThenReload('cauris'),
           ),
+        HomeDestination(
+          icon: Icons.school_outlined,
+          label: 'Académie',
+          onTap: () => _openThenReload('academie'),
+        ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
