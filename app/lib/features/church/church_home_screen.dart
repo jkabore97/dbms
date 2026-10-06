@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'trust_screen.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 
@@ -249,6 +251,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                     moneyOut: _moneyOut,
                     currency: _currency,
                   ),
+                  // Not points: a level read off the books (088).
+                  TrustCard(orgId: widget.orgId),
                   const SizedBox(height: 24),
                   Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
