@@ -423,8 +423,8 @@ class ShopSectionLabel extends StatelessWidget {
 
 /// The bottom of every street page. First the way to the rest of the street
 /// (« Toutes les vitrines »), on the page itself; then the footer proper: one
-/// centred band of cream, with Mara and what it is, and under it « POWERED BY »
-/// over Kaj Consulting's logo on its white card.
+/// centred band of cream, with Mara and its slogan, and under it « POWERED BY
+/// KAJ » over Kaj's K.
 class ShopFooter extends StatelessWidget {
   const ShopFooter({super.key, this.onDirectory});
 
@@ -466,35 +466,34 @@ class ShopFooter extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
               const SizedBox(height: 24),
+              // « POWERED BY KAJ », KAJ in bold, and Kaj's K alone under it.
               Semantics(
-                label: 'Powered by KAJ Consulting',
+                label: 'Powered by KAJ',
                 child: ExcludeSemantics(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('POWERED BY',
-                          style: TextStyle(
-                              fontSize: 11,
-                              letterSpacing: 3,
-                              color: ShopStyle.mist)),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 22, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0x14000000)),
-                          boxShadow: const [
-                            BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 12,
-                                offset: Offset(0, 4)),
+                      const Text.rich(
+                        key: Key('powered-by'),
+                        TextSpan(
+                          text: 'POWERED BY ',
+                          children: [
+                            TextSpan(
+                              text: 'KAJ',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: ShopStyle.ink),
+                            ),
                           ],
                         ),
-                        child: Image.asset('assets/brand/kaj_logo.png',
-                            key: const Key('kaj-logo'), height: 56),
+                        style: TextStyle(
+                            fontSize: 12,
+                            letterSpacing: 3,
+                            color: ShopStyle.mist),
                       ),
+                      const SizedBox(height: 12),
+                      Image.asset('assets/brand/kaj_k.png',
+                          key: const Key('kaj-logo'), height: 44),
                     ],
                   ),
                 ),

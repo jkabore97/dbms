@@ -9,10 +9,17 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: SingleChildScrollView(child: ShopFooter())),
     ));
-    expect(find.text('POWERED BY'), findsOneWidget);
+    expect(find.text('POWERED BY KAJ'), findsOneWidget);
+    final kaj = (tester.widget<Text>(find.byKey(const Key('powered-by')))
+            .textSpan! as TextSpan)
+        .children!
+        .single as TextSpan;
+    expect(kaj.text, 'KAJ');
+    expect(kaj.style!.fontWeight, FontWeight.w800, reason: 'KAJ in bold');
+    expect(find.text('KAJ CONSULTING'), findsNothing);
     expect(find.text('Au Service du Peuple'), findsOneWidget);
     expect(find.byKey(const Key('kaj-logo')), findsOneWidget);
-    expect(find.bySemanticsLabel('Powered by KAJ Consulting'), findsOneWidget);
+    expect(find.bySemanticsLabel('Powered by KAJ'), findsOneWidget);
     expect(find.text('Des vitrines de quartier, tenues par les boutiques.'),
         findsNothing);
   });
@@ -28,7 +35,7 @@ void main() {
     ));
     final link = tester.getCenter(find.byKey(const Key('footer-directory')));
     final band = tester.getRect(find.byKey(const Key('shop-footer')));
-    final powered = tester.getCenter(find.text('POWERED BY'));
+    final powered = tester.getCenter(find.byKey(const Key('powered-by')));
     expect(link.dy, lessThan(band.top), reason: 'the link sits above the footer');
     expect(band.width, 400, reason: 'the band spans the page');
     expect(powered.dx, closeTo(200, 1), reason: 'centred');

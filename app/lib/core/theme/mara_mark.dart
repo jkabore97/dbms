@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Mara's marks (the brand files in `assets/brand/`). Wherever the app
 /// shows its own name — the sign-in, the splash, the code screen — it is
 /// one of these, never a stand-in icon. Kaj, who makes Mara, signs the
-/// street's footer (« POWERED BY » and `kaj_logo.png`).
+/// street's footer (« POWERED BY KAJ » over `kaj_k.png`).
 ///
 /// The palette they are drawn in: indigo [maraIndigo] for the grounds,
 /// terracotta, gold and green for the seal's accents, warm paper behind.
