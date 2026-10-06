@@ -424,7 +424,7 @@ class ShopSectionLabel extends StatelessWidget {
 /// The bottom of every street page. First the way to the rest of the street
 /// (« Toutes les vitrines »), on the page itself; then the footer proper: one
 /// centred band of cream, with Mara and its slogan, and under it « POWERED BY
-/// KAJ » over Kaj's K.
+/// KAJ », KAJ in bold.
 class ShopFooter extends StatelessWidget {
   const ShopFooter({super.key, this.onDirectory});
 
@@ -466,35 +466,25 @@ class ShopFooter extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
               const SizedBox(height: 24),
-              // « POWERED BY KAJ », KAJ in bold, and Kaj's K alone under it.
+              // « POWERED BY KAJ », KAJ in bold.
               Semantics(
                 label: 'Powered by KAJ',
-                child: ExcludeSemantics(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text.rich(
-                        key: Key('powered-by'),
+                child: const ExcludeSemantics(
+                  child: Text.rich(
+                    key: Key('powered-by'),
+                    TextSpan(
+                      text: 'POWERED BY ',
+                      children: [
                         TextSpan(
-                          text: 'POWERED BY ',
-                          children: [
-                            TextSpan(
-                              text: 'KAJ',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  color: ShopStyle.ink),
-                            ),
-                          ],
+                          text: 'KAJ',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: ShopStyle.ink),
                         ),
-                        style: TextStyle(
-                            fontSize: 12,
-                            letterSpacing: 3,
-                            color: ShopStyle.mist),
-                      ),
-                      const SizedBox(height: 12),
-                      Image.asset('assets/brand/kaj_k.png',
-                          key: const Key('kaj-logo'), height: 44),
-                    ],
+                      ],
+                    ),
+                    style: TextStyle(
+                        fontSize: 12, letterSpacing: 3, color: ShopStyle.mist),
                   ),
                 ),
               ),

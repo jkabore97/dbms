@@ -18,7 +18,7 @@ void main() {
     expect(kaj.style!.fontWeight, FontWeight.w800, reason: 'KAJ in bold');
     expect(find.text('KAJ CONSULTING'), findsNothing);
     expect(find.text('Au Service du Peuple'), findsOneWidget);
-    expect(find.byKey(const Key('kaj-logo')), findsOneWidget);
+    expect(find.byKey(const Key('kaj-logo')), findsNothing, reason: 'words only');
     expect(find.bySemanticsLabel('Powered by KAJ'), findsOneWidget);
     expect(find.text('Des vitrines de quartier, tenues par les boutiques.'),
         findsNothing);
