@@ -169,6 +169,7 @@ jobs:
         run: |
           flutter build apk --release --split-per-abi \
             --target-platform android-arm,android-arm64 \
+            --split-debug-info=build/symbols \
             --build-number="$GITHUB_RUN_NUMBER" \
             --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
@@ -178,7 +179,11 @@ jobs:
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=PUSH_URL="$PUSH_URL" \
             --dart-define=PAY_URL="$PAY_URL"
+          # arm and arm64 only, like the APKs: x86_64 is the emulator's, and
+          # carried it would add a third engine to the bundle for no phone.
           flutter build appbundle --release \
+            --target-platform android-arm,android-arm64 \
+            --split-debug-info=build/symbols \
             --build-number="$GITHUB_RUN_NUMBER" \
             --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
@@ -212,6 +217,16 @@ jobs:
           name: kaj-app-android
           path: app/out/*
           if-no-files-found: error
+
+      # The Dart symbols --split-debug-info took out of the app: what turns
+      # an obfuscated stack trace from a phone back into file and line
+      # (`flutter symbolize`). Kept for a quarter, never shipped.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaj-app-android-symbols
+          path: app/build/symbols
+          retention-days: 90
+          if-no-files-found: warn
 
       # The public download link. Every push to main makes one release,
       # tagged by run number and marked latest, so

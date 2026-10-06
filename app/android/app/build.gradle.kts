@@ -80,6 +80,24 @@ android {
             )
         }
     }
+
+    // Native libraries compressed in the APK: the file a shop downloads from
+    // the release page over a market connection is about a third smaller.
+    // (They are unpacked once at install; the Play Store delivers per phone.)
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+}
+
+// Text recognition from Google Play services instead of the bundled model:
+// the bundled one put 12 MB of native code and models in every APK. The
+// unbundled library has the same API (com.google.mlkit.vision.text), and the
+// manifest's DEPENDENCIES meta-data has Play services fetch the model at
+// install, so the first photo still reads at once.
+configurations.all {
+    exclude(group = "com.google.mlkit", module = "text-recognition")
 }
 
 kotlin {
@@ -95,4 +113,5 @@ flutter {
 dependencies {
     // The AppCompat theme the fingerprint dialog needs (styles.xml).
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
 }

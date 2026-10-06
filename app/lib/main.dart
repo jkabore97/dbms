@@ -108,7 +108,9 @@ Future<void> _startup() async {
 
   // The local database opens first and the UI runs from it. If Supabase is
   // unreachable, the app still works completely — that is the whole point.
-  final db = await LocalDb.open();
+  // Opened while Supabase starts: the two do not depend on each other, and
+  // on the web the database's engine is itself a download.
+  final opening = LocalDb.open();
 
   SupabaseClient? client;
   SyncService? sync;
@@ -123,6 +125,9 @@ Future<void> _startup() async {
       authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
     );
     client = Supabase.instance.client;
+  }
+  final db = await opening;
+  if (client != null) {
     // Started by the session once someone is actually signed in — draining
     // the outbox before then would post entries with no author.
     sync = SyncService(db, client);
