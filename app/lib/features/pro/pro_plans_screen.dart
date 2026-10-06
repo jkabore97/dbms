@@ -111,7 +111,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kaj Pro')),
+      appBar: AppBar(title: const Text('Mara Pro')),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: wide ? 48 : 20, vertical: 24),
         children: [
@@ -133,7 +133,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       children: [
                         Text(
                           org.isPro
-                              ? 'Vous êtes sur Kaj Pro'
+                              ? 'Vous êtes sur Mara Pro'
                               : 'Faites grandir ${org.name}',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall
@@ -143,7 +143,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         Text(
                           org.isPro
                               ? 'Tous les outils ci-dessous sont ouverts.'
-                              : 'Kaj reste gratuit pour le quotidien. Kaj Pro '
+                              : 'Mara reste gratuit pour le quotidien. Mara Pro '
                                   'ajoute la livraison, le paiement en ligne et '
                                   'les outils d\'une entreprise qui grandit.',
                           textAlign: TextAlign.center,
@@ -240,8 +240,8 @@ class _Returned extends StatelessWidget {
     final text = !paid
         ? 'Paiement annulé : rien n\'a été prélevé.'
         : active
-            ? 'Merci ! Kaj Pro est actif.'
-            : 'Merci ! Paiement reçu — Kaj Pro s\'active dans quelques secondes.';
+            ? 'Merci ! Mara Pro est actif.'
+            : 'Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.';
     return Container(
       key: const Key('stripe-returned'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -287,7 +287,7 @@ class _Header extends StatelessWidget {
           flex: 2,
           child: Column(
             children: [
-              Text('Kaj', style: theme.textTheme.titleSmall),
+              Text('Mara', style: theme.textTheme.titleSmall),
               Text('Gratuit', style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
             ],
           ),
@@ -302,7 +302,7 @@ class _Header extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('Kaj Pro',
+                Text('Mara Pro',
                     style: theme.textTheme.titleSmall?.copyWith(color: kPaper)),
                 if (proPrice != null)
                   Text(proPrice!,
@@ -367,7 +367,7 @@ class ProPlansScreenRows {
           ],
         ),
         (
-          'Avec Kaj Pro',
+          'Avec Mara Pro',
           [for (final f in t.proFeatures) PlanRow(PlanTerms.labelOf(f), null, true)],
         ),
         (

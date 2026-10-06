@@ -601,7 +601,7 @@ class _StatStrip extends StatelessWidget {
         // The first revenue number (065). Tapping it lists the businesses
         // behind it, the way every other tile does.
         _StatTile(
-          label: 'Kaj Pro',
+          label: 'Mara Pro',
           value: number.format(overview.pro),
           hint: overview.pro == 0 ? 'aucune encore' : 'payantes',
           colour: const Color(0xFF2E7D5B),
@@ -920,7 +920,7 @@ class _Tools extends StatelessWidget {
           () => context.push(Routes.consoleFeatured)),
       (Icons.sports_motorsports_outlined, 'Livreurs',
           () => context.push(Routes.consoleCouriers)),
-      (Icons.workspace_premium_outlined, 'Kaj Pro',
+      (Icons.workspace_premium_outlined, 'Mara Pro',
           () => context.push(Routes.consolePro)),
       (Icons.account_balance_wallet_outlined, 'Paiements Wave',
           () => context.push(Routes.consoleWave)),

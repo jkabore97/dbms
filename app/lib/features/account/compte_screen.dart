@@ -148,7 +148,7 @@ class CompteScreen extends StatelessWidget {
                 // employee who meets a badge knows what it is.
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
-                  title: org.isPro ? 'Kaj Pro' : 'Passer à Kaj Pro',
+                  title: org.isPro ? 'Mara Pro' : 'Passer à Mara Pro',
                   subtitle: org.isPro
                       ? 'Formule active'
                       : 'Paie, analyses, comptabilité, équipe sans limite…',
@@ -286,7 +286,7 @@ class CompteScreen extends StatelessWidget {
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 16, 4, 8),
-            child: Text('Kaj', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: Text('Mara', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../errors.dart';
+
 import 'push_client.dart';
 
 /// One ring of the bell.
@@ -23,7 +25,7 @@ class NotificationRow {
   factory NotificationRow.fromRow(Map<String, dynamic> r) => NotificationRow(
         id: r['id'] as String,
         kind: r['kind'] as String,
-        message: r['message'] as String,
+        message: brandText(r['message'] as String),
         createdAt: DateTime.parse(r['created_at'] as String),
         readAt: r['read_at'] == null
             ? null

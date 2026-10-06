@@ -129,7 +129,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                   Icon(Icons.workspace_premium_outlined,
                       color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
-                  Text('Kaj Pro', style: theme.textTheme.headlineSmall),
+                  Text('Mara Pro', style: theme.textTheme.headlineSmall),
                   const Spacer(),
                   if (widget.org.isPro)
                     Chip(
@@ -141,12 +141,12 @@ class _ProPayPanelState extends State<ProPayPanel> {
               const SizedBox(height: 12),
               Text(
                 widget.org.isPro
-                    ? 'Cette entreprise est sur Kaj Pro. Tous les outils '
+                    ? 'Cette entreprise est sur Mara Pro. Tous les outils '
                         'ci-dessous sont ouverts.'
-                    : 'Kaj reste gratuit pour le quotidien : le stock, les '
+                    : 'Mara reste gratuit pour le quotidien : le stock, les '
                         'ventes, le carnet de crédit, la vitrine et jusqu\'à '
                         '${terms.freeMaxStaff} comptes en plus du propriétaire. '
-                        'Kaj Pro ajoute ce dont une entreprise qui grandit a '
+                        'Mara Pro ajoute ce dont une entreprise qui grandit a '
                         'besoin :',
                 style: muted,
               ),
@@ -243,7 +243,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                   )
                 else
                   Text(
-                    'Pour payer, contactez Kaj : le numéro de paiement vous '
+                    'Pour payer, contactez Mara : le numéro de paiement vous '
                     'sera donné directement.',
                     style: muted,
                   ),
@@ -256,13 +256,13 @@ class _ProPayPanelState extends State<ProPayPanel> {
                       leading: Icon(Icons.check_circle_outline),
                       title: Text('Merci, c\'est noté.'),
                       subtitle: Text(
-                          'Kaj vérifie le paiement et active Kaj Pro sur cette '
+                          'Mara vérifie le paiement et active Mara Pro sur cette '
                           'entreprise. Vous le verrez dans Compte › Formule.'),
                     ),
                   )
                 else if (widget.canRequest) ...[
                   Text(
-                    'Une fois le paiement envoyé, dites-le ici : Kaj le vérifie '
+                    'Une fois le paiement envoyé, dites-le ici : Mara le vérifie '
                     'et active la formule.',
                     style: muted,
                   ),
@@ -310,7 +310,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 ] else
                   Text(
                     'Demandez au propriétaire de l\'entreprise de passer à '
-                    'Kaj Pro : lui seul peut le faire.',
+                    'Mara Pro : lui seul peut le faire.',
                     style: muted,
                   ),
               ],

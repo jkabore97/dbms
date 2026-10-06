@@ -150,7 +150,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           content: const Text(
             'Le compte de la plateforme demandera, à chaque connexion, un '
             'code à 6 chiffres de Google Authenticator ou Microsoft '
-            "Authenticator. Kaj vous montre tout de suite comment l'ajouter. "
+            "Authenticator. Mara vous montre tout de suite comment l'ajouter. "
             'Les comptes des boutiques ne changent pas : mot de passe, puis '
             "le code de l'appareil.",
           ),
@@ -257,7 +257,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             _Group(
               title: 'Verrouillage du téléphone',
               note: settings.policy == null
-                  ? 'Après ce délai hors de l\'application, Kaj redemande '
+                  ? 'Après ce délai hors de l\'application, Mara redemande '
                         'le code de l\'appareil.'
                   : 'Votre entreprise demande le code après '
                         '${SecuritySettings.label(settings.policy)} au plus.',

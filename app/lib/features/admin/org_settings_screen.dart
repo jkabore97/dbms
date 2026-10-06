@@ -429,7 +429,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Kaj Pro sans date de fin ?'),
+          title: const Text('Mara Pro sans date de fin ?'),
           content: const Text(
             'Sans date, cette entreprise reste Pro jusqu\'à ce que vous '
             'changiez sa formule à la main. Pour un paiement, indiquez '
@@ -466,8 +466,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         if (_planRaw == 'free') _planUntil = null;
         _savingPlan = false;
         _planMessage = _planRaw == 'pro'
-            ? 'Entreprise passée sur Kaj Pro.'
-            : 'Entreprise repassée sur Kaj (gratuit).';
+            ? 'Entreprise passée sur Mara Pro.'
+            : 'Entreprise repassée sur Mara (gratuit).';
       });
     } catch (error) {
       if (!mounted) return;
@@ -711,7 +711,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 4),
         Text(
-            "Quand un client paie sa commande par Wave ou par carte dans Kaj, "
+            "Quand un client paie sa commande par Wave ou par carte dans Mara, "
             "l'argent est envoyé sur ce numéro Wave quelques instants après. "
             "Un numéro Wave ordinaire suffit.",
             style: theme.textTheme.bodySmall
@@ -777,7 +777,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 4),
       Text(
           "Chaque membre a un code sur son téléphone. Fixez le délai maximal "
-          "après lequel Kaj le redemande : personne de l'équipe ne pourra "
+          "après lequel Mara le redemande : personne de l'équipe ne pourra "
           'choisir plus long, ni « Jamais ».',
           style: muted),
       const SizedBox(height: 12),
@@ -1005,7 +1005,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // Pro tools are badged and held on a Free business.
     _ReadOnlyRow(
       label: 'Formule',
-      value: widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
+      value: widget.plan == 'pro' ? 'Mara Pro' : 'Mara (gratuit)',
     ),
   ];
 
@@ -1124,9 +1124,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         key: const Key('delivery-pro-note'),
         child: ListTile(
           leading: const Icon(Icons.workspace_premium_outlined),
-          title: const Text('La livraison fait partie de Kaj Pro'),
+          title: const Text('La livraison fait partie de Mara Pro'),
           subtitle: const Text(
-              'Votre vitrine propose le retrait en boutique. Passez à Kaj '
+              'Votre vitrine propose le retrait en boutique. Passez à Mara '
               'Pro pour livrer vos clients, avec le prix calculé selon la '
               'distance.'),
           trailing: const Icon(Icons.chevron_right),
@@ -1339,7 +1339,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       Text('Formule (plateforme)', style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-        'Kaj Pro se règle à la main pour l\'instant : quand le '
+        'Mara Pro se règle à la main pour l\'instant : quand le '
         'paiement est arrivé sur Wave, passez l\'entreprise en '
         'Pro jusqu\'à la date payée. Passée cette date elle '
         'redevient gratuite, sans rien perdre.',
@@ -1350,8 +1350,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 12),
       SegmentedButton<String>(
         segments: const [
-          ButtonSegment(value: 'free', label: Text('Kaj')),
-          ButtonSegment(value: 'pro', label: Text('Kaj Pro')),
+          ButtonSegment(value: 'free', label: Text('Mara')),
+          ButtonSegment(value: 'pro', label: Text('Mara Pro')),
         ],
         selected: {_planRaw},
         onSelectionChanged: _savingPlan
@@ -1520,7 +1520,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         final reach = _deliveryReachController.text.trim();
         final included = _deliveryIncludedController.text.trim();
         return [
-          if (widget.plan != 'pro') 'Kaj Pro',
+          if (widget.plan != 'pro') 'Mara Pro',
           base.isEmpty && perKm.isEmpty
               ? 'Tarifs de la plateforme'
               : _deliveryMinimum && included.isNotEmpty
@@ -1540,7 +1540,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             : 'Placée sur la carte';
       case _Part.platform:
         return [
-          widget.plan == 'pro' ? 'Kaj Pro' : 'Kaj (gratuit)',
+          widget.plan == 'pro' ? 'Mara Pro' : 'Mara (gratuit)',
           if (widget.canSuspend) _suspended ? 'suspendue' : 'active',
         ].join(' · ');
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 
 /// How the street side looks — the vitrine and the directory — and why it
@@ -135,6 +136,7 @@ class ShopPage extends StatefulWidget {
     super.key,
     required this.title,
     required this.body,
+    this.brand,
     this.leading,
     this.trailing,
     this.floatingActionButton,
@@ -144,6 +146,10 @@ class ShopPage extends StatefulWidget {
   });
 
   final String title;
+
+  /// Drawn in the header instead of [title], which still names the page
+  /// for a screen reader: the street's own front page shows Mara's mark.
+  final Widget? brand;
   final Widget body;
   final Widget? leading;
 
@@ -217,13 +223,21 @@ class _ShopPageState extends State<ShopPage> {
           actions: widget.trailing == null ? null : [widget.trailing!],
           automaticallyImplyLeading: false,
           centerTitle: true,
-          title: Text(
-            widget.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 1.1),
-          ),
+          title: widget.brand != null
+              ? Semantics(
+                  header: true,
+                  label: widget.title,
+                  child: ExcludeSemantics(child: widget.brand!),
+                )
+              : Text(
+                  widget.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.1),
+                ),
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(),
@@ -300,7 +314,7 @@ class _ShopAnnouncementState extends State<ShopAnnouncement> {
   Widget build(BuildContext context) {
     final line = widget.lines[_i % widget.lines.length];
     return Material(
-      color: ShopStyle.ink,
+      color: maraIndigo, // Mara's own ground, over every street page
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -408,6 +422,12 @@ class ShopFooter extends StatelessWidget {
         const SizedBox(height: 48),
         const Divider(),
         const SizedBox(height: 28),
+        // Mara, the street's own name, then who makes it.
+        const MaraWordmark(key: Key('mara-footer'), height: 44),
+        const SizedBox(height: 6),
+        const Text('Les boutiques près de vous',
+            style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+        const SizedBox(height: 26),
         // « POWERED BY » over the owner's logo — KAJ Consulting's, in full,
         // on a white card — as on the owner's example; in place of the old
         // wordmark and tagline.

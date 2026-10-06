@@ -27,7 +27,7 @@ export async function sendPayout(env, args, fetchImpl = fetch) {
     mobile: args.mobile,
     name: args.name || undefined,
     client_reference: args.paymentId,
-    payment_reason: "Kaj · vente sur la vitrine",
+    payment_reason: "Mara · vente sur la vitrine",
   }, args.paymentId, fetchImpl);
 }
 

@@ -99,9 +99,9 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                 SwitchListTile(
                   value: _terms.on,
                   onChanged: _busy ? null : (v) => _set('wave_checkout', v),
-                  title: const Text('Paiement Wave dans Kaj'),
+                  title: const Text('Paiement Wave dans Mara'),
                   subtitle: const Text(
-                      'Commandes, Kaj Pro et mises en avant. À ouvrir une fois '
+                      'Commandes, Mara Pro et mises en avant. À ouvrir une fois '
                       'la clé Wave installée et un essai réussi.'),
                 ),
                 SwitchListTile(
@@ -156,7 +156,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                       subtitle: Text([
                         switch (r.kind) {
                           'order' => 'Commande',
-                          'pro' => 'Kaj Pro',
+                          'pro' => 'Mara Pro',
                           _ => 'Mise en avant',
                         },
                         r.method == 'card' ? 'carte' : 'Wave',

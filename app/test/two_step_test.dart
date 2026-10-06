@@ -109,7 +109,7 @@ class _Step extends TwoStep {
       const TwoStepEnrollment(
         factorId: 'f1',
         secret: 'JBSWY3DPEHPK3PXP',
-        uri: 'otpauth://totp/Kaj:admin?secret=JBSWY3DPEHPK3PXP&issuer=Kaj',
+        uri: 'otpauth://totp/Mara:admin?secret=JBSWY3DPEHPK3PXP&issuer=Mara',
       );
 
   @override
@@ -397,6 +397,6 @@ void main() {
     await tester.tap(find.text('Valider'));
     await flush();
     expect(find.text('Code de votre application'), findsNothing);
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
   });
 }

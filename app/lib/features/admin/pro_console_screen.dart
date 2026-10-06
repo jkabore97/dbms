@@ -102,7 +102,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saved = 'Enregistré. Les prochains écrans Kaj Pro le disent.';
+        _saved = 'Enregistré. Les prochains écrans Mara Pro le disent.';
       });
     } catch (error) {
       if (!mounted) return;
@@ -152,7 +152,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kaj Pro'),
+        title: const Text('Mara Pro'),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
@@ -256,8 +256,8 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                 Text('Le numéro et le prix', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  'Ce que la fenêtre Kaj Pro dit aux propriétaires : où payer '
-                  'et combien. Sans numéro, elle dit de contacter Kaj.',
+                  'Ce que la fenêtre Mara Pro dit aux propriétaires : où payer '
+                  'et combien. Sans numéro, elle dit de contacter Mara.',
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -267,7 +267,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   enabled: !_saving,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: 'Numéro Wave / Orange Money de Kaj',
+                    labelText: 'Numéro Wave / Orange Money de Mara',
                     hintText: '+226 70 00 00 00',
                     border: OutlineInputBorder(),
                   ),
@@ -339,7 +339,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   subtitle: Text(
                     'Les propriétaires s\'abonnent par carte, au prix ci-dessus, '
                     'renouvelé chaque mois ou chaque année. À ouvrir une fois les '
-                    'clés Stripe installées (README, « Kaj Pro by card »). Un '
+                    'clés Stripe installées (README, « Mara Pro by card »). Un '
                     'nouveau prix vaut pour les nouveaux abonnements.',
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),

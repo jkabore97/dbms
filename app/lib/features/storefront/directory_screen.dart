@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
+import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
@@ -271,7 +272,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return ShopPage(
-      title: 'Les vitrines',
+      title: 'Mara — les vitrines',
+      brand: const MaraWordmark(key: Key('mara-header'), height: 34),
       announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
       body: _loading

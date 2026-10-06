@@ -220,18 +220,18 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('a member reads Kaj Pro and gets no form', (tester) async {
+    testWidgets('a member reads Mara Pro and gets no form', (tester) async {
       await pump(tester, _Admin(), platform: false, plan: 'pro');
       expect(find.text('Formule'), findsOneWidget);
-      expect(find.text('Kaj Pro'), findsOneWidget);
+      expect(find.text('Mara Pro'), findsOneWidget);
       expect(find.text('Formule (plateforme)'), findsNothing);
       expect(find.text('Enregistrer la formule'), findsNothing);
     });
 
-    testWidgets('a member on the free plan reads Kaj (gratuit)',
+    testWidgets('a member on the free plan reads Mara (gratuit)',
         (tester) async {
       await pump(tester, _Admin(), platform: false);
-      expect(find.text('Kaj (gratuit)'), findsOneWidget);
+      expect(find.text('Mara (gratuit)'), findsOneWidget);
     });
 
     testWidgets('the platform sees the form prefilled with what it set',
@@ -252,8 +252,8 @@ void main() {
       final admin = _Admin();
       await pump(tester, admin, platform: true);
 
-      await tester.ensureVisible(find.text('Kaj Pro'));
-      await tester.tap(find.text('Kaj Pro'));
+      await tester.ensureVisible(find.text('Mara Pro'));
+      await tester.tap(find.text('Mara Pro'));
       await tester.pump();
       expect(find.textContaining('Payé jusqu\'au…'), findsOneWidget);
 
@@ -266,7 +266,7 @@ void main() {
       await tester.pump();
 
       // No date: asked, not assumed.
-      expect(find.text('Kaj Pro sans date de fin ?'), findsOneWidget);
+      expect(find.text('Mara Pro sans date de fin ?'), findsOneWidget);
       await tester.tap(find.text('Sans date de fin'));
       await tester.pump();
       await tester.pump();
@@ -276,7 +276,7 @@ void main() {
       expect(admin.saved.single['plan'], 'pro');
       expect(admin.saved.single['until'], isNull);
       expect(admin.saved.single['note'], 'Wave 25 000 F le 12/09');
-      expect(find.text('Entreprise passée sur Kaj Pro.'), findsOneWidget);
+      expect(find.text('Entreprise passée sur Mara Pro.'), findsOneWidget);
     });
 
     testWidgets('back to free sends no date and asks nothing', (tester) async {
@@ -284,8 +284,8 @@ void main() {
           _Admin(plan: 'pro', until: DateTime(2027, 9, 12), note: 'partenaire');
       await pump(tester, admin, platform: true, plan: 'pro');
 
-      await tester.ensureVisible(find.text('Kaj'));
-      await tester.tap(find.text('Kaj'));
+      await tester.ensureVisible(find.text('Mara'));
+      await tester.tap(find.text('Mara'));
       await tester.pump();
       final save = find.text('Enregistrer la formule');
       await tester.ensureVisible(save);
@@ -293,11 +293,11 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Kaj Pro sans date de fin ?'), findsNothing);
+      expect(find.text('Mara Pro sans date de fin ?'), findsNothing);
       expect(admin.saved.single['plan'], 'free');
       expect(admin.saved.single['until'], isNull);
       expect(
-          find.text('Entreprise repassée sur Kaj (gratuit).'), findsOneWidget);
+          find.text('Entreprise repassée sur Mara (gratuit).'), findsOneWidget);
     });
   });
 }

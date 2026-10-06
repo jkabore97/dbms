@@ -164,7 +164,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                                   'application sur votre téléphone.'
                             : "Ouvrez votre application d'authentification "
                                   'et entrez le code à 6 chiffres affiché pour '
-                                  'Kaj.',
+                                  'Mara.',
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodyMedium,
                       ),
@@ -224,7 +224,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                                   'à ce compte sont déconnectés.'
                             : 'Téléphone perdu ? Dans le tableau de bord '
                                   'Supabase : Authentication › Users › ce compte '
-                                  '› supprimez son facteur. Kaj proposera alors '
+                                  '› supprimez son facteur. Mara proposera alors '
                                   "d'en ajouter un nouveau.",
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodySmall,
@@ -265,7 +265,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
       ),
       step(
         '2',
-        'Ajoutez Kaj : scannez ce code depuis un autre écran, ou '
+        'Ajoutez Mara : scannez ce code depuis un autre écran, ou '
             'touchez le bouton sur ce téléphone.',
       ),
       const SizedBox(height: 8),

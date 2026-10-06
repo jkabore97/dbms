@@ -22,7 +22,7 @@ class _FakeConsole extends ConsoleRepository {
         userId: 'u2',
         isPlatformAdmin: true,
         businessCount: 0,
-        fullName: 'Kaj Admin'),
+        fullName: 'Mara Admin'),
   ];
 
   @override
@@ -54,7 +54,7 @@ void main() {
     await tester.pump(); // resolve the initial load
 
     expect(find.text('Awa Traoré'), findsOneWidget);
-    expect(find.text('Kaj Admin'), findsOneWidget);
+    expect(find.text('Mara Admin'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'awa');
     // The 300ms debounce, then the reload.
@@ -62,7 +62,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Awa Traoré'), findsOneWidget);
-    expect(find.text('Kaj Admin'), findsNothing);
+    expect(find.text('Mara Admin'), findsNothing);
   });
 
   testWidgets('opening a person shows their businesses and the platform toggle',
@@ -78,7 +78,7 @@ void main() {
     await tester.pump(); // resolve userOrgs
 
     expect(find.text('Boutique A'), findsOneWidget);
-    expect(find.text('Accès plateforme (Kaj)'), findsOneWidget);
+    expect(find.text('Accès plateforme (Mara)'), findsOneWidget);
     // The account Worker is not configured here, so the reset/delete buttons
     // are replaced by the note that says so.
     expect(find.textContaining('service de comptes'), findsOneWidget);

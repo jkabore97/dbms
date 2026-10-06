@@ -112,7 +112,7 @@ void main() {
         'Android · Chrome');
     expect(describeUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17) Safari/605'),
         'iPhone · Safari');
-    expect(describeUserAgent('Dart/3.9 (dart:io)'), 'Appareil · application Kaj');
+    expect(describeUserAgent('Dart/3.9 (dart:io)'), 'Appareil · application Mara');
     expect(describeUserAgent(null), 'Appareil inconnu');
   });
 

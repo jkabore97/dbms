@@ -132,8 +132,28 @@ const retailPalette = KajPalette(
 );
 
 /// Sign-in, the business picker, the platform console: everything that belongs
-/// to the app rather than to one business. Teal, so it is nobody's profile.
+/// to the app rather than to one business. Mara's indigo (the brand's own
+/// ground), so it is nobody's profile; its tints are the seal's terracotta,
+/// gold, green and violet, deepened until a white icon reads on each.
 const kajPalette = KajPalette(
+  name: 'mara',
+  label: 'Mara',
+  seed: Color(0xFF3D4CC4),
+  ink: Color(0xFF1E2560),
+  hero: [Color(0xFFF6F2EA), Color(0xFFE6E8F8)],
+  tints: [
+    Color(0xFF3D4CC4),
+    Color(0xFFB8441F),
+    Color(0xFF9A6408),
+    Color(0xFF1C7A52),
+    Color(0xFF5B3FA8),
+    Color(0xFF1E2560),
+  ],
+);
+
+/// The app's teal before it was Mara, kept under its stored name: a
+/// business that chose « Lagune » keeps it.
+const lagunePalette = KajPalette(
   name: 'lagune',
   label: 'Lagune',
   seed: Color(0xFF0B5F58),
@@ -242,6 +262,7 @@ const allPalettes = <KajPalette>[
   churchPalette,
   retailPalette,
   kajPalette,
+  lagunePalette,
   oceanPalette,
   prunePalette,
   savanePalette,
@@ -291,11 +312,13 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
 /// hero wash is the flat band behind the home screen's figure. Everything
 /// else is paper, ink and stone, the same for every business, so a shop and
 /// a farm are told apart by their accent rather than by a different page.
+// Mara's paper: white pages, the brand's near-black ink, and its warm
+// cream for every quiet block.
 const kPaper = Color(0xFFFFFFFF);
-const kInk = Color(0xFF1F1F1F);
-const kStone = Color(0xFFF4F3EF);
-const kMist = Color(0xFF6E6E6B);
-const kLine = Color(0xFFE7E5E0);
+const kInk = Color(0xFF14161C);
+const kStone = Color(0xFFF6F2EA);
+const kMist = Color(0xFF6B6A66);
+const kLine = Color(0xFFE8E3D8);
 
 /// Builds the app's `ThemeData` from a palette — the paper edition.
 ///

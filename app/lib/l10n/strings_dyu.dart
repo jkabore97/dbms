@@ -9,7 +9,7 @@ class StringsDyu extends Strings {
   StringsDyu([String locale = 'dyu']) : super(locale);
 
   @override
-  String get appTitle => 'Kaj';
+  String get appTitle => 'Mara';
 
   @override
   String get languageName => 'Julakan';

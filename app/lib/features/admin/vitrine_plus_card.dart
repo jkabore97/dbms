@@ -199,9 +199,9 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             color: theme.colorScheme.surfaceContainerHighest,
             child: ListTile(
               leading: const Icon(Icons.workspace_premium_outlined),
-              title: const Text('Réservé à Kaj Pro'),
+              title: const Text('Réservé à Mara Pro'),
               subtitle: const Text(
-                  'Passez à Kaj Pro pour habiller votre vitrine.'),
+                  'Passez à Mara Pro pour habiller votre vitrine.'),
               trailing: FilledButton.tonal(
                 onPressed: _openPro,
                 child: const Text('Voir'),

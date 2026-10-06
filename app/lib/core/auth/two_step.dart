@@ -72,8 +72,8 @@ class TwoStep {
     final stamp = DateTime.now().toIso8601String().substring(0, 16);
     final r = await client.auth.mfa.enroll(
       factorType: FactorType.totp,
-      issuer: 'Kaj',
-      friendlyName: 'Kaj ${label ?? ''} $stamp'.replaceAll(RegExp(r'\s+'), ' '),
+      issuer: 'Mara',
+      friendlyName: 'Mara ${label ?? ''} $stamp'.replaceAll(RegExp(r'\s+'), ' '),
     );
     final totp = r.totp!;
     return TwoStepEnrollment(

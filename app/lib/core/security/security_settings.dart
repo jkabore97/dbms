@@ -145,7 +145,7 @@ class SecuritySettings extends ChangeNotifier {
   Future<bool> unlockWithBiometrics() async {
     try {
       return await _bio.authenticate(
-        localizedReason: 'Déverrouiller Kaj',
+        localizedReason: 'Déverrouiller Mara',
         biometricOnly: true,
       );
     } catch (_) {

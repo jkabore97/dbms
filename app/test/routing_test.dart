@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaj_app/core/theme/mara_mark.dart';
 import 'package:kaj_app/main.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
@@ -168,7 +169,7 @@ void main() {
     // tap away, and it is the tap that opens it.
     await pumpApp(tester);
 
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsNothing);
@@ -176,7 +177,7 @@ void main() {
     await tester.tap(find.text('Se connecter'));
     await flush(tester);
 
-    expect(find.text('Kaj'), findsOneWidget);
+    expect(find.byType(MaraWordmark), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsOneWidget);
   });
@@ -191,7 +192,7 @@ void main() {
 
     await enterPin(tester, '1379');
 
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text('Se connecter'), findsNothing);
 
     // The three doors the owner asked for: the boutique (to have one),
@@ -290,7 +291,7 @@ void main() {
 
     // Signed in, still on the main page — the owner's words. The business
     // is behind the boutique button in the corner.
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
     await tester.tap(find.byTooltip('Ma boutique'));
     await flush(tester);
@@ -314,7 +315,7 @@ void main() {
 
     // Home is the street now; the waiting room is one tap behind the
     // boutique button, for the employee holding an invitation code.
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
     await tester.tap(find.byTooltip('Ouvrir ma boutique'));
     await flush(tester);
 
@@ -334,7 +335,7 @@ void main() {
     ]);
     await pumpApp(tester);
     await enterPin(tester, '1379');
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final router = app.routerConfig as GoRouter;
@@ -344,7 +345,7 @@ void main() {
       await flush(tester);
       // The street is gone and the static page is showing — the redirect
       // let it through rather than sending the reader back home.
-      expect(find.text('Les vitrines'), findsNothing,
+      expect(find.byKey(const Key('mara-header')), findsNothing,
           reason: 'redirect bounced $route back home');
       router.go('/vitrines');
       await flush(tester);
@@ -360,7 +361,7 @@ void main() {
 
     // Signed out, so: the street, with "Se connecter" — and never the code
     // screen, since there is no code to ask for.
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
     expect(find.text('Entrez votre code'), findsNothing);
   });
@@ -371,7 +372,7 @@ void main() {
     // build has no backend, so the window says so — but it is the window
     // that says it, not the sign-in gate.
     await pumpApp(tester);
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     (app.routerConfig as GoRouter).go('/s/boutique-esperance');
@@ -394,7 +395,7 @@ void main() {
     ]);
     await pumpApp(tester);
     await enterPin(tester, '1379');
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
     await tester.tap(find.byTooltip('Ma boutique'));
     await flush(tester);
@@ -402,7 +403,7 @@ void main() {
 
     await pressBack(tester);
 
-    expect(find.text('Les vitrines'), findsNothing,
+    expect(find.byKey(const Key('mara-header')), findsNothing,
         reason: 'back from the picker fell out onto the public street');
     expect(find.text('Choisissez une activité'), findsOneWidget);
   });
@@ -415,7 +416,7 @@ void main() {
     (app.routerConfig as GoRouter).go('/vitrines');
     await flush(tester);
 
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text("L'annuaire a besoin d'une connexion."), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsNothing);
@@ -437,7 +438,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Les vitrines'));
     await flush(tester);
-    expect(find.text('Les vitrines'), findsOneWidget);
+    expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
     await tester.tap(find.byTooltip('Ma boutique'));
     await flush(tester);
@@ -627,7 +628,7 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
-      expect(find.text('Les vitrines'), findsOneWidget);
+      expect(find.byKey(const Key('mara-header')), findsOneWidget);
       await tester.tap(find.byTooltip('Ma boutique'));
       await flush(tester);
 
@@ -648,7 +649,7 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
-      expect(find.text('Les vitrines'), findsOneWidget);
+      expect(find.byKey(const Key('mara-header')), findsOneWidget);
       await tester.tap(find.byTooltip('Ma boutique'));
       await flush(tester);
       expect(find.text('Choisissez une activité'), findsOneWidget);
@@ -698,7 +699,7 @@ void main() {
 
       await pressBack(tester);
 
-      expect(find.text('Les vitrines'), findsOneWidget);
+      expect(find.byKey(const Key('mara-header')), findsOneWidget);
     });
 
     testWidgets('a business can be reopened after going back', (tester) async {

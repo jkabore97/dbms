@@ -42,7 +42,7 @@ void main() {
         ),
         GoRoute(
           path: '/o/:id/kaj-pro',
-          builder: (_, _) => const Scaffold(body: Text('page Kaj Pro')),
+          builder: (_, _) => const Scaffold(body: Text('page Mara Pro')),
         ),
       ],
     );
@@ -51,7 +51,7 @@ void main() {
   }
 
   testWidgets('the owner of a Free business sees it over every page, and it '
-      'opens Kaj and Kaj Pro side by side', (tester) async {
+      'opens Mara and Mara Pro side by side', (tester) async {
     await pump(tester, _owner);
     expect(find.byKey(const Key('pro-pill')), findsOneWidget);
     expect(find.text('PRO'), findsOneWidget);
@@ -66,7 +66,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('pro-pill')));
     await tester.pumpAndSettle();
-    expect(find.text('page Kaj Pro'), findsOneWidget);
+    expect(find.text('page Mara Pro'), findsOneWidget);
   });
 
   testWidgets('an employee, or a Pro business, sees no strip', (tester) async {
@@ -84,7 +84,7 @@ void main() {
     final rows = {
       for (final (title, list) in ProPlansScreenRows.of(terms)) title: list,
     };
-    expect(rows['Avec Kaj Pro']!.map((r) => r.label), [
+    expect(rows['Avec Mara Pro']!.map((r) => r.label), [
       PlanTerms.labelOf('delivery'),
       PlanTerms.labelOf('analytics'),
     ]);

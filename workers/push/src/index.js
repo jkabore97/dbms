@@ -108,8 +108,9 @@ export function payloadFor(row, env) {
   else if (row.org_id && (kind.startsWith("order") || kind.startsWith("delivery"))) path = `/o/${row.org_id}/commandes`;
   else if (row.org_id) path = `/o/${row.org_id}`;
   return {
-    title: "Kaj",
-    body: row.message || "",
+    title: "Mara",
+    // The database's sentences were written when the app was Kaj.
+    body: (row.message || "").replace(/\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)/g, "Mara"),
     url: `${origin}${path}`,
     tag: row.id ? `kaj-${row.id}` : undefined,
   };
