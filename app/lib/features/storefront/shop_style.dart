@@ -141,6 +141,7 @@ class ShopPage extends StatefulWidget {
     this.trailing,
     this.floatingActionButton,
     this.bottom,
+    this.overlay,
     this.accent,
     this.announcements = const [],
   });
@@ -160,8 +161,12 @@ class ShopPage extends StatefulWidget {
   final Widget? trailing;
   final Widget? floatingActionButton;
 
-  /// A bar pinned under the body — the basket, when there is one.
+  /// A bar pinned under the body.
   final Widget? bottom;
+
+  /// Floats over the foot of the body without taking room from it — the
+  /// basket, while the shopper is still among the goods.
+  final Widget? overlay;
 
   /// The thin dark strip over the header, its lines taking turns. Empty:
   /// no strip (the courier's pages, which are work, not a shop).
@@ -252,7 +257,9 @@ class _ShopPageState extends State<ShopPage> {
       child: Scaffold(
         floatingActionButton: widget.floatingActionButton,
         bottomNavigationBar: widget.bottom,
-        body: Column(
+        body: Stack(
+          children: [
+            Column(
           children: [
             ClipRect(
               child: AnimatedAlign(
@@ -269,6 +276,11 @@ class _ShopPageState extends State<ShopPage> {
                 child: widget.body,
               ),
             ),
+          ],
+            ),
+            if (widget.overlay != null)
+              Positioned(
+                  left: 0, right: 0, bottom: 0, child: widget.overlay!),
           ],
         ),
       ),
@@ -411,8 +423,8 @@ class ShopSectionLabel extends StatelessWidget {
 
 /// The bottom of every street page. First the way to the rest of the street
 /// (« Toutes les vitrines »), on the page itself; then the footer proper: one
-/// centred band of cream, with Mara and what it is, and under it « POWERED BY »
-/// over Kaj Consulting's logo on its white card.
+/// centred band of cream, with Mara and its slogan, and under it « POWERED BY
+/// KAJ », KAJ in bold.
 class ShopFooter extends StatelessWidget {
   const ShopFooter({super.key, this.onDirectory});
 
@@ -449,40 +461,30 @@ class ShopFooter extends StatelessWidget {
             children: [
               const MaraWordmark(key: Key('mara-footer'), height: 40),
               const SizedBox(height: 4),
-              const Text('Les boutiques près de vous',
+              const Text('Au Service du Peuple',
+                  key: Key('footer-slogan'),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
               const SizedBox(height: 24),
+              // « POWERED BY KAJ », KAJ in bold.
               Semantics(
-                label: 'Powered by KAJ Consulting',
-                child: ExcludeSemantics(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('POWERED BY',
+                label: 'Powered by KAJ',
+                child: const ExcludeSemantics(
+                  child: Text.rich(
+                    key: Key('powered-by'),
+                    TextSpan(
+                      text: 'POWERED BY ',
+                      children: [
+                        TextSpan(
+                          text: 'KAJ',
                           style: TextStyle(
-                              fontSize: 11,
-                              letterSpacing: 3,
-                              color: ShopStyle.mist)),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 22, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0x14000000)),
-                          boxShadow: const [
-                            BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 12,
-                                offset: Offset(0, 4)),
-                          ],
+                              fontWeight: FontWeight.w800,
+                              color: ShopStyle.ink),
                         ),
-                        child: Image.asset('assets/brand/kaj_logo.png',
-                            key: const Key('kaj-logo'), height: 56),
-                      ),
-                    ],
+                      ],
+                    ),
+                    style: TextStyle(
+                        fontSize: 12, letterSpacing: 3, color: ShopStyle.mist),
                   ),
                 ),
               ),

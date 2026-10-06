@@ -64,7 +64,7 @@ void main() {
 
   test('the tab, the install and the launcher say Mara', () {
     expect(File('web/index.html').readAsStringSync(),
-        contains('<title>Mara — les boutiques près de vous</title>'));
+        contains('<title>Mara — Au Service du Peuple</title>'));
     expect(File('web/manifest.json').readAsStringSync(),
         contains('"short_name": "Mara"'));
     expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),

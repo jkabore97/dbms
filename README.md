@@ -1,6 +1,6 @@
 # Mara — Multi-Tenant Business Management Platform
 
-**Mara** (« les boutiques près de vous ») is the app's name; it is made and
+**Mara** — « Au Service du Peuple » — is the app's name; it is made and
 run by Kaj Consulting, which signs the street's footer (« POWERED BY »).
 The code keeps its old internal names — the `kaj_app` package, the
 Android id `bf.kaj.app` (changing it would orphan every installed phone),

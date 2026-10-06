@@ -66,6 +66,23 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// (see [_restoreBasket]) until "Commander" sends it.
   final Map<String, double> _basket = {};
 
+  /// The basket's place in the page, just above « Toutes les vitrines »
+  /// and the footer. Once it is on screen the floating card steps aside,
+  /// so the basket is never drawn under the footer.
+  final _inlineBasket = GlobalKey();
+  bool _inlineShown = false;
+
+  void _checkInline() {
+    if (!mounted) return;
+    final box = _inlineBasket.currentContext?.findRenderObject() as RenderBox?;
+    var shown = false;
+    if (box != null && box.attached && box.hasSize) {
+      final top = box.localToGlobal(Offset.zero).dy;
+      shown = top < MediaQuery.sizeOf(context).height - 24;
+    }
+    if (shown != _inlineShown) setState(() => _inlineShown = shown);
+  }
+
   /// Where this shop's basket sleeps on the device. Per shop, so filling a
   /// basket at the tailor's never spills into the grocer's.
   String get _basketKey => 'street_basket_${widget.slug}';
@@ -290,8 +307,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Measured after this frame: has the basket's place in the page come
+    // into view (a short shelf, or scrolled to the end)?
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkInline());
+    Widget basketBar({required bool floating}) => _BasketBar(
+          floating: floating,
+          picked: [
+            for (final i in _items)
+              if ((_basket[i.id] ?? 0) > 0) (i, (_basket[i.id] ?? 0).round()),
+          ],
+          capture: widget.capture,
+          count: _count,
+          total: moneyFormat(_shop?.currency ?? 'XOF').format(_total),
+          sending: _sending,
+          onOrder: _order,
+        );
     final shop = _shop;
-    final money = moneyFormat(shop?.currency ?? 'XOF');
 
     return ShopPage(
       title: shop?.name ?? 'Vitrine',
@@ -304,19 +335,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
-      bottom: _basket.isEmpty
-          ? null
-          : _BasketBar(
-              picked: [
-                for (final i in _items)
-                  if ((_basket[i.id] ?? 0) > 0) (i, (_basket[i.id] ?? 0).round()),
-              ],
-              capture: widget.capture,
-              count: _count,
-              total: money.format(_total),
-              sending: _sending,
-              onOrder: _order,
-            ),
+      overlay: _basket.isEmpty || _inlineShown ? null : basketBar(floating: true),
       body: _loading
           ? const ShopSkeleton.shelf()
           : _error != null
@@ -332,7 +351,20 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                           onPressed: _directory,
                           child: const Text('Voir les autres vitrines')),
                     )
-                  : _Window(
+                  : NotificationListener<ScrollNotification>(
+                      // Measured once the scrolled frame is laid out: during
+                      // the notification the page has not moved yet.
+                      onNotification: (_) {
+                        WidgetsBinding.instance
+                            .addPostFrameCallback((_) => _checkInline());
+                        return false;
+                      },
+                      child: _Window(
+                      basketCard: _basket.isEmpty
+                          ? null
+                          : KeyedSubtree(
+                              key: _inlineBasket,
+                              child: basketBar(floating: false)),
                       shop: shop,
                       items: _visible,
                       totalCount: _items.length,
@@ -345,6 +377,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                       onAdd: _add,
                       onRemove: _remove,
                       onDetails: _details,
+                    ),
                     ),
     );
   }
@@ -390,6 +423,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 /// The basket, pinned under the page: how many, how much, one button.
 class _BasketBar extends StatelessWidget {
   const _BasketBar({
+    required this.floating,
     required this.picked,
     required this.capture,
     required this.count,
@@ -397,6 +431,9 @@ class _BasketBar extends StatelessWidget {
     required this.sending,
     required this.onOrder,
   });
+
+  /// Over the page while browsing, or in it, above the footer.
+  final bool floating;
 
   /// What is in the basket, in the shelf's order, with how many of each.
   final List<(PublicItem, int)> picked;
@@ -408,20 +445,13 @@ class _BasketBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A card that floats over the page rather than a strip glued to its
-    // foot: the basket reads as the basket, never as part of the footer.
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Material(
-              key: const Key('basket-bar'),
+    // A card that floats over the page while the shopper is among the
+    // goods; at the end of the page the same card sits in it, above
+    // « Toutes les vitrines » and the footer — never under them.
+    final card = Material(
+              key: Key(floating ? 'basket-bar' : 'basket-inline'),
               color: ShopStyle.paper,
-              elevation: 4,
+              elevation: floating ? 4 : 0,
               shadowColor: const Color(0x22000000),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
@@ -433,6 +463,15 @@ class _BasketBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (!floating) ...[
+                      const Text('VOTRE PANIER',
+                          style: TextStyle(
+                              fontSize: 12,
+                              letterSpacing: 1.4,
+                              fontWeight: FontWeight.w700,
+                              color: ShopStyle.ink)),
+                      const SizedBox(height: 8),
+                    ],
                     // Each article picked: its photo, small, and its name.
                     SizedBox(
                       height: 44,
@@ -485,7 +524,17 @@ class _BasketBar extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
+            );
+    if (!floating) return card;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: card,
           ),
         ),
       ),
@@ -1073,6 +1122,7 @@ class _OrderSheetState extends State<OrderSheet> {
 
 class _Window extends StatelessWidget {
   const _Window({
+    this.basketCard,
     required this.shop,
     required this.items,
     required this.totalCount,
@@ -1087,6 +1137,8 @@ class _Window extends StatelessWidget {
     required this.onDetails,
   });
 
+  /// The basket, in the page after the goods, before the footer.
+  final Widget? basketCard;
   final PublicShop shop;
   final List<PublicItem> items;
 
@@ -1412,6 +1464,10 @@ class _Window extends StatelessWidget {
                   },
                 );
                 }),
+              if (basketCard != null) ...[
+                const SizedBox(height: 32),
+                basketCard!,
+              ],
               ShopFooter(onDirectory: onDirectory),
             ],
           ),

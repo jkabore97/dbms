@@ -30,7 +30,7 @@ void main() {
   test('the page carries the title, the description and the share card', () {
     final html = File('$web/index.html').readAsStringSync();
     expect(html, contains('<html lang="fr">'));
-    expect(html, contains('<title>Mara — les boutiques près de vous</title>'));
+    expect(html, contains('<title>Mara — Au Service du Peuple</title>'));
     expect(html, isNot(contains('kaj_app')));
     expect(html, isNot(contains('A new Flutter project')));
     expect(html, contains('property="og:title"'));

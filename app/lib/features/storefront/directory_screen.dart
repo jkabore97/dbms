@@ -491,8 +491,10 @@ class _Street extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Mara's slogan, then what the street is.
                 Text(
-                  'Les boutiques près de vous',
+                  'Au Service du Peuple',
+                  key: const Key('street-slogan'),
                   style: TextStyle(
                     fontSize: wide ? 32 : 24,
                     height: 1.15,
@@ -503,7 +505,8 @@ class _Street extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Articles, prix et numéro, tenus par chaque boutique.',
+                  'Les boutiques près de vous : articles, prix et numéro, '
+                  'tenus par chaque boutique.',
                   style: TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
                 const SizedBox(height: 16),
