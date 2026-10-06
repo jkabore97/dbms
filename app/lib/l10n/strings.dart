@@ -104,7 +104,7 @@ abstract class Strings {
   /// No description provided for @appTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Kaj'**
+  /// **'Mara'**
   String get appTitle;
 
   /// This language's own name, in itself — shown in the language picker so somebody who cannot read the current language can still find their own.

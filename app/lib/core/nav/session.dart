@@ -177,26 +177,34 @@ class SessionController extends ChangeNotifier {
   PlanTerms get planTerms => _terms;
 
   Future<void> _loadAccess(OrgSummary org) async {
-    if (!_termsLoaded) {
-      try {
-        _terms = await admin.planTerms();
+    // The plan's terms, the business's feature states and (for a team
+    // member) the owner's dial do not depend on one another: asked at once,
+    // a business opens after one round trip instead of three.
+    final terms = _termsLoaded
+        ? null
+        : admin.planTerms().then<Object?>((t) => t, onError: (Object _) => null);
+    final states = admin
+        .featureStates(org.id)
+        .then<Object?>((s) => s, onError: (Object _) => null);
+    final rules = org.isAdmin
+        ? null
+        : admin.featureRulesForTier(org.id, OrgAccess.tierOf(org.roles));
+    if (terms != null) {
+      final t = await terms;
+      // Offline, or a database before 066: the defaults stand.
+      if (t is PlanTerms) {
+        _terms = t;
         _termsLoaded = true;
-      } catch (_) {
-        // Offline, or a database before 066: the defaults stand.
       }
     }
-    try {
-      final states = await admin.featureStates(org.id);
-      if (states != null) _features[org.id] = states;
-    } catch (_) {}
+    final s = await states;
+    if (s is FeatureStates) _features[org.id] = s;
     final locked = _lockedFor(org);
     final OrgAccess next;
-    if (org.isAdmin) {
+    if (rules == null) {
       next = locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
     } else {
-      final rules =
-          await admin.featureRulesForTier(org.id, OrgAccess.tierOf(org.roles));
-      next = OrgAccess.forTier(rules, proLocked: locked);
+      next = OrgAccess.forTier(await rules, proLocked: locked);
     }
     // Emit only if this changes what screens already see — an unchanged dial
     // (an admin, an untouched business, an offline fetch that came back empty)
@@ -567,14 +575,38 @@ class SessionController extends ChangeNotifier {
     String? notice;
 
     if (auth.hasLiveSession) {
-      // A platform admin below aal2 is refused by the server on every call
-      // but this one (077), so it is asked first and the resolve stops at
-      // the code screen. A stall or an error falls through: the server is
-      // what enforces, and the next resolve asks again.
+      // Three questions that do not depend on each other, asked at once:
+      // on a market connection every round trip is a third of a second or
+      // more, and asked one after the other they kept the spinner up for
+      // all three before the business list could even be requested.
+      //
+      // Each is bounded by a timeout. On a market connection a request can
+      // stall — the socket stays open and the reply never comes, so the
+      // future neither completes nor throws. A timed-out call is treated as
+      // a dead connection: fall back to what the device already knows, show
+      // the notice, and let the next resolve retry.
+      //
+      // * Two-step (077): a platform admin below aal2 is refused by the
+      //   server on every call but this one, so the resolve stops at the
+      //   code screen when it says so. A stall or an error falls through.
+      // * Platform admin: never throws, defaults closed on a stall, and is
+      //   needed precisely when the org list comes back empty.
+      // * Invitations addressed to this phone or email become memberships
+      //   before the org list is asked — otherwise an invited user lands on
+      //   the waiting screen with an invitation unclaimed. Best-effort.
       final step = twoStep;
-      if (step != null) {
+      final askedTwoStep = step?.status().timeout(resolveTimeout);
+      final askedAdmin = admin
+          .isPlatformAdmin()
+          .timeout(resolveTimeout)
+          .catchError((Object _) => false);
+      final claimed = admin
+          .claimMyInvitations()
+          .timeout(resolveTimeout)
+          .then((_) => null, onError: (Object _) => null);
+      if (askedTwoStep != null) {
         try {
-          final status = await step.status().timeout(resolveTimeout);
+          final status = await askedTwoStep;
           if (status.mustAsk) {
             _twoStepEnrolled = status.enrolled;
             _phase = SessionPhase.twoStep;
@@ -583,34 +615,8 @@ class SessionController extends ChangeNotifier {
           }
         } catch (_) {}
       }
-
-      // Every network call below is bounded by a timeout. On a market
-      // connection a request can stall — the socket stays open and the reply
-      // never comes, so the future neither completes nor throws. An unbounded
-      // await there hangs the whole app on "Chargement de vos entreprises…"
-      // with no way forward, which is exactly what a reload was doing. A
-      // timed-out call is treated as a dead connection: fall back to what the
-      // device already knows, show the notice, and let the next resolve retry.
-
-      // Asked first and separately: it never throws, and a platform admin with
-      // no businesses yet needs it precisely when the org list comes back
-      // empty. A stall must neither hang the app nor silently claim admin, so
-      // it defaults closed and the next resolve re-reads it.
-      try {
-        platformAdmin =
-            await admin.isPlatformAdmin().timeout(resolveTimeout);
-      } catch (_) {
-        platformAdmin = false;
-      }
-
-      // Anything addressed to this person's phone or email becomes a
-      // membership before we ask what they belong to — otherwise an invited
-      // user would land on the waiting screen with an invitation sitting
-      // unclaimed on the server. Best-effort: a stall or error simply defers
-      // the sweep to the next launch rather than blocking the org fetch.
-      try {
-        await admin.claimMyInvitations().timeout(resolveTimeout);
-      } catch (_) {}
+      platformAdmin = await askedAdmin;
+      await claimed;
 
       try {
         orgs = await auth.fetchOrgs().timeout(resolveTimeout);

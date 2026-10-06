@@ -1,84 +1,26 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../theme/mara_mark.dart';
-import '../../features/pro/pro_strip.dart';
-import '../../features/cauris/cauris_screen.dart';
-import '../../features/cauris/league_screen.dart';
-import '../../features/academy/academy_screen.dart';
-import '../../features/farm/for_sale_screen.dart';
 import '../cauris/cauris_repository.dart';
 import '../academy/academy_repository.dart';
-import '../../features/pay/stripe_button.dart';
-import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'business_screens.dart' deferred as biz;
 
-import '../../features/accounting/account_ledger_screen.dart';
-import '../../features/accounting/accounting_hub_screen.dart';
-import '../../features/accounting/balance_sheet_screen.dart';
-import '../../features/accounting/chart_of_accounts_screen.dart';
-import '../../features/accounting/income_statement_screen.dart';
-import '../../features/accounting/trial_balance_screen.dart';
-import '../../features/accounting/journal_screen.dart';
-import '../../features/admin/admin_home_screen.dart';
-import '../../features/admin/applications_screen.dart';
-import '../../features/admin/create_business_screen.dart';
-import '../../features/admin/org_colours_screen.dart';
-import '../../features/admin/org_settings_screen.dart';
-import '../../features/admin/people_screen.dart';
-import '../../features/admin/platform_console_screen.dart';
 import '../../core/courier/courier_repository.dart';
-import '../../features/admin/couriers_screen.dart';
-import '../../features/admin/pro_console_screen.dart';
-import '../../features/admin/settlement_screen.dart';
-import '../../features/admin/featured_screen.dart';
-import '../../features/admin/showcase_screen.dart';
-import '../../features/courier/courier_screen.dart';
-import '../../features/courier/job_map_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
-import '../../features/orders/shop_orders_screen.dart';
-import '../../features/admin/platform_people_screen.dart';
-import '../../features/admin/platform_audit_screen.dart';
-import '../../features/analytics/owner_analytics_screen.dart';
-import '../../features/analytics/platform_analytics_screen.dart';
-import '../../features/admin/trainers_screen.dart';
-import '../../features/account/compte_screen.dart';
 import '../../features/account/legal_screens.dart';
-import '../../features/admin/structure_screen.dart';
-import '../../features/admin/team_access_screen.dart';
 import '../../features/auth/join_or_apply_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/no_org_screen.dart';
 import '../../features/auth/org_picker_screen.dart';
 import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
-import '../../features/capture/confirm_products_screen.dart';
-import '../../features/capture/gallery_screen.dart';
-import '../../features/church/reports/balances_screen.dart';
-import '../../features/church/reports/giving_statement_screen.dart';
-import '../../features/church/reports/reports_hub_screen.dart';
-import '../../features/church/reports/weekly_summary_screen.dart';
-import '../../features/console/console_screen.dart';
-import '../../features/credit/credit_book_screen.dart';
-import '../../features/farm/flocks_screen.dart';
-import '../../features/farm/livestock_screen.dart';
-import '../../features/farm/stock_screen.dart';
-import '../../features/home/business_shell.dart';
-import '../../features/invoicing/billing_details_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../storefront/storefront_repository.dart';
-import '../../features/invoicing/invoice_document_screen.dart';
-import '../../features/invoicing/invoices_screen.dart';
-import '../../features/invoicing/new_invoice_screen.dart';
-import '../../features/notify/notifications_screen.dart';
-import '../../features/production/production_screen.dart';
-import '../../features/retail/corrections_screen.dart';
-import '../../features/retail/products_screen.dart';
-import '../../features/retail/staff_screen.dart';
-import '../../features/account/security_screen.dart';
-import '../../features/admin/wave_console_screen.dart';
 import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
-import '../../features/tontine/tontines_screen.dart';
 import '../theme/kaj_theme.dart';
 import '../accounting/models.dart';
 import '../invoicing/models.dart' show InvoiceDocument;
@@ -177,7 +119,66 @@ abstract final class Routes {
 /// thing the router listens to: every phase change re-runs the redirect below,
 /// which is what turns "signed out" or "no business yet" into an address rather
 /// than a screen swapped in behind the user's back.
+
+/// The pages a shopper reaches — the street, a shop, sign-in, their orders,
+/// the help and legal pages — built from what the first download carries.
+/// Everything else is inside a business and waits for business_screens.dart.
+bool _shopperPath(String location) =>
+    location == '/' ||
+    location.startsWith('/s/') ||
+    const [
+      Routes.splash,
+      Routes.signIn,
+      Routes.pin,
+      Routes.twoStep,
+      Routes.join,
+      Routes.myProfile,
+      Routes.picker,
+      Routes.myOrders,
+      Routes.language,
+      Routes.payment,
+      Routes.privacy,
+      Routes.terms,
+      Routes.faq,
+      Routes.directory,
+    ].any((p) => location == p || location.startsWith('$p/'));
+
+Future<bool>? _businessScreens;
+bool _businessScreensReady = false;
+
+/// Loads the business half of the app once (web: one more file, the first
+/// time somebody opens a business; Android: nothing to fetch). A failed
+/// download — the connection dropped — is asked again next time.
+Future<bool> _loadBusinessScreens() => _businessScreens ??= () async {
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          await biz.loadLibrary();
+          _businessScreensReady = true;
+          return true;
+        } catch (_) {
+          await Future<void>.delayed(Duration(seconds: 1 + attempt));
+        }
+      }
+      _businessScreens = null;
+      return false;
+    }();
+
+/// Starts that download early, while a signed-in person is still on the
+/// picker or the splash, so opening the business does not wait for it.
+void warmBusinessScreens() => unawaited(_loadBusinessScreens());
+
 GoRouter buildRouter(SessionController session) {
+  // Somebody with a business will open it: fetch its screens now.
+  void warm() {
+    if (session.orgs.isNotEmpty) warmBusinessScreens();
+  }
+
+  session.addListener(warm);
+  warm();
+  // On a phone the business half is part of the app already: loading it is
+  // immediate, so it is loaded straight away and never waited for.
+  if (!kIsWeb) warmBusinessScreens();
+
   /// The one place that decides where a person is allowed to be.
   ///
   /// Written as "which locations does this phase permit" rather than a chain of
@@ -347,7 +348,20 @@ GoRouter buildRouter(SessionController session) {
   return GoRouter(
     initialLocation: Routes.splash,
     refreshListenable: session,
-    redirect: redirect,
+    redirect: (context, state) {
+      final to = redirect(context, state);
+      // Somewhere inside a business: its screens arrive first (business_
+      // screens.dart is deferred). A redirect elsewhere comes back through
+      // here with the new address, so only the address that stays is asked.
+      // Once they are here the answer is immediate, as before.
+      if (to == null &&
+          !_businessScreensReady &&
+          !_shopperPath(state.matchedLocation)) {
+        return _loadBusinessScreens()
+            .then((ok) => ok ? null : '/chargement-impossible');
+      }
+      return to;
+    },
     // An address that matches nothing — a stale bookmark, a mistyped link —
     // gets a calm page with the way home, never the router's red debug page.
     errorBuilder: (context, state) => const NotFoundScreen(),
@@ -359,7 +373,7 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
           path: Routes.language, builder: (_, _) => const LanguageScreen()),
       GoRoute(
-          path: Routes.security, builder: (_, _) => const SecurityScreen()),
+          path: Routes.security, builder: (_, _) => biz.SecurityScreen()),
       GoRoute(
         path: '${Routes.payment}/:id',
         builder: (_, state) => PaymentScreen(
@@ -404,13 +418,13 @@ GoRouter buildRouter(SessionController session) {
       // their courses — the server says which of those this person gets.
       GoRoute(
         path: Routes.courier,
-        builder: (context, state) => CourierScreen(
+        builder: (context, state) => biz.CourierScreen(
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),
       GoRoute(
         path: '${Routes.courier}/course/:id',
-        builder: (context, state) => JobMapScreen(
+        builder: (context, state) => biz.JobMapScreen(
           orderId: state.pathParameters['id']!,
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
@@ -585,7 +599,7 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.newBusiness,
         builder: (context, _) =>
-            CreateBusinessScreen(admin: AppScope.of(context).admin),
+            biz.CreateBusinessScreen(admin: AppScope.of(context).admin),
       ),
 
       /// Asking for another business, for somebody who already has one. A
@@ -595,7 +609,7 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.applyForBusiness,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return CreateBusinessScreen(
+          return biz.CreateBusinessScreen(
             admin: scope.admin,
             onboarding: scope.onboarding,
             asApplication: true,
@@ -607,7 +621,7 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.console,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return PlatformConsoleScreen(
+          return biz.PlatformConsoleScreen(
             admin: scope.admin,
             console: scope.console,
           );
@@ -617,20 +631,20 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.platformAnalytics,
         builder: (context, _) =>
-            PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics),
+            biz.PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics),
       ),
 
       GoRoute(
         path: Routes.trainers,
         builder: (context, _) =>
-            TrainersScreen(console: AppScope.of(context).console),
+            biz.TrainersScreen(console: AppScope.of(context).console),
       ),
 
       GoRoute(
         path: Routes.consolePeople,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return PlatformPeopleScreen(
+          return biz.PlatformPeopleScreen(
             console: scope.console,
             admin: scope.admin,
           );
@@ -640,47 +654,47 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.consoleAudit,
         builder: (context, _) =>
-            PlatformAuditScreen(console: AppScope.of(context).console),
+            biz.PlatformAuditScreen(console: AppScope.of(context).console),
       ),
 
       // The paid spots on the welcome page: a platform decision (054).
       GoRoute(
         path: Routes.consoleFeatured,
         builder: (context, _) =>
-            FeaturedScreen(admin: AppScope.of(context).admin),
+            biz.FeaturedScreen(admin: AppScope.of(context).admin),
       ),
 
       // The platform's own vitrines d'exemple (094).
       GoRoute(
         path: Routes.consoleShowcase,
         builder: (context, _) =>
-            ShowcaseScreen(admin: AppScope.of(context).admin),
+            biz.ShowcaseScreen(admin: AppScope.of(context).admin),
       ),
 
       // Who may carry deliveries: also the platform's decision (056).
       GoRoute(
         path: Routes.consoleCouriers,
         builder: (context, _) =>
-            CouriersScreen(admin: AppScope.of(context).admin),
+            biz.CouriersScreen(admin: AppScope.of(context).admin),
       ),
 
       // The platform's part of the delivery fees, per courier, per month (067).
       GoRoute(
         path: Routes.consoleSettlement,
         builder: (context, _) =>
-            SettlementScreen(admin: AppScope.of(context).admin),
+            biz.SettlementScreen(admin: AppScope.of(context).admin),
       ),
 
       // Wave checkout's switches and payouts (076).
       GoRoute(
         path: Routes.consoleWave,
-        builder: (_, _) => const WaveConsoleScreen(),
+        builder: (_, _) => biz.WaveConsoleScreen(),
       ),
       // Who said they paid, and what the paywall says (066).
       GoRoute(
         path: Routes.consolePro,
         builder: (context, _) =>
-            ProConsoleScreen(
+            biz.ProConsoleScreen(
               admin: AppScope.of(context).admin,
               cauris: CaurisRepository(AppScope.of(context).auth.client),
             ),
@@ -689,7 +703,7 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.applications,
         builder: (context, _) =>
-            ApplicationsScreen(onboarding: AppScope.of(context).onboarding),
+            biz.ApplicationsScreen(onboarding: AppScope.of(context).onboarding),
       ),
 
       // ----------------------------------------------------------------
@@ -700,7 +714,7 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, state) => _withOrg(
           context,
           state,
-          (scope, org) => BusinessShell(org: org),
+          (scope, org) => biz.BusinessShell(org: org),
         ),
         routes: [
           GoRoute(
@@ -709,7 +723,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  JournalScreen(accounting: scope.accounting, org: org),
+                  biz.JournalScreen(accounting: scope.accounting, org: org),
             ),
           ),
           GoRoute(
@@ -717,7 +731,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => AccountingHubScreen(
+              (scope, org) => biz.AccountingHubScreen(
                 accounting: scope.accounting,
                 org: org,
                 // The chart of accounts screen mirrors what it fetches onto
@@ -732,7 +746,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => IncomeStatementScreen(
+                  (scope, org) => biz.IncomeStatementScreen(
                       accounting: scope.accounting, org: org),
                 ),
               ),
@@ -741,7 +755,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => BalanceSheetScreen(
+                  (scope, org) => biz.BalanceSheetScreen(
                       accounting: scope.accounting, org: org),
                 ),
               ),
@@ -750,7 +764,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => ChartOfAccountsScreen(
+                  (scope, org) => biz.ChartOfAccountsScreen(
                     accounting: scope.accounting,
                     org: org,
                     db: scope.db,
@@ -763,7 +777,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => TrialBalanceScreen(
+                  (scope, org) => biz.TrialBalanceScreen(
                       accounting: scope.accounting, org: org),
                 ),
               ),
@@ -783,7 +797,7 @@ GoRouter buildRouter(SessionController session) {
                         backTo: Routes.inside(org.id, 'comptabilite'),
                       );
                     }
-                    return AccountLedgerScreen(
+                    return biz.AccountLedgerScreen(
                       accounting: scope.accounting,
                       org: org,
                       account: account.account,
@@ -798,7 +812,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => AdminHomeScreen(
+              (scope, org) => biz.AdminHomeScreen(
                 admin: scope.admin,
                 org: org,
                 console: scope.console,
@@ -816,7 +830,7 @@ GoRouter buildRouter(SessionController session) {
                   context,
                   state,
                   (scope, org) =>
-                      TeamAccessScreen(admin: scope.admin, orgId: org.id),
+                      biz.TeamAccessScreen(admin: scope.admin, orgId: org.id),
                 ),
               ),
               GoRoute(
@@ -824,7 +838,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => PeopleScreen(
+                  (scope, org) => biz.PeopleScreen(
                     admin: scope.admin,
                     orgId: org.id,
                     orgName: org.name,
@@ -838,7 +852,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => StructureScreen(
+                  (scope, org) => biz.StructureScreen(
                     admin: scope.admin,
                     orgId: org.id,
                     profile: org.profile,
@@ -850,7 +864,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => ConsoleScreen(
+                  (scope, org) => biz.ConsoleScreen(
                     console: scope.console,
                     db: scope.db,
                     org: org,
@@ -862,7 +876,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => OrgSettingsScreen(
+                  (scope, org) => biz.OrgSettingsScreen(
                     admin: scope.admin,
                     orgId: org.id,
                     onSaved: scope.session.resolveOrgs,
@@ -888,7 +902,7 @@ GoRouter buildRouter(SessionController session) {
                     builder: (context, state) => _withOrg(
                       context,
                       state,
-                      (scope, org) => OrgColoursScreen(
+                      (scope, org) => biz.OrgColoursScreen(
                         admin: scope.admin,
                         orgId: org.id,
                         profile: org.profile,
@@ -907,7 +921,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => ShopOrdersScreen(org: org, retail: scope.retail),
+              (scope, org) => biz.ShopOrdersScreen(org: org, retail: scope.retail),
             ),
           ),
           GoRoute(
@@ -916,7 +930,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  InvoicesScreen(org: org, invoicing: scope.invoicing),
+                  biz.InvoicesScreen(org: org, invoicing: scope.invoicing),
             ),
             routes: [
               GoRoute(
@@ -925,7 +939,7 @@ GoRouter buildRouter(SessionController session) {
                   context,
                   state,
                   (scope, org) =>
-                      NewInvoiceScreen(org: org, invoicing: scope.invoicing),
+                      biz.NewInvoiceScreen(org: org, invoicing: scope.invoicing),
                 ),
               ),
               GoRoute(
@@ -933,7 +947,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => BillingDetailsScreen(
+                  (scope, org) => biz.BillingDetailsScreen(
                       org: org, invoicing: scope.invoicing),
                 ),
               ),
@@ -951,7 +965,7 @@ GoRouter buildRouter(SessionController session) {
                         backTo: Routes.inside(org.id, 'factures'),
                       );
                     }
-                    return NewInvoiceScreen(
+                    return biz.NewInvoiceScreen(
                       org: org,
                       invoicing: scope.invoicing,
                       revisionOf: doc,
@@ -965,7 +979,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => InvoiceDocumentScreen(
+                  (scope, org) => biz.InvoiceDocumentScreen(
                     org: org,
                     invoicing: scope.invoicing,
                     invoiceId: state.pathParameters['invoiceId']!,
@@ -979,7 +993,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => CompteScreen(org: org),
+              (scope, org) => biz.CompteScreen(org: org),
             ),
           ),
           // Kaj and Kaj Pro side by side: the « Pro » strip, every badged
@@ -989,20 +1003,20 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => ProPlansScreen(
+              (scope, org) => biz.ProPlansScreen(
                 org: org,
                 terms: scope.session.planTerms,
                 admin: scope.admin,
                 // Kaj Pro by card (082), for an admin, when the platform
                 // has opened it; and Stripe's page once it is paid.
                 cardButton: org.isAdmin
-                    ? (period) => StripeCardButton(
+                    ? (period) => biz.StripeCardButton(
                           orgId: org.id,
                           terms: scope.session.planTerms,
                           period: period,
                         )
                     : null,
-                cardManage: org.isAdmin ? StripeManage(orgId: org.id) : null,
+                cardManage: org.isAdmin ? biz.StripeManage(orgId: org.id) : null,
                 stripeReturn: state.uri.queryParameters['stripe'],
                 onPaid: () => scope.session.refresh(force: true),
               ),
@@ -1014,7 +1028,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  ReportsHubScreen(reports: scope.reports, org: org),
+                  biz.ReportsHubScreen(reports: scope.reports, org: org),
             ),
             routes: [
               GoRoute(
@@ -1022,7 +1036,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => WeeklySummaryScreen(
+                  (scope, org) => biz.WeeklySummaryScreen(
                     reports: scope.reports,
                     orgId: org.id,
                     orgName: org.name,
@@ -1036,7 +1050,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => BalancesScreen(
+                  (scope, org) => biz.BalancesScreen(
                     reports: scope.reports,
                     orgId: org.id,
                     currency: org.currency,
@@ -1048,7 +1062,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => GivingStatementScreen(
+                  (scope, org) => biz.GivingStatementScreen(
                     reports: scope.reports,
                     orgId: org.id,
                     orgName: org.name,
@@ -1061,7 +1075,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => OwnerAnalyticsScreen(
+                  (scope, org) => biz.OwnerAnalyticsScreen(
                     analytics: scope.analytics,
                     orgId: org.id,
                     orgName: org.name,
@@ -1076,7 +1090,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => GalleryScreen(
+              (scope, org) => biz.GalleryScreen(
                 org: org,
                 capture: scope.capture,
                 retail: scope.retail,
@@ -1095,7 +1109,7 @@ GoRouter buildRouter(SessionController session) {
                         backTo: Routes.inside(org.id, 'photos'),
                       );
                     }
-                    return DocumentScreen(
+                    return biz.DocumentScreen(
                       org: org,
                       document: arg.document,
                       capture: scope.capture,
@@ -1117,7 +1131,7 @@ GoRouter buildRouter(SessionController session) {
                         backTo: Routes.inside(org.id, 'photos'),
                       );
                     }
-                    return ConfirmProductsScreen(
+                    return biz.ConfirmProductsScreen(
                       org: org,
                       retail: scope.retail,
                       lines: arg.lines,
@@ -1135,7 +1149,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => LeagueScreen(
+              (scope, org) => biz.LeagueScreen(
                 org: org,
                 cauris: CaurisRepository(scope.auth.client),
               ),
@@ -1147,7 +1161,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => AcademyScreen(
+              (scope, org) => biz.AcademyScreen(
                 org: org,
                 academy: AcademyRepository(scope.auth.client),
               ),
@@ -1159,7 +1173,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => CaurisScreen(
+              (scope, org) => biz.CaurisScreen(
                 org: org,
                 cauris: CaurisRepository(scope.auth.client),
               ),
@@ -1171,7 +1185,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => ForSaleScreen(
+              (scope, org) => biz.ForSaleScreen(
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
@@ -1183,7 +1197,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => ProductsScreen(
+              (scope, org) => biz.ProductsScreen(
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
@@ -1197,7 +1211,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  CorrectionsScreen(org: org, retail: scope.retail),
+                  biz.CorrectionsScreen(org: org, retail: scope.retail),
             ),
           ),
           GoRoute(
@@ -1205,7 +1219,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => StaffScreen(org: org, staff: scope.staff),
+              (scope, org) => biz.StaffScreen(org: org, staff: scope.staff),
             ),
           ),
           GoRoute(
@@ -1213,7 +1227,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => CreditBookScreen(
+              (scope, org) => biz.CreditBookScreen(
                 org: org,
                 credit: scope.credit,
                 retail: scope.retail,
@@ -1226,7 +1240,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => CustomerDebtsScreen(
+                  (scope, org) => biz.CustomerDebtsScreen(
                     org: org,
                     credit: scope.credit,
                     customerId: state.pathParameters['customerId']!,
@@ -1241,7 +1255,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => TontinesScreen(
+              (scope, org) => biz.TontinesScreen(
                 org: org,
                 tontine: scope.tontine,
                 access: scope.session.accessFor(org.id),
@@ -1253,7 +1267,7 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => TontineScreen(
+                  (scope, org) => biz.TontineScreen(
                     org: org,
                     tontine: scope.tontine,
                     tontineId: state.pathParameters['tontineId']!,
@@ -1268,7 +1282,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => NotificationsScreen(notify: scope.notify),
+              (scope, org) => biz.NotificationsScreen(notify: scope.notify),
             ),
           ),
           GoRoute(
@@ -1276,7 +1290,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => ProductionScreen(
+              (scope, org) => biz.ProductionScreen(
                 org: org,
                 production: scope.production,
                 retail: scope.retail,
@@ -1290,7 +1304,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  StockScreen(db: scope.db, org: org, farm: scope.farm),
+                  biz.StockScreen(db: scope.db, org: org, farm: scope.farm),
             ),
           ),
           GoRoute(
@@ -1299,7 +1313,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) =>
-                  FlocksScreen(db: scope.db, org: org, farm: scope.farm),
+                  biz.FlocksScreen(db: scope.db, org: org, farm: scope.farm),
             ),
           ),
           GoRoute(
@@ -1307,7 +1321,7 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => LivestockScreen(
+              (scope, org) => biz.LivestockScreen(
                 org: org,
                 farm: scope.farm,
                 initialTab:
@@ -1392,7 +1406,7 @@ Widget _withOrg(
         theme: org.theme,
         // The small « Pro » on every page of a business not on Kaj Pro,
         // for its owner and admins (ProStrip decides).
-        child: ProStrip(org: org, child: build(scope, org)),
+        child: biz.ProStrip(org: org, child: build(scope, org)),
       );
     },
   );
