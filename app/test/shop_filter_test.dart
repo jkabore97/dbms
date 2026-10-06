@@ -79,6 +79,14 @@ void main() {
 
     tearDown(() => db.close());
 
+    // Let the basket's write land before the database closes.
+    Future<void> settle(WidgetTester tester) async {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 6));
+    }
+
     Future<void> pumpShop(WidgetTester tester, {int count = 8}) async {
       tester.view.physicalSize = const Size(1000, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -165,6 +173,7 @@ void main() {
       // the article): the bar appears, and the device remembers.
       await tester.tap(find.byIcon(Icons.add).first);
       await tester.pump();
+      await tester.pump();
       expect(find.text('Commander'), findsOneWidget);
       // Let the write land on the real (async) database.
       await tester.runAsync(
@@ -173,20 +182,29 @@ void main() {
       // A refresh, a sign-in round-trip: a brand-new screen, same device.
       await tester.pumpWidget(const SizedBox());
       await pumpShop(tester, count: 5);
+      await tester.pump();
       expect(find.text('Commander'), findsOneWidget);
     });
 
-    testWidgets('the basket names what is in it, with its picture, in a '
-        'card of its own above the page', (tester) async {
+    testWidgets('the basket names what is in it, with its picture; on a '
+        'short shelf it sits in the page, above the footer', (tester) async {
       await pumpShop(tester, count: 5);
       await tester.tap(find.byIcon(Icons.add).first);
       await tester.pump();
       await tester.tap(find.byIcon(Icons.add).first);
       await tester.pump();
+      await tester.pump();
 
-      final bar = find.byKey(const Key('basket-bar'));
-      expect(bar, findsOneWidget);
-      final picked = find.byKey(const Key('basket-picked'));
+      // The whole shelf is on screen: the basket is in the page, and no
+      // floating card is drawn over the footer.
+      final inline = find.byKey(const Key('basket-inline'));
+      expect(inline, findsOneWidget);
+      expect(find.byKey(const Key('basket-bar')), findsNothing);
+      expect(tester.getRect(inline).bottom,
+          lessThan(tester.getRect(find.byKey(const Key('footer-directory'))).top),
+          reason: 'the basket comes before « Toutes les vitrines »');
+      final picked = find.descendant(
+          of: inline, matching: find.byKey(const Key('basket-picked')));
       expect(find.descendant(of: picked, matching: find.text('Café Touba')),
           findsOneWidget);
       // No photo: the initial stands in its square.
@@ -195,11 +213,29 @@ void main() {
       expect(find.descendant(of: picked, matching: find.text('×2')),
           findsOneWidget);
       expect(find.text('2 articles'), findsOneWidget);
-      // Let the basket's write land before the database closes.
-      await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(seconds: 6));
+      await settle(tester);
+    });
+
+    testWidgets('on a long shelf the basket floats while browsing, and at '
+        'the end it stops above the footer', (tester) async {
+      await pumpShop(tester, count: 40);
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('basket-bar')), findsOneWidget,
+          reason: 'among the goods, the basket floats');
+
+      await tester.drag(find.byType(ListView).first, const Offset(0, -20000));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('basket-bar')), findsNothing,
+          reason: 'at the end it steps aside — never under the footer');
+      final inline = find.byKey(const Key('basket-inline'));
+      expect(inline, findsOneWidget);
+      expect(tester.getRect(inline).bottom,
+          lessThan(tester.getRect(find.byKey(const Key('shop-footer'))).top));
+      await settle(tester);
     });
   });
 }

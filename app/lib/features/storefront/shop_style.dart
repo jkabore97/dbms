@@ -141,6 +141,7 @@ class ShopPage extends StatefulWidget {
     this.trailing,
     this.floatingActionButton,
     this.bottom,
+    this.overlay,
     this.accent,
     this.announcements = const [],
   });
@@ -160,8 +161,12 @@ class ShopPage extends StatefulWidget {
   final Widget? trailing;
   final Widget? floatingActionButton;
 
-  /// A bar pinned under the body — the basket, when there is one.
+  /// A bar pinned under the body.
   final Widget? bottom;
+
+  /// Floats over the foot of the body without taking room from it — the
+  /// basket, while the shopper is still among the goods.
+  final Widget? overlay;
 
   /// The thin dark strip over the header, its lines taking turns. Empty:
   /// no strip (the courier's pages, which are work, not a shop).
@@ -252,7 +257,9 @@ class _ShopPageState extends State<ShopPage> {
       child: Scaffold(
         floatingActionButton: widget.floatingActionButton,
         bottomNavigationBar: widget.bottom,
-        body: Column(
+        body: Stack(
+          children: [
+            Column(
           children: [
             ClipRect(
               child: AnimatedAlign(
@@ -269,6 +276,11 @@ class _ShopPageState extends State<ShopPage> {
                 child: widget.body,
               ),
             ),
+          ],
+            ),
+            if (widget.overlay != null)
+              Positioned(
+                  left: 0, right: 0, bottom: 0, child: widget.overlay!),
           ],
         ),
       ),
