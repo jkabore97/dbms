@@ -13,6 +13,7 @@ import '../../core/access/org_access.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/cauris/cauris_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
@@ -200,6 +201,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   Future<void> _load() async {
     // Read before the first await: a context is not for after a gap.
     final scopeAdmin = AppScope.read(context)?.admin;
+    final scopeClient = AppScope.read(context)?.auth.client;
     final sync = AppScope.read(context)?.sync;
     final retail = widget.retail;
     if (retail == null || !retail.isConfigured) {
@@ -257,6 +259,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         try {
           vitrine = await scopeAdmin?.vitrineChecklist(widget.org.id);
         } catch (_) {}
+        // Cauris for a complete vitrine (084), read where it is seen.
+        unawaited(CaurisRepository(scopeClient).milestones(widget.org.id));
       }
 
       if (!mounted) return;
@@ -664,6 +668,12 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           ),
       ],
       more: [
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.savings_outlined,
+            label: 'Mes cauris',
+            onTap: () => _openThenReload('cauris'),
+          ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,

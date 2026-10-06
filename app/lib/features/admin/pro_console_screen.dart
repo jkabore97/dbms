@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
+import '../../core/cauris/cauris_repository.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'cauris_console_card.dart';
 
 /// Kaj Pro, from the platform's side (066, M10 block 2).
 ///
@@ -16,9 +18,12 @@ import '../../core/nav/router.dart';
 /// first, each with the way to the business's Formule card (where Pro is
 /// actually granted, 065) and a button to close it once that is done.
 class ProConsoleScreen extends StatefulWidget {
-  const ProConsoleScreen({super.key, required this.admin});
+  const ProConsoleScreen({super.key, required this.admin, this.cauris});
 
   final AdminRepository admin;
+
+  /// The cauris rules and the week's top earners (084).
+  final CaurisRepository? cauris;
 
   @override
   State<ProConsoleScreen> createState() => _ProConsoleScreenState();
@@ -345,6 +350,12 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
+                if (widget.cauris != null) ...[
+                  const SizedBox(height: 28),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  CaurisConsoleCard(cauris: widget.cauris!),
+                ],
                 const SizedBox(height: 16),
                 Text(
                   'La liste des outils Pro et les plafonds gratuits '

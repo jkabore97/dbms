@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/mara_mark.dart';
 import '../../features/pro/pro_strip.dart';
+import '../../features/cauris/cauris_screen.dart';
 import '../../features/farm/for_sale_screen.dart';
+import '../cauris/cauris_repository.dart';
 import '../../features/pay/stripe_button.dart';
 import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -665,7 +667,10 @@ GoRouter buildRouter(SessionController session) {
       GoRoute(
         path: Routes.consolePro,
         builder: (context, _) =>
-            ProConsoleScreen(admin: AppScope.of(context).admin),
+            ProConsoleScreen(
+              admin: AppScope.of(context).admin,
+              cauris: CaurisRepository(AppScope.of(context).auth.client),
+            ),
       ),
 
       GoRoute(
@@ -1110,6 +1115,18 @@ GoRouter buildRouter(SessionController session) {
                 ),
               ),
             ],
+          ),
+          // Cauris (084): the business's wallet.
+          GoRoute(
+            path: 'cauris',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => CaurisScreen(
+                org: org,
+                cauris: CaurisRepository(scope.auth.client),
+              ),
+            ),
           ),
           // What a farm sells on its vitrine (083).
           GoRoute(

@@ -146,6 +146,16 @@ class CompteScreen extends StatelessWidget {
                 // The plan, said plainly (066): what this business is on, and
                 // the door to the other one. Drawn for every member so an
                 // employee who meets a badge knows what it is.
+                // Cauris (084): what doing well earns. Businesses only: an
+                // association does not compete.
+                if (admin && org.profile != 'church' && org.profile != 'association')
+                  _Tile(
+                    key: const Key('compte-cauris'),
+                    icon: Icons.savings_outlined,
+                    title: 'Mes cauris',
+                    subtitle: 'Gagnés en vendant bien, à dépenser en outils Pro',
+                    onTap: () => context.push(inside('cauris')),
+                  ),
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
                   title: org.isPro ? 'Mara Pro' : 'Passer à Mara Pro',
@@ -389,6 +399,7 @@ class _Group extends StatelessWidget {
 
 class _Tile extends StatelessWidget {
   const _Tile({
+    super.key,
     required this.icon,
     required this.title,
     required this.onTap,

@@ -248,6 +248,18 @@ class StorefrontRepository {
     } catch (_) {}
   }
 
+  /// One distinct visitor of this vitrine today (084): the device's own
+  /// random id, so the shop's cauris count people, not reloads. Never
+  /// awaited by a screen and never fails one.
+  Future<void> recordVisitor(String slug, String visitorId) async {
+    final client = _client;
+    if (client == null) return;
+    try {
+      await client.rpc('record_visitor',
+          params: {'p_slug': slug, 'p_visitor': visitorId});
+    } catch (_) {}
+  }
+
   /// Counts the articles of a strip as seen, in one call (071).
   Future<void> recordSeen(List<String> productIds) async {
     final client = _client;
