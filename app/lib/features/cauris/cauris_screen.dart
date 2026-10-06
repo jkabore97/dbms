@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/cauris/cauris_repository.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/mara_mark.dart';
@@ -121,6 +123,13 @@ class _CaurisScreenState extends State<CaurisScreen> {
                   'cette entreprise.')
             else ...[
               _Wallet(wallet: w),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                key: const Key('open-league'),
+                onPressed: () => context.push(Routes.inside(widget.org.id, 'classement')),
+                icon: const Icon(Icons.emoji_events_outlined),
+                label: Text('Classement de la semaine · +${w.week}'),
+              ),
               const SizedBox(height: 22),
               _label(theme, 'Comment gagner des cauris'),
               KajCard(

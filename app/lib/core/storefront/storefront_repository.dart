@@ -300,6 +300,8 @@ class StorefrontStyle {
     this.hideOutOfStock = false,
     this.logoKey,
     this.delivers = false,
+    this.topWeekRank,
+    this.topWeekLeague,
   });
 
   static const none = StorefrontStyle();
@@ -330,6 +332,11 @@ class StorefrontStyle {
   /// by storefront() for every plan. Like the logo, no dressing.
   final bool delivers;
 
+  /// Last week's top 3 of its league (086): the rank and the league, for
+  /// the badge on the window. Null when it was not on the podium.
+  final int? topWeekRank;
+  final String? topWeekLeague;
+
   bool get isEmpty =>
       tagline == null &&
       hours == null &&
@@ -357,6 +364,12 @@ class StorefrontStyle {
       hideOutOfStock: json['hide_out_of_stock'] == true,
       logoKey: s('logo_key'),
       delivers: json['delivers'] == true,
+      topWeekRank: json['top_week'] is Map
+          ? ((json['top_week'] as Map)['rank'] as num?)?.toInt()
+          : null,
+      topWeekLeague: json['top_week'] is Map
+          ? (json['top_week'] as Map)['league'] as String?
+          : null,
     );
   }
 
