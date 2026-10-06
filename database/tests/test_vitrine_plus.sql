@@ -30,6 +30,8 @@ end $$;
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant execute on all functions in schema public to authenticated;
+-- 093 opened the basics to every plan; this suite pins 068's rule.
+update platform_settings set value = '0' where key = 'vitrine_free_basics';
 
 insert into auth.users (id, phone, raw_user_meta_data) values
     (:plat,    '+22640000001', '{"full_name": "Plateforme"}'),

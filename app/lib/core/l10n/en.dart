@@ -2990,4 +2990,34 @@ const enStrings = <String, String>{
       'A business cannot sponsor itself',
   'Seul un administrateur dit qui l\'a parrainé':
       'Only an administrator says who sponsored it',
+  // 093: dressing the vitrine.
+  'Habiller ma vitrine': 'Dress my vitrine',
+  'Choisissez, l\'aperçu montre aussitôt ce que verront vos clients.':
+      'Choose; the preview shows at once what your customers will see.',
+  'POUR TOUTES LES VITRINES': 'FOR EVERY VITRINE',
+  'Jours d\'ouverture': 'Opening days',
+  'Ouvre à': 'Opens at',
+  'Ferme à': 'Closes at',
+  'Choisissez au moins un jour.': 'Choose at least one day.',
+  'AVEC MARA PRO': 'WITH MARA PRO',
+  'Essayez ici ; vos clients le verront avec Mara Pro.':
+      'Try it here; your customers will see it with Mara Pro.',
+  'La présentation, les articles à la une et « Ouvert maintenant ».':
+      'The layout, featured articles and « Open now ».',
+  'Présentation des articles': 'How articles are shown',
+  'La présentation, les articles à la une et « Ouvert maintenant » s\'affichent avec Mara Pro.':
+      'The layout, featured articles and « Open now » show with Mara Pro.',
+  'Grille': 'Grid',
+  'Grandes photos': 'Large photos',
+  'Liste': 'List',
+  'Menu': 'Menu',
+  'Habiller ma vitrine · Mettre en avant': 'Dress my vitrine · Promote',
+  'Ouvert maintenant': 'Open now',
+  'Fermé': 'Closed',
+  'Les horaires : choisissez les jours, puis une heure d\'ouverture et une de fermeture':
+      'Opening hours: choose the days, then an opening and a closing time',
+  'Kaj Pro : les autres couleurs font partie de Kaj Pro. Choisissez l\'une des six couleurs proposées.':
+      'Kaj Pro: other colours are part of Kaj Pro. Choose one of the six colours offered.',
+  'La présentation est grille, grandes photos, liste ou menu':
+      'The layout is grid, large photos, list or menu',
 };

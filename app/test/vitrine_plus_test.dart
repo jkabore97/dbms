@@ -251,10 +251,19 @@ void main() {
       // Only published articles are offered.
       expect(find.text('Caché'), findsNothing);
 
-      await tester.enterText(
-          find.widgetWithText(TextField, 'Horaires'), 'Lun–Sam 8h–19h');
+      // The days, Monday to Saturday; the times stay 8h and 19h.
+      for (var d = 1; d <= 6; d++) {
+        await tester.ensureVisible(find.byKey(Key('day-$d')));
+        await tester.tap(find.byKey(Key('day-$d')));
+        await tester.pump();
+      }
+      expect(find.text('Lun–Sam 8h–19h'), findsWidgets);
+      await tester.ensureVisible(find.bySemanticsLabel('Couleur #2E7D5B'));
       await tester.tap(find.bySemanticsLabel('Couleur #2E7D5B'));
-      await tester.tap(find.text('Sucre'));
+      await tester.ensureVisible(find.widgetWithText(FilterChip, 'Sucre'));
+      await tester.tap(find.widgetWithText(FilterChip, 'Sucre'));
+      await tester.ensureVisible(find.byKey(const Key('layout-menu')));
+      await tester.tap(find.byKey(const Key('layout-menu')));
       await tester.pump();
       expect(find.text('Articles en tête (2/6)'), findsOneWidget);
 
@@ -270,6 +279,12 @@ void main() {
         'hours': 'Lun–Sam 8h–19h',
         'accent': '#2E7D5B',
         'pinned': ['p2', 'p1'],
+        'layout': 'menu',
+        'schedule': {
+          'days': [1, 2, 3, 4, 5, 6],
+          'open': '08:00',
+          'close': '19:00',
+        },
       });
       expect(find.textContaining('Vitrine enregistrée'), findsOneWidget);
     });
