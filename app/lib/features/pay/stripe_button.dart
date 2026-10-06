@@ -108,7 +108,7 @@ class _StripeCardButtonState extends State<StripeCardButton> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Visa, Mastercard. Renouvelé chaque ${year ? 'année' : 'mois'}, '
+          'Visa, Mastercard. Renouvelé chaque ${year ? context.tr('année') : 'mois'}, '
           'annulable à tout moment. Paiement sécurisé par Stripe.',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: kMist),
@@ -186,10 +186,10 @@ class _StripeManageState extends State<StripeManage> {
         ? ''
         : DateFormat('d MMMM yyyy', 'fr_FR').format(sub.until!.toLocal());
     final line = !sub.active
-        ? 'Abonnement par carte arrêté.'
+        ? context.tr('Abonnement par carte arrêté.')
         : sub.cancelAtEnd
-            ? 'Payé par carte jusqu\'au $until, puis arrêté.'
-            : 'Payé par carte, renouvelé le $until.';
+            ? context.tr('Payé par carte jusqu\'au {until}, puis arrêté.', {'until': until})
+            : context.tr('Payé par carte, renouvelé le {until}.', {'until': until});
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,

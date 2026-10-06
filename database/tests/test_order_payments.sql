@@ -10,6 +10,9 @@
 -- collected twice.
 -- ============================================================
 \set ON_ERROR_STOP on
+-- 092 hides a vitrine below 8 items (test_vitrine_minimum.sql); this
+-- suite is about something else, so it keeps the old rule (no minimum).
+update platform_settings set value = '0' where key = 'vitrine_min_items';
 
 \set owner_a   '''30303030-0000-0000-0000-000000000001'''
 \set customer  '''30303030-0000-0000-0000-000000000002'''

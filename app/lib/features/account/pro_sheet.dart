@@ -110,13 +110,8 @@ class _ProPayPanelState extends State<ProPayPanel> {
               const SizedBox(height: 12),
               Text(
                 widget.org.isPro
-                    ? 'Cette entreprise est sur Mara Pro. Tous les outils '
-                        'ci-dessous sont ouverts.'
-                    : 'Mara reste gratuit pour le quotidien : le stock, les '
-                        'ventes, le carnet de crédit, la vitrine et jusqu\'à '
-                        '${terms.freeMaxStaff} comptes en plus du propriétaire. '
-                        'Mara Pro ajoute ce dont une entreprise qui grandit a '
-                        'besoin :',
+                    ? context.tr('Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.')
+                    : context.tr('Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et jusqu\'à {freeMaxStaff} comptes en plus du propriétaire. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :', {'freeMaxStaff': terms.freeMaxStaff}),
                 style: muted,
               ),
               const SizedBox(height: 12),

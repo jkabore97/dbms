@@ -415,7 +415,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
             decoration: InputDecoration(
               labelText: context.tr('Montant'),
               border: const OutlineInputBorder(),
-              errorText: tooMuch ? 'Plus que ce qui est dû.' : null,
+              errorText: tooMuch ? context.tr('Plus que ce qui est dû.') : null,
             ),
           ),
         ],

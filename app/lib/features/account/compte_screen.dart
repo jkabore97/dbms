@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/l10n/locale_controller.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 
@@ -102,6 +104,12 @@ class CompteScreen extends StatelessWidget {
             ),
           ),
 
+          // Préférences: the language, French by default, English on demand.
+          _Group(
+            title: context.tr('Préférences'),
+            children: [_EnglishSwitch(controller: scope.localeController)],
+          ),
+
           _Group(
             title: context.tr('Mon compte'),
             children: [
@@ -112,15 +120,11 @@ class CompteScreen extends StatelessWidget {
                   subtitle: _securityLine(scope),
                   onTap: () => context.push(Routes.security),
                 ),
-              _Tile(
-                icon: Icons.language,
-                title: Strings.of(context).language,
-                onTap: () => context.push(Routes.language),
-              ),
               if (live && !session.isPlatformAdmin)
                 _Tile(
                   icon: Icons.business_center_outlined,
                   title: Strings.of(context).applyForBusiness,
+                  locked: PathGate.locks(context, org, 'second_business'),
                   onTap: () => PathGate.guard(context, org, 'second_business',
                       () => context.push(Routes.applyForBusiness)),
                 ),
@@ -135,6 +139,7 @@ class CompteScreen extends StatelessWidget {
 
           if (live)
             _Group(
+              open: true,
               title: org.name,
               children: [
                 if (admin)
@@ -185,8 +190,8 @@ class CompteScreen extends StatelessWidget {
                   icon: Icons.workspace_premium_outlined,
                   title: org.isPro ? context.tr('Mara Pro') : context.tr('Passer à Mara Pro'),
                   subtitle: org.isPro
-                      ? 'Formule active'
-                      : 'Paie, analyses, comptabilité, équipe sans limite…',
+                      ? context.tr('Formule active')
+                      : context.tr('Paie, analyses, comptabilité, équipe sans limite…'),
                   onTap: openPro,
                 ),
               ],
@@ -233,6 +238,7 @@ class CompteScreen extends StatelessWidget {
                   _Tile(
                     icon: Icons.handshake_outlined,
                     title: Strings.of(context).creditBook,
+                    locked: PathGate.locks(context, org, 'credits'),
                     onTap: () => PathGate.open(context, org, 'credits',
                         () => context.push(inside('credits'))),
                   ),
@@ -251,7 +257,9 @@ class CompteScreen extends StatelessWidget {
                   _Tile(
                     icon: Icons.precision_manufacturing_outlined,
                     title: Strings.of(context).production,
-                    onTap: () => context.push(inside('production')),
+                    locked: PathGate.locks(context, org, 'production'),
+                    onTap: () => PathGate.open(context, org, 'production',
+                        () => context.push(inside('production'))),
                   ),
               ],
             ),
@@ -378,14 +386,50 @@ String _securityLine(AppScope scope) {
   ].join(' · ');
 }
 
-class _Group extends StatelessWidget {
-  const _Group({required this.title, required this.children});
+/// English or French (Compte › Préférences): French unless switched.
+class _EnglishSwitch extends StatelessWidget {
+  const _EnglishSwitch({required this.controller});
+
+  final LocaleController controller;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => SwitchListTile(
+          key: const Key('compte-english'),
+          secondary: const Icon(Icons.translate),
+          // Each language named in itself.
+          title: const Text('English'),
+          subtitle: const Text('Français par défaut'),
+          value: controller.effective.languageCode == 'en',
+          onChanged: (on) =>
+              controller.choose(on ? const Locale('en') : const Locale('fr')),
+        ),
+      );
+}
+
+/// A titled group of rows that folds open and shut, so Compte reads as a
+/// short list of headings rather than one long page.
+class _Group extends StatefulWidget {
+  const _Group({required this.title, required this.children, this.open = false});
 
   final String title;
   final List<Widget> children;
 
+  /// Folded unless said: the business's own group opens, the rest wait.
+  final bool open;
+
+  @override
+  State<_Group> createState() => _GroupState();
+}
+
+class _GroupState extends State<_Group> {
+  late bool _open = widget.open;
+
   @override
   Widget build(BuildContext context) {
+    final title = widget.title;
+    final children = widget.children;
     if (children.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     return Padding(
@@ -393,20 +437,37 @@ class _Group extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(
-              title.toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w700,
+          InkWell(
+            key: Key('group-$title'),
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _open = !_open),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _open ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(Icons.expand_more,
+                        size: 20, color: theme.colorScheme.primary),
+                  ),
+                ],
               ),
             ),
           ),
-          KajCard(
+          if (_open) KajCard(
             elevation: 0,
             margin: EdgeInsets.zero,
             color: theme.colorScheme.surfaceContainerHighest,
@@ -435,6 +496,7 @@ class _Tile extends StatelessWidget {
     this.subtitle,
     this.pro = false,
     this.proCost,
+    this.locked = false,
   });
 
   final IconData icon;
@@ -449,24 +511,29 @@ class _Tile extends StatelessWidget {
   /// Its price in cauris, when the business may unlock it with them (085).
   final int? proCost;
 
+  /// Still ahead on the earned path (089): greyed, with a lock.
+  final bool locked;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
       leading: Icon(
         icon,
-        color: pro ? theme.colorScheme.onSurfaceVariant : null,
+        color: pro || locked ? theme.colorScheme.onSurfaceVariant : null,
       ),
       title: Text(
         title,
-        style: pro
+        style: pro || locked
             ? TextStyle(color: theme.colorScheme.onSurfaceVariant)
             : null,
       ),
       subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: pro
           ? ProCostBadge(cost: proCost)
-          : const Icon(Icons.chevron_right, size: 20),
+          : locked
+              ? Icon(Icons.lock, size: 20, color: theme.colorScheme.onSurfaceVariant)
+              : const Icon(Icons.chevron_right, size: 20),
       onTap: onTap,
     );
   }

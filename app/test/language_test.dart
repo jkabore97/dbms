@@ -74,7 +74,7 @@ void main() {
     await tester.pump();
   }
 
-  group('the default follows the phone', () {
+  group('French by default, whatever the phone', () {
     testWidgets('a French phone opens in French', (tester) async {
       tester.platformDispatcher.localesTestValue = [const Locale('fr', 'BF')];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
@@ -84,12 +84,13 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('an English phone opens in English', (tester) async {
+    testWidgets('an English phone still opens in French', (tester) async {
       tester.platformDispatcher.localesTestValue = [const Locale('en', 'US')];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
       await pumpApp(tester);
 
-      expect(find.text('Sign in to open your business.'), findsOneWidget);
+      expect(find.text('Connectez-vous pour ouvrir votre activité.'),
+          findsOneWidget);
     });
 
     testWidgets('a phone in a language the app does not speak falls to French',
@@ -143,9 +144,9 @@ void main() {
       expect(second.effective, const Locale('en'));
     });
 
-    testWidgets('clearing the choice goes back to following the phone',
+    testWidgets('clearing the choice goes back to French, even on an English phone',
         (tester) async {
-      tester.platformDispatcher.localesTestValue = [const Locale('fr')];
+      tester.platformDispatcher.localesTestValue = [const Locale('en')];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
       final locale = LocaleController(db);

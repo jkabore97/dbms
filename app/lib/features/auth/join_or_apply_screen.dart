@@ -137,7 +137,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
         builder: (_) => ProfileFormScreen(
           onboarding: widget.onboarding,
           intro: intro,
-          nextLabel: nextLabel ?? 'Enregistrer',
+          nextLabel: nextLabel ?? context.tr('Enregistrer'),
         ),
       ),
     );
@@ -216,17 +216,15 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                 children: [
                   Text(
                     widget.identity.label.isEmpty
-                        ? 'Votre compte est créé.'
-                        : 'Bonjour ${widget.identity.label}.',
+                        ? context.tr('Votre compte est créé.')
+                        : context.tr('Bonjour {label}.', {'label': widget.identity.label}),
                     style: theme.textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     contact == null
-                        ? 'Votre compte existe. Il ne donne encore accès à '
-                            'aucune entreprise.'
-                        : 'Compte $contact. Il ne donne encore accès à aucune '
-                            'entreprise.',
+                        ? context.tr('Votre compte existe. Il ne donne encore accès à aucune entreprise.')
+                        : context.tr('Compte {contact}. Il ne donne encore accès à aucune entreprise.', {'contact': contact}),
                     style: theme.textTheme.bodySmall,
                   ),
 
@@ -330,8 +328,8 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                         : _apply,
                     icon: const Icon(Icons.add_business_outlined),
                     label: Text(_application?.isPending ?? false
-                        ? 'Demande en cours'
-                        : 'Demander une entreprise'),
+                        ? context.tr('Demande en cours')
+                        : context.tr('Demander une entreprise')),
                   ),
 
                   const SizedBox(height: 32),

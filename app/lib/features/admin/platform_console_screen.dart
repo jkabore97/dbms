@@ -372,8 +372,8 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                         children: [
                           Text(
                             _isFiltered
-                                ? 'Aucune entreprise ne correspond.'
-                                : 'Aucune entreprise pour le moment.',
+                                ? context.tr('Aucune entreprise ne correspond.')
+                                : context.tr('Aucune entreprise pour le moment.'),
                             style: theme.textTheme.bodyLarge,
                           ),
                           if (_isFiltered) ...[
@@ -569,7 +569,7 @@ class _StatStrip extends StatelessWidget {
           label: context.tr('Entreprises'),
           value: number.format(overview.active),
           hint: overview.newThisWeek > 0
-              ? '+${overview.newThisWeek} cette semaine'
+              ? context.tr('+{newThisWeek} cette semaine', {'newThisWeek': overview.newThisWeek})
               : null,
           colour: palette.tint(0),
           selected: activity == null && status == 'active',
@@ -585,7 +585,7 @@ class _StatStrip extends StatelessWidget {
         _StatTile(
           label: context.tr('Silencieuses (30 j)'),
           value: number.format(overview.silent30d),
-          hint: overview.silent30d > 0 ? 'à rappeler' : null,
+          hint: overview.silent30d > 0 ? context.tr('à rappeler') : null,
           colour: const Color(0xFFB1541A),
           selected: activity == 'silent30',
           onTap: () => onSelect('silent30', 'active'),
@@ -602,7 +602,7 @@ class _StatStrip extends StatelessWidget {
         _StatTile(
           label: context.tr('Mara Pro'),
           value: number.format(overview.pro),
-          hint: overview.pro == 0 ? 'aucune encore' : 'payantes',
+          hint: overview.pro == 0 ? context.tr('aucune encore') : 'payantes',
           colour: const Color(0xFF2E7D5B),
           selected: activity == 'pro',
           onTap: () => onSelect('pro', 'active'),

@@ -184,7 +184,7 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                 contentPadding: EdgeInsets.zero,
                 dense: true,
                 title: Text(c.feature == 'pro_all'
-                    ? 'Mara Pro complet'
+                    ? context.tr('Mara Pro complet')
                     : PlanTerms.labelOf(c.feature)),
                 subtitle: c.minDays > 0
                     ? Text(context.tr('après {minDays} jours sur Mara', {'minDays': c.minDays}))

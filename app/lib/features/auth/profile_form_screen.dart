@@ -225,7 +225,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   onPressed: _saving ? null : _pickBirth,
                   icon: const Icon(Icons.cake_outlined),
                   label: Text(_birth == null
-                      ? 'Date de naissance'
+                      ? context.tr('Date de naissance')
                       : DateFormat('d MMMM y', 'fr_FR').format(_birth!)),
                 ),
                 const SizedBox(height: 12),
@@ -258,7 +258,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   // Said plainly, because retyping something feels like
                   // pointless work unless the reason is on screen.
                   helperText: _phoneProblem == null
-                      ? "C'est ce numéro que votre responsable utilisera."
+                      ? context.tr('C\'est ce numéro que votre responsable utilisera.')
                       : null,
                 ),
                 if (_error != null) ...[

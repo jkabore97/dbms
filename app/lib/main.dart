@@ -415,7 +415,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           // Keyed by the language: changing it rebuilds every page, so the
           // phrases read through context.tr() follow at once.
           builder: (context, child) => KeyedSubtree(
-            key: ValueKey(Localizations.localeOf(context)),
+            key: ValueKey(trCurrent = Localizations.localeOf(context).languageCode),
             child: KajBackground(
               palette: kajPalette,
               child: UpdateBanner(

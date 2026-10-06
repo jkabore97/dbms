@@ -309,7 +309,7 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
               '$when · ${fulfilmentLabel(order.fulfilment)} · '
-              '${order.isPaid ? 'Payé' : paymentLabel(order.paymentMethod)}',
+              '${order.isPaid ? context.tr('Payé') : paymentLabel(order.paymentMethod)}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           const SizedBox(height: 12),
           for (final l in order.lines)
@@ -341,7 +341,7 @@ class _OrderCard extends StatelessWidget {
                 ),
                 Text(
                     order.deliveryFee == null
-                        ? 'à discuter'
+                        ? context.tr('à discuter')
                         : '${money.format(order.deliveryFee!)} au livreur',
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
               ],

@@ -1015,7 +1015,7 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
       accent: accent,
       subtitle: widget.alive == null
           ? null
-          : '${widget.alive} oiseaux au dernier point',
+          : context.tr('{alive} oiseaux au dernier point', {'alive': widget.alive}),
       children: [
         ChoiceChipRow(
           values: flockEventLabels,

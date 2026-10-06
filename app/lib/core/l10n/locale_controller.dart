@@ -48,8 +48,10 @@ class LocaleController extends ChangeNotifier {
   /// The explicit choice, or null for "follow the phone".
   Locale? get chosen => _chosen;
 
-  /// What the app will actually display right now.
-  Locale get effective => _chosen ?? platformResolved();
+  /// What the app will actually display right now: French, unless the
+  /// person switched to English (Compte › Préférences). The owner's call:
+  /// Mara is a French app first, whatever language the phone was sold in.
+  Locale get effective => _chosen ?? const Locale('fr');
 
   /// Reads the stored choice. Called once at startup, before `runApp`, so the
   /// first frame is already in the right language — a screen that flashes

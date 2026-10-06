@@ -285,8 +285,8 @@ class _You extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   b.gap == null
-                      ? (b.score > 0 ? 'En tête : gardez-la !' : 'La course commence.')
-                      : 'Encore ${b.gap} cauris pour la place devant.',
+                      ? (b.score > 0 ? context.tr('En tête : gardez-la !') : context.tr('La course commence.'))
+                      : context.tr('Encore {gap} cauris pour la place devant.', {'gap': b.gap}),
                   key: const Key('league-gap'),
                   style: theme.textTheme.bodySmall?.copyWith(color: maraCream),
                 ),

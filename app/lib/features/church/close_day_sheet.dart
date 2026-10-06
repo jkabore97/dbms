@@ -169,7 +169,7 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                       ? Colors.green.shade700
                       : Colors.orange.shade800,
                   label: context.tr('En attente d\'envoi'),
-                  value: _pending == 0 ? 'Tout est envoyé' : '$_pending',
+                  value: _pending == 0 ? context.tr('Tout est envoyé') : '$_pending',
                 ),
 
                 const SizedBox(height: 24),
@@ -186,8 +186,8 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                       Expanded(
                         child: Text(
                           streakAfter <= 1
-                              ? 'Premier jour clôturé'
-                              : '$streakAfter jours clôturés d\'affilée',
+                              ? context.tr('Premier jour clôturé')
+                              : context.tr('{streakAfter} jours clôturés d\'affilée', {'streakAfter': streakAfter}),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onPrimaryContainer,
@@ -212,8 +212,8 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                         : const Icon(Icons.check),
                     label: Text(
                       _alreadyClosed
-                          ? 'Mettre à jour la clôture'
-                          : 'Clôturer la journée',
+                          ? context.tr('Mettre à jour la clôture')
+                          : context.tr('Clôturer la journée'),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -225,8 +225,8 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                 Center(
                   child: Text(
                     _alreadyClosed
-                        ? 'Journée déjà clôturée — vous pouvez la revalider.'
-                        : 'Fonctionne sans connexion',
+                        ? context.tr('Journée déjà clôturée — vous pouvez la revalider.')
+                        : context.tr('Fonctionne sans connexion'),
                     style:
                         theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),

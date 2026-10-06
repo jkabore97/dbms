@@ -204,7 +204,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
   Widget build(BuildContext context) {
     final job = _job;
     return ShopPage(
-      title: job == null ? 'Course' : job.shopName,
+      title: job == null ? context.tr('Course') : job.shopName,
       leading: IconButton(
         tooltip: context.tr('Mes courses'),
         icon: const Icon(Icons.arrow_back),
@@ -214,7 +214,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null || job == null
               ? ShopNotice(
-                  text: _error ?? "Cette course n'est pas la vôtre.",
+                  text: _error ?? context.tr('Cette course n\'est pas la vôtre.'),
                   action: OutlinedButton(
                       onPressed: () => context.go(Routes.courier),
                       child: Text(context.tr('Retour aux courses'))),
@@ -366,7 +366,7 @@ class _Panel extends StatelessWidget {
               const SizedBox(height: 6),
               _leg(Icons.home_outlined, 'Client',
                   (job.dropAddress ?? '').trim().isEmpty
-                      ? 'Adresse chez le client'
+                      ? context.tr('Adresse chez le client')
                       : job.dropAddress!.trim(),
                   toDoor,
                   bold: !atShop),
@@ -378,7 +378,7 @@ class _Panel extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                   job.deliveryFee == null
-                      ? 'Course : prix à convenir'
+                      ? context.tr('Course : prix à convenir')
                       : 'Course : ${money.format(job.deliveryFee!)}'
                           '${job.distanceKm == null ? '' : ' · ${job.distanceKm!.toStringAsFixed(1)} km'}',
                   style: const TextStyle(

@@ -75,8 +75,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     'commande se mettra à jour toute seule.')
                 : (Icons.hourglass_top, 'Confirmation en cours…',
                     widget.issue == 'erreur'
-                        ? 'Wave signale un problème ; nous vérifions.'
-                        : 'Nous attendons la confirmation de Wave.');
+                        ? context.tr('Wave signale un problème ; nous vérifions.')
+                        : context.tr('Nous attendons la confirmation de Wave.'));
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('Paiement'))),
       body: Center(

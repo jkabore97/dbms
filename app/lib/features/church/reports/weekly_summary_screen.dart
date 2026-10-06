@@ -484,7 +484,7 @@ class _WeekPicker extends StatelessWidget {
         ),
         Text(
           isThisWeek
-              ? 'Cette semaine'
+              ? context.tr('Cette semaine')
               : 'Semaine au ${DateFormat('d MMMM', 'fr_FR').format(weekEnding)}',
           style: theme.textTheme.titleSmall,
         ),

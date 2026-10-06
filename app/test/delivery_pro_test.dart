@@ -169,10 +169,12 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('a Free shop is told delivery is Mara Pro', (tester) async {
+    testWidgets('a Free shop sees delivery locked under the Pro seal, not a form',
+        (tester) async {
       await open(tester, _Admin());
-      expect(find.byKey(const Key('delivery-pro-note')), findsOneWidget);
-      expect(find.text('La livraison fait partie de Mara Pro'), findsOneWidget);
+      expect(find.byKey(const Key('pro-lock-delivery')), findsOneWidget);
+      expect(find.byKey(const Key('delivery-mode')), findsNothing,
+          reason: 'locked, not editable');
     });
 
     testWidgets('a Pro shop: no note; « Minimum, puis au km » asks how far', (

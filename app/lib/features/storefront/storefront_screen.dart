@@ -315,9 +315,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     } on PostgrestException catch (e) {
       // A refusal the shop's rules made (069: beyond its reach) is said in
       // the server's words; only a failure to reach the server is "network".
+      if (!mounted) return null;
       return e.code == 'P0001'
           ? e.message
-          : "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
+          : context.tr('La commande n\'a pas pu être envoyée. Vérifiez le réseau.');
     } catch (_) {
       if (!mounted) return null;
       return context.tr('La commande n\'a pas pu être envoyée. Vérifiez le réseau.');
@@ -346,7 +347,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     final shop = _shop;
 
     return ShopPage(
-      title: shop?.name ?? 'Vitrine',
+      title: shop?.name ?? context.tr('Vitrine'),
       announcements:
           shop?.profile == 'farm' ? ShopPage.farm : ShopPage.street,
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
@@ -943,11 +944,11 @@ class _OrderSheetState extends State<OrderSheet> {
                   else
                     Text(
                       !_feeKnown
-                          ? 'épinglez votre porte pour le prix'
+                          ? context.tr('épinglez votre porte pour le prix')
                           : _tooFar
-                              ? 'trop loin'
+                              ? context.tr('trop loin')
                               : _fee == null
-                                  ? 'à discuter avec la boutique'
+                                  ? context.tr('à discuter avec la boutique')
                                   : money.format(_fee!),
                       style: TextStyle(
                           fontSize: 14,
@@ -1129,10 +1130,8 @@ class _OrderSheetState extends State<OrderSheet> {
             const SizedBox(height: 6),
             Text(
               _payment == 'wave'
-                  ? 'Rien à payer maintenant : dès que la boutique accepte, '
-                      'un bouton Wave apparaît dans Mes commandes.'
-                  : 'Rien à payer maintenant : vous payez à la boutique, '
-                      'au retrait ou à la livraison.',
+                  ? context.tr('Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.')
+                  : context.tr('Rien à payer maintenant : vous payez à la boutique, au retrait ou à la livraison.'),
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
           ],
@@ -1296,8 +1295,8 @@ class _Window extends StatelessWidget {
                     ),
                     child: Text(
                       style.topWeekRank == 1
-                          ? '🏆 1er de la semaine'
-                          : '🏆 Top 3 de la semaine',
+                          ? context.tr('🏆 1er de la semaine')
+                          : context.tr('🏆 Top 3 de la semaine'),
                       style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -1311,10 +1310,10 @@ class _Window extends StatelessWidget {
                     _kindOf(shop.profile),
                     if (address.isNotEmpty) address,
                     shop.delivers
-                        ? 'Retrait ou livraison'
+                        ? context.tr('Retrait ou livraison')
                         : shop.profile == 'farm'
-                            ? 'Retrait à la ferme'
-                            : 'Retrait en boutique',
+                            ? context.tr('Retrait à la ferme')
+                            : context.tr('Retrait en boutique'),
                   ].join(' · '),
                   style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
@@ -1393,7 +1392,7 @@ class _Window extends StatelessWidget {
                     ? null
                     : items.length == totalCount
                         ? '$totalCount article${totalCount > 1 ? 's' : ''}'
-                        : '${items.length} sur $totalCount',
+                        : context.tr('{length} sur {totalCount}', {'length': items.length, 'totalCount': totalCount}),
               ),
               if (totalCount > 0) ...[
                 const SizedBox(height: 6),
@@ -1969,8 +1968,8 @@ class ArticleSheet extends StatelessWidget {
                     item.isPreorder
                         ? preorderLine(item)
                         : item.inStock
-                            ? 'En stock'
-                            : 'Épuisé',
+                            ? context.tr('En stock')
+                            : context.tr('Épuisé'),
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
               ],
             ),

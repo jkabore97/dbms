@@ -356,8 +356,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                       )
                     : Text(
                         widget.asApplication
-                            ? 'Envoyer la demande'
-                            : "Créer l'activité",
+                            ? context.tr('Envoyer la demande')
+                            : context.tr('Créer l\'activité'),
                         style: const TextStyle(fontSize: 17),
                       ),
               ),
@@ -365,10 +365,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             const SizedBox(height: 12),
             Text(
               widget.asApplication
-                  ? 'Un administrateur Kaj-consulting examine la demande. '
-                      'Une fois validée, vous en serez le propriétaire.'
-                  : 'Vous en serez le propriétaire. Un plan comptable de '
-                      'départ est créé automatiquement.',
+                  ? context.tr('Un administrateur Kaj-consulting examine la demande. Une fois validée, vous en serez le propriétaire.')
+                  : context.tr('Vous en serez le propriétaire. Un plan comptable de départ est créé automatiquement.'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

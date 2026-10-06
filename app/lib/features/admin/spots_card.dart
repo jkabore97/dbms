@@ -142,7 +142,7 @@ class _SpotRow extends StatelessWidget {
     final state = spot.stateLabel();
     final running = state == 'En cours' || state == 'Terminée';
     final dates = spot.startsAt == null
-        ? '${spot.days} jours'
+        ? context.tr('{days} jours', {'days': spot.days})
         : 'du ${date.format(spot.startsAt!)} au ${date.format(spot.endsAt!)}';
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -480,11 +480,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       ],
       Text(
         shop
-            ? 'La boutique apparaît en tête de la liste des boutiques, '
-                'marquée « Sponsorisé ».'
-            : "L'article apparaît en tête de « À la une » sur la page "
-                "d'accueil, marqué « Sponsorisé ». Il lui faut une photo, "
-                'un prix et du stock.',
+            ? context.tr('La boutique apparaît en tête de la liste des boutiques, marquée « Sponsorisé ».')
+            : context.tr('L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé ». Il lui faut une photo, un prix et du stock.'),
         style: muted,
       ),
       const SizedBox(height: 14),
@@ -502,7 +499,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       const SizedBox(height: 16),
       Text(
         _proFree
-            ? 'Offert : Mara Pro inclut une mise en avant de 7 jours par mois.'
+            ? context.tr('Offert : Mara Pro inclut une mise en avant de 7 jours par mois.')
             : 'Prix : ${_money(price)}',
         style: theme.textTheme.titleMedium,
       ),
@@ -547,8 +544,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             leading: const Icon(Icons.phone_android_outlined),
             title: Text(_terms.wave),
             subtitle: Text(_terms.waveName.isEmpty
-                ? 'Payez par Wave ou Orange Money à ce numéro'
-                : 'Wave · ${_terms.waveName}'),
+                ? context.tr('Payez par Wave ou Orange Money à ce numéro')
+                : context.tr('Wave · {waveName}', {'waveName': _terms.waveName})),
             trailing: IconButton(
               tooltip: context.tr('Copier le numéro'),
               icon: const Icon(Icons.copy_outlined),
@@ -604,10 +601,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           leading: const Icon(Icons.check_circle_outline),
           title: Text(free ? context.tr('C\'est en ligne.') : context.tr('Merci, c\'est noté.')),
           subtitle: Text(free
-              ? 'Votre article est à la une. Ses vues et commandes '
-                  's\'affichent dans « Mettre en avant ».'
-              : 'Mara vérifie le paiement et lance la mise en avant. Vous '
-                  'serez prévenu dans la cloche.'),
+              ? context.tr('Votre article est à la une. Ses vues et commandes s\'affichent dans « Mettre en avant ».')
+              : context.tr('Mara vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.')),
         ),
       ),
       const SizedBox(height: 8),

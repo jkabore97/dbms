@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,6 +57,28 @@ class LessonPlayer extends StatefulWidget {
 class _LessonPlayerState extends State<LessonPlayer> {
   final _pages = PageController();
   int _at = 0;
+
+  /// The steps follow one another by themselves (one every few seconds,
+  /// once the hand has tapped); a tap on pause holds the current one.
+  bool _auto = true;
+  Timer? _next;
+
+  void _schedule() {
+    _next?.cancel();
+    if (!_auto || !mounted || KajMotion.reduced(context)) return;
+    if (_at >= _script.steps.length - 1) return;
+    _next = Timer(const Duration(milliseconds: 4200), () {
+      if (mounted && _pages.hasClients) {
+        _pages.nextPage(duration: KajMotion.page, curve: KajMotion.ease);
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _schedule();
+  }
   bool _busy = false;
   String? _result;
 
@@ -66,6 +90,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
 
   @override
   void dispose() {
+    _next?.cancel();
     _pages.dispose();
     super.dispose();
   }
@@ -79,10 +104,10 @@ class _LessonPlayerState extends State<LessonPlayer> {
       final r = await widget.academy.complete(widget.org.id, widget.lessonKey);
       if (!mounted) return;
       setState(() => _result = !r.done
-          ? 'Pas encore : faites-le d\'abord dans l\'application, puis revenez.'
+          ? context.tr('Pas encore : faites-le d\'abord dans l\'application, puis revenez.')
           : r.earned > 0
-              ? 'Bravo ! +${r.earned} cauris pour votre entreprise.'
-              : 'Bravo, leçon terminée !');
+              ? context.tr('Bravo ! +{earned} cauris pour votre entreprise.', {'earned': r.earned})
+              : context.tr('Bravo, leçon terminée !'));
     } catch (e) {
       if (mounted) setState(() => _result = describeError(e));
     } finally {
@@ -96,7 +121,20 @@ class _LessonPlayerState extends State<LessonPlayer> {
     final steps = _script.steps;
     final last = _at == steps.length - 1;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr(widget.title))),
+      appBar: AppBar(
+        title: Text(context.tr(widget.title)),
+        actions: [
+          IconButton(
+            key: const Key('lesson-auto'),
+            tooltip: _auto ? context.tr('Pause') : context.tr('Lecture'),
+            icon: Icon(_auto ? Icons.pause_circle_outline : Icons.play_circle_outline),
+            onPressed: () {
+              setState(() => _auto = !_auto);
+              _schedule();
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -105,7 +143,10 @@ class _LessonPlayerState extends State<LessonPlayer> {
                 key: const Key('lesson-pages'),
                 controller: _pages,
                 itemCount: steps.length,
-                onPageChanged: (i) => setState(() => _at = i),
+                onPageChanged: (i) {
+                  setState(() => _at = i);
+                  _schedule();
+                },
                 itemBuilder: (context, i) => _StepView(step: steps[i]),
               ),
             ),
@@ -154,13 +195,13 @@ class _LessonPlayerState extends State<LessonPlayer> {
                               ? Routes.inside(widget.org.id, '').replaceAll(RegExp(r'/$'), '')
                               : Routes.inside(widget.org.id, rest));
                         },
-                        child: Text(context.tr(_script.tryLabel ?? 'Essayer maintenant')),
+                        child: Text(context.tr(_script.tryLabel ?? context.tr('Essayer maintenant'))),
                       ),
                     if (!widget.mission && _script.tryIt != null)
                       TextButton(
                         onPressed: () =>
                             context.push(Routes.inside(widget.org.id, _script.tryIt!)),
-                        child: Text(context.tr(_script.tryLabel ?? 'Y aller')),
+                        child: Text(context.tr(_script.tryLabel ?? context.tr('Y aller'))),
                       ),
                     const SizedBox(height: 6),
                     FilledButton.icon(
@@ -175,6 +216,131 @@ class _LessonPlayerState extends State<LessonPlayer> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The phone's screen, drawn like Mara's own: status bar, app bar, a card
+/// with the step's picture, three rows, the bottom bar.
+class _MockScreen extends StatelessWidget {
+  const _MockScreen({required this.step, required this.w, required this.h});
+
+  final LessonStep step;
+  final double w;
+  final double h;
+
+  @override
+  Widget build(BuildContext context) {
+    final small = TextStyle(fontSize: w * 0.04, color: maraIndigo);
+    Widget bar(double f, {Color c = const Color(0xFFE8E3D8), double t = 0.018}) => Container(
+          height: h * t,
+          width: w * f,
+          decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(6)),
+        );
+    return ColoredBox(
+      color: const Color(0xFFFBF8F2),
+      child: Column(
+        children: [
+          // Status bar.
+          Padding(
+            padding: EdgeInsets.fromLTRB(w * 0.06, h * 0.012, w * 0.06, h * 0.006),
+            child: Row(
+              children: [
+                Text('9:41', style: small.copyWith(fontWeight: FontWeight.w700)),
+                const Spacer(),
+                Icon(Icons.signal_cellular_alt, size: w * 0.045, color: maraIndigo),
+                Icon(Icons.battery_full, size: w * 0.045, color: maraIndigo),
+              ],
+            ),
+          ),
+          // The app's bar.
+          Container(
+            color: maraIndigo,
+            padding: EdgeInsets.symmetric(horizontal: w * 0.05, vertical: h * 0.018),
+            child: Row(
+              children: [
+                Icon(Icons.storefront, size: w * 0.06, color: maraGold),
+                SizedBox(width: w * 0.03),
+                Expanded(
+                  child: Text(context.tr(step.title),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: maraCream, fontSize: w * 0.045, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          ),
+          // The card: the step's picture.
+          Container(
+            margin: EdgeInsets.all(w * 0.05),
+            padding: EdgeInsets.all(w * 0.04),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(w * 0.04),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: w * 0.16,
+                  height: w * 0.16,
+                  decoration: BoxDecoration(
+                    color: maraIndigo,
+                    borderRadius: BorderRadius.circular(w * 0.04),
+                  ),
+                  child: Icon(step.icon, size: w * 0.09, color: maraGold),
+                ),
+                SizedBox(width: w * 0.04),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      bar(0.4, c: maraIndigo.withValues(alpha: 0.7)),
+                      SizedBox(height: h * 0.01),
+                      bar(0.28),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Three rows of a list.
+          for (final f in const [0.42, 0.34, 0.38])
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: w * 0.06, vertical: h * 0.011),
+              child: Row(
+                children: [
+                  CircleAvatar(radius: w * 0.04, backgroundColor: const Color(0xFFE8E3D8)),
+                  SizedBox(width: w * 0.04),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [bar(f), SizedBox(height: h * 0.006), bar(f * 0.6, t: 0.012)],
+                    ),
+                  ),
+                  bar(0.12, c: maraGold.withValues(alpha: 0.6)),
+                ],
+              ),
+            ),
+          const Spacer(),
+          // The bar at the foot.
+          Container(
+            padding: EdgeInsets.symmetric(vertical: h * 0.014),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFE8E3D8))),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (final i in const [Icons.home, Icons.inventory_2_outlined, Icons.shopping_bag_outlined, Icons.menu])
+                  Icon(i, size: w * 0.07, color: maraIndigo.withValues(alpha: i == Icons.home ? 1 : 0.45)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -262,33 +428,12 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(w * 0.08),
                     ),
-                    child: Column(
-                      children: [
-                        SizedBox(height: h * 0.06),
-                        // A screen sketched in a few bars.
-                        for (final f in const [0.7, 0.5, 0.6])
-                          Container(
-                            margin: EdgeInsets.symmetric(
-                                horizontal: w * 0.1, vertical: h * 0.012),
-                            height: h * 0.022,
-                            width: w * f,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE8E3D8),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        const Spacer(),
-                        Icon(widget.step.icon, size: w * 0.36, color: maraIndigo),
-                        const Spacer(),
-                        Container(
-                          margin: EdgeInsets.all(w * 0.06),
-                          height: h * 0.07,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF6F2EA),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ],
+                    // A real screen, drawn: the status bar, the app's bar
+                    // with the page's name, a card, three rows, the bar at
+                    // the foot — the hand then taps where it would.
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(w * 0.08),
+                      child: _MockScreen(step: widget.step, w: w, h: h),
                     ),
                   ),
                 ),

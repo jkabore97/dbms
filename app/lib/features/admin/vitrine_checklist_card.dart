@@ -62,7 +62,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
       final n = await retail.publishAll(widget.orgId);
       if (!mounted) return;
       setState(() => _message = n == 0
-          ? 'Tout est déjà sur la vitrine.'
+          ? context.tr('Tout est déjà sur la vitrine.')
           : '$n article${n > 1 ? 's' : ''} publié${n > 1 ? 's' : ''} sur la vitrine.');
       await _load();
     } catch (error) {
@@ -181,6 +181,23 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
                   ),
               ],
             ),
+            if (list.open && !list.public) ...[
+              const SizedBox(height: 12),
+              Row(
+                key: const Key('vitrine-min'),
+                children: [
+                  Icon(Icons.visibility_off_outlined, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                        context.tr('Visible du public dès {min} articles en vente : {n} / {min}.',
+                            {'min': list.minItems, 'n': list.published}),
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ],
             if (list.published == 0 && list.open) ...[
               const SizedBox(height: 8),
               Text(

@@ -149,21 +149,16 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       const SizedBox(height: 12),
                       Text(
                         _enrolling
-                            ? 'Protégez le compte de la plateforme'
-                            : 'Code de votre application',
+                            ? context.tr('Protégez le compte de la plateforme')
+                            : context.tr('Code de votre application'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         _enrolling
-                            ? 'Ce compte gère toutes les entreprises. Pour '
-                                  "l'ouvrir, il faudra désormais votre mot de "
-                                  'passe et un code à 6 chiffres donné par une '
-                                  'application sur votre téléphone.'
-                            : "Ouvrez votre application d'authentification "
-                                  'et entrez le code à 6 chiffres affiché pour '
-                                  'Mara.',
+                            ? context.tr('Ce compte gère toutes les entreprises. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.')
+                            : context.tr('Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodyMedium,
                       ),
@@ -196,10 +191,10 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                           onPressed: _busy ? null : _submit,
                           child: Text(
                             _busy
-                                ? 'Vérification…'
+                                ? context.tr('Vérification…')
                                 : _enrolling
-                                ? 'Activer'
-                                : 'Valider',
+                                ? context.tr('Activer')
+                                : context.tr('Valider'),
                           ),
                         ),
                       ],
@@ -219,12 +214,8 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       const SizedBox(height: 20),
                       Text(
                         _enrolling
-                            ? 'À l’activation, les autres appareils connectés '
-                                  'à ce compte sont déconnectés.'
-                            : 'Téléphone perdu ? Dans le tableau de bord '
-                                  'Supabase : Authentication › Users › ce compte '
-                                  '› supprimez son facteur. Mara proposera alors '
-                                  "d'en ajouter un nouveau.",
+                            ? context.tr('À l’activation, les autres appareils connectés à ce compte sont déconnectés.')
+                            : context.tr('Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Mara proposera alors d\'en ajouter un nouveau.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodySmall,
                       ),

@@ -161,11 +161,8 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                         Expanded(
                           child: Text(
                             balanced
-                                ? 'Les deux colonnes sont égales : les comptes '
-                                    'sont équilibrés.'
-                                : 'Les deux colonnes ne sont pas égales. '
-                                    'Signalez-le : une écriture a contourné '
-                                    "l'application.",
+                                ? context.tr('Les deux colonnes sont égales : les comptes sont équilibrés.')
+                                : context.tr('Les deux colonnes ne sont pas égales. Signalez-le : une écriture a contourné l\'application.'),
                             style: theme.textTheme.bodySmall,
                           ),
                         ),
@@ -206,7 +203,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   // result row so it lands last. It is not a code and must
                   // not be shown as one.
                   subtitle: line.code == 'zzz'
-                      ? 'Recettes moins dépenses, depuis le début'
+                      ? context.tr('Recettes moins dépenses, depuis le début')
                       : line.code,
                   amount: line.amount,
                   money: money,

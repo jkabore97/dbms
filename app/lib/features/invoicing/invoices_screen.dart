@@ -211,8 +211,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                           child: Center(
                             child: Text(
                               _invoices.isEmpty
-                                  ? 'Aucune facture pour le moment.'
-                                  : 'Tout est payé.',
+                                  ? context.tr('Aucune facture pour le moment.')
+                                  : context.tr('Tout est payé.'),
                               style: theme.textTheme.bodyLarge,
                             ),
                           ),

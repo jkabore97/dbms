@@ -710,10 +710,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
             const SizedBox(height: 8),
             Text(
               document.uploadedName == null
-                  ? 'Aucune photo n’est supprimée : une preuve qui disparaît '
-                      'ne se distingue pas d’une preuve qui n’a jamais existé.'
-                  : 'Prise par ${document.uploadedName}. Aucune photo n’est '
-                      'supprimée.',
+                  ? context.tr('Aucune photo n’est supprimée : une preuve qui disparaît ne se distingue pas d’une preuve qui n’a jamais existé.')
+                  : context.tr('Prise par {uploadedName}. Aucune photo n’est supprimée.', {'uploadedName': document.uploadedName}),
               style: theme.textTheme.bodySmall,
             ),
           ],

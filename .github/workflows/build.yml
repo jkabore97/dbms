@@ -318,7 +318,14 @@ jobs:
       # the checked-in worker and wasm current with the package version.
       - name: Install sqflite web assets
         working-directory: app
-        run: dart run sqflite_common_ffi_web:setup
+        # Tracked in the repository (see app/.gitignore); regenerated only
+        # when missing, because the generator's own toolchain can break.
+        run: |
+          if [ -f web/sqflite_sw.js ] && [ -f web/sqlite3.wasm ]; then
+            echo "sqflite web assets are in the repository"
+          else
+            dart run sqflite_common_ffi_web:setup
+          fi
 
       - name: Build web
         working-directory: app

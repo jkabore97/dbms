@@ -160,8 +160,8 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.revisionOf == null
-            ? 'Nouvelle facture'
-            : 'Corriger la facture ${widget.revisionOf!.number}'),
+            ? context.tr('Nouvelle facture')
+            : context.tr('Corriger la facture {number}', {'number': widget.revisionOf!.number})),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
@@ -300,8 +300,8 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2))
             : const Icon(Icons.receipt_long),
         label: Text(widget.revisionOf == null
-            ? 'Créer la facture'
-            : 'Corriger la facture'),
+            ? context.tr('Créer la facture')
+            : context.tr('Corriger la facture')),
       ),
     );
   }
