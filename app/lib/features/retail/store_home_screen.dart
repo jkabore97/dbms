@@ -14,6 +14,8 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/cauris/cauris_repository.dart';
+import '../../core/cauris/feature_states.dart';
+import '../cauris/path_card.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
@@ -101,6 +103,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   /// The vitrine's checklist (070), for an owner whose window is open and
   /// unfinished: the nudge card. Null hides it.
   VitrineChecklist? _vitrine;
+
+  /// The Basic path (085), as the session read it for this business.
+  BasicProgress? get _path =>
+      AppScope.read(context)?.session.featuresFor(widget.org.id)?.progress;
 
   bool _loading = true;
   String? _error;
@@ -478,7 +484,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
               const SizedBox(height: 16),
             ],
 
-            if (_vitrine != null && _vitrine!.open && _vitrine!.score < 100) ...[
+            // A new business's path (085): the vitrine opens its tools.
+            if (_path case final p? when p.gated) ...[
+              PathCard(org: widget.org, progress: p),
+              const SizedBox(height: 16),
+            ] else if (_vitrine != null && _vitrine!.open && _vitrine!.score < 100) ...[
               _VitrineNudge(
                 list: _vitrine!,
                 onTap: () async {
@@ -664,7 +674,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
-            onTap: () => context.push(Routes.inside(widget.org.id, 'factures')),
+            onTap: () => PathGate.guard(context, widget.org, 'invoices',
+                () => context.push(Routes.inside(widget.org.id, 'factures'))),
           ),
       ],
       more: [
@@ -678,7 +689,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
-            onTap: () => _openThenReload('production'),
+            onTap: () => PathGate.guard(context, widget.org, 'production',
+                () => _openThenReload('production')),
           ),
         if (cameraReady && widget.access.canSee('photos'))
           HomeDestination(

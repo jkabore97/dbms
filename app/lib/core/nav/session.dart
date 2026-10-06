@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 
 import '../access/org_access.dart';
 import '../access/plan_terms.dart';
+import '../cauris/feature_states.dart';
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
 import '../auth/auth_repository.dart';
@@ -144,9 +145,29 @@ class SessionController extends ChangeNotifier {
   /// Which tools the plan locks for this business: none on Pro, none for
   /// the platform admin, the Pro list otherwise. The server decides the
   /// same way (pro_locked); this only says where to draw the badge.
-  Set<String> _lockedFor(OrgSummary org) => (org.isPro || _isPlatformAdmin)
-      ? const <String>{}
-      : _terms.proFeatures.toSet();
+  Set<String> _lockedFor(OrgSummary org) {
+    final states = _features[org.id];
+    if (org.isPro || _isPlatformAdmin || (states?.isPro ?? false)) {
+      return const <String>{};
+    }
+    // A tool unlocked with cauris (085) is open like Pro, for its 30 days.
+    return _terms.proFeatures.toSet().difference(states?.unlocked ?? const {});
+  }
+
+  /// Each opened business's cauris prices, unlocks and Basic path (085).
+  final Map<String, FeatureStates> _features = {};
+
+  FeatureStates? featuresFor(String? orgId) =>
+      orgId == null ? null : _features[orgId];
+
+  /// After cauris were spent: read the business's tools again, so its
+  /// badges and its gates follow at once.
+  Future<void> reloadFeatures(String orgId) async {
+    final org = orgById(orgId);
+    if (org == null) return;
+    await _loadAccess(org);
+    _emit();
+  }
 
   /// The line between Kaj and Kaj Pro (066), fetched once per session. The
   /// defaults are what 066 seeds, so a build with no signal badges the same
@@ -164,6 +185,10 @@ class SessionController extends ChangeNotifier {
         // Offline, or a database before 066: the defaults stand.
       }
     }
+    try {
+      final states = await admin.featureStates(org.id);
+      if (states != null) _features[org.id] = states;
+    } catch (_) {}
     final locked = _lockedFor(org);
     final OrgAccess next;
     if (org.isAdmin) {

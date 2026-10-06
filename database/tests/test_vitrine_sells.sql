@@ -36,6 +36,9 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile, default_currency, storefront_enabled) values
     (:shop,   'Boutique Pleine', 'pleine-42', 'retail', 'XOF', true),
     (:closed, 'Boutique Fermée', 'fermee-42', 'retail', 'XOF', false);
+-- Businesses already on the street: 085's path to it (60 %) is for the
+-- ones that start from now on, and this file is about the street itself.
+update orgs set progress_since = null where progress_since is not null;
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop, :owner, 'owner',    'org', :shop, 'full'),
     (:shop, :clerk, 'employee', 'org', :shop, 'full');

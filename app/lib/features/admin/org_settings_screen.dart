@@ -806,8 +806,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ];
   }
 
-  /// The door to Kaj Pro, from a Pro tool on this page.
-  void _openPro() {
+  /// The door to Mara Pro, from a Pro tool on this page — delivery, the
+  /// one it guards (081) — with its price in cauris (085).
+  void _openPro([String feature = 'delivery']) {
     final scope = AppScope.maybeOf(context);
     final org = scope?.session.orgById(widget.orgId);
     if (scope == null || org == null) return;
@@ -817,6 +818,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       terms: scope.session.planTerms,
       admin: widget.admin,
       canRequest: org.isAdmin,
+      feature: feature,
     );
   }
 

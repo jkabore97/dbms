@@ -40,6 +40,9 @@ insert into orgs (id, name, slug, profile, default_currency, address, storefront
     (:shop_a, 'Alimentation Yaar',   'annuaire-a-26', 'retail', 'XOF', 'Place Naaba Koom', true,  12.3714, -1.5197),
     (:shop_b, 'Boutique Bilan',      'annuaire-b-26', 'retail', 'XOF', null,               true,  null,    null),
     (:shop_c, 'Comptoir Fermé',      'annuaire-c-26', 'retail', 'XOF', null,               false, 12.40,   -1.50);
+-- Businesses already on the street: 085's path to it (60 %) is for the
+-- ones that start from now on, and this file is about the street itself.
+update orgs set progress_since = null where progress_since is not null;
 select seed_retail_accounts(:shop_a);
 select seed_retail_accounts(:shop_b);
 select seed_retail_accounts(:shop_c);

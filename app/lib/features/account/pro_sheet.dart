@@ -7,6 +7,7 @@ import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
+import '../cauris/unlock_sheet.dart';
 import '../pay/wave_buttons.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/nav/router.dart';
@@ -23,7 +24,13 @@ class ProSheet {
     required PlanTerms terms,
     required AdminRepository admin,
     required bool canRequest,
+    String? feature,
   }) async {
+    // A known tool opens its own door first (085): cauris, or Mara Pro.
+    if (feature != null) {
+      await UnlockSheet.open(context, org: org, feature: feature);
+      return;
+    }
     await GoRouter.of(context).push(Routes.inside(org.id, 'kaj-pro'));
   }
 }

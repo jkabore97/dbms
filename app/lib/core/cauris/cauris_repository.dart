@@ -70,6 +70,32 @@ class CaurisRepository {
     });
   }
 
+  /// What each Pro tool costs in cauris (085), for the console.
+  Future<List<({String feature, int cost, int minDays})>> costs() async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client.rpc('cauris_costs_list') as List<dynamic>;
+      return [
+        for (final r in rows)
+          if (r is Map)
+            (
+              feature: '${r['feature']}',
+              cost: _int(r['cost']),
+              minDays: _int(r['min_days']),
+            ),
+      ];
+    } on PostgrestException catch (e) {
+      if (_missing(e)) return const [];
+      rethrow;
+    }
+  }
+
+  Future<void> setCost(String feature, int cost) async {
+    await _client!.rpc('set_cauris_cost',
+        params: {'p_feature': feature, 'p_cost': cost});
+  }
+
   /// The week's top earners, with how much of their orders came from one
   /// customer — what an abuse looks like.
   Future<List<CaurisWatchRow>> watch() async {

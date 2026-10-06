@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../access/plan_terms.dart';
+import '../cauris/feature_states.dart';
 import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../storefront/storefront_repository.dart' show StorefrontStyle;
@@ -736,6 +737,27 @@ class AdminRepository {
   /// The line between Kaj and Kaj Pro (066): which tools carry the badge,
   /// the caps, the price and the Wave number. One round trip per session.
   /// No client, no signal, or a database before 066: the seeded defaults.
+  /// What each tool costs in cauris, which are open, and the Basic path
+  /// (085). Null for a non-member, offline, or before 085.
+  Future<FeatureStates?> featureStates(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('feature_states', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      return FeatureStates.fromJson(Map<String, dynamic>.from(v));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Spends cauris on a tool for 30 days (085). Returns until when.
+  Future<DateTime?> spendCauris(String orgId, String feature) async {
+    final v = await _client!.rpc('spend_cauris',
+        params: {'p_org_id': orgId, 'p_feature': feature});
+    return v is Map ? DateTime.tryParse('${v['until']}') : null;
+  }
+
   Future<PlanTerms> planTerms() async {
     final client = _client;
     if (client == null) return PlanTerms.defaults;
