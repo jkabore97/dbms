@@ -12,20 +12,36 @@
 //   POST /v1/wave       Wave's webhook, signed with WAVE_WEBHOOK_SECRET
 //   cron */15           payouts that failed are tried again (five times)
 //
+// And Kaj Pro by card, as a Stripe subscription (082, src/stripe.js):
+//
+//   POST /v1/stripe/checkout  the app, with the owner's token:
+//                             { org_id, period: month|year } → { url }
+//   POST /v1/stripe/portal    the app, with the owner's token: { org_id }
+//                             → { url } of Stripe's page to change the card
+//                             or cancel
+//   POST /v1/stripe           Stripe's webhook, signed with
+//                             STRIPE_WEBHOOK_SECRET
+//
 // What it holds, and why (secrets set by deploy-pay.yml):
 //
 //   WAVE_API_KEY               Kaj's Wave Business key — never in an app
 //   WAVE_WEBHOOK_SECRET        what Wave signs its webhook with
-//   SUPABASE_SERVICE_ROLE_KEY  used for exactly four functions granted to
+//   STRIPE_SECRET_KEY          Kaj's Stripe key — never in an app
+//   STRIPE_WEBHOOK_SECRET      what Stripe signs its webhook with
+//   SUPABASE_SERVICE_ROLE_KEY  used for exactly five functions granted to
 //                              the service role alone: wave_attach,
 //                              wave_settle, wave_payout_done,
-//                              wave_payout_queue
+//                              wave_payout_queue, stripe_settle
 //
 // The amount is never the app's: wave_begin() (called with the person's
 // own token, so under their identity) reads it from the order, the plan or
 // the spot, and refuses what is not theirs to pay.
 
 import { createSession, sendPayout, verifySignature } from "./wave.js";
+import {
+  createCheckout, createPortal, getSubscription, readSubscription, subscriptionOf,
+  verifyStripeSignature,
+} from "./stripe.js";
 
 export default {
   async fetch(request, env) {
@@ -35,7 +51,54 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
 
     if (request.method === "GET" && url.pathname === "/v1/health") {
-      return json({ ready: Boolean(env.WAVE_API_KEY && env.WAVE_WEBHOOK_SECRET) }, 200, cors);
+      return json({
+        ready: Boolean(env.WAVE_API_KEY && env.WAVE_WEBHOOK_SECRET),
+        stripe: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET),
+      }, 200, cors);
+    }
+
+    if (request.method === "POST"
+        && (url.pathname === "/v1/stripe/checkout" || url.pathname === "/v1/stripe/portal")) {
+      if (!env.STRIPE_SECRET_KEY) {
+        return json({ error: "Le paiement par carte n'est pas encore configuré." }, 503, cors);
+      }
+      const token = bearer(request);
+      if (!token) return json({ error: "Connectez-vous pour payer." }, 401, cors);
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: "body is not JSON" }, 400, cors);
+      }
+      try {
+        const result = url.pathname.endsWith("/portal")
+          ? await stripePortal(body, token, env)
+          : await stripeCheckout(body, token, env);
+        return json(result, 200, cors);
+      } catch (error) {
+        return json({ error: error.message || "Le paiement n'a pas pu commencer." },
+          error.status && error.status < 500 ? error.status : 502, cors);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/stripe") {
+      const raw = await request.text();
+      const ok = await verifyStripeSignature(
+        request.headers.get("Stripe-Signature"), raw, env.STRIPE_WEBHOOK_SECRET);
+      if (!ok) return json({ error: "bad signature" }, 401, {});
+      let event;
+      try {
+        event = JSON.parse(raw);
+      } catch {
+        return json({ error: "body is not JSON" }, 400, {});
+      }
+      try {
+        return json(await onStripeEvent(event, env), 200, {});
+      } catch (error) {
+        // Unlike Wave's, a failure here is worth Stripe's retry: the event
+        // is re-read from Stripe each time, so a retry is never a double.
+        return json({ error: String(error?.message || error) }, 500, {});
+      }
     }
 
     if (request.method === "POST" && url.pathname === "/v1/checkout") {
@@ -113,6 +176,67 @@ export async function checkout(body, userToken, env, io = { fetch }) {
   return { url: session.wave_launch_url, payment_id: begun.payment_id, method };
 }
 
+/// The owner asked to subscribe by card.
+export async function stripeCheckout(body, userToken, env, io = { fetch }) {
+  const begun = await rpcAs(env, userToken, "stripe_begin", {
+    p_org_id: body?.org_id,
+    p_period: body?.period === "year" ? "year" : "month",
+  }, io.fetch);
+  const origin = (env.APP_ORIGIN || "").replace(/\/$/, "");
+  const back = `${origin}/o/${begun.org_id}/kaj-pro`;
+  const session = await createCheckout(env, {
+    orgId: begun.org_id,
+    orgName: begun.org_name,
+    period: begun.period,
+    amount: begun.amount,
+    currency: begun.currency,
+    customerId: begun.customer_id || null,
+    email: begun.email || null,
+    successUrl: `${back}?stripe=ok`,
+    cancelUrl: `${back}?stripe=annule`,
+  }, io.fetch);
+  return { url: session.url, id: session.id };
+}
+
+/// The owner asked for Stripe's page: change the card, cancel.
+export async function stripePortal(body, userToken, env, io = { fetch }) {
+  const customerId = await rpcAs(env, userToken, "stripe_customer_of", {
+    p_org_id: body?.org_id,
+  }, io.fetch);
+  if (!customerId) {
+    const error = new Error("Aucun abonnement par carte pour cette entreprise.");
+    error.status = 404;
+    throw error;
+  }
+  const origin = (env.APP_ORIGIN || "").replace(/\/$/, "");
+  const portal = await createPortal(env, {
+    customerId,
+    returnUrl: `${origin}/o/${body.org_id}/kaj-pro`,
+  }, io.fetch);
+  return { url: portal.url };
+}
+
+/// Stripe says something about a subscription. Whatever the event, the
+/// subscription is read again from Stripe, so events out of order or twice
+/// write the same truth.
+export async function onStripeEvent(event, env, io = { fetch }) {
+  const ref = subscriptionOf(event);
+  if (!ref || !ref.id) return { ignored: event?.type || "" };
+  const sub = readSubscription(await getSubscription(env, ref.id, io.fetch));
+  const orgId = sub.orgId || ref.orgId;
+  if (!orgId) return { ignored: "no business on the subscription" };
+  const settled = await rpcService(env, "stripe_settle", {
+    p_org_id: orgId,
+    p_subscription_id: sub.subscriptionId,
+    p_customer_id: sub.customerId,
+    p_status: sub.status,
+    p_period: sub.period,
+    p_period_end: sub.periodEnd,
+    p_cancel_at_end: sub.cancelAtEnd,
+  }, io.fetch);
+  return { settled: true, active: Boolean(settled?.active) };
+}
+
 /// Wave says a session ended.
 export async function onWebhook(event, env, io = { fetch, sendPayout }) {
   const type = event?.type || "";
@@ -175,7 +299,7 @@ async function rpcAs(env, token, fn, args, fetchImpl) {
   return rpc(env, fn, args, env.SUPABASE_PUBLISHABLE_KEY, token, fetchImpl);
 }
 
-/// PostgREST as the service role, for the four functions it alone runs.
+/// PostgREST as the service role, for the five functions it alone runs.
 async function rpcService(env, fn, args, fetchImpl) {
   return rpc(env, fn, args, env.SUPABASE_SERVICE_ROLE_KEY, env.SUPABASE_SERVICE_ROLE_KEY, fetchImpl);
 }

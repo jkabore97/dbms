@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/kaj_mark.dart';
 import '../../features/pro/pro_strip.dart';
+import '../../features/pay/stripe_button.dart';
 import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -973,6 +974,18 @@ GoRouter buildRouter(SessionController session) {
                 org: org,
                 terms: scope.session.planTerms,
                 admin: scope.admin,
+                // Kaj Pro by card (082), for an admin, when the platform
+                // has opened it; and Stripe's page once it is paid.
+                cardButton: org.isAdmin
+                    ? (period) => StripeCardButton(
+                          orgId: org.id,
+                          terms: scope.session.planTerms,
+                          period: period,
+                        )
+                    : null,
+                cardManage: org.isAdmin ? StripeManage(orgId: org.id) : null,
+                stripeReturn: state.uri.queryParameters['stripe'],
+                onPaid: () => scope.session.refresh(force: true),
               ),
             ),
           ),

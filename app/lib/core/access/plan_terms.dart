@@ -18,6 +18,7 @@ class PlanTerms {
     this.wave = '',
     this.waveName = '',
     this.deliverySharePct = 10,
+    this.stripeOn = false,
   });
 
   /// What 066 seeds, so a build ahead of its database badges the same tools.
@@ -57,6 +58,10 @@ class PlanTerms {
   /// on each order when its fee is; this is the rate for the next one.
   final int deliverySharePct;
 
+  /// Kaj Pro by card, as a Stripe subscription (082): the platform's switch.
+  /// The price is [priceMonth] / [priceYear], the same wherever it is paid.
+  final bool stripeOn;
+
   bool get hasWave => wave.trim().isNotEmpty;
 
   factory PlanTerms.fromJson(Map<String, dynamic> json) {
@@ -84,6 +89,7 @@ class PlanTerms {
       wave: s('platform_wave'),
       waveName: s('platform_wave_name'),
       deliverySharePct: n('delivery_share_pct', 10),
+      stripeOn: json['stripe_on'] == true,
     );
   }
 

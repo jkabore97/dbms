@@ -480,7 +480,7 @@ One-time setup, in order:
    Put the key in the repository secret `WAVE_API_KEY` and the webhook
    secret in `WAVE_WEBHOOK_SECRET` — never in chat. (`SUPABASE_SERVICE_ROLE_KEY`
    is already there for the push Worker.)
-3. **Deploy**: the "Deploy the Wave Worker" workflow. Set the repository
+3. **Deploy**: the "Deploy the payments Worker" workflow. Set the repository
    variable `PAY_URL` to its origin and re-run *Deploy to Cloudflare*.
 4. **Each shop**: Paramètres › Paiements › « Numéro Wave » (the shop's
    own). For each shop Wave registers as an aggregated merchant, put the id
@@ -492,6 +492,52 @@ One-time setup, in order:
 
 Until step 5 nothing changes for anyone: the shop's own Wave link and
 « J'ai payé » stay as they are.
+
+### Kaj Pro by card (Stripe)
+
+Kaj Pro as a monthly or yearly **card subscription** through Stripe
+(migration 082, `workers/pay/src/stripe.js`). Stripe is used for the
+subscription only; orders are still paid by Wave. **The price is yours:**
+Console › Kaj Pro › « Prix par mois » / « Prix par an », the same fields
+the Wave payment reads, so the comparison page, Wave and Stripe all charge
+the same amount. The Worker sends that price to Stripe on each new
+checkout, so there is no Stripe product to keep up to date. A new price
+applies to **new** subscriptions; a running one renews at the price it
+started with (Stripe's rule).
+
+How it goes: on `/o/<id>/kaj-pro` an admin taps « S'abonner par carte » →
+the Worker calls `stripe_begin()` with the owner's own sign-in (admins only;
+the amount comes from the database) → Stripe Checkout, in French → Stripe
+posts a signed webhook to `<PAY_URL>/v1/stripe` → the Worker reads the
+subscription again from Stripe and calls `stripe_settle()` (service role
+only) → the business is Pro until the end of the paid period plus one day.
+Renewals move that date forward. A cancellation keeps what was already paid.
+A longer date bought with Wave, or a Pro with no end date (a gift), is never
+shortened. « Gérer la carte ou annuler » opens Stripe's own customer page.
+
+One-time setup (keys go only in GitHub's secrets page, never in chat):
+
+1. **Stripe account** for Kaj, activated for live payments. XOF is
+   supported as a zero-decimal currency; check that your account's country
+   can charge in it, and if not, set `pro_currency` to a currency it can.
+2. **Settings › Billing › Customer portal**: switch on cancelling and
+   updating the payment method, then save. The « Gérer » button opens this
+   page.
+3. **Developers › API keys**: put the secret key in the repository secret
+   `STRIPE_SECRET_KEY`.
+4. **Developers › Webhooks** › Add endpoint `<PAY_URL>/v1/stripe`, with
+   events `checkout.session.completed`, `invoice.paid`,
+   `invoice.payment_failed`, `customer.subscription.updated` and
+   `customer.subscription.deleted`. Put its signing secret in
+   `STRIPE_WEBHOOK_SECRET`.
+5. **Deploy**: run the "Deploy the payments Worker" workflow. Either Stripe
+   or Wave alone is enough to deploy it. Make sure `PAY_URL` is set, then
+   re-run *Deploy to Cloudflare*.
+6. **Switch it on**: Console › Kaj Pro › « Abonnement par carte (Stripe) ».
+   Try it first with a test key (`sk_test_…`) and the card 4242 4242 4242
+   4242, then swap in the live key.
+
+Until step 6, no card button appears anywhere.
 
 ### Google sign-in
 
@@ -691,9 +737,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `081` up to date, paste
-`database/apply_006_to_081.sql` into the Supabase SQL editor and run it once.
-It is `006` through `081` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `082` up to date, paste
+`database/apply_006_to_082.sql` into the Supabase SQL editor and run it once.
+It is `006` through `082` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
