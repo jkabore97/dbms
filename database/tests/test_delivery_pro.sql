@@ -33,6 +33,9 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled,
     (:free, 'Boutique Libre', 'libre-51', 'retail', 'XOF', true, 12.3714, -1.5197, '+22670510001'),
     (:pro,  'Boutique Pro',   'pro-51',   'retail', 'XOF', true, 12.3714, -1.5197, '+22670510002');
 update orgs set plan = 'pro' where id = :pro;
+-- 090 keeps Wave closed until Mara allows it (test_cash_only.sql); this
+-- suite is about Wave itself, so its shops are allowed.
+update orgs set wave_allowed = true where id in (:free, :pro);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:free, :owner, 'owner', 'org', :free, 'full'),
     (:pro,  :owner, 'owner', 'org', :pro,  'full');

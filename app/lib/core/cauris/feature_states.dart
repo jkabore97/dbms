@@ -6,6 +6,7 @@ class FeatureStates {
     this.balance = 0,
     this.tools = const {},
     this.progress = const BasicProgress(),
+    this.waveAllowed = false,
   });
 
   final String plan;
@@ -14,6 +15,10 @@ class FeatureStates {
   /// Tool key → its cauris price and state. 'pro_all' is Mara Pro complet.
   final Map<String, ToolState> tools;
   final BasicProgress progress;
+
+  /// Mara's tick (090): until it is given, every order is paid in cash and
+  /// the Wave settings and buttons stay out of sight.
+  final bool waveAllowed;
 
   bool get isPro => plan == 'pro';
 
@@ -44,6 +49,7 @@ class FeatureStates {
       progress: p is Map
           ? BasicProgress.fromJson(Map<String, dynamic>.from(p))
           : const BasicProgress(),
+      waveAllowed: j['wave_allowed'] == true,
     );
   }
 }

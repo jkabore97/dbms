@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/kaj_card.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
-import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import '../cauris/unlock_sheet.dart';
-import '../pay/wave_buttons.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/nav/router.dart';
 
@@ -35,10 +32,8 @@ class ProSheet {
   }
 }
 
-/// How to pay for Kaj Pro, and the button that closes the loop by hand
-/// until money moves through the platform: Wave (076) when it is open, the
-/// platform's number, and « J'ai payé », which writes a request the console
-/// lists. With [period] given, the page above chose month or year and this
+/// How to pay for Mara Pro: by card through Stripe (082), and only that way
+/// — « Bientôt disponible » until the platform opens it. With [period] given, the page above chose month or year and this
 /// panel draws no choice of its own; with [showFeatures] false, the page
 /// above already listed what Pro adds.
 class ProPayPanel extends StatefulWidget {
@@ -72,48 +67,15 @@ class ProPayPanel extends StatefulWidget {
 }
 
 class _ProPayPanelState extends State<ProPayPanel> {
-  late final _amount = TextEditingController(text: '${widget.terms.priceYear}');
-  final _note = TextEditingController();
-  bool _busy = false;
-  bool _sent = false;
-
-  /// Which period Wave checkout pays for (076).
-  String _period = 'year';
-  String? _error;
-
-  @override
-  void dispose() {
-    _amount.dispose();
-    _note.dispose();
-    super.dispose();
-  }
+  /// The platform has opened the card (082), and this build carries the
+  /// payment Worker (the scope's WavePay says; a tree without it — a test
+  /// handing the button its own — takes the platform's word).
+  bool _cardReady(BuildContext context) =>
+      widget.terms.stripeOn &&
+      (AppScope.read(context)?.wavePay?.compiledIn ?? true);
 
   String _money(int amount) =>
       '${NumberFormat.decimalPattern('fr_FR').format(amount)} F CFA';
-
-  Future<void> _request() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final amount =
-          double.tryParse(_amount.text.trim().replaceAll(RegExp(r'[\s ]'), ''));
-      await widget.admin.requestPro(widget.org.id,
-          amount: amount, note: _note.text);
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _sent = true;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _error = describeError(error);
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +84,6 @@ class _ProPayPanelState extends State<ProPayPanel> {
     final muted = theme.textTheme.bodyMedium
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
-    final period = widget.period ?? _period;
     return Padding(
         padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -198,127 +159,42 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 ),
                 ],
                 const SizedBox(height: 12),
-                if (widget.canRequest && widget.top != null) ...[
-                  widget.top!,
-                  const SizedBox(height: 12),
-                ],
-                // Paid and switched on at once, by Wave or card (076) —
-                // when the platform has opened it, and for an admin only.
-                if (widget.canRequest)
-                  WaveButtons(
-                    kind: 'pro',
-                    ref: widget.org.id,
-                    period: period,
-                    above: widget.period != null ? null : Center(
-                      child: SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment(
-                              value: 'month',
-                              label: Text('1 mois · ${_money(terms.priceMonth)}')),
-                          ButtonSegment(
-                              value: 'year',
-                              label: Text('1 an · ${_money(terms.priceYear)}')),
-                        ],
-                        selected: {_period},
-                        onSelectionChanged: (v) =>
-                            setState(() => _period = v.first),
-                      ),
-                    ),
-                    below: Text('Ou à la main :', style: muted),
-                  ),
-                const SizedBox(height: 8),
-                if (terms.hasWave)
-                  KajCard(
-                    elevation: 0,
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    child: ListTile(
-                      leading: const Icon(Icons.phone_android_outlined),
-                      title: Text(terms.wave),
-                      subtitle: Text(terms.waveName.isEmpty
-                          ? 'Payez par Wave ou Orange Money à ce numéro'
-                          : 'Wave · ${terms.waveName}'),
-                      trailing: IconButton(
-                        tooltip: 'Copier le numéro',
-                        icon: const Icon(Icons.copy_outlined),
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: terms.wave));
-                          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                              const SnackBar(content: Text('Numéro copié')));
-                        },
-                      ),
-                    ),
+                // Mara Pro is paid by card through Stripe, and only that
+                // way: no manual « J'ai payé », no Wave to Mara. Until the
+                // card is open, the sheet says so.
+                if (!widget.canRequest)
+                  Text(
+                    'Seul le propriétaire peut passer à Mara Pro.',
+                    style: muted,
                   )
+                else if (_cardReady(context) && widget.top != null)
+                  widget.top!
                 else
-                  Text(
-                    'Pour payer, contactez Mara : le numéro de paiement vous '
-                    'sera donné directement.',
-                    style: muted,
-                  ),
-                const SizedBox(height: 16),
-                if (_sent)
-                  KajCard(
-                    elevation: 0,
-                    color: theme.colorScheme.primaryContainer,
-                    child: const ListTile(
-                      leading: Icon(Icons.check_circle_outline),
-                      title: Text('Merci, c\'est noté.'),
-                      subtitle: Text(
-                          'Mara vérifie le paiement et active Mara Pro sur cette '
-                          'entreprise. Vous le verrez dans Compte › Formule.'),
+                  Container(
+                    key: const Key('pro-soon'),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  )
-                else if (widget.canRequest) ...[
-                  Text(
-                    'Une fois le paiement envoyé, dites-le ici : Mara le vérifie '
-                    'et active la formule.',
-                    style: muted,
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _amount,
-                    enabled: !_busy,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Montant envoyé (F CFA)',
-                      border: OutlineInputBorder(),
+                    child: Row(
+                      children: [
+                        Icon(Icons.credit_card,
+                            size: 32, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Bientôt disponible',
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800)),
+                              Text('Paiement par carte bancaire.', style: muted),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _note,
-                    enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Précision (facultatif)',
-                      hintText: 'Nom Wave, référence, date…',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_error!,
-                        style: TextStyle(color: theme.colorScheme.error)),
-                  ],
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
-                    child: FilledButton.icon(
-                      onPressed: _busy ? null : _request,
-                      icon: _busy
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.done_all),
-                      label: const Text("J'ai payé",
-                          style: TextStyle(fontSize: 17)),
-                    ),
-                  ),
-                ] else
-                  Text(
-                    'Demandez au propriétaire de l\'entreprise de passer à '
-                    'Mara Pro : lui seul peut le faire.',
-                    style: muted,
                   ),
               ],
             ],

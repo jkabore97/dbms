@@ -671,6 +671,26 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   // Kaj's Wave checkout (076): the number the shop's sales are sent to, and
   // the merchant id Wave gave the shop (the platform's to set).
   final _payoutController = TextEditingController();
+
+  /// Mara's tick (090): Wave is drawn only once a platform admin allows it.
+  late bool _waveAllowed = AppScope.read(context)
+          ?.session
+          .featuresFor(widget.orgId)
+          ?.waveAllowed ??
+      false;
+  bool _savingWave = false;
+
+  Future<void> _setWaveAllowed(bool v) async {
+    setState(() => _savingWave = true);
+    try {
+      await widget.admin.setOrgWaveAllowed(widget.orgId, v);
+      if (mounted) setState(() => _waveAllowed = v);
+    } catch (e) {
+      if (mounted) setState(() => _error = describeError(e));
+    } finally {
+      if (mounted) setState(() => _savingWave = false);
+    }
+  }
   final _merchantRefController = TextEditingController();
   bool _savingPayout = false;
 
@@ -1012,6 +1032,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   ];
 
   List<Widget> _payments(ThemeData theme) => [
+    if (!_waveAllowed) ...[
+      Row(children: [
+        const Icon(Icons.payments_outlined, size: 28),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text('Espèces pour le moment',
+              key: const Key('cash-only'),
+              style: theme.textTheme.titleSmall),
+        ),
+      ]),
+      const SizedBox(height: 24),
+    ] else ...[
     Text('Paiement Wave', style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     TextField(
@@ -1029,6 +1061,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     ),
     const SizedBox(height: 24),
+    ],
     Text('Taux de change', style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
@@ -1313,6 +1346,17 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   ];
 
   List<Widget> _platform(ThemeData theme) => [
+        if (widget.canSuspend) ...[
+          SwitchListTile(
+            key: const Key('wave-allowed'),
+            contentPadding: EdgeInsets.zero,
+            value: _waveAllowed,
+            onChanged: _savingWave ? null : _setWaveAllowed,
+            title: const Text('Autoriser Wave'),
+            subtitle: const Text('Sinon : espèces uniquement.'),
+          ),
+          const SizedBox(height: 12),
+        ],
         Text('Wave (plateforme)', style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         Text(
@@ -1494,7 +1538,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _Part.payments => [
         ..._payments(theme),
         ..._saveBar(theme),
-        ..._waveReceive(theme),
+        if (_waveAllowed) ..._waveReceive(theme),
       ],
     _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
     _Part.delivery => [..._delivery(theme), ..._saveBar(theme)],
@@ -1514,7 +1558,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       case _Part.payments:
         final wave = _waveController.text.trim();
         return [
-          wave.isEmpty ? 'Wave non configuré' : 'Wave configuré',
+          if (!_waveAllowed) 'Espèces'
+          else wave.isEmpty ? 'Wave non configuré' : 'Wave configuré',
           if (_payoutController.text.trim().isNotEmpty) 'reçoit sur ${_payoutController.text.trim()}',
           if (_rates.isNotEmpty)
             '${_rates.length} autre${_rates.length > 1 ? 's' : ''} monnaie${_rates.length > 1 ? 's' : ''}',

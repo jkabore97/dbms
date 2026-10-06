@@ -202,6 +202,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final a = _phoneController.text.trim();
     final b = _phoneConfirmController.text.trim();
     if (a.isEmpty || b.isEmpty) return null;
+    final length = _country.lengthProblem(a);
+    if (length != null) return length;
     if (_country.toE164(a) != _country.toE164(b)) {
       return Strings.of(context).phonesDiffer;
     }

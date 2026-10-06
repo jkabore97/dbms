@@ -305,6 +305,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         products: _products,
         canCredit: widget.access.canEdit('credits') &&
             !PathGate.locks(context, widget.org, 'credits'),
+        allowWave: AppScope.read(context)
+                ?.session
+                .featuresFor(widget.org.id)
+                ?.waveAllowed ??
+            false,
       ),
     );
     if (recorded == true) await _load();

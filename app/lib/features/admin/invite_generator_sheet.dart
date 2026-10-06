@@ -83,6 +83,11 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
   }
 
   Future<void> _generate() async {
+    final length = _country.lengthProblem(_phone.text);
+    if (length != null) {
+      setState(() => _error = length);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;

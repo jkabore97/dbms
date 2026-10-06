@@ -35,6 +35,7 @@ class SaleSheet extends StatefulWidget {
     this.capture,
     this.products = const [],
     this.canCredit = true,
+    this.allowWave = false,
     this.initialMethod = 'cash',
     this.orgName = '',
   });
@@ -46,6 +47,9 @@ class SaleSheet extends StatefulWidget {
   /// Whether "Crédit" is offered at all — the owner's dial from 031. The
   /// server refuses regardless; this keeps the refused button off screen.
   final bool canCredit;
+
+  /// Wave at the till (090): only once Mara has allowed it for this shop.
+  final bool allowWave;
 
   /// Which payment method the sheet opens on. 'credit' when the carnet opens
   /// it, so recording a credit sale there picks real products and moves stock
@@ -621,7 +625,7 @@ class _SaleSheetState extends State<SaleSheet> {
                 const ButtonSegment(value: 'cash', label: Text('Espèces')),
                 const ButtonSegment(
                     value: 'mobile_money', label: Text('Mobile')),
-                if (_waveMerchant != null)
+                if (_waveMerchant != null && widget.allowWave)
                   const ButtonSegment(
                     value: 'wave',
                     label: Text('Wave'),

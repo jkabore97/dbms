@@ -120,6 +120,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   String? get _phoneProblem {
     if (_phoneText.isEmpty) return null;
     if (_phoneAgainText.isEmpty) return null;
+    final length = _country.lengthProblem(_phoneText);
+    if (length != null) return length;
     // Compared normalised, so "70 12 34 56" and "70123456" are the agreement
     // they look like rather than a mismatch over a space.
     if (_e164 != _country.toE164(_phoneAgainText)) {

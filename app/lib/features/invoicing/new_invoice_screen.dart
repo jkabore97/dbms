@@ -102,7 +102,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
     if (_complete.isEmpty) {
       return 'Ajoutez au moins une ligne avec une quantité et un prix.';
     }
-    return null;
+    return _country.lengthProblem(_phone.text);
   }
 
   Future<void> _save() async {

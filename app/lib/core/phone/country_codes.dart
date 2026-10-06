@@ -21,6 +21,33 @@
 class CountryCode {
   const CountryCode(this.iso, this.dial, this.name, {this.trunkZero = true});
 
+  /// How many digits a number has here once the dialling code — and a
+  /// trunk zero — are taken off (the national significant number). Only
+  /// for the plans I am sure of; elsewhere no length is checked.
+  static const _lengths = <String, List<int>>{
+    'BF': [8], 'ML': [8], 'NE': [8], 'TG': [8],
+    'CI': [10], 'BJ': [10], 'NG': [10],
+    'SN': [9], 'GH': [9], 'GN': [9], 'CM': [9],
+    'FR': [9], 'BE': [8, 9], 'MA': [9],
+    'US': [10], 'CA': [10], 'GB': [10],
+  };
+
+  /// What is wrong with the length of a number typed under this country, in
+  /// a few words — or null when it is right, empty, or not checked here. A
+  /// number typed with its own `+` or `00` is left to its own country.
+  String? lengthProblem(String typed) {
+    final want = _lengths[iso];
+    if (want == null) return null;
+    var cleaned = typed.replaceAll(RegExp(r'[\s\-().]'), '');
+    if (cleaned.isEmpty || cleaned.startsWith('+') || cleaned.startsWith('00')) {
+      return null;
+    }
+    if (trunkZero && cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+    final n = cleaned.replaceAll(RegExp(r'\D'), '').length;
+    if (want.contains(n)) return null;
+    return '${want.join(' ou ')} chiffres pour $name ($dial)';
+  }
+
   /// ISO 3166-1 alpha-2, shown in the field.
   ///
   /// Shown as letters rather than a flag emoji on purpose: Flutter web paints

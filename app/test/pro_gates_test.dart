@@ -149,8 +149,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
     }
 
-    testWidgets('says the price and the number, and "J\'ai payé" lands',
-        (tester) async {
+    testWidgets('says the price, and « Bientôt » until the card is open — '
+        'no manual payment', (tester) async {
       final admin = _Admin(
           terms: const PlanTerms(
               wave: '+226 70 00 00 00', waveName: 'Kaj Consulting'));
@@ -162,30 +162,15 @@ void main() {
       await tester.tap(find.text('Mensuel'));
       await tester.pump();
       expect(find.textContaining(RegExp(r'2.500 F / mois')), findsOneWidget);
-      expect(find.text('+226 70 00 00 00'), findsOneWidget);
-      expect(find.text('Wave · Kaj Consulting'), findsOneWidget);
       expect(find.textContaining('Pointages et paie'), findsOneWidget);
-
-      await tester.enterText(
-          find.widgetWithText(TextField, 'Précision (facultatif)'),
-          'Awa Wave 12/09');
-      await tester.tap(find.text("J'ai payé"));
-      await tester.pump();
-      await tester.pump();
-
-      expect(admin.requested, hasLength(1));
-      expect(admin.requested.single['org'], 'org-1');
-      expect(admin.requested.single['amount'], 25000);
-      expect(admin.requested.single['note'], 'Awa Wave 12/09');
-      expect(find.text("Merci, c'est noté."), findsOneWidget);
+      expect(find.byKey(const Key('pro-soon')), findsOneWidget);
+      expect(find.text('Bientôt disponible'), findsOneWidget);
+      expect(find.text("J'ai payé"), findsNothing);
+      expect(find.text('+226 70 00 00 00'), findsNothing,
+          reason: 'Mara Pro is paid by card only');
     });
 
-    testWidgets('without a number it says to contact Mara', (tester) async {
-      await open(tester, _Admin(), org: _free);
-      expect(find.textContaining('contactez Mara'), findsOneWidget);
-    });
-
-    testWidgets('an employee is told whom to ask, and has no button',
+    testWidgets('an employee is told only the owner can, and has no button',
         (tester) async {
       await open(tester, _Admin(),
           org: OrgSummary(
@@ -194,7 +179,7 @@ void main() {
               profile: _free.profile,
               roles: const ['employee']));
       expect(find.text("J'ai payé"), findsNothing);
-      expect(find.textContaining('Demandez au propriétaire'), findsOneWidget);
+      expect(find.text('Seul le propriétaire peut passer à Mara Pro.'), findsOneWidget);
     });
 
     testWidgets('on a Pro business it says so and asks for nothing',
