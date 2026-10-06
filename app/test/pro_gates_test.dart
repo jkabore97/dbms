@@ -6,8 +6,8 @@ import 'package:kaj_app/core/access/plan_terms.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/errors.dart';
-import 'package:kaj_app/features/account/pro_sheet.dart';
 import 'package:kaj_app/features/admin/pro_console_screen.dart';
+import 'package:kaj_app/features/pro/pro_plans_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The line between Kaj and Kaj Pro on the phone (066, M10 block 2): the
@@ -134,31 +134,19 @@ void main() {
     });
   });
 
-  group('the paywall sheet', () {
+  // The door to pay is the comparison page now (ProSheet.open pushes it);
+  // the claims are the same, read where the owner meets them.
+  group('the paywall, on the Kaj Pro page', () {
     Future<void> open(WidgetTester tester, _Admin admin,
-        {required OrgSummary org, required bool canRequest}) async {
-      tester.view.physicalSize = const Size(800, 1800);
+        {required OrgSummary org}) async {
+      tester.view.physicalSize = const Size(800, 3600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Center(
-              child: FilledButton(
-                onPressed: () => ProSheet.open(context,
-                    org: org,
-                    terms: admin.terms,
-                    admin: admin,
-                    canRequest: canRequest),
-                child: const Text('ouvrir'),
-              ),
-            ),
-          ),
-        ),
+        home: ProPlansScreen(org: org, terms: admin.terms, admin: admin),
       ));
-      await tester.tap(find.text('ouvrir'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 600));
     }
 
     testWidgets('says the price and the number, and "J\'ai payé" lands',
@@ -166,15 +154,14 @@ void main() {
       final admin = _Admin(
           terms: const PlanTerms(
               wave: '+226 70 00 00 00', waveName: 'Kaj Consulting'));
-      await open(tester, admin, org: _free, canRequest: true);
+      await open(tester, admin, org: _free);
 
-      expect(find.text('Kaj Pro'), findsOneWidget);
       // intl's French thousands separator is a narrow no-break space, so
       // the digits are matched around it rather than through it.
-      expect(find.textContaining(RegExp(r'2.500 F CFA par mois')),
-          findsOneWidget);
-      expect(find.textContaining(RegExp(r'25.000 F CFA par an')),
-          findsOneWidget);
+      expect(find.textContaining(RegExp(r'25.000 F / an')), findsOneWidget);
+      await tester.tap(find.text('Mensuel'));
+      await tester.pump();
+      expect(find.textContaining(RegExp(r'2.500 F / mois')), findsOneWidget);
       expect(find.text('+226 70 00 00 00'), findsOneWidget);
       expect(find.text('Wave · Kaj Consulting'), findsOneWidget);
       expect(find.textContaining('Pointages et paie'), findsOneWidget);
@@ -194,28 +181,29 @@ void main() {
     });
 
     testWidgets('without a number it says to contact Kaj', (tester) async {
-      final admin = _Admin();
-      await open(tester, admin, org: _free, canRequest: true);
+      await open(tester, _Admin(), org: _free);
       expect(find.textContaining('contactez Kaj'), findsOneWidget);
     });
 
     testWidgets('an employee is told whom to ask, and has no button',
         (tester) async {
-      final admin = _Admin();
-      await open(tester, admin, org: _free, canRequest: false);
+      await open(tester, _Admin(),
+          org: OrgSummary(
+              id: _free.id,
+              name: _free.name,
+              profile: _free.profile,
+              roles: const ['employee']));
       expect(find.text("J'ai payé"), findsNothing);
       expect(find.textContaining('Demandez au propriétaire'), findsOneWidget);
     });
 
     testWidgets('on a Pro business it says so and asks for nothing',
         (tester) async {
-      final admin = _Admin();
-      await open(tester, admin, org: _pro, canRequest: true);
-      expect(find.text('Active'), findsOneWidget);
+      await open(tester, _Admin(), org: _pro);
+      expect(find.text('Vous êtes sur Kaj Pro'), findsOneWidget);
       expect(find.text("J'ai payé"), findsNothing);
-      expect(find.textContaining('F CFA par mois'), findsNothing);
-      expect(find.textContaining('Cette entreprise est sur Kaj Pro'),
-          findsOneWidget);
+      expect(find.byKey(const Key('pro-price')), findsNothing);
+      expect(find.byKey(const Key('pro-period')), findsNothing);
     });
   });
 

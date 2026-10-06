@@ -8,13 +8,14 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../pay/wave_buttons.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/nav/router.dart';
 
 /// The one door to Kaj Pro (066, M10 block 2).
 ///
-/// Opened from every badged tool and from the Compte screen. It says what Pro
-/// is, what it costs, where to pay, and carries the one button that closes
-/// the loop by hand until money moves through the platform: "J'ai payé",
-/// which writes a request the console lists. No money moves here.
+/// Opened from every badged tool, the Compte screen and the « Pro » strip
+/// on every page: it now opens the Free and Pro side by side
+/// (`/o/<id>/kaj-pro`, ProPlansScreen), whose foot is [ProPayPanel].
 class ProSheet {
   static Future<void> open(
     BuildContext context, {
@@ -22,28 +23,34 @@ class ProSheet {
     required PlanTerms terms,
     required AdminRepository admin,
     required bool canRequest,
-  }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _ProSheetBody(
-        org: org,
-        terms: terms,
-        admin: admin,
-        canRequest: canRequest,
-      ),
-    );
+  }) async {
+    await GoRouter.of(context).push(Routes.inside(org.id, 'kaj-pro'));
   }
 }
 
-class _ProSheetBody extends StatefulWidget {
-  const _ProSheetBody({
+/// How to pay for Kaj Pro, and the button that closes the loop by hand
+/// until money moves through the platform: Wave (076) when it is open, the
+/// platform's number, and « J'ai payé », which writes a request the console
+/// lists. With [period] given, the page above chose month or year and this
+/// panel draws no choice of its own; with [showFeatures] false, the page
+/// above already listed what Pro adds.
+class ProPayPanel extends StatefulWidget {
+  const ProPayPanel({
+    super.key,
     required this.org,
     required this.terms,
     required this.admin,
     required this.canRequest,
+    this.period,
+    this.showFeatures = true,
+    this.top,
   });
+
+  final String? period;
+  final bool showFeatures;
+
+  /// Drawn first, for an admin, above Wave: the card button (Stripe).
+  final Widget? top;
 
   final OrgSummary org;
   final PlanTerms terms;
@@ -54,10 +61,10 @@ class _ProSheetBody extends StatefulWidget {
   final bool canRequest;
 
   @override
-  State<_ProSheetBody> createState() => _ProSheetBodyState();
+  State<ProPayPanel> createState() => _ProPayPanelState();
 }
 
-class _ProSheetBodyState extends State<_ProSheetBody> {
+class _ProPayPanelState extends State<ProPayPanel> {
   late final _amount = TextEditingController(text: '${widget.terms.priceYear}');
   final _note = TextEditingController();
   bool _busy = false;
@@ -108,15 +115,15 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
     final muted = theme.textTheme.bodyMedium
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 8, 24, 24 + MediaQuery.viewInsetsOf(context).bottom),
-        child: SingleChildScrollView(
+    final period = widget.period ?? _period;
+    return Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.showFeatures) ...[
               Row(
                 children: [
                   Icon(Icons.workspace_premium_outlined,
@@ -173,22 +180,29 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
                   ],
                 ),
               ),
+              ],
               if (!widget.org.isPro) ...[
+                if (widget.showFeatures) ...[
                 const SizedBox(height: 16),
                 Text(
                   '${_money(terms.priceMonth)} par mois, ou '
                   '${_money(terms.priceYear)} par an.',
                   style: theme.textTheme.titleMedium,
                 ),
+                ],
                 const SizedBox(height: 12),
+                if (widget.canRequest && widget.top != null) ...[
+                  widget.top!,
+                  const SizedBox(height: 12),
+                ],
                 // Paid and switched on at once, by Wave or card (076) —
                 // when the platform has opened it, and for an admin only.
                 if (widget.canRequest)
                   WaveButtons(
                     kind: 'pro',
                     ref: widget.org.id,
-                    period: _period,
-                    above: Center(
+                    period: period,
+                    above: widget.period != null ? null : Center(
                       child: SegmentedButton<String>(
                         segments: [
                           ButtonSegment(
@@ -302,8 +316,6 @@ class _ProSheetBodyState extends State<_ProSheetBody> {
               ],
             ],
           ),
-        ),
-      ),
     );
   }
 }
