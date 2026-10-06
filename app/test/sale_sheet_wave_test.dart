@@ -54,6 +54,7 @@ void main() {
             orgName: 'Boutique',
             retail: retail,
             products: const [],
+            allowWave: true,
           ),
         ),
       );

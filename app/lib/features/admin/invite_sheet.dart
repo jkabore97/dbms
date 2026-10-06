@@ -76,6 +76,11 @@ class _InviteSheetState extends State<InviteSheet> {
   }
 
   Future<void> _create() async {
+    final length = _country.lengthProblem(_phoneController.text);
+    if (length != null) {
+      setState(() => _error = length);
+      return;
+    }
     setState(() {
       _working = true;
       _error = null;

@@ -38,6 +38,9 @@ update profiles set is_platform_admin = true where id = :plat;
 insert into orgs (id, name, slug, profile, default_currency, storefront_enabled) values
     (:shop, 'Boutique Wave', 'wave-47', 'retail', 'XOF', true),
     (:bare, 'Boutique Sans', 'sans-47', 'retail', 'XOF', true);
+-- 090 keeps Wave closed until Mara allows it (test_cash_only.sql); this
+-- suite is about Wave itself, so its shops are allowed.
+update orgs set wave_allowed = true where id in (:shop, :bare);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop, :owner, 'owner', 'org', :shop, 'full'),
     (:bare, :owner, 'owner', 'org', :bare, 'full');

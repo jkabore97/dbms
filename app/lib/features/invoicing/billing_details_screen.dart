@@ -98,6 +98,11 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
   }
 
   Future<void> _save() async {
+    final length = _country.lengthProblem(_phone.text);
+    if (length != null) {
+      setState(() => _error = length);
+      return;
+    }
     setState(() {
       _saving = true;
       _error = null;
