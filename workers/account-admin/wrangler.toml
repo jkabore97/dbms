@@ -27,7 +27,7 @@ SUPABASE_PUBLISHABLE_KEY = ""
 
 # Who may call this from a browser. Not a wildcard: the endpoint acts on behalf
 # of whoever is signed in when a page calls it.
-ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"
+ALLOWED_ORIGINS = "https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"
 
 # The service-role key is NOT here. It is a Worker secret, set once and never
 # committed:

@@ -4,6 +4,7 @@ import 'dart:ui' show Color;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../orders/orders.dart';
+import '../site/site.dart';
 
 /// The shop window, read by anyone (052).
 ///
@@ -704,7 +705,7 @@ String foldSearchText(String text) {
 String publicShopUrl(String slug) {
   final origin = Uri.base.scheme.startsWith('http')
       ? Uri.base.origin
-      : 'https://dbms.kabore-boss.workers.dev';
+      : siteOrigin;
   return '$origin/s/$slug';
 }
 

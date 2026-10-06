@@ -19,7 +19,7 @@ workers_dev = true
 SUPABASE_URL = ""
 VAPID_PUBLIC_KEY = ""
 PUSH_SUBJECT = "mailto:kabore.boss@gmail.com"
-APP_ORIGIN = "https://dbms.kabore-boss.workers.dev"
+APP_ORIGIN = "https://marakaj.com"
 # Who may ask for the public key from a browser. The webhook door needs no
 # origin — it is called by the database, with the shared secret.
-ALLOWED_ORIGINS = "https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"
+ALLOWED_ORIGINS = "https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"

@@ -58,7 +58,7 @@ void main() {
     test('the public address falls back to the production site', () {
       // In a test there is no http origin to inherit.
       expect(publicShopUrl('boutique-awa'),
-          'https://dbms.kabore-boss.workers.dev/s/boutique-awa');
+          'https://marakaj.com/s/boutique-awa');
     });
 
     test('the share link carries the text, encoded', () {
