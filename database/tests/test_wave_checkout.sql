@@ -215,6 +215,8 @@ grant execute on function wave_payout_done(uuid, boolean, text, text) to authent
 -- redefine it are applied again after it, so the suites that follow see
 -- the database as it really is.
 \ir ../migrations/081_delivery_pro.sql
+-- 085 asks org_has() where 081 asked the plan: put it back on top.
+\ir ../migrations/085_cauris_unlocks.sql
 do $$ begin
     if has_function_privilege('anon', 'wave_settle(uuid, text, boolean, text)', 'execute') then
         raise exception 'FAIL: the signed-out street can settle a payment';

@@ -152,6 +152,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
       terms: scope.session.planTerms,
       admin: widget.admin,
       canRequest: org.isAdmin,
+      feature: 'vitrine_plus',
     );
   }
 

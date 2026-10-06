@@ -123,6 +123,7 @@ class AdminHomeScreen extends StatelessWidget {
                   terms: s.session.planTerms,
                   admin: admin,
                   canRequest: org.isAdmin,
+                  feature: 'team_access',
                 );
                 return;
               }

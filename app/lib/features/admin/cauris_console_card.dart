@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/access/plan_terms.dart';
 import '../../core/cauris/cauris_repository.dart';
 import '../../core/errors.dart';
 import '../cauris/cauri_icon.dart';
@@ -20,6 +21,7 @@ class CaurisConsoleCard extends StatefulWidget {
 class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
   List<CaurisRule> _rules = const [];
   List<CaurisWatchRow> _watch = const [];
+  List<({String feature, int cost, int minDays})> _costs = const [];
   bool _loading = true;
   String? _error;
 
@@ -33,8 +35,10 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
     try {
       final rules = await widget.cauris.rules();
       final watch = await widget.cauris.watch();
+      final costs = await widget.cauris.costs();
       if (!mounted) return;
       setState(() {
+        _costs = costs;
         _rules = rules;
         _watch = watch;
         _loading = false;
@@ -99,6 +103,40 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
     }
   }
 
+  Future<void> _editCost(String feature, int cost) async {
+    final c = TextEditingController(text: '$cost');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Prix en cauris'),
+        content: TextField(
+          key: const Key('cost-value'),
+          controller: c,
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Enregistrer')),
+        ],
+      ),
+    );
+    final v = int.tryParse(c.text.trim());
+    if (ok != true || v == null) return;
+    try {
+      await widget.cauris.setCost(feature, v);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeError(e))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -137,6 +175,25 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                   style: const TextStyle(fontWeight: FontWeight.w700)),
               onTap: () => _edit(r),
             ),
+          if (_costs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Prix des outils, pour 30 jours', style: theme.textTheme.titleSmall),
+            for (final c in _costs)
+              ListTile(
+                key: Key('cost-${c.feature}'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(c.feature == 'pro_all'
+                    ? 'Mara Pro complet'
+                    : PlanTerms.labelOf(c.feature)),
+                subtitle: c.minDays > 0
+                    ? Text('après ${c.minDays} jours sur Mara')
+                    : null,
+                trailing: CaurisAmount(c.cost,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                onTap: () => _editCost(c.feature, c.cost),
+              ),
+          ],
           const SizedBox(height: 12),
           Text('Les plus gros gains de la semaine',
               style: theme.textTheme.titleSmall),

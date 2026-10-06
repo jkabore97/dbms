@@ -15,6 +15,8 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
+import '../../core/nav/app_scope.dart';
+import '../cauris/path_card.dart';
 import '../home/home_nav.dart';
 import 'farm_sheets.dart';
 import '../../core/nav/router.dart';
@@ -258,6 +260,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // A new farm's path (085): its vitrine opens its tools.
+                  if (AppScope.read(context)?.session.featuresFor(widget.org.id)?.progress
+                      case final p? when p.gated) ...[
+                    PathCard(org: widget.org, progress: p),
+                    const SizedBox(height: 16),
+                  ],
                   _TodayCard(
                     day: _today,
                     moneyIn: _moneyIn,
@@ -411,7 +419,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
-            onTap: () => _push(Routes.inside(id, 'factures')),
+            onTap: () => PathGate.guard(context, widget.org, 'invoices',
+                () => _push(Routes.inside(id, 'factures'))),
           ),
       ],
       more: [
@@ -436,13 +445,15 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           HomeDestination(
             icon: Icons.handshake_outlined,
             label: s.creditBook,
-            onTap: () => context.push(Routes.inside(id, 'credits')),
+            onTap: () => PathGate.guard(context, widget.org, 'credits',
+                () => context.push(Routes.inside(id, 'credits'))),
           ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
-            onTap: () => context.push(Routes.inside(id, 'production')),
+            onTap: () => PathGate.guard(context, widget.org, 'production',
+                () => context.push(Routes.inside(id, 'production'))),
           ),
         if (widget.capture != null &&
             widget.capture!.isConfigured &&

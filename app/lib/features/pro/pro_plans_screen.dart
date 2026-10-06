@@ -9,7 +9,11 @@ import '../../core/auth/models.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/motion.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
+import '../cauris/cauri_icon.dart';
+import '../cauris/unlock_sheet.dart';
 
 /// Kaj and Kaj Pro, side by side (`/o/<id>/kaj-pro`).
 ///
@@ -53,8 +57,16 @@ class ProPlansScreen extends StatefulWidget {
   State<ProPlansScreen> createState() => _ProPlansScreenState();
 }
 
+/// A tool a Free business can open with cauris (085): its price, drawn in
+/// the Free column with a lock.
+class CaurisPrice {
+  const CaurisPrice(this.cost);
+  final int cost;
+}
+
 /// One line of the comparison: what it is, what Free gives, what Pro gives.
-/// A null cell is « not included »; `true` is a tick; a string says how much.
+/// A null cell is « not included »; `true` is a tick; a string says how much;
+/// a [CaurisPrice] says it opens for that many cauris.
 class PlanRow {
   const PlanRow(this.label, this.free, this.pro);
 
@@ -86,6 +98,17 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     super.dispose();
   }
 
+  /// Tool → its cauris price for this business, when known (085).
+  Map<String, int> get _costs {
+    final states = AppScope.read(context)?.session.featuresFor(widget.org.id);
+    if (states == null ||
+        widget.org.profile == 'church' ||
+        widget.org.profile == 'association') {
+      return const {};
+    }
+    return {for (final e in states.tools.entries) e.key: e.value.cost};
+  }
+
   String _money(int amount) =>
       '${NumberFormat.decimalPattern('fr_FR').format(amount)} F';
 
@@ -97,8 +120,9 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     return saved <= 0 ? 0 : (saved / t.priceMonth).floor();
   }
 
-  static List<(String, List<PlanRow>)> rowsFor(PlanTerms t) =>
-      ProPlansScreenRows.of(t);
+  static List<(String, List<PlanRow>)> rowsFor(PlanTerms t,
+          {Map<String, int> costs = const {}}) =>
+      ProPlansScreenRows.of(t, costs: costs);
 
 
   @override
@@ -178,7 +202,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         ? null
                         : '${_money(price)} / ${_period == 'year' ? 'an' : 'mois'}',
                   ),
-                  for (final (title, rows) in rowsFor(t)) ...[
+                  for (final (title, rows) in rowsFor(t, costs: _costs)) ...[
                     const SizedBox(height: 18),
                     ScrollReveal(
                       child: Padding(
@@ -205,6 +229,11 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                     ),
                   ],
                   const SizedBox(height: 28),
+                  // Mara Pro complet, earned rather than paid (085).
+                  if (!org.isPro && _costs['pro_all'] != null) ...[
+                    _EarnIt(org: org, cost: _costs['pro_all']!),
+                    const SizedBox(height: 20),
+                  ],
                   if (org.isPro && widget.cardManage != null) widget.cardManage!,
                   if (!org.isPro)
                     ProPayPanel(
@@ -271,6 +300,59 @@ class _Returned extends StatelessWidget {
   }
 }
 
+/// « Ou gagnez-le » (085): everything for 30 days, for cauris earned by
+/// doing well.
+class _EarnIt extends StatelessWidget {
+  const _EarnIt({required this.org, required this.cost});
+
+  final OrgSummary org;
+  final int cost;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('earn-pro'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: maraIndigo,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CauriIcon(size: 26),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Ou gagnez Mara Pro',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        color: maraCream, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Vos commandes, vos clients fidèles et votre vitrine rapportent des '
+            'cauris. Avec $cost cauris, tout Mara Pro est à vous pour 30 jours — '
+            'ou débloquez un seul outil pour moins.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: maraCream),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => UnlockSheet.open(context, org: org, feature: 'pro_all'),
+            style: FilledButton.styleFrom(
+                backgroundColor: maraGold, foregroundColor: maraIndigo),
+            icon: const CauriIcon(size: 16, color: maraIndigo),
+            label: Text('Débloquer avec $cost cauris'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// The columns' heads: Kaj and Kaj Pro, Pro's price under its name.
 class _Header extends StatelessWidget {
   const _Header({this.proPrice});
@@ -327,6 +409,18 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget cell(Object? v, {required bool pro}) {
+      if (v is CaurisPrice) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 14, color: kMist),
+            const SizedBox(width: 3),
+            CaurisAmount(v.cost,
+                iconSize: 13,
+                style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
+          ],
+        );
+      }
       if (v == true) {
         return Icon(Icons.check, size: 20, color: pro ? kInk : kMist);
       }
@@ -355,7 +449,9 @@ class _Row extends StatelessWidget {
 /// The whole comparison, from the platform's terms — public so a test can
 /// read it without drawing the page.
 class ProPlansScreenRows {
-  static List<(String, List<PlanRow>)> of(PlanTerms t) => [
+  static List<(String, List<PlanRow>)> of(PlanTerms t,
+          {Map<String, int> costs = const {}}) =>
+      [
         (
           'Pour tous',
           const [
@@ -368,7 +464,11 @@ class ProPlansScreenRows {
         ),
         (
           'Avec Mara Pro',
-          [for (final f in t.proFeatures) PlanRow(PlanTerms.labelOf(f), null, true)],
+          [
+            for (final f in t.proFeatures)
+              PlanRow(PlanTerms.labelOf(f),
+                  costs[f] == null ? null : CaurisPrice(costs[f]!), true),
+          ],
         ),
         (
           'Sans limite',

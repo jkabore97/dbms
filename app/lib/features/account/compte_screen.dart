@@ -8,6 +8,8 @@ import '../../core/security/security_settings.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
 import '../admin/invite_generator_sheet.dart';
+import '../cauris/path_card.dart';
+import '../cauris/unlock_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 
@@ -50,7 +52,19 @@ class CompteScreen extends StatelessWidget {
       canRequest: org.isAdmin,
     );
     VoidCallback gated(String feature, VoidCallback go) =>
-        access.isProLocked(feature) ? openPro : go;
+        access.isProLocked(feature)
+            ? () => ProSheet.open(
+                  context,
+                  org: org,
+                  terms: session.planTerms,
+                  admin: scope.admin,
+                  canRequest: org.isAdmin,
+                  feature: feature,
+                )
+            : go;
+    // Its price in cauris (085), on the grey badge.
+    int? costOf(String feature) =>
+        session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
@@ -106,7 +120,8 @@ class CompteScreen extends StatelessWidget {
                 _Tile(
                   icon: Icons.business_center_outlined,
                   title: Strings.of(context).applyForBusiness,
-                  onTap: () => context.push(Routes.applyForBusiness),
+                  onTap: () => PathGate.guard(context, org, 'second_business',
+                      () => context.push(Routes.applyForBusiness)),
                 ),
               if (session.orgs.length > 1)
                 _Tile(
@@ -178,6 +193,7 @@ class CompteScreen extends StatelessWidget {
                     icon: Icons.insights_outlined,
                     title: 'Analyses',
                     pro: access.isProLocked('analytics'),
+                    proCost: costOf('analytics'),
                     onTap: gated(
                       'analytics',
                       () => context.push(inside('rapports/analyse')),
@@ -188,6 +204,7 @@ class CompteScreen extends StatelessWidget {
                     icon: Icons.menu_book_outlined,
                     title: Strings.of(context).accounting,
                     pro: access.isProLocked('accounting'),
+                    proCost: costOf('accounting'),
                     onTap: gated(
                       'accounting',
                       () => context.push(inside('comptabilite')),
@@ -206,13 +223,15 @@ class CompteScreen extends StatelessWidget {
                   _Tile(
                     icon: Icons.handshake_outlined,
                     title: Strings.of(context).creditBook,
-                    onTap: () => context.push(inside('credits')),
+                    onTap: () => PathGate.guard(context, org, 'credits',
+                        () => context.push(inside('credits'))),
                   ),
                 if (access.canSee('tontines'))
                   _Tile(
                     icon: Icons.group_outlined,
                     title: Strings.of(context).tontines,
                     pro: access.isProLocked('tontines'),
+                    proCost: costOf('tontines'),
                     onTap: gated(
                       'tontines',
                       () => context.push(inside('tontines')),
@@ -405,6 +424,7 @@ class _Tile extends StatelessWidget {
     required this.onTap,
     this.subtitle,
     this.pro = false,
+    this.proCost,
   });
 
   final IconData icon;
@@ -415,6 +435,9 @@ class _Tile extends StatelessWidget {
   /// The tool is behind Kaj Pro on this business (066): drawn, greyed, with
   /// the badge — never hidden. The tap opens the door to pay.
   final bool pro;
+
+  /// Its price in cauris, when the business may unlock it with them (085).
+  final int? proCost;
 
   @override
   Widget build(BuildContext context) {
@@ -432,34 +455,10 @@ class _Tile extends StatelessWidget {
       ),
       subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: pro
-          ? const _ProBadge()
+          ? ProCostBadge(cost: proCost)
           : const Icon(Icons.chevron_right, size: 20),
       onTap: onTap,
     );
   }
 }
 
-/// The small "Pro" mark on a tool the plan holds (066).
-class _ProBadge extends StatelessWidget {
-  const _ProBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        'Pro',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimaryContainer,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-        ),
-      ),
-    );
-  }
-}
