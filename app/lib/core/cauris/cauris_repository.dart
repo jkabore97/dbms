@@ -70,6 +70,30 @@ class CaurisRepository {
     });
   }
 
+  /// This week's board for the business's league (086); null for a
+  /// stranger or before 086.
+  Future<LeagueBoard?> board(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('league_board', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      return LeagueBoard.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (_missing(e)) return null;
+      rethrow;
+    }
+  }
+
+  /// Hide the business's name from the board; the four-a-week message.
+  Future<void> setBoardPrefs(String orgId, {bool? hidden, bool? notify}) async {
+    await _client!.rpc('set_board_prefs', params: {
+      'p_org_id': orgId,
+      'p_hidden': hidden,
+      'p_notify': notify,
+    });
+  }
+
   /// What each Pro tool costs in cauris (085), for the console.
   Future<List<({String feature, int cost, int minDays})>> costs() async {
     final client = _client;
@@ -115,6 +139,59 @@ class CaurisRepository {
 }
 
 int _int(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+
+/// This week's race in the business's league (086).
+class LeagueBoard {
+  const LeagueBoard({
+    required this.label,
+    required this.rank,
+    required this.score,
+    required this.size,
+    this.gap,
+    this.top = const [],
+    this.hidden = false,
+    this.notify = true,
+    this.lastWeekRank,
+  });
+
+  /// « Boutiques · Ouagadougou · petites »
+  final String label;
+  final int rank;
+  final int score;
+
+  /// How many businesses race in the league.
+  final int size;
+
+  /// Cauris still needed to pass the place above; null when first.
+  final int? gap;
+  final List<({int rank, String name, int score, bool me})> top;
+  final bool hidden;
+  final bool notify;
+  final int? lastWeekRank;
+
+  factory LeagueBoard.fromJson(Map<String, dynamic> j) => LeagueBoard(
+        label: '${j['label'] ?? ''}',
+        rank: _int(j['rank']),
+        score: _int(j['score']),
+        size: _int(j['size']),
+        gap: j['gap'] == null ? null : _int(j['gap']),
+        top: [
+          for (final t in (j['top'] as List? ?? const []))
+            if (t is Map)
+              (
+                rank: _int(t['rank']),
+                name: '${t['name']}',
+                score: _int(t['score']),
+                me: t['me'] == true,
+              ),
+        ],
+        hidden: j['hidden'] == true,
+        notify: j['notify'] != false,
+        lastWeekRank: j['last_week'] is Map
+            ? _int((j['last_week'] as Map)['rank'])
+            : null,
+      );
+}
 
 class CaurisWallet {
   const CaurisWallet({

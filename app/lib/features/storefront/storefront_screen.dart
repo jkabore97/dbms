@@ -1282,6 +1282,28 @@ class _Window extends StatelessWidget {
                 // A fact the shop has not given is left out, never shown
                 // empty (070).
                 const SizedBox(height: 10),
+                // Last week's podium (086): a shop customers can trust.
+                if (style.topWeekRank != null) ...[
+                  Container(
+                    key: const Key('top-week-badge'),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2B63D),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      style.topWeekRank == 1
+                          ? '🏆 1er de la semaine'
+                          : '🏆 Top 3 de la semaine',
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E2560)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   [
                     _kindOf(shop.profile),
