@@ -9,11 +9,12 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: SingleChildScrollView(child: ShopFooter())),
     ));
-    expect(find.text('POWERED BY KAJ'), findsOneWidget);
+    expect(find.textContaining('POWERED BY KAJ'), findsOneWidget);
+    expect(find.textContaining('Mara', findRichText: true), findsWidgets);
     final kaj = (tester.widget<Text>(find.byKey(const Key('powered-by')))
             .textSpan! as TextSpan)
         .children!
-        .single as TextSpan;
+        .first as TextSpan;
     expect(kaj.text, 'KAJ');
     expect(kaj.style!.fontWeight, FontWeight.w800, reason: 'KAJ in bold');
     expect(find.text('KAJ CONSULTING'), findsNothing);
@@ -41,5 +42,6 @@ void main() {
     expect(powered.dx, closeTo(200, 1), reason: 'centred');
     expect(link.dx, closeTo(200, 1));
     expect(band.contains(powered), isTrue);
+    expect(band.height, lessThan(90), reason: 'a small footer');
   });
 }
