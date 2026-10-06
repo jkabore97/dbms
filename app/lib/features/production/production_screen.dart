@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../cauris/path_card.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
@@ -92,6 +94,10 @@ class _ProductionScreenState extends State<ProductionScreen> {
   }
 
   Future<void> _create({ProductionRun? repeat}) async {
+    // Locked (089): what was kept is read, nothing new is written.
+    if (PathGate.locks(context, widget.org, 'production')) {
+      return PathGate.guard(context, widget.org, 'production', () {});
+    }
     final made = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,

@@ -303,7 +303,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         currency: widget.org.currency,
         capture: widget.access.canEdit('photos') ? widget.capture : null,
         products: _products,
-        canCredit: widget.access.canEdit('credits'),
+        canCredit: widget.access.canEdit('credits') &&
+            !PathGate.locks(context, widget.org, 'credits'),
       ),
     );
     if (recorded == true) await _load();
@@ -674,7 +675,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
-            onTap: () => PathGate.guard(context, widget.org, 'invoices',
+            onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => context.push(Routes.inside(widget.org.id, 'factures'))),
           ),
       ],
@@ -694,7 +695,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
-            onTap: () => PathGate.guard(context, widget.org, 'production',
+            onTap: () => PathGate.open(context, widget.org, 'production',
                 () => _openThenReload('production')),
           ),
         if (cameraReady && widget.access.canSee('photos'))

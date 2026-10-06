@@ -419,7 +419,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
-            onTap: () => PathGate.guard(context, widget.org, 'invoices',
+            onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => _push(Routes.inside(id, 'factures'))),
           ),
       ],
@@ -450,14 +450,14 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           HomeDestination(
             icon: Icons.handshake_outlined,
             label: s.creditBook,
-            onTap: () => PathGate.guard(context, widget.org, 'credits',
+            onTap: () => PathGate.open(context, widget.org, 'credits',
                 () => context.push(Routes.inside(id, 'credits'))),
           ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
-            onTap: () => PathGate.guard(context, widget.org, 'production',
+            onTap: () => PathGate.open(context, widget.org, 'production',
                 () => context.push(Routes.inside(id, 'production'))),
           ),
         if (widget.capture != null &&

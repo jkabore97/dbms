@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../cauris/path_card.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -96,6 +98,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _openNew() async {
+    // Locked (089): what was kept is read, nothing new is written.
+    if (PathGate.locks(context, widget.org, 'invoices')) {
+      return PathGate.guard(context, widget.org, 'invoices', () {});
+    }
     final id = await context
         .push<String>(Routes.inside(widget.org.id, 'factures/nouvelle'));
     if (id == null || !mounted) return;

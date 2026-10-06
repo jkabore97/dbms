@@ -8,6 +8,11 @@
 -- "who owes me" is oldest-first, because that is the collection order.
 -- ============================================================
 \set ON_ERROR_STOP on
+-- 089 locks invoices, production and the credit book until earned; that
+-- rule is proven in test_earned_locks.sql. This suite is about something
+-- else, so it opens the three doors for its own fixtures.
+update platform_settings set value = '0'
+ where key in ('progress_invoices_pct', 'progress_production_pct', 'progress_credit_orders');
 
 \set owner    '''89898989-0000-0000-0000-000000000001'''
 \set clerk    '''89898989-0000-0000-0000-000000000002'''
