@@ -179,6 +179,13 @@ class ShopPage extends StatefulWidget {
     'Commandez en ligne, payez au retrait ou à la livraison',
   ];
 
+  /// The same strip over a farm's vitrine (083).
+  static const farm = [
+    'Retrait à la ferme, ou livraison dans le quartier',
+    'Tout droit de la ferme, sans intermédiaire',
+    'Commandez à l\'avance la prochaine bande ou la récolte',
+  ];
+
   @override
   State<ShopPage> createState() => _ShopPageState();
 }

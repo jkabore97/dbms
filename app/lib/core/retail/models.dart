@@ -22,6 +22,8 @@ class Product {
     this.isIngredient = false,
     this.isPublished = false,
     this.description,
+    this.unit,
+    this.availableFrom,
   });
 
   final String id;
@@ -49,6 +51,13 @@ class Product {
   /// origin — shown under the name on the vitrine (064). Null when the shop
   /// wrote nothing.
   final String? description;
+
+  /// How it is sold — « plateau », « kg », « tête » (083). Null is « l'unité ».
+  final String? unit;
+
+  /// For a batch or a harvest still to come (083): until this day the
+  /// vitrine offers it as a pre-order. Null when it is there now.
+  final DateTime? availableFrom;
 
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
@@ -79,6 +88,12 @@ class Product {
       description: (row['description'] as String?)?.trim().isEmpty == true
           ? null
           : row['description'] as String?,
+      unit: (row['unit'] as String?)?.trim().isEmpty == true
+          ? null
+          : row['unit'] as String?,
+      availableFrom: row['available_from'] == null
+          ? null
+          : DateTime.tryParse('${row['available_from']}'),
     );
   }
 }

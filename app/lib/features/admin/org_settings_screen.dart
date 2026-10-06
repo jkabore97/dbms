@@ -1064,9 +1064,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text('Vitrine en ligne', style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
-      'Une page publique de la boutique, avec les articles que vous '
-      "choisissez d'afficher — photo et prix — à partager sur "
-      "WhatsApp. Rien ne s'y vend : le client vous contacte.",
+      _profile == 'farm'
+          ? 'Une page publique de la ferme, avec ce que vous mettez « À '
+              'vendre » — photo, prix, à l\'unité ou au plateau — à '
+              'partager sur WhatsApp. Les clients commandent, même à '
+              'l\'avance pour une bande ou une récolte à venir.'
+          : 'Une page publique de la boutique, avec les articles que vous '
+              "choisissez d'afficher — photo et prix — à partager sur "
+              'WhatsApp. Les clients commandent depuis la vitrine.',
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),

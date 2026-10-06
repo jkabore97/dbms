@@ -415,6 +415,17 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           ),
       ],
       more: [
+        // The farm's vitrine (083): what it sells, and the orders for it.
+        HomeDestination(
+          icon: Icons.storefront_outlined,
+          label: 'À vendre',
+          onTap: () => _push(Routes.inside(id, 'a-vendre')),
+        ),
+        HomeDestination(
+          icon: Icons.shopping_bag_outlined,
+          label: 'Commandes',
+          onTap: () => _push(Routes.inside(id, 'commandes')),
+        ),
         if (widget.access.canSee('credits'))
           HomeDestination(
             icon: Icons.handshake_outlined,

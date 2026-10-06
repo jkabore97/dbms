@@ -198,9 +198,19 @@ class RetailRepository {
     const columns = 'id, name, barcode, serial, cost_price, sale_price, '
         'quantity, expires_on, low_stock_at, is_ingredient, is_published';
     try {
-      return await _products(orgId, '$columns, description',
+      return await _products(
+          orgId, '$columns, description, unit, available_from',
           activeOnly: activeOnly);
     } on PostgrestException catch (error) {
+      if (error.code == '42703') {
+        // Before 083: no unit or date yet, the description is there.
+        try {
+          return await _products(orgId, '$columns, description',
+              activeOnly: activeOnly);
+        } on PostgrestException catch (e) {
+          if (e.code != '42703') rethrow;
+        }
+      }
       // The app deploys before the owner pastes the bundle; between the two
       // the column of 064 is not there yet. A shelf with no descriptions
       // beats no shelf at all.
@@ -581,6 +591,10 @@ class RetailRepository {
     bool? isIngredient,
     bool? isPublished,
     String? description,
+    String? unit,
+    DateTime? availableFrom,
+    bool clearAvailableFrom = false,
+    double? quantity,
   }) async {
     final client = _requireClient();
     // `.select()` turns a silent no-op into a fact we can check. A PostgREST
@@ -605,6 +619,14 @@ class RetailRepository {
           if (description != null)
             'description':
                 description.trim().isEmpty ? null : description.trim(),
+          // 083's farm fields: sent only when given, so a shop's edit on a
+          // database before 083 still saves.
+          if (unit != null) 'unit': unit.trim().isEmpty ? null : unit.trim(),
+          if (availableFrom != null) 'available_from': _date(availableFrom),
+          if (clearAvailableFrom) 'available_from': null,
+          // A farm counts what it has to sell by hand: it grew it, it did
+          // not buy it, so no purchase is booked (receive() would).
+          'quantity': ?quantity,
         })
         .eq('id', productId)
         .select('id');
