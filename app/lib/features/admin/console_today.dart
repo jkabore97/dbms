@@ -6,6 +6,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The top of the console (072): today, before the table.
 ///
@@ -105,9 +106,9 @@ class ConsoleTodayState extends State<ConsoleToday> {
           KajCard(
             elevation: 0,
             color: theme.colorScheme.surfaceContainerHighest,
-            child: const ListTile(
-              leading: Icon(Icons.check_circle_outline),
-              title: Text("Rien n'attend la plateforme."),
+            child: ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: Text(context.tr('Rien n\'attend la plateforme.')),
             ),
           )
         else
@@ -123,7 +124,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('${x.count}',
+                    Text(context.tr('{count}', {'count': x.count}),
                         style: theme.textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.w700)),
                     if (x.route != null) const Icon(Icons.chevron_right),
@@ -173,7 +174,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
           child: OutlinedButton.icon(
             onPressed: _write,
             icon: const Icon(Icons.campaign_outlined),
-            label: const Text('Écrire aux boutiques'),
+            label: Text(context.tr('Écrire aux boutiques')),
           ),
         ),
         const SizedBox(height: 20),
@@ -321,23 +322,22 @@ class _MessageDialogState extends State<_MessageDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Écrire aux boutiques'),
+      title: Text(context.tr('Écrire aux boutiques')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-              'Le message arrive dans la cloche des propriétaires et '
-              'administrateurs de chaque entreprise.'),
+          Text(
+              context.tr('Le message arrive dans la cloche des propriétaires et administrateurs de chaque entreprise.')),
           const SizedBox(height: 12),
           TextField(
             controller: _text,
             enabled: !_busy,
             maxLines: 4,
             maxLength: 500,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Nouveau : mettez un article en avant…',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: context.tr('Nouveau : mettez un article en avant…'),
             ),
           ),
           if (_error != null)
@@ -348,11 +348,11 @@ class _MessageDialogState extends State<_MessageDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _busy ? null : _send,
-          child: const Text('Envoyer'),
+          child: Text(context.tr('Envoyer')),
         ),
       ],
     );

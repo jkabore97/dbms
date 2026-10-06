@@ -88,6 +88,7 @@ import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
 import 'app_scope.dart';
 import 'session.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Every screen in the app, and the address it lives at.
 ///
@@ -567,7 +568,7 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.myProfile,
         builder: (context, _) => ProfileFormScreen(
           onboarding: AppScope.of(context).onboarding,
-          title: 'Mes informations',
+          title: context.tr('Mes informations'),
           nextLabel: 'Enregistrer',
           intro: 'Ces informations vous suivent dans toutes les entreprises '
               'que vous rejoignez. Elles figurent sur un contrat ou un '
@@ -1441,15 +1442,15 @@ class _MissingContext extends StatelessWidget {
             children: [
               const Icon(Icons.open_in_new_off_outlined, size: 40),
               const SizedBox(height: 16),
-              const Text(
-                "Cette page s'ouvre depuis la liste.",
+              Text(
+                context.tr('Cette page s\'ouvre depuis la liste.'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 17),
+                style: const TextStyle(fontSize: 17),
               ),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => context.go(backTo),
-                child: const Text('Voir la liste'),
+                child: Text(context.tr('Voir la liste')),
               ),
             ],
           ),
@@ -1476,12 +1477,12 @@ class NotFoundScreen extends StatelessWidget {
               children: [
                 const MaraMark(size: 72),
                 const SizedBox(height: 24),
-                Text('Cette page n\'existe pas',
+                Text(context.tr('Cette page n\'existe pas'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge),
                 const SizedBox(height: 8),
                 Text(
-                  'Le lien est peut-être ancien ou incomplet.',
+                  context.tr('Le lien est peut-être ancien ou incomplet.'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -1489,7 +1490,7 @@ class NotFoundScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: () => context.go('/'),
-                  child: const Text("Retour à l'accueil"),
+                  child: Text(context.tr('Retour à l\'accueil')),
                 ),
               ],
             ),

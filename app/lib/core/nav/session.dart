@@ -497,7 +497,7 @@ class SessionController extends ChangeNotifier {
     final salt = identity?.pinSalt;
     final hash = identity?.pinHash;
     if (identity == null || salt == null || hash == null) {
-      return "Aucun code n'est enregistré sur ce téléphone.";
+      return 'Aucun code n\'est enregistré sur ce téléphone.';
     }
     if (!PinCodec.verify(current, salt: salt, hash: hash)) {
       return 'Code actuel incorrect.';

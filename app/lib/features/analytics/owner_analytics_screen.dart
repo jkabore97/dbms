@@ -6,6 +6,7 @@ import '../../core/analytics/models.dart';
 import '../../core/format/money.dart';
 import 'charts.dart';
 import 'widgets.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the owner sees: what sells more or less, when the shop earns, and how
 /// the takings trend — the "smart things" asked for, over a window they choose.
@@ -69,7 +70,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = "Les analyses n'ont pas pu être chargées.";
+        _error = context.tr('Les analyses n\'ont pas pu être chargées.');
         _loading = false;
       });
     }
@@ -85,12 +86,12 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analyses'),
+        title: Text(context.tr('Analyses')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -135,34 +136,34 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
       runSpacing: 12,
       children: [
         KpiCard(
-          label: 'Chiffre d\'affaires',
+          label: context.tr('Chiffre d\'affaires'),
           value: _money.format(h.revenue),
           icon: Icons.payments_outlined,
           emphasis: true,
         ),
         KpiCard(
-          label: 'Bénéfice',
+          label: context.tr('Bénéfice'),
           value: _money.format(h.margin),
           hint: '$marginPct % du CA',
           icon: Icons.trending_up,
         ),
         KpiCard(
-          label: 'Ventes',
+          label: context.tr('Ventes'),
           value: '${h.saleCount}',
           icon: Icons.receipt_long_outlined,
         ),
         KpiCard(
-          label: 'Panier moyen',
+          label: context.tr('Panier moyen'),
           value: _money.format(h.avgBasket),
           icon: Icons.shopping_basket_outlined,
         ),
         KpiCard(
-          label: 'Articles vendus',
+          label: context.tr('Articles vendus'),
           value: _units(h.units),
           icon: Icons.inventory_2_outlined,
         ),
         KpiCard(
-          label: 'Produits différents',
+          label: context.tr('Produits différents'),
           value: '${h.productsSold}',
           icon: Icons.category_outlined,
         ),
@@ -178,8 +179,8 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     final worst = products.last;
 
     return SectionCard(
-      title: 'Ce qui se vend',
-      subtitle: 'Classé par chiffre d\'affaires sur la période',
+      title: context.tr('Ce qui se vend'),
+      subtitle: context.tr('Classé par chiffre d\'affaires sur la période'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -197,7 +198,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
               Expanded(
                 child: _Superlative(
                   icon: Icons.local_fire_department_outlined,
-                  label: 'Le plus vendu',
+                  label: context.tr('Le plus vendu'),
                   name: best.name,
                   detail: '${_units(best.units)} · ${_perDay(best.perDay)}',
                 ),
@@ -205,7 +206,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
               Expanded(
                 child: _Superlative(
                   icon: Icons.hourglass_bottom_outlined,
-                  label: 'Le plus lent',
+                  label: context.tr('Le plus lent'),
                   name: worst.name,
                   detail: '${_units(worst.units)} · ${_perDay(worst.perDay)}',
                 ),
@@ -233,16 +234,16 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     final weekLabels = [for (final d in order) dowNames[d]];
 
     return SectionCard(
-      title: 'Quand ça se vend',
-      subtitle: 'Chiffre d\'affaires par heure et par jour',
+      title: context.tr('Quand ça se vend'),
+      subtitle: context.tr('Chiffre d\'affaires par heure et par jour'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Par heure', style: _muted(context)),
+          Text(context.tr('Par heure'), style: _muted(context)),
           const SizedBox(height: 8),
           BarChart(values: hours, labels: hourLabels),
           const SizedBox(height: 20),
-          Text('Par jour de la semaine', style: _muted(context)),
+          Text(context.tr('Par jour de la semaine'), style: _muted(context)),
           const SizedBox(height: 8),
           BarChart(values: weekVals, labels: weekLabels),
         ],
@@ -258,7 +259,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     final df = DateFormat('d MMM', 'fr_FR');
 
     return SectionCard(
-      title: 'Tendance',
+      title: context.tr('Tendance'),
       subtitle:
           'Meilleur jour : ${df.format(peak.day)} (${_money.format(peak.revenue)})',
       child: Column(
@@ -290,7 +291,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
 
   String _perDay(double v) {
     final s = v == v.roundToDouble() ? '${v.round()}' : v.toStringAsFixed(1);
-    return '$s /jour';
+    return context.tr('{s} /jour', {'s': s});
   }
 }
 
@@ -418,11 +419,11 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.insights_outlined, size: 48, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
-          Text('Aucune vente sur cette période',
+          Text(context.tr('Aucune vente sur cette période'),
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Enregistrez des ventes et les analyses apparaîtront ici.',
+            context.tr('Enregistrez des ventes et les analyses apparaîtront ici.'),
             textAlign: TextAlign.center,
             style: TextStyle(color: scheme.onSurfaceVariant),
           ),
@@ -448,7 +449,7 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(message),
           const SizedBox(height: 12),
-          FilledButton.tonal(onPressed: onRetry, child: const Text('Réessayer')),
+          FilledButton.tonal(onPressed: onRetry, child: Text(context.tr('Réessayer'))),
         ],
       ),
     );

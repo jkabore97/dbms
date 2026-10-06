@@ -10,6 +10,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
 import 'invite_sheet.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Who belongs to this business, and who has been asked to.
 ///
@@ -115,7 +116,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Retirer ${member.label} ?'),
+        title: Text(context.tr('Retirer {label} ?', {'label': member.label})),
         content: Text(
           '${member.label} perdra l\'accès à '
           '${_scopeLabel(member).toLowerCase()} en tant que '
@@ -126,11 +127,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Retour'),
+            child: Text(context.tr('Retour')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Retirer'),
+            child: Text(context.tr('Retirer')),
           ),
         ],
       ),
@@ -226,38 +227,38 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.edit_outlined),
-                  title: const Text('Modifier les informations'),
+                  title: Text(context.tr('Modifier les informations')),
                   onTap: () => Navigator.pop(ctx, 'edit'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.badge_outlined),
-                  title: const Text('Changer la responsabilité'),
+                  title: Text(context.tr('Changer la responsabilité')),
                   onTap: () => Navigator.pop(ctx, 'role'),
                 ),
                 if (canWorker)
                   ListTile(
                     leading: const Icon(Icons.password_outlined),
-                    title: const Text('Réinitialiser le mot de passe'),
+                    title: Text(context.tr('Réinitialiser le mot de passe')),
                     onTap: () => Navigator.pop(ctx, 'password'),
                   ),
                 // A lost phone (075): every session of this person closed.
                 if (!isSelf && member.role != 'owner')
                   ListTile(
                     leading: const Icon(Icons.phonelink_erase_outlined),
-                    title: const Text('Déconnecter partout'),
-                    subtitle: const Text('Téléphone perdu ou volé'),
+                    title: Text(context.tr('Déconnecter partout')),
+                    subtitle: Text(context.tr('Téléphone perdu ou volé')),
                     onTap: () => Navigator.pop(ctx, 'signout'),
                   ),
                 ListTile(
                   leading: const Icon(Icons.person_remove_outlined),
-                  title: const Text("Retirer de l'entreprise"),
+                  title: Text(context.tr('Retirer de l\'entreprise')),
                   onTap: () => Navigator.pop(ctx, 'remove'),
                 ),
                 if (canWorker && !isSelf)
                   ListTile(
                     leading: Icon(Icons.delete_forever_outlined,
                         color: Theme.of(ctx).colorScheme.error),
-                    title: Text('Supprimer le compte',
+                    title: Text(context.tr('Supprimer le compte'),
                         style:
                             TextStyle(color: Theme.of(ctx).colorScheme.error)),
                     onTap: () => Navigator.pop(ctx, 'delete'),
@@ -295,19 +296,16 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Déconnecter ${member.label} partout ?'),
-        content: const Text(
-            'Tous ses téléphones et navigateurs devront se reconnecter avec '
-            'le mot de passe, au plus tard dans une heure. Ses accès à '
-            "l'entreprise ne changent pas : pour les retirer, utilisez "
-            "« Retirer de l'entreprise »."),
+        title: Text(context.tr('Déconnecter {label} partout ?', {'label': member.label})),
+        content: Text(
+            context.tr('Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'entreprise ».')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+              child: Text(context.tr('Annuler'))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Déconnecter')),
+              child: Text(context.tr('Déconnecter'))),
         ],
       ),
     );
@@ -376,7 +374,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final chosen = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Responsabilité de ${member.label}'),
+        title: Text(context.tr('Responsabilité de {label}', {'label': member.label})),
         content: StatefulBuilder(
           builder: (ctx, setInner) => DropdownButton<String>(
             value: selected,
@@ -391,11 +389,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, selected),
-            child: const Text('Enregistrer'),
+            child: Text(context.tr('Enregistrer')),
           ),
         ],
       ),
@@ -413,25 +411,25 @@ class _PeopleScreenState extends State<PeopleScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setInner) => AlertDialog(
-          title: Text('Nouveau mot de passe — ${member.label}'),
+          title: Text(context.tr('Nouveau mot de passe — {label}', {'label': member.label})),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: pw1,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nouveau mot de passe',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Nouveau mot de passe'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: pw2,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirmer',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Confirmer'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               if (error != null) ...[
@@ -444,7 +442,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler'),
+              child: Text(context.tr('Annuler')),
             ),
             FilledButton(
               onPressed: () {
@@ -459,7 +457,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 }
                 Navigator.pop(ctx, true);
               },
-              child: const Text('Changer'),
+              child: Text(context.tr('Changer')),
             ),
           ],
         ),
@@ -477,24 +475,21 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Supprimer le compte de ${member.label} ?'),
-        content: const Text(
-          "Le compte sera supprimé et la personne déconnectée. À sa prochaine "
-          "connexion, elle arrivera sur la page d'accueil pour rejoindre une "
-          'entreprise avec un code ou en demander une.\n\n'
-          "L'historique de ce qu'elle a enregistré reste dans les comptes.",
+        title: Text(context.tr('Supprimer le compte de {label} ?', {'label': member.label})),
+        content: Text(
+          context.tr('Le compte sera supprimé et la personne déconnectée. À sa prochaine connexion, elle arrivera sur la page d\'accueil pour rejoindre une entreprise avec un code ou en demander une.\n\nL\'historique de ce qu\'elle a enregistré reste dans les comptes.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer'),
+            child: Text(context.tr('Supprimer')),
           ),
         ],
       ),
@@ -539,7 +534,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final open = _invitations.where((i) => i.isOpen).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Personnes')),
+      appBar: AppBar(title: Text(context.tr('Personnes'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -551,13 +546,13 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     _Banner(message: _error!, onRetry: _load),
                     const SizedBox(height: 16),
                   ],
-                  Text('Membres (${_members.length})',
+                  Text(context.tr('Membres ({length})', {'length': _members.length}),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_members.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Text('Personne pour le moment.'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(context.tr('Personne pour le moment.')),
                     )
                   else
                     ..._members.map(
@@ -580,8 +575,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           // colleague may read it. Whether the sheet then offers
                           // to edit or manage them is decided inside, by rank.
                           trailing: m.role == 'owner'
-                              ? const Chip(
-                                  label: Text('Propriétaire'),
+                              ? Chip(
+                                  label: Text(context.tr('Propriétaire')),
                                   visualDensity: VisualDensity.compact,
                                 )
                               : const Icon(Icons.chevron_right),
@@ -590,13 +585,13 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       ),
                     ),
                   const SizedBox(height: 24),
-                  Text('Invitations en attente (${open.length})',
+                  Text(context.tr('Invitations en attente ({length})', {'length': open.length}),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (open.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Text('Aucune invitation en attente.'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(context.tr('Aucune invitation en attente.')),
                     )
                   else
                     ...open.map(
@@ -626,20 +621,20 @@ class _PeopleScreenState extends State<PeopleScreen> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.copy),
-                                tooltip: 'Copier',
+                                tooltip: context.tr('Copier'),
                                 onPressed: () async {
                                   await Clipboard.setData(
                                     ClipboardData(text: i.code),
                                   );
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Code copié')),
+                                    SnackBar(content: Text(context.tr('Code copié'))),
                                   );
                                 },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline),
-                                tooltip: 'Annuler',
+                                tooltip: context.tr('Annuler'),
                                 onPressed: () => _revokeInvitation(i),
                               ),
                             ],
@@ -654,7 +649,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _loading ? null : _invite,
         icon: const Icon(Icons.person_add_alt),
-        label: const Text('Inviter'),
+        label: Text(context.tr('Inviter')),
       ),
     );
   }
@@ -683,7 +678,7 @@ class _Banner extends StatelessWidget {
               style: TextStyle(color: theme.colorScheme.onErrorContainer),
             ),
           ),
-          TextButton(onPressed: onRetry, child: const Text('Réessayer')),
+          TextButton(onPressed: onRetry, child: Text(context.tr('Réessayer'))),
         ],
       ),
     );
@@ -729,7 +724,7 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
 
   Future<void> _save() async {
     if (_first.text.trim().isEmpty || _last.text.trim().isEmpty) {
-      setState(() => _error = 'Un prénom et un nom de famille sont requis.');
+      setState(() => _error = context.tr('Un prénom et un nom de famille sont requis.'));
       return;
     }
     setState(() {
@@ -772,16 +767,16 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Informations — ${widget.member.label}',
+            Text(context.tr('Informations — {label}', {'label': widget.member.label}),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _first,
               enabled: !_busy,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Prénom',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Prénom'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -789,9 +784,9 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
               controller: _middle,
               enabled: !_busy,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Deuxième prénom (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Deuxième prénom (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -799,18 +794,18 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
               controller: _last,
               enabled: !_busy,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Nom de famille',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom de famille'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _title,
               enabled: !_busy,
-              decoration: const InputDecoration(
-                labelText: 'Titre (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Titre (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -818,9 +813,9 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
               controller: _phone,
               enabled: !_busy,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Téléphone (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Téléphone (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -856,7 +851,7 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
               ),
             ),
           ],

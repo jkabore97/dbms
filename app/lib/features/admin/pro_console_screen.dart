@@ -9,6 +9,7 @@ import '../../core/cauris/cauris_repository.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'cauris_console_card.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Kaj Pro, from the platform's side (066, M10 block 2).
 ///
@@ -157,12 +158,12 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mara Pro'),
+        title: Text(context.tr('Mara Pro')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -178,24 +179,22 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                       leading: const Icon(Icons.error_outline),
                       title: Text(_error!),
                       trailing: TextButton(
-                          onPressed: _load, child: const Text('Réessayer')),
+                          onPressed: _load, child: Text(context.tr('Réessayer'))),
                     ),
                   ),
-                Text('Demandes en attente (${_requests.length})',
+                Text(context.tr('Demandes en attente ({length})', {'length': _requests.length}),
                     style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  'Un propriétaire a tapé « J\'ai payé ». Vérifiez le '
-                  'paiement dans Wave, passez l\'entreprise en Pro depuis sa '
-                  'formule, puis marquez la demande traitée.',
+                  context.tr('Un propriétaire a tapé « J\'ai payé ». Vérifiez le paiement dans Wave, passez l\'entreprise en Pro depuis sa formule, puis marquez la demande traitée.'),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 if (_requests.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Text('Aucune demande en attente.'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(context.tr('Aucune demande en attente.')),
                   ),
                 for (final r in _requests)
                   KajCard(
@@ -215,7 +214,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                               ),
                               if (r.orgPlan == 'pro')
                                 Chip(
-                                  label: const Text('déjà Pro'),
+                                  label: Text(context.tr('déjà Pro')),
                                   backgroundColor:
                                       theme.colorScheme.primaryContainer,
                                 ),
@@ -241,13 +240,13 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                                 onPressed: () => context.push(Routes.orgSettings(r.orgId)),
                                 icon: const Icon(Icons.workspace_premium_outlined,
                                     size: 18),
-                                label: const Text('Ouvrir la formule'),
+                                label: Text(context.tr('Ouvrir la formule')),
                               ),
                               const SizedBox(width: 4),
                               FilledButton.tonalIcon(
                                 onPressed: () => _handle(r),
                                 icon: const Icon(Icons.done, size: 18),
-                                label: const Text('Traitée'),
+                                label: Text(context.tr('Traitée')),
                               ),
                             ],
                           ),
@@ -258,11 +257,10 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                 const SizedBox(height: 28),
                 const Divider(),
                 const SizedBox(height: 12),
-                Text('Le numéro et le prix', style: theme.textTheme.titleMedium),
+                Text(context.tr('Le numéro et le prix'), style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  'Ce que la fenêtre Mara Pro dit aux propriétaires : où payer '
-                  'et combien. Sans numéro, elle dit de contacter Mara.',
+                  context.tr('Ce que la fenêtre Mara Pro dit aux propriétaires : où payer et combien. Sans numéro, elle dit de contacter Mara.'),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -271,19 +269,19 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   controller: _wave,
                   enabled: !_saving,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Numéro Wave / Orange Money de Mara',
+                  decoration: InputDecoration(
+                    labelText: context.tr('Numéro Wave / Orange Money de Mara'),
                     hintText: '+226 70 00 00 00',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _waveName,
                   enabled: !_saving,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom affiché sur Wave',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Nom affiché sur Wave'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -295,7 +293,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                         enabled: !_saving,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: 'Prix par mois (${_terms.currency})',
+                          labelText: context.tr('Prix par mois ({currency})', {'currency': _terms.currency}),
                           border: const OutlineInputBorder(),
                         ),
                       ),
@@ -307,7 +305,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                         enabled: !_saving,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: 'Prix par an (${_terms.currency})',
+                          labelText: context.tr('Prix par an ({currency})', {'currency': _terms.currency}),
                           border: const OutlineInputBorder(),
                         ),
                       ),
@@ -330,8 +328,8 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save_outlined),
-                    label: const Text('Enregistrer le numéro et les prix',
-                        style: TextStyle(fontSize: 16)),
+                    label: Text(context.tr('Enregistrer le numéro et les prix'),
+                        style: const TextStyle(fontSize: 16)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -340,12 +338,9 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   contentPadding: EdgeInsets.zero,
                   value: _stripeOn,
                   onChanged: _stripeSaving ? null : _setStripe,
-                  title: const Text('Abonnement par carte (Stripe)'),
+                  title: Text(context.tr('Abonnement par carte (Stripe)')),
                   subtitle: Text(
-                    'Les propriétaires s\'abonnent par carte, au prix ci-dessus, '
-                    'renouvelé chaque mois ou chaque année. À ouvrir une fois les '
-                    'clés Stripe installées (README, « Mara Pro by card »). Un '
-                    'nouveau prix vaut pour les nouveaux abonnements.',
+                    context.tr('Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Mara Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.'),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
@@ -358,11 +353,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                 ],
                 const SizedBox(height: 16),
                 Text(
-                  'La liste des outils Pro et les plafonds gratuits '
-                  '(${_terms.freeMaxStaff} comptes, '
-                  '${_terms.freeMaxInvoicesMonth} factures par mois, '
-                  '${_terms.freeMaxPhotos} photos) se changent dans '
-                  'platform_settings.',
+                  context.tr('La liste des outils Pro et les plafonds gratuits ({freeMaxStaff} comptes, {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos) se changent dans platform_settings.', {'freeMaxStaff': _terms.freeMaxStaff, 'freeMaxInvoicesMonth': _terms.freeMaxInvoicesMonth, 'freeMaxPhotos': _terms.freeMaxPhotos}),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),

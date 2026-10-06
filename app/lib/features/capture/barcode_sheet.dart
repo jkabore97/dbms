@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Reading a barcode with the camera.
 ///
@@ -88,7 +89,7 @@ class _BarcodeSheetState extends State<BarcodeSheet> {
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
-                  tooltip: 'Fermer',
+                  tooltip: context.tr('Fermer'),
                 ),
               ],
             ),
@@ -117,8 +118,7 @@ class _BarcodeSheetState extends State<BarcodeSheet> {
                             alignment: Alignment.center,
                             padding: const EdgeInsets.all(16),
                             child: Text(
-                              "La caméra n'est pas disponible : "
-                              '${error.errorCode.name}',
+                              context.tr('La caméra n\'est pas disponible : {name}', {'name': error.errorCode.name}),
                               textAlign: TextAlign.center,
                             ),
                           );
@@ -128,7 +128,7 @@ class _BarcodeSheetState extends State<BarcodeSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Placez le code-barres dans le cadre.',
+              context.tr('Placez le code-barres dans le cadre.'),
               style: theme.textTheme.bodySmall,
             ),
           ],

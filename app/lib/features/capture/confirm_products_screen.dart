@@ -8,6 +8,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/capture/invoice_reading.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The screen M5's demo is actually about: *she photographs a delivery invoice
 /// and the products are in the system without typing.*
@@ -189,7 +190,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
     final unsure = _rows.where((r) => !r.line.checked).length;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Articles lus')),
+      appBar: AppBar(title: Text(context.tr('Articles lus'))),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -219,8 +220,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Rien n’est enregistré tant que vous n’avez pas appuyé sur le '
-            'bouton. Corrigez ce qui est faux, décochez ce qui n’en est pas.',
+            context.tr('Rien n’est enregistré tant que vous n’avez pas appuyé sur le bouton. Corrigez ce qui est faux, décochez ce qui n’en est pas.'),
             style: theme.textTheme.bodySmall,
           ),
           if (unsure > 0) ...[
@@ -283,9 +283,9 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                   child: TextField(
                     controller: row.name,
                     enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Article',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Article'),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => setState(() {}),
@@ -310,9 +310,9 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                       enabled: !_saving,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Quantité',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: context.tr('Quantité'),
+                        border: const OutlineInputBorder(),
                         isDense: true,
                       ),
                       onChanged: (_) => setState(() {}),
@@ -325,11 +325,11 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                       enabled: !_saving,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         // Cost, not shelf price. A supplier's price used as
                         // the selling price would zero the margin silently.
-                        labelText: 'Prix d’achat',
-                        border: OutlineInputBorder(),
+                        labelText: context.tr('Prix d’achat'),
+                        border: const OutlineInputBorder(),
                         isDense: true,
                       ),
                       onChanged: (_) => setState(() {}),

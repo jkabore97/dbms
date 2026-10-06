@@ -15,6 +15,7 @@ import '../retail/sale_sheet.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/models.dart';
 import '../../l10n/strings.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Qui me doit combien — the carnet de crédit.
 ///
@@ -138,7 +139,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
         actions: [
           if (widget.access.canEdit('credits'))
             IconButton(
-              tooltip: 'Dette sans article (prêt)',
+              tooltip: context.tr('Dette sans article (prêt)'),
               icon: const Icon(Icons.request_quote_outlined),
               onPressed: _newLoan,
             ),

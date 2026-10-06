@@ -12,6 +12,7 @@ import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../admin/pin_preview.dart';
 import '../common/phone_field.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the first setup writes (091), apart so a test can stand in for it.
 abstract class SetupActions {
@@ -119,23 +120,23 @@ class _SetupScreenState extends State<SetupScreen> {
   List<_Step> get _steps => [
         (
           icon: _farm ? Icons.agriculture : Icons.storefront,
-          title: _farm ? 'Votre ferme' : 'Votre boutique',
-          line: 'Son nom, tel que vos clients le connaissent.',
+          title: _farm ? context.tr('Votre ferme') : context.tr('Votre boutique'),
+          line: context.tr('Son nom, tel que vos clients le connaissent.'),
         ),
         (
           icon: Icons.inventory_2,
-          title: _farm ? 'Ce que vous vendez' : 'Votre premier article',
-          line: 'Un nom, un prix, combien vous en avez.',
+          title: _farm ? context.tr('Ce que vous vendez') : context.tr('Votre premier article'),
+          line: context.tr('Un nom, un prix, combien vous en avez.'),
         ),
         (
           icon: Icons.storefront_outlined,
-          title: 'Votre vitrine',
-          line: 'Votre page, à partager sur WhatsApp.',
+          title: context.tr('Votre vitrine'),
+          line: context.tr('Votre page, à partager sur WhatsApp.'),
         ),
         (
           icon: Icons.place,
-          title: 'Où vous trouver',
-          line: 'Vos clients vous voient sur la carte.',
+          title: context.tr('Où vous trouver'),
+          line: context.tr('Vos clients vous voient sur la carte.'),
         ),
       ];
 
@@ -187,7 +188,7 @@ class _SetupScreenState extends State<SetupScreen> {
   Future<void> _saveName() async {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Le nom, s\'il vous plaît.');
+      setState(() => _error = context.tr('Le nom, s\'il vous plaît.'));
       return;
     }
     await _run(() => widget.actions.rename(widget.org.id, name, widget.org.currency));
@@ -198,7 +199,7 @@ class _SetupScreenState extends State<SetupScreen> {
     final price = _num(_price);
     final qty = _num(_quantity) ?? 0;
     if (name.isEmpty || price == null || price <= 0) {
-      setState(() => _error = 'Un nom et un prix.');
+      setState(() => _error = context.tr('Un nom et un prix.'));
       return;
     }
     await _run(() async {
@@ -269,7 +270,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   const MaraMark(size: 32),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text('Mise en route',
+                    child: Text(context.tr('Mise en route'),
                         style: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800)),
                   ),
@@ -366,13 +367,13 @@ class _SetupScreenState extends State<SetupScreen> {
           controller: _name,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
-            labelText: _farm ? 'Nom de la ferme' : 'Nom de la boutique',
+            labelText: _farm ? context.tr('Nom de la ferme') : context.tr('Nom de la boutique'),
             prefixIcon: const Icon(Icons.badge_outlined),
             border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 20),
-        _primary('Continuer', _saveName, key: const Key('setup-next-0')),
+        _primary(context.tr('Continuer'), _saveName, key: const Key('setup-next-0')),
       ];
 
   List<Widget> _articleStep(ThemeData theme) => [
@@ -389,7 +390,7 @@ class _SetupScreenState extends State<SetupScreen> {
           controller: _article,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
-            labelText: _farm ? 'Ex. : Plateau d\'œufs' : 'Ex. : Sac de riz 25 kg',
+            labelText: _farm ? context.tr('Ex. : Plateau d\'œufs') : context.tr('Ex. : Sac de riz 25 kg'),
             prefixIcon: const Icon(Icons.label_outline),
             border: const OutlineInputBorder(),
           ),
@@ -402,10 +403,10 @@ class _SetupScreenState extends State<SetupScreen> {
                 key: const Key('setup-price'),
                 controller: _price,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Prix (F)',
-                  prefixIcon: Icon(Icons.sell_outlined),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Prix (F)'),
+                  prefixIcon: const Icon(Icons.sell_outlined),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -415,10 +416,10 @@ class _SetupScreenState extends State<SetupScreen> {
                 key: const Key('setup-quantity'),
                 controller: _quantity,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'En stock',
-                  prefixIcon: Icon(Icons.inventory_outlined),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('En stock'),
+                  prefixIcon: const Icon(Icons.inventory_outlined),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -426,13 +427,13 @@ class _SetupScreenState extends State<SetupScreen> {
         ),
         const SizedBox(height: 14),
         if (_articles == 0)
-          _primary('Ajouter', _addArticle, key: const Key('setup-add'), icon: Icons.add)
+          _primary(context.tr('Ajouter'), _addArticle, key: const Key('setup-add'), icon: Icons.add)
         else
           OutlinedButton.icon(
             key: const Key('setup-add'),
             onPressed: _busy ? null : _addArticle,
             icon: const Icon(Icons.add),
-            label: const Text('Ajouter encore'),
+            label: Text(context.tr('Ajouter encore')),
           ),
         if (_articles > 0) ...[
           const SizedBox(height: 12),
@@ -447,10 +448,10 @@ class _SetupScreenState extends State<SetupScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          Text('Plus tard : Stock › « + ».',
+          Text(context.tr('Plus tard : Stock › « + ».'),
               textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
-          _primary('Continuer', () => _go(2), key: const Key('setup-next-1')),
+          _primary(context.tr('Continuer'), () => _go(2), key: const Key('setup-next-1')),
         ],
       ];
 
@@ -460,18 +461,18 @@ class _SetupScreenState extends State<SetupScreen> {
           value: _open,
           onChanged: (v) => setState(() => _open = v),
           secondary: const Icon(Icons.storefront),
-          title: const Text('Ouvrir ma vitrine'),
+          title: Text(context.tr('Ouvrir ma vitrine')),
         ),
         const SizedBox(height: 8),
         TextField(
           key: const Key('setup-blurb'),
           controller: _blurb,
           maxLength: 80,
-          decoration: const InputDecoration(
-            labelText: 'En une phrase',
-            hintText: 'Ex. : Le riz et l\'huile du quartier',
-            prefixIcon: Icon(Icons.short_text),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('En une phrase'),
+            hintText: context.tr('Ex. : Le riz et l\'huile du quartier'),
+            prefixIcon: const Icon(Icons.short_text),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 4),
@@ -480,20 +481,20 @@ class _SetupScreenState extends State<SetupScreen> {
           controller: _phone,
           country: _country,
           onCountry: (c) => setState(() => _country = c),
-          labelText: 'Téléphone des clients',
+          labelText: context.tr('Téléphone des clients'),
         ),
         const SizedBox(height: 10),
         TextField(
           key: const Key('setup-address'),
           controller: _address,
-          decoration: const InputDecoration(
-            labelText: 'Quartier, repère',
-            prefixIcon: Icon(Icons.home_work_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Quartier, repère'),
+            prefixIcon: const Icon(Icons.home_work_outlined),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 20),
-        _primary('Continuer', _saveVitrine, key: const Key('setup-next-2')),
+        _primary(context.tr('Continuer'), _saveVitrine, key: const Key('setup-next-2')),
       ];
 
   List<Widget> _positionStep(ThemeData theme) => [
@@ -503,7 +504,7 @@ class _SetupScreenState extends State<SetupScreen> {
             onPressed: _busy ? null : _locate,
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(56)),
             icon: const Icon(Icons.my_location),
-            label: const Text('Utiliser ma position'),
+            label: Text(context.tr('Utiliser ma position')),
           )
         else ...[
           PinPreview(
@@ -513,16 +514,16 @@ class _SetupScreenState extends State<SetupScreen> {
             onMove: (lat, lng) => setState(() => _pin = (lat, lng)),
           ),
           const SizedBox(height: 16),
-          _primary('Terminer', _savePosition,
+          _primary(context.tr('Terminer'), _savePosition,
               key: const Key('setup-next-3'), icon: Icons.check),
         ],
         const SizedBox(height: 12),
         TextButton(
           key: const Key('setup-later'),
           onPressed: _busy ? null : _finish,
-          child: const Text('Plus tard'),
+          child: Text(context.tr('Plus tard')),
         ),
-        Text('Sans position, pas de cauris de vitrine complète.',
+        Text(context.tr('Sans position, pas de cauris de vitrine complète.'),
             textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
       ];
 }
@@ -648,7 +649,7 @@ class _Ready extends StatelessWidget {
             children: [
               const Center(child: _Picture(icon: Icons.celebration)),
               const SizedBox(height: 20),
-              Text('C\'est prêt !',
+              Text(context.tr('C\'est prêt !'),
                   key: const Key('setup-ready'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium
@@ -666,7 +667,7 @@ class _Ready extends StatelessWidget {
                       backgroundColor: maraGold, foregroundColor: maraIndigo),
                   onPressed: onDone,
                   icon: const Icon(Icons.storefront),
-                  label: const Text('Ouvrir ma boutique', style: TextStyle(fontSize: 17)),
+                  label: Text(context.tr('Ouvrir ma boutique'), style: const TextStyle(fontSize: 17)),
                 ),
               ),
             ],

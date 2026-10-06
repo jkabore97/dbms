@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// "I paid for this in cedis — what did it cost in francs?"
 ///
@@ -99,23 +100,22 @@ class _CurrencyConvertDialogState extends State<CurrencyConvertDialog> {
     final converted = _converted;
 
     return AlertDialog(
-      title: const Text('Convertir un montant'),
+      title: Text(context.tr('Convertir un montant')),
       content: _loading
           ? const SizedBox(
               height: 80, child: Center(child: CircularProgressIndicator()))
           : _rates.isEmpty
-              ? const Text(
-                  'Aucun taux de change défini. Ajoutez vos monnaies dans '
-                  'Administration › Paramètres › Taux de change.')
+              ? Text(
+                  context.tr('Aucun taux de change défini. Ajoutez vos monnaies dans Administration › Paramètres › Taux de change.'))
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<CurrencyRate>(
                       initialValue: _picked,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Monnaie payée',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: context.tr('Monnaie payée'),
+                        border: const OutlineInputBorder(),
                       ),
                       items: [
                         for (final r in _rates)
@@ -135,7 +135,7 @@ class _CurrencyConvertDialogState extends State<CurrencyConvertDialog> {
                           decimal: true),
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        labelText: 'Montant',
+                        labelText: context.tr('Montant'),
                         suffixText: _picked?.currency,
                         border: const OutlineInputBorder(),
                       ),
@@ -159,14 +159,14 @@ class _CurrencyConvertDialogState extends State<CurrencyConvertDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         if (!_loading && _rates.isNotEmpty)
           FilledButton(
             onPressed: converted == null
                 ? null
                 : () => Navigator.of(context).pop(converted),
-            child: const Text('Utiliser'),
+            child: Text(context.tr('Utiliser')),
           ),
       ],
     );

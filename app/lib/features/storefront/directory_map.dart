@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/storefront/storefront_repository.dart';
 import 'shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Pins that sit on top of each other, grouped.
 ///
@@ -208,7 +209,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
             height: 48,
             child: Semantics(
               button: true,
-              label: '${g.length} boutiques ici',
+              label: context.tr('{length} boutiques ici', {'length': g.length}),
               hint: 'Rapprocher la carte',
               excludeSemantics: true,
               child: GestureDetector(
@@ -227,7 +228,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '${g.length}',
+                    context.tr('{length}', {'length': g.length}),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -249,7 +250,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
           width: 22,
           height: 22,
           child: Semantics(
-            label: 'Ma position',
+            label: context.tr('Ma position'),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: const Color(0xFF1F5FA8),
@@ -302,7 +303,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                         shape: const CircleBorder(),
                         elevation: 2,
                         child: IconButton(
-                          tooltip: 'Retour à la liste',
+                          tooltip: context.tr('Retour à la liste'),
                           icon: const Icon(Icons.arrow_back),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -449,8 +450,8 @@ class _MapCard extends StatelessWidget {
                           vertical: 10,
                         ),
                       ),
-                      child: const Text(
-                        'Voir la vitrine',
+                      child: Text(
+                        context.tr('Voir la vitrine'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -458,7 +459,7 @@ class _MapCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   IconButton.outlined(
-                    tooltip: 'Itinéraire',
+                    tooltip: context.tr('Itinéraire'),
                     onPressed: onDirections,
                     icon: const Icon(Icons.directions_outlined, size: 20),
                   ),

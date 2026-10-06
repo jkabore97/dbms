@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The invited person's side: type the code, see whose business it is, join.
 ///
@@ -69,8 +70,7 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
         _orgName = name;
         _checking = false;
         if (name == null) {
-          _error = 'Code inconnu, déjà utilisé ou expiré. '
-              'Vérifiez les caractères saisis.';
+          _error = context.tr('Code inconnu, déjà utilisé ou expiré. Vérifiez les caractères saisis.');
         }
       });
     } catch (error) {
@@ -107,7 +107,7 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
     final busy = _checking || _joining;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("J'ai un code")),
+      appBar: AppBar(title: Text(context.tr('J\'ai un code'))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -123,14 +123,13 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Entrez le code reçu',
+                  context.tr('Entrez le code reçu'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Le responsable de votre activité vous l\'a communiqué de '
-                  'vive voix, par écrit ou par QR code.',
+                  context.tr('Le responsable de votre activité vous l\'a communiqué de vive voix, par écrit ou par QR code.'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -149,13 +148,13 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
                   ),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'ABCD-2345',
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    hintText: context.tr('ABCD-2345'),
                     // Without this the field's accessible name is the example
                     // code, so a screen reader announces "ABCD-2345" as the
                     // name of the box rather than as a sample of what goes in.
-                    labelText: "Code d'invitation",
+                    labelText: context.tr('Code d\'invitation'),
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
                   onChanged: (_) {
@@ -201,7 +200,7 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'Vous rejoignez',
+                          context.tr('Vous rejoignez'),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                           ),
@@ -233,9 +232,9 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                                   child:
                                       CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text(
-                                  'Vérifier le code',
-                                  style: TextStyle(fontSize: 17),
+                              : Text(
+                                  context.tr('Vérifier le code'),
+                                  style: const TextStyle(fontSize: 17),
                                 ),
                         )
                       : FilledButton.icon(
@@ -248,9 +247,9 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                                       CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.login),
-                          label: const Text(
-                            'Rejoindre',
-                            style: TextStyle(fontSize: 17),
+                          label: Text(
+                            context.tr('Rejoindre'),
+                            style: const TextStyle(fontSize: 17),
                           ),
                         ),
                 ),

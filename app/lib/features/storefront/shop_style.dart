@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// How the street side looks — the vitrine and the directory — and why it
 /// does not look like the rest of the app.
@@ -447,7 +448,7 @@ class ShopFooter extends StatelessWidget {
           Center(
             child: UnderlineLink(
                 key: const Key('footer-directory'),
-                label: 'Toutes les vitrines',
+                label: context.tr('Toutes les vitrines'),
                 onTap: onDirectory,
                 style: const TextStyle(
                     fontSize: 16,
@@ -468,14 +469,14 @@ class ShopFooter extends StatelessWidget {
             children: [
               const MaraWordmark(key: Key('mara-footer'), height: 40),
               const SizedBox(height: 4),
-              const Text('Au Service du Peuple',
-                  key: Key('footer-slogan'),
+              Text(context.tr('Au Service du Peuple'),
+                  key: const Key('footer-slogan'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
               const SizedBox(height: 24),
               // « POWERED BY KAJ », KAJ in bold.
               Semantics(
-                label: 'Powered by KAJ',
+                label: context.tr('Powered by KAJ'),
                 child: const ExcludeSemantics(
                   child: Text.rich(
                     key: Key('powered-by'),
@@ -571,7 +572,7 @@ Future<T?> showShopSheet<T>({
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    tooltip: 'Fermer',
+                    tooltip: context.tr('Fermer'),
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(dialog).pop(),
                   ),

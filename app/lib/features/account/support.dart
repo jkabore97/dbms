@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Reaching the people who run Kaj.
 ///
@@ -25,14 +26,14 @@ class Support {
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok && context.mounted) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text("Impossible d'ouvrir WhatsApp sur cet appareil."),
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Impossible d\'ouvrir WhatsApp sur cet appareil.')),
         ));
       }
     } catch (_) {
       if (context.mounted) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text("Impossible d'ouvrir WhatsApp sur cet appareil."),
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Impossible d\'ouvrir WhatsApp sur cet appareil.')),
         ));
       }
     }

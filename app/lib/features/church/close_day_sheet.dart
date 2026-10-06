@@ -3,6 +3,7 @@ import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/local_db.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Closing the day.
 ///
@@ -130,21 +131,21 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                 _Row(
                   icon: Icons.arrow_downward,
                   color: Colors.green.shade700,
-                  label: 'Reçu',
+                  label: context.tr('Reçu'),
                   value: money.format(_moneyIn),
                 ),
                 const SizedBox(height: 12),
                 _Row(
                   icon: Icons.arrow_upward,
                   color: Colors.orange.shade800,
-                  label: 'Dépensé',
+                  label: context.tr('Dépensé'),
                   value: money.format(_moneyOut),
                 ),
                 const Divider(height: 28),
                 _Row(
                   icon: Icons.functions,
                   color: theme.colorScheme.primary,
-                  label: 'Solde du jour',
+                  label: context.tr('Solde du jour'),
                   value: money.format(_moneyIn - _moneyOut),
                   emphasis: true,
                 ),
@@ -153,7 +154,7 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                 _Row(
                   icon: Icons.receipt_long_outlined,
                   color: theme.colorScheme.onSurfaceVariant,
-                  label: 'Enregistrements',
+                  label: context.tr('Enregistrements'),
                   value: '$_entries',
                 ),
                 const SizedBox(height: 12),
@@ -167,7 +168,7 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                   color: _pending == 0
                       ? Colors.green.shade700
                       : Colors.orange.shade800,
-                  label: 'En attente d\'envoi',
+                  label: context.tr('En attente d\'envoi'),
                   value: _pending == 0 ? 'Tout est envoyé' : '$_pending',
                 ),
 

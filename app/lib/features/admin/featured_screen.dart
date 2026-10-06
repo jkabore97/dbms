@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/format/money.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The paid spots on the welcome page — "à la une".
 ///
@@ -103,11 +104,10 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
     if (_asks.isEmpty) return const [];
     final date = DateFormat('d MMM', 'fr_FR');
     return [
-      Text('Mises en avant achetées', style: theme.textTheme.titleMedium),
+      Text(context.tr('Mises en avant achetées'), style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
       Text(
-        'Vérifiez le paiement Wave, puis validez : la période commence '
-        'aussitôt, ou dès qu\'une place se libère.',
+        context.tr('Vérifiez le paiement Wave, puis validez : la période commence aussitôt, ou dès qu\'une place se libère.'),
         style: theme.textTheme.bodySmall
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
       ),
@@ -119,7 +119,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${a.orgName} · ${a.label}',
+                Text(context.tr('{orgName} · {label}', {'orgName': a.orgName, 'label': a.label}),
                     style: theme.textTheme.titleSmall),
                 const SizedBox(height: 2),
                 Text([
@@ -143,13 +143,13 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                       TextButton(
                         onPressed:
                             _busyId != null ? null : () => _decide(a, false),
-                        child: const Text('Refuser'),
+                        child: Text(context.tr('Refuser')),
                       ),
                       const SizedBox(width: 4),
                       FilledButton(
                         onPressed:
                             _busyId != null ? null : () => _decide(a, true),
-                        child: const Text('Valider'),
+                        child: Text(context.tr('Valider')),
                       ),
                     ],
                   ),
@@ -158,7 +158,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
           ),
         ),
       const SizedBox(height: 20),
-      Text('Choix de la plateforme', style: theme.textTheme.titleMedium),
+      Text(context.tr('Choix de la plateforme'), style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
     ];
   }
@@ -170,10 +170,10 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('À la une'),
+        title: Text(context.tr('À la une')),
         actions: [
           IconButton(
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
@@ -191,19 +191,17 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                         Text(_error!, textAlign: TextAlign.center),
                         const SizedBox(height: 12),
                         OutlinedButton(
-                            onPressed: _load, child: const Text('Réessayer')),
+                            onPressed: _load, child: Text(context.tr('Réessayer'))),
                       ],
                     ),
                   ),
                 )
               : _rows.isEmpty && _asks.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(32),
                         child: Text(
-                          'Aucun article en vitrine pour le moment. '
-                          'Une boutique doit ouvrir sa vitrine et y afficher '
-                          "des articles avant qu'ils puissent passer à la une.",
+                          context.tr('Aucun article en vitrine pour le moment. Une boutique doit ouvrir sa vitrine et y afficher des articles avant qu\'ils puissent passer à la une.'),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -213,9 +211,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                       children: [
                         ..._askSection(theme),
                         Text(
-                          'Les articles cochés apparaissent sur la page '
-                          "d'accueil, toutes boutiques confondues, pendant "
-                          '30 jours. $live à la une en ce moment.',
+                          context.tr('Les articles cochés apparaissent sur la page d\'accueil, toutes boutiques confondues, pendant 30 jours. {live} à la une en ce moment.', {'live': live}),
                           style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant),
                         ),

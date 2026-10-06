@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/motion.dart';
 import 'shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The page before its content: the shape of what is coming, in the paper
 /// colours, breathing slowly. A spinner in the middle of a blank page says
@@ -79,7 +80,7 @@ class ShopSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Chargement…',
+      label: context.tr('Chargement…'),
       liveRegion: true,
       child: ExcludeSemantics(
         child: SingleChildScrollView(

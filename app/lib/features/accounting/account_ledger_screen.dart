@@ -5,6 +5,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One account, every movement, with the balance after each.
 ///
@@ -161,7 +162,7 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StatTile(
-            label: 'Solde à la fin de la période',
+            label: context.tr('Solde à la fin de la période'),
             amount: closing,
             money: money,
             emphasis: true,
@@ -170,10 +171,10 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
           Row(
             children: [
               Expanded(
-                child: StatTile(label: 'Entré', amount: debit, money: money),
+                child: StatTile(label: context.tr('Entré'), amount: debit, money: money),
               ),
               Expanded(
-                child: StatTile(label: 'Sorti', amount: credit, money: money),
+                child: StatTile(label: context.tr('Sorti'), amount: credit, money: money),
               ),
             ],
           ),

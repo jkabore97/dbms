@@ -6,6 +6,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/mara_mark.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The association's trust level on its home (088): the level as four
 /// steps, tapped open for the five pillars. Drawn only inside the app's
@@ -73,11 +74,11 @@ class _TrustCardState extends State<TrustCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('NIVEAU DE CONFIANCE',
+                      Text(context.tr('NIVEAU DE CONFIANCE'),
                           style: theme.textTheme.labelSmall
                               ?.copyWith(letterSpacing: 1.2, color: kMist)),
                       const SizedBox(height: 2),
-                      Text(t.level,
+                      Text(context.tr(t.level),
                           key: const Key('trust-level'),
                           style: theme.textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w800)),
@@ -155,7 +156,7 @@ class _TrustScreenState extends State<TrustScreen> {
     final admin = widget.platformAdmin ??
         (AppScope.maybeOf(context)?.session.isPlatformAdmin ?? false);
     return Scaffold(
-      appBar: AppBar(title: const Text('Niveau de confiance')),
+      appBar: AppBar(title: Text(context.tr('Niveau de confiance'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
@@ -172,7 +173,7 @@ class _TrustScreenState extends State<TrustScreen> {
           else if (t != null) ...[
             Center(child: _Seal(level: t, size: 96)),
             const SizedBox(height: 12),
-            Text(t.level,
+            Text(context.tr(t.level),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
@@ -180,9 +181,7 @@ class _TrustScreenState extends State<TrustScreen> {
             Center(child: _Steps(step: t.step, wide: true)),
             const SizedBox(height: 12),
             Text(
-              'La confiance ne s\'achète pas et ne se compare pas : elle se lit '
-              'dans vos comptes. Tenez-les chaque semaine et justifiez chaque '
-              'dépense : c\'est ce qu\'un donateur regarde.',
+              context.tr('La confiance ne s\'achète pas et ne se compare pas : elle se lit dans vos comptes. Tenez-les chaque semaine et justifiez chaque dépense : c\'est ce qu\'un donateur regarde.'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(color: kMist),
             ),
@@ -196,7 +195,7 @@ class _TrustScreenState extends State<TrustScreen> {
                     p.met ? Icons.check_circle : Icons.radio_button_unchecked,
                     color: p.met ? maraGreen : kMist,
                   ),
-                  title: Text(p.title,
+                  title: Text(context.tr(p.title),
                       style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(p.line),
                 ),
@@ -207,9 +206,9 @@ class _TrustScreenState extends State<TrustScreen> {
                 key: const Key('trust-verify'),
                 value: t.verified,
                 onChanged: _busy ? null : _verify,
-                title: const Text('Vérifiée par Mara'),
-                subtitle: const Text(
-                    'Réservé à Mara : après avoir vu le récépissé et les responsables.'),
+                title: Text(context.tr('Vérifiée par Mara')),
+                subtitle: Text(
+                    context.tr('Réservé à Mara : après avoir vu le récépissé et les responsables.')),
               ),
             ],
           ],

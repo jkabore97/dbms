@@ -12,6 +12,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import 'cauri_icon.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « Mes cauris » (084): what the business has earned, how, and how to
 /// earn more.
@@ -105,7 +106,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
     final theme = Theme.of(context);
     final w = _wallet;
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes cauris')),
+      appBar: AppBar(title: Text(context.tr('Mes cauris'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -119,8 +120,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
             else if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error))
             else if (w == null)
-              const Text('Les cauris ne sont pas encore ouverts pour '
-                  'cette entreprise.')
+              Text(context.tr('Les cauris ne sont pas encore ouverts pour cette entreprise.'))
             else ...[
               _Wallet(wallet: w),
               const SizedBox(height: 12),
@@ -128,14 +128,14 @@ class _CaurisScreenState extends State<CaurisScreen> {
                 key: const Key('open-league'),
                 onPressed: () => context.push(Routes.inside(widget.org.id, 'classement')),
                 icon: const Icon(Icons.emoji_events_outlined),
-                label: Text('Classement de la semaine · +${w.week}'),
+                label: Text(context.tr('Classement de la semaine · +{week}', {'week': w.week})),
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 key: const Key('open-academy'),
                 onPressed: () => context.push(Routes.inside(widget.org.id, 'academie')),
                 icon: const Icon(Icons.school_outlined),
-                label: const Text('Apprendre et gagner · Académie Mara'),
+                label: Text(context.tr('Apprendre et gagner · Académie Mara')),
               ),
               const SizedBox(height: 22),
               _label(theme, 'Comment gagner des cauris'),
@@ -150,8 +150,8 @@ class _CaurisScreenState extends State<CaurisScreen> {
                         title: Text(r.label),
                         subtitle: r.dailyCap == null
                             ? null
-                            : Text('jusqu\'à ${r.dailyCap} par jour'),
-                        trailing: Text('+${r.points}',
+                            : Text(context.tr('jusqu\'à {dailyCap} par jour', {'dailyCap': r.dailyCap})),
+                        trailing: Text(context.tr('+{points}', {'points': r.points}),
                             style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700)),
                       ),
@@ -181,13 +181,13 @@ class _CaurisScreenState extends State<CaurisScreen> {
                           child: OutlinedButton.icon(
                             onPressed: () => _share(w.referralCode!),
                             icon: const Icon(Icons.share_outlined, size: 18),
-                            label: const Text('Envoyer sur WhatsApp'),
+                            label: Text(context.tr('Envoyer sur WhatsApp')),
                           ),
                         ),
                       ],
                       if (!w.referred) ...[
                         const SizedBox(height: 16),
-                        Text('On vous a parrainé ?',
+                        Text(context.tr('On vous a parrainé ?'),
                             style: theme.textTheme.titleSmall),
                         const SizedBox(height: 6),
                         Row(
@@ -197,9 +197,9 @@ class _CaurisScreenState extends State<CaurisScreen> {
                                 key: const Key('referral-code'),
                                 controller: _code,
                                 enabled: !_savingCode,
-                                decoration: const InputDecoration(
-                                  hintText: 'Le code de votre parrain',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  hintText: context.tr('Le code de votre parrain'),
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
                                 ),
                               ),
@@ -207,7 +207,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
                             const SizedBox(width: 8),
                             FilledButton(
                               onPressed: _savingCode ? null : _saveCode,
-                              child: const Text('Valider'),
+                              child: Text(context.tr('Valider')),
                             ),
                           ],
                         ),
@@ -223,8 +223,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
               const SizedBox(height: 22),
               _label(theme, 'Historique'),
               if (w.history.isEmpty)
-                Text('Pas encore de cauris. La première commande terminée '
-                    'en rapporte.',
+                Text(context.tr('Pas encore de cauris. La première commande terminée en rapporte.'),
                     style: theme.textTheme.bodyMedium?.copyWith(color: kMist))
               else
                 KajCard(
@@ -243,7 +242,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
                             if (h.note != null) h.note!,
                           ].join(' · ')),
                           trailing: Text(
-                            h.delta > 0 ? '+${h.delta}' : '${h.delta}',
+                            h.delta > 0 ? context.tr('+{delta}', {'delta': h.delta}) : context.tr('{delta}', {'delta': h.delta}),
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               color: h.delta > 0
@@ -319,7 +318,7 @@ class _Wallet extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Cette semaine : +${wallet.week}',
+            context.tr('Cette semaine : +{week}', {'week': wallet.week}),
             key: const Key('cauris-week'),
             style: theme.textTheme.titleSmall?.copyWith(color: maraGold),
           ),

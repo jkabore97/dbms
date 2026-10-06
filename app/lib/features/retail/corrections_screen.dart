@@ -8,6 +8,7 @@ import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Undoing a transaction the honest way.
 ///
@@ -89,18 +90,17 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
           children: [
             Text(detail),
             const SizedBox(height: 8),
-            const Text(
-              "L'opération n'est pas supprimée : une écriture inverse "
-              "l'annule dans le stock et dans la comptabilité.",
-              style: TextStyle(fontSize: 13),
+            Text(
+              context.tr('L\'opération n\'est pas supprimée : une écriture inverse l\'annule dans le stock et dans la comptabilité.'),
+              style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Raison (facultatif)',
-                hintText: 'ex. données de test',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Raison (facultatif)'),
+                hintText: context.tr('ex. données de test'),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -109,11 +109,11 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Corriger'),
+            child: Text(context.tr('Corriger')),
           ),
         ],
       ),
@@ -125,7 +125,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
       await run(reason);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Correction enregistrée.')),
+        SnackBar(content: Text(context.tr('Correction enregistrée.'))),
       );
       await _load();
     } catch (error) {
@@ -152,7 +152,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Corrections')),
+      appBar: AppBar(title: Text(context.tr('Corrections'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -166,20 +166,18 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
                     const SizedBox(height: 12),
                   ],
                   Text(
-                    "Annulez une vente ou un achat entré par erreur — ou des "
-                    "données de test. Rien n'est effacé : la comptabilité et "
-                    "les analyses se corrigent d'elles-mêmes.",
+                    context.tr('Annulez une vente ou un achat entré par erreur — ou des données de test. Rien n\'est effacé : la comptabilité et les analyses se corrigent d\'elles-mêmes.'),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 20),
 
                   // Sales.
-                  Text('Ventes', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Ventes'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_sales.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Text('Aucune vente.'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(context.tr('Aucune vente.')),
                     )
                   else
                     ..._sales.map(_saleTile),
@@ -187,12 +185,12 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
                   const SizedBox(height: 24),
 
                   // Deliveries / purchases.
-                  Text('Entrées de stock', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Entrées de stock'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_deliveries.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Text('Aucune entrée de stock.'),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(context.tr('Aucune entrée de stock.')),
                     )
                   else
                     ..._deliveries.map(_deliveryTile),
@@ -226,20 +224,20 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         ].join(' · ')),
         trailing: s.reversed
             ? Chip(
-                label: const Text('Corrigé'),
+                label: Text(context.tr('Corrigé')),
                 visualDensity: VisualDensity.compact,
                 backgroundColor: theme.colorScheme.surfaceContainerHighest,
               )
             : OutlinedButton(
                 onPressed: () => _confirmAndReverse(
-                  title: 'Corriger cette vente ?',
+                  title: context.tr('Corriger cette vente ?'),
                   detail:
                       'Vente de ${_money.format(s.total)} du ${_when(s.occurredAt)}. '
                       'Les articles retournent en stock.',
                   run: (reason) =>
                       widget.retail.recordReturn(s.id, note: reason),
                 ),
-                child: const Text('Corriger'),
+                child: Text(context.tr('Corriger')),
               ),
       ),
     );
@@ -269,20 +267,20 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         ].join(' · ')),
         trailing: d.reversed
             ? Chip(
-                label: const Text('Corrigé'),
+                label: Text(context.tr('Corrigé')),
                 visualDensity: VisualDensity.compact,
                 backgroundColor: theme.colorScheme.surfaceContainerHighest,
               )
             : OutlinedButton(
                 onPressed: () => _confirmAndReverse(
-                  title: 'Corriger cette entrée ?',
+                  title: context.tr('Corriger cette entrée ?'),
                   detail: '$qty ${d.productName} entré(s) le '
                       '${_when(d.receivedAt)}. Le stock est retiré et '
                       "l'achat est annulé dans les comptes.",
                   run: (reason) =>
                       widget.retail.reverseReceipt(d.id, reason: reason),
                 ),
-                child: const Text('Corriger'),
+                child: Text(context.tr('Corriger')),
               ),
       ),
     );

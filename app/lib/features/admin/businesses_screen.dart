@@ -7,6 +7,7 @@ import '../../core/admin/admin_repository.dart';
 import 'create_business_screen.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Every business on the platform, and the three things that can be done to
 /// one: changed, put away, destroyed.
@@ -83,20 +84,18 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Archiver ${org.name} ?'),
-        content: const Text(
-          'Elle disparaîtra de l’écran de ses membres. Rien n’est supprimé : '
-          'toutes les écritures restent, et vous pouvez la restaurer à tout '
-          'moment.',
+        title: Text(context.tr('Archiver {name} ?', {'name': org.name})),
+        content: Text(
+          context.tr('Elle disparaîtra de l’écran de ses membres. Rien n’est supprimé : toutes les écritures restent, et vous pouvez la restaurer à tout moment.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Archiver'),
+            child: Text(context.tr('Archiver')),
           ),
         ],
       ),
@@ -150,11 +149,11 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     final archived = _orgs.where((o) => o.isArchived).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Entreprises')),
+      appBar: AppBar(title: Text(context.tr('Entreprises'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.add_business),
-        label: const Text('Nouvelle'),
+        label: Text(context.tr('Nouvelle')),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -177,7 +176,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
                     OutlinedButton.icon(
                       onPressed: _load,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Réessayer'),
+                      label: Text(context.tr('Réessayer')),
                     ),
                   ],
                 ),
@@ -192,11 +191,10 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
               ),
             if (archived.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text('Archivées', style: theme.textTheme.titleMedium),
+              Text(context.tr('Archivées'), style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                'Invisibles pour leurs membres, complètes, restaurables. '
-                'La suppression définitive n’est possible qu’ici.',
+                context.tr('Invisibles pour leurs membres, complètes, restaurables. La suppression définitive n’est possible qu’ici.'),
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
@@ -212,7 +210,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
                 padding: const EdgeInsets.only(top: 48),
                 child: Center(
                   child: Text(
-                    'Aucune entreprise pour le moment.',
+                    context.tr('Aucune entreprise pour le moment.'),
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
@@ -263,7 +261,7 @@ class _BusinessCard extends StatelessWidget {
                 ),
                 if (org.isArchived)
                   Chip(
-                    label: const Text('Archivée'),
+                    label: Text(context.tr('Archivée')),
                     visualDensity: VisualDensity.compact,
                     backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
@@ -291,19 +289,19 @@ class _BusinessCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onEdit,
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Modifier'),
+                    label: Text(context.tr('Modifier')),
                   ),
                 if (onArchive != null)
                   OutlinedButton.icon(
                     onPressed: onArchive,
                     icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                    label: const Text('Archiver'),
+                    label: Text(context.tr('Archiver')),
                   ),
                 if (onRestore != null)
                   FilledButton.tonalIcon(
                     onPressed: onRestore,
                     icon: const Icon(Icons.unarchive_outlined, size: 18),
-                    label: const Text('Restaurer'),
+                    label: Text(context.tr('Restaurer')),
                   ),
                 // Deliberately the last thing, deliberately only on an
                 // archived business, and deliberately not a filled button.
@@ -313,7 +311,7 @@ class _BusinessCard extends StatelessWidget {
                     style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error),
                     icon: const Icon(Icons.delete_forever_outlined, size: 18),
-                    label: const Text('Supprimer définitivement'),
+                    label: Text(context.tr('Supprimer définitivement')),
                   ),
               ],
             ),
@@ -379,7 +377,7 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
     final org = widget.org;
 
     return AlertDialog(
-      title: const Text('Supprimer définitivement'),
+      title: Text(context.tr('Supprimer définitivement')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +396,7 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
-          Text('Tapez « ${org.name} » pour confirmer.',
+          Text(context.tr('Tapez « {name} » pour confirmer.', {'name': org.name}),
               style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
           TextField(
@@ -417,7 +415,7 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -425,7 +423,7 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
             foregroundColor: theme.colorScheme.onError,
           ),
           onPressed: _matches ? () => Navigator.of(context).pop(true) : null,
-          child: const Text('Supprimer'),
+          child: Text(context.tr('Supprimer')),
         ),
       ],
     );
@@ -493,7 +491,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-      messenger.showSnackBar(const SnackBar(content: Text('Enregistré.')));
+      messenger.showSnackBar(SnackBar(content: Text(context.tr('Enregistré.'))));
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -513,20 +511,20 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Modifier l’entreprise', style: theme.textTheme.titleLarge),
+            Text(context.tr('Modifier l’entreprise'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
-              decoration: const InputDecoration(
-                labelText: 'Nom',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _slug,
               decoration: InputDecoration(
-                labelText: 'Adresse',
+                labelText: context.tr('Adresse'),
                 border: const OutlineInputBorder(),
                 helperText: _slugProblem == null
                     ? 'Sert de sous-domaine : ${_slug.text.trim()}.kajapp.com'
@@ -537,39 +535,39 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _profile,
-              decoration: const InputDecoration(
-                labelText: 'Type',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Type'),
+                border: const OutlineInputBorder(),
                 // Not cosmetic: the profile decides which home screen every
                 // member of this business opens on tomorrow morning.
-                helperText: 'Change l’écran d’accueil de tous les membres.',
+                helperText: context.tr('Change l’écran d’accueil de tous les membres.'),
               ),
               items: [
-                const DropdownMenuItem(
-                    value: 'association', child: Text('Association')),
-                const DropdownMenuItem(value: 'farm', child: Text('Ferme')),
-                const DropdownMenuItem(
-                    value: 'retail', child: Text('Commerce')),
+                DropdownMenuItem(
+                    value: 'association', child: Text(context.tr('Association'))),
+                DropdownMenuItem(value: 'farm', child: Text(context.tr('Ferme'))),
+                DropdownMenuItem(
+                    value: 'retail', child: Text(context.tr('Commerce'))),
                 // A business not yet migrated by 035 still reads 'church';
                 // keep it selectable so its edit form does not crash on a
                 // value with no item, without offering it to anyone else.
                 if (widget.org.profile == 'church')
-                  const DropdownMenuItem(value: 'church', child: Text('Association')),
+                  DropdownMenuItem(value: 'church', child: Text(context.tr('Association'))),
                 // 'Autre' is no longer offered when creating a business. Kept
                 // here only for one already on it, so its edit form neither
                 // breaks (a Dropdown value must match an item) nor lets a
                 // business be newly switched to the empty profile.
                 if (widget.org.profile == 'generic')
-                  const DropdownMenuItem(value: 'generic', child: Text('Autre')),
+                  DropdownMenuItem(value: 'generic', child: Text(context.tr('Autre'))),
               ],
               onChanged: (v) => setState(() => _profile = v ?? _profile),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _currency,
-              decoration: const InputDecoration(
-                labelText: 'Monnaie',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Monnaie'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -583,7 +581,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.check),
-                label: const Text('Enregistrer'),
+                label: Text(context.tr('Enregistrer')),
               ),
             ),
           ],

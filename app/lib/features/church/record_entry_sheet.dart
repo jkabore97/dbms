@@ -4,6 +4,7 @@ import '../../core/format/money.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import 'entry_controls.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Recording money, in either direction, by the name the person gives it.
 ///
@@ -127,8 +128,8 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
   Future<void> _addCategory() async {
     final name = await promptForName(
       context,
-      title: widget.isIncome ? 'Nouvelle recette' : 'Nouvelle dépense',
-      label: 'Nom de la catégorie',
+      title: widget.isIncome ? context.tr('Nouvelle recette') : context.tr('Nouvelle dépense'),
+      label: context.tr('Nom de la catégorie'),
       hint: widget.isIncome ? 'Vente de terrain' : 'Réparation du toit',
     );
     if (name == null || !mounted) return;
@@ -245,7 +246,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    widget.isIncome ? 'Recette' : 'Dépense',
+                    widget.isIncome ? context.tr('Recette') : context.tr('Dépense'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: accent,
                       fontWeight: FontWeight.w700,
@@ -276,7 +277,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
               enabled: !_saving,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                labelText: "Nom de l'entrée",
+                labelText: context.tr('Nom de l\'entrée'),
                 hintText: widget.isIncome
                     ? 'Offrande du dimanche'
                     : 'Réparation du toit',
@@ -284,7 +285,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
                 suffixIcon: _nameController.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Effacer',
+                        tooltip: context.tr('Effacer'),
                         icon: const Icon(Icons.close, size: 18),
                         onPressed: () => setState(() {
                           _nameController.clear();
@@ -333,7 +334,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
                 onExpansionChanged: (open) =>
                     setState(() => _detailsOpen = open),
                 title: Text(
-                  'Détails',
+                  context.tr('Détails'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -345,10 +346,10 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
                     minLines: 2,
                     maxLines: 4,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'Note',
-                      hintText: 'Ce qu\'il faut se rappeler de cette entrée',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Note'),
+                      hintText: context.tr('Ce qu\'il faut se rappeler de cette entrée'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -393,7 +394,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Fonctionne sans connexion',
+                context.tr('Fonctionne sans connexion'),
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
             ),

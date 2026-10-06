@@ -14,6 +14,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/theme/kaj_card.dart';
 import '../capture/capture_action.dart';
 import '../retail/product_photo.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -98,14 +99,14 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final slug = widget.org.slug;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('À vendre'),
+        title: Text(context.tr('À vendre')),
         actions: [
           if (slug != null && slug.isNotEmpty)
             TextButton.icon(
               key: const Key('see-vitrine'),
               onPressed: () => context.push(Routes.storefront(slug)),
               icon: const Icon(Icons.storefront_outlined),
-              label: const Text('Ma vitrine'),
+              label: Text(context.tr('Ma vitrine')),
             ),
         ],
       ),
@@ -114,7 +115,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
               key: const Key('for-sale-add'),
               onPressed: () => _open(),
               icon: const Icon(Icons.add),
-              label: const Text('Mettre en vente'),
+              label: Text(context.tr('Mettre en vente')),
             )
           : null,
       body: RefreshIndicator(
@@ -123,10 +124,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
           children: [
             Text(
-              'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa '
-              'photo et son prix, est sur votre vitrine. Les clients '
-              'commandent, viennent le chercher à la ferme ou se le font '
-              'livrer.',
+              context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent, viennent le chercher à la ferme ou se le font livrer.'),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
@@ -137,7 +135,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                 onPressed: () =>
                     context.push(Routes.orgSettings(widget.org.id)),
                 icon: const Icon(Icons.settings_outlined, size: 18),
-                label: const Text('Ouvrir ou régler la vitrine'),
+                label: Text(context.tr('Ouvrir ou régler la vitrine')),
               ),
             ),
             const SizedBox(height: 8),
@@ -153,8 +151,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    'Rien en vente pour le moment. « Mettre en vente » : un '
-                    'plateau d\'œufs, un sac de maïs, une pintade…',
+                    context.tr('Rien en vente pour le moment. « Mettre en vente » : un plateau d\'œufs, un sac de maïs, une pintade…'),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
@@ -299,7 +296,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
     final name = _name.text.trim();
     final price = _num(_price);
     if (name.isEmpty || price == null || price < 0) {
-      setState(() => _error = 'Un nom et un prix, s\'il vous plaît.');
+      setState(() => _error = context.tr('Un nom et un prix, s\'il vous plaît.'));
       return;
     }
     setState(() {
@@ -371,7 +368,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(editing ? 'Modifier' : 'Mettre en vente',
+            Text(editing ? context.tr('Modifier') : context.tr('Mettre en vente'),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
@@ -399,10 +396,10 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     controller: _name,
                     enabled: !_busy,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'Quoi ?',
-                      hintText: 'Œufs frais, poulets de chair…',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Quoi ?'),
+                      hintText: context.tr('Œufs frais, poulets de chair…'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -418,7 +415,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     enabled: !_busy,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Prix (${widget.org.currency})',
+                      labelText: context.tr('Prix ({currency})', {'currency': widget.org.currency}),
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -429,10 +426,10 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     key: const Key('for-sale-unit'),
                     controller: _unit,
                     enabled: !_busy,
-                    decoration: const InputDecoration(
-                      labelText: 'Par',
-                      hintText: 'plateau, kg…',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Par'),
+                      hintText: context.tr('plateau, kg…'),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -461,7 +458,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               enabled: !_busy,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Combien en avez-vous ?',
+                labelText: context.tr('Combien en avez-vous ?'),
                 suffixText: _unit.text.trim().isEmpty ? null : _unit.text.trim(),
                 border: const OutlineInputBorder(),
               ),
@@ -480,7 +477,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                         setState(() => _availableFrom = null);
                       }
                     },
-              title: const Text('Pas encore prêt'),
+              title: Text(context.tr('Pas encore prêt')),
               subtitle: Text(_availableFrom == null
                   ? 'Une bande ou une récolte à venir : les clients '
                       'commandent à l\'avance.'
@@ -492,10 +489,10 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               enabled: !_busy,
               maxLength: 300,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'En deux mots (facultatif)',
-                hintText: 'Poulets fermiers de 2 kg, nourris au maïs.',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('En deux mots (facultatif)'),
+                hintText: context.tr('Poulets fermiers de 2 kg, nourris au maïs.'),
+                border: const OutlineInputBorder(),
               ),
             ),
             SwitchListTile(
@@ -504,7 +501,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               value: _published,
               onChanged:
                   _busy ? null : (v) => setState(() => _published = v),
-              title: const Text('Sur la vitrine'),
+              title: Text(context.tr('Sur la vitrine')),
             ),
             if (_error != null) ...[
               const SizedBox(height: 4),
@@ -521,7 +518,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(editing ? 'Enregistrer' : 'Mettre en vente',
+                    : Text(editing ? context.tr('Enregistrer') : context.tr('Mettre en vente'),
                         style: const TextStyle(fontSize: 16)),
               ),
             ),
@@ -529,7 +526,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _busy ? null : _remove,
-                child: const Text('Retirer de la vente'),
+                child: Text(context.tr('Retirer de la vente')),
               ),
             ],
           ],

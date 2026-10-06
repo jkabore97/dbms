@@ -6,6 +6,7 @@ import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/pay/wave_pay.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « Payer avec Wave » and, when Wave's page takes cards for the account,
 /// « Payer par carte » (076). Draws nothing until the platform has switched
@@ -127,7 +128,7 @@ class _WaveButtonsState extends State<WaveButtons> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.phone_iphone_outlined),
-            label: const Text('Payer avec Wave', style: TextStyle(fontSize: 16)),
+            label: Text(context.tr('Payer avec Wave'), style: const TextStyle(fontSize: 16)),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF1DC4FF),
               foregroundColor: const Color(0xFF0B1F33),
@@ -141,7 +142,7 @@ class _WaveButtonsState extends State<WaveButtons> {
             child: OutlinedButton.icon(
               onPressed: _busy ? null : () => _go(card: true),
               icon: const Icon(Icons.credit_card_outlined),
-              label: const Text('Payer par carte'),
+              label: Text(context.tr('Payer par carte')),
             ),
           ),
         ],

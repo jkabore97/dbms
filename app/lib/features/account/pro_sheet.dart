@@ -8,6 +8,7 @@ import '../../core/nav/app_scope.dart';
 import '../cauris/unlock_sheet.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The one door to Kaj Pro (066, M10 block 2).
 ///
@@ -97,11 +98,11 @@ class _ProPayPanelState extends State<ProPayPanel> {
                   Icon(Icons.workspace_premium_outlined,
                       color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
-                  Text('Mara Pro', style: theme.textTheme.headlineSmall),
+                  Text(context.tr('Mara Pro'), style: theme.textTheme.headlineSmall),
                   const Spacer(),
                   if (widget.org.isPro)
                     Chip(
-                      label: const Text('Active'),
+                      label: Text(context.tr('Active')),
                       backgroundColor: theme.colorScheme.primaryContainer,
                     ),
                 ],
@@ -141,9 +142,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                         size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('Comptes, factures et photos sans limite '
-                          '(gratuit : ${terms.freeMaxInvoicesMonth} factures '
-                          'par mois, ${terms.freeMaxPhotos} photos)'),
+                      child: Text(context.tr('Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos)', {'freeMaxInvoicesMonth': terms.freeMaxInvoicesMonth, 'freeMaxPhotos': terms.freeMaxPhotos})),
                     ),
                   ],
                 ),
@@ -164,7 +163,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 // card is open, the sheet says so.
                 if (!widget.canRequest)
                   Text(
-                    'Seul le propriétaire peut passer à Mara Pro.',
+                    context.tr('Seul le propriétaire peut passer à Mara Pro.'),
                     style: muted,
                   )
                 else if (_cardReady(context) && widget.top != null)
@@ -186,10 +185,10 @@ class _ProPayPanelState extends State<ProPayPanel> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Bientôt disponible',
+                              Text(context.tr('Bientôt disponible'),
                                   style: theme.textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w800)),
-                              Text('Paiement par carte bancaire.', style: muted),
+                              Text(context.tr('Paiement par carte bancaire.'), style: muted),
                             ],
                           ),
                         ),

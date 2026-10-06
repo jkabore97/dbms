@@ -8,6 +8,7 @@ import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
 import 'report_shell.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The categories money falls into, and what has landed in each.
 ///
@@ -168,7 +169,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plan comptable'),
+        title: Text(context.tr('Plan comptable')),
         actions: [
           if (retiredCount > 0)
             IconButton(
@@ -186,7 +187,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
           ? FloatingActionButton.extended(
               onPressed: _create,
               icon: const Icon(Icons.add),
-              label: const Text('Compte'),
+              label: Text(context.tr('Compte')),
             )
           : null,
       body: ReportBody(
@@ -272,16 +273,16 @@ class _RenameAccountDialogState extends State<_RenameAccountDialog> {
     final account = widget.account;
 
     return AlertDialog(
-      title: const Text('Renommer'),
+      title: Text(context.tr('Renommer')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Nom',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nom'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -289,10 +290,10 @@ class _RenameAccountDialogState extends State<_RenameAccountDialog> {
             controller: _noteController,
             minLines: 2,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'À quoi sert ce compte',
-              hintText: 'Pour ceux qui liront ce plan dans deux ans',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('À quoi sert ce compte'),
+              hintText: context.tr('Pour ceux qui liront ce plan dans deux ans'),
+              border: const OutlineInputBorder(),
             ),
           ),
           if (account.hasHistory) ...[
@@ -309,14 +310,14 @@ class _RenameAccountDialogState extends State<_RenameAccountDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, (
             name: _nameController.text.trim(),
             note: _noteController.text.trim(),
           )),
-          child: const Text('Enregistrer'),
+          child: Text(context.tr('Enregistrer')),
         ),
       ],
     );
@@ -381,10 +382,10 @@ class _AccountTile extends StatelessWidget {
                 if (value == 'toggle') onToggleActive();
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'rename', child: Text('Renommer')),
+                PopupMenuItem(value: 'rename', child: Text(context.tr('Renommer'))),
                 PopupMenuItem(
                   value: 'toggle',
-                  child: Text(faded ? 'Remettre en service' : 'Retirer'),
+                  child: Text(faded ? context.tr('Remettre en service') : context.tr('Retirer')),
                 ),
               ],
             )
@@ -437,21 +438,21 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Nouveau compte', style: theme.textTheme.titleLarge),
+          Text(context.tr('Nouveau compte'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 20),
           TextField(
             controller: _nameController,
             autofocus: true,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Nom',
-              hintText: 'Emprunt bancaire',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nom'),
+              hintText: context.tr('Emprunt bancaire'),
+              border: const OutlineInputBorder(),
             ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
-          Text('Nature', style: theme.textTheme.labelLarge),
+          Text(context.tr('Nature'), style: theme.textTheme.labelLarge),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -477,9 +478,9 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
             controller: _noteController,
             minLines: 2,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'À quoi il sert (facultatif)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('À quoi il sert (facultatif)'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 20),
@@ -495,7 +496,7 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
                             ? null
                             : _noteController.text.trim(),
                       )),
-              child: const Text('Créer'),
+              child: Text(context.tr('Créer')),
             ),
           ),
         ],

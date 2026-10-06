@@ -5,6 +5,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What happened, and who did it.
 ///
@@ -156,7 +157,7 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
               padding: const EdgeInsets.only(right: 8),
               child: ActionChip(
                 avatar: const Icon(Icons.close, size: 16),
-                label: const Text('Tout'),
+                label: Text(context.tr('Tout')),
                 onPressed: () => _setFilter(
                   clearTable: true,
                   clearActor: true,
@@ -173,12 +174,12 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
                   ? _setFilter(clearActor: true)
                   : _setFilter(actorId: value),
               itemBuilder: (_) => [
-                const PopupMenuItem(value: '*', child: Text('Tout le monde')),
+                PopupMenuItem(value: '*', child: Text(context.tr('Tout le monde'))),
                 for (final actor in _actors)
                   if (actor.id != null)
                     PopupMenuItem(
                       value: actor.id!,
-                      child: Text('${actor.label} (${actor.events})'),
+                      child: Text(context.tr('{label} ({events})', {'label': actor.label, 'events': actor.events})),
                     ),
               ],
               child: Chip(
@@ -206,12 +207,12 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
   }
 
   String _actorLabel() {
-    if (_actorId == null) return 'Tout le monde';
+    if (_actorId == null) return context.tr('Tout le monde');
     return _actors
         .firstWhere(
           (a) => a.id == _actorId,
           orElse: () => AuditActor(
-            label: 'Quelqu\'un',
+            label: context.tr('Quelqu\'un'),
             events: 0,
             lastSeen: DateTime.now(),
           ),
@@ -241,7 +242,7 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
               OutlinedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Réessayer'),
+                label: Text(context.tr('Réessayer')),
               ),
             ],
           ),
@@ -259,9 +260,7 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  'Rien à afficher. Le journal enregistre les changements '
-                  "d'accès, de structure et de plan comptable à partir du "
-                  'moment où il a été installé — il ne remonte pas plus loin.',
+                  context.tr('Rien à afficher. Le journal enregistre les changements d\'accès, de structure et de plan comptable à partir du moment où il a été installé — il ne remonte pas plus loin.'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

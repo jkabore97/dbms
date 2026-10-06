@@ -12,6 +12,7 @@ import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One screen for everything that used to be scattered across a long popup
 /// menu: who you are, the business you are in, help, and the legal pages.
@@ -102,12 +103,12 @@ class CompteScreen extends StatelessWidget {
           ),
 
           _Group(
-            title: 'Mon compte',
+            title: context.tr('Mon compte'),
             children: [
               if (live)
                 _Tile(
                   icon: Icons.shield_outlined,
-                  title: 'Sécurité',
+                  title: context.tr('Sécurité'),
                   subtitle: _securityLine(scope),
                   onTap: () => context.push(Routes.security),
                 ),
@@ -167,8 +168,8 @@ class CompteScreen extends StatelessWidget {
                   _Tile(
                     key: const Key('compte-cauris'),
                     icon: Icons.savings_outlined,
-                    title: 'Mes cauris',
-                    subtitle: 'Gagnés en vendant bien, à dépenser en outils Pro',
+                    title: context.tr('Mes cauris'),
+                    subtitle: context.tr('Gagnés en vendant bien, à dépenser en outils Pro'),
                     onTap: () => context.push(inside('cauris')),
                   ),
                 // Académie Mara (087): every member learns, each at their
@@ -176,13 +177,13 @@ class CompteScreen extends StatelessWidget {
                 _Tile(
                   key: const Key('compte-academy'),
                   icon: Icons.school_outlined,
-                  title: 'Académie Mara',
-                  subtitle: 'Des leçons de deux minutes, en images',
+                  title: context.tr('Académie Mara'),
+                  subtitle: context.tr('Des leçons de deux minutes, en images'),
                   onTap: () => context.push(inside('academie')),
                 ),
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
-                  title: org.isPro ? 'Mara Pro' : 'Passer à Mara Pro',
+                  title: org.isPro ? context.tr('Mara Pro') : context.tr('Passer à Mara Pro'),
                   subtitle: org.isPro
                       ? 'Formule active'
                       : 'Paie, analyses, comptabilité, équipe sans limite…',
@@ -193,14 +194,14 @@ class CompteScreen extends StatelessWidget {
 
           if (live)
             _Group(
-              title: 'Outils',
+              title: context.tr('Outils'),
               children: [
                 // Owner-only, the same full visibility the server requires for
                 // the analytics functions themselves.
                 if (org.visibility == 'full' && org.profile == 'retail')
                   _Tile(
                     icon: Icons.insights_outlined,
-                    title: 'Analyses',
+                    title: context.tr('Analyses'),
                     pro: access.isProLocked('analytics'),
                     proCost: costOf('analytics'),
                     onTap: gated(
@@ -225,7 +226,7 @@ class CompteScreen extends StatelessWidget {
                 if (admin && org.profile == 'retail')
                   _Tile(
                     icon: Icons.history_toggle_off_outlined,
-                    title: 'Corrections',
+                    title: context.tr('Corrections'),
                     onTap: () => context.push(inside('corrections')),
                   ),
                 if (access.canSee('credits'))
@@ -257,7 +258,7 @@ class CompteScreen extends StatelessWidget {
 
           if (platform)
             _Group(
-              title: 'Plateforme',
+              title: context.tr('Plateforme'),
               children: [
                 _Tile(
                   icon: Icons.business_outlined,
@@ -278,33 +279,33 @@ class CompteScreen extends StatelessWidget {
             ),
 
           _Group(
-            title: 'Aide',
+            title: context.tr('Aide'),
             children: [
               _Tile(
                 icon: Icons.support_agent_outlined,
-                title: 'Contacter le support',
-                subtitle: 'Sur WhatsApp',
+                title: context.tr('Contacter le support'),
+                subtitle: context.tr('Sur WhatsApp'),
                 onTap: () => Support.openWhatsApp(context),
               ),
               _Tile(
                 icon: Icons.help_outline,
-                title: 'Questions fréquentes',
+                title: context.tr('Questions fréquentes'),
                 onTap: () => context.push(Routes.faq),
               ),
             ],
           ),
 
           _Group(
-            title: 'À propos',
+            title: context.tr('À propos'),
             children: [
               _Tile(
                 icon: Icons.privacy_tip_outlined,
-                title: 'Politique de confidentialité',
+                title: context.tr('Politique de confidentialité'),
                 onTap: () => context.push(Routes.privacy),
               ),
               _Tile(
                 icon: Icons.description_outlined,
-                title: "Conditions d'utilisation",
+                title: context.tr('Conditions d\'utilisation'),
                 onTap: () => context.push(Routes.terms),
               ),
             ],
@@ -322,9 +323,9 @@ class CompteScreen extends StatelessWidget {
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 16, 4, 8),
-            child: Text('Mara', style: TextStyle(fontWeight: FontWeight.w600)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+            child: Text(context.tr('Mara'), style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),

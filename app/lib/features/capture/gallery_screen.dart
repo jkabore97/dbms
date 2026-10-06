@@ -15,6 +15,7 @@ import '../../core/retail/retail_repository.dart';
 import 'capture_action.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Everything this business has photographed.
 ///
@@ -112,7 +113,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
-        const SnackBar(content: Text('Lecture de la page…')));
+        SnackBar(content: Text(context.tr('Lecture de la page…'))));
     try {
       final lines = await widget.capture.readNotebookPage(
         orgId: widget.org.id,
@@ -122,9 +123,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
       if (lines.isEmpty) {
-        messenger.showSnackBar(const SnackBar(
-            content: Text("Rien de lisible sur cette page. "
-                'Reprenez la photo de plus près, bien éclairée.')));
+        messenger.showSnackBar(SnackBar(
+            content: Text(context.tr('Rien de lisible sur cette page. Reprenez la photo de plus près, bien éclairée.'))));
         return;
       }
       final added = await context.push<bool>(
@@ -158,14 +158,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Photos'),
+        title: Text(context.tr('Photos')),
         actions: [
           // Only a shop stocks products, so only a shop reads carnets.
           if (widget.retail != null && widget.capture.isConfigured)
             IconButton(
               onPressed: _readNotebook,
               icon: const Icon(Icons.auto_stories_outlined),
-              tooltip: 'Lire une page de carnet',
+              tooltip: context.tr('Lire une page de carnet'),
             ),
         ],
       ),
@@ -175,7 +175,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ? FloatingActionButton.extended(
               onPressed: _capture,
               icon: const Icon(Icons.photo_camera),
-              label: const Text('Photo'),
+              label: Text(context.tr('Photo')),
             )
           : null,
       body: RefreshIndicator(
@@ -192,7 +192,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 text: _error!,
                 action: TextButton(
                   onPressed: _load,
-                  child: const Text('Réessayer'),
+                  child: Text(context.tr('Réessayer')),
                 ),
               ),
               const SizedBox(height: 16),
@@ -216,18 +216,17 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         'en attente de réseau.',
                 action: TextButton(
                   onPressed: _load,
-                  child: const Text('Envoyer'),
+                  child: Text(context.tr('Envoyer')),
                 ),
               ),
               const SizedBox(height: 16),
             ],
 
             if (unfiled.isNotEmpty) ...[
-              Text('À classer', style: theme.textTheme.titleMedium),
+              Text(context.tr('À classer'), style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
-                'Une photo sans nom reste une preuve. La classer la rend '
-                'trouvable.',
+                context.tr('Une photo sans nom reste une preuve. La classer la rend trouvable.'),
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
@@ -240,7 +239,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
             ],
 
             if (filed.isNotEmpty) ...[
-              Text('Classées', style: theme.textTheme.titleMedium),
+              Text(context.tr('Classées'), style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               ...filed.map((d) => _DocumentTile(
                     document: d,
@@ -258,13 +257,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         size: 48, color: theme.disabledColor),
                     const SizedBox(height: 12),
                     Text(
-                      'Aucune photo pour le moment.',
+                      context.tr('Aucune photo pour le moment.'),
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Photographiez une facture, une livraison, une étiquette. '
-                      'Rien d’autre n’est demandé.',
+                      context.tr('Photographiez une facture, une livraison, une étiquette. Rien d’autre n’est demandé.'),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall,
                     ),
@@ -479,7 +477,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
         _changed = true;
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Classée.')));
+          .showSnackBar(SnackBar(content: Text(context.tr('Classée.'))));
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
@@ -544,26 +542,26 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
             TextField(
               controller: _caption,
-              decoration: const InputDecoration(
-                labelText: 'Nom (facultatif)',
-                helperText: 'Ce que c’est, en vos mots.',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom (facultatif)'),
+                helperText: context.tr('Ce que c’est, en vos mots.'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
 
             DropdownButtonFormField<String>(
               initialValue: _kind,
-              decoration: const InputDecoration(
-                labelText: 'Type (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Type (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 'receipt', child: Text('Reçu')),
-                DropdownMenuItem(value: 'invoice', child: Text('Facture')),
+              items: [
+                DropdownMenuItem(value: 'receipt', child: Text(context.tr('Reçu'))),
+                DropdownMenuItem(value: 'invoice', child: Text(context.tr('Facture'))),
                 DropdownMenuItem(
-                    value: 'product_photo', child: Text('Photo d’article')),
-                DropdownMenuItem(value: 'photo', child: Text('Autre')),
+                    value: 'product_photo', child: Text(context.tr('Photo d’article'))),
+                DropdownMenuItem(value: 'photo', child: Text(context.tr('Autre'))),
               ],
               onChanged: (value) => setState(() => _kind = value),
             ),
@@ -573,9 +571,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _productId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Article (facultatif)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Article (facultatif)'),
+                  border: const OutlineInputBorder(),
                 ),
                 items: widget.products
                     .map((p) => DropdownMenuItem(
@@ -620,7 +618,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                     FilledButton.icon(
                       onPressed: _addToStock,
                       icon: const Icon(Icons.add_shopping_cart),
-                      label: const Text('Vérifier et ajouter au stock'),
+                      label: Text(context.tr('Vérifier et ajouter au stock')),
                     ),
                   ],
                 ),
@@ -634,7 +632,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
               // and can then edit it, which is the difference between an
               // accelerator and the app inventing an expiry date.
               if (!_suggestions.isEmpty) ...[
-                Text('Suggestions', style: theme.textTheme.titleSmall),
+                Text(context.tr('Suggestions'), style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8,
@@ -668,13 +666,12 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Lecture automatique. Rien n’est appliqué : touchez un nom '
-                  'pour le reprendre, vérifiez le reste vous-même.',
+                  context.tr('Lecture automatique. Rien n’est appliqué : touchez un nom pour le reprendre, vérifiez le reste vous-même.'),
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
               ],
-              Text('Ce que le téléphone a lu',
+              Text(context.tr('Ce que le téléphone a lu'),
                   style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               // Shown, never applied. A misread date that silently became a
@@ -694,8 +691,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Lecture automatique, à vérifier. Rien n’est modifié tant que '
-                'vous ne le faites pas.',
+                context.tr('Lecture automatique, à vérifier. Rien n’est modifié tant que vous ne le faites pas.'),
                 style: theme.textTheme.bodySmall,
               ),
             ],
@@ -709,7 +705,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.check),
-              label: const Text('Enregistrer'),
+              label: Text(context.tr('Enregistrer')),
             ),
             const SizedBox(height: 8),
             Text(

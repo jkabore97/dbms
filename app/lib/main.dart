@@ -42,6 +42,7 @@ import 'core/tontine/tontine_repository.dart';
 import 'core/theme/kaj_theme.dart';
 import 'core/update/update_banner.dart';
 import 'core/update/update_check.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Supplied at build time so no credentials live in the source:
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
@@ -176,9 +177,9 @@ class StartupErrorApp extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "L'application n'a pas pu démarrer",
-                  style: TextStyle(
+                Text(
+                  context.tr('L\'application n\'a pas pu démarrer'),
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF8C1D18),
@@ -411,11 +412,16 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           // business, ProfileTheme paints its own wash over this one.
           // The update banner sits above every page, inside the wash, so a
           // phone on an old APK hears about the new one wherever it is.
-          builder: (context, child) => KajBackground(
-            palette: kajPalette,
-            child: UpdateBanner(
-              check: _update,
-              child: child ?? const SizedBox.shrink(),
+          // Keyed by the language: changing it rebuilds every page, so the
+          // phrases read through context.tr() follow at once.
+          builder: (context, child) => KeyedSubtree(
+            key: ValueKey(Localizations.localeOf(context)),
+            child: KajBackground(
+              palette: kajPalette,
+              child: UpdateBanner(
+                check: _update,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
           locale: _locale.effective,

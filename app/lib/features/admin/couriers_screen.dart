@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The platform decides who carries (056). Applications first; a switch of
 /// two verbs per row — approve, suspend — because handing a stranger goods,
@@ -74,16 +75,16 @@ class _CouriersScreenState extends State<CouriersScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Livreurs'),
+        title: Text(context.tr('Livreurs')),
         actions: [
           // What each courier owes for the month (067).
           IconButton(
-            tooltip: 'Règlement du mois',
+            tooltip: context.tr('Règlement du mois'),
             onPressed: () => context.push(Routes.consoleSettlement),
             icon: const Icon(Icons.account_balance_wallet_outlined),
           ),
           IconButton(
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
@@ -101,19 +102,17 @@ class _CouriersScreenState extends State<CouriersScreen> {
                         Text(_error!, textAlign: TextAlign.center),
                         const SizedBox(height: 12),
                         OutlinedButton(
-                            onPressed: _load, child: const Text('Réessayer')),
+                            onPressed: _load, child: Text(context.tr('Réessayer'))),
                       ],
                     ),
                   ),
                 )
               : _rows.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(32),
                         child: Text(
-                          "Personne ne s'est encore inscrit comme livreur. "
-                          "L'inscription se fait depuis l'espace livreur "
-                          'de la page des vitrines.',
+                          context.tr('Personne ne s\'est encore inscrit comme livreur. L\'inscription se fait depuis l\'espace livreur de la page des vitrines.'),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -165,12 +164,12 @@ class _CouriersScreenState extends State<CouriersScreen> {
                                           style: TextButton.styleFrom(
                                               foregroundColor:
                                                   theme.colorScheme.error),
-                                          child: const Text('Suspendre'),
+                                          child: Text(context.tr('Suspendre')),
                                         )
                                       : FilledButton(
                                           onPressed: () =>
                                               _decide(row, 'approved'),
-                                          child: const Text('Approuver'),
+                                          child: Text(context.tr('Approuver')),
                                         ),
                             ),
                           ),

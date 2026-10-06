@@ -6,6 +6,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the database actually holds for this business.
 ///
@@ -104,7 +105,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
               OutlinedButton.icon(
                 onPressed: _load,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Réessayer'),
+                label: Text(context.tr('Réessayer')),
               ),
             ],
           ),
@@ -201,9 +202,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
             ),
           const SizedBox(height: 24),
           Text(
-            "Les nombres ci-dessus ne comptent que les lignes de cette "
-            "activité. Aucune donnée d'une autre activité n'est visible ici, "
-            'à aucun niveau de privilège.',
+            context.tr('Les nombres ci-dessus ne comptent que les lignes de cette activité. Aucune donnée d\'une autre activité n\'est visible ici, à aucun niveau de privilège.'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

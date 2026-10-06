@@ -9,6 +9,7 @@ import '../../core/theme/mara_mark.dart';
 import '../cauris/cauri_icon.dart';
 import 'lesson_player.dart';
 import 'lessons.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « Académie Mara » (087): the level this person climbed to, and the
 /// lessons of the business's kind — guides to watch, missions to live —
@@ -63,7 +64,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
     final theme = Theme.of(context);
     final a = _a;
     return Scaffold(
-      appBar: AppBar(title: const Text('Académie Mara')),
+      appBar: AppBar(title: Text(context.tr('Académie Mara'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -77,7 +78,7 @@ class _AcademyScreenState extends State<AcademyScreen> {
             else if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error))
             else if (a == null)
-              const Text('L\'Académie n\'est pas encore ouverte.')
+              Text(context.tr('L\'Académie n\'est pas encore ouverte.'))
             else ...[
               _LevelHeader(academy: a),
               const SizedBox(height: 18),
@@ -151,7 +152,7 @@ class _LevelHeader extends StatelessWidget {
                             color: i <= at ? maraIndigo : maraCream.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 6),
-                      Text(_levels[i].$1,
+                      Text(context.tr(_levels[i].$1),
                           style: theme.textTheme.labelMedium?.copyWith(
                               color: maraCream,
                               fontWeight: i == at ? FontWeight.w800 : FontWeight.w500)),
@@ -171,7 +172,7 @@ class _LevelHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text('${a.done} / ${a.total}',
+          Text(context.tr('{done} / {total}', {'done': a.done, 'total': a.total}),
               style: theme.textTheme.labelLarge?.copyWith(color: maraCream)),
         ],
       ),
@@ -229,14 +230,14 @@ class _LessonTile extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              Text(l.title,
+              Text(context.tr(l.title),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Text(l.ready ? 'Réussie !' : '${l.minutes} min',
+                  Text(l.ready ? context.tr('Réussie !') : context.tr('{minutes} min', {'minutes': l.minutes}),
                       style: theme.textTheme.labelMedium?.copyWith(
                           color: l.ready ? maraTerracotta : kMist,
                           fontWeight: l.ready ? FontWeight.w800 : null)),
@@ -274,7 +275,7 @@ class LessonHelpButton extends StatelessWidget {
     if (scope == null) return const SizedBox.shrink();
     return IconButton(
       key: Key('help-$lessonKey'),
-      tooltip: 'Comment faire ?',
+      tooltip: context.tr('Comment faire ?'),
       icon: const Icon(Icons.help_outline),
       onPressed: () => LessonPlayer.open(
         context,

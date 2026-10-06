@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/text_reader.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Taking the photograph.
 ///
@@ -45,8 +46,9 @@ class CaptureAction {
     } on Exception catch (error) {
       // A browser with no camera permission, or a device with no camera at
       // all, throws here rather than returning null.
+      if (!context.mounted) return false;
       messenger.showSnackBar(SnackBar(
-        content: Text("La caméra n'est pas disponible : $error"),
+        content: Text(context.tr('La caméra n\'est pas disponible : {error}', {'error': error})),
       ));
       return false;
     }
@@ -57,8 +59,9 @@ class CaptureAction {
     final contentType = _typeOf(file);
 
     if (contentType == null) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Ce type de fichier ne peut pas être envoyé.'),
+      if (!context.mounted) return false;
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr('Ce type de fichier ne peut pas être envoyé.')),
       ));
       return false;
     }
@@ -123,13 +126,13 @@ class CaptureAction {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera),
-              title: const Text('Prendre une photo'),
+              title: Text(context.tr('Prendre une photo')),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text(
-                  kIsWeb ? 'Choisir un fichier' : 'Choisir une photo'),
+              title: Text(
+                  kIsWeb ? context.tr('Choisir un fichier') : context.tr('Choisir une photo')),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
           ],
@@ -155,13 +158,13 @@ class CaptureAction {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera),
-              title: const Text('Prendre une photo'),
+              title: Text(context.tr('Prendre une photo')),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text(
-                  kIsWeb ? 'Choisir un fichier' : 'Choisir une photo'),
+              title: Text(
+                  kIsWeb ? context.tr('Choisir un fichier') : context.tr('Choisir une photo')),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
           ],
@@ -180,8 +183,9 @@ class CaptureAction {
         preferredCameraDevice: CameraDevice.rear,
       );
     } on Exception catch (error) {
+      if (!context.mounted) return null;
       messenger.showSnackBar(SnackBar(
-        content: Text("La caméra n'est pas disponible : $error"),
+        content: Text(context.tr('La caméra n\'est pas disponible : {error}', {'error': error})),
       ));
       return null;
     }
@@ -189,8 +193,9 @@ class CaptureAction {
 
     final contentType = _typeOf(file);
     if (contentType == null || !contentType.startsWith('image/')) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Ce type de fichier ne peut pas être lu.'),
+      if (!context.mounted) return null;
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr('Ce type de fichier ne peut pas être lu.')),
       ));
       return null;
     }

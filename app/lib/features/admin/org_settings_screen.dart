@@ -24,6 +24,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The business's own details.
 ///
@@ -244,7 +245,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = "Le nom de l'activité ne peut pas être vide.");
+      setState(() => _error = context.tr('Le nom de l\'activité ne peut pas être vide.'));
       return;
     }
 
@@ -265,7 +266,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           lng > 180) {
         setState(
           () => _error =
-              'Indiquez la latitude et la longitude, ou aucune des deux.',
+              context.tr('Indiquez la latitude et la longitude, ou aucune des deux.'),
         );
         return;
       }
@@ -286,8 +287,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           deliveryPerKm < 0) {
         setState(
           () => _error =
-              'Indiquez la base et le prix par km de livraison, ou aucun des '
-              'deux pour garder ceux de la plateforme.',
+              context.tr('Indiquez la base et le prix par km de livraison, ou aucun des deux pour garder ceux de la plateforme.'),
         );
         return;
       }
@@ -302,8 +302,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           deliveryIncluded <= 0 ||
           deliveryIncluded > 50) {
         setState(() => _error =
-            'Indiquez jusqu\'à combien de kilomètres le minimum s\'applique '
-            '(de 0,5 à 50 km).');
+            context.tr('Indiquez jusqu\'à combien de kilomètres le minimum s\'applique (de 0,5 à 50 km).'));
         return;
       }
     }
@@ -316,8 +315,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       if (deliveryReach == null || deliveryReach <= 0 || deliveryReach > 200) {
         setState(
           () => _error =
-              'La distance de livraison va de 1 à 200 km, ou vide pour celle '
-              'de la plateforme (15 km).',
+              context.tr('La distance de livraison va de 1 à 200 km, ou vide pour celle de la plateforme (15 km).'),
         );
         return;
       }
@@ -429,20 +427,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Mara Pro sans date de fin ?'),
-          content: const Text(
-            'Sans date, cette entreprise reste Pro jusqu\'à ce que vous '
-            'changiez sa formule à la main. Pour un paiement, indiquez '
-            'plutôt la date de fin.',
+          title: Text(context.tr('Mara Pro sans date de fin ?')),
+          content: Text(
+            context.tr('Sans date, cette entreprise reste Pro jusqu\'à ce que vous changiez sa formule à la main. Pour un paiement, indiquez plutôt la date de fin.'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annuler'),
+              child: Text(context.tr('Annuler')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Sans date de fin'),
+              child: Text(context.tr('Sans date de fin')),
             ),
           ],
         ),
@@ -499,20 +495,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Suspendre cette entreprise ?'),
-          content: const Text(
-            'Ses membres pourront encore tout consulter, mais ne pourront '
-            'plus rien enregistrer — ni vente, ni dépense, ni stock — '
-            "jusqu'à la réactivation. Les données ne sont pas supprimées.",
+          title: Text(context.tr('Suspendre cette entreprise ?')),
+          content: Text(
+            context.tr('Ses membres pourront encore tout consulter, mais ne pourront plus rien enregistrer — ni vente, ni dépense, ni stock — jusqu\'à la réactivation. Les données ne sont pas supprimées.'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annuler'),
+              child: Text(context.tr('Annuler')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Suspendre'),
+              child: Text(context.tr('Suspendre')),
             ),
           ],
         ),
@@ -537,7 +531,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            freezing ? 'Entreprise suspendue' : 'Entreprise réactivée',
+            freezing ? context.tr('Entreprise suspendue') : context.tr('Entreprise réactivée'),
           ),
         ),
       );
@@ -563,11 +557,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
         messenger.showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Sans autorisation, tapez la position ou collez '
-              'un lien Google Maps.',
+              context.tr('Sans autorisation, tapez la position ou collez un lien Google Maps.'),
             ),
           ),
         );
@@ -586,9 +580,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       });
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Position introuvable. Vérifiez que le GPS est activé.',
+            context.tr('Position introuvable. Vérifiez que le GPS est activé.'),
           ),
         ),
       );
@@ -606,24 +600,24 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       context: context,
       builder: (context) => OwnedController(
         builder: (context, controller) => AlertDialog(
-          title: const Text('Lien Google Maps'),
+          title: Text(context.tr('Lien Google Maps')),
           content: TextField(
             controller: controller,
             autofocus: true,
             maxLines: 3,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'https://www.google.com/maps/place/...@12.37,-1.52,17z',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: context.tr('https://www.google.com/maps/place/...@12.37,-1.52,17z'),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annuler'),
+              child: Text(context.tr('Annuler')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Utiliser'),
+              child: Text(context.tr('Utiliser')),
             ),
           ],
         ),
@@ -633,10 +627,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final position = parseGoogleMapsLink(text);
     if (position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Ce lien ne contient pas de position. Ouvrez-le dans '
-            "Google Maps et copiez l'adresse complète.",
+            context.tr('Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.'),
           ),
         ),
       );
@@ -729,7 +722,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         await pay.setPayoutNumber(widget.orgId, _payoutController.text);
       }
       await _loadShopWave();
-      messenger.showSnackBar(const SnackBar(content: Text('Enregistré')));
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(context.tr('Enregistré'))));
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
@@ -739,13 +733,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   List<Widget> _waveReceive(ThemeData theme) => [
         const SizedBox(height: 24),
-        Text('Recevoir les paiements des clients',
+        Text(context.tr('Recevoir les paiements des clients'),
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 4),
         Text(
-            "Quand un client paie sa commande par Wave ou par carte dans Mara, "
-            "l'argent est envoyé sur ce numéro Wave quelques instants après. "
-            "Un numéro Wave ordinaire suffit.",
+            context.tr('Quand un client paie sa commande par Wave ou par carte dans Mara, l\'argent est envoyé sur ce numéro Wave quelques instants après. Un numéro Wave ordinaire suffit.'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
@@ -756,9 +748,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 controller: _payoutController,
                 enabled: !_savingPayout,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Numéro Wave',
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: context.tr('Numéro Wave'),
                   hintText: '+226 70 00 00 00',
                 ),
               ),
@@ -766,7 +758,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             const SizedBox(width: 8),
             FilledButton.tonal(
               onPressed: _savingPayout ? null : () => _savePayout(),
-              child: const Text('Enregistrer'),
+              child: Text(context.tr('Enregistrer')),
             ),
           ],
         ),
@@ -805,35 +797,31 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final muted = theme.textTheme.bodySmall
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     return [
-      Text('Verrouillage des téléphones', style: theme.textTheme.titleSmall),
+      Text(context.tr('Verrouillage des téléphones'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-          "Chaque membre a un code sur son téléphone. Fixez le délai maximal "
-          "après lequel Mara le redemande : personne de l'équipe ne pourra "
-          'choisir plus long, ni « Jamais ».',
+          context.tr('Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Mara le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».'),
           style: muted),
       const SizedBox(height: 12),
       DropdownButtonFormField<int?>(
         initialValue: _lockRule,
         isExpanded: true,
-        decoration: const InputDecoration(
-            border: OutlineInputBorder(), labelText: 'Délai maximal'),
-        items: const [
-          DropdownMenuItem(value: null, child: Text('Aucune règle')),
-          DropdownMenuItem(value: 1, child: Text('1 min')),
-          DropdownMenuItem(value: 5, child: Text('5 min (conseillé)')),
-          DropdownMenuItem(value: 15, child: Text('15 min')),
-          DropdownMenuItem(value: 60, child: Text('1 h')),
+        decoration: InputDecoration(
+            border: const OutlineInputBorder(), labelText: context.tr('Délai maximal')),
+        items: [
+          DropdownMenuItem(value: null, child: Text(context.tr('Aucune règle'))),
+          DropdownMenuItem(value: 1, child: Text(context.tr('1 min'))),
+          DropdownMenuItem(value: 5, child: Text(context.tr('5 min (conseillé)'))),
+          DropdownMenuItem(value: 15, child: Text(context.tr('15 min'))),
+          const DropdownMenuItem(value: 60, child: Text('1 h')),
         ],
         onChanged: _savingLock ? null : _saveLockRule,
       ),
       const SizedBox(height: 24),
-      Text('Un téléphone perdu ou volé', style: theme.textTheme.titleSmall),
+      Text(context.tr('Un téléphone perdu ou volé'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-          "Ouvrez Équipe et accès, puis la personne, puis « Déconnecter "
-          "partout » : tous ses appareils devront se reconnecter avec le mot "
-          'de passe.',
+          context.tr('Ouvrez Équipe et accès, puis la personne, puis « Déconnecter partout » : tous ses appareils devront se reconnecter avec le mot de passe.'),
           style: muted),
     ];
   }
@@ -886,9 +874,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         caption: 'Logo',
       );
       if (id == null) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Logo gardé, en attente de réseau. Réessayez une '
-              'fois connecté pour le mettre sur la vitrine.'),
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Logo gardé, en attente de réseau. Réessayez une fois connecté pour le mettre sur la vitrine.')),
         ));
         return;
       }
@@ -899,7 +887,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       if (!mounted) return;
       setState(() => _logoKey = key);
       messenger.showSnackBar(
-          const SnackBar(content: Text('Logo enregistré : il est sur la vitrine.')));
+          SnackBar(content: Text(context.tr('Logo enregistré : il est sur la vitrine.'))));
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
@@ -924,7 +912,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final capture = widget.capture;
     final canUpload = capture != null && capture.isConfigured;
     return [
-      Text('Logo', style: theme.textTheme.labelLarge),
+      Text(context.tr('Logo'), style: theme.textTheme.labelLarge),
       const SizedBox(height: 8),
       Row(
         children: [
@@ -958,12 +946,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   key: const Key('org-logo-change'),
                   onPressed: !canUpload || _logoBusy ? null : _changeLogo,
                   icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                  label: Text(_logoKey == null ? 'Ajouter un logo' : 'Changer'),
+                  label: Text(_logoKey == null ? context.tr('Ajouter un logo') : context.tr('Changer')),
                 ),
                 if (_logoKey != null)
                   TextButton(
                     onPressed: _logoBusy ? null : _removeLogo,
-                    child: const Text('Retirer'),
+                    child: Text(context.tr('Retirer')),
                   ),
               ],
             ),
@@ -985,7 +973,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   List<Widget> _identity(ThemeData theme) => [
     ..._logoRow(theme),
-    Text('Nom', style: theme.textTheme.labelLarge),
+    Text(context.tr('Nom'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     TextField(
       controller: _nameController,
@@ -994,7 +982,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       decoration: const InputDecoration(border: OutlineInputBorder()),
     ),
     const SizedBox(height: 24),
-    Text('Monnaie', style: theme.textTheme.labelLarge),
+    Text(context.tr('Monnaie'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     DropdownButtonFormField<String>(
       initialValue: _currency,
@@ -1005,7 +993,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       onChanged: _saving ? null : (v) => setState(() => _currency = v!),
     ),
     const SizedBox(height: 24),
-    Text('Couleurs', style: theme.textTheme.labelLarge),
+    Text(context.tr('Couleurs'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     _ColourRow(
       palette: paletteFor(_profile, theme: _theme),
@@ -1013,20 +1001,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       onTap: _saving ? null : _openColours,
     ),
     const SizedBox(height: 32),
-    Text('Non modifiable ici', style: theme.textTheme.titleSmall),
+    Text(context.tr('Non modifiable ici'), style: theme.textTheme.titleSmall),
     const SizedBox(height: 4),
     Text(
-      "L'adresse web et le type d'activité changent ce que voient "
-      'tous les membres. Contactez Kaj-consulting pour les '
-      'modifier.',
+      context.tr('L\'adresse web et le type d\'activité changent ce que voient tous les membres. Contactez Kaj-consulting pour les modifier.'),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
     ),
     const SizedBox(height: 12),
-    _ReadOnlyRow(label: 'Adresse web', value: '$_slug.kajapp.com'),
+    _ReadOnlyRow(label: context.tr('Adresse web'), value: '$_slug.kajapp.com'),
     _ReadOnlyRow(
-      label: "Type d'activité",
+      label: context.tr('Type d\'activité'),
       value: switch (_profile) {
         'retail' => 'Boutique',
         'farm' => 'Ferme',
@@ -1038,7 +1024,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // it; only the platform changes it, below. Since 066 the
     // Pro tools are badged and held on a Free business.
     _ReadOnlyRow(
-      label: 'Formule',
+      label: context.tr('Formule'),
       value: widget.plan == 'pro' ? 'Mara Pro' : 'Mara (gratuit)',
     ),
   ];
@@ -1049,32 +1035,31 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         const Icon(Icons.payments_outlined, size: 28),
         const SizedBox(width: 10),
         Expanded(
-          child: Text('Espèces pour le moment',
+          child: Text(context.tr('Espèces pour le moment'),
               key: const Key('cash-only'),
               style: theme.textTheme.titleSmall),
         ),
       ]),
       const SizedBox(height: 24),
     ] else ...[
-    Text('Paiement Wave', style: theme.textTheme.labelLarge),
+    Text(context.tr('Paiement Wave'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     TextField(
       controller: _waveController,
       enabled: !_saving,
       keyboardType: TextInputType.text,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
         hintText: '+226 70 00 00 00',
-        prefixIcon: Icon(Icons.qr_code_2),
+        prefixIcon: const Icon(Icons.qr_code_2),
         helperText:
-            'Le numéro Wave du commerce. Laissez vide pour '
-            'ne pas proposer Wave à la vente.',
+            context.tr('Le numéro Wave du commerce. Laissez vide pour ne pas proposer Wave à la vente.'),
         helperMaxLines: 2,
       ),
     ),
     const SizedBox(height: 24),
     ],
-    Text('Taux de change', style: theme.textTheme.labelLarge),
+    Text(context.tr('Taux de change'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
       'Pour encaisser une vente dans une autre monnaie. Les '
@@ -1092,7 +1077,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         subtitle: Text(knownCurrencies[r.currency] ?? ''),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
-          tooltip: 'Retirer',
+          tooltip: context.tr('Retirer'),
           onPressed: _saving ? null : () => _removeRate(r),
         ),
         onTap: _saving ? null : () => _editRate(r),
@@ -1102,13 +1087,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       child: OutlinedButton.icon(
         onPressed: _saving ? null : () => _editRate(),
         icon: const Icon(Icons.add),
-        label: const Text('Ajouter une monnaie'),
+        label: Text(context.tr('Ajouter une monnaie')),
       ),
     ),
   ];
 
   List<Widget> _vitrine(ThemeData theme) => [
-    Text('Vitrine en ligne', style: theme.textTheme.labelLarge),
+    Text(context.tr('Vitrine en ligne'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
       _profile == 'farm'
@@ -1127,16 +1112,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       contentPadding: EdgeInsets.zero,
       value: _storefrontEnabled,
       onChanged: _saving ? null : (v) => setState(() => _storefrontEnabled = v),
-      title: const Text('Ouvrir la vitrine'),
+      title: Text(context.tr('Ouvrir la vitrine')),
     ),
     if (_storefrontEnabled) ...[
       TextField(
         controller: _blurbController,
         enabled: !_saving,
         maxLines: 2,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Quelques mots sur la boutique (facultatif)',
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Quelques mots sur la boutique (facultatif)'),
         ),
       ),
       const SizedBox(height: 10),
@@ -1157,9 +1142,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           key: const Key('vitrine-advanced'),
           tilePadding: EdgeInsets.zero,
           leading: const Icon(Icons.tune),
-          title: const Text('Vitrine avancée',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: const Text('Mettre en avant · Habillage Pro'),
+          title: Text(context.tr('Vitrine avancée'),
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(context.tr('Mettre en avant · Habillage Pro')),
           children: [
             SpotsCard(
               orgId: widget.orgId,
@@ -1188,24 +1173,22 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         key: const Key('delivery-pro-note'),
         child: ListTile(
           leading: const Icon(Icons.workspace_premium_outlined),
-          title: const Text('La livraison fait partie de Mara Pro'),
-          subtitle: const Text(
-              'Votre vitrine propose le retrait en boutique. Passez à Mara '
-              'Pro pour livrer vos clients, avec le prix calculé selon la '
-              'distance.'),
+          title: Text(context.tr('La livraison fait partie de Mara Pro')),
+          subtitle: Text(
+              context.tr('Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
           trailing: const Icon(Icons.chevron_right),
           onTap: _openPro,
         ),
       ),
       const SizedBox(height: 12),
     ],
-    Text('Frais de livraison', style: theme.textTheme.titleSmall),
+    Text(context.tr('Frais de livraison'), style: theme.textTheme.titleSmall),
     const SizedBox(height: 8),
     SegmentedButton<bool>(
       key: const Key('delivery-mode'),
-      segments: const [
-        ButtonSegment(value: false, label: Text('Prix au km')),
-        ButtonSegment(value: true, label: Text('Minimum, puis au km')),
+      segments: [
+        ButtonSegment(value: false, label: Text(context.tr('Prix au km'))),
+        ButtonSegment(value: true, label: Text(context.tr('Minimum, puis au km'))),
       ],
       selected: {_deliveryMinimum},
       onSelectionChanged: _saving
@@ -1238,7 +1221,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              labelText: _deliveryMinimum ? 'Minimum' : 'Base',
+              labelText: _deliveryMinimum ? context.tr('Minimum') : context.tr('Base'),
             ),
           ),
         ),
@@ -1248,9 +1231,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             controller: _deliveryPerKmController,
             enabled: !_saving,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Par km',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: context.tr('Par km'),
             ),
           ),
         ),
@@ -1263,10 +1246,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         controller: _deliveryIncludedController,
         enabled: !_saving,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Minimum jusqu\'à (km)',
-          helperText: 'Ex. 3 : toute course de 0 à 3 km coûte le minimum.',
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Minimum jusqu\'à (km)'),
+          helperText: context.tr('Ex. 3 : toute course de 0 à 3 km coûte le minimum.'),
         ),
       ),
     ],
@@ -1275,22 +1258,20 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       controller: _deliveryReachController,
       enabled: !_saving,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        labelText: 'Distance maximale (km)',
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
+        labelText: context.tr('Distance maximale (km)'),
         helperText:
-            'Au-delà, la livraison n\'est pas proposée. '
-            'Vide : 15 km.',
+            context.tr('Au-delà, la livraison n\'est pas proposée. Vide : 15 km.'),
       ),
     ),
   ];
 
   List<Widget> _position(ThemeData theme) => [
-    Text('Position sur la carte', style: theme.textTheme.titleSmall),
+    Text(context.tr('Position sur la carte'), style: theme.textTheme.titleSmall),
     const SizedBox(height: 4),
     Text(
-      "Pour que les clients vous trouvent dans l'annuaire, "
-      '« près de moi » et sur la carte. Facultatif.',
+      context.tr('Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.'),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1307,9 +1288,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               decimal: true,
               signed: true,
             ),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Latitude',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: context.tr('Latitude'),
             ),
           ),
         ),
@@ -1323,9 +1304,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               decimal: true,
               signed: true,
             ),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Longitude',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: context.tr('Longitude'),
             ),
           ),
         ),
@@ -1345,12 +1326,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.my_location),
-          label: const Text('Utiliser ma position'),
+          label: Text(context.tr('Utiliser ma position')),
         ),
         OutlinedButton.icon(
           onPressed: (_saving || _locating) ? null : _pasteMapsLink,
           icon: const Icon(Icons.link),
-          label: const Text('Coller un lien Google Maps'),
+          label: Text(context.tr('Coller un lien Google Maps')),
         ),
       ],
     ),
@@ -1376,16 +1357,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             contentPadding: EdgeInsets.zero,
             value: _waveAllowed,
             onChanged: _savingWave ? null : _setWaveAllowed,
-            title: const Text('Autoriser Wave'),
-            subtitle: const Text('Sinon : espèces uniquement.'),
+            title: Text(context.tr('Autoriser Wave')),
+            subtitle: Text(context.tr('Sinon : espèces uniquement.')),
           ),
           const SizedBox(height: 12),
         ],
-        Text('Wave (plateforme)', style: theme.textTheme.titleSmall),
+        Text(context.tr('Wave (plateforme)'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         Text(
-            "L'identifiant que Wave a donné à cette boutique (marchand "
-            'agrégé). Les paiements des commandes portent son nom chez Wave.',
+            context.tr('L\'identifiant que Wave a donné à cette boutique (marchand agrégé). Les paiements des commandes portent son nom chez Wave.'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
@@ -1394,16 +1374,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             child: TextField(
               controller: _merchantRefController,
               enabled: !_savingPayout,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Identifiant marchand Wave'),
+              decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: context.tr('Identifiant marchand Wave')),
             ),
           ),
           const SizedBox(width: 8),
           FilledButton.tonal(
             onPressed:
                 _savingPayout ? null : () => _savePayout(merchant: true),
-            child: const Text('Enregistrer'),
+            child: Text(context.tr('Enregistrer')),
           ),
         ]),
         const SizedBox(height: 32),
@@ -1411,22 +1391,19 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 40),
       const Divider(),
       const SizedBox(height: 16),
-      Text('Formule (plateforme)', style: theme.textTheme.titleSmall),
+      Text(context.tr('Formule (plateforme)'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-        'Mara Pro se règle à la main pour l\'instant : quand le '
-        'paiement est arrivé sur Wave, passez l\'entreprise en '
-        'Pro jusqu\'à la date payée. Passée cette date elle '
-        'redevient gratuite, sans rien perdre.',
+        context.tr('Mara Pro se règle à la main pour l\'instant : quand le paiement est arrivé sur Wave, passez l\'entreprise en Pro jusqu\'à la date payée. Passée cette date elle redevient gratuite, sans rien perdre.'),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
       const SizedBox(height: 12),
       SegmentedButton<String>(
-        segments: const [
-          ButtonSegment(value: 'free', label: Text('Mara')),
-          ButtonSegment(value: 'pro', label: Text('Mara Pro')),
+        segments: [
+          ButtonSegment(value: 'free', label: Text(context.tr('Mara'))),
+          ButtonSegment(value: 'pro', label: Text(context.tr('Mara Pro'))),
         ],
         selected: {_planRaw},
         onSelectionChanged: _savingPlan
@@ -1450,10 +1427,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       TextField(
         controller: _planNoteController,
         enabled: !_savingPlan,
-        decoration: const InputDecoration(
-          labelText: 'Note (pour la plateforme)',
-          hintText: 'Wave 25 000 F le 12/09, partenaire, test…',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: context.tr('Note (pour la plateforme)'),
+          hintText: context.tr('Wave 25 000 F le 12/09, partenaire, test…'),
+          border: const OutlineInputBorder(),
         ),
       ),
       if (_planMessage != null) ...[
@@ -1472,9 +1449,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.workspace_premium_outlined),
-          label: const Text(
-            'Enregistrer la formule',
-            style: TextStyle(fontSize: 16),
+          label: Text(
+            context.tr('Enregistrer la formule'),
+            style: const TextStyle(fontSize: 16),
           ),
         ),
       ),
@@ -1483,7 +1460,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 40),
       const Divider(),
       const SizedBox(height: 16),
-      Text('Modération de la plateforme', style: theme.textTheme.titleSmall),
+      Text(context.tr('Modération de la plateforme'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
         _suspended
@@ -1512,7 +1489,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   _suspended ? Icons.lock_open_outlined : Icons.lock_outline,
                 ),
           label: Text(
-            _suspended ? 'Réactiver' : 'Suspendre',
+            _suspended ? context.tr('Réactiver') : context.tr('Suspendre'),
             style: const TextStyle(fontSize: 16),
           ),
           style: _suspended
@@ -1552,7 +1529,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+            : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
       ),
     ),
     if (_saved != null && _saved == _open) ...[
@@ -1569,7 +1546,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 30),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Enregistré',
+              child: Text(context.tr('Enregistré'),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800)),
             ),
@@ -1581,7 +1558,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 _open = next;
               }),
               icon: Icon(_next?.icon ?? Icons.done_all),
-              label: Text(_next == null ? 'Terminé' : 'Suivant : ${_next!.label}'),
+              label: Text(_next == null ? context.tr('Terminé') : context.tr('Suivant : {label}', {'label': context.tr(_next!.label)})),
             ),
           ],
         ),
@@ -1642,7 +1619,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             : 'Code exigé après ${_lockRule == 60 ? '1 h' : '$_lockRule min'}';
       case _Part.position:
         final pin = _pin;
-        if (pin == null) return 'Non renseignée';
+        if (pin == null) return context.tr('Non renseignée');
         return pinLooksMisplaced(pin.$1, pin.$2, _currency)
             ? 'Loin de la zone de la monnaie'
             : 'Placée sur la carte';
@@ -1705,7 +1682,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               Icon(Icons.workspace_premium, size: 16, color: theme.colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                'MARA PRO',
+                context.tr('MARA PRO'),
                 key: const Key('settings-pro-group'),
                 style: theme.textTheme.labelSmall?.copyWith(
                   letterSpacing: 1.2,
@@ -1730,7 +1707,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               ),
             _PartRow.link(
               icon: Icons.groups_outlined,
-              label: 'Équipe et accès',
+              label: context.tr('Équipe et accès'),
               state: 'Qui voit et modifie quoi',
               onTap: () => context.push(
                 Routes.inside(widget.orgId, 'administration/acces'),
@@ -1743,7 +1720,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'PLATEFORME',
+              context.tr('PLATEFORME'),
               style: theme.textTheme.labelSmall?.copyWith(
                 letterSpacing: 1.2,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -1779,7 +1756,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -1787,7 +1764,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // A desk: the index on the left, the open part beside it.
     if (wide) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1797,7 +1774,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               child: open == null
                   ? Center(
                       child: Text(
-                        'Choisissez une rubrique à gauche.',
+                        context.tr('Choisissez une rubrique à gauche.'),
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -1814,7 +1791,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // index, not out of the settings.
     if (open == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Paramètres de l'activité")),
+        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
         body: _index(theme, wide: false),
       );
     }
@@ -1826,11 +1803,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            tooltip: 'Retour aux paramètres',
+            tooltip: context.tr('Retour aux paramètres'),
             icon: const Icon(Icons.arrow_back),
             onPressed: () => setState(() => _open = null),
           ),
-          title: Text(open.label),
+          title: Text(context.tr(open.label)),
         ),
         body: _page(open, theme),
       ),
@@ -1913,7 +1890,7 @@ class _PartRow extends StatelessWidget {
       selected: selected,
       leading: Icon(part?.icon ?? icon),
       title: Text(
-        part?.label ?? label!,
+        context.tr(part?.label ?? label!),
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
@@ -1938,8 +1915,7 @@ class _ClosedNote extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Text(
-      'La vitrine est fermée : ces réglages servent dès son ouverture '
-      '(rubrique Vitrine).',
+      context.tr('La vitrine est fermée : ces réglages servent dès son ouverture (rubrique Vitrine).'),
       style: theme.textTheme.bodyMedium?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -2021,14 +1997,14 @@ class _LinkRow extends StatelessWidget {
             child: SelectableText(url, style: theme.textTheme.bodySmall),
           ),
           IconButton(
-            tooltip: 'Copier le lien',
+            tooltip: context.tr('Copier le lien'),
             icon: const Icon(Icons.copy_outlined, size: 18),
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: url));
               if (context.mounted) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('Lien copié')));
+                ).showSnackBar(SnackBar(content: Text(context.tr('Lien copié'))));
               }
             },
           ),
@@ -2133,7 +2109,7 @@ class _RateDialogState extends State<RateDialog> {
     final home = widget.homeCurrency == 'XOF' ? 'FCFA' : widget.homeCurrency;
     return AlertDialog(
       title: Text(
-        widget.existing == null ? 'Ajouter une monnaie' : 'Modifier le taux',
+        widget.existing == null ? context.tr('Ajouter une monnaie') : context.tr('Modifier le taux'),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -2142,9 +2118,9 @@ class _RateDialogState extends State<RateDialog> {
             DropdownButtonFormField<String>(
               initialValue: _code,
               isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Monnaie',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Monnaie'),
+                border: const OutlineInputBorder(),
               ),
               items: [
                 for (final code in _choices)
@@ -2170,7 +2146,7 @@ class _RateDialogState extends State<RateDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Taux',
+              labelText: context.tr('Taux'),
               prefixText: _code == null ? null : '1 $_code = ',
               suffixText: home,
               helperText: _code == 'EUR' && widget.homeCurrency == 'XOF'
@@ -2184,13 +2160,13 @@ class _RateDialogState extends State<RateDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _canSave
               ? () => Navigator.of(context).pop((_code!, _rate!))
               : null,
-          child: const Text('Enregistrer'),
+          child: Text(context.tr('Enregistrer')),
         ),
       ],
     );

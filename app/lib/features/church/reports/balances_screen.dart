@@ -5,6 +5,7 @@ import '../../../core/format/money.dart';
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Where the money is, right now — cash, bank, mobile money.
 ///
@@ -71,12 +72,12 @@ class _BalancesScreenState extends State<BalancesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Soldes'),
+        title: Text(context.tr('Soldes')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -106,7 +107,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
                           ),
                           TextButton(
                             onPressed: _load,
-                            child: const Text('Réessayer'),
+                            child: Text(context.tr('Réessayer')),
                           ),
                         ],
                       ),
@@ -122,7 +123,7 @@ class _BalancesScreenState extends State<BalancesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Total disponible',
+                            context.tr('Total disponible'),
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: theme.colorScheme.onPrimaryContainer
                                   .withValues(alpha: 0.8),
@@ -141,13 +142,13 @@ class _BalancesScreenState extends State<BalancesScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text('Détail', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Détail'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_balances.isEmpty && _error == null)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Text(
-                        'Aucun compte pour le moment.',
+                        context.tr('Aucun compte pour le moment.'),
                         textAlign: TextAlign.center,
                       ),
                     )

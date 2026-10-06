@@ -7,6 +7,7 @@ import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Inviting somebody, in one sheet.
 ///
@@ -141,7 +142,7 @@ class _InviteSheetState extends State<InviteSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Inviter quelqu\'un', style: theme.textTheme.headlineSmall),
+        Text(context.tr('Inviter quelqu\'un'), style: theme.textTheme.headlineSmall),
         const SizedBox(height: 4),
         Text(
           widget.orgName,
@@ -150,7 +151,7 @@ class _InviteSheetState extends State<InviteSheet> {
           ),
         ),
         const SizedBox(height: 24),
-        Text('Rôle', style: theme.textTheme.labelLarge),
+        Text(context.tr('Rôle'), style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: _role,
@@ -164,9 +165,9 @@ class _InviteSheetState extends State<InviteSheet> {
         if (_role == 'observer') ...[
           const SizedBox(height: 12),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'full', label: Text('Détail complet')),
-              ButtonSegment(value: 'summary', label: Text('Totaux seulement')),
+            segments: [
+              ButtonSegment(value: 'full', label: Text(context.tr('Détail complet'))),
+              ButtonSegment(value: 'summary', label: Text(context.tr('Totaux seulement'))),
             ],
             selected: {_visibility},
             onSelectionChanged:
@@ -174,22 +175,22 @@ class _InviteSheetState extends State<InviteSheet> {
           ),
           const SizedBox(height: 4),
           Text(
-            "Un observateur lit les comptes sans jamais pouvoir les modifier.",
+            context.tr('Un observateur lit les comptes sans jamais pouvoir les modifier.'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
         const SizedBox(height: 20),
-        Text('Portée', style: theme.textTheme.labelLarge),
+        Text(context.tr('Portée'), style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: _scope,
           decoration: const InputDecoration(border: OutlineInputBorder()),
           items: [
-            const DropdownMenuItem(
+            DropdownMenuItem(
               value: 'org',
-              child: Text("Toute l'activité"),
+              child: Text(context.tr('Toute l\'activité')),
             ),
             for (final entity in widget.structure) ...[
               DropdownMenuItem(
@@ -199,7 +200,7 @@ class _InviteSheetState extends State<InviteSheet> {
               for (final dept in entity.departments)
                 DropdownMenuItem(
                   value: 'department:${dept.id}',
-                  child: Text('    ${entity.name} · ${dept.name}'),
+                  child: Text(context.tr('    {name} · {name2}', {'name': entity.name, 'name2': dept.name})),
                 ),
             ],
           ],
@@ -207,40 +208,38 @@ class _InviteSheetState extends State<InviteSheet> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Cette personne ne verra rien en dehors de cette portée.',
+          context.tr('Cette personne ne verra rien en dehors de cette portée.'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 20),
-        Text('Numéro de téléphone (optionnel)',
+        Text(context.tr('Numéro de téléphone (optionnel)'),
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         PhoneField(
           controller: _phoneController,
           country: _country,
           onCountry: (c) => setState(() => _country = c),
-          labelText: 'Numéro',
+          labelText: context.tr('Numéro'),
           hintText: '70 12 34 56',
           enabled: !_working,
         ),
         const SizedBox(height: 4),
         Text(
-          'Avec un numéro, le code ne fonctionne que pour cette personne et '
-          "s'active tout seul à sa connexion. Sans numéro, il fonctionne pour "
-          'quiconque le détient — à remettre en main propre.',
+          context.tr('Avec un numéro, le code ne fonctionne que pour cette personne et s\'active tout seul à sa connexion. Sans numéro, il fonctionne pour quiconque le détient — à remettre en main propre.'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 20),
-        Text('Valable', style: theme.textTheme.labelLarge),
+        Text(context.tr('Valable'), style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         SegmentedButton<int>(
-          segments: const [
-            ButtonSegment(value: 1, label: Text('1 jour')),
-            ButtonSegment(value: 7, label: Text('7 jours')),
-            ButtonSegment(value: 14, label: Text('14 jours')),
+          segments: [
+            ButtonSegment(value: 1, label: Text(context.tr('1 jour'))),
+            ButtonSegment(value: 7, label: Text(context.tr('7 jours'))),
+            ButtonSegment(value: 14, label: Text(context.tr('14 jours'))),
           ],
           selected: {_validDays},
           onSelectionChanged:
@@ -263,7 +262,7 @@ class _InviteSheetState extends State<InviteSheet> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.qr_code_2),
-            label: const Text('Créer le code', style: TextStyle(fontSize: 17)),
+            label: Text(context.tr('Créer le code'), style: const TextStyle(fontSize: 17)),
           ),
         ),
         const SizedBox(height: 8),
@@ -284,7 +283,7 @@ class _InviteSheetState extends State<InviteSheet> {
       children: [
         Icon(Icons.check_circle, size: 48, color: theme.colorScheme.primary),
         const SizedBox(height: 16),
-        Text('Code créé', style: theme.textTheme.headlineSmall),
+        Text(context.tr('Code créé'), style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         Text(
           '${roleLabel(invitation.role)} · '
@@ -371,18 +370,18 @@ class _InviteSheetState extends State<InviteSheet> {
                   );
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Code copié')),
+                    SnackBar(content: Text(context.tr('Code copié'))),
                   );
                 },
                 icon: const Icon(Icons.copy),
-                label: const Text('Copier'),
+                label: Text(context.tr('Copier')),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Terminé'),
+                child: Text(context.tr('Terminé')),
               ),
             ),
           ],

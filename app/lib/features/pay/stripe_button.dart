@@ -8,6 +8,7 @@ import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/pay/wave_pay.dart';
 import '../../core/theme/kaj_theme.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « S'abonner par carte » — Kaj Pro as a Stripe subscription (082).
 ///
@@ -202,7 +203,7 @@ class _StripeManageState extends State<StripeManage> {
           key: const Key('stripe-manage'),
           onPressed: _busy ? null : _open,
           icon: const Icon(Icons.credit_card_outlined),
-          label: const Text('Gérer la carte ou annuler'),
+          label: Text(context.tr('Gérer la carte ou annuler')),
         ),
         if (_error != null) ...[
           const SizedBox(height: 6),

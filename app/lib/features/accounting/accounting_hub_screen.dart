@@ -8,6 +8,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The accounting section.
 ///
@@ -105,9 +106,7 @@ class AccountingHubScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Ces écrans ont besoin du réseau. Un rapport est un '
-                    'chiffre à un instant : mieux vaut ne rien afficher que '
-                    'de présenter celui de la semaine dernière.',
+                    context.tr('Ces écrans ont besoin du réseau. Un rapport est un chiffre à un instant : mieux vaut ne rien afficher que de présenter celui de la semaine dernière.'),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),

@@ -8,6 +8,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/admin/models.dart' show roleLabel;
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The platform admin's global directory of people — the other axis to the
 /// business console. Search any account across every business, see where they
@@ -81,7 +82,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Annuaire des personnes')),
+      appBar: AppBar(title: Text(context.tr('Annuaire des personnes'))),
       body: Column(
         children: [
           Padding(
@@ -92,12 +93,12 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _load(),
               decoration: InputDecoration(
-                hintText: 'Nom, téléphone ou e-mail…',
+                hintText: context.tr('Nom, téléphone ou e-mail…'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Effacer',
+                        tooltip: context.tr('Effacer'),
                         icon: const Icon(Icons.close),
                         onPressed: () {
                           _search.clear();
@@ -123,10 +124,10 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
                       ),
                     ])
                   : _people.isEmpty && !_loading
-                      ? ListView(children: const [
+                      ? ListView(children: [
                           Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Center(child: Text('Aucun compte trouvé.')),
+                            padding: const EdgeInsets.all(40),
+                            child: Center(child: Text(context.tr('Aucun compte trouvé.'))),
                           ),
                         ])
                       : ListView.separated(
@@ -162,7 +163,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
         subtitle: Text(subtitle),
         trailing: person.isPlatformAdmin
             ? Chip(
-                label: const Text('Mara'),
+                label: Text(context.tr('Mara')),
                 visualDensity: VisualDensity.compact,
                 backgroundColor: theme.colorScheme.primaryContainer,
               )
@@ -262,10 +263,10 @@ class _PersonSheetState extends State<_PersonSheet> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+              child: Text(context.tr('Annuler'))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Confirmer')),
+              child: Text(context.tr('Confirmer'))),
         ],
       ),
     );
@@ -286,23 +287,23 @@ class _PersonSheetState extends State<_PersonSheet> {
         String? err;
         return StatefulBuilder(builder: (ctx, setLocal) {
           return AlertDialog(
-            title: Text('Nouveau mot de passe — ${widget.person.label}'),
+            title: Text(context.tr('Nouveau mot de passe — {label}', {'label': widget.person.label})),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: pw1,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Nouveau mot de passe',
-                      border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                      labelText: context.tr('Nouveau mot de passe'),
+                      border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: pw2,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Confirmer', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                      labelText: context.tr('Confirmer'), border: const OutlineInputBorder()),
                 ),
                 if (err != null) ...[
                   const SizedBox(height: 8),
@@ -315,7 +316,7 @@ class _PersonSheetState extends State<_PersonSheet> {
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Annuler')),
+                  child: Text(context.tr('Annuler'))),
               FilledButton(
                 onPressed: () {
                   if (pw1.text.length < 8) {
@@ -326,7 +327,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                     Navigator.pop(ctx, pw1.text);
                   }
                 },
-                child: const Text('Enregistrer'),
+                child: Text(context.tr('Enregistrer')),
               ),
             ],
           );
@@ -346,19 +347,18 @@ class _PersonSheetState extends State<_PersonSheet> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Supprimer le compte de ${widget.person.label} ?'),
-        content: const Text(
-            'Le compte sera supprimé définitivement et la personne sera '
-            'déconnectée. Cette action est irréversible.'),
+        title: Text(context.tr('Supprimer le compte de {label} ?', {'label': widget.person.label})),
+        content: Text(
+            context.tr('Le compte sera supprimé définitivement et la personne sera déconnectée. Cette action est irréversible.')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+              child: Text(context.tr('Annuler'))),
           FilledButton(
             style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(ctx).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer'),
+            child: Text(context.tr('Supprimer')),
           ),
         ],
       ),
@@ -406,7 +406,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                 ),
                 if (_isPlatformAdmin)
                   Chip(
-                    label: const Text('Mara'),
+                    label: Text(context.tr('Mara')),
                     backgroundColor: theme.colorScheme.primaryContainer,
                   ),
               ],
@@ -416,7 +416,7 @@ class _PersonSheetState extends State<_PersonSheet> {
             if (p.phone != null) _row(context, Icons.phone_outlined, p.phone!),
             const Divider(height: 28),
 
-            Text('Entreprises', style: theme.textTheme.titleMedium),
+            Text(context.tr('Entreprises'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             if (_orgs == null)
               const Padding(
@@ -424,9 +424,9 @@ class _PersonSheetState extends State<_PersonSheet> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (_orgs!.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text("N'appartient à aucune entreprise."),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(context.tr('N\'appartient à aucune entreprise.')),
               )
             else
               ..._orgs!.map((o) => ListTile(
@@ -452,9 +452,9 @@ class _PersonSheetState extends State<_PersonSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _isPlatformAdmin,
                 onChanged: _busy ? null : (_) => _togglePlatform(),
-                title: const Text('Accès plateforme (Mara)'),
-                subtitle: const Text(
-                    'Voir et gérer toutes les entreprises de la plateforme.'),
+                title: Text(context.tr('Accès plateforme (Mara)')),
+                subtitle: Text(
+                    context.tr('Voir et gérer toutes les entreprises de la plateforme.')),
               ),
 
             if (_canWorker) ...[
@@ -462,7 +462,7 @@ class _PersonSheetState extends State<_PersonSheet> {
               OutlinedButton.icon(
                 onPressed: _busy ? null : _resetPassword,
                 icon: const Icon(Icons.password_outlined),
-                label: const Text('Réinitialiser le mot de passe'),
+                label: Text(context.tr('Réinitialiser le mot de passe')),
               ),
               if (!_isSelf) ...[
                 const SizedBox(height: 8),
@@ -470,14 +470,13 @@ class _PersonSheetState extends State<_PersonSheet> {
                   onPressed: _busy ? null : _delete,
                   icon: Icon(Icons.delete_forever_outlined,
                       color: theme.colorScheme.error),
-                  label: Text('Supprimer le compte',
+                  label: Text(context.tr('Supprimer le compte'),
                       style: TextStyle(color: theme.colorScheme.error)),
                 ),
               ],
             ] else
               Text(
-                'La réinitialisation du mot de passe et la suppression '
-                'nécessitent le service de comptes (non configuré).',
+                context.tr('La réinitialisation du mot de passe et la suppression nécessitent le service de comptes (non configuré).'),
                 style: theme.textTheme.bodySmall,
               ),
             const SizedBox(height: 8),

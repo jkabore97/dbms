@@ -5,6 +5,7 @@ import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -125,7 +126,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     // Compared normalised, so "70 12 34 56" and "70123456" are the agreement
     // they look like rather than a mismatch over a space.
     if (_e164 != _country.toE164(_phoneAgainText)) {
-      return 'Les deux numéros ne sont pas identiques.';
+      return context.tr('Les deux numéros ne sont pas identiques.');
     }
     return null;
   }
@@ -196,27 +197,27 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 TextField(
                   controller: _first,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Prénom',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Prénom'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _middle,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Deuxième prénom (facultatif)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Deuxième prénom (facultatif)'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _last,
                   textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom de famille',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Nom de famille'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -231,10 +232,10 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 TextField(
                   controller: _title,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Fonction (facultatif)',
-                    helperText: 'Vendeuse, gérant, comptable…',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Fonction (facultatif)'),
+                    helperText: context.tr('Vendeuse, gérant, comptable…'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -242,7 +243,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   controller: _phone,
                   country: _country,
                   onCountry: (c) => setState(() => _country = c),
-                  labelText: 'Numéro de téléphone',
+                  labelText: context.tr('Numéro de téléphone'),
                   hintText: '70 12 34 56',
                   enabled: !_saving,
                 ),
@@ -251,7 +252,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   controller: _phoneAgain,
                   country: _country,
                   onCountry: (c) => setState(() => _country = c),
-                  labelText: 'Confirmez le numéro',
+                  labelText: context.tr('Confirmez le numéro'),
                   enabled: !_saving,
                   errorText: _phoneProblem,
                   // Said plainly, because retyping something feels like

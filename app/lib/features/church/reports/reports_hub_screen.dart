@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import '../../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The reports, and who is allowed to see which.
 ///
@@ -80,8 +81,7 @@ class ReportsHubScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Votre accès porte sur les totaux. Le détail des '
-                      'opérations ne vous est pas communiqué.',
+                      context.tr('Votre accès porte sur les totaux. Le détail des opérations ne vous est pas communiqué.'),
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

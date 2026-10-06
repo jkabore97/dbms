@@ -11,6 +11,7 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
 import 'farm_sheets.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The batches, and how they are doing.
 ///
@@ -151,19 +152,18 @@ class _FlocksScreenState extends State<FlocksScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Clôturer ${flock.batchCode} ?'),
-        content: const Text(
-          "La bande disparaît de l'écran d'accueil et garde tout son "
-          "historique. Rien n'est supprimé.",
+        title: Text(context.tr('Clôturer {batchCode} ?', {'batchCode': flock.batchCode})),
+        content: Text(
+          context.tr('La bande disparaît de l\'écran d\'accueil et garde tout son historique. Rien n\'est supprimé.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Retour'),
+            child: Text(context.tr('Retour')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Clôturer'),
+            child: Text(context.tr('Clôturer')),
           ),
         ],
       ),
@@ -176,7 +176,7 @@ class _FlocksScreenState extends State<FlocksScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("La bande n'a pas pu être clôturée.")),
+        SnackBar(content: Text(context.tr('La bande n\'a pas pu être clôturée.'))),
       );
     }
   }
@@ -185,10 +185,10 @@ class _FlocksScreenState extends State<FlocksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bandes'),
+        title: Text(context.tr('Bandes')),
         actions: [
           LessonHelpButton(
-              org: widget.org, lessonKey: 'farm_log', title: 'Tenir le cahier de la ferme'),
+              org: widget.org, lessonKey: 'farm_log', title: context.tr('Tenir le cahier de la ferme')),
           IconButton(
             tooltip: _showClosed
                 ? 'Masquer les bandes clôturées'
@@ -205,7 +205,7 @@ class _FlocksScreenState extends State<FlocksScreen> {
           ? FloatingActionButton.extended(
               onPressed: _openFlock,
               icon: const Icon(Icons.add),
-              label: const Text('Bande'),
+              label: Text(context.tr('Bande')),
             )
           : null,
       body: ReportBody(
@@ -305,7 +305,7 @@ class _FlockCard extends StatelessWidget {
                 ),
                 if (!flock.isOpen)
                   Chip(
-                    label: const Text('clôturée'),
+                    label: Text(context.tr('clôturée')),
                     visualDensity: VisualDensity.compact,
                     labelStyle: theme.textTheme.bodySmall,
                   )
@@ -317,17 +317,17 @@ class _FlockCard extends StatelessWidget {
                       if (v == 'correct') onCorrect?.call();
                     },
                     itemBuilder: (_) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'record',
-                        child: Text('Enregistrer un événement'),
+                        child: Text(context.tr('Enregistrer un événement')),
                       ),
                       if (onCorrect != null)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'correct',
-                          child: Text('Corriger une entrée'),
+                          child: Text(context.tr('Corriger une entrée')),
                         ),
-                      const PopupMenuItem(
-                          value: 'close', child: Text('Clôturer')),
+                      PopupMenuItem(
+                          value: 'close', child: Text(context.tr('Clôturer'))),
                     ],
                   ),
               ],
@@ -337,21 +337,21 @@ class _FlockCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Stat(
-                    label: 'Ponte (7 j)',
+                    label: context.tr('Ponte (7 j)'),
                     value: flock.layRateLabel,
                     hint: '${flock.eggs7d} œufs',
                   ),
                 ),
                 Expanded(
                   child: _Stat(
-                    label: 'Vivants',
+                    label: context.tr('Vivants'),
                     value: '${flock.alive}',
                     hint: 'sur ${flock.started}',
                   ),
                 ),
                 Expanded(
                   child: _Stat(
-                    label: 'Morts',
+                    label: context.tr('Morts'),
                     value: '${flock.died}',
                     hint: '${(flock.mortalityRate * 100).toStringAsFixed(1)} %',
                     tint: worrying ? theme.colorScheme.error : null,
@@ -366,7 +366,7 @@ class _FlockCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onRecord,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Mortalité, pesée, vaccination'),
+                  label: Text(context.tr('Mortalité, pesée, vaccination')),
                 ),
               ),
             ],
@@ -465,11 +465,10 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Nouvelle bande', style: theme.textTheme.titleLarge),
+          Text(context.tr('Nouvelle bande'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            'Demande le réseau : le code doit être unique dans toute '
-            "l'activité.",
+            context.tr('Demande le réseau : le code doit être unique dans toute l\'activité.'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -477,9 +476,9 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
           const SizedBox(height: 20),
           TextField(
             controller: _codeController,
-            decoration: const InputDecoration(
-              labelText: 'Code de la bande',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Code de la bande'),
+              border: const OutlineInputBorder(),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -488,9 +487,9 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
             controller: _countController,
             autofocus: true,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: "Nombre d'oiseaux à l'arrivée",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nombre d\'oiseaux à l\'arrivée'),
+              border: const OutlineInputBorder(),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -498,10 +497,10 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
           TextField(
             controller: _breedController,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Race (facultatif)',
-              hintText: 'Isa Brown',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Race (facultatif)'),
+              hintText: context.tr('Isa Brown'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 20),
@@ -517,7 +516,7 @@ class _NewFlockSheetState extends State<_NewFlockSheet> {
                             : _breedController.text.trim(),
                       ))
                   : null,
-              child: const Text('Ouvrir la bande'),
+              child: Text(context.tr('Ouvrir la bande')),
             ),
           ),
         ],
