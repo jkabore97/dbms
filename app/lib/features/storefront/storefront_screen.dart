@@ -307,6 +307,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       bottom: _basket.isEmpty
           ? null
           : _BasketBar(
+              picked: [
+                for (final i in _items)
+                  if ((_basket[i.id] ?? 0) > 0) (i, (_basket[i.id] ?? 0).round()),
+              ],
+              capture: widget.capture,
               count: _count,
               total: money.format(_total),
               sending: _sending,
@@ -385,12 +390,17 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 /// The basket, pinned under the page: how many, how much, one button.
 class _BasketBar extends StatelessWidget {
   const _BasketBar({
+    required this.picked,
+    required this.capture,
     required this.count,
     required this.total,
     required this.sending,
     required this.onOrder,
   });
 
+  /// What is in the basket, in the shelf's order, with how many of each.
+  final List<(PublicItem, int)> picked;
+  final CaptureRepository capture;
   final int count;
   final String total;
   final bool sending;
@@ -398,44 +408,161 @@ class _BasketBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: ShopStyle.paper,
-        border: Border(top: BorderSide(color: ShopStyle.line)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('$count article${count > 1 ? 's' : ''}',
-                      style: const TextStyle(
-                          fontSize: 13, color: ShopStyle.mist)),
-                  Text(total,
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: ShopStyle.ink)),
-                ],
+    // A card that floats over the page rather than a strip glued to its
+    // foot: the basket reads as the basket, never as part of the footer.
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Material(
+              key: const Key('basket-bar'),
+              color: ShopStyle.paper,
+              elevation: 4,
+              shadowColor: const Color(0x22000000),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: const BorderSide(color: ShopStyle.line),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Each article picked: its photo, small, and its name.
+                    SizedBox(
+                      height: 44,
+                      child: ListView.separated(
+                        key: const Key('basket-picked'),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: picked.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, i) {
+                          final (item, qty) = picked[i];
+                          return _PickedChip(
+                              key: ValueKey(item.id),
+                              item: item,
+                              qty: qty,
+                              capture: capture);
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('$count article${count > 1 ? 's' : ''}',
+                                  style: const TextStyle(
+                                      fontSize: 13, color: ShopStyle.mist)),
+                              Text(total,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: ShopStyle.ink)),
+                            ],
+                          ),
+                        ),
+                        FilledButton(
+                          onPressed: sending ? null : onOrder,
+                          child: sending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: ShopStyle.paper))
+                              : const Text('Commander'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            FilledButton(
-              onPressed: sending ? null : onOrder,
-              child: sending
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: ShopStyle.paper))
-                  : const Text('Commander'),
-            ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// One article in the basket bar: a small square of its photo (or its
+/// initial), its name, and « ×2 » when there is more than one.
+class _PickedChip extends StatelessWidget {
+  const _PickedChip({
+    super.key,
+    required this.item,
+    required this.qty,
+    required this.capture,
+  });
+
+  final PublicItem item;
+  final int qty;
+  final CaptureRepository capture;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+      decoration: BoxDecoration(
+        color: ShopStyle.stone,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: item.photoKey == null
+                  ? ColoredBox(
+                      color: ShopStyle.paper,
+                      child: Center(
+                        child: Text(
+                          item.name.isEmpty
+                              ? '?'
+                              : item.name.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: ShopStyle.mist),
+                        ),
+                      ),
+                    )
+                  : _Photo(
+                      photoKey: item.photoKey,
+                      capture: capture,
+                      label: item.name,
+                      lean: false,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, color: ShopStyle.ink)),
+          ),
+          if (qty > 1)
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Text('×$qty',
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: ShopStyle.mist)),
+            ),
+        ],
       ),
     );
   }
@@ -1813,6 +1940,7 @@ class _Photo extends StatefulWidget {
     required this.capture,
     this.label = "Photo de l'article",
     this.fit = BoxFit.cover,
+    this.lean = true,
   });
 
   final String? photoKey;
@@ -1821,6 +1949,9 @@ class _Photo extends StatefulWidget {
 
   /// A logo is shown whole (contain); a photo fills its square (cover).
   final BoxFit fit;
+
+  /// Whether a photo leans in under the pointer; a thumbnail holds still.
+  final bool lean;
 
   @override
   State<_Photo> createState() => _PhotoState();
@@ -1847,7 +1978,7 @@ class _PhotoState extends State<_Photo> {
             Image.memory(bytes, fit: widget.fit, semanticLabel: widget.label);
         // A product photograph leans in under the pointer; a logo, shown
         // whole, holds still.
-        if (widget.fit != BoxFit.cover) return image;
+        if (widget.fit != BoxFit.cover || !widget.lean) return image;
         return ClipRect(child: ZoomOnHover(child: image));
       },
     );

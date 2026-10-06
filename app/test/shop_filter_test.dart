@@ -175,5 +175,31 @@ void main() {
       await pumpShop(tester, count: 5);
       expect(find.text('Commander'), findsOneWidget);
     });
+
+    testWidgets('the basket names what is in it, with its picture, in a '
+        'card of its own above the page', (tester) async {
+      await pumpShop(tester, count: 5);
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pump();
+
+      final bar = find.byKey(const Key('basket-bar'));
+      expect(bar, findsOneWidget);
+      final picked = find.byKey(const Key('basket-picked'));
+      expect(find.descendant(of: picked, matching: find.text('Café Touba')),
+          findsOneWidget);
+      // No photo: the initial stands in its square.
+      expect(find.descendant(of: picked, matching: find.text('C')),
+          findsOneWidget);
+      expect(find.descendant(of: picked, matching: find.text('×2')),
+          findsOneWidget);
+      expect(find.text('2 articles'), findsOneWidget);
+      // Let the basket's write land before the database closes.
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 6));
+    });
   });
 }
