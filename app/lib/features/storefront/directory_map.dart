@@ -321,10 +321,10 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                             ),
                             child: Text(
                               _placed.isEmpty
-                                  ? "Aucune vitrine n'a indiqué sa position"
+                                  ? context.tr('Aucune vitrine n\'a indiqué sa position')
                                   : unplaced == 0
                                   ? '${_placed.length} vitrine${_placed.length > 1 ? 's' : ''} sur la carte'
-                                  : '${_placed.length} sur la carte · $unplaced sans position',
+                                  : context.tr('{length} sur la carte · {unplaced} sans position', {'length': _placed.length, 'unplaced': unplaced}),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(

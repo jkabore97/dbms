@@ -632,7 +632,7 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
                   child: l.ok
                       ? Text(
                           '✓ ${l.name} — ${l.quantity} × ${l.salePrice}'
-                          '${l.costPrice != null ? ' (coût ${l.costPrice})' : ''}',
+                          '${l.costPrice != null ? context.tr(' (coût {costPrice})', {'costPrice': l.costPrice}) : ''}',
                           style: theme.textTheme.bodySmall,
                         )
                       : Text(
@@ -964,7 +964,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     },
               icon: const Icon(Icons.event_outlined),
               label: Text(_expiresOn == null
-                  ? "Date d'expiration (facultatif)"
+                  ? context.tr('Date d\'expiration (facultatif)')
                   : 'Expire le '
                       '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
             ),
@@ -1025,8 +1025,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                               : const Icon(Icons.photo_camera_outlined,
                                   size: 18),
                           label: Text(_photoBytes == null
-                              ? 'Ajouter une photo'
-                              : 'Changer la photo'),
+                              ? context.tr('Ajouter une photo')
+                              : context.tr('Changer la photo')),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -1378,7 +1378,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                     },
               icon: const Icon(Icons.event_outlined),
               label: Text(_expiresOn == null
-                  ? "Date d'expiration (facultatif)"
+                  ? context.tr('Date d\'expiration (facultatif)')
                   : 'Expire le '
                       '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
             ),

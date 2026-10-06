@@ -83,7 +83,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
     try {
       final name = await widget.cauris.setReferral(widget.org.id, _code.text);
       if (!mounted) return;
-      setState(() => _codeLine = 'Merci ! $name est votre parrain.');
+      setState(() => _codeLine = context.tr('Merci ! {name} est votre parrain.', {'name': name}));
       await _load();
     } catch (e) {
       if (mounted) setState(() => _codeLine = describeError(e));
@@ -138,7 +138,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
                 label: Text(context.tr('Apprendre et gagner · Académie Mara')),
               ),
               const SizedBox(height: 22),
-              _label(theme, 'Comment gagner des cauris'),
+              _label(theme, context.tr('Comment gagner des cauris')),
               KajCard(
                 margin: EdgeInsets.zero,
                 child: Column(
@@ -160,7 +160,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              _label(theme, 'Parrainez une entreprise'),
+              _label(theme, context.tr('Parrainez une entreprise')),
               KajCard(
                 margin: EdgeInsets.zero,
                 child: Padding(
@@ -168,12 +168,65 @@ class _CaurisScreenState extends State<CaurisScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Votre code : « ${w.referralCode ?? '—'} ». Une entreprise '
-                        'qui le donne en arrivant et qui décolle (vitrine '
-                        'complète, 3 commandes) vous rapporte des cauris.',
-                        style: theme.textTheme.bodyMedium,
+                      // What it pays, first and big.
+                      Row(
+                        children: [
+                          const CauriIcon(size: 30),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              context.tr('+{points} cauris par entreprise parrainée',
+                                  {'points': w.referralPoints}),
+                              key: const Key('referral-points'),
+                              style: theme.textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.tr('Quand elle a sa vitrine complète et 3 commandes terminées.'),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Text(context.tr('Votre code'), style: theme.textTheme.labelLarge),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: Text(w.referralCode ?? '—',
+                                key: const Key('referral-own-code'),
+                                style: theme.textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                          ),
+                        ],
+                      ),
+                      // Who was brought in, and how far each is.
+                      for (final r in w.referrals) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          key: Key('referral-${r.name}'),
+                          children: [
+                            Icon(r.paid ? Icons.check_circle : Icons.hourglass_top,
+                                color: r.paid ? Colors.green.shade600 : kMist, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(r.name, style: theme.textTheme.bodyMedium)),
+                            Text(
+                              r.paid
+                                  ? context.tr('+{points} reçus', {'points': w.referralPoints})
+                                  : context.tr('Vitrine {score} % · {orders}/3 commandes',
+                                      {'score': r.score, 'orders': r.orders}),
+                              style: theme.textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                      ],
                       if (w.referralCode != null) ...[
                         const SizedBox(height: 8),
                         Align(
@@ -221,7 +274,7 @@ class _CaurisScreenState extends State<CaurisScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              _label(theme, 'Historique'),
+              _label(theme, context.tr('Historique')),
               if (w.history.isEmpty)
                 Text(context.tr('Pas encore de cauris. La première commande terminée en rapporte.'),
                     style: theme.textTheme.bodyMedium?.copyWith(color: kMist))

@@ -135,7 +135,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                 const SizedBox(height: 24),
                 Text(
                     failed == 0
-                        ? 'Paiements'
+                        ? context.tr('Paiements')
                         : 'Paiements · $failed versement${failed > 1 ? 's' : ''} en échec',
                     style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
@@ -157,7 +157,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                           'pro' => 'Mara Pro',
                           _ => 'Mise en avant',
                         },
-                        r.method == 'card' ? 'carte' : 'Wave',
+                        r.method == 'card' ? 'carte' : context.tr('Wave'),
                         switch (r.status) {
                           'succeeded' => 'payé',
                           'failed' => 'échoué',

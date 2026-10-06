@@ -162,8 +162,8 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
           Text(widget.title, style: theme.textTheme.titleLarge),
           Text(
             widget.canWrite
-                ? 'Appui long sur une ligne pour la corriger.'
-                : 'Lecture seule.',
+                ? context.tr('Appui long sur une ligne pour la corriger.')
+                : context.tr('Lecture seule.'),
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 12),

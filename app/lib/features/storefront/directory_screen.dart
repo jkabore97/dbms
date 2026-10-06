@@ -626,7 +626,7 @@ class _Street extends StatelessWidget {
               ],
               const SizedBox(height: 32),
               ShopSectionLabel(
-                located ? 'Les plus proches' : 'Toutes les vitrines',
+                located ? context.tr('Les plus proches') : context.tr('Toutes les vitrines'),
                 note: entries.isEmpty
                     ? null
                     : '${entries.length} vitrine${entries.length > 1 ? 's' : ''}',
@@ -769,7 +769,7 @@ class _HitTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final money = moneyFormat(hit.currency);
     final distance = distanceLabel(hit.distanceKm);
-    final shopLine = distance == null ? hit.shopName : '${hit.shopName} · $distance';
+    final shopLine = distance == null ? hit.shopName : context.tr('{shopName} · {distance}', {'shopName': hit.shopName, 'distance': distance});
     // One button to a screen reader, read in the order a sighted shopper
     // reads it: the article, its price, whether there is any, the shop.
     return Semantics(
@@ -982,7 +982,7 @@ class _ShopTile extends StatelessWidget {
     final second = line.isNotEmpty
         ? line
         : (located && !entry.hasLocation
-            ? 'Position non renseignée'
+            ? context.tr('Position non renseignée')
             : _labelFor(entry.profile));
 
     return Semantics(
@@ -1161,7 +1161,7 @@ class _ShopFace extends StatelessWidget {
                     Text(
                       p.price == p.price.roundToDouble()
                           ? '${p.price.toStringAsFixed(0)} F'
-                          : '${p.price} F',
+                          : context.tr('{price} F', {'price': p.price}),
                       style:
                           const TextStyle(fontSize: 13, color: ShopStyle.mist),
                     ),

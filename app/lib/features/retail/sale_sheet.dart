@@ -731,8 +731,8 @@ class _SaleSheetState extends State<SaleSheet> {
                       )
                     : Text(
                         _method == 'wave'
-                            ? 'Payer avec Wave'
-                            : 'Enregistrer la vente',
+                            ? context.tr('Payer avec Wave')
+                            : context.tr('Enregistrer la vente'),
                         style: const TextStyle(fontSize: 17)),
               ),
             ),

@@ -170,10 +170,8 @@ class _StockScreenState extends State<StockScreen> {
         onRetry: _load,
         isEmpty: _items.isEmpty,
         emptyMessage: widget.org.visibility == 'summary'
-            ? 'Votre accès porte sur les totaux. Le détail du stock ne vous '
-                'est pas communiqué.'
-            : 'Aucun article pour le moment. Le premier est créé tout seul, '
-                'à la première réception.',
+            ? context.tr('Votre accès porte sur les totaux. Le détail du stock ne vous est pas communiqué.')
+            : context.tr('Aucun article pour le moment. Le premier est créé tout seul, à la première réception.'),
         child: ListView(
           children: [
             if (low.isNotEmpty)
@@ -192,8 +190,8 @@ class _StockScreenState extends State<StockScreen> {
                     Expanded(
                       child: Text(
                         low.length == 1
-                            ? 'Il reste peu de ${low.first.name}.'
-                            : '${low.length} articles presque épuisés.',
+                            ? context.tr('Il reste peu de {name}.', {'name': low.first.name})
+                            : context.tr('{length} articles presque épuisés.', {'length': low.length}),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onErrorContainer,
                         ),

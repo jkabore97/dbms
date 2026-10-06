@@ -136,8 +136,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
         context: context,
         builder: (context) => AlertDialog(
           title: Text(status == 'refused'
-              ? 'Refuser cette commande ?'
-              : 'Annuler cette commande ?'),
+              ? context.tr('Refuser cette commande ?')
+              : context.tr('Annuler cette commande ?')),
           content: Text(context.tr('{customerName} en sera informé.', {'customerName': order.customerName})),
           actions: [
             TextButton(
@@ -404,14 +404,14 @@ class _OrderCard extends StatelessWidget {
             Text(
                 '$when · ${fulfilmentLabel(order.fulfilment)} · '
                 '${paymentLabel(order.paymentMethod)}'
-                '${order.isPaid ? ' · payé' : ''}',
+                '${order.isPaid ? context.tr(' · payé') : ''}',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             // The state's clock (073): "Prête depuis 25 min".
             if (order.isOpen && clock?.since != null)
               Text(
                   '${orderStatusLabel(order.status)} ${clock!.sinceLabel()}'
-                  '${clock!.selfDelivered ? ' · vous livrez' : ''}',
+                  '${clock!.selfDelivered ? context.tr(' · vous livrez') : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: clock!.stuck
@@ -510,7 +510,7 @@ class _OrderCard extends StatelessWidget {
             if (order.fulfilment == 'delivery')
               Text(
                   order.deliveryFee == null
-                      ? 'Livraison : prix à convenir avec le livreur'
+                      ? context.tr('Livraison : prix à convenir avec le livreur')
                       : 'Livraison : ${money.format(order.deliveryFee!)} '
                           'au livreur, à la porte',
                   style: theme.textTheme.bodySmall),

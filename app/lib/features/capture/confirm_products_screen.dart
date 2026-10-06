@@ -203,7 +203,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.add_shopping_cart),
             label: Text(_selected.isEmpty
-                ? 'Aucune ligne sélectionnée'
+                ? context.tr('Aucune ligne sélectionnée')
                 : 'Ajouter ${_selected.length} article'
                     '${_selected.length > 1 ? 's' : ''} — '
                     '${_money.format(_total)}'),

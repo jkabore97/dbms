@@ -158,8 +158,8 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       children: [
                         Text(
                           org.isPro
-                              ? 'Vous êtes sur Mara Pro'
-                              : 'Faites grandir ${org.name}',
+                              ? context.tr('Vous êtes sur Mara Pro')
+                              : context.tr('Faites grandir {name}', {'name': org.name}),
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
@@ -167,10 +167,8 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         const SizedBox(height: 8),
                         Text(
                           org.isPro
-                              ? 'Tous les outils ci-dessous sont ouverts.'
-                              : 'Mara reste gratuit pour le quotidien. Mara Pro '
-                                  'ajoute la livraison, le paiement en ligne et '
-                                  'les outils d\'une entreprise qui grandit.',
+                              ? context.tr('Tous les outils ci-dessous sont ouverts.')
+                              : context.tr('Mara reste gratuit pour le quotidien. Mara Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.'),
                           textAlign: TextAlign.center,
                           style: muted,
                         ),
@@ -187,8 +185,8 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                           ButtonSegment(
                             value: 'year',
                             label: Text(_monthsOffered > 0
-                                ? 'Annuel · $_monthsOffered mois offerts'
-                                : 'Annuel'),
+                                ? context.tr('Annuel · {_monthsOffered} mois offerts', {'_monthsOffered': _monthsOffered})
+                                : context.tr('Annuel')),
                           ),
                         ],
                         selected: {_period},
@@ -268,10 +266,10 @@ class _Returned extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final text = !paid
-        ? 'Paiement annulé : rien n\'a été prélevé.'
+        ? context.tr('Paiement annulé : rien n\'a été prélevé.')
         : active
-            ? 'Merci ! Mara Pro est actif.'
-            : 'Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.';
+            ? context.tr('Merci ! Mara Pro est actif.')
+            : context.tr('Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.');
     return Container(
       key: const Key('stripe-returned'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

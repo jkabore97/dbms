@@ -106,7 +106,7 @@ class _StaffScreenState extends State<StaffScreen> {
         title: Text(context.tr('Payer {fullName} ?', {'fullName': person.fullName})),
         content: Text(
           amount == null || amount == 0
-              ? "Rien à payer pour l'instant."
+              ? context.tr('Rien à payer pour l\'instant.')
               : '${_money.format(amount)}'
                   '${person.isCasual ? ", pour les heures non réglées." : ", salaire."}',
         ),
@@ -334,7 +334,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText:
-                    _kind == 'casual' ? 'Taux horaire' : 'Salaire mensuel',
+                    _kind == 'casual' ? context.tr('Taux horaire') : context.tr('Salaire mensuel'),
                 border: const OutlineInputBorder(),
               ),
             ),

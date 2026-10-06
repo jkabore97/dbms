@@ -125,8 +125,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
         SnackBar(
           content: Text(
             text.contains('duplicate') || text.contains('unique')
-                ? 'Une bande porte déjà ce code.'
-                : "La bande n'a pas pu être ouverte. Vérifiez le réseau.",
+                ? context.tr('Une bande porte déjà ce code.')
+                : context.tr('La bande n\'a pas pu être ouverte. Vérifiez le réseau.'),
           ),
         ),
       );
@@ -191,8 +191,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
               org: widget.org, lessonKey: 'farm_log', title: context.tr('Tenir le cahier de la ferme')),
           IconButton(
             tooltip: _showClosed
-                ? 'Masquer les bandes clôturées'
-                : 'Afficher les bandes clôturées',
+                ? context.tr('Masquer les bandes clôturées')
+                : context.tr('Afficher les bandes clôturées'),
             icon: Icon(_showClosed ? Icons.visibility_off : Icons.history),
             onPressed: () {
               setState(() => _showClosed = !_showClosed);
@@ -214,9 +214,8 @@ class _FlocksScreenState extends State<FlocksScreen> {
         onRetry: _load,
         isEmpty: _flocks.isEmpty,
         emptyMessage: widget.org.visibility == 'summary'
-            ? 'Votre accès porte sur les totaux. Le détail des bandes ne vous '
-                'est pas communiqué.'
-            : 'Aucune bande ouverte.',
+            ? context.tr('Votre accès porte sur les totaux. Le détail des bandes ne vous est pas communiqué.')
+            : context.tr('Aucune bande ouverte.'),
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [

@@ -125,14 +125,14 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                 Text([
                   '${a.days} jours',
                   a.free
-                      ? 'offerte (Pro)'
+                      ? context.tr('offerte (Pro)')
                       : moneyFormat(a.currency).format(a.price),
                   switch (a.status) {
                     'paid_claimed' => 'dit avoir payé',
                     'requested' => 'pas encore payé',
                     _ => a.startsAt != null && a.endsAt != null
                         ? 'du ${date.format(a.startsAt!)} au ${date.format(a.endsAt!)}'
-                        : 'en cours',
+                        : context.tr('en cours'),
                   },
                   if ((a.note ?? '').isNotEmpty) '« ${a.note} »',
                 ].join(' · ')),

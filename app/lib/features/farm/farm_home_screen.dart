@@ -627,7 +627,7 @@ class _LowStockBanner extends StatelessWidget {
             child: Text(
               items.length == 1
                   ? Strings.of(context).lowStockOf(names)
-                  : '${items.length} articles presque épuisés : $names.',
+                  : context.tr('{length} articles presque épuisés : {names}.', {'length': items.length, 'names': names}),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onErrorContainer),
             ),
@@ -793,7 +793,7 @@ class _FarmShapeCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               shape.isEmpty
-                  ? 'Enregistrez vos animaux et vos parcelles.'
+                  ? context.tr('Enregistrez vos animaux et vos parcelles.')
                   : [
                       if (shape.hasLivestock)
                         '${shape.animals} animaux en ${shape.herds} groupe'
@@ -814,8 +814,8 @@ class _FarmShapeCard extends StatelessWidget {
                     onPressed: onAnimals,
                     icon: const Icon(Icons.pets, size: 18),
                     label: Text(shape.hasLivestock
-                        ? '${shape.animals} animaux'
-                        : 'Animaux'),
+                        ? context.tr('{animals} animaux', {'animals': shape.animals})
+                        : context.tr('Animaux')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -824,8 +824,8 @@ class _FarmShapeCard extends StatelessWidget {
                     onPressed: onCrops,
                     icon: const Icon(Icons.grass, size: 18),
                     label: Text(shape.hasCrops
-                        ? '${shape.cropCycles} cultures'
-                        : 'Cultures'),
+                        ? context.tr('{cropCycles} cultures', {'cropCycles': shape.cropCycles})
+                        : context.tr('Cultures')),
                   ),
                 ),
               ],

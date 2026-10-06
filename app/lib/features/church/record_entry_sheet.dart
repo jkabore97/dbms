@@ -130,7 +130,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
       context,
       title: widget.isIncome ? context.tr('Nouvelle recette') : context.tr('Nouvelle dépense'),
       label: context.tr('Nom de la catégorie'),
-      hint: widget.isIncome ? 'Vente de terrain' : 'Réparation du toit',
+      hint: widget.isIncome ? context.tr('Vente de terrain') : context.tr('Réparation du toit'),
     );
     if (name == null || !mounted) return;
 
@@ -167,7 +167,7 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
     if (typed.isNotEmpty) return typed;
     final category = _category;
     if (category != null) return accountLabel(category);
-    return widget.isIncome ? 'Recette' : 'Dépense';
+    return widget.isIncome ? context.tr('Recette') : context.tr('Dépense');
   }
 
   Future<void> _save() async {
@@ -279,8 +279,8 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
               decoration: InputDecoration(
                 labelText: context.tr('Nom de l\'entrée'),
                 hintText: widget.isIncome
-                    ? 'Offrande du dimanche'
-                    : 'Réparation du toit',
+                    ? context.tr('Offrande du dimanche')
+                    : context.tr('Réparation du toit'),
                 border: const OutlineInputBorder(),
                 suffixIcon: _nameController.text.isEmpty
                     ? null
@@ -382,8 +382,8 @@ class _RecordEntrySheetState extends State<RecordEntrySheet> {
                       )
                     : Text(
                         widget.isIncome
-                            ? 'Enregistrer la recette'
-                            : 'Enregistrer la dépense',
+                            ? context.tr('Enregistrer la recette')
+                            : context.tr('Enregistrer la dépense'),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,

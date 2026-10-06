@@ -196,7 +196,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
                 labelText: context.tr('Nom de l\'entrée'),
                 hintText: context.tr('Dépôt de la collecte du dimanche'),
                 helperText: _labelController.text.trim().isEmpty
-                    ? 'Sans nom, ce sera « Transfert »'
+                    ? context.tr('Sans nom, ce sera « Transfert »')
                     : null,
                 border: const OutlineInputBorder(),
               ),

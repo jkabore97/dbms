@@ -284,9 +284,8 @@ class _CourierScreenState extends State<CourierScreen>
     setState(() => _alertsOn = granted);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(granted
-          ? 'Alertes activées : une nouvelle livraison sonnera $reach.'
-          : "Le navigateur a refusé les alertes. Elles s'activent dans "
-              'ses paramètres de notifications.'),
+          ? context.tr('Alertes activées : une nouvelle livraison sonnera {reach}.', {'reach': reach})
+          : context.tr('Le navigateur a refusé les alertes. Elles s\'activent dans ses paramètres de notifications.')),
     ));
   }
 
@@ -705,7 +704,7 @@ class _JobCard extends StatelessWidget {
               icon: Icons.home_outlined,
               label: context.tr('Livrer'),
               place: (job.dropAddress ?? '').trim().isEmpty
-                  ? 'Adresse chez le client'
+                  ? context.tr('Adresse chez le client')
                   : job.dropAddress!.trim(),
               // The customer pinned their door (058): the itinerary goes to
               // the pin, not to a guess at the written address.
@@ -749,7 +748,7 @@ class _JobCard extends StatelessWidget {
             // taking when its price says so, instead of rotting on the board.
             Text(
                 job.deliveryFee == null
-                    ? 'Course : prix à convenir'
+                    ? context.tr('Course : prix à convenir')
                     : 'Course : ${money.format(job.deliveryFee!)}'
                         '${job.distanceKm == null ? '' : ' · ${job.distanceKm!.toStringAsFixed(1)} km'}',
                 style: const TextStyle(
@@ -775,8 +774,8 @@ class _JobCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                   job.status == 'delivered'
-                      ? 'Livrée'
-                      : 'Terminée (${job.status})',
+                      ? context.tr('Livrée')
+                      : context.tr('Terminée ({status})', {'status': job.status}),
                   style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

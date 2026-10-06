@@ -254,12 +254,11 @@ class _PersonSheetState extends State<_PersonSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(next
-            ? 'Donner l\'accès plateforme ?'
-            : 'Retirer l\'accès plateforme ?'),
+            ? context.tr('Donner l\'accès plateforme ?')
+            : context.tr('Retirer l\'accès plateforme ?')),
         content: Text(next
-            ? '${widget.person.label} pourra voir et gérer toutes les '
-                'entreprises de la plateforme.'
-            : '${widget.person.label} perdra l\'accès à la plateforme.'),
+            ? context.tr('{label} pourra voir et gérer toutes les entreprises de la plateforme.', {'label': widget.person.label})
+            : context.tr('{label} perdra l\'accès à la plateforme.', {'label': widget.person.label})),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -271,9 +270,10 @@ class _PersonSheetState extends State<_PersonSheet> {
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     await _run(
       () => widget.console.setPlatformAdmin(widget.person.userId, next),
-      next ? 'Accès plateforme accordé' : 'Accès plateforme retiré',
+      next ? context.tr('Accès plateforme accordé') : context.tr('Accès plateforme retiré'),
     );
     if (mounted) setState(() => _isPlatformAdmin = next);
   }
@@ -437,7 +437,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                         : Icons.storefront_outlined),
                     title: Text(o.orgName),
                     subtitle: Text(
-                        '${roleLabel(o.role)}${o.archived ? ' · archivée' : ''}'),
+                        '${roleLabel(o.role)}${o.archived ? context.tr(' · archivée') : ''}'),
                   )),
             const Divider(height: 28),
 

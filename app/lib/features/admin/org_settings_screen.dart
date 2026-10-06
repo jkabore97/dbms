@@ -22,6 +22,8 @@ import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/errors.dart';
+import '../../core/theme/mara_mark.dart';
+import '../cauris/unlock_sheet.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -462,8 +464,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         if (_planRaw == 'free') _planUntil = null;
         _savingPlan = false;
         _planMessage = _planRaw == 'pro'
-            ? 'Entreprise passée sur Mara Pro.'
-            : 'Entreprise repassée sur Mara (gratuit).';
+            ? context.tr('Entreprise passée sur Mara Pro.')
+            : context.tr('Entreprise repassée sur Mara (gratuit).');
       });
     } catch (error) {
       if (!mounted) return;
@@ -784,8 +786,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       setState(() => _lockRule = minutes);
       messenger.showSnackBar(SnackBar(
           content: Text(minutes == null
-              ? 'Règle retirée : chacun choisit son délai.'
-              : "Code exigé après $minutes min sur les téléphones de l'équipe.")));
+              ? context.tr('Règle retirée : chacun choisit son délai.')
+              : context.tr('Code exigé après {minutes} min sur les téléphones de l\'équipe.', {'minutes': minutes}))));
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
@@ -825,6 +827,69 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           style: muted),
     ];
   }
+
+  /// A Pro tool this business has neither on its plan nor unlocked with
+  /// cauris (085): drawn locked, under the Pro seal, never as a form.
+  bool _toolLocked(String feature) {
+    if (widget.plan == 'pro') return false;
+    final f = AppScope.maybeOf(context)?.session.featuresFor(widget.orgId);
+    if (f == null) return true;
+    return !f.isPro && f.toolOf(feature)?.until == null;
+  }
+
+  int? _costOf(String feature) => AppScope.maybeOf(context)
+      ?.session
+      .featuresFor(widget.orgId)
+      ?.toolOf(feature)
+      ?.cost;
+
+  /// The locked page of a Pro tool: its picture under the seal, one line,
+  /// and the way to open it (cauris or Mara Pro).
+  List<Widget> _proLock(ThemeData theme, String feature, IconData icon,
+          String title, String line) =>
+      [
+        Container(
+          key: Key('pro-lock-$feature'),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 84,
+                    height: 84,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(icon, size: 44, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const Positioned(right: -10, bottom: -10, child: MaraMark(size: 38)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(title,
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              ProCostBadge(cost: _costOf(feature)),
+              const SizedBox(height: 10),
+              Text(line, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                key: Key('pro-lock-open-$feature'),
+                onPressed: () => _openPro(feature),
+                icon: const Icon(Icons.lock_open),
+                label: Text(context.tr('Débloquer')),
+              ),
+            ],
+          ),
+        ),
+      ];
 
   /// The door to Mara Pro, from a Pro tool on this page — delivery, the
   /// one it guards (081) — with its price in cauris (085).
@@ -961,9 +1026,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 6),
       Text(
         canUpload
-            ? 'Affiché à côté du nom sur votre vitrine. Une image carrée, '
-                'sur fond clair, se lit le mieux.'
-            : "L'envoi de photos n'est pas disponible sur cette installation.",
+            ? context.tr('Affiché à côté du nom sur votre vitrine. Une image carrée, sur fond clair, se lit le mieux.')
+            : context.tr('L\'envoi de photos n\'est pas disponible sur cette installation.'),
         style: theme.textTheme.bodySmall
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
       ),
@@ -997,7 +1061,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 8),
     _ColourRow(
       palette: paletteFor(_profile, theme: _theme),
-      label: paletteNamed(_theme)?.label ?? 'Couleur par défaut',
+      label: paletteNamed(_theme)?.label ?? context.tr('Couleur par défaut'),
       onTap: _saving ? null : _openColours,
     ),
     const SizedBox(height: 32),
@@ -1025,7 +1089,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // Pro tools are badged and held on a Free business.
     _ReadOnlyRow(
       label: context.tr('Formule'),
-      value: widget.plan == 'pro' ? 'Mara Pro' : 'Mara (gratuit)',
+      value: widget.plan == 'pro' ? context.tr('Mara Pro') : context.tr('Mara (gratuit)'),
     ),
   ];
 
@@ -1097,13 +1161,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 4),
     Text(
       _profile == 'farm'
-          ? 'Une page publique de la ferme, avec ce que vous mettez « À '
-              'vendre » — photo, prix, à l\'unité ou au plateau — à '
-              'partager sur WhatsApp. Les clients commandent, même à '
-              'l\'avance pour une bande ou une récolte à venir.'
-          : 'Une page publique de la boutique, avec les articles que vous '
-              "choisissez d'afficher — photo et prix — à partager sur "
-              'WhatsApp. Les clients commandent depuis la vitrine.',
+          ? context.tr('Une page publique de la ferme, avec ce que vous mettez « À vendre » — photo, prix, à l\'unité ou au plateau — à partager sur WhatsApp. Les clients commandent, même à l\'avance pour une bande ou une récolte à venir.')
+          : context.tr('Une page publique de la boutique, avec les articles que vous choisissez d\'afficher — photo et prix — à partager sur WhatsApp. Les clients commandent depuis la vitrine.'),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1198,15 +1257,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 8),
     Text(
       _deliveryMinimum
-          ? 'Le minimum couvre toute course jusqu\'à la distance choisie ; '
-                'au-delà, chaque kilomètre ajoute le prix par km. Vide : '
-                'les tarifs de la plateforme (500 + 150 F/km). Le montant '
-                "est annoncé au client avant qu'il commande."
-          : 'Une base pour la course, plus un prix par kilomètre '
-                'entre votre boutique et la porte du client. Vide : les '
-                'tarifs de la plateforme (500 + 150 F/km). Le montant '
-                "est annoncé au client avant qu'il commande, et payé au "
-                'livreur à la porte.',
+          ? context.tr('Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande.')
+          : context.tr('Une base pour la course, plus un prix par kilomètre entre votre boutique et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.'),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1417,7 +1469,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           icon: const Icon(Icons.event_outlined),
           label: Text(
             _planUntil == null
-                ? 'Payé jusqu\'au… (sans date = sans fin)'
+                ? context.tr('Payé jusqu\'au… (sans date = sans fin)')
                 : 'Payé jusqu\'au '
                       '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}',
           ),
@@ -1464,12 +1516,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 4),
       Text(
         _suspended
-            ? 'Cette entreprise est suspendue : ses membres peuvent '
-                  'consulter mais rien enregistrer. Réactivez-la pour '
-                  'rétablir les opérations.'
-            : 'Suspendre gèle toutes les écritures sans rien '
-                  'supprimer. À utiliser pour un impayé, un litige ou '
-                  'un abus, le temps de le régler.',
+            ? context.tr('Cette entreprise est suspendue : ses membres peuvent consulter mais rien enregistrer. Réactivez-la pour rétablir les opérations.')
+            : context.tr('Suspendre gèle toutes les écritures sans rien supprimer. À utiliser pour un impayé, un litige ou un abus, le temps de le régler.'),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -1574,7 +1622,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         if (_waveAllowed) ..._waveReceive(theme),
       ],
     _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
-    _Part.delivery => [..._delivery(theme), ..._saveBar(theme)],
+    _Part.delivery => _toolLocked('delivery')
+        ? _proLock(theme, 'delivery', Icons.delivery_dining,
+            context.tr('Livraison'),
+            context.tr('Livrez vos clients, au prix calculé selon la distance.'))
+        : [..._delivery(theme), ..._saveBar(theme)],
     _Part.position => [..._position(theme), ..._saveBar(theme)],
     _Part.team => _team(theme),
     _Part.platform => _platform(theme),
@@ -1591,14 +1643,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       case _Part.payments:
         final wave = _waveController.text.trim();
         return [
-          if (!_waveAllowed) 'Espèces'
-          else wave.isEmpty ? 'Wave non configuré' : 'Wave configuré',
-          if (_payoutController.text.trim().isNotEmpty) 'reçoit sur ${_payoutController.text.trim()}',
+          if (!_waveAllowed) context.tr('Espèces')
+          else wave.isEmpty ? context.tr('Wave non configuré') : context.tr('Wave configuré'),
+          if (_payoutController.text.trim().isNotEmpty)
+            context.tr('reçoit sur {number}', {'number': _payoutController.text.trim()}),
           if (_rates.isNotEmpty)
-            '${_rates.length} autre${_rates.length > 1 ? 's' : ''} monnaie${_rates.length > 1 ? 's' : ''}',
+            context.tr(_rates.length > 1 ? '{n} autres monnaies' : '{n} autre monnaie', {'n': _rates.length}),
         ].join(' · ');
       case _Part.vitrine:
-        return _storefrontEnabled ? 'Ouverte' : 'Fermée';
+        return _storefrontEnabled ? context.tr('Ouverte') : context.tr('Fermée');
       case _Part.delivery:
         final base = _deliveryBaseController.text.trim();
         final perKm = _deliveryPerKmController.text.trim();
@@ -1607,26 +1660,26 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         return [
           if (widget.plan != 'pro') 'Mara Pro',
           base.isEmpty && perKm.isEmpty
-              ? 'Tarifs de la plateforme'
+              ? context.tr('Tarifs de la plateforme')
               : _deliveryMinimum && included.isNotEmpty
-                  ? '$base F jusqu\'à $included km, puis ${perKm.isEmpty ? '0' : perKm} F/km'
+                  ? context.tr('{base} F jusqu\'à {km} km, puis {perKm} F/km', {'base': base, 'km': included, 'perKm': perKm.isEmpty ? '0' : perKm})
                   : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
           '${reach.isEmpty ? '15' : reach} km',
         ].join(' · ');
       case _Part.team:
         return _lockRule == null
-            ? 'Aucune règle de verrouillage'
-            : 'Code exigé après ${_lockRule == 60 ? '1 h' : '$_lockRule min'}';
+            ? context.tr('Aucune règle de verrouillage')
+            : context.tr('Code exigé après {delay}', {'delay': _lockRule == 60 ? '1 h' : '$_lockRule min'});
       case _Part.position:
         final pin = _pin;
         if (pin == null) return context.tr('Non renseignée');
         return pinLooksMisplaced(pin.$1, pin.$2, _currency)
-            ? 'Loin de la zone de la monnaie'
-            : 'Placée sur la carte';
+            ? context.tr('Loin de la zone de la monnaie')
+            : context.tr('Placée sur la carte');
       case _Part.platform:
         return [
-          widget.plan == 'pro' ? 'Mara Pro' : 'Mara (gratuit)',
-          if (widget.canSuspend) _suspended ? 'suspendue' : 'active',
+          widget.plan == 'pro' ? context.tr('Mara Pro') : context.tr('Mara (gratuit)'),
+          if (widget.canSuspend) _suspended ? context.tr('suspendue') : context.tr('active'),
         ].join(' · ');
     }
   }
@@ -1698,7 +1751,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             for (final part in _parts.where(_proParts.contains))
               _PartRow(
                 part: part,
-                state: _stateOf(part),
+                state: _toolLocked('delivery') ? context.tr('Réservé à Mara Pro') : _stateOf(part),
+                proCost: _toolLocked('delivery') ? (_costOf('delivery') ?? 0) : null,
                 selected: wide && _open == part,
                 onTap: () => setState(() {
                   _open = part;
@@ -1708,10 +1762,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             _PartRow.link(
               icon: Icons.groups_outlined,
               label: context.tr('Équipe et accès'),
-              state: 'Qui voit et modifie quoi',
-              onTap: () => context.push(
-                Routes.inside(widget.orgId, 'administration/acces'),
-              ),
+              state: _toolLocked('team_access')
+                  ? context.tr('Réservé à Mara Pro')
+                  : context.tr('Qui voit et modifie quoi'),
+              proCost: _toolLocked('team_access') ? (_costOf('team_access') ?? 0) : null,
+              onTap: _toolLocked('team_access')
+                  ? () => _openPro('team_access')
+                  : () => context.push(
+                        Routes.inside(widget.orgId, 'administration/acces'),
+                      ),
             ),
           ],
         ),
@@ -1863,6 +1922,7 @@ class _PartRow extends StatelessWidget {
     required this.onTap,
     this.warn = false,
     this.selected = false,
+    this.proCost,
   }) : icon = null,
        label = null;
 
@@ -1871,6 +1931,7 @@ class _PartRow extends StatelessWidget {
     required String this.label,
     required this.state,
     required this.onTap,
+    this.proCost,
   }) : part = null,
        warn = false,
        selected = false;
@@ -1882,6 +1943,10 @@ class _PartRow extends StatelessWidget {
   final bool warn;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Set when the row is a Pro tool still locked: the badge replaces the
+  /// chevron (0 = no cauris price known).
+  final int? proCost;
 
   @override
   Widget build(BuildContext context) {
@@ -1899,7 +1964,9 @@ class _PartRow extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: warn ? TextStyle(color: theme.colorScheme.error) : null,
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: proCost != null
+          ? ProCostBadge(cost: proCost == 0 ? null : proCost)
+          : const Icon(Icons.chevron_right),
       onTap: onTap,
     );
   }
@@ -2147,11 +2214,11 @@ class _RateDialogState extends State<RateDialog> {
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: context.tr('Taux'),
-              prefixText: _code == null ? null : '1 $_code = ',
+              prefixText: _code == null ? null : context.tr('1 {_code} = ', {'_code': _code}),
               suffixText: home,
               helperText: _code == 'EUR' && widget.homeCurrency == 'XOF'
-                  ? 'Taux fixe officiel : 655,957'
-                  : 'Le taux que vous obtenez réellement.',
+                  ? context.tr('Taux fixe officiel : 655,957')
+                  : context.tr('Le taux que vous obtenez réellement.'),
               border: const OutlineInputBorder(),
             ),
           ),

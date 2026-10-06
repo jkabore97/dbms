@@ -407,7 +407,7 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
               hintText: org.name,
               errorText: _controller.text.isEmpty || _matches
                   ? null
-                  : 'Le nom ne correspond pas.',
+                  : context.tr('Le nom ne correspond pas.'),
             ),
           ),
         ],

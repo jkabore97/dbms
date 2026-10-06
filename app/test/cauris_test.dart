@@ -115,7 +115,8 @@ void main() {
     expect(find.text('jusqu\'à 30 par jour'), findsOneWidget);
     expect(find.text('+15'), findsOneWidget);
     expect(find.text('-10'), findsOneWidget);
-    expect(find.textContaining('« elim-shop »'), findsOneWidget);
+    expect(find.byKey(const Key('referral-own-code')), findsOneWidget);
+    expect(find.text('elim-shop'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('referral-code')), 'boutique-awa');
     await tester.tap(find.text('Valider'));

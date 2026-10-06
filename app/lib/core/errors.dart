@@ -1,3 +1,4 @@
+import 'l10n/tr.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Turns whatever the server threw into something a person can act on.
@@ -27,7 +28,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 ///   * **Out of date.** The app is asking for something this database has not
 ///     been migrated to yet — `PGRST202`. That is an operator problem, and
 ///     saying so stops somebody hunting for a setting that does not exist.
-String describeError(Object error) => brandText(_describe(error));
+String describeError(Object error) =>
+    translate(trCurrent, brandText(_describe(error)));
 
 /// The app is Mara; the database and the Worker still say « Kaj » in the
 /// sentences they send (« Kaj Pro : la livraison… », « Kaj Pro est actif »),

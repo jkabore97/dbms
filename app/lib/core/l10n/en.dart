@@ -2480,4 +2480,514 @@ const enStrings = <String, String>{
       'Few corrections',
   'Six mois sur Mara':
       'Six months on Mara',
+  ' (coût {costPrice})':
+      ' (cost {costPrice})',
+  ' · archivée':
+      ' · archived',
+  ' · payé':
+      ' · paid',
+  ' · totaux seulement':
+      ' · totals only',
+  ' · vous livrez':
+      ' · you deliver',
+  '+{newThisWeek} cette semaine':
+      '+{newThisWeek} this week',
+  '+{points} cauris par entreprise parrainée':
+      '+{points} cauris per business you sponsor',
+  '+{points} reçus':
+      '+{points} received',
+  '1 {_code} = ':
+      '1 {_code} = ',
+  'Abonnement par carte arrêté.':
+      'Card subscription stopped.',
+  'Accès plateforme accordé':
+      'Platform access granted',
+  'Accès plateforme retiré':
+      'Platform access removed',
+  'Activée : un code de votre application d\'authentification est demandé à chaque connexion du compte de la plateforme.':
+      'On: a code from your authenticator app is asked at every sign-in to the platform account.',
+  'Adresse chez le client':
+      'Address at the customer\'s',
+  'Afficher les bandes clôturées':
+      'Show closed batches',
+  'Afficher les comptes retirés ({retiredCount})':
+      'Show removed accounts ({retiredCount})',
+  'Affiché à côté du nom sur votre vitrine. Une image carrée, sur fond clair, se lit le mieux.':
+      'Shown next to the name on your vitrine. A square picture, on a light background, reads best.',
+  'Ajouter une photo':
+      'Add a photo',
+  'Alertes activées : une commande sonnera {reach}.':
+      'Alerts on: an order will ring {reach}.',
+  'Alertes activées : une nouvelle livraison sonnera {reach}.':
+      'Alerts on: a new delivery will ring {reach}.',
+  'Animaux':
+      'Animals',
+  'Annuel':
+      'Yearly',
+  'Annuel · {_monthsOffered} mois offerts':
+      'Yearly · {_monthsOffered} months free',
+  'Appui long sur une ligne pour la corriger.':
+      'Long-press a line to correct it.',
+  'Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.':
+      'After this time away from the app, Mara asks for the device code again.',
+  'Aucun article pour le moment. Le premier est créé tout seul, à la première réception.':
+      'No items yet. The first is created by itself, at the first delivery.',
+  'Aucun autre appareil n\'était connecté.':
+      'No other device was signed in.',
+  'Aucun département':
+      'No department',
+  'Aucun mouvement sur ce compte pour cette période.':
+      'No movement on this account in this period.',
+  'Aucune bande ouverte.':
+      'No open batch.',
+  'Aucune entreprise ne correspond.':
+      'No business matches.',
+  'Aucune facture pour le moment.':
+      'No invoices yet.',
+  'Aucune ligne sélectionnée':
+      'No line selected',
+  'Aucune photo n’est supprimée : une preuve qui disparaît ne se distingue pas d’une preuve qui n’a jamais existé.':
+      'No photo is deleted: a proof that disappears cannot be told from a proof that never existed.',
+  'Aucune règle de verrouillage':
+      'No lock rule',
+  'Aucune vente':
+      'No sales',
+  'Aucune vitrine n\'a indiqué sa position':
+      'No vitrine has given its position',
+  'Aucune écriture sur cette période.':
+      'No entries in this period.',
+  'Bonjour {label}.':
+      'Hello {label}.',
+  'Bravo ! +{earned} cauris pour votre entreprise.':
+      'Well done! +{earned} cauris for your business.',
+  'Bravo, leçon terminée !':
+      'Well done, lesson finished!',
+  'C\'est ce numéro que votre responsable utilisera.':
+      'This is the number your manager will use.',
+  'Ce compte gère toutes les entreprises. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.':
+      'This account manages every business. To open it, you will now need your password and a 6-digit code given by an app on your phone.',
+  'Cette course n\'est pas la vôtre.':
+      'This trip is not yours.',
+  'Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.':
+      'This business is on Mara Pro. All the tools below are open.',
+  'Cette entreprise est suspendue : ses membres peuvent consulter mais rien enregistrer. Réactivez-la pour rétablir les opérations.':
+      'This business is suspended: its members can look but record nothing. Reactivate it to restore operations.',
+  'Cette semaine':
+      'This week',
+  'Changer la photo':
+      'Change the photo',
+  'Code de votre application':
+      'Your app\'s code',
+  'Code exigé après {delay}':
+      'Code required after {delay}',
+  'Code exigé après {minutes} min sur les téléphones de l\'équipe.':
+      'Code required after {minutes} min on the team\'s phones.',
+  'Compte {contact}. Il ne donne encore accès à aucune entreprise.':
+      'Account {contact}. It does not give access to any business yet.',
+  'Corriger la facture':
+      'Correct the invoice',
+  'Corriger la facture {number}':
+      'Correct invoice {number}',
+  'Course':
+      'Trip',
+  'Course : prix à convenir':
+      'Trip: price to agree',
+  'Créer l\'activité':
+      'Create the business',
+  'Créer la facture':
+      'Create the invoice',
+  'Cultures':
+      'Crops',
+  'Date d\'expiration (facultatif)':
+      'Expiry date (optional)',
+  'Date de naissance':
+      'Date of birth',
+  'Date de naissance (facultatif)':
+      'Date of birth (optional)',
+  'Demande en cours':
+      'Request in progress',
+  'Demander une entreprise':
+      'Ask for a business',
+  'Des enregistrements ont été refusés par le serveur. Ils ne partiront pas tout seuls : montrez cet écran à la personne qui gère le serveur.':
+      'Some records were refused by the server. They will not go by themselves: show this screen to the person who runs the server.',
+  'Donner l\'accès plateforme ?':
+      'Give platform access?',
+  'Débit = crédit. Chaque écriture a bien ses deux côtés.':
+      'Debit = credit. Every entry has both its sides.',
+  'Débit et crédit ne s\'égalisent pas. Une écriture a contourné l\'application.':
+      'Debit and credit do not match. An entry went around the app.',
+  'Désactivée : le compte de la plateforme s\'ouvre avec le mot de passe, puis le code de l\'appareil.':
+      'Off: the platform account opens with the password, then the device code.',
+  'En tête : gardez-la !':
+      'In the lead: keep it!',
+  'Encore {gap} cauris pour la place devant.':
+      '{gap} more cauris for the place ahead.',
+  'Enregistrer la dépense':
+      'Save the expense',
+  'Enregistrer la recette':
+      'Save the income',
+  'Enregistrer la vente':
+      'Save the sale',
+  'Enregistrez vos animaux et vos parcelles.':
+      'Record your animals and your plots.',
+  'Entreprise passée sur Mara Pro.':
+      'Business switched to Mara Pro.',
+  'Entreprise repassée sur Mara (gratuit).':
+      'Business back on Mara (free).',
+  'Envoyer la demande':
+      'Send the request',
+  'Faites grandir {name}':
+      'Grow {name}',
+  'Fermée':
+      'Closed',
+  'Formule active':
+      'Active plan',
+  'Historique':
+      'History',
+  'Il reste peu de {name}.':
+      '{name} is running low.',
+  'Jamais':
+      'Never',
+  'Journée déjà clôturée — vous pouvez la revalider.':
+      'Day already closed — you can confirm it again.',
+  'L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé ». Il lui faut une photo, un prix et du stock.':
+      'The item appears at the top of « Featured » on the home page, marked « Sponsored ». It needs a photo, a price and stock.',
+  'L\'envoi de photos n\'est pas disponible sur cette installation.':
+      'Sending photos is not available on this installation.',
+  'La bande n\'a pas pu être ouverte. Vérifiez le réseau.':
+      'The batch could not be opened. Check the network.',
+  'La boutique apparaît en tête de la liste des boutiques, marquée « Sponsorisé ».':
+      'The shop appears at the top of the list of shops, marked « Sponsored ».',
+  'La course commence.':
+      'The trip begins.',
+  'Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande.':
+      'The minimum covers any trip up to the chosen distance; beyond, each kilometre adds the price per km. Empty: the platform\'s rates (500 + 150 F/km). The amount is shown to the customer before they order.',
+  'Le navigateur a refusé les alertes. Elles s\'activent dans ses paramètres de notifications.':
+      'The browser refused alerts. They are turned on in its notification settings.',
+  'Le nom ne correspond pas.':
+      'The name does not match.',
+  'Le propriétaire gère ses propres informations.':
+      'The owner manages their own details.',
+  'Le taux que vous obtenez réellement.':
+      'The rate you really get.',
+  'Lecture':
+      'Play',
+  'Lecture seule.':
+      'Read only.',
+  'Les deux colonnes ne sont pas égales. Signalez-le : une écriture a contourné l\'application.':
+      'The two columns are not equal. Report it: an entry went around the app.',
+  'Les deux colonnes sont égales : les comptes sont équilibrés.':
+      'The two columns are equal: the books balance.',
+  'Les noms d\'appareils viennent du navigateur ou du téléphone : ils sont approximatifs. Un appareil fermé garde l\'accès au plus une heure, le temps que sa clé expire.':
+      'Device names come from the browser or the phone: they are approximate. A closed device keeps access for an hour at most, until its key expires.',
+  'Les plus proches':
+      'Nearest',
+  'Livraison : prix à convenir avec le livreur':
+      'Delivery: price to agree with the courier',
+  'Livrez vos clients, au prix calculé selon la distance.':
+      'Deliver to your customers, at a price worked out by distance.',
+  'Livrée':
+      'Delivered',
+  'Loin de la zone de la monnaie':
+      'Far from the currency\'s zone',
+  'Mara (gratuit)':
+      'Mara (free)',
+  'Mara Pro complet':
+      'Full Mara Pro',
+  'Mara Pro complet : tous les outils, sans limite':
+      'Full Mara Pro: every tool, without limit',
+  'Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et jusqu\'à {freeMaxStaff} comptes en plus du propriétaire. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :':
+      'Mara stays free for everyday work: stock, sales, the credit book, the vitrine and up to {freeMaxStaff} accounts besides the owner. Mara Pro adds what a growing business needs:',
+  'Mara reste gratuit pour le quotidien. Mara Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.':
+      'Mara stays free for everyday work. Mara Pro adds delivery, online payment and the tools of a growing business.',
+  'Mara vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.':
+      'Mara checks the payment and starts the featured spot. You will be told in the bell.',
+  'Masquer les bandes clôturées':
+      'Hide closed batches',
+  'Masquer les comptes retirés':
+      'Hide removed accounts',
+  'Merci ! Mara Pro est actif.':
+      'Thank you! Mara Pro is active.',
+  'Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.':
+      'Thank you! Payment received — Mara Pro switches on in a few seconds.',
+  'Merci ! {name} est votre parrain.':
+      'Thank you! {name} is your sponsor.',
+  'Mettre à jour la clôture':
+      'Update the closing',
+  'Mises en avant':
+      'Featured spots',
+  'Montant caché, toucher pour afficher':
+      'Amount hidden, tap to show',
+  'Nombre':
+      'Number',
+  'Nous attendons la confirmation de Wave.':
+      'We are waiting for Wave\'s confirmation.',
+  'Nouvelle facture':
+      'New invoice',
+  'Offert : Mara Pro inclut une mise en avant de 7 jours par mois.':
+      'Included: Mara Pro includes a 7-day featured spot every month.',
+  'Offrande du dimanche':
+      'Sunday offering',
+  'Ouverte':
+      'Open',
+  'Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.':
+      'Open your authenticator app and enter the 6-digit code shown for Mara.',
+  'Paie, analyses, comptabilité, équipe sans limite…':
+      'Payroll, analytics, accounting, unlimited team…',
+  'Paiement annulé : rien n\'a été prélevé.':
+      'Payment cancelled: nothing was charged.',
+  'Parrainez une entreprise':
+      'Sponsor a business',
+  'Pas encore : faites-le d\'abord dans l\'application, puis revenez.':
+      'Not yet: do it in the app first, then come back.',
+  'Pas sur la vitrine':
+      'Not on the vitrine',
+  'Pause':
+      'Pause',
+  'Payez par Wave ou Orange Money à ce numéro':
+      'Pay by Wave or Orange Money to this number',
+  'Payé':
+      'Paid',
+  'Payé jusqu\'au… (sans date = sans fin)':
+      'Paid until… (no date = no end)',
+  'Payé par carte jusqu\'au {until}, puis arrêté.':
+      'Paid by card until {until}, then stopped.',
+  'Payé par carte, renouvelé le {until}.':
+      'Paid by card, renewed on {until}.',
+  'Photo enregistrée.':
+      'Photo saved.',
+  'Photo gardée. Elle partira dès qu’il y a du réseau.':
+      'Photo kept. It will go as soon as there is network.',
+  'Placée sur la carte':
+      'Placed on the map',
+  'Plus que ce qui est dû.':
+      'More than what is owed.',
+  'Poids (kg)':
+      'Weight (kg)',
+  'Position non renseignée':
+      'Position not set',
+  'Premier jour clôturé':
+      'First day closed',
+  'Prise par {uploadedName}. Aucune photo n’est supprimée.':
+      'Taken by {uploadedName}. No photo is deleted.',
+  'Protégez le compte de la plateforme':
+      'Protect the platform account',
+  'Préférences':
+      'Preferences',
+  'Prête à retirer':
+      'Ready to collect',
+  'Prête, attend le livreur':
+      'Ready, waiting for the courier',
+  'Quand elle a sa vitrine complète et 3 commandes terminées.':
+      'When it has a complete vitrine and 3 finished orders.',
+  'Qui voit et modifie quoi':
+      'Who sees and changes what',
+  'Raison inconnue':
+      'Unknown reason',
+  'Recettes moins dépenses, depuis le début':
+      'Income minus expenses, since the start',
+  'Refuser cette commande ?':
+      'Refuse this order?',
+  'Retirer l\'accès plateforme ?':
+      'Remove platform access?',
+  'Retirée':
+      'Removed',
+  'Retrait en boutique':
+      'Pickup at the shop',
+  'Retrait ou livraison':
+      'Pickup or delivery',
+  'Retrait à la ferme':
+      'Pickup at the farm',
+  'Rien de refusé. Ce qui reste partira dès que le réseau reviendra.':
+      'Nothing refused. What is left will go as soon as the network is back.',
+  'Rien récolté pour l’instant':
+      'Nothing harvested yet',
+  'Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.':
+      'Nothing to pay now: as soon as the shop accepts, a Wave button appears in My orders.',
+  'Rien à payer maintenant : vous payez à la boutique, au retrait ou à la livraison.':
+      'Nothing to pay now: you pay the shop, at pickup or on delivery.',
+  'Rien à payer pour l\'instant.':
+      'Nothing to pay yet.',
+  'Règle retirée : chacun choisit son délai.':
+      'Rule removed: everyone chooses their own wait.',
+  'Récolte prévue (facultatif)':
+      'Expected harvest (optional)',
+  'Réparation du toit':
+      'Roof repair',
+  'Salaire mensuel':
+      'Monthly salary',
+  'Sans nom, ce sera « Transfert »':
+      'Without a name, it will be « Transfer »',
+  'Scanner un code':
+      'Scan a code',
+  'Suspendre gèle toutes les écritures sans rien supprimer. À utiliser pour un impayé, un litige ou un abus, le temps de le régler.':
+      'Suspending freezes every entry without deleting anything. Use it for an unpaid bill, a dispute or abuse, while it is sorted out.',
+  'Système':
+      'System',
+  'Tarifs de la plateforme':
+      'Platform rates',
+  'Taux fixe officiel : 655,957':
+      'Official fixed rate: 655.957',
+  'Taux horaire':
+      'Hourly rate',
+  'Terminée ({status})':
+      'Finished ({status})',
+  'Tous les outils ci-dessous sont ouverts.':
+      'All the tools below are open.',
+  'Tout ce qui a été enregistré sur cet appareil est arrivé au serveur.':
+      'Everything recorded on this device has reached the server.',
+  'Tout est déjà sur la vitrine.':
+      'Everything is already on the vitrine.',
+  'Tout est envoyé':
+      'Everything is sent',
+  'Tout est payé.':
+      'Everything is paid.',
+  'Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Mara proposera alors d\'en ajouter un nouveau.':
+      'Lost phone? In the Supabase dashboard: Authentication › Users › this account › delete its factor. Mara will then offer to add a new one.',
+  'Un administrateur Kaj-consulting examine la demande. Une fois validée, vous en serez le propriétaire.':
+      'A Kaj-consulting administrator reviews the request. Once approved, you will be its owner.',
+  'Une bande ou une récolte à venir : les clients commandent à l\'avance.':
+      'A batch or a harvest to come: customers order in advance.',
+  'Une bande porte déjà ce code.':
+      'A batch already has this code.',
+  'Une base pour la course, plus un prix par kilomètre entre votre boutique et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.':
+      'A base for the trip, plus a price per kilometre between your shop and the customer\'s door. Empty: the platform\'s rates (500 + 150 F/km). The amount is shown to the customer before they order, and paid to the courier at the door.',
+  'Une page publique de la boutique, avec les articles que vous choisissez d\'afficher — photo et prix — à partager sur WhatsApp. Les clients commandent depuis la vitrine.':
+      'A public page for the shop, with the items you choose to show — photo and price — to share on WhatsApp. Customers order from the vitrine.',
+  'Une page publique de la ferme, avec ce que vous mettez « À vendre » — photo, prix, à l\'unité ou au plateau — à partager sur WhatsApp. Les clients commandent, même à l\'avance pour une bande ou une récolte à venir.':
+      'A public page for the farm, with what you put « For sale » — photo, price, by the unit or the tray — to share on WhatsApp. Customers order, even in advance for a batch or a harvest to come.',
+  'Vente de terrain':
+      'Land sale',
+  'Visible du public dès {min} articles en vente : {n} / {min}.':
+      'Visible to the public from {min} items on sale: {n} / {min}.',
+  'Vitrine {score} % · {orders}/3 commandes':
+      'Vitrine {score} % · {orders}/3 orders',
+  'Votre accès porte sur les totaux. Le détail des bandes ne vous est pas communiqué.':
+      'Your access covers the totals. The detail of the batches is not shared with you.',
+  'Votre accès porte sur les totaux. Le détail des mouvements ne vous est pas communiqué.':
+      'Your access covers the totals. The detail of the movements is not shared with you.',
+  'Votre accès porte sur les totaux. Le détail des écritures ne vous est pas communiqué.':
+      'Your access covers the totals. The detail of the entries is not shared with you.',
+  'Votre accès porte sur les totaux. Le détail du stock ne vous est pas communiqué.':
+      'Your access covers the totals. The detail of the stock is not shared with you.',
+  'Votre article est à la une. Ses vues et commandes s\'affichent dans « Mettre en avant ».':
+      'Your item is featured. Its views and orders show in « Feature ».',
+  'Votre code':
+      'Your code',
+  'Votre compte est créé.':
+      'Your account is created.',
+  'Votre compte existe. Il ne donne encore accès à aucune entreprise.':
+      'Your account exists. It does not give access to any business yet.',
+  'Vous en serez le propriétaire. Un plan comptable de départ est créé automatiquement.':
+      'You will be its owner. A starting chart of accounts is created automatically.',
+  'Vous ne pouvez pas modifier ce compte.':
+      'You cannot change this account.',
+  'Vous êtes sur Mara Pro':
+      'You are on Mara Pro',
+  'Vérification…':
+      'Checking…',
+  'Wave configuré':
+      'Wave set up',
+  'Wave non configuré':
+      'Wave not set up',
+  'Wave signale un problème ; nous vérifions.':
+      'Wave reports a problem; we are checking.',
+  'Wave · {waveName}':
+      'Wave · {waveName}',
+  '\nRéservé à {phone}':
+      '\nFor {phone} only',
+  'active':
+      'active',
+  'année':
+      'year',
+  'aucune encore':
+      'none yet',
+  'comme la semaine dernière':
+      'same as last week',
+  'dans {daysLeft} j':
+      'in {daysLeft} d',
+  'en cours':
+      'in progress',
+  'offerte (Pro)':
+      'included (Pro)',
+  'périmé':
+      'expired',
+  'reçoit sur {number}':
+      'receives on {number}',
+  'suspendue':
+      'suspended',
+  'trop loin':
+      'too far',
+  '{alive} oiseaux au dernier point':
+      '{alive} birds at the last count',
+  '{animals} animaux':
+      '{animals} animals',
+  '{base} F jusqu\'à {km} km, puis {perKm} F/km':
+      '{base} F up to {km} km, then {perKm} F/km',
+  '{cropCycles} cultures':
+      '{cropCycles} crops',
+  '{label} n\'était connecté nulle part.':
+      '{label} was not signed in anywhere.',
+  '{label} perdra l\'accès à la plateforme.':
+      '{label} will lose access to the platform.',
+  '{label} pourra voir et gérer toutes les entreprises de la plateforme.':
+      '{label} will be able to see and manage every business on the platform.',
+  '{length} articles presque épuisés : {names}.':
+      '{length} items almost sold out: {names}.',
+  '{length} articles presque épuisés.':
+      '{length} items almost sold out.',
+  '{length} sur la carte · {unplaced} sans position':
+      '{length} on the map · {unplaced} without a position',
+  '{length} sur {totalCount}':
+      '{length} of {totalCount}',
+  '{price} F':
+      '{price} F',
+  '{shopName} · {distance}':
+      '{shopName} · {distance}',
+  '{streakAfter} jours clôturés d\'affilée':
+      '{streakAfter} days closed in a row',
+  'À l’activation, les autres appareils connectés à ce compte sont déconnectés.':
+      'On activation, the other devices signed in to this account are signed out.',
+  'à discuter':
+      'to discuss',
+  'à discuter avec la boutique':
+      'to discuss with the shop',
+  'à rappeler':
+      'to call back',
+  'épinglez votre porte pour le prix':
+      'pin your door for the price',
+  '🏆 1er de la semaine':
+      '🏆 1st of the week',
+  '🏆 Top 3 de la semaine':
+      '🏆 Top 3 of the week',
+  '{n} autres monnaies':
+      '{n} other currencies',
+  '{n} autre monnaie':
+      '{n} other currency',
+  'Factures : vitrine à 70 % pour les débloquer.':
+      'Invoices: vitrine at 70 % to unlock them.',
+  'Production : vitrine à 90 % pour la débloquer.':
+      'Production: vitrine at 90 % to unlock it.',
+  'Carnet de crédit : 3 commandes terminées pour le débloquer.':
+      'Credit book: 3 finished orders to unlock it.',
+  'Une deuxième entreprise : avec Mara Pro.':
+      'A second business: with Mara Pro.',
+  'Paiement en espèces uniquement pour le moment.':
+      'Cash payment only for now.',
+  'Ajoutez d\'abord un article.':
+      'Add an item first.',
+  'Seul un administrateur termine la mise en route':
+      'Only an administrator finishes the setup',
+  'Pas de connexion. Réessayez quand le réseau revient.':
+      'No connection. Try again when the network is back.',
+  'Code de parrainage inconnu':
+      'Unknown sponsor code',
+  'Le parrain est déjà enregistré':
+      'The sponsor is already recorded',
+  'Le parrainage se dit dans les 30 premiers jours':
+      'A sponsor is given within the first 30 days',
+  'Une entreprise ne se parraine pas elle-même':
+      'A business cannot sponsor itself',
+  'Seul un administrateur dit qui l\'a parrainé':
+      'Only an administrator says who sponsored it',
 };

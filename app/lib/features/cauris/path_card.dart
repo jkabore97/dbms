@@ -220,7 +220,7 @@ class PathGate {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(context.tr(step.label.isEmpty ? 'Verrouillé' : step.label),
+                Text(context.tr(step.label.isEmpty ? context.tr('Verrouillé') : step.label),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w800)),

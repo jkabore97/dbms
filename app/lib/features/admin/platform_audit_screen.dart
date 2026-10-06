@@ -167,7 +167,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
     };
     final who = (e.actorLabel != null && e.actorLabel!.isNotEmpty)
         ? e.actorLabel!
-        : 'Système';
+        : context.tr('Système');
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: colour),

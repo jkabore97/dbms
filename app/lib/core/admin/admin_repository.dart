@@ -1369,6 +1369,7 @@ class VitrineChecklist {
     this.address = false,
     this.phone = false,
     this.pin = false,
+    this.minItems = 1,
   });
 
   factory VitrineChecklist.fromJson(Map<String, dynamic> j) {
@@ -1383,8 +1384,15 @@ class VitrineChecklist {
       address: j['address'] == true,
       phone: j['phone'] == true,
       pin: j['pin'] == true,
+      minItems: j['min_items'] == null ? 1 : n(j['min_items']),
     );
   }
+
+  /// Items on sale before the public sees the vitrine (092).
+  final int minItems;
+
+  /// Enough items on sale for the public to see the vitrine.
+  bool get public => published >= minItems;
 
   final bool open;
   final int active;
@@ -1402,7 +1410,7 @@ class VitrineChecklist {
 
   /// The steps, in the order an owner should take them, each done or not.
   List<({String label, bool done})> get steps => [
-        (label: 'Des articles sur la vitrine', done: published > 0),
+        (label: 'Des articles sur la vitrine', done: published >= (minItems < 1 ? 1 : minItems)),
         (label: 'Trois articles en photo', done: photosDone),
         (label: 'Une phrase de présentation', done: blurb),
         (label: 'Un numéro de téléphone', done: phone),

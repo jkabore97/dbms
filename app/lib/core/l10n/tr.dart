@@ -32,6 +32,11 @@ extension Tr on BuildContext {
   }
 }
 
+/// The app's language right now, for the few places that speak without a
+/// BuildContext (the server's refusals, through describeError). Set by the
+/// app each time it builds (main.dart).
+String trCurrent = 'fr';
+
 String translate(String language, String fr, [Map<String, Object?> args = const {}]) {
   var s = language == 'en' ? (enStrings[fr] ?? fr) : fr;
   for (final e in args.entries) {

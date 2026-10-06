@@ -174,8 +174,8 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
           if (retiredCount > 0)
             IconButton(
               tooltip: _showRetired
-                  ? 'Masquer les comptes retirés'
-                  : 'Afficher les comptes retirés ($retiredCount)',
+                  ? context.tr('Masquer les comptes retirés')
+                  : context.tr('Afficher les comptes retirés ({retiredCount})', {'retiredCount': retiredCount}),
               icon: Icon(
                 _showRetired ? Icons.visibility_off : Icons.visibility_outlined,
               ),

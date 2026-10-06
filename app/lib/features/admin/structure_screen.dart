@@ -189,7 +189,7 @@ class _StructureScreenState extends State<StructureScreen> {
                             ),
                             subtitle: Text(
                               entity.departments.isEmpty
-                                  ? 'Aucun département'
+                                  ? context.tr('Aucun département')
                                   : '${entity.departments.length} département'
                                       '${entity.departments.length > 1 ? 's' : ''}',
                             ),

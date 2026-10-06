@@ -132,7 +132,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
     final theme = Theme.of(context);
     final tool = _tool;
     final label = widget.feature == 'pro_all'
-        ? 'Mara Pro complet : tous les outils, sans limite'
+        ? context.tr('Mara Pro complet : tous les outils, sans limite')
         : PlanTerms.labelOf(widget.feature);
     final canBuy = widget.org.isAdmin && _missing == 0 && tool.waitsDays == null;
     return SafeArea(

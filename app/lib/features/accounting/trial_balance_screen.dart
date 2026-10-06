@@ -151,11 +151,8 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
                             Expanded(
                               child: Text(
                                 balanced
-                                    ? 'Débit = crédit. Chaque écriture a bien '
-                                        'ses deux côtés.'
-                                    : "Débit et crédit ne s'égalisent pas. "
-                                        'Une écriture a contourné '
-                                        "l'application.",
+                                    ? context.tr('Débit = crédit. Chaque écriture a bien ses deux côtés.')
+                                    : context.tr('Débit et crédit ne s\'égalisent pas. Une écriture a contourné l\'application.'),
                                 style: theme.textTheme.bodySmall,
                               ),
                             ),

@@ -90,14 +90,15 @@ class CaptureAction {
         ocrText: reading,
       );
 
+      if (!context.mounted) return false;
       messenger.showSnackBar(SnackBar(
         content: Text(id == null
             // Not an error. The bytes are on the device and will go when
             // there is signal — saying "échec" here would teach her to stop
             // taking photographs when the connection is poor, which is
             // exactly when they matter.
-            ? 'Photo gardée. Elle partira dès qu’il y a du réseau.'
-            : 'Photo enregistrée.'),
+            ? context.tr('Photo gardée. Elle partira dès qu’il y a du réseau.')
+            : context.tr('Photo enregistrée.')),
       ));
       return true;
     } on CaptureException catch (error) {

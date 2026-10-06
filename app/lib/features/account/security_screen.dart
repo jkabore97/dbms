@@ -221,9 +221,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
     setState(() => _busy = 'others');
     try {
       final n = await _api!.closeOtherSessions();
+      if (!mounted) return;
       _say(
         n == 0
-            ? 'Aucun autre appareil n\'était connecté.'
+            ? context.tr('Aucun autre appareil n\'était connecté.')
             : '$n appareil${n > 1 ? 's' : ''} déconnecté${n > 1 ? 's' : ''}.',
       );
       await _load();
@@ -253,8 +254,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             _Group(
               title: context.tr('Verrouillage du téléphone'),
               note: settings.policy == null
-                  ? 'Après ce délai hors de l\'application, Mara redemande '
-                        'le code de l\'appareil.'
+                  ? context.tr('Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.')
                   : 'Votre entreprise demande le code après '
                         '${SecuritySettings.label(settings.policy)} au plus.',
               children: [
@@ -269,7 +269,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                           enabled: settings.allows(m),
                           title: Text(
                             m == null
-                                ? 'Jamais'
+                                ? context.tr('Jamais')
                                 : 'Après ${SecuritySettings.label(m)}',
                           ),
                           subtitle: m == SecuritySettings.defaultLock
@@ -318,10 +318,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             title: context.tr('Mot de passe et appareils'),
             note: others == 0
                 ? null
-                : 'Les noms d\'appareils viennent du navigateur ou du '
-                      'téléphone : ils sont approximatifs. Un appareil fermé '
-                      'garde l\'accès au plus une heure, le temps que sa clé '
-                      'expire.',
+                : context.tr('Les noms d\'appareils viennent du navigateur ou du téléphone : ils sont approximatifs. Un appareil fermé garde l\'accès au plus une heure, le temps que sa clé expire.'),
             children: [
               ListTile(
                 leading: const Icon(Icons.password_outlined),
@@ -388,12 +385,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   title: Text(context.tr('Validation en deux étapes')),
                   subtitle: Text(
                     _twoStepOn!
-                        ? 'Activée : un code de votre application '
-                              "d'authentification est demandé à chaque "
-                              'connexion du compte de la plateforme.'
-                        : 'Désactivée : le compte de la plateforme '
-                              "s'ouvre avec le mot de passe, puis le code "
-                              "de l'appareil.",
+                        ? context.tr('Activée : un code de votre application d\'authentification est demandé à chaque connexion du compte de la plateforme.')
+                        : context.tr('Désactivée : le compte de la plateforme s\'ouvre avec le mot de passe, puis le code de l\'appareil.'),
                   ),
                 ),
               ],

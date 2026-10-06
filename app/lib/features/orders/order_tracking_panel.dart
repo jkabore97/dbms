@@ -65,9 +65,9 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
     final steps = <(String, String)>[
       ('pending', 'Envoyée'),
       ('accepted', 'Acceptée'),
-      ('ready', delivery ? 'Prête, attend le livreur' : 'Prête à retirer'),
+      ('ready', delivery ? context.tr('Prête, attend le livreur') : context.tr('Prête à retirer')),
       if (delivery) ('in_transit', 'En route'),
-      (delivery ? 'delivered' : 'picked_up', delivery ? 'Livrée' : 'Retirée'),
+      (delivery ? 'delivered' : 'picked_up', delivery ? context.tr('Livrée') : context.tr('Retirée')),
     ];
     final order = [for (final s in steps) s.$1];
     final at = order.indexOf(t.status);

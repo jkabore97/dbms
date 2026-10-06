@@ -118,9 +118,8 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
               onRetry: _load,
               isEmpty: _movements.isEmpty,
               emptyMessage: summaryOnly
-                  ? 'Votre accès porte sur les totaux. Le détail des '
-                      'mouvements ne vous est pas communiqué.'
-                  : 'Aucun mouvement sur ce compte pour cette période.',
+                  ? context.tr('Votre accès porte sur les totaux. Le détail des mouvements ne vous est pas communiqué.')
+                  : context.tr('Aucun mouvement sur ce compte pour cette période.'),
               child: ListView.separated(
                 itemCount: _movements.length + 1,
                 separatorBuilder: (_, _) => const Divider(height: 1),

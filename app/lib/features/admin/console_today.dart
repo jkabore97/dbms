@@ -79,7 +79,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
           c(t, 'spots_paid') > 0
               ? 'Mises en avant (${c(t, 'spots_paid')} payée'
                   '${c(t, 'spots_paid') > 1 ? 's' : ''})'
-              : 'Mises en avant',
+              : context.tr('Mises en avant'),
           c(t, 'spots'),
           Icons.campaign_outlined,
           Routes.consoleFeatured),
@@ -92,7 +92,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
 
     final week = c(g, 'orders_week'), last = c(g, 'orders_last_week');
     final trend = week == last
-        ? 'comme la semaine dernière'
+        ? context.tr('comme la semaine dernière')
         : week > last
             ? '+${week - last} sur la semaine dernière'
             : '${week - last} sur la semaine dernière';

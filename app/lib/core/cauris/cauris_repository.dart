@@ -193,6 +193,17 @@ class LeagueBoard {
       );
 }
 
+/// A business this one sponsored (092): it pays once its vitrine is
+/// complete and it has finished 3 orders.
+class Referral {
+  const Referral({required this.name, required this.score, required this.orders, required this.paid});
+
+  final String name;
+  final int score;
+  final int orders;
+  final bool paid;
+}
+
 class CaurisWallet {
   const CaurisWallet({
     required this.balance,
@@ -200,6 +211,8 @@ class CaurisWallet {
     this.expiresOn,
     this.referralCode,
     this.referred = false,
+    this.referralPoints = 0,
+    this.referrals = const [],
     this.history = const [],
     this.rules = const [],
   });
@@ -218,6 +231,12 @@ class CaurisWallet {
 
   /// Whether it has said who brought it in.
   final bool referred;
+
+  /// What one sponsored business pays once it takes off (092).
+  final int referralPoints;
+
+  /// The businesses this one brought in, and how far each is from paying.
+  final List<Referral> referrals;
   final List<CaurisLine> history;
 
   /// How to earn, as the platform set it.
@@ -229,6 +248,17 @@ class CaurisWallet {
         expiresOn: DateTime.tryParse('${j['expires_on'] ?? ''}'),
         referralCode: j['referral_code'] as String?,
         referred: j['referred'] == true,
+        referralPoints: _int(j['referral_points']),
+        referrals: [
+          for (final r in (j['referrals'] as List? ?? const []))
+            if (r is Map)
+              Referral(
+                name: '${r['name']}',
+                score: _int(r['score']),
+                orders: _int(r['orders']),
+                paid: r['paid'] == true,
+              ),
+        ],
         history: [
           for (final h in (j['history'] as List? ?? const []))
             CaurisLine.fromJson(Map<String, dynamic>.from(h as Map)),

@@ -188,7 +188,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                           ? theme.colorScheme.primary
                           : theme.colorScheme.onSurfaceVariant,
                       semanticLabel:
-                          p.isPublished ? 'Sur la vitrine' : 'Pas sur la vitrine',
+                          p.isPublished ? context.tr('Sur la vitrine') : context.tr('Pas sur la vitrine'),
                     ),
                   ),
                 ),
@@ -479,8 +479,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     },
               title: Text(context.tr('Pas encore prêt')),
               subtitle: Text(_availableFrom == null
-                  ? 'Une bande ou une récolte à venir : les clients '
-                      'commandent à l\'avance.'
+                  ? context.tr('Une bande ou une récolte à venir : les clients commandent à l\'avance.')
                   : 'Disponible à partir du '
                       '${DateFormat('dd/MM/yyyy').format(_availableFrom!)}'),
             ),

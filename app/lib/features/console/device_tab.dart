@@ -113,14 +113,10 @@ class _DeviceTabState extends State<DeviceTab> {
                   const SizedBox(height: 16),
                   Text(
                     health.stuck > 0
-                        ? "Des enregistrements ont été refusés par le serveur. "
-                            "Ils ne partiront pas tout seuls : montrez cet "
-                            'écran à la personne qui gère le serveur.'
+                        ? context.tr('Des enregistrements ont été refusés par le serveur. Ils ne partiront pas tout seuls : montrez cet écran à la personne qui gère le serveur.')
                         : waiting > 0
-                            ? 'Rien de refusé. Ce qui reste partira dès que le '
-                                'réseau reviendra.'
-                            : 'Tout ce qui a été enregistré sur cet appareil '
-                                'est arrivé au serveur.',
+                            ? context.tr('Rien de refusé. Ce qui reste partira dès que le réseau reviendra.')
+                            : context.tr('Tout ce qui a été enregistré sur cet appareil est arrivé au serveur.'),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -205,7 +201,7 @@ class _FailureTile extends StatelessWidget {
 
     final action = row['action'] as String;
     final attempts = row['attempts'] as int? ?? 0;
-    final error = (row['last_error'] as String?) ?? 'Raison inconnue';
+    final error = (row['last_error'] as String?) ?? context.tr('Raison inconnue');
     final created = DateTime.parse(row['created_at'] as String).toLocal();
 
     // The label the person typed, so the row is recognisable as a thing that

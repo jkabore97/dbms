@@ -217,8 +217,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                   child: Text(
                     member.role == 'owner'
-                        ? "Le propriétaire gère ses propres informations."
-                        : 'Vous ne pouvez pas modifier ce compte.',
+                        ? context.tr('Le propriétaire gère ses propres informations.')
+                        : context.tr('Vous ne pouvez pas modifier ce compte.'),
                     style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                         color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                   ),
@@ -313,9 +313,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final n = await api.signOutMember(widget.orgId, member.userId);
+      if (!mounted) return;
       messenger.showSnackBar(SnackBar(
           content: Text(n == 0
-              ? '${member.label} n\'était connecté nulle part.'
+              ? context.tr('{label} n\'était connecté nulle part.', {'label': member.label})
               : '${member.label} est déconnecté de $n appareil${n > 1 ? 's' : ''}.')));
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
@@ -569,7 +570,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(m.label),
                           subtitle: Text(
                             '${roleLabel(m.role)} · ${_scopeLabel(m)}'
-                            '${m.visibility == 'summary' ? ' · totaux seulement' : ''}',
+                            '${m.visibility == 'summary' ? context.tr(' · totaux seulement') : ''}',
                           ),
                           // Every member opens to their information — a
                           // colleague may read it. Whether the sheet then offers
@@ -613,7 +614,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           subtitle: Text(
                             '${roleLabel(i.role)} · '
                             '${_scopeNames[i.scopeId] ?? scopeKindLabel(i.scopeKind)}'
-                            '${i.phone != null ? '\nRéservé à ${i.phone}' : '\nAu porteur'}',
+                            '${i.phone != null ? context.tr('\nRéservé à {phone}', {'phone': i.phone}) : '\nAu porteur'}',
                           ),
                           isThreeLine: true,
                           trailing: Row(
@@ -833,7 +834,7 @@ class _EditMemberSheetState extends State<_EditMemberSheet> {
                     },
               icon: const Icon(Icons.cake_outlined),
               label: Text(_dob == null
-                  ? 'Date de naissance (facultatif)'
+                  ? context.tr('Date de naissance (facultatif)')
                   : 'Né(e) le ${DateFormat('d MMMM y', 'fr_FR').format(_dob!)}'),
             ),
             if (_error != null) ...[

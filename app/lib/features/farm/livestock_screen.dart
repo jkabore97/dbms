@@ -109,7 +109,7 @@ class _LivestockScreenState extends State<LivestockScreen>
       builder: (_) => _QuantitySheet(
         title: title,
         subtitle: context.tr('{label} — {headCount} têtes', {'label': herd.label, 'headCount': herd.headCount}),
-        label: kind == 'weight' ? 'Poids (kg)' : 'Nombre',
+        label: kind == 'weight' ? context.tr('Poids (kg)') : context.tr('Nombre'),
       ),
     );
     if (quantity == null) return;
@@ -329,7 +329,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                           ? '${cycle.harvested.toStringAsFixed(0)} ${cycle.unit} récoltés'
                               '${cycle.expectedYield == null ? '' : ' sur ${cycle.expectedYield!.toStringAsFixed(0)} attendus'}'
                           : cycle.expectedYield == null
-                              ? 'Rien récolté pour l’instant'
+                              ? context.tr('Rien récolté pour l’instant')
                               : '${cycle.expectedYield!.toStringAsFixed(0)} ${cycle.unit} attendus',
                       style: theme.textTheme.bodyMedium,
                     ),
@@ -697,7 +697,7 @@ class _NewCropSheetState extends State<_NewCropSheet> {
               },
               icon: const Icon(Icons.event_available),
               label: Text(_expected == null
-                  ? 'Récolte prévue (facultatif)'
+                  ? context.tr('Récolte prévue (facultatif)')
                   : 'Récolte prévue le ${DateFormat('d MMM y', 'fr_FR').format(_expected!)}'),
             ),
             if (_error != null) ...[

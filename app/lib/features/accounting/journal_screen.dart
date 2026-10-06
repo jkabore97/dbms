@@ -133,9 +133,8 @@ class _JournalScreenState extends State<JournalScreen> {
               onRetry: _load,
               isEmpty: _rows.isEmpty,
               emptyMessage: summaryOnly
-                  ? 'Votre accès porte sur les totaux. Le détail des écritures '
-                      'ne vous est pas communiqué.'
-                  : 'Aucune écriture sur cette période.',
+                  ? context.tr('Votre accès porte sur les totaux. Le détail des écritures ne vous est pas communiqué.')
+                  : context.tr('Aucune écriture sur cette période.'),
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
                   if (notification.metrics.extentAfter < 400) _loadMore();

@@ -359,7 +359,7 @@ class _Swatch extends StatelessWidget {
       button: true,
       selected: selected,
       label: colour == null
-          ? 'Couleur par défaut'
+          ? context.tr('Couleur par défaut')
           : 'Couleur ${StorefrontStyle.hexOf(colour!)}',
       child: InkWell(
         onTap: onTap,
@@ -447,7 +447,7 @@ class _ThumbState extends State<_Thumb> {
         }
         return Image.memory(bytes,
             fit: BoxFit.cover,
-            semanticLabel: widget.document.caption ?? 'Photo');
+            semanticLabel: widget.document.caption ?? context.tr('Photo'));
       },
     );
   }

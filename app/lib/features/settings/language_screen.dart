@@ -36,9 +36,6 @@ class LanguageScreen extends StatelessWidget {
       body: ListenableBuilder(
         listenable: locale,
         builder: (context, _) {
-          final systemResolved =
-              lookupStrings(LocaleController.platformResolved()).languageName;
-
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
@@ -51,19 +48,12 @@ class LanguageScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              _LanguageTile(
-                title: strings.languageSystem,
-                subtitle: strings.languageSystemSubtitle(systemResolved),
-                selected: locale.chosen == null,
-                onTap: () => locale.choose(null),
-              ),
-              const Divider(height: 24),
               for (final l in enabledLocales)
                 _LanguageTile(
                   // The language's own name for itself, looked up in that
                   // language rather than the current one — see above.
                   title: lookupStrings(l).languageName,
-                  selected: locale.chosen == l,
+                  selected: locale.effective == l,
                   onTap: () => locale.choose(l),
                 ),
             ],
@@ -80,11 +70,10 @@ class _LanguageTile extends StatelessWidget {
     required this.title,
     required this.selected,
     required this.onTap,
-    this.subtitle,
+
   });
 
   final String title;
-  final String? subtitle;
   final bool selected;
   final VoidCallback onTap;
 
@@ -93,7 +82,6 @@ class _LanguageTile extends StatelessWidget {
     final theme = Theme.of(context);
     return ListTile(
       title: Text(title, style: const TextStyle(fontSize: 17)),
-      subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: selected
           ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
           : const Icon(Icons.circle_outlined),

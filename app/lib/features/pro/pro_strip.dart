@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/mara_mark.dart';
+
 import '../../core/nav/app_scope.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,10 +50,23 @@ class ProStrip extends StatelessWidget {
             ),
             child: SizedBox(
               height: 34,
-              child: Center(
-                child: ProPill(
-                  onTap: () => context.push(Routes.inside(org.id, 'kaj-pro')),
-                ),
+              // « PRO » on the left, the Mara seal in the middle.
+              child: Stack(
+                fit: StackFit.expand,
+                alignment: Alignment.center,
+                children: [
+                  const Center(child: MaraMark(key: Key('strip-seal'), size: 26)),
+                  Positioned(
+                    left: 12,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: ProPill(
+                      onTap: () => context.push(Routes.inside(org.id, 'kaj-pro')),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -69,7 +84,7 @@ class ProStrip extends StatelessWidget {
   }
 }
 
-/// The pill itself: ink, small capitals, a spark.
+/// The pill itself: ink and small capitals.
 class ProPill extends StatelessWidget {
   const ProPill({super.key, required this.onTap});
 
@@ -93,8 +108,6 @@ class ProPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.auto_awesome, size: 14, color: kPaper),
-                const SizedBox(width: 6),
                 Text(
                   context.tr('PRO'),
                   style: const TextStyle(

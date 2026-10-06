@@ -192,9 +192,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     setState(() => _alertsOn = granted);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(granted
-          ? 'Alertes activées : une commande sonnera $reach.'
-          : "Le navigateur a refusé les alertes. Elles s'activent dans "
-              'ses paramètres de notifications.'),
+          ? context.tr('Alertes activées : une commande sonnera {reach}.', {'reach': reach})
+          : context.tr('Le navigateur a refusé les alertes. Elles s\'activent dans ses paramètres de notifications.')),
     ));
   }
 
@@ -551,8 +550,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                                 Expanded(child: Text(p.name)),
                                 Text(
                                   p.isExpired
-                                      ? 'périmé'
-                                      : 'dans ${p.daysLeft} j',
+                                      ? context.tr('périmé')
+                                      : context.tr('dans {daysLeft} j', {'daysLeft': p.daysLeft}),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     fontWeight: p.isExpired
                                         ? FontWeight.bold
@@ -859,7 +858,7 @@ class _DiscreetState extends State<_Discreet> {
     if (!widget.hidden) return widget.child;
     return Semantics(
       button: true,
-      label: _shown ? null : 'Montant caché, toucher pour afficher',
+      label: _shown ? null : context.tr('Montant caché, toucher pour afficher'),
       child: InkWell(
         onTap: () => setState(() => _shown = !_shown),
         borderRadius: BorderRadius.circular(8),
