@@ -8,6 +8,7 @@ import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
 import '../church/entry_controls.dart' show promptForName;
 import 'farm_sheets.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What is in the store, and what is about to run out.
 ///
@@ -95,7 +96,7 @@ class _StockScreenState extends State<StockScreen> {
     final text = await promptForName(
       context,
       title: item.name,
-      label: 'Seuil (${item.unit})',
+      label: context.tr('Seuil ({unit})', {'unit': item.unit}),
       hint: 'Prévenir en dessous de ce nombre',
       initial:
           item.reorderLevel == null ? '' : trimQuantity(item.reorderLevel!),
@@ -117,7 +118,7 @@ class _StockScreenState extends State<StockScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Le seuil n'a pas pu être enregistré.")),
+        SnackBar(content: Text(context.tr('Le seuil n\'a pas pu être enregistré.'))),
       );
     }
   }
@@ -138,11 +139,11 @@ class _StockScreenState extends State<StockScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stock'),
+        title: Text(context.tr('Stock')),
         actions: [
           if (_canWrite)
             IconButton(
-              tooltip: 'Perte',
+              tooltip: context.tr('Perte'),
               icon: const Icon(Icons.delete_outline),
               onPressed: () => _record(MoveStockSheet(
                 db: widget.db,
@@ -160,7 +161,7 @@ class _StockScreenState extends State<StockScreen> {
                 currency: widget.org.currency,
               )),
               icon: const Icon(Icons.local_shipping_outlined),
-              label: const Text('Réception'),
+              label: Text(context.tr('Réception')),
             )
           : null,
       body: ReportBody(

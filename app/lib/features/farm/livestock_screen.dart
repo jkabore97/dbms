@@ -10,6 +10,7 @@ import '../../core/auth/models.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Animals that are not chickens, and things that grow in the ground.
 ///
@@ -107,7 +108,7 @@ class _LivestockScreenState extends State<LivestockScreen>
       isScrollControlled: true,
       builder: (_) => _QuantitySheet(
         title: title,
-        subtitle: '${herd.label} — ${herd.headCount} têtes',
+        subtitle: context.tr('{label} — {headCount} têtes', {'label': herd.label, 'headCount': herd.headCount}),
         label: kind == 'weight' ? 'Poids (kg)' : 'Nombre',
       ),
     );
@@ -127,10 +128,10 @@ class _LivestockScreenState extends State<LivestockScreen>
       context: context,
       isScrollControlled: true,
       builder: (_) => _QuantitySheet(
-        title: 'Récolte',
+        title: context.tr('Récolte'),
         subtitle:
             '${cycle.crop}${cycle.plotName == null ? '' : ' — ${cycle.plotName}'}',
-        label: 'Quantité (${cycle.unit})',
+        label: context.tr('Quantité ({unit})', {'unit': cycle.unit}),
       ),
     );
     if (quantity == null) return;
@@ -159,7 +160,7 @@ class _LivestockScreenState extends State<LivestockScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Élevage et cultures'),
+        title: Text(context.tr('Élevage et cultures')),
         bottom: TabBar(
           controller: tabs,
           tabs: const [
@@ -173,7 +174,7 @@ class _LivestockScreenState extends State<LivestockScreen>
         builder: (context, _) => FloatingActionButton.extended(
           onPressed: tabs.index == 0 ? _openHerd : _openCrop,
           icon: const Icon(Icons.add),
-          label: Text(tabs.index == 0 ? 'Groupe' : 'Culture'),
+          label: Text(tabs.index == 0 ? context.tr('Groupe') : context.tr('Culture')),
         ),
       ),
       body: TabBarView(
@@ -209,7 +210,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                               style: theme.textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold)),
                         ),
-                        Text('${herd.headCount}',
+                        Text(context.tr('{headCount}', {'headCount': herd.headCount}),
                             style: theme.textTheme.headlineSmall),
                       ],
                     ),
@@ -240,20 +241,20 @@ class _LivestockScreenState extends State<LivestockScreen>
                           onPressed: () =>
                               _herdEvent(herd, 'birth', 'Naissances'),
                           icon: const Icon(Icons.add_circle_outline, size: 18),
-                          label: const Text('Naissance'),
+                          label: Text(context.tr('Naissance')),
                         ),
                         OutlinedButton.icon(
                           onPressed: () =>
                               _herdEvent(herd, 'mortality', 'Pertes'),
                           icon:
                               const Icon(Icons.remove_circle_outline, size: 18),
-                          label: const Text('Perte'),
+                          label: Text(context.tr('Perte')),
                         ),
                         OutlinedButton.icon(
                           onPressed: () =>
                               _herdEvent(herd, 'vaccination', 'Vaccination'),
                           icon: const Icon(Icons.vaccines_outlined, size: 18),
-                          label: const Text('Vaccin'),
+                          label: Text(context.tr('Vaccin')),
                         ),
                         if (!widget.org.isObserverOnly)
                           TextButton.icon(
@@ -266,7 +267,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                               canWrite: true,
                             ),
                             icon: const Icon(Icons.history, size: 18),
-                            label: const Text('Corriger'),
+                            label: Text(context.tr('Corriger')),
                           ),
                       ],
                     ),
@@ -353,7 +354,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                           onPressed: () => _harvest(cycle),
                           icon:
                               const Icon(Icons.agriculture_outlined, size: 18),
-                          label: const Text('Enregistrer une récolte'),
+                          label: Text(context.tr('Enregistrer une récolte')),
                         ),
                         if (!widget.org.isObserverOnly && cycle.harvested > 0)
                           TextButton.icon(
@@ -366,7 +367,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                               canWrite: true,
                             ),
                             icon: const Icon(Icons.history, size: 18),
-                            label: const Text('Corriger'),
+                            label: Text(context.tr('Corriger')),
                           ),
                       ],
                     ),
@@ -492,51 +493,51 @@ class _NewHerdSheetState extends State<_NewHerdSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Nouveau groupe', style: theme.textTheme.titleLarge),
+            Text(context.tr('Nouveau groupe'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _label,
-              decoration: const InputDecoration(
-                labelText: 'Nom du groupe',
-                helperText: 'Troupeau A, Chèvres du bas-fond…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom du groupe'),
+                helperText: context.tr('Troupeau A, Chèvres du bas-fond…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _species,
-              decoration: const InputDecoration(
-                labelText: 'Espèce',
+              decoration: InputDecoration(
+                labelText: context.tr('Espèce'),
                 // Free text on purpose: a compiled list is wrong for the
                 // first farmer with guinea fowl.
-                helperText: 'Caprin, bovin, ovin, porcin, pintade…',
-                border: OutlineInputBorder(),
+                helperText: context.tr('Caprin, bovin, ovin, porcin, pintade…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _count,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Nombre de têtes',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nombre de têtes'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _breed,
-              decoration: const InputDecoration(
-                labelText: 'Race (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Race (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _purpose,
-              decoration: const InputDecoration(
-                labelText: 'Destination (facultatif)',
-                helperText: 'Lait, engraissement, reproduction…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Destination (facultatif)'),
+                helperText: context.tr('Lait, engraissement, reproduction…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             if (_error != null) ...[
@@ -546,7 +547,7 @@ class _NewHerdSheetState extends State<_NewHerdSheet> {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _ready ? _save : null,
-              child: const Text('Créer le groupe'),
+              child: Text(context.tr('Créer le groupe')),
             ),
           ],
         ),
@@ -627,42 +628,42 @@ class _NewCropSheetState extends State<_NewCropSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Nouvelle culture', style: theme.textTheme.titleLarge),
+            Text(context.tr('Nouvelle culture'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _crop,
-              decoration: const InputDecoration(
-                labelText: 'Culture',
-                helperText: 'Oignon, maïs, tomate…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Culture'),
+                helperText: context.tr('Oignon, maïs, tomate…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _variety,
-              decoration: const InputDecoration(
-                labelText: 'Variété (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Variété (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _plot,
-              decoration: const InputDecoration(
-                labelText: 'Parcelle',
+              decoration: InputDecoration(
+                labelText: context.tr('Parcelle'),
                 // Created from its name if it does not exist, so nobody has
                 // to define a field before planting in it.
-                helperText: 'Créée automatiquement si elle est nouvelle.',
-                border: OutlineInputBorder(),
+                helperText: context.tr('Créée automatiquement si elle est nouvelle.'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _yield,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Rendement attendu en kg (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Rendement attendu en kg (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -706,7 +707,7 @@ class _NewCropSheetState extends State<_NewCropSheet> {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _busy || _crop.text.trim().isEmpty ? null : _save,
-              child: const Text('Enregistrer la culture'),
+              child: Text(context.tr('Enregistrer la culture')),
             ),
           ],
         ),
@@ -779,7 +780,7 @@ class _QuantitySheetState extends State<_QuantitySheet> {
             onPressed: (_number ?? 0) > 0
                 ? () => Navigator.of(context).pop(_number)
                 : null,
-            child: const Text('Enregistrer'),
+            child: Text(context.tr('Enregistrer')),
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the business owns and what it owes, at a date.
 ///
@@ -97,7 +98,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
     final balanced = (totalAssets - totalClaims).abs() < 1;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bilan')),
+      appBar: AppBar(title: Text(context.tr('Bilan'))),
       body: ReportBody(
         loading: _loading,
         error: _error,
@@ -128,7 +129,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                       children: [
                         Expanded(
                           child: StatTile(
-                            label: 'Actif',
+                            label: context.tr('Actif'),
                             amount: totalAssets,
                             money: money,
                             emphasis: true,
@@ -136,7 +137,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                         ),
                         Expanded(
                           child: StatTile(
-                            label: 'Passif',
+                            label: context.tr('Passif'),
                             amount: totalClaims,
                             money: money,
                             emphasis: true,

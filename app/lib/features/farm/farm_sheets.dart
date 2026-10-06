@@ -8,6 +8,7 @@ import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../church/entry_controls.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The four things Ignace records, and the one rule they all obey: they work
 /// with no signal.
@@ -88,8 +89,8 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
   Future<void> _addItem() async {
     final name = await promptForName(
       context,
-      title: 'Nouvel article',
-      label: "Nom de l'article",
+      title: context.tr('Nouvel article'),
+      label: context.tr('Nom de l\'article'),
       hint: 'Aliment ponte',
     );
     if (name == null || !mounted) return;
@@ -132,7 +133,7 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
 
     return _SheetFrame(
       icon: Icons.local_shipping_outlined,
-      title: 'Réception',
+      title: context.tr('Réception'),
       accent: accent,
       children: [
         if (_loading)
@@ -163,9 +164,9 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
                 ],
                 style:
                     const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                decoration: const InputDecoration(
-                  labelText: 'Quantité',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Quantité'),
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -175,9 +176,9 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
               flex: 4,
               child: DropdownButtonFormField<String>(
                 initialValue: _unit,
-                decoration: const InputDecoration(
-                  labelText: 'Unité',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Unité'),
+                  border: const OutlineInputBorder(),
                 ),
                 items: [
                   for (final unit in farmUnits)
@@ -191,7 +192,7 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           ],
         ),
         const SizedBox(height: 16),
-        Text('Prix par $_unit', style: theme.textTheme.labelLarge),
+        Text(context.tr('Prix par {_unit}', {'_unit': _unit}), style: theme.textTheme.labelLarge),
         const SizedBox(height: 6),
         Center(
           child: Text(
@@ -216,7 +217,7 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
         else
           Center(
             child: Text(
-              'Laissez à zéro si vous ne connaissez pas encore le prix',
+              context.tr('Laissez à zéro si vous ne connaissez pas encore le prix'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
@@ -239,15 +240,15 @@ class _ReceiveStockSheetState extends State<ReceiveStockSheet> {
           controller: _noteController,
           enabled: !_saving,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Note',
-            hintText: 'Livraison SODEPAL',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Note'),
+            hintText: context.tr('Livraison SODEPAL'),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 16),
         _SaveButton(
-          label: 'Enregistrer la réception',
+          label: context.tr('Enregistrer la réception'),
           accent: accent,
           enabled: _valid,
           saving: _saving,
@@ -320,8 +321,8 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
   Future<void> _addItem() async {
     final name = await promptForName(
       context,
-      title: 'Nouvel article',
-      label: "Nom de l'article",
+      title: context.tr('Nouvel article'),
+      label: context.tr('Nom de l\'article'),
     );
     if (name == null || !mounted) return;
     setState(() {
@@ -359,9 +360,9 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
 
     return _SheetFrame(
       icon: _isWaste ? Icons.delete_outline : Icons.restaurant_outlined,
-      title: _isWaste ? 'Perte' : 'Consommation',
+      title: _isWaste ? context.tr('Perte') : context.tr('Consommation'),
       accent: accent,
-      subtitle: "Le compte bouge, l'argent non : il est parti à la livraison.",
+      subtitle: context.tr('Le compte bouge, l\'argent non : il est parti à la livraison.'),
       children: [
         if (_loading)
           const Padding(
@@ -391,9 +392,9 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
                 ],
                 style:
                     const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                decoration: const InputDecoration(
-                  labelText: 'Quantité',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Quantité'),
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -403,9 +404,9 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
               flex: 4,
               child: DropdownButtonFormField<String>(
                 initialValue: _unit,
-                decoration: const InputDecoration(
-                  labelText: 'Unité',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Unité'),
+                  border: const OutlineInputBorder(),
                 ),
                 items: [
                   for (final unit in farmUnits)
@@ -424,21 +425,20 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
           enabled: !_saving,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
-            labelText: 'Note',
-            hintText: _isWaste ? 'Sac éventré' : 'Poulailler 2',
+            labelText: context.tr('Note'),
+            hintText: _isWaste ? context.tr('Sac éventré') : context.tr('Poulailler 2'),
             border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 8),
         if (!_isWaste)
           Text(
-            'Compter ce qui est distribué chaque jour est ce qui permet de '
-            "savoir lundi que l'aliment finira jeudi.",
+            context.tr('Compter ce qui est distribué chaque jour est ce qui permet de savoir lundi que l\'aliment finira jeudi.'),
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
         const SizedBox(height: 16),
         _SaveButton(
-          label: _isWaste ? 'Enregistrer la perte' : 'Enregistrer',
+          label: _isWaste ? context.tr('Enregistrer la perte') : context.tr('Enregistrer'),
           accent: accent,
           enabled: _valid,
           saving: _saving,
@@ -603,8 +603,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = 'Enregistrement impossible. La récolte d\'une culture demande '
-            'le réseau.';
+        _error = context.tr('Enregistrement impossible. La récolte d\'une culture demande le réseau.');
       });
     }
   }
@@ -617,9 +616,9 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
 
     return _SheetFrame(
       icon: Icons.eco_outlined,
-      title: 'Récolte',
+      title: context.tr('Récolte'),
       accent: accent,
-      subtitle: "Production, pas recette : l'argent vient à la vente.",
+      subtitle: context.tr('Production, pas recette : l\'argent vient à la vente.'),
       children: [
         ..._subjectPicker(theme, accent),
         if (subject != null) ...[
@@ -674,7 +673,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
           ],
 
           _SaveButton(
-            label: 'Enregistrer la récolte',
+            label: context.tr('Enregistrer la récolte'),
             accent: accent,
             enabled: _quantity > 0,
             saving: _saving,
@@ -699,8 +698,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
-              "Rien à récolter pour l'instant. Ouvrez une culture dans "
-              '« Élevage et cultures » — cela demande le réseau.',
+              context.tr('Rien à récolter pour l\'instant. Ouvrez une culture dans « Élevage et cultures » — cela demande le réseau.'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
@@ -711,7 +709,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
     }
 
     return [
-      Text('Que récoltez-vous ?', style: theme.textTheme.labelLarge),
+      Text(context.tr('Que récoltez-vous ?'), style: theme.textTheme.labelLarge),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -737,7 +735,7 @@ class _RecordHarvestSheetState extends State<RecordHarvestSheet> {
           if (_canAddCrop)
             ActionChip(
               avatar: const Icon(Icons.add, size: 18),
-              label: const Text('Autre…'),
+              label: Text(context.tr('Autre…')),
               onPressed: _saving ? null : _addCrop,
             ),
           if (_loadingCrops)
@@ -848,7 +846,7 @@ class _NewCropDialogState extends State<_NewCropDialog> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = 'Impossible pour le moment. Cela demande le réseau.';
+        _error = context.tr('Impossible pour le moment. Cela demande le réseau.');
       });
     }
   }
@@ -856,7 +854,7 @@ class _NewCropDialogState extends State<_NewCropDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Que récoltez-vous ?'),
+      title: Text(context.tr('Que récoltez-vous ?')),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -866,28 +864,28 @@ class _NewCropDialogState extends State<_NewCropDialog> {
               controller: _crop,
               autofocus: true,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Culture',
-                hintText: 'Tomate, gombo, maïs…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Culture'),
+                hintText: context.tr('Tomate, gombo, maïs…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _plot,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Parcelle (facultatif)',
-                hintText: 'Derrière la maison',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Parcelle (facultatif)'),
+                hintText: context.tr('Derrière la maison'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _unit,
-              decoration: const InputDecoration(
-                labelText: 'Compté en',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Compté en'),
+                border: const OutlineInputBorder(),
               ),
               items: [
                 for (final entry in _units.entries)
@@ -908,7 +906,7 @@ class _NewCropDialogState extends State<_NewCropDialog> {
       actions: [
         TextButton(
           onPressed: _saving ? null : () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _saving ? null : _save,
@@ -917,7 +915,7 @@ class _NewCropDialogState extends State<_NewCropDialog> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Ajouter'),
+              : Text(context.tr('Ajouter')),
         ),
       ],
     );
@@ -1050,9 +1048,7 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Plus que le dernier effectif connu '
-                    '(${widget.alive}). Vérifiez le chiffre — le serveur '
-                    'refusera si la bande est plus petite.',
+                    context.tr('Plus que le dernier effectif connu ({alive}). Vérifiez le chiffre — le serveur refusera si la bande est plus petite.', {'alive': widget.alive}),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -1077,15 +1073,15 @@ class _FlockEventSheetState extends State<FlockEventSheet> {
           controller: _noteController,
           enabled: !_saving,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Note',
-            hintText: 'Chaleur, Newcastle, poulailler 2…',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Note'),
+            hintText: context.tr('Chaleur, Newcastle, poulailler 2…'),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 16),
         _SaveButton(
-          label: 'Enregistrer',
+          label: context.tr('Enregistrer'),
           accent: accent,
           enabled: _quantity > 0,
           saving: _saving,
@@ -1175,7 +1171,7 @@ class _SheetFrame extends StatelessWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Fonctionne sans connexion',
+                context.tr('Fonctionne sans connexion'),
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
             ),

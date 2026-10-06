@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What each courier owes for a month (067, M10 block 4).
 ///
@@ -112,12 +113,12 @@ class _SettlementScreenState extends State<SettlementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Règlement des livreurs'),
+        title: Text(context.tr('Règlement des livreurs')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -127,7 +128,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
           Row(
             children: [
               IconButton(
-                tooltip: 'Mois précédent',
+                tooltip: context.tr('Mois précédent'),
                 onPressed: _loading ? null : () => _step(-1),
                 icon: const Icon(Icons.chevron_left),
               ),
@@ -139,7 +140,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                 ),
               ),
               IconButton(
-                tooltip: 'Mois suivant',
+                tooltip: context.tr('Mois suivant'),
                 onPressed: _loading || isCurrent ? null : () => _step(1),
                 icon: const Icon(Icons.chevron_right),
               ),
@@ -147,9 +148,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Le client paie le livreur à la porte ; la part de Mara sur '
-            'chaque livraison est due par le livreur à la fin du mois, '
-            'par Wave. Ce que chaque livreur doit, ce mois-ci :',
+            context.tr('Le client paie le livreur à la porte ; la part de Mara sur chaque livraison est due par le livreur à la fin du mois, par Wave. Ce que chaque livreur doit, ce mois-ci :'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -162,7 +161,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                 leading: const Icon(Icons.error_outline),
                 title: Text(_error!),
                 trailing:
-                    TextButton(onPressed: _load, child: const Text('Réessayer')),
+                    TextButton(onPressed: _load, child: Text(context.tr('Réessayer'))),
               ),
             ),
           if (!_loading && _error == null) ...[
@@ -180,9 +179,9 @@ class _SettlementScreenState extends State<SettlementScreen> {
             ),
             const SizedBox(height: 8),
             if (_rows.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Text('Aucune livraison ce mois-ci.'),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(context.tr('Aucune livraison ce mois-ci.')),
               ),
             for (final r in _rows)
               KajCard(
@@ -204,7 +203,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                       Text('${money.format(r.share)} F',
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
-                      Text('à régler',
+                      Text(context.tr('à régler'),
                           style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant)),
                     ],
@@ -215,12 +214,10 @@ class _SettlementScreenState extends State<SettlementScreen> {
           const SizedBox(height: 28),
           const Divider(),
           const SizedBox(height: 12),
-          Text('La part de Mara', style: theme.textTheme.titleMedium),
+          Text(context.tr('La part de Mara'), style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'En pourcentage des frais de livraison. Fixée sur chaque '
-            'commande au moment où elle est passée : changer le taux ne '
-            'change que les prochaines. Aujourd\'hui : ${_terms.deliverySharePct} %.',
+            context.tr('En pourcentage des frais de livraison. Fixée sur chaque commande au moment où elle est passée : changer le taux ne change que les prochaines. Aujourd\'hui : {deliverySharePct} %.', {'deliverySharePct': _terms.deliverySharePct}),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -233,9 +230,9 @@ class _SettlementScreenState extends State<SettlementScreen> {
                   controller: _pct,
                   enabled: !_saving,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Part (%)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Part (%)'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -252,7 +249,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save_outlined),
-                    label: const Text('Enregistrer le taux'),
+                    label: Text(context.tr('Enregistrer le taux')),
                   ),
                 ),
               ),

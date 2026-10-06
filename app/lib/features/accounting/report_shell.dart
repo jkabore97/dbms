@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 export '../../core/format/money.dart' show moneyFormat;
 
 import '../../core/auth/auth_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The parts every accounting screen needs and none of them should own.
 ///
@@ -140,9 +141,7 @@ class ReportBody extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Un rapport est un chiffre à un instant. '
-                'Mieux vaut pas de chiffre du tout que le chiffre de la '
-                'semaine dernière présenté comme celui d\'aujourd\'hui.',
+                context.tr('Un rapport est un chiffre à un instant. Mieux vaut pas de chiffre du tout que le chiffre de la semaine dernière présenté comme celui d\'aujourd\'hui.'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -152,7 +151,7 @@ class ReportBody extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Réessayer'),
+                label: Text(context.tr('Réessayer')),
               ),
             ],
           ),
@@ -365,8 +364,7 @@ class SummaryOnlyNotice extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Votre accès porte sur les totaux. Le détail par compte ne vous '
-              'est pas communiqué.',
+              context.tr('Votre accès porte sur les totaux. Le détail par compte ne vous est pas communiqué.'),
               style: theme.textTheme.bodySmall,
             ),
           ),

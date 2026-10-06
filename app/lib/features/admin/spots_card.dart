@@ -10,6 +10,7 @@ import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../pay/wave_buttons.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// "Mettre en avant" (071): the shop's spots on the street, and the door to
 /// buy one.
@@ -100,15 +101,14 @@ class _SpotsCardState extends State<SpotsCard> {
                 Icon(Icons.campaign_outlined, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Mettre en avant',
+                  child: Text(context.tr('Mettre en avant'),
                       style: theme.textTheme.titleMedium),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              'Un article en tête de « À la une » sur la page d\'accueil, ou '
-              'toute la boutique en haut de la liste, pour 7 ou 30 jours.',
+              context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la boutique en haut de la liste, pour 7 ou 30 jours.'),
               style: muted,
             ),
             if (_loaded && _spots.isNotEmpty) ...[
@@ -120,7 +120,7 @@ class _SpotsCardState extends State<SpotsCard> {
             FilledButton.tonalIcon(
               onPressed: _buy,
               icon: const Icon(Icons.add),
-              label: const Text('Mettre en avant'),
+              label: Text(context.tr('Mettre en avant')),
             ),
           ],
         ),
@@ -175,8 +175,7 @@ class _SpotRow extends StatelessWidget {
             if (running) ...[
               const SizedBox(height: 6),
               Text(
-                '${spot.seen} vues · ${spot.opened} ouvertures · '
-                '${spot.added} au panier · ${spot.ordered} commandes',
+                context.tr('{seen} vues · {opened} ouvertures · {added} au panier · {ordered} commandes', {'seen': spot.seen, 'opened': spot.opened, 'added': spot.added, 'ordered': spot.ordered}),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(fontWeight: FontWeight.w600),
               ),
@@ -187,7 +186,7 @@ class _SpotRow extends StatelessWidget {
                 child: TextButton.icon(
                   onPressed: onPay,
                   icon: const Icon(Icons.payments_outlined, size: 18),
-                  label: const Text('Payer et confirmer'),
+                  label: Text(context.tr('Payer et confirmer')),
                 ),
               ),
           ],
@@ -409,7 +408,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Mettre en avant', style: theme.textTheme.headlineSmall),
+              Text(context.tr('Mettre en avant'), style: theme.textTheme.headlineSmall),
               const SizedBox(height: 12),
               if (_done)
                 ..._doneView(theme)
@@ -432,18 +431,18 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     final shop = _shop;
     final price = _terms.price(shop: shop, days: _days);
     return [
-      Text('Quoi ?', style: theme.textTheme.titleSmall),
+      Text(context.tr('Quoi ?'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 6),
       SegmentedButton<bool>(
-        segments: const [
+        segments: [
           ButtonSegment(
               value: false,
-              icon: Icon(Icons.sell_outlined),
-              label: Text('Un article')),
+              icon: const Icon(Icons.sell_outlined),
+              label: Text(context.tr('Un article'))),
           ButtonSegment(
               value: true,
-              icon: Icon(Icons.storefront_outlined),
-              label: Text('La boutique')),
+              icon: const Icon(Icons.storefront_outlined),
+              label: Text(context.tr('La boutique'))),
         ],
         selected: {shop},
         onSelectionChanged: _busy
@@ -455,8 +454,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            "Aucun article prêt : mettez sur la vitrine un article avec un "
-            'prix et du stock.',
+            context.tr('Aucun article prêt : mettez sur la vitrine un article avec un prix et du stock.'),
             style: TextStyle(color: theme.colorScheme.error),
           ),
         ),
@@ -466,8 +464,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
               ? _productId
               : _articles.first.id,
           isExpanded: true,
-          decoration: const InputDecoration(
-              labelText: 'Article', border: OutlineInputBorder()),
+          decoration: InputDecoration(
+              labelText: context.tr('Article'), border: const OutlineInputBorder()),
           items: [
             for (final a in _articles)
               DropdownMenuItem(
@@ -490,12 +488,12 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         style: muted,
       ),
       const SizedBox(height: 14),
-      Text('Combien de temps ?', style: theme.textTheme.titleSmall),
+      Text(context.tr('Combien de temps ?'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 6),
       SegmentedButton<int>(
-        segments: const [
-          ButtonSegment(value: 7, label: Text('7 jours')),
-          ButtonSegment(value: 30, label: Text('30 jours')),
+        segments: [
+          ButtonSegment(value: 7, label: Text(context.tr('7 jours'))),
+          ButtonSegment(value: 30, label: Text(context.tr('30 jours'))),
         ],
         selected: {_days},
         onSelectionChanged:
@@ -509,8 +507,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         style: theme.textTheme.titleMedium,
       ),
       Text(
-        'Au plus ${_terms.maxLive} articles à la une en même temps : si la '
-        'place est prise, votre période commence dès qu\'une se libère.',
+        context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
         style: theme.textTheme.bodySmall,
       ),
       const SizedBox(height: 14),
@@ -518,7 +515,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         height: 52,
         child: FilledButton(
           onPressed: _busy || (!shop && _productId == null) ? null : _ask,
-          child: Text(_proFree ? 'Mettre en avant' : 'Continuer vers le paiement',
+          child: Text(_proFree ? context.tr('Mettre en avant') : context.tr('Continuer vers le paiement'),
               style: const TextStyle(fontSize: 16)),
         ),
       ),
@@ -528,7 +525,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   List<Widget> _payView(ThemeData theme, TextStyle? muted) {
     final spot = _asked!;
     return [
-      Text('${spot.label} · ${spot.days} jours',
+      Text(context.tr('{label} · {days} jours', {'label': spot.label, 'days': spot.days}),
           style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
       Text('À payer : ${moneyFormat(spot.currency).format(spot.price)}',
@@ -539,7 +536,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       WaveButtons(
         kind: 'spot',
         ref: spot.id,
-        below: Text('Ou à la main :', style: muted),
+        below: Text(context.tr('Ou à la main :'), style: muted),
       ),
       const SizedBox(height: 8),
       if (_terms.hasWave)
@@ -553,34 +550,32 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
                 ? 'Payez par Wave ou Orange Money à ce numéro'
                 : 'Wave · ${_terms.waveName}'),
             trailing: IconButton(
-              tooltip: 'Copier le numéro',
+              tooltip: context.tr('Copier le numéro'),
               icon: const Icon(Icons.copy_outlined),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _terms.wave));
                 ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Numéro copié')));
+                    SnackBar(content: Text(context.tr('Numéro copié'))));
               },
             ),
           ),
         )
       else
         Text(
-            'Pour payer, contactez Mara : le numéro de paiement vous sera '
-            'donné directement.',
+            context.tr('Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.'),
             style: muted),
       const SizedBox(height: 12),
       Text(
-          "Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la "
-          'mise en avant commence.',
+          context.tr('Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.'),
           style: muted),
       const SizedBox(height: 10),
       TextField(
         controller: _note,
         enabled: !_busy,
-        decoration: const InputDecoration(
-          labelText: 'Précision (facultatif)',
-          hintText: 'Nom Wave, référence…',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: context.tr('Précision (facultatif)'),
+          hintText: context.tr('Nom Wave, référence…'),
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 12),
@@ -589,12 +584,12 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         child: FilledButton.icon(
           onPressed: _busy ? null : _paid,
           icon: const Icon(Icons.done_all),
-          label: const Text("J'ai payé", style: TextStyle(fontSize: 17)),
+          label: Text(context.tr('J\'ai payé'), style: const TextStyle(fontSize: 17)),
         ),
       ),
       TextButton(
         onPressed: _busy ? null : () => Navigator.of(context).pop(true),
-        child: const Text('Payer plus tard'),
+        child: Text(context.tr('Payer plus tard')),
       ),
     ];
   }
@@ -607,7 +602,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         color: theme.colorScheme.primaryContainer,
         child: ListTile(
           leading: const Icon(Icons.check_circle_outline),
-          title: Text(free ? 'C\'est en ligne.' : 'Merci, c\'est noté.'),
+          title: Text(free ? context.tr('C\'est en ligne.') : context.tr('Merci, c\'est noté.')),
           subtitle: Text(free
               ? 'Votre article est à la une. Ses vues et commandes '
                   's\'affichent dans « Mettre en avant ».'
@@ -618,7 +613,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       const SizedBox(height: 8),
       FilledButton(
         onPressed: () => Navigator.of(context).pop(true),
-        child: const Text('Fermer'),
+        child: Text(context.tr('Fermer')),
       ),
     ];
   }

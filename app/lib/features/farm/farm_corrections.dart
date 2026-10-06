@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/errors.dart';
 import '../../core/farm/farm_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Correcting a farm entry after it was recorded — the app's version of
 /// crossing a wrong number out in a notebook. Backed by the 033 update_
@@ -180,7 +181,7 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
           else if (_rows.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text('Aucune entrée pour l’instant.',
+              child: Text(context.tr('Aucune entrée pour l’instant.'),
                   style: theme.textTheme.bodyMedium),
             )
           else
@@ -260,7 +261,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   Future<void> _save() async {
     final qty = double.tryParse(_quantity.text.trim().replaceAll(',', '.'));
     if (qty == null) {
-      setState(() => _error = 'Entrez un nombre.');
+      setState(() => _error = context.tr('Entrez un nombre.'));
       return;
     }
     setState(() {
@@ -305,9 +306,9 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Corriger l’entrée', style: theme.textTheme.titleLarge),
+          Text(context.tr('Corriger l’entrée'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
-          Text(widget.kind == FarmEntryKind.harvest ? 'Qualité' : 'Type',
+          Text(widget.kind == FarmEntryKind.harvest ? context.tr('Qualité') : context.tr('Type'),
               style: theme.textTheme.labelLarge),
           const SizedBox(height: 8),
           Wrap(
@@ -329,17 +330,17 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
             ],
-            decoration: const InputDecoration(
-              labelText: 'Quantité',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Quantité'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _note,
-            decoration: const InputDecoration(
-              labelText: 'Note (optionnel)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Note (optionnel)'),
+              border: const OutlineInputBorder(),
             ),
           ),
           if (_error != null) ...[
@@ -354,7 +355,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Enregistrer la correction'),
+                : Text(context.tr('Enregistrer la correction')),
           ),
         ],
       ),

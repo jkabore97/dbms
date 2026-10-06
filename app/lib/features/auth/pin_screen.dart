@@ -6,6 +6,7 @@ import '../../l10n/strings.dart';
 import '../../core/auth/models.dart';
 import '../../core/auth/pin_codec.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 enum PinPurpose {
   /// First run after signing in: choose the code.
@@ -337,14 +338,14 @@ class _Keypad extends StatelessWidget {
                               onPressed: onBiometric,
                               icon: const Icon(Icons.fingerprint),
                               iconSize: 30,
-                              tooltip: 'Empreinte digitale',
+                              tooltip: context.tr('Empreinte digitale'),
                             ))
                       : key == '<'
                           ? IconButton(
                               onPressed: onBackspace,
                               icon: const Icon(Icons.backspace_outlined),
                               iconSize: 26,
-                              tooltip: 'Effacer',
+                              tooltip: context.tr('Effacer'),
                             )
                           : TextButton(
                               onPressed: () => onDigit(key),

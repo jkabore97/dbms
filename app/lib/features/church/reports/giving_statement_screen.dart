@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A member's giving for a year, for them to keep.
 ///
@@ -129,10 +130,9 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Le partage a échoué sur cet appareil. '
-            "Faites une capture d'écran en attendant.",
+            context.tr('Le partage a échoué sur cet appareil. Faites une capture d\'écran en attendant.'),
           ),
         ),
       );
@@ -148,7 +148,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
     final thisYear = DateTime.now().year;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Relevé de dons')),
+      appBar: AppBar(title: Text(context.tr('Relevé de dons'))),
       body: _loadingMembers
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -170,23 +170,22 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                Text('Membre', style: theme.textTheme.labelLarge),
+                Text(context.tr('Membre'), style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 if (_members.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      'Aucun membre enregistré. Les relevés sont établis pour '
-                      'les personnes inscrites au registre de l\'association.',
+                      context.tr('Aucun membre enregistré. Les relevés sont établis pour les personnes inscrites au registre de l\'association.'),
                     ),
                   )
                 else
                   DropdownButtonFormField<String>(
                     initialValue: _member?.id,
                     isExpanded: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Choisir une personne',
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      hintText: context.tr('Choisir une personne'),
                     ),
                     items: [
                       for (final m in _members)
@@ -201,7 +200,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                     },
                   ),
                 const SizedBox(height: 16),
-                Text('Année', style: theme.textTheme.labelLarge),
+                Text(context.tr('Année'), style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 SegmentedButton<int>(
                   segments: [
@@ -239,9 +238,9 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                     child: FilledButton.icon(
                       onPressed: _sharing || lines.isEmpty ? null : _share,
                       icon: const Icon(Icons.share),
-                      label: const Text(
-                        'Partager le relevé',
-                        style: TextStyle(fontSize: 17),
+                      label: Text(
+                        context.tr('Partager le relevé'),
+                        style: const TextStyle(fontSize: 17),
                       ),
                     ),
                   ),
@@ -300,7 +299,7 @@ class _StatementCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Relevé de dons · $year',
+            context.tr('Relevé de dons · {year}', {'year': year}),
             style: const TextStyle(fontSize: 13, color: _muted),
           ),
           const SizedBox(height: 16),
@@ -316,11 +315,11 @@ class _StatementCard extends StatelessWidget {
           Container(height: 1, color: const Color(0xFFE8EEEB)),
           const SizedBox(height: 12),
           if (lines.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                'Aucun don enregistré pour cette année.',
-                style: TextStyle(fontSize: 14, color: _muted),
+                context.tr('Aucun don enregistré pour cette année.'),
+                style: const TextStyle(fontSize: 14, color: _muted),
               ),
             )
           else
@@ -360,9 +359,9 @@ class _StatementCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total',
-                style: TextStyle(
+              Text(
+                context.tr('Total'),
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: _ink,

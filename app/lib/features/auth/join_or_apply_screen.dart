@@ -11,6 +11,7 @@ import '../../core/onboarding/onboarding_repository.dart';
 import 'profile_form_screen.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What somebody sees when they have an account and belong to nothing.
 ///
@@ -157,7 +158,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _message = 'Code accepté. Ouverture de votre entreprise…';
+        _message = context.tr('Code accepté. Ouverture de votre entreprise…');
       });
       await widget.onRetry();
       widget.onJoined?.call();
@@ -197,12 +198,12 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bienvenue sur Mara'),
+        title: Text(context.tr('Bienvenue sur Mara')),
         actions: [
           IconButton(
             onPressed: widget.onSignOut,
             icon: const Icon(Icons.logout),
-            tooltip: 'Se déconnecter',
+            tooltip: context.tr('Se déconnecter'),
           ),
         ],
       ),
@@ -238,10 +239,9 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                       color: theme.colorScheme.secondaryContainer,
                       child: ListTile(
                         leading: const Icon(Icons.badge_outlined),
-                        title: const Text('Complétez vos informations'),
-                        subtitle: const Text(
-                            'Nom, date de naissance, téléphone. Nécessaire '
-                            'pour un contrat ou un bulletin de paie.'),
+                        title: Text(context.tr('Complétez vos informations')),
+                        subtitle: Text(
+                            context.tr('Nom, date de naissance, téléphone. Nécessaire pour un contrat ou un bulletin de paie.')),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _editProfile(
                           intro: 'Ces informations vous suivent dans toutes '
@@ -263,11 +263,11 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
 
                   // Route one, and first because it is far more common: most
                   // people arriving here were sent a code by somebody.
-                  Text('On vous a envoyé un code ?',
+                  Text(context.tr('On vous a envoyé un code ?'),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    'Votre responsable vous l’a envoyé par WhatsApp ou SMS.',
+                    context.tr('Votre responsable vous l’a envoyé par WhatsApp ou SMS.'),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
@@ -275,10 +275,10 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                     controller: _code,
                     autocorrect: false,
                     textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: "Code d'invitation",
-                      hintText: 'XXXX-XXXX',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Code d\'invitation'),
+                      hintText: context.tr('XXXX-XXXX'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -291,7 +291,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.login),
-                    label: const Text('Rejoindre l’entreprise'),
+                    label: Text(context.tr('Rejoindre l’entreprise')),
                   ),
 
                   if (_error != null) ...[
@@ -316,13 +316,11 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                   const SizedBox(height: 16),
 
                   // Route two.
-                  Text('Vous dirigez une entreprise ?',
+                  Text(context.tr('Vous dirigez une entreprise ?'),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    'Décrivez-la et envoyez la demande. Un administrateur '
-                    'Kaj-consulting la valide, puis vous en devenez '
-                    'propriétaire.',
+                    context.tr('Décrivez-la et envoyez la demande. Un administrateur Kaj-consulting la valide, puis vous en devenez propriétaire.'),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
@@ -340,7 +338,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                   TextButton.icon(
                     onPressed: widget.checking ? null : () => widget.onRetry(),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Vérifier à nouveau'),
+                    label: Text(context.tr('Vérifier à nouveau')),
                   ),
                 ],
               ),
@@ -409,14 +407,13 @@ class _ApplicationCard extends StatelessWidget {
           if (application.isPending) ...[
             const SizedBox(height: 8),
             Text(
-              'Nous vous répondrons bientôt. Vous pouvez modifier la demande '
-              'tant qu’elle est en attente.',
+              context.tr('Nous vous répondrons bientôt. Vous pouvez modifier la demande tant qu’elle est en attente.'),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: onEdit,
-              child: const Text('Modifier la demande'),
+              child: Text(context.tr('Modifier la demande')),
             ),
           ],
           if (application.isRejected && application.decisionNote != null) ...[
@@ -425,7 +422,7 @@ class _ApplicationCard extends StatelessWidget {
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: onEdit,
-              child: const Text('Corriger et renvoyer'),
+              child: Text(context.tr('Corriger et renvoyer')),
             ),
           ],
           if (application.isApproved) ...[
@@ -440,8 +437,7 @@ class _ApplicationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'C’est validé — vous en êtes propriétaire. '
-                    'Ouverture de votre entreprise…',
+                    context.tr('C’est validé — vous en êtes propriétaire. Ouverture de votre entreprise…'),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),

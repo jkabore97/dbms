@@ -11,6 +11,7 @@ import '../../core/invoicing/models.dart';
 import '../accounting/report_shell.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Invoicing, for whichever business is open.
 ///
@@ -134,13 +135,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Factures'),
+        title: Text(context.tr('Factures')),
         actions: [
           if (widget.org.isAdmin)
             IconButton(
               onPressed: _openBilling,
               icon: const Icon(Icons.storefront_outlined),
-              tooltip: 'En-tête de facture',
+              tooltip: context.tr('En-tête de facture'),
             ),
         ],
       ),
@@ -161,11 +162,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                           color: theme.colorScheme.tertiaryContainer,
                           child: ListTile(
                             leading: const Icon(Icons.info_outline),
-                            title: const Text("En-tête incomplet"),
-                            subtitle: const Text(
-                              'Ajoutez votre adresse et votre numéro IFU : '
-                              'sans eux, un client ne peut pas comptabiliser '
-                              'votre facture.',
+                            title: Text(context.tr('En-tête incomplet')),
+                            subtitle: Text(
+                              context.tr('Ajoutez votre adresse et votre numéro IFU : sans eux, un client ne peut pas comptabiliser votre facture.'),
                             ),
                             onTap: _openBilling,
                           ),
@@ -180,7 +179,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Reste à encaisser',
+                                Text(context.tr('Reste à encaisser'),
                                     style: theme.textTheme.labelLarge),
                                 const SizedBox(height: 4),
                                 Text(
@@ -196,9 +195,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
                       const SizedBox(height: 12),
                       SegmentedButton<bool>(
-                        segments: const [
-                          ButtonSegment(value: true, label: Text('Toutes')),
-                          ButtonSegment(value: false, label: Text('Impayées')),
+                        segments: [
+                          ButtonSegment(value: true, label: Text(context.tr('Toutes'))),
+                          ButtonSegment(value: false, label: Text(context.tr('Impayées'))),
                         ],
                         selected: {_showAll},
                         onSelectionChanged: (s) =>
@@ -233,7 +232,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           ? FloatingActionButton.extended(
               onPressed: _openNew,
               icon: const Icon(Icons.add),
-              label: const Text('Facturer'),
+              label: Text(context.tr('Facturer')),
             )
           : null,
     );
@@ -328,7 +327,7 @@ class _Failed extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Réessayer'),
+              label: Text(context.tr('Réessayer')),
             ),
           ],
         ),

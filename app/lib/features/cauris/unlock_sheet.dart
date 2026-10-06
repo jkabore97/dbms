@@ -11,6 +11,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import 'cauri_icon.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The grey « PRO · 400 » on a tool a Basic business has not opened (085):
 /// the plan's mark and its price in cauris, side by side.
@@ -35,7 +36,7 @@ class ProCostBadge extends StatelessWidget {
         children: [
           Icon(Icons.lock_outline, size: 13, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
-          Text('PRO',
+          Text(context.tr('PRO'),
               style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w800, letterSpacing: 0.6)),
           if (cost != null) ...[
@@ -168,12 +169,12 @@ class _UnlockSheetState extends State<UnlockSheet> {
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Continuer'),
+                child: Text(context.tr('Continuer')),
               ),
             ] else ...[
               Row(
                 children: [
-                  Text('Débloquer 30 jours : ', style: theme.textTheme.bodyLarge),
+                  Text(context.tr('Débloquer 30 jours : '), style: theme.textTheme.bodyLarge),
                   CaurisAmount(tool.cost,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w800)),
@@ -182,11 +183,11 @@ class _UnlockSheetState extends State<UnlockSheet> {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Text('Vous en avez ', style: theme.textTheme.bodyMedium),
+                  Text(context.tr('Vous en avez '), style: theme.textTheme.bodyMedium),
                   CaurisAmount(widget.states.balance,
                       style: theme.textTheme.bodyMedium),
                   if (_missing > 0)
-                    Text(' — encore $_missing à gagner',
+                    Text(context.tr(' — encore {_missing} à gagner', {'_missing': _missing}),
                         key: const Key('unlock-missing'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w700)),
@@ -195,14 +196,13 @@ class _UnlockSheetState extends State<UnlockSheet> {
               if (tool.waitsDays != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Cet outil s\'ouvre avec des cauris dans ${tool.waitsDays} jours : '
-                  'il faut un peu d\'activité pour qu\'il serve.',
+                  context.tr('Cet outil s\'ouvre avec des cauris dans {waitsDays} jours : il faut un peu d\'activité pour qu\'il serve.', {'waitsDays': tool.waitsDays}),
                   style: theme.textTheme.bodySmall,
                 ),
               ],
               if (!widget.org.isAdmin) ...[
                 const SizedBox(height: 6),
-                Text('Le propriétaire ou un administrateur peut le débloquer.',
+                Text(context.tr('Le propriétaire ou un administrateur peut le débloquer.'),
                     style: theme.textTheme.bodySmall),
               ],
               if (_error != null) ...[
@@ -221,8 +221,8 @@ class _UnlockSheetState extends State<UnlockSheet> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const CauriIcon(size: 18),
-                  label: const Text('Débloquer avec mes cauris',
-                      style: TextStyle(fontSize: 16)),
+                  label: Text(context.tr('Débloquer avec mes cauris'),
+                      style: const TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -233,7 +233,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                     Navigator.of(context).pop();
                     context.push(Routes.inside(widget.org.id, 'cauris'));
                   },
-                  child: const Text('Comment gagner des cauris'),
+                  child: Text(context.tr('Comment gagner des cauris')),
                 ),
               TextButton(
                 key: const Key('unlock-pro'),
@@ -241,7 +241,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   Navigator.of(context).pop();
                   context.push(Routes.inside(widget.org.id, 'kaj-pro'));
                 },
-                child: const Text('Ou passer à Mara Pro'),
+                child: Text(context.tr('Ou passer à Mara Pro')),
               ),
             ],
           ],

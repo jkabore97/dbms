@@ -12,6 +12,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One course, on a map: where I am, where the shop is, where the door is.
 ///
@@ -82,14 +83,14 @@ class _JobMapScreenState extends State<JobMapScreen> {
         _job = job;
         _loading = false;
         if (job == null) {
-          _error = "Cette course n'est pas, ou plus, la vôtre.";
+          _error = context.tr('Cette course n\'est pas, ou plus, la vôtre.');
         }
       });
       _frame();
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = "La course n'a pas pu être chargée. Vérifiez le réseau.";
+        _error = context.tr('La course n\'a pas pu être chargée. Vérifiez le réseau.');
         _loading = false;
       });
     }
@@ -185,7 +186,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
       if (!mounted) return;
       if (status == 'delivered') {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Livraison enregistrée. Merci !')));
+            SnackBar(content: Text(context.tr('Livraison enregistrée. Merci !'))));
         context.go(Routes.courier);
         return;
       }
@@ -205,7 +206,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
     return ShopPage(
       title: job == null ? 'Course' : job.shopName,
       leading: IconButton(
-        tooltip: 'Mes courses',
+        tooltip: context.tr('Mes courses'),
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go('${Routes.courier}?onglet=courses'),
       ),
@@ -216,7 +217,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
                   text: _error ?? "Cette course n'est pas la vôtre.",
                   action: OutlinedButton(
                       onPressed: () => context.go(Routes.courier),
-                      child: const Text('Retour aux courses')),
+                      child: Text(context.tr('Retour aux courses'))),
                 )
               : Column(
                   children: [
@@ -394,20 +395,20 @@ class _Panel extends StatelessWidget {
                       onPressed: () =>
                           onOpen(directionsUrl(job.shopLat!, job.shopLng!)),
                       icon: const Icon(Icons.directions_outlined, size: 18),
-                      label: const Text('Vers la boutique'),
+                      label: Text(context.tr('Vers la boutique')),
                     ),
                   if (job.hasDropPin)
                     (atShop ? OutlinedButton.icon : FilledButton.icon)(
                       onPressed: () =>
                           onOpen(directionsUrl(job.dropLat!, job.dropLng!)),
                       icon: const Icon(Icons.directions_outlined, size: 18),
-                      label: const Text('Vers le client'),
+                      label: Text(context.tr('Vers le client')),
                     ),
                   if (phone.isNotEmpty)
                     OutlinedButton.icon(
                       onPressed: () => onOpen('tel:$phone'),
                       icon: const Icon(Icons.call_outlined, size: 18),
-                      label: const Text('Appeler'),
+                      label: Text(context.tr('Appeler')),
                     ),
                   if (atShop)
                     OutlinedButton(
@@ -415,7 +416,7 @@ class _Panel extends StatelessWidget {
                           ? null
                           : () => onMark('in_transit',
                               "Le retrait n'a pas pu être enregistré."),
-                      child: const Text('Colis récupéré'),
+                      child: Text(context.tr('Colis récupéré')),
                     )
                   else if (job.status == 'in_transit')
                     OutlinedButton(
@@ -423,7 +424,7 @@ class _Panel extends StatelessWidget {
                           ? null
                           : () => onMark('delivered',
                               "La livraison n'a pas pu être enregistrée."),
-                      child: const Text('Livré'),
+                      child: Text(context.tr('Livré')),
                     ),
                 ],
               ),

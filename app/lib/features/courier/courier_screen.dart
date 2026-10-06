@@ -17,6 +17,7 @@ import '../../core/nav/url_tabs.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_skeleton.dart';
 import '../storefront/shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The livreur's whole world on one page.
 ///
@@ -90,7 +91,7 @@ class _CourierScreenState extends State<CourierScreen>
     });
     if (!widget.courier.isConfigured) {
       setState(() {
-        _error = "L'espace livreur a besoin d'une connexion.";
+        _error = context.tr('L\'espace livreur a besoin d\'une connexion.');
         _loading = false;
       });
       return;
@@ -136,7 +137,7 @@ class _CourierScreenState extends State<CourierScreen>
       if (!mounted) return;
       if (silent) return; // No signal is not news: what is on screen stays.
       setState(() {
-        _error = "L'espace livreur n'a pas pu être chargé. Vérifiez le réseau.";
+        _error = context.tr('L\'espace livreur n\'a pas pu être chargé. Vérifiez le réseau.');
         _loading = false;
       });
     }
@@ -194,10 +195,10 @@ class _CourierScreenState extends State<CourierScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text('Pourquoi la livraison échoue ?',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(context.tr('Pourquoi la livraison échoue ?'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ),
             for (final (key, label) in const [
               ('absent', 'Client absent'),
@@ -209,12 +210,11 @@ class _CourierScreenState extends State<CourierScreen>
                 title: Text(label),
                 onTap: () => Navigator.of(sheet).pop(key),
               ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 4, 20, 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
               child: Text(
-                  'La commande est annulée et vous rapportez le colis à la '
-                  'boutique. La boutique et le client sont prévenus.',
-                  style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                  context.tr('La commande est annulée et vous rapportez le colis à la boutique. La boutique et le client sont prévenus.'),
+                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
             ),
           ],
         ),
@@ -232,8 +232,8 @@ class _CourierScreenState extends State<CourierScreen>
       await _load();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("L'inscription n'a pas pu partir. Vérifiez le réseau.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('L\'inscription n\'a pas pu partir. Vérifiez le réseau.'))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -301,9 +301,9 @@ class _CourierScreenState extends State<CourierScreen>
     final running = _mine.where((j) => j.isRunning).length;
 
     return ShopPage(
-      title: 'Espace livreur',
+      title: context.tr('Espace livreur'),
       leading: IconButton(
-        tooltip: 'Les vitrines',
+        tooltip: context.tr('Les vitrines'),
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go(Routes.directory),
       ),
@@ -317,12 +317,12 @@ class _CourierScreenState extends State<CourierScreen>
                 // promise, and gone once it is kept.
                 if (OrderAlert.supported && !_alertsOn)
                   IconButton(
-                    tooltip: 'Recevoir les alertes de livraison',
+                    tooltip: context.tr('Recevoir les alertes de livraison'),
                     icon: const Icon(Icons.notifications_active_outlined),
                     onPressed: _busy ? null : _enableAlerts,
                   ),
                 IconButton(
-                  tooltip: 'Actualiser',
+                  tooltip: context.tr('Actualiser'),
                   icon: const Icon(Icons.refresh),
                   onPressed: _loading || _busy ? null : _load,
                 ),
@@ -335,7 +335,7 @@ class _CourierScreenState extends State<CourierScreen>
               ? ShopNotice(
                   text: _error!,
                   action: OutlinedButton(
-                      onPressed: _load, child: const Text('Réessayer')),
+                      onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : switch (_status) {
                   null => _Pitch(busy: _busy, onRegister: _register),
@@ -386,7 +386,7 @@ class _CourierScreenState extends State<CourierScreen>
                                                 .take(job.orderId),
                                             'Trop tard : un autre livreur '
                                             "l'a prise."),
-                                    child: const Text("J'accepte"),
+                                    child: Text(context.tr('J\'accepte')),
                                   ),
                                 ],
                               ),
@@ -405,7 +405,7 @@ class _CourierScreenState extends State<CourierScreen>
                                             Routes.courierJob(job.orderId)),
                                         icon: const Icon(Icons.map_outlined,
                                             size: 18),
-                                        label: const Text('Carte'),
+                                        label: Text(context.tr('Carte')),
                                       ),
                                       FilledButton(
                                         onPressed: _busy
@@ -415,7 +415,7 @@ class _CourierScreenState extends State<CourierScreen>
                                                     job.orderId, 'in_transit'),
                                                 "Le retrait n'a pas pu être "
                                                 'enregistré.'),
-                                        child: const Text('Colis récupéré'),
+                                        child: Text(context.tr('Colis récupéré')),
                                       ),
                                       OutlinedButton(
                                         onPressed: _busy
@@ -425,7 +425,7 @@ class _CourierScreenState extends State<CourierScreen>
                                                     .release(job.orderId),
                                                 'Cette course ne peut plus '
                                                 'être remise.'),
-                                        child: const Text('Remettre'),
+                                        child: Text(context.tr('Remettre')),
                                       ),
                                     ],
                                   'in_transit' => [
@@ -434,17 +434,17 @@ class _CourierScreenState extends State<CourierScreen>
                                             Routes.courierJob(job.orderId)),
                                         icon: const Icon(Icons.map_outlined,
                                             size: 18),
-                                        label: const Text('Carte'),
+                                        label: Text(context.tr('Carte')),
                                       ),
                                       FilledButton(
                                         onPressed:
                                             _busy ? null : () => _deliver(job),
-                                        child: const Text('Livré'),
+                                        child: Text(context.tr('Livré')),
                                       ),
                                       OutlinedButton(
                                         onPressed:
                                             _busy ? null : () => _fail(job),
-                                        child: const Text('Échec'),
+                                        child: Text(context.tr('Échec')),
                                       ),
                                     ],
                                   _ => const [],
@@ -484,8 +484,8 @@ class _EarningsStrip extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("AUJOURD'HUI",
-                      style: TextStyle(
+                  Text(context.tr('AUJOURD\'HUI'),
+                      style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.4,
@@ -554,9 +554,9 @@ class _Pitch extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Livrez pour les\nboutiques du quartier.',
-                  style: TextStyle(
+                Text(
+                  context.tr('Livrez pour les\nboutiques du quartier.'),
+                  style: const TextStyle(
                       fontSize: 30,
                       height: 1.1,
                       fontWeight: FontWeight.w700,
@@ -564,12 +564,9 @@ class _Pitch extends StatelessWidget {
                       color: ShopStyle.ink),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Les boutiques préparent des commandes à livrer. Vous les '
-                  'prenez quand vous voulez, vous encaissez le montant à la '
-                  'porte et vous réglez la boutique. La plateforme valide '
-                  'chaque livreur avant sa première course.',
-                  style: TextStyle(
+                Text(
+                  context.tr('Les boutiques préparent des commandes à livrer. Vous les prenez quand vous voulez, vous encaissez le montant à la porte et vous réglez la boutique. La plateforme valide chaque livreur avant sa première course.'),
+                  style: const TextStyle(
                       fontSize: 16, height: 1.45, color: ShopStyle.ink),
                 ),
                 const SizedBox(height: 22),
@@ -581,7 +578,7 @@ class _Pitch extends StatelessWidget {
                           height: 16,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: ShopStyle.paper))
-                      : const Text("M'inscrire comme livreur"),
+                      : Text(context.tr('M\'inscrire comme livreur')),
                 ),
               ],
             ),
@@ -695,7 +692,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 10),
             _Leg(
               icon: Icons.storefront_outlined,
-              label: 'Retirer',
+              label: context.tr('Retirer'),
               place: (job.shopAddress ?? '').trim().isEmpty
                   ? job.shopName
                   : job.shopAddress!.trim(),
@@ -706,7 +703,7 @@ class _JobCard extends StatelessWidget {
             const SizedBox(height: 6),
             _Leg(
               icon: Icons.home_outlined,
-              label: 'Livrer',
+              label: context.tr('Livrer'),
               place: (job.dropAddress ?? '').trim().isEmpty
                   ? 'Adresse chez le client'
                   : job.dropAddress!.trim(),
@@ -732,13 +729,13 @@ class _JobCard extends StatelessWidget {
                   ),
                   if (phone.isNotEmpty) ...[
                     IconButton(
-                      tooltip: 'Appeler',
+                      tooltip: context.tr('Appeler'),
                       icon: const Icon(Icons.call_outlined, size: 20),
                       onPressed: () => onOpen('tel:$phone'),
                     ),
                     if (whatsappUrl(phone) != null)
                       IconButton(
-                        tooltip: 'WhatsApp',
+                        tooltip: context.tr('WhatsApp'),
                         icon: const Icon(Icons.chat_outlined, size: 20),
                         onPressed: () => onOpen(whatsappUrl(phone)!),
                       ),
@@ -817,11 +814,11 @@ class _Leg extends StatelessWidget {
         Icon(icon, size: 18, color: ShopStyle.mist),
         const SizedBox(width: 8),
         Expanded(
-          child: Text('$label : $place',
+          child: Text(context.tr('{label} : {place}', {'label': label, 'place': place}),
               style: const TextStyle(fontSize: 15, color: ShopStyle.ink)),
         ),
         if (onRoute != null)
-          TextButton(onPressed: onRoute, child: const Text('Itinéraire')),
+          TextButton(onPressed: onRoute, child: Text(context.tr('Itinéraire'))),
       ],
     );
   }
@@ -848,13 +845,12 @@ class _CodeDialogState extends State<_CodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Code du client'),
+      title: Text(context.tr('Code du client')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Demandez au client les 4 chiffres affichés dans sa '
-              'commande : ils prouvent que le colis est bien arrivé.'),
+          Text(context.tr('Demandez au client les 4 chiffres affichés dans sa commande : ils prouvent que le colis est bien arrivé.')),
           const SizedBox(height: 12),
           TextField(
             controller: _code,
@@ -872,13 +868,13 @@ class _CodeDialogState extends State<_CodeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _code.text.trim().length == 4
               ? () => Navigator.of(context).pop(_code.text.trim())
               : null,
-          child: const Text('Valider la livraison'),
+          child: Text(context.tr('Valider la livraison')),
         ),
       ],
     );
@@ -911,11 +907,11 @@ class _CashStrip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Text('À remettre aux boutiques',
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text(context.tr('À remettre aux boutiques'),
                       style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                          const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 ),
                 for (final e in shops.entries)
                   ListTile(
@@ -923,12 +919,11 @@ class _CashStrip extends StatelessWidget {
                     trailing: Text(money.format(e.value),
                         style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 4, 20, 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                   child: Text(
-                      'La boutique confirme dans Mara quand elle a reçu '
-                      "l'argent ; la ligne disparaît alors d'ici.",
-                      style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                      context.tr('La boutique confirme dans Mara quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.'),
+                      style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
                 ),
               ],
             ),

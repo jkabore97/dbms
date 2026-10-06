@@ -12,6 +12,7 @@ import '../../core/nav/router.dart';
 import '../../core/phone/country_codes.dart';
 import '../../l10n/strings.dart';
 import '../common/phone_field.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The way in — and, now, the way to get an account in the first place.
 ///
@@ -801,15 +802,12 @@ class _NoBackendNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Serveur non configuré',
+            context.tr('Serveur non configuré'),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Cette version a été compilée sans adresse de serveur, donc la "
-            'connexion est impossible. Reconstruisez avec :\n\n'
-            '  --dart-define=SUPABASE_URL=…\n'
-            '  --dart-define=SUPABASE_PUBLISHABLE_KEY=…',
+          Text(
+            context.tr('Cette version a été compilée sans adresse de serveur, donc la connexion est impossible. Reconstruisez avec :\n\n  --dart-define=SUPABASE_URL=…\n  --dart-define=SUPABASE_PUBLISHABLE_KEY=…'),
           ),
         ],
       ),

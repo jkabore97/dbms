@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/two_step.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The platform admin's second step (077).
 ///
@@ -69,9 +70,9 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
       } else {
         _factorId = await widget.twoStep.verifiedFactorId();
         if (_factorId == null) {
+          if (!mounted) return;
           _error =
-              "Aucune application n'est enregistrée pour ce compte. "
-              'Déconnectez-vous puis reconnectez-vous pour en ajouter une.';
+              context.tr('Aucune application n\'est enregistrée pour ce compte. Déconnectez-vous puis reconnectez-vous pour en ajouter une.');
         }
       }
     } catch (e) {
@@ -85,7 +86,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     final factor = _factorId;
     if (factor == null || _busy) return;
     if (code.length != 6) {
-      setState(() => _error = 'Le code a 6 chiffres.');
+      setState(() => _error = context.tr('Le code a 6 chiffres.'));
       return;
     }
     setState(() {
@@ -100,8 +101,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
       if (mounted) {
         setState(
           () => _error =
-              'Code incorrect ou expiré. '
-              'Entrez le code affiché maintenant dans l’application.',
+              context.tr('Code incorrect ou expiré. Entrez le code affiché maintenant dans l’application.'),
         );
       }
     } catch (e) {
@@ -119,8 +119,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     if (!ok && mounted) {
       setState(
         () => _error =
-            "Aucune application d'authentification n'a "
-            'répondu. Installez-en une, ou tapez la clé ci-dessous.',
+            context.tr('Aucune application d\'authentification n\'a répondu. Installez-en une, ou tapez la clé ci-dessous.'),
       );
     }
   }
@@ -131,7 +130,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Validation en deux étapes'),
+        title: Text(context.tr('Validation en deux étapes')),
       ),
       body: SafeArea(
         child: Center(
@@ -214,7 +213,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                         if (_factorId == null)
                           TextButton(
                             onPressed: _prepare,
-                            child: const Text('Réessayer'),
+                            child: Text(context.tr('Réessayer')),
                           ),
                       ],
                       const SizedBox(height: 20),
@@ -232,7 +231,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: _busy ? null : widget.onSignOut,
-                        child: const Text('Se déconnecter'),
+                        child: Text(context.tr('Se déconnecter')),
                       ),
                     ],
                   ),
@@ -280,11 +279,11 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
       OutlinedButton.icon(
         onPressed: () => _openApp(e.uri),
         icon: const Icon(Icons.open_in_new),
-        label: const Text("Ouvrir l'application d'authentification"),
+        label: Text(context.tr('Ouvrir l\'application d\'authentification')),
       ),
       const SizedBox(height: 8),
       Text(
-        'Ou tapez cette clé dans l’application :',
+        context.tr('Ou tapez cette clé dans l’application :'),
         textAlign: TextAlign.center,
         style: t.textTheme.bodySmall,
       ),
@@ -300,7 +299,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Copier la clé',
+            tooltip: context.tr('Copier la clé'),
             icon: const Icon(Icons.copy, size: 18),
             onPressed: () => Clipboard.setData(ClipboardData(text: e.secret)),
           ),

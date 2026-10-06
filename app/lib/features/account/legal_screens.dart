@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The three static pages the app must carry to be publishable: a privacy
 /// policy, terms of use, and a short FAQ. They ship inside the app rather than
@@ -46,8 +47,8 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _DocScaffold(
-      title: 'Politique de confidentialité',
+    return _DocScaffold(
+      title: context.tr('Politique de confidentialité'),
       blocks: [
         'Mara enregistre les informations que vous saisissez pour faire '
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
@@ -82,8 +83,8 @@ class TermsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _DocScaffold(
-      title: "Conditions d'utilisation",
+    return _DocScaffold(
+      title: context.tr('Conditions d\'utilisation'),
       blocks: [
         'En utilisant Mara, vous acceptez ces conditions.',
         '# Votre compte',
@@ -117,8 +118,8 @@ class FaqScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _DocScaffold(
-      title: 'Questions fréquentes',
+    return _DocScaffold(
+      title: context.tr('Questions fréquentes'),
       blocks: [
         '# L\'application fonctionne-t-elle sans internet ?',
         'Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; '

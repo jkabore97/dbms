@@ -9,6 +9,7 @@ import '../../core/phone/country_codes.dart';
 import '../accounting/report_shell.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Composing one.
 ///
@@ -98,9 +99,9 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
       _complete.fold<double>(0, (sum, line) => sum + line.amount);
 
   String? get _problem {
-    if (_customer.text.trim().isEmpty) return 'Indiquez le client.';
+    if (_customer.text.trim().isEmpty) return context.tr('Indiquez le client.');
     if (_complete.isEmpty) {
-      return 'Ajoutez au moins une ligne avec une quantité et un prix.';
+      return context.tr('Ajoutez au moins une ligne avec une quantité et un prix.');
     }
     return _country.lengthProblem(_phone.text);
   }
@@ -165,25 +166,25 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
-          Text('Client', style: theme.textTheme.titleMedium),
+          Text(context.tr('Client'), style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           TextField(
             controller: _customer,
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Nom du client',
-              hintText: 'Hôtel Indépendance',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nom du client'),
+              hintText: context.tr('Hôtel Indépendance'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _address,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Adresse (facultatif)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Adresse (facultatif)'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -191,7 +192,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
             controller: _phone,
             country: _country,
             onCountry: (c) => setState(() => _country = c),
-            labelText: 'Téléphone (facultatif)',
+            labelText: context.tr('Téléphone (facultatif)'),
             hintText: '70 12 34 56',
             enabled: !_saving,
           ),
@@ -200,14 +201,14 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Lignes', style: theme.textTheme.titleMedium),
+                child: Text(context.tr('Lignes'), style: theme.textTheme.titleMedium),
               ),
               TextButton.icon(
                 onPressed: _saving
                     ? null
                     : () => setState(() => _lines.add(_LineDraft())),
                 icon: const Icon(Icons.add),
-                label: const Text('Ajouter'),
+                label: Text(context.tr('Ajouter')),
               ),
             ],
           ),
@@ -234,7 +235,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Text('Total', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Total'), style: theme.textTheme.titleMedium),
                   const Spacer(),
                   Text(
                     _money.format(_total),
@@ -247,7 +248,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
           ),
 
           const SizedBox(height: 24),
-          Text('Échéance', style: theme.textTheme.titleMedium),
+          Text(context.tr('Échéance'), style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           // Terms are agreed in days — "payable à 30 jours" — and the date is
           // what gets stored. Asking for the date would be asking somebody to
@@ -257,7 +258,7 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
             children: [
               for (final days in [null, 7, 15, 30, 60])
                 ChoiceChip(
-                  label: Text(days == null ? 'À réception' : '$days jours'),
+                  label: Text(days == null ? context.tr('À réception') : context.tr('{days} jours', {'days': days})),
                   selected: _dueDays == days,
                   onSelected:
                       _saving ? null : (_) => setState(() => _dueDays = days),
@@ -270,10 +271,10 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
             controller: _memo,
             textCapitalization: TextCapitalization.sentences,
             maxLines: 2,
-            decoration: const InputDecoration(
-              labelText: 'Note interne (facultatif)',
-              helperText: "N'apparaît pas sur la facture.",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Note interne (facultatif)'),
+              helperText: context.tr('N\'apparaît pas sur la facture.'),
+              border: const OutlineInputBorder(),
             ),
           ),
 
@@ -375,10 +376,10 @@ class _LineEditor extends StatelessWidget {
                     controller: draft.description,
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: (_) => onChanged(),
-                    decoration: const InputDecoration(
-                      labelText: 'Désignation',
+                    decoration: InputDecoration(
+                      labelText: context.tr('Désignation'),
                       isDense: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -386,7 +387,7 @@ class _LineEditor extends StatelessWidget {
                   IconButton(
                     onPressed: onRemove,
                     icon: const Icon(Icons.close),
-                    tooltip: 'Retirer la ligne',
+                    tooltip: context.tr('Retirer la ligne'),
                   ),
               ],
             ),
@@ -400,10 +401,10 @@ class _LineEditor extends StatelessWidget {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => onChanged(),
-                    decoration: const InputDecoration(
-                      labelText: 'Qté',
+                    decoration: InputDecoration(
+                      labelText: context.tr('Qté'),
                       isDense: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -415,10 +416,10 @@ class _LineEditor extends StatelessWidget {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => onChanged(),
-                    decoration: const InputDecoration(
-                      labelText: 'Prix unitaire',
+                    decoration: InputDecoration(
+                      labelText: context.tr('Prix unitaire'),
                       isDense: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),

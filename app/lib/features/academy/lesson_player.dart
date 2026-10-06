@@ -9,6 +9,7 @@ import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../cauris/cauri_icon.dart';
 import 'lessons.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One lesson of Académie Mara, played step by step (087): a drawn phone
 /// showing the screen in question and a hand that travels to the button
@@ -95,7 +96,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
     final steps = _script.steps;
     final last = _at == steps.length - 1;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(title: Text(context.tr(widget.title))),
       body: SafeArea(
         child: Column(
           children: [
@@ -141,7 +142,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
                       key: const Key('lesson-next'),
                       onPressed: () => _pages.nextPage(
                           duration: KajMotion.page, curve: KajMotion.ease),
-                      child: const Text('Suivant'),
+                      child: Text(context.tr('Suivant')),
                     )
                   else ...[
                     if (widget.mission && _script.tryIt != null)
@@ -153,20 +154,20 @@ class _LessonPlayerState extends State<LessonPlayer> {
                               ? Routes.inside(widget.org.id, '').replaceAll(RegExp(r'/$'), '')
                               : Routes.inside(widget.org.id, rest));
                         },
-                        child: Text(_script.tryLabel ?? 'Essayer maintenant'),
+                        child: Text(context.tr(_script.tryLabel ?? 'Essayer maintenant')),
                       ),
                     if (!widget.mission && _script.tryIt != null)
                       TextButton(
                         onPressed: () =>
                             context.push(Routes.inside(widget.org.id, _script.tryIt!)),
-                        child: Text(_script.tryLabel ?? 'Y aller'),
+                        child: Text(context.tr(_script.tryLabel ?? 'Y aller')),
                       ),
                     const SizedBox(height: 6),
                     FilledButton.icon(
                       key: const Key('lesson-finish'),
                       onPressed: _busy ? null : _finish,
                       icon: const CauriIcon(size: 16, color: maraGold),
-                      label: Text(widget.mission ? 'C\'est fait !' : 'J\'ai compris'),
+                      label: Text(widget.mission ? context.tr('C\'est fait !') : context.tr('J\'ai compris')),
                     ),
                   ],
                 ],
@@ -194,11 +195,11 @@ class _StepView extends StatelessWidget {
         children: [
           Expanded(child: Center(child: _Phone(step: step))),
           const SizedBox(height: 18),
-          Text(step.title,
+          Text(context.tr(step.title),
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
-          Text(step.text,
+          Text(context.tr(step.text),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge),
         ],
@@ -313,7 +314,7 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                             spreadRadius: 2),
                       ],
                     ),
-                    child: Text(widget.step.target!,
+                    child: Text(context.tr(widget.step.target!),
                         style: const TextStyle(
                             color: maraIndigo, fontWeight: FontWeight.w800)),
                   ),

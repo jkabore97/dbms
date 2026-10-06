@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What this phone is still holding.
 ///
@@ -83,25 +84,25 @@ class _DeviceTabState extends State<DeviceTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("File d'envoi", style: theme.textTheme.titleMedium),
+                  Text(context.tr('File d\'envoi'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: _Stat(
-                          label: 'Envoyé',
+                          label: context.tr('Envoyé'),
                           value: '${health.sent}',
                         ),
                       ),
                       Expanded(
                         child: _Stat(
-                          label: 'En attente de réseau',
+                          label: context.tr('En attente de réseau'),
                           value: '$waiting',
                         ),
                       ),
                       Expanded(
                         child: _Stat(
-                          label: 'Refusé',
+                          label: context.tr('Refusé'),
                           value: '${health.stuck}',
                           tint:
                               health.stuck > 0 ? theme.colorScheme.error : null,
@@ -128,7 +129,7 @@ class _DeviceTabState extends State<DeviceTab> {
           ),
           if (_failed.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text('Refusés', style: theme.textTheme.titleMedium),
+            Text(context.tr('Refusés'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             for (final row in _failed) _FailureTile(row: row),
           ],
@@ -141,16 +142,16 @@ class _DeviceTabState extends State<DeviceTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Cet appareil', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Cet appareil'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
-                  _Fact(label: 'Activité ouverte', value: widget.org.name),
+                  _Fact(label: context.tr('Activité ouverte'), value: widget.org.name),
                   _Fact(
-                    label: 'Rôles',
+                    label: context.tr('Rôles'),
                     value: widget.org.roles.join(', '),
                   ),
-                  _Fact(label: 'Visibilité', value: widget.org.visibility),
-                  _Fact(label: 'Monnaie', value: widget.org.currency),
-                  _Fact(label: 'Profil', value: widget.org.profile),
+                  _Fact(label: context.tr('Visibilité'), value: widget.org.visibility),
+                  _Fact(label: context.tr('Monnaie'), value: widget.org.currency),
+                  _Fact(label: context.tr('Profil'), value: widget.org.profile),
                 ],
               ),
             ),

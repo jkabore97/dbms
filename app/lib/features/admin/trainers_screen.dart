@@ -4,6 +4,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Where the platform runs its trainers (038): the students sent out to teach
 /// businesses the app.
@@ -84,19 +85,19 @@ class _TrainersScreenState extends State<TrainersScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formateurs'),
+        title: Text(context.tr('Formateurs')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addTrainer,
         icon: const Icon(Icons.person_add_alt_1),
-        label: const Text('Ajouter un formateur'),
+        label: Text(context.tr('Ajouter un formateur')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -113,11 +114,10 @@ class _TrainersScreenState extends State<TrainersScreen> {
                                 size: 48,
                                 color: theme.colorScheme.onSurfaceVariant),
                             const SizedBox(height: 12),
-                            const Text('Aucun formateur pour le moment'),
+                            Text(context.tr('Aucun formateur pour le moment')),
                             const SizedBox(height: 4),
                             Text(
-                              'Ajoutez un formateur par son numéro, puis '
-                              'affectez-le aux entreprises qu\'il accompagne.',
+                              context.tr('Ajoutez un formateur par son numéro, puis affectez-le aux entreprises qu\'il accompagne.'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   color: theme.colorScheme.onSurfaceVariant),
@@ -144,7 +144,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
                                     fontWeight: FontWeight.w600)),
                             subtitle: Text(t.phone ?? ''),
                             trailing: Chip(
-                              label: Text('${t.assignments}'),
+                              label: Text(context.tr('{assignments}', {'assignments': t.assignments})),
                               avatar: const Icon(Icons.storefront_outlined,
                                   size: 16),
                             ),
@@ -176,13 +176,12 @@ class _AddTrainerDialogState extends State<_AddTrainerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Ajouter un formateur'),
+      title: Text(context.tr('Ajouter un formateur')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Entrez le numéro de téléphone du compte à désigner comme '
-            'formateur. Le compte doit déjà exister.',
+          Text(
+            context.tr('Entrez le numéro de téléphone du compte à désigner comme formateur. Le compte doit déjà exister.'),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -190,10 +189,10 @@ class _AddTrainerDialogState extends State<_AddTrainerDialog> {
             keyboardType: TextInputType.phone,
             autofocus: true,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Numéro de téléphone',
+            decoration: InputDecoration(
+              labelText: context.tr('Numéro de téléphone'),
               hintText: '+226 70 00 00 00',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
           ),
         ],
@@ -201,13 +200,13 @@ class _AddTrainerDialogState extends State<_AddTrainerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _controller.text.trim().isEmpty
               ? null
               : () => Navigator.of(context).pop(_controller.text.trim()),
-          child: const Text('Ajouter'),
+          child: Text(context.tr('Ajouter')),
         ),
       ],
     );
@@ -299,7 +298,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
                 style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
-          Text('Entreprises accompagnées', style: theme.textTheme.labelLarge),
+          Text(context.tr('Entreprises accompagnées'), style: theme.textTheme.labelLarge),
           const SizedBox(height: 8),
           if (_loading)
             const Padding(
@@ -309,7 +308,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
           else if (_orgs.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text('Aucune entreprise affectée.',
+              child: Text(context.tr('Aucune entreprise affectée.'),
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             )
           else
@@ -327,7 +326,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
                       subtitle: Text(o.slug),
                       trailing: IconButton(
                         icon: const Icon(Icons.remove_circle_outline),
-                        tooltip: 'Retirer',
+                        tooltip: context.tr('Retirer'),
                         onPressed: () => _remove(o),
                       ),
                     ),
@@ -338,7 +337,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
           FilledButton.icon(
             onPressed: _assign,
             icon: const Icon(Icons.add_business_outlined),
-            label: const Text('Affecter à une entreprise'),
+            label: Text(context.tr('Affecter à une entreprise')),
           ),
         ],
       ),
@@ -410,10 +409,10 @@ class _BusinessPickerState extends State<_BusinessPicker> {
             autofocus: true,
             onSubmitted: (_) => _search(),
             decoration: InputDecoration(
-              hintText: 'Rechercher une entreprise…',
+              hintText: context.tr('Rechercher une entreprise…'),
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
-                tooltip: 'Rechercher',
+                tooltip: context.tr('Rechercher'),
                 icon: const Icon(Icons.arrow_forward),
                 onPressed: _search,
               ),

@@ -12,6 +12,7 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../account/pro_sheet.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The Pro dressing of the vitrine (068), under the vitrine switch on the
 /// business settings: a cover from the shop's own photographs, a tagline,
@@ -130,7 +131,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _message = 'Vitrine enregistrée. Ouvrez-la pour voir le résultat.';
+        _message = context.tr('Vitrine enregistrée. Ouvrez-la pour voir le résultat.');
       });
     } catch (error) {
       if (!mounted) return;
@@ -172,7 +173,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
       children: [
         Row(
           children: [
-            Text('Vitrine personnalisée', style: theme.textTheme.titleSmall),
+            Text(context.tr('Vitrine personnalisée'), style: theme.textTheme.titleSmall),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -180,7 +181,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                 color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text('Pro',
+              child: Text(context.tr('Pro'),
                   style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w700)),
@@ -189,8 +190,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Une photo de couverture, une phrase, vos horaires, la couleur '
-          'de vos boutons et jusqu\'à six articles en tête de la vitrine.',
+          context.tr('Une photo de couverture, une phrase, vos horaires, la couleur de vos boutons et jusqu\'à six articles en tête de la vitrine.'),
           style: muted,
         ),
         const SizedBox(height: 10),
@@ -200,12 +200,12 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             color: theme.colorScheme.surfaceContainerHighest,
             child: ListTile(
               leading: const Icon(Icons.workspace_premium_outlined),
-              title: const Text('Réservé à Mara Pro'),
-              subtitle: const Text(
-                  'Passez à Mara Pro pour habiller votre vitrine.'),
+              title: Text(context.tr('Réservé à Mara Pro')),
+              subtitle: Text(
+                  context.tr('Passez à Mara Pro pour habiller votre vitrine.')),
               trailing: FilledButton.tonal(
                 onPressed: _openPro,
-                child: const Text('Voir'),
+                child: Text(context.tr('Voir')),
               ),
             ),
           )
@@ -216,10 +216,10 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             controller: _tagline,
             enabled: !_saving,
             maxLength: 80,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Phrase d\'accroche',
-              hintText: 'Pagnes et gâteaux depuis 1998',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: context.tr('Phrase d\'accroche'),
+              hintText: context.tr('Pagnes et gâteaux depuis 1998'),
             ),
           ),
           const SizedBox(height: 10),
@@ -227,14 +227,14 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             controller: _hours,
             enabled: !_saving,
             maxLength: 120,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Horaires',
-              hintText: 'Lun–Sam 8h–19h',
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: context.tr('Horaires'),
+              hintText: context.tr('Lun–Sam 8h–19h'),
             ),
           ),
           const SizedBox(height: 6),
-          Text('Couleur des boutons', style: theme.textTheme.labelLarge),
+          Text(context.tr('Couleur des boutons'), style: theme.textTheme.labelLarge),
           const SizedBox(height: 8),
           Wrap(
             spacing: 10,
@@ -254,12 +254,11 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             ],
           ),
           const SizedBox(height: 14),
-          Text('Photo de couverture', style: theme.textTheme.labelLarge),
+          Text(context.tr('Photo de couverture'), style: theme.textTheme.labelLarge),
           const SizedBox(height: 4),
           if (_photos.isEmpty)
             Text(
-              'Prenez d\'abord une photo de votre devanture dans Photos ; '
-              'elle apparaîtra ici.',
+              context.tr('Prenez d\'abord une photo de votre devanture dans Photos ; elle apparaîtra ici.'),
               style: muted,
             )
           else
@@ -273,7 +272,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                     onTap: _saving
                         ? null
                         : () => setState(() => _coverKey = null),
-                    child: const Center(child: Text('Aucune')),
+                    child: Center(child: Text(context.tr('Aucune'))),
                   ),
                   for (final d in _photos)
                     _CoverChoice(
@@ -287,11 +286,11 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
               ),
             ),
           const SizedBox(height: 14),
-          Text('Articles en tête (${_pinned.length}/6)',
+          Text(context.tr('Articles en tête ({length}/6)', {'length': _pinned.length}),
               style: theme.textTheme.labelLarge),
           const SizedBox(height: 4),
           if (_products.isEmpty)
-            Text('Mettez d\'abord des articles sur la vitrine.', style: muted)
+            Text(context.tr('Mettez d\'abord des articles sur la vitrine.'), style: muted)
           else
             Wrap(
               spacing: 8,
@@ -319,7 +318,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             contentPadding: EdgeInsets.zero,
             value: _hideOut,
             onChanged: _saving ? null : (v) => setState(() => _hideOut = v),
-            title: const Text('Ne pas afficher les articles épuisés'),
+            title: Text(context.tr('Ne pas afficher les articles épuisés')),
           ),
           if (_message != null) ...[
             const SizedBox(height: 4),
@@ -337,7 +336,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.storefront_outlined),
-              label: const Text('Enregistrer la vitrine'),
+              label: Text(context.tr('Enregistrer la vitrine')),
             ),
           ),
         ],

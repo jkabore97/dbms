@@ -5,6 +5,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Every entry, newest first, in the words it was written in.
 ///
@@ -113,7 +114,7 @@ class _JournalScreenState extends State<JournalScreen> {
     final summaryOnly = widget.org.visibility == 'summary';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Journal')),
+      appBar: AppBar(title: Text(context.tr('Journal'))),
       body: Column(
         children: [
           const SizedBox(height: 12),
@@ -232,14 +233,14 @@ class _JournalTile extends StatelessWidget {
               // sees the words "débit" and "crédit" anywhere else in the app
               // and does not need to see them here either — "Vers" and "De"
               // say the same thing about where the money went.
-              _Fact(label: 'Vers', value: row.debitLabel),
-              _Fact(label: 'De', value: row.creditLabel),
+              _Fact(label: context.tr('Vers'), value: row.debitLabel),
+              _Fact(label: context.tr('De'), value: row.creditLabel),
               if (row.memo != null && row.memo!.isNotEmpty)
-                _Fact(label: 'Note', value: row.memo!),
+                _Fact(label: context.tr('Note'), value: row.memo!),
               for (final entry in row.details.entries)
                 _Fact(label: entry.key, value: '${entry.value}'),
               _Fact(
-                label: 'Enregistré',
+                label: context.tr('Enregistré'),
                 value: DateFormat('d MMMM y à HH:mm', 'fr_FR')
                     .format(row.occurredAt),
               ),

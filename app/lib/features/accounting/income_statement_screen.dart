@@ -5,6 +5,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Did the business earn or lose, over a period.
 ///
@@ -101,7 +102,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
         result < 0 ? theme.colorScheme.error : Colors.green.shade800;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Compte de résultat')),
+      appBar: AppBar(title: Text(context.tr('Compte de résultat'))),
       body: Column(
         children: [
           const SizedBox(height: 12),
@@ -142,14 +143,14 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                             children: [
                               Expanded(
                                 child: StatTile(
-                                  label: 'Reçu',
+                                  label: context.tr('Reçu'),
                                   amount: earned,
                                   money: money,
                                 ),
                               ),
                               Expanded(
                                 child: StatTile(
-                                  label: 'Dépensé',
+                                  label: context.tr('Dépensé'),
                                   amount: spent,
                                   money: money,
                                 ),
@@ -158,7 +159,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                           ),
                           const Divider(height: 28),
                           StatTile(
-                            label: result < 0 ? 'Perte' : 'Bénéfice',
+                            label: result < 0 ? context.tr('Perte') : context.tr('Bénéfice'),
                             amount: result,
                             money: money,
                             tint: resultTint,
@@ -171,7 +172,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                   if (income.isEmpty && expense.isEmpty)
                     const SummaryOnlyNotice(),
                   if (income.isNotEmpty) ...[
-                    const SectionHeader(title: 'Recettes'),
+                    SectionHeader(title: context.tr('Recettes')),
                     for (final line in income)
                       AmountRow(
                         label: line.label,
@@ -181,7 +182,7 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
                       ),
                   ],
                   if (expense.isNotEmpty) ...[
-                    const SectionHeader(title: 'Dépenses'),
+                    SectionHeader(title: context.tr('Dépenses')),
                     for (final line in expense)
                       AmountRow(
                         label: line.label,

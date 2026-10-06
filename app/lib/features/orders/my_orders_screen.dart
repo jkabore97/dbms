@@ -14,6 +14,7 @@ import '../storefront/shop_skeleton.dart';
 import '../pay/wave_buttons.dart';
 import 'order_tracking_panel.dart';
 import '../storefront/shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A customer's orders: what they asked for, where each one stands, and
 /// the one thing they can still do about a pending one — withdraw it.
@@ -79,7 +80,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     });
     if (!widget.storefront.isConfigured) {
       setState(() {
-        _error = "Vos commandes ont besoin d'une connexion.";
+        _error = context.tr('Vos commandes ont besoin d\'une connexion.');
         _loading = false;
       });
       return;
@@ -96,7 +97,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       if (!mounted) return;
       if (silent) return;
       setState(() {
-        _error = "Vos commandes n'ont pas pu être chargées. Vérifiez le réseau.";
+        _error = context.tr('Vos commandes n\'ont pas pu être chargées. Vérifiez le réseau.');
         _loading = false;
       });
     }
@@ -112,14 +113,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Payer avec Wave'),
+          title: Text(context.tr('Payer avec Wave')),
           content: Text('Dans votre application Wave, envoyez '
               '${moneyFormat(order.currency).format(order.total)} '
               'au marchand : $raw'),
           actions: [
             FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Compris')),
+                child: Text(context.tr('Compris'))),
           ],
         ),
       );
@@ -132,15 +133,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Annuler cette commande ?'),
-        content: Text('${order.shopName} ne la verra plus.'),
+        title: Text(context.tr('Annuler cette commande ?')),
+        content: Text(context.tr('{shopName} ne la verra plus.', {'shopName': order.shopName})),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Garder')),
+              child: Text(context.tr('Garder'))),
           FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Annuler la commande')),
+              child: Text(context.tr('Annuler la commande'))),
         ],
       ),
     );
@@ -151,8 +152,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       await _load();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Trop tard : la boutique a déjà répondu.")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('Trop tard : la boutique a déjà répondu.'))));
       await _load();
     } finally {
       if (mounted) setState(() => _busyId = null);
@@ -165,10 +166,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     final past = _orders.where((o) => !o.isOpen).toList();
 
     return ShopPage(
-      title: 'Mes commandes',
+      title: context.tr('Mes commandes'),
       announcements: ShopPage.street,
       leading: IconButton(
-        tooltip: 'Les vitrines',
+        tooltip: context.tr('Les vitrines'),
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go(Routes.directory),
       ),
@@ -178,14 +179,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               ? ShopNotice(
                   text: _error!,
                   action: OutlinedButton(
-                      onPressed: _load, child: const Text('Réessayer')),
+                      onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : _orders.isEmpty
                   ? ShopNotice(
                       text: "Vous n'avez pas encore commandé.",
                       action: FilledButton(
                         onPressed: () => context.go(Routes.directory),
-                        child: const Text('Voir les vitrines'),
+                        child: Text(context.tr('Voir les vitrines')),
                       ),
                     )
                   : ListView(
@@ -334,9 +335,9 @@ class _OrderCard extends StatelessWidget {
           if (order.fulfilment == 'delivery') ...[
             Row(
               children: [
-                const Expanded(
-                  child: Text('Livraison',
-                      style: TextStyle(fontSize: 14, color: ShopStyle.mist)),
+                Expanded(
+                  child: Text(context.tr('Livraison'),
+                      style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
                 ),
                 Text(
                     order.deliveryFee == null
@@ -349,9 +350,9 @@ class _OrderCard extends StatelessWidget {
           ],
           Row(
             children: [
-              const Expanded(
-                child: Text('Total',
-                    style: TextStyle(
+              Expanded(
+                child: Text(context.tr('Total'),
+                    style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: ShopStyle.ink)),
@@ -365,17 +366,17 @@ class _OrderCard extends StatelessWidget {
           ),
           if ((order.address ?? '').isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('Livraison : ${order.address}',
+            Text(context.tr('Livraison : {address}', {'address': order.address}),
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
           if ((order.courierName ?? '').isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text('Livreur : ${order.courierName}',
+            Text(context.tr('Livreur : {courierName}', {'courierName': order.courierName}),
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
           if ((order.note ?? '').isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text('Note : ${order.note}',
+            Text(context.tr('Note : {note}', {'note': order.note}),
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
           ?tracking,
@@ -402,7 +403,7 @@ class _OrderCard extends StatelessWidget {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Annuler la commande'),
+                  : Text(context.tr('Annuler la commande')),
             ),
           ],
         ],

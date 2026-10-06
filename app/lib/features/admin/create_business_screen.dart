@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/onboarding/onboarding_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Making a new business — the one screen only Kaj-consulting sees.
 ///
@@ -202,10 +203,10 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   String _describe(Object error) {
     final text = error.toString();
     if (text.contains('orgs_slug_key') || text.contains('duplicate key')) {
-      return "L'adresse « $_slug » est déjà utilisée par une autre activité.";
+      return context.tr('L\'adresse « {_slug} » est déjà utilisée par une autre activité.', {'_slug': _slug});
     }
     if (text.contains('Only a platform admin')) {
-      return "Ce compte n'a pas le droit de créer une activité.";
+      return context.tr('Ce compte n\'a pas le droit de créer une activité.');
     }
     return text;
   }
@@ -217,7 +218,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
         _slug.isEmpty ? null : CreateBusinessScreen.slugProblem(_slug);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nouvelle activité')),
+      appBar: AppBar(title: Text(context.tr('Nouvelle activité'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -227,10 +228,10 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               enabled: !_busy,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: "Nom de l'activité",
-                hintText: 'Association Bethel',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom de l\'activité'),
+                hintText: context.tr('Association Bethel'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -243,7 +244,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                 FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9-]')),
               ],
               decoration: InputDecoration(
-                labelText: 'Adresse',
+                labelText: context.tr('Adresse'),
                 helperText: slugProblem == null ? '$_slug.kajapp.com' : null,
                 errorText: slugProblem,
                 border: const OutlineInputBorder(),
@@ -251,7 +252,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             ),
             const SizedBox(height: 24),
 
-            Text('Type', style: theme.textTheme.titleSmall),
+            Text(context.tr('Type'), style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             // Cards rather than a radio group: four options each needing a
             // line of explanation do not fit a SegmentedButton, and this is
@@ -290,9 +291,9 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
                 ],
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Monnaie',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Monnaie'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -304,11 +305,10 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                 enabled: !_busy,
                 maxLines: 3,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Décrivez votre activité',
-                  helperText: 'Ce que vous vendez ou produisez, où, depuis '
-                      'quand. C’est ce que lira la personne qui valide.',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Décrivez votre activité'),
+                  helperText: context.tr('Ce que vous vendez ou produisez, où, depuis quand. C’est ce que lira la personne qui valide.'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],

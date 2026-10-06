@@ -4,6 +4,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/retail/retail_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// "Votre vitrine : 40 %" — what the window has and lacks (070).
 ///
@@ -111,10 +112,10 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
                           strokeWidth: 6,
                           backgroundColor:
                               theme.colorScheme.primary.withValues(alpha: 0.12),
-                          semanticsLabel: 'Vitrine complète à $score pour cent',
+                          semanticsLabel: context.tr('Vitrine complète à {score} pour cent', {'score': score}),
                         ),
                       ),
-                      Text('$score %',
+                      Text(context.tr('{score} %', {'score': score}),
                           key: const Key('vitrine-score'),
                           style: theme.textTheme.labelLarge
                               ?.copyWith(fontWeight: FontWeight.w800)),
@@ -124,7 +125,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                      score == 100 ? 'Vitrine complète' : 'Remplissez votre vitrine',
+                      score == 100 ? context.tr('Vitrine complète') : context.tr('Remplissez votre vitrine'),
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w800)),
                 ),
@@ -170,7 +171,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(tiles[k].$2,
+                        Text(context.tr(tiles[k].$2),
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -183,8 +184,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
             if (list.published == 0 && list.open) ...[
               const SizedBox(height: 8),
               Text(
-                "Tant qu'aucun article n'est publié, la vitrine n'apparaît pas "
-                "dans l'annuaire.",
+                context.tr('Tant qu\'aucun article n\'est publié, la vitrine n\'apparaît pas dans l\'annuaire.'),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.error),
               ),
@@ -194,7 +194,7 @@ class _VitrineChecklistCardState extends State<VitrineChecklistCard> {
               FilledButton.icon(
                 onPressed: _busy ? null : _publishAll,
                 icon: const Icon(Icons.storefront_outlined, size: 18),
-                label: Text('Tout publier (${list.unpublished})'),
+                label: Text(context.tr('Tout publier ({unpublished})', {'unpublished': list.unpublished})),
               ),
             ],
             if (_message != null) ...[

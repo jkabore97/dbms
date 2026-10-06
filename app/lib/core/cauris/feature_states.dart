@@ -1,3 +1,5 @@
+import '../l10n/tr.dart';
+
 /// What a business's tools cost in cauris, which are open, and its Basic
 /// path (085), read in one call — feature_states().
 class FeatureStates {
@@ -143,20 +145,22 @@ class BasicProgress {
         _ => pro ? 1 : 0,
       };
 
-  /// The goal, in a few words.
-  String goalFor(String feature) => switch (feature) {
-        'invoices' => 'Vitrine à $invoicesPct %',
-        'production' => 'Vitrine à $productionPct %',
-        'credits' => '$creditOrders commandes',
+  /// The goal, in a few words, in [language] (fr or en).
+  String goalFor(String feature, [String language = 'fr']) => switch (feature) {
+        'invoices' => translate(language, 'Vitrine à {pct} %', {'pct': invoicesPct}),
+        'production' => translate(language, 'Vitrine à {pct} %', {'pct': productionPct}),
+        'credits' => translate(language, '{n} commandes', {'n': creditOrders}),
         'second_business' => 'Mara Pro',
         _ => '',
       };
 
-  /// Where it stands, in a few words.
-  String needFor(String feature) => switch (feature) {
-        'invoices' || 'production' => 'Vitrine : $score %',
-        'credits' => 'Commandes : $orders / $creditOrders',
-        'second_business' => 'Avec Mara Pro',
+  /// Where it stands, in a few words, in [language].
+  String needFor(String feature, [String language = 'fr']) => switch (feature) {
+        'invoices' || 'production' =>
+          translate(language, 'Vitrine : {score} %', {'score': score}),
+        'credits' => translate(language, 'Commandes : {orders} / {need}',
+            {'orders': orders, 'need': creditOrders}),
+        'second_business' => translate(language, 'Avec Mara Pro'),
         _ => '',
       };
 

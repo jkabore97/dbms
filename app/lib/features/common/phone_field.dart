@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/phone/country_codes.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A phone field whose country code is chosen rather than assumed.
 ///
@@ -169,15 +170,15 @@ class _CountrySheetState extends State<_CountrySheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Indicatif du pays', style: theme.textTheme.titleLarge),
+                  Text(context.tr('Indicatif du pays'), style: theme.textTheme.titleLarge),
                   const SizedBox(height: 12),
                   TextField(
                     autofocus: true,
                     onChanged: (v) => setState(() => _query = v),
-                    decoration: const InputDecoration(
-                      hintText: 'Pays ou indicatif',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: context.tr('Pays ou indicatif'),
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -186,7 +187,7 @@ class _CountrySheetState extends State<_CountrySheet> {
             ),
             Expanded(
               child: near.isEmpty && far.isEmpty
-                  ? const Center(child: Text('Aucun pays trouvé.'))
+                  ? Center(child: Text(context.tr('Aucun pays trouvé.')))
                   : ListView(
                       children: [
                         if (near.isNotEmpty) ...[

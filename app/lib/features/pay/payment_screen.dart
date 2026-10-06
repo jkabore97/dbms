@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/pay/wave_pay.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Where Wave sends the person back (076): it waits for Wave's own word —
 /// the webhook, not the return address, decides — and says what happened.
@@ -77,7 +78,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? 'Wave signale un problème ; nous vérifions.'
                         : 'Nous attendons la confirmation de Wave.');
     return Scaffold(
-      appBar: AppBar(title: const Text('Paiement')),
+      appBar: AppBar(title: Text(context.tr('Paiement'))),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -102,7 +103,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 onPressed: () => context.canPop()
                     ? context.pop()
                     : context.go(Routes.myOrders),
-                child: const Text('Continuer'),
+                child: Text(context.tr('Continuer')),
               ),
             ],
           ),

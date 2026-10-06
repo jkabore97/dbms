@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Whether a pin sits far outside where a business using [currency] is.
 ///
@@ -84,7 +85,7 @@ class PinPreview extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Touchez la carte pour déplacer le repère sur la porte.',
+          context.tr('Touchez la carte pour déplacer le repère sur la porte.'),
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
@@ -103,9 +104,7 @@ class PinPreview extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Cette position est loin de la zone franc CFA. '
-                    "Si le téléphone n'était pas à la boutique, touchez la "
-                    'carte au bon endroit ou collez le lien Google Maps.',
+                    context.tr('Cette position est loin de la zone franc CFA. Si le téléphone n\'était pas à la boutique, touchez la carte au bon endroit ou collez le lien Google Maps.'),
                     style: TextStyle(color: theme.colorScheme.onErrorContainer),
                   ),
                 ),

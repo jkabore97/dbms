@@ -4,6 +4,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The shape of the business: its sites, and the departments inside them.
 ///
@@ -109,11 +110,11 @@ class _StructureScreenState extends State<StructureScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Enregistrer'),
+            child: Text(context.tr('Enregistrer')),
           ),
         ],
       ),
@@ -125,7 +126,7 @@ class _StructureScreenState extends State<StructureScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('${_entityWord}s et départements')),
+      appBar: AppBar(title: Text(context.tr('{_entityWord}s et départements', {'_entityWord': _entityWord}))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -194,10 +195,10 @@ class _StructureScreenState extends State<StructureScreen> {
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined),
-                              tooltip: 'Renommer',
+                              tooltip: context.tr('Renommer'),
                               onPressed: () async {
                                 final name = await _askName(
-                                  title: 'Renommer',
+                                  title: context.tr('Renommer'),
                                   initial: entity.name,
                                 );
                                 if (name == null || name.isEmpty) return;
@@ -217,10 +218,10 @@ class _StructureScreenState extends State<StructureScreen> {
                                 trailing: IconButton(
                                   icon:
                                       const Icon(Icons.edit_outlined, size: 20),
-                                  tooltip: 'Renommer',
+                                  tooltip: context.tr('Renommer'),
                                   onPressed: () async {
                                     final name = await _askName(
-                                      title: 'Renommer le département',
+                                      title: context.tr('Renommer le département'),
                                       initial: dept.name,
                                     );
                                     if (name == null || name.isEmpty) return;
@@ -235,10 +236,10 @@ class _StructureScreenState extends State<StructureScreen> {
                             padding: const EdgeInsets.fromLTRB(24, 0, 8, 8),
                             child: TextButton.icon(
                               icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Ajouter un département'),
+                              label: Text(context.tr('Ajouter un département')),
                               onPressed: () async {
                                 final name = await _askName(
-                                  title: 'Nouveau département',
+                                  title: context.tr('Nouveau département'),
                                   hint: 'Chorale, Volaille, Caisse…',
                                 );
                                 if (name == null || name.isEmpty) return;

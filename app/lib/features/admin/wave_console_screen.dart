@@ -6,6 +6,7 @@ import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/pay/wave_pay.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Console › Paiements Wave (076): the switches, the platform's share, and
 /// every payment with its payout — failed payouts first, since each is a
@@ -81,7 +82,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
     final when = DateFormat('d MMM, HH:mm', 'fr_FR');
     final failed = _rows.where((r) => r.payoutStatus == 'failed').length;
     return Scaffold(
-      appBar: AppBar(title: const Text('Paiements Wave')),
+      appBar: AppBar(title: Text(context.tr('Paiements Wave'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -90,27 +91,24 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                 if (!_pay!.compiledIn)
                   KajCard(
                     color: theme.colorScheme.tertiaryContainer,
-                    child: const ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text("Cette version de l'app ne connaît pas le "
-                          'service de paiement (PAY_URL).'),
+                    child: ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(context.tr('Cette version de l\'app ne connaît pas le service de paiement (PAY_URL).')),
                     ),
                   ),
                 SwitchListTile(
                   value: _terms.on,
                   onChanged: _busy ? null : (v) => _set('wave_checkout', v),
-                  title: const Text('Paiement Wave dans Mara'),
-                  subtitle: const Text(
-                      'Commandes, Mara Pro et mises en avant. À ouvrir une fois '
-                      'la clé Wave installée et un essai réussi.'),
+                  title: Text(context.tr('Paiement Wave dans Mara')),
+                  subtitle: Text(
+                      context.tr('Commandes, Mara Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.')),
                 ),
                 SwitchListTile(
                   value: _terms.card,
                   onChanged: _busy ? null : (v) => _set('wave_card', v),
-                  title: const Text('Proposer « Payer par carte »'),
-                  subtitle: const Text(
-                      'Seulement si la page de paiement Wave accepte les cartes '
-                      'pour votre compte.'),
+                  title: Text(context.tr('Proposer « Payer par carte »')),
+                  subtitle: Text(
+                      context.tr('Seulement si la page de paiement Wave accepte les cartes pour votre compte.')),
                 ),
                 const SizedBox(height: 8),
                 Row(children: [
@@ -119,9 +117,9 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                       controller: _share,
                       enabled: !_busy,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Part de la plateforme sur une commande (%)',
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: context.tr('Part de la plateforme sur une commande (%)'),
                       ),
                     ),
                   ),
@@ -131,7 +129,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                         ? null
                         : () => _set('wave_commission_pct',
                             num.tryParse(_share.text.replaceAll(',', '.')) ?? 0),
-                    child: const Text('Enregistrer'),
+                    child: Text(context.tr('Enregistrer')),
                   ),
                 ]),
                 const SizedBox(height: 24),
@@ -142,9 +140,9 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                     style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (_rows.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Aucun paiement Wave pour le moment.'),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(context.tr('Aucun paiement Wave pour le moment.')),
                   ),
                 for (final r in _rows)
                   KajCard(

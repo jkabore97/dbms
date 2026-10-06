@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/orders/orders.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Where an order is, for the person who placed it (073).
 ///
@@ -99,8 +100,8 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('CODE À DONNER AU LIVREUR',
-                    style: TextStyle(
+                Text(context.tr('CODE À DONNER AU LIVREUR'),
+                    style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
@@ -113,9 +114,9 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
                         fontWeight: FontWeight.w700,
                         letterSpacing: 8,
                         color: ShopStyle.ink)),
-                const Text(
-                    'Donnez-le seulement quand vous avez votre commande en main.',
-                    style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+                Text(
+                    context.tr('Donnez-le seulement quand vous avez votre commande en main.'),
+                    style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
               ],
             ),
           ),
@@ -135,7 +136,7 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
               OutlinedButton.icon(
                 onPressed: () => widget.onCall('tel:${t.shopPhone}'),
                 icon: const Icon(Icons.storefront_outlined, size: 18),
-                label: const Text('Appeler la boutique'),
+                label: Text(context.tr('Appeler la boutique')),
               ),
           ],
         ),
@@ -147,10 +148,10 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
     final label = OrderClock(since: t.since).sinceLabel();
     if (label.isEmpty) return null;
     if (t.status == 'in_transit' && t.selfDelivered) {
-      return '${t.shopName} vous livre lui-même · $label';
+      return context.tr('{shopName} vous livre lui-même · {label}', {'shopName': t.shopName, 'label': label});
     }
     if (t.status == 'in_transit' && t.courierName != null) {
-      return '${t.courierName} · $label';
+      return context.tr('{courierName} · {label}', {'courierName': t.courierName, 'label': label});
     }
     return label;
   }

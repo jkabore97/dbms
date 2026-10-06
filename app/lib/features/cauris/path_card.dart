@@ -7,6 +7,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One tool on the path (089): its picture, its name, what opens it.
 typedef _Step = ({String key, IconData icon, String label});
@@ -77,7 +78,7 @@ class PathCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Text('Votre vitrine ouvre vos outils',
+                  child: Text(context.tr('Votre vitrine ouvre vos outils'),
                       style: theme.textTheme.titleMedium?.copyWith(
                           color: maraCream, fontWeight: FontWeight.w800)),
                 ),
@@ -137,11 +138,11 @@ class _Tile extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Text(step.label,
+        Text(context.tr(step.label),
             textAlign: TextAlign.center,
             style: theme.textTheme.labelSmall
                 ?.copyWith(color: maraCream, fontWeight: FontWeight.w700)),
-        Text(open ? 'Ouvert' : progress.goalFor(step.key),
+        Text(open ? context.tr('Ouvert') : progress.goalFor(step.key, context.trLanguage),
             textAlign: TextAlign.center,
             style: theme.textTheme.labelSmall
                 ?.copyWith(color: maraCream.withValues(alpha: 0.7), fontSize: 10)),
@@ -219,12 +220,12 @@ class PathGate {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(step.label.isEmpty ? 'Verrouillé' : step.label,
+                Text(context.tr(step.label.isEmpty ? 'Verrouillé' : step.label),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
-                Text('Se débloque : ${progress.goalFor(feature)}',
+                Text('Se débloque : ${progress.goalFor(feature, context.trLanguage)}',
                     key: const Key('path-goal'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleSmall),
@@ -244,7 +245,7 @@ class PathGate {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(progress.needFor(feature),
+                Text(progress.needFor(feature, context.trLanguage),
                     key: const Key('path-need'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium),
@@ -257,7 +258,7 @@ class PathGate {
                       context.push(Routes.inside(org.id, 'kaj-pro'));
                     },
                     icon: const Icon(Icons.workspace_premium),
-                    label: const Text('Voir Mara Pro'),
+                    label: Text(context.tr('Voir Mara Pro')),
                   )
                 else if (feature == 'credits')
                   FilledButton.icon(
@@ -267,7 +268,7 @@ class PathGate {
                       context.push(Routes.inside(org.id, 'commandes'));
                     },
                     icon: const Icon(Icons.shopping_bag),
-                    label: const Text('Mes commandes'),
+                    label: Text(context.tr('Mes commandes')),
                   )
                 else
                   FilledButton.icon(
@@ -277,7 +278,7 @@ class PathGate {
                       context.push(Routes.orgSettings(org.id));
                     },
                     icon: const Icon(Icons.storefront),
-                    label: const Text('Compléter ma vitrine'),
+                    label: Text(context.tr('Compléter ma vitrine')),
                   ),
                 if (view != null) ...[
                   const SizedBox(height: 8),
@@ -288,7 +289,7 @@ class PathGate {
                       view();
                     },
                     icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Voir (lecture seule)'),
+                    label: Text(context.tr('Voir (lecture seule)')),
                   ),
                 ],
               ],

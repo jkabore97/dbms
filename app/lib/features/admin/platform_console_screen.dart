@@ -13,6 +13,7 @@ import '../../core/theme/kaj_theme.dart';
 import 'console_today.dart';
 import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The console for somebody running a platform with thousands of businesses
 /// on it.
@@ -114,7 +115,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
     if (!widget.console.isConfigured) {
       setState(() {
         _loading = false;
-        _error = "Cette version de l'application a été compilée sans serveur.";
+        _error = context.tr('Cette version de l\'application a été compilée sans serveur.');
       });
       return;
     }
@@ -294,7 +295,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Console'),
+        title: Text(context.tr('Console')),
         actions: [
           IconButton(
             onPressed: _loading
@@ -304,14 +305,14 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                     _load();
                   },
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.add_business_outlined),
-        label: const Text('Nouvelle entreprise'),
+        label: Text(context.tr('Nouvelle entreprise')),
       ),
       body: Column(
         children: [
@@ -325,7 +326,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 ConsoleToday(key: _todayKey, admin: widget.admin),
                 const _Tools(),
                 const SizedBox(height: 20),
-                Text('Entreprises', style: theme.textTheme.titleMedium),
+                Text(context.tr('Entreprises'), style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 _StatStrip(
                   overview: _overview,
@@ -343,13 +344,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 if (_legacy)
                   KajCard(
                     color: theme.colorScheme.tertiaryContainer,
-                    child: const ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text("Base de données à mettre à jour"),
+                    child: ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(context.tr('Base de données à mettre à jour')),
                       subtitle: Text(
-                        'La console fonctionne en mode réduit : recherche et '
-                        'filtres sont appliqués sur cet appareil. Appliquez '
-                        'la migration 021 pour la recherche côté serveur.',
+                        context.tr('La console fonctionne en mode réduit : recherche et filtres sont appliqués sur cet appareil. Appliquez la migration 021 pour la recherche côté serveur.'),
                       ),
                     ),
                   ),
@@ -361,7 +360,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                       title: Text(_error!),
                       trailing: TextButton(
                         onPressed: _load,
-                        child: const Text('Réessayer'),
+                        child: Text(context.tr('Réessayer')),
                       ),
                     ),
                   )
@@ -381,7 +380,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: () => _applyFilter(clear: true),
-                              child: const Text('Effacer les filtres'),
+                              child: Text(context.tr('Effacer les filtres')),
                             ),
                           ],
                         ],
@@ -420,13 +419,13 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           controller: _searchController,
           onChanged: _onQueryChanged,
           decoration: InputDecoration(
-            hintText: 'Rechercher par nom ou identifiant…',
+            hintText: context.tr('Rechercher par nom ou identifiant…'),
             prefixIcon: const Icon(Icons.search),
             isDense: true,
             suffixIcon: _searchController.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Effacer',
+                    tooltip: context.tr('Effacer'),
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       _searchController.clear();
@@ -442,7 +441,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            for (final entry in const {
+            for (final entry in {
               'farm': 'Fermes',
               'retail': 'Boutiques',
               'church': 'Associations',
@@ -465,11 +464,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 });
                 _load();
               },
-              itemBuilder: (_) => const [
+              itemBuilder: (_) => [
                 PopupMenuItem(
-                    value: 'activity', child: Text('Activité récente')),
-                PopupMenuItem(value: 'name', child: Text('Nom')),
-                PopupMenuItem(value: 'newest', child: Text('Plus récentes')),
+                    value: 'activity', child: Text(context.tr('Activité récente'))),
+                PopupMenuItem(value: 'name', child: Text(context.tr('Nom'))),
+                PopupMenuItem(value: 'newest', child: Text(context.tr('Plus récentes'))),
               ],
               child: Chip(
                 avatar: const Icon(Icons.sort, size: 18),
@@ -484,7 +483,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               TextButton.icon(
                 onPressed: () => _applyFilter(clear: true),
                 icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-                label: const Text('Tout effacer'),
+                label: Text(context.tr('Tout effacer')),
               ),
           ],
         ),
@@ -520,7 +519,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                     _load();
                   },
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Page précédente',
+            tooltip: context.tr('Page précédente'),
           ),
           Text('${_page + 1} / $_pageCount', style: theme.textTheme.bodyMedium),
           IconButton(
@@ -531,7 +530,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                     _load();
                   },
             icon: const Icon(Icons.chevron_right),
-            tooltip: 'Page suivante',
+            tooltip: context.tr('Page suivante'),
           ),
         ],
       ),
@@ -567,7 +566,7 @@ class _StatStrip extends StatelessWidget {
       runSpacing: 10,
       children: [
         _StatTile(
-          label: 'Entreprises',
+          label: context.tr('Entreprises'),
           value: number.format(overview.active),
           hint: overview.newThisWeek > 0
               ? '+${overview.newThisWeek} cette semaine'
@@ -577,14 +576,14 @@ class _StatStrip extends StatelessWidget {
           onTap: () => onSelect(null, 'active'),
         ),
         _StatTile(
-          label: 'Actives (7 j)',
+          label: context.tr('Actives (7 j)'),
           value: number.format(overview.active7d),
           colour: palette.tint(2),
           selected: activity == 'active7',
           onTap: () => onSelect('active7', 'active'),
         ),
         _StatTile(
-          label: 'Silencieuses (30 j)',
+          label: context.tr('Silencieuses (30 j)'),
           value: number.format(overview.silent30d),
           hint: overview.silent30d > 0 ? 'à rappeler' : null,
           colour: const Color(0xFFB1541A),
@@ -592,7 +591,7 @@ class _StatStrip extends StatelessWidget {
           onTap: () => onSelect('silent30', 'active'),
         ),
         _StatTile(
-          label: 'Jamais utilisées',
+          label: context.tr('Jamais utilisées'),
           value: number.format(overview.neverActive),
           colour: const Color(0xFFB03B3B),
           selected: activity == 'never',
@@ -601,7 +600,7 @@ class _StatStrip extends StatelessWidget {
         // The first revenue number (065). Tapping it lists the businesses
         // behind it, the way every other tile does.
         _StatTile(
-          label: 'Mara Pro',
+          label: context.tr('Mara Pro'),
           value: number.format(overview.pro),
           hint: overview.pro == 0 ? 'aucune encore' : 'payantes',
           colour: const Color(0xFF2E7D5B),
@@ -609,7 +608,7 @@ class _StatStrip extends StatelessWidget {
           onTap: () => onSelect('pro', 'active'),
         ),
         _StatTile(
-          label: 'Archivées',
+          label: context.tr('Archivées'),
           value: number.format(overview.archived),
           colour: Theme.of(context).colorScheme.outline,
           selected: status == 'archived',
@@ -698,14 +697,14 @@ class _TableHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Row(
         children: [
-          Expanded(flex: 5, child: Text('ENTREPRISE', style: style)),
-          Expanded(flex: 2, child: Text('TYPE', style: style)),
+          Expanded(flex: 5, child: Text(context.tr('ENTREPRISE'), style: style)),
+          Expanded(flex: 2, child: Text(context.tr('TYPE'), style: style)),
           Expanded(
               flex: 2,
-              child: Text('MEMBRES', style: style, textAlign: TextAlign.right)),
+              child: Text(context.tr('MEMBRES'), style: style, textAlign: TextAlign.right)),
           Expanded(
               flex: 3,
-              child: Text('DERNIÈRE ACTIVITÉ',
+              child: Text(context.tr('DERNIÈRE ACTIVITÉ'),
                   style: style, textAlign: TextAlign.right)),
           const SizedBox(width: 40),
         ],
@@ -740,24 +739,24 @@ class _OrgRowTile extends StatelessWidget {
   ({String label, Color colour}) _health(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return switch (org.health) {
-      OrgHealth.healthy => (label: 'Active', colour: const Color(0xFF0E7A63)),
-      OrgHealth.slowing => (label: 'Ralentit', colour: const Color(0xFFA96A0B)),
+      OrgHealth.healthy => (label: context.tr('Active'), colour: const Color(0xFF0E7A63)),
+      OrgHealth.slowing => (label: context.tr('Ralentit'), colour: const Color(0xFFA96A0B)),
       OrgHealth.silent => (
-          label: 'Silencieuse',
+          label: context.tr('Silencieuse'),
           colour: const Color(0xFFB1541A)
         ),
       OrgHealth.neverStarted => (
-          label: 'Jamais utilisée',
+          label: context.tr('Jamais utilisée'),
           colour: const Color(0xFFB03B3B)
         ),
-      OrgHealth.archived => (label: 'Archivée', colour: scheme.outline),
+      OrgHealth.archived => (label: context.tr('Archivée'), colour: scheme.outline),
     };
   }
 
   String _lastActivity() {
     if (org.lastActivityAt == null) return '—';
     final days = org.daysSinceActivity!;
-    if (days == 0) return "aujourd'hui";
+    if (days == 0) return 'aujourd\'hui';
     if (days == 1) return 'hier';
     if (days < 30) return 'il y a $days j';
     return date.format(org.lastActivityAt!);
@@ -771,13 +770,13 @@ class _OrgRowTile extends StatelessWidget {
     final menu = PopupMenuButton<String>(
       onSelected: onAction,
       itemBuilder: (_) => [
-        const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+        PopupMenuItem(value: 'edit', child: Text(context.tr('Modifier'))),
         if (org.isArchived)
-          const PopupMenuItem(value: 'restore', child: Text('Restaurer'))
+          PopupMenuItem(value: 'restore', child: Text(context.tr('Restaurer')))
         else
-          const PopupMenuItem(value: 'archive', child: Text('Archiver')),
+          PopupMenuItem(value: 'archive', child: Text(context.tr('Archiver'))),
         if (org.isArchived)
-          const PopupMenuItem(value: 'delete', child: Text('Supprimer…')),
+          PopupMenuItem(value: 'delete', child: Text(context.tr('Supprimer…'))),
       ],
     );
 
@@ -840,7 +839,7 @@ class _OrgRowTile extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        '${org.memberCount}',
+                        context.tr('{memberCount}', {'memberCount': org.memberCount}),
                         textAlign: TextAlign.right,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -928,7 +927,7 @@ class _Tools extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Outils', style: theme.textTheme.titleMedium),
+        Text(context.tr('Outils'), style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,

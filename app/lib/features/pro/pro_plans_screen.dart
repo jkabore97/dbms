@@ -14,6 +14,7 @@ import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import '../cauris/cauri_icon.dart';
 import '../cauris/unlock_sheet.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Kaj and Kaj Pro, side by side (`/o/<id>/kaj-pro`).
 ///
@@ -135,7 +136,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mara Pro')),
+      appBar: AppBar(title: Text(context.tr('Mara Pro'))),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: wide ? 48 : 20, vertical: 24),
         children: [
@@ -182,7 +183,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       child: SegmentedButton<String>(
                         key: const Key('pro-period'),
                         segments: [
-                          const ButtonSegment(value: 'month', label: Text('Mensuel')),
+                          ButtonSegment(value: 'month', label: Text(context.tr('Mensuel'))),
                           ButtonSegment(
                             value: 'year',
                             label: Text(_monthsOffered > 0
@@ -326,7 +327,7 @@ class _EarnIt extends StatelessWidget {
               const CauriIcon(size: 26),
               const SizedBox(width: 10),
               Expanded(
-                child: Text('Ou gagnez Mara Pro',
+                child: Text(context.tr('Ou gagnez Mara Pro'),
                     style: theme.textTheme.titleMedium?.copyWith(
                         color: maraCream, fontWeight: FontWeight.w700)),
               ),
@@ -334,9 +335,7 @@ class _EarnIt extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Vos commandes, vos clients fidèles et votre vitrine rapportent des '
-            'cauris. Avec $cost cauris, tout Mara Pro est à vous pour 30 jours — '
-            'ou débloquez un seul outil pour moins.',
+            context.tr('Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Mara Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.', {'cost': cost}),
             style: theme.textTheme.bodyMedium?.copyWith(color: maraCream),
           ),
           const SizedBox(height: 12),
@@ -345,7 +344,7 @@ class _EarnIt extends StatelessWidget {
             style: FilledButton.styleFrom(
                 backgroundColor: maraGold, foregroundColor: maraIndigo),
             icon: const CauriIcon(size: 16, color: maraIndigo),
-            label: Text('Débloquer avec $cost cauris'),
+            label: Text(context.tr('Débloquer avec {cost} cauris', {'cost': cost})),
           ),
         ],
       ),
@@ -369,8 +368,8 @@ class _Header extends StatelessWidget {
           flex: 2,
           child: Column(
             children: [
-              Text('Mara', style: theme.textTheme.titleSmall),
-              Text('Gratuit', style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
+              Text(context.tr('Mara'), style: theme.textTheme.titleSmall),
+              Text(context.tr('Gratuit'), style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
             ],
           ),
         ),
@@ -384,7 +383,7 @@ class _Header extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('Mara Pro',
+                Text(context.tr('Mara Pro'),
                     style: theme.textTheme.titleSmall?.copyWith(color: kPaper)),
                 if (proPrice != null)
                   Text(proPrice!,

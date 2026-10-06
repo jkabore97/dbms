@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/invoicing/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../accounting/report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The invoice itself. Deliberately a white sheet with black text whatever the
 /// business's palette is: this leaves the app and lands in somebody else's
@@ -60,12 +61,12 @@ class InvoicePaper extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('FACTURE',
-                        style: TextStyle(
+                    Text(context.tr('FACTURE'),
+                        style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2)),
-                    Text('N° ${doc.number}',
+                    Text(context.tr('N° {number}', {'number': doc.number}),
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text(date.format(doc.issuedOn)),
                     if (doc.dueOn != null)
@@ -82,9 +83,9 @@ class InvoicePaper extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                 color: const Color(0xFFFDECEA),
-                child: const Text(
-                  'FACTURE ANNULÉE',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('FACTURE ANNULÉE'),
+                  style: const TextStyle(
                     color: Color(0xFF8C1D18),
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
@@ -94,8 +95,8 @@ class InvoicePaper extends StatelessWidget {
             ],
 
             const SizedBox(height: 20),
-            const Text('Facturé à',
-                style: TextStyle(fontSize: 11, color: Color(0xFF6B6B6B))),
+            Text(context.tr('Facturé à'),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF6B6B6B))),
             Text(doc.customerName,
                 style:
                     const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
@@ -109,11 +110,11 @@ class InvoicePaper extends StatelessWidget {
             for (final line in doc.lines) _LineRow(line: line, money: money),
 
             const Divider(height: 24, color: Color(0xFFDDDDDD)),
-            _Total(label: 'Total', value: money.format(doc.total), bold: true),
+            _Total(label: context.tr('Total'), value: money.format(doc.total), bold: true),
             if (doc.paid > 0) ...[
-              _Total(label: 'Déjà payé', value: money.format(doc.paid)),
+              _Total(label: context.tr('Déjà payé'), value: money.format(doc.paid)),
               _Total(
-                label: 'Reste à payer',
+                label: context.tr('Reste à payer'),
                 value: money.format(doc.outstanding),
                 bold: true,
                 colour: doc.outstanding > 0 ? const Color(0xFFB3261E) : null,
@@ -125,9 +126,9 @@ class InvoicePaper extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                 color: const Color(0xFFE6F4EA),
-                child: const Text(
-                  'PAYÉE',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('PAYÉE'),
+                  style: const TextStyle(
                     color: Color(0xFF1E6B3A),
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
@@ -168,16 +169,16 @@ class _LineHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(flex: 5, child: Text('DÉSIGNATION', style: style)),
+          Expanded(flex: 5, child: Text(context.tr('DÉSIGNATION'), style: style)),
           Expanded(
               flex: 2,
-              child: Text('QTÉ', style: style, textAlign: TextAlign.right)),
+              child: Text(context.tr('QTÉ'), style: style, textAlign: TextAlign.right)),
           Expanded(
               flex: 3,
               child: Text('P.U.', style: style, textAlign: TextAlign.right)),
           Expanded(
               flex: 3,
-              child: Text('MONTANT', style: style, textAlign: TextAlign.right)),
+              child: Text(context.tr('MONTANT'), style: style, textAlign: TextAlign.right)),
         ],
       ),
     );

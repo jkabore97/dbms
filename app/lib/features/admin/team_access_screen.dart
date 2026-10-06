@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The owner's dial: per tool, per tier, who sees and who edits.
 ///
@@ -106,9 +107,8 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
     try {
       await widget.admin.saveFeatureRules(widget.orgId, _rules);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Enregistré. Les écrans de l’équipe suivront à '
-              'leur prochaine ouverture.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('Enregistré. Les écrans de l’équipe suivront à leur prochaine ouverture.'))));
       setState(() => _busy = false);
     } catch (error) {
       if (!mounted) return;
@@ -137,10 +137,10 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                   visualDensity: VisualDensity.compact,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap),
               segments: [
-                const ButtonSegment(value: 'hidden', label: Text('Caché')),
-                const ButtonSegment(value: 'view', label: Text('Voir')),
+                ButtonSegment(value: 'hidden', label: Text(context.tr('Caché'))),
+                ButtonSegment(value: 'view', label: Text(context.tr('Voir'))),
                 if (feature.editable)
-                  const ButtonSegment(value: 'edit', label: Text('Modifier')),
+                  ButtonSegment(value: 'edit', label: Text(context.tr('Modifier'))),
               ],
               selected: {value},
               onSelectionChanged: _busy
@@ -158,17 +158,14 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text("Accès de l'équipe")),
+      appBar: AppBar(title: Text(context.tr('Accès de l\'équipe'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
                 Text(
-                  'Ce que chaque niveau voit et peut modifier. Les '
-                  'propriétaires et administrateurs gardent toujours tout. '
-                  'Les prix, le crédit et la production sont aussi refusés '
-                  'par le serveur — pas seulement cachés.',
+                  context.tr('Ce que chaque niveau voit et peut modifier. Les propriétaires et administrateurs gardent toujours tout. Les prix, le crédit et la production sont aussi refusés par le serveur — pas seulement cachés.'),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
@@ -224,7 +221,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.check),
-              label: const Text('Enregistrer'),
+              label: Text(context.tr('Enregistrer')),
             ),
     );
   }

@@ -10,6 +10,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Recording a sale, with a customer standing there.
 ///
@@ -204,7 +205,7 @@ class _SaleSheetState extends State<SaleSheet> {
     final capture = widget.capture;
     if (capture == null) return;
 
-    final code = await BarcodeSheet.scan(context, title: 'Scanner un article');
+    final code = await BarcodeSheet.scan(context, title: context.tr('Scanner un article'));
     if (code == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
@@ -224,8 +225,7 @@ class _SaleSheetState extends State<SaleSheet> {
 
       if (row == null) {
         messenger.showSnackBar(SnackBar(
-          content: Text('Code $code inconnu dans cette boutique. '
-              'Ajoutez l’article depuis Articles.'),
+          content: Text(context.tr('Code {code} inconnu dans cette boutique. Ajoutez l’article depuis Articles.', {'code': code})),
         ));
         return;
       }
@@ -258,11 +258,11 @@ class _SaleSheetState extends State<SaleSheet> {
 
   Future<void> _save() async {
     if (_lines.isEmpty) {
-      setState(() => _error = 'Ajoutez au moins un article.');
+      setState(() => _error = context.tr('Ajoutez au moins un article.'));
       return;
     }
     if (_method == 'credit' && _customerController.text.trim().isEmpty) {
-      setState(() => _error = 'Entrez le nom du client pour un crédit.');
+      setState(() => _error = context.tr('Entrez le nom du client pour un crédit.'));
       return;
     }
     if (!await _stockAllows()) return;
@@ -332,9 +332,8 @@ class _SaleSheetState extends State<SaleSheet> {
                 _method == 'credit' ? _customerController.text.trim() : null,
           );
           if (!mounted) return;
-          ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(
-              content: Text('Pas de réseau : vente gardée sur le téléphone. '
-                  'Elle partira dès le retour de la connexion.')));
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+              content: Text(context.tr('Pas de réseau : vente gardée sur le téléphone. Elle partira dès le retour de la connexion.'))));
           Navigator.of(context).pop(true);
           return;
         } catch (_) {}
@@ -374,17 +373,17 @@ class _SaleSheetState extends State<SaleSheet> {
     final go = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('Stock insuffisant'),
+        title: Text(context.tr('Stock insuffisant')),
         content: Text('${short.join('\n')}\n\nLe stock passera sous zéro. '
             'Vendre quand même ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialog).pop(false),
-            child: const Text('Corriger'),
+            child: Text(context.tr('Corriger')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialog).pop(true),
-            child: const Text('Vendre quand même'),
+            child: Text(context.tr('Vendre quand même')),
           ),
         ],
       ),
@@ -464,13 +463,13 @@ class _SaleSheetState extends State<SaleSheet> {
               children: [
                 Expanded(
                   child:
-                      Text('Nouvelle vente', style: theme.textTheme.titleLarge),
+                      Text(context.tr('Nouvelle vente'), style: theme.textTheme.titleLarge),
                 ),
                 if (widget.capture != null)
                   IconButton(
                     onPressed: _busy ? null : _scan,
                     icon: const Icon(Icons.qr_code_scanner),
-                    tooltip: 'Scanner un code-barres',
+                    tooltip: context.tr('Scanner un code-barres'),
                   ),
               ],
             ),
@@ -485,13 +484,13 @@ class _SaleSheetState extends State<SaleSheet> {
                   enabled: !_busy,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    hintText: 'Rechercher un article…',
+                    hintText: context.tr('Rechercher un article…'),
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchController.text.isEmpty
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.close),
-                            tooltip: 'Effacer',
+                            tooltip: context.tr('Effacer'),
                             onPressed: () =>
                                 setState(_searchController.clear),
                           ),
@@ -505,8 +504,7 @@ class _SaleSheetState extends State<SaleSheet> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    'Aucun article ne correspond — tapez le nom ci-dessous '
-                    'pour le vendre quand même.',
+                    context.tr('Aucun article ne correspond — tapez le nom ci-dessous pour le vendre quand même.'),
                     style: theme.textTheme.bodySmall,
                   ),
                 )
@@ -533,10 +531,10 @@ class _SaleSheetState extends State<SaleSheet> {
               controller: _nameController,
               enabled: !_busy,
               onChanged: (_) => setState(() => _picked = null),
-              decoration: const InputDecoration(
-                labelText: 'Article',
-                hintText: 'Sucre 1kg',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Article'),
+                hintText: context.tr('Sucre 1kg'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -549,9 +547,9 @@ class _SaleSheetState extends State<SaleSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      labelText: 'Quantité',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Quantité'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -565,9 +563,9 @@ class _SaleSheetState extends State<SaleSheet> {
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                     ],
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      labelText: 'Prix unitaire',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Prix unitaire'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -577,7 +575,7 @@ class _SaleSheetState extends State<SaleSheet> {
             OutlinedButton.icon(
               onPressed: _canAddLine && !_busy ? _addLine : null,
               icon: const Icon(Icons.add),
-              label: const Text('Ajouter au panier'),
+              label: Text(context.tr('Ajouter au panier')),
             ),
             if (_lines.isNotEmpty) ...[
               const SizedBox(height: 20),
@@ -596,7 +594,7 @@ class _SaleSheetState extends State<SaleSheet> {
                           style: theme.textTheme.titleMedium),
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
-                        tooltip: 'Retirer',
+                        tooltip: context.tr('Retirer'),
                         onPressed: _busy
                             ? null
                             : () => setState(() => _lines.removeAt(entry.key)),
@@ -609,7 +607,7 @@ class _SaleSheetState extends State<SaleSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Total', style: theme.textTheme.titleMedium),
+                  Text(context.tr('Total'), style: theme.textTheme.titleMedium),
                   Text(
                     _money.format(_total),
                     style: theme.textTheme.headlineSmall
@@ -622,18 +620,18 @@ class _SaleSheetState extends State<SaleSheet> {
             SegmentedButton<String>(
               showSelectedIcon: false,
               segments: [
-                const ButtonSegment(value: 'cash', label: Text('Espèces')),
-                const ButtonSegment(
-                    value: 'mobile_money', label: Text('Mobile')),
+                ButtonSegment(value: 'cash', label: Text(context.tr('Espèces'))),
+                ButtonSegment(
+                    value: 'mobile_money', label: Text(context.tr('Mobile'))),
                 if (_waveMerchant != null && widget.allowWave)
-                  const ButtonSegment(
+                  ButtonSegment(
                     value: 'wave',
-                    label: Text('Wave'),
-                    icon: Icon(Icons.qr_code_2),
+                    label: Text(context.tr('Wave')),
+                    icon: const Icon(Icons.qr_code_2),
                   ),
-                const ButtonSegment(value: 'bank', label: Text('Banque')),
+                ButtonSegment(value: 'bank', label: Text(context.tr('Banque'))),
                 if (widget.canCredit)
-                  const ButtonSegment(value: 'credit', label: Text('Crédit')),
+                  ButtonSegment(value: 'credit', label: Text(context.tr('Crédit'))),
               ],
               selected: {_method},
               onSelectionChanged: _busy
@@ -679,8 +677,8 @@ class _SaleSheetState extends State<SaleSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('À encaisser',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text(context.tr('À encaisser'),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -707,12 +705,12 @@ class _SaleSheetState extends State<SaleSheet> {
               TextField(
                 controller: _customerController,
                 enabled: !_busy,
-                decoration: const InputDecoration(
-                  labelText: 'Nom du client',
+                decoration: InputDecoration(
+                  labelText: context.tr('Nom du client'),
                   // The same sale as always — the goods leave, the day's
                   // totals count it — only the money waits in the carnet.
-                  helperText: 'La vente ira dans le carnet de crédit.',
-                  border: OutlineInputBorder(),
+                  helperText: context.tr('La vente ira dans le carnet de crédit.'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
@@ -795,9 +793,9 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Paiement Wave', style: theme.textTheme.titleLarge),
+          Text(context.tr('Paiement Wave'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
-          Text('Faites scanner ce code au client, puis entrez son nom Wave.',
+          Text(context.tr('Faites scanner ce code au client, puis entrez son nom Wave.'),
               style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
           Center(
@@ -831,10 +829,10 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
             autofocus: true,
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Nom de l\'expéditeur Wave',
-              helperText: 'Le nom qui apparaît sur le paiement Wave.',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nom de l\'expéditeur Wave'),
+              helperText: context.tr('Le nom qui apparaît sur le paiement Wave.'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 20),
@@ -843,7 +841,7 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Annuler'),
+                  child: Text(context.tr('Annuler')),
                 ),
               ),
               const SizedBox(width: 12),
@@ -856,7 +854,7 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
                         : () => Navigator.of(context)
                             .pop(_senderController.text.trim()),
                     icon: const Icon(Icons.check),
-                    label: const Text('Paiement reçu'),
+                    label: Text(context.tr('Paiement reçu')),
                   ),
                 ),
               ),
@@ -896,7 +894,7 @@ class WaveReceiptDialog extends StatelessWidget {
 
     return AlertDialog(
       icon: const Icon(Icons.check_circle_outline, color: Color(0xFF0E7A63), size: 40),
-      title: const Text('Paiement Wave reçu'),
+      title: Text(context.tr('Paiement Wave reçu')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -912,7 +910,7 @@ class WaveReceiptDialog extends StatelessWidget {
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Terminer'),
+          child: Text(context.tr('Terminer')),
         ),
       ],
     );
@@ -977,7 +975,7 @@ class TenderReceiptDialog extends StatelessWidget {
     return AlertDialog(
       icon: const Icon(Icons.check_circle_outline,
           color: Color(0xFF0E7A63), size: 40),
-      title: const Text('Vente enregistrée'),
+      title: Text(context.tr('Vente enregistrée')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -993,7 +991,7 @@ class TenderReceiptDialog extends StatelessWidget {
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Terminer'),
+          child: Text(context.tr('Terminer')),
         ),
       ],
     );

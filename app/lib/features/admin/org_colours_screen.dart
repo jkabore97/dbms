@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Choosing the colours everybody in this business will see.
 ///
@@ -83,7 +84,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
         _saving = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Couleurs enregistrées')),
+        SnackBar(content: Text(context.tr('Couleurs enregistrées'))),
       );
     } catch (error) {
       if (!mounted) return;
@@ -107,13 +108,12 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
       child: Builder(builder: (context) {
         final previewTheme = Theme.of(context);
         return Scaffold(
-          appBar: AppBar(title: const Text('Couleurs')),
+          appBar: AppBar(title: Text(context.tr('Couleurs'))),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               Text(
-                'Ces couleurs sont celles de votre activité : toute votre '
-                'équipe les verra.',
+                context.tr('Ces couleurs sont celles de votre activité : toute votre équipe les verra.'),
                 style: previewTheme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 20),
@@ -122,13 +122,13 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
               // looks like and the most likely thing somebody wants back.
               _PaletteCard(
                 palette: paletteFor(widget.profile),
-                title: 'Couleur par défaut',
+                title: context.tr('Couleur par défaut'),
                 subtitle: _profileLabel(widget.profile),
                 selected: _selected == null,
                 onTap: _saving ? null : () => setState(() => _selected = null),
               ),
               const SizedBox(height: 20),
-              Text('Autres couleurs', style: previewTheme.textTheme.titleSmall),
+              Text(context.tr('Autres couleurs'), style: previewTheme.textTheme.titleSmall),
               const SizedBox(height: 12),
 
               for (final palette in allPalettes) ...[
@@ -176,7 +176,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Text(
-                        _dirty ? 'Enregistrer' : 'Enregistré',
+                        _dirty ? context.tr('Enregistrer') : context.tr('Enregistré'),
                         style: const TextStyle(fontSize: 17),
                       ),
               ),
@@ -296,7 +296,7 @@ class _MiniHome extends StatelessWidget {
           // Stands in for the app bar title and the day's figure — the two
           // places the ink has to be read against the wash.
           Text(
-            "Aujourd'hui",
+            context.tr('Aujourd\'hui'),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

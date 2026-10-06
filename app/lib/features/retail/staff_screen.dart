@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/auth/models.dart';
 import '../../core/retail/staff.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Who gets paid, and what they are owed right now.
 ///
@@ -102,7 +103,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Payer ${person.fullName} ?'),
+        title: Text(context.tr('Payer {fullName} ?', {'fullName': person.fullName})),
         content: Text(
           amount == null || amount == 0
               ? "Rien à payer pour l'instant."
@@ -112,12 +113,12 @@ class _StaffScreenState extends State<StaffScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           if (amount != null && amount > 0)
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Payer'),
+              child: Text(context.tr('Payer')),
             ),
         ],
       ),
@@ -134,7 +135,7 @@ class _StaffScreenState extends State<StaffScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${person.fullName} payé.')),
+          SnackBar(content: Text(context.tr('{fullName} payé.', {'fullName': person.fullName}))),
         );
       }
     } catch (error) {
@@ -148,11 +149,11 @@ class _StaffScreenState extends State<StaffScreen> {
     final totalOwed = _owed.fold<double>(0, (sum, w) => sum + w.owed);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Personnel')),
+      appBar: AppBar(title: Text(context.tr('Personnel'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addPerson,
         icon: const Icon(Icons.person_add_alt),
-        label: const Text('Ajouter'),
+        label: Text(context.tr('Ajouter')),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -173,7 +174,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('À payer', style: theme.textTheme.titleMedium),
+                    Text(context.tr('À payer'), style: theme.textTheme.titleMedium),
                     Text(
                       _money.format(totalOwed),
                       style: theme.textTheme.headlineSmall
@@ -185,12 +186,10 @@ class _StaffScreenState extends State<StaffScreen> {
               const SizedBox(height: 16),
             ],
             if (!_loading && _people.isEmpty && _error == null)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Text(
-                  'Personne pour le moment.\n'
-                  'Ajoutez les personnes que vous payez — elles n’ont pas '
-                  'besoin de compte dans l’application.',
+                  context.tr('Personne pour le moment.\nAjoutez les personnes que vous payez — elles n’ont pas besoin de compte dans l’application.'),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -215,12 +214,12 @@ class _StaffScreenState extends State<StaffScreen> {
                       if (person.isCasual)
                         IconButton(
                           icon: const Icon(Icons.more_time),
-                          tooltip: 'Journée travaillée',
+                          tooltip: context.tr('Journée travaillée'),
                           onPressed: () => _recordShift(person),
                         ),
                       IconButton(
                         icon: const Icon(Icons.payments_outlined),
-                        tooltip: 'Payer',
+                        tooltip: context.tr('Payer'),
                         onPressed: () => _pay(person),
                       ),
                     ],
@@ -301,11 +300,10 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Ajouter une personne', style: theme.textTheme.titleLarge),
+            Text(context.tr('Ajouter une personne'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              "Être payé et pouvoir ouvrir les comptes sont deux choses "
-              "différentes : ajouter quelqu'un ici ne lui donne aucun accès.",
+              context.tr('Être payé et pouvoir ouvrir les comptes sont deux choses différentes : ajouter quelqu\'un ici ne lui donne aucun accès.'),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -314,16 +312,16 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               enabled: !_busy,
               autofocus: true,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Nom',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Nom'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'casual', label: Text('Journalier')),
-                ButtonSegment(value: 'permanent', label: Text('Permanent')),
+              segments: [
+                ButtonSegment(value: 'casual', label: Text(context.tr('Journalier'))),
+                ButtonSegment(value: 'permanent', label: Text(context.tr('Permanent'))),
               ],
               selected: {_kind},
               onSelectionChanged:
@@ -344,9 +342,9 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
             TextField(
               controller: _role,
               enabled: !_busy,
-              decoration: const InputDecoration(
-                labelText: 'Fonction (facultatif)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Fonction (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             if (_error != null) ...[
@@ -364,7 +362,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Ajouter', style: TextStyle(fontSize: 17)),
+                    : Text(context.tr('Ajouter'), style: const TextStyle(fontSize: 17)),
               ),
             ),
           ],
@@ -410,7 +408,7 @@ class _ShiftSheetState extends State<_ShiftSheet> {
   Future<void> _save() async {
     final hours = _value;
     if (hours == null || hours <= 0 || hours > 24) {
-      setState(() => _error = 'Entrez un nombre d’heures entre 1 et 24.');
+      setState(() => _error = context.tr('Entrez un nombre d’heures entre 1 et 24.'));
       return;
     }
 
@@ -448,7 +446,7 @@ class _ShiftSheetState extends State<_ShiftSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Journée de ${widget.person.fullName}',
+          Text(context.tr('Journée de {fullName}', {'fullName': widget.person.fullName}),
               style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
           TextField(
@@ -457,9 +455,9 @@ class _ShiftSheetState extends State<_ShiftSheet> {
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Heures travaillées',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Heures travaillées'),
+              border: const OutlineInputBorder(),
             ),
           ),
           if (_error != null) ...[
@@ -477,7 +475,7 @@ class _ShiftSheetState extends State<_ShiftSheet> {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+                  : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
             ),
           ),
         ],

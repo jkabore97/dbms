@@ -5,6 +5,7 @@ import '../../core/analytics/analytics_repository.dart';
 import '../../core/analytics/models.dart';
 import '../../core/format/money.dart';
 import 'widgets.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What the platform admin sees: the whole platform in a line of totals, then
 /// every business ranked by what it takes. Backed by the two SECURITY DEFINER
@@ -68,7 +69,7 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = "Les analyses n'ont pas pu être chargées.";
+        _error = context.tr('Les analyses n\'ont pas pu être chargées.');
         _loading = false;
       });
     }
@@ -84,12 +85,12 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analyses de la plateforme'),
+        title: Text(context.tr('Analyses de la plateforme')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -127,24 +128,24 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
           runSpacing: 12,
           children: [
             KpiCard(
-              label: 'Chiffre d\'affaires',
+              label: context.tr('Chiffre d\'affaires'),
               value: _money.format(_headline.revenue),
               icon: Icons.payments_outlined,
               emphasis: true,
             ),
             KpiCard(
-              label: 'Bénéfice',
+              label: context.tr('Bénéfice'),
               value: _money.format(_headline.margin),
               hint: '$marginPct % du CA',
               icon: Icons.trending_up,
             ),
             KpiCard(
-              label: 'Ventes',
+              label: context.tr('Ventes'),
               value: '${_headline.saleCount}',
               icon: Icons.receipt_long_outlined,
             ),
             KpiCard(
-              label: 'Entreprises actives',
+              label: context.tr('Entreprises actives'),
               value: '${_headline.activeBusinesses} / ${_headline.businesses}',
               icon: Icons.storefront_outlined,
             ),
@@ -152,12 +153,12 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
         ),
         const SizedBox(height: 20),
         SectionCard(
-          title: 'Les entreprises',
-          subtitle: 'Classées par chiffre d\'affaires sur la période',
+          title: context.tr('Les entreprises'),
+          subtitle: context.tr('Classées par chiffre d\'affaires sur la période'),
           child: _businesses.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text('Aucune entreprise.',
+                  child: Text(context.tr('Aucune entreprise.'),
                       style: TextStyle(color: scheme.onSurfaceVariant)),
                 )
               : Column(
@@ -220,7 +221,7 @@ class _BusinessRow extends StatelessWidget {
             children: [
               Text(money.format(b.revenue),
                   style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text('${b.saleCount} ventes · $marginPct %',
+              Text(context.tr('{saleCount} ventes · {marginPct} %', {'saleCount': b.saleCount, 'marginPct': marginPct}),
                   style:
                       TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
             ],

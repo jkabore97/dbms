@@ -5,6 +5,7 @@ import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// What goes at the top of every invoice this business issues.
 ///
@@ -133,15 +134,14 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('En-tête de facture')),
+      appBar: AppBar(title: Text(context.tr('En-tête de facture'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
               children: [
                 Text(
-                  'Ces informations apparaissent en haut de chaque facture '
-                  'que vous envoyez.',
+                  context.tr('Ces informations apparaissent en haut de chaque facture que vous envoyez.'),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 8),
@@ -154,10 +154,10 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                   controller: _address,
                   textCapitalization: TextCapitalization.sentences,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Adresse',
-                    hintText: 'Rue 14.28, secteur 15, Ouagadougou',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Adresse'),
+                    hintText: context.tr('Rue 14.28, secteur 15, Ouagadougou'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -165,7 +165,7 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                   controller: _phone,
                   country: _country,
                   onCountry: (c) => setState(() => _country = c),
-                  labelText: 'Téléphone',
+                  labelText: context.tr('Téléphone'),
                   hintText: '70 12 34 56',
                   enabled: !_saving,
                 ),
@@ -173,17 +173,16 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                 TextField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail (facultatif)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('E-mail (facultatif)'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text('Numéro fiscal', style: theme.textTheme.titleMedium),
+                Text(context.tr('Numéro fiscal'), style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  "Sans lui, votre client ne peut pas passer votre facture "
-                  'dans ses propres comptes.',
+                  context.tr('Sans lui, votre client ne peut pas passer votre facture dans ses propres comptes.'),
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -194,9 +193,9 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                       width: 130,
                       child: DropdownButtonFormField<String>(
                         initialValue: _taxLabel,
-                        decoration: const InputDecoration(
-                          labelText: 'Type',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: context.tr('Type'),
+                          border: const OutlineInputBorder(),
                         ),
                         items: [
                           for (final label in _taxLabels)
@@ -212,10 +211,10 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                       child: TextField(
                         controller: _taxId,
                         textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
-                          labelText: 'Numéro',
+                        decoration: InputDecoration(
+                          labelText: context.tr('Numéro'),
                           hintText: '00012345A',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -226,11 +225,10 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                   controller: _footer,
                   textCapitalization: TextCapitalization.sentences,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Bas de page',
-                    helperText: 'Conditions de paiement, numéro Orange Money, '
-                        'remerciements…',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Bas de page'),
+                    helperText: context.tr('Conditions de paiement, numéro Orange Money, remerciements…'),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 if (_error != null) ...[
@@ -256,7 +254,7 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.check),
-              label: const Text('Enregistrer'),
+              label: Text(context.tr('Enregistrer')),
             ),
     );
   }

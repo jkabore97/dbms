@@ -7,6 +7,7 @@ import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
 import '../notify/notifications_screen.dart';
 import 'home_router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A business, open.
 ///
@@ -111,9 +112,7 @@ class _SuspendedBanner extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Cette entreprise est suspendue. La consultation reste '
-                  'possible, mais aucune nouvelle opération ne peut être '
-                  'enregistrée.',
+                  context.tr('Cette entreprise est suspendue. La consultation reste possible, mais aucune nouvelle opération ne peut être enregistrée.'),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onErrorContainer),
                 ),
@@ -165,7 +164,7 @@ class _HomeWithNoticeState extends State<_HomeWithNotice> {
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: () => setState(() => _dismissed = true),
-                    tooltip: 'Masquer',
+                    tooltip: context.tr('Masquer'),
                   ),
                 ],
               ),

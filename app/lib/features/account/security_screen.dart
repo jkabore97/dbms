@@ -8,6 +8,7 @@ import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/security/security_repository.dart';
 import '../../core/security/security_settings.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Compte › Sécurité.
 ///
@@ -146,22 +147,18 @@ class _SecurityScreenState extends State<SecurityScreen> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Activer la validation en deux étapes ?'),
-          content: const Text(
-            'Le compte de la plateforme demandera, à chaque connexion, un '
-            'code à 6 chiffres de Google Authenticator ou Microsoft '
-            "Authenticator. Mara vous montre tout de suite comment l'ajouter. "
-            'Les comptes des boutiques ne changent pas : mot de passe, puis '
-            "le code de l'appareil.",
+          title: Text(context.tr('Activer la validation en deux étapes ?')),
+          content: Text(
+            context.tr('Le compte de la plateforme demandera, à chaque connexion, un code à 6 chiffres de Google Authenticator ou Microsoft Authenticator. Mara vous montre tout de suite comment l\'ajouter. Les comptes des boutiques ne changent pas : mot de passe, puis le code de l\'appareil.'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annuler'),
+              child: Text(context.tr('Annuler')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Activer'),
+              child: Text(context.tr('Activer')),
             ),
           ],
         ),
@@ -204,19 +201,18 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Déconnecter les autres appareils ?'),
-        content: const Text(
-          'Ce téléphone reste connecté. Les autres devront se reconnecter '
-          'avec le mot de passe.',
+        title: Text(context.tr('Déconnecter les autres appareils ?')),
+        content: Text(
+          context.tr('Ce téléphone reste connecté. Les autres devront se reconnecter avec le mot de passe.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Déconnecter'),
+            child: Text(context.tr('Déconnecter')),
           ),
         ],
       ),
@@ -249,13 +245,13 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final others = _sessions.where((s) => !s.current).length;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sécurité')),
+      appBar: AppBar(title: Text(context.tr('Sécurité'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           if (settings != null) ...[
             _Group(
-              title: 'Verrouillage du téléphone',
+              title: context.tr('Verrouillage du téléphone'),
               note: settings.policy == null
                   ? 'Après ce délai hors de l\'application, Mara redemande '
                         'le code de l\'appareil.'
@@ -277,10 +273,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
                                 : 'Après ${SecuritySettings.label(m)}',
                           ),
                           subtitle: m == SecuritySettings.defaultLock
-                              ? const Text('Conseillé')
+                              ? Text(context.tr('Conseillé'))
                               : (!settings.allows(m)
-                                    ? const Text(
-                                        'Non permis par votre entreprise',
+                                    ? Text(
+                                        context.tr('Non permis par votre entreprise'),
                                       )
                                     : null),
                         ),
@@ -292,35 +288,34 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     value: settings.biometric,
                     onChanged: settings.setBiometric,
                     secondary: const Icon(Icons.fingerprint),
-                    title: const Text('Déverrouiller avec l\'empreinte'),
-                    subtitle: const Text('Le code reste toujours possible.'),
+                    title: Text(context.tr('Déverrouiller avec l\'empreinte')),
+                    subtitle: Text(context.tr('Le code reste toujours possible.')),
                   ),
                 ListTile(
                   leading: const Icon(Icons.pin_outlined),
-                  title: const Text('Changer le code'),
+                  title: Text(context.tr('Changer le code')),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _changeCode,
                 ),
               ],
             ),
             _Group(
-              title: 'Discrétion',
+              title: context.tr('Discrétion'),
               children: [
                 SwitchListTile(
                   value: settings.hideAmounts,
                   onChanged: settings.setHideAmounts,
                   secondary: const Icon(Icons.visibility_off_outlined),
-                  title: const Text('Cacher les montants à l\'accueil'),
-                  subtitle: const Text(
-                    'Le total du jour s\'affiche d\'un toucher, pas devant '
-                    'les clients.',
+                  title: Text(context.tr('Cacher les montants à l\'accueil')),
+                  subtitle: Text(
+                    context.tr('Le total du jour s\'affiche d\'un toucher, pas devant les clients.'),
                   ),
                 ),
               ],
             ),
           ],
           _Group(
-            title: 'Mot de passe et appareils',
+            title: context.tr('Mot de passe et appareils'),
             note: others == 0
                 ? null
                 : 'Les noms d\'appareils viennent du navigateur ou du '
@@ -330,7 +325,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.password_outlined),
-                title: const Text('Changer le mot de passe'),
+                title: Text(context.tr('Changer le mot de passe')),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: _changePassword,
               ),
@@ -360,7 +355,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     trailing: s.current
                         ? null
                         : IconButton(
-                            tooltip: 'Déconnecter cet appareil',
+                            tooltip: context.tr('Déconnecter cet appareil'),
                             icon: const Icon(Icons.logout),
                             onPressed: _busy != null
                                 ? null
@@ -374,7 +369,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     color: theme.colorScheme.error,
                   ),
                   title: Text(
-                    'Déconnecter les autres appareils',
+                    context.tr('Déconnecter les autres appareils'),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                   onTap: _busy != null ? null : _closeOthers,
@@ -383,14 +378,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ),
           if (_platformAdmin && _twoStep != null && _twoStepOn != null)
             _Group(
-              title: 'Plateforme',
+              title: context.tr('Plateforme'),
               children: [
                 SwitchListTile(
                   key: const Key('two-step-switch'),
                   value: _twoStepOn!,
                   onChanged: _busy != null ? null : _setTwoStep,
                   secondary: const Icon(Icons.verified_user_outlined),
-                  title: const Text('Validation en deux étapes'),
+                  title: Text(context.tr('Validation en deux étapes')),
                   subtitle: Text(
                     _twoStepOn!
                         ? 'Activée : un code de votre application '
@@ -404,10 +399,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
               ],
             ),
           _Group(
-            title: 'Activité du compte',
+            title: context.tr('Activité du compte'),
             children: [
               if (!_loading && _events.isEmpty)
-                ListTile(title: Text('Rien pour l\'instant.', style: muted)),
+                ListTile(title: Text(context.tr('Rien pour l\'instant.'), style: muted)),
               for (final e in _events.take(20))
                 ListTile(
                   dense: true,
@@ -515,7 +510,7 @@ class _ChangeCodeDialogState extends State<_ChangeCodeDialog> {
 
   Future<void> _go() async {
     if (_next.text != _again.text) {
-      setState(() => _error = 'Les deux nouveaux codes ne sont pas pareils.');
+      setState(() => _error = context.tr('Les deux nouveaux codes ne sont pas pareils.'));
       return;
     }
     setState(() {
@@ -554,7 +549,7 @@ class _ChangeCodeDialogState extends State<_ChangeCodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Changer le code'),
+      title: Text(context.tr('Changer le code')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -571,11 +566,11 @@ class _ChangeCodeDialogState extends State<_ChangeCodeDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _busy ? null : _go,
-          child: const Text('Changer'),
+          child: Text(context.tr('Changer')),
         ),
       ],
     );
@@ -606,7 +601,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   Future<void> _go() async {
     if (_next.text.length < 8) {
-      setState(() => _error = 'Au moins 8 caractères.');
+      setState(() => _error = context.tr('Au moins 8 caractères.'));
       return;
     }
     setState(() {
@@ -629,7 +624,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Changer le mot de passe'),
+      title: Text(context.tr('Changer le mot de passe')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -637,9 +632,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             controller: _current,
             enabled: !_busy,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Mot de passe actuel',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Mot de passe actuel'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 10),
@@ -647,10 +642,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             controller: _next,
             enabled: !_busy,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Nouveau mot de passe',
-              helperText: 'Au moins 8 caractères',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Nouveau mot de passe'),
+              helperText: context.tr('Au moins 8 caractères'),
+              border: const OutlineInputBorder(),
             ),
           ),
           if (_error != null) ...[
@@ -665,11 +660,11 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _busy ? null : _go,
-          child: const Text('Changer'),
+          child: Text(context.tr('Changer')),
         ),
       ],
     );

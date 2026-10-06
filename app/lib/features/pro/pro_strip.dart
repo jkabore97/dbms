@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/kaj_theme.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The small « Pro » at the top of every page inside a business that is not
 /// on Kaj Pro, for the people who can change that — its owner and admins.
@@ -78,7 +79,7 @@ class ProPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Passer à Mara Pro',
+      label: context.tr('Passer à Mara Pro'),
       excludeSemantics: true,
       child: Material(
         key: const Key('pro-pill'),
@@ -87,16 +88,16 @@ class ProPill extends StatelessWidget {
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.auto_awesome, size: 14, color: kPaper),
-                SizedBox(width: 6),
+                const Icon(Icons.auto_awesome, size: 14, color: kPaper),
+                const SizedBox(width: 6),
                 Text(
-                  'PRO',
-                  style: TextStyle(
+                  context.tr('PRO'),
+                  style: const TextStyle(
                     color: kPaper,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

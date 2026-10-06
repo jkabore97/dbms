@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The platform's queue: people asking for a business to exist.
 ///
@@ -66,7 +67,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Valider ${application.name} ?'),
+        title: Text(context.tr('Valider {name} ?', {'name': application.name})),
         content: Text(
           'L’entreprise sera créée à l’adresse « ${application.slug} », et '
           '${application.applicant ?? 'le demandeur'} en deviendra '
@@ -75,11 +76,11 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Valider'),
+            child: Text(context.tr('Valider')),
           ),
         ],
       ),
@@ -124,7 +125,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Demandes')),
+      appBar: AppBar(title: Text(context.tr('Demandes'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -146,7 +147,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                     OutlinedButton.icon(
                       onPressed: _load,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Réessayer'),
+                      label: Text(context.tr('Réessayer')),
                     ),
                   ],
                 ),
@@ -199,7 +200,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                           FilledButton.icon(
                             onPressed: () => _approve(application),
                             icon: const Icon(Icons.check, size: 18),
-                            label: const Text('Valider'),
+                            label: Text(context.tr('Valider')),
                           ),
                           const SizedBox(width: 8),
                           TextButton.icon(
@@ -207,7 +208,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                             style: TextButton.styleFrom(
                                 foregroundColor: theme.colorScheme.error),
                             icon: const Icon(Icons.close, size: 18),
-                            label: const Text('Refuser'),
+                            label: Text(context.tr('Refuser')),
                           ),
                         ],
                       ),
@@ -223,7 +224,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                     Icon(Icons.inbox_outlined,
                         size: 48, color: theme.disabledColor),
                     const SizedBox(height: 12),
-                    Text('Aucune demande en attente.',
+                    Text(context.tr('Aucune demande en attente.'),
                         style: theme.textTheme.titleMedium),
                   ],
                 ),
@@ -270,22 +271,22 @@ class _RejectDialogState extends State<_RejectDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Refuser ${widget.application.name}'),
+      title: Text(context.tr('Refuser {name}', {'name': widget.application.name})),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Le demandeur verra ce message et pourra corriger sa demande.',
+          Text(
+            context.tr('Le demandeur verra ce message et pourra corriger sa demande.'),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _reason,
             autofocus: true,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Nom déjà utilisé, informations manquantes…',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: context.tr('Nom déjà utilisé, informations manquantes…'),
+              border: const OutlineInputBorder(),
             ),
           ),
         ],
@@ -293,7 +294,7 @@ class _RejectDialogState extends State<_RejectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           // The server refuses an empty reason too. Both, because a dialog
@@ -302,7 +303,7 @@ class _RejectDialogState extends State<_RejectDialog> {
           onPressed: _reason.text.trim().isEmpty
               ? null
               : () => Navigator.of(context).pop(_reason.text),
-          child: const Text('Refuser'),
+          child: Text(context.tr('Refuser')),
         ),
       ],
     );

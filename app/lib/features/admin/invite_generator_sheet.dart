@@ -8,6 +8,7 @@ import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The manager's side of getting somebody into the business.
 ///
@@ -132,30 +133,29 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Inviter quelqu’un', style: theme.textTheme.titleLarge),
+        Text(context.tr('Inviter quelqu’un'), style: theme.textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
-          'Vous obtiendrez un code à lui envoyer. Il crée son compte, entre le '
-          'code, et rejoint l’entreprise.',
+          context.tr('Vous obtiendrez un code à lui envoyer. Il crée son compte, entre le code, et rejoint l’entreprise.'),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 20),
         TextField(
           controller: _name,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nom de la personne (facultatif)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Nom de la personne (facultatif)'),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _title,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Fonction (facultatif)',
-            helperText: 'Vendeuse, gardien, comptable…',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Fonction (facultatif)'),
+            helperText: context.tr('Vendeuse, gardien, comptable…'),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
@@ -163,25 +163,25 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
           controller: _phone,
           country: _country,
           onCountry: (c) => setState(() => _country = c),
-          labelText: 'Téléphone (facultatif)',
+          labelText: context.tr('Téléphone (facultatif)'),
           hintText: '70 12 34 56',
           enabled: !_busy,
           // Said plainly, because it changes what the code is: with a
           // number it belongs to one person, without it whoever holds it.
-          helperText: 'Avec un numéro, le code ne marche que pour lui.',
+          helperText: context.tr('Avec un numéro, le code ne marche que pour lui.'),
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           initialValue: _role,
-          decoration: const InputDecoration(
-            labelText: 'Rôle',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('Rôle'),
+            border: const OutlineInputBorder(),
           ),
-          items: const [
-            DropdownMenuItem(value: 'employee', child: Text('Employé')),
-            DropdownMenuItem(value: 'manager', child: Text('Responsable')),
-            DropdownMenuItem(value: 'admin', child: Text('Administrateur')),
-            DropdownMenuItem(value: 'observer', child: Text('Observateur')),
+          items: [
+            DropdownMenuItem(value: 'employee', child: Text(context.tr('Employé'))),
+            DropdownMenuItem(value: 'manager', child: Text(context.tr('Responsable'))),
+            DropdownMenuItem(value: 'admin', child: Text(context.tr('Administrateur'))),
+            DropdownMenuItem(value: 'observer', child: Text(context.tr('Observateur'))),
           ],
           onChanged: _busy ? null : (v) => setState(() => _role = v ?? _role),
         ),
@@ -205,7 +205,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.key),
-          label: const Text('Générer le code'),
+          label: Text(context.tr('Générer le code')),
         ),
       ],
     );
@@ -216,7 +216,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Code prêt', style: theme.textTheme.titleLarge),
+        Text(context.tr('Code prêt'), style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
 
         Container(
@@ -254,7 +254,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
             ShareParams(text: invitation.message),
           ),
           icon: const Icon(Icons.send),
-          label: const Text('Envoyer par WhatsApp ou SMS'),
+          label: Text(context.tr('Envoyer par WhatsApp ou SMS')),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
@@ -265,11 +265,11 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
             await Clipboard.setData(ClipboardData(text: invitation.code));
             if (!mounted) return;
             messenger.showSnackBar(
-              const SnackBar(content: Text('Code copié.')),
+              SnackBar(content: Text(context.tr('Code copié.'))),
             );
           },
           icon: const Icon(Icons.copy),
-          label: const Text('Copier le code'),
+          label: Text(context.tr('Copier le code')),
         ),
 
         const SizedBox(height: 20),
@@ -285,7 +285,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Ou faites-lui scanner ce code s’il est à côté de vous.',
+          context.tr('Ou faites-lui scanner ce code s’il est à côté de vous.'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall,
         ),
@@ -298,7 +298,7 @@ class _InviteGeneratorSheetState extends State<InviteGeneratorSheet> {
             _title.clear();
             _phone.clear();
           }),
-          child: const Text('Inviter quelqu’un d’autre'),
+          child: Text(context.tr('Inviter quelqu’un d’autre')),
         ),
       ],
     );

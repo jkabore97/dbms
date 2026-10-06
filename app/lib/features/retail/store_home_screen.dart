@@ -27,6 +27,7 @@ import '../home/home_nav.dart';
 import 'sale_sheet.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Esperance's home screen.
 ///
@@ -154,9 +155,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(
-          'Nouvelle commande : $pending à traiter sur la vitrine.'),
+          context.tr('Nouvelle commande : {pending} à traiter sur la vitrine.', {'pending': pending})),
       action: SnackBarAction(
-        label: 'Voir',
+        label: context.tr('Voir'),
         onPressed: () =>
             context.push(Routes.inside(widget.org.id, 'commandes')),
       ),
@@ -213,7 +214,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     if (retail == null || !retail.isConfigured) {
       setState(() {
         _loading = false;
-        _error = "Cette version a été compilée sans serveur.";
+        _error = context.tr('Cette version a été compilée sans serveur.');
       });
       return;
     }
@@ -578,7 +579,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Aujourd'hui",
+                    context.tr('Aujourd\'hui'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: KajTheme.of(context).ink.withValues(alpha: 0.82),
                     ),
@@ -627,7 +628,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Marchandise vendue avant sa date',
+                            context.tr('Marchandise vendue avant sa date'),
                             style: theme.textTheme.bodySmall,
                           ),
                         ],
@@ -672,7 +673,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         if (widget.retail != null && widget.access.canSee('orders'))
           HomeDestination(
             icon: Icons.inbox_outlined,
-            label: 'Commandes',
+            label: context.tr('Commandes'),
             badge: _pendingOrders,
             onTap: () => _openThenReload('commandes'),
           ),
@@ -688,12 +689,12 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.savings_outlined,
-            label: 'Mes cauris',
+            label: context.tr('Mes cauris'),
             onTap: () => _openThenReload('cauris'),
           ),
         HomeDestination(
           icon: Icons.school_outlined,
-          label: 'Académie',
+          label: context.tr('Académie'),
           onTap: () => _openThenReload('academie'),
         ),
         if (widget.access.canSee('production'))
@@ -714,12 +715,12 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         if (slug != null && slug.isNotEmpty)
           HomeDestination(
             icon: Icons.visibility_outlined,
-            label: 'Voir ma vitrine',
+            label: context.tr('Voir ma vitrine'),
             onTap: () => context.go(Routes.storefront(slug)),
           ),
         HomeDestination(
           icon: Icons.storefront_outlined,
-          label: 'Voir le marché',
+          label: context.tr('Voir le marché'),
           onTap: () => context.go(Routes.directory),
         ),
         HomeDestination(
@@ -757,9 +758,9 @@ class _VitrineNudge extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Votre vitrine : ${list.score} %',
+                  Text(context.tr('Votre vitrine : {score} %', {'score': list.score}),
                       style: theme.textTheme.titleSmall),
-                  Text('À faire : $next',
+                  Text(context.tr('À faire : {next}', {'next': next}),
                       style: theme.textTheme.bodySmall),
                 ],
               ),
@@ -792,13 +793,13 @@ class _AlertsCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Soyez prévenu à chaque commande de la vitrine.',
+              context.tr('Soyez prévenu à chaque commande de la vitrine.'),
               style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
             ),
           ),
           FilledButton.tonal(
             onPressed: onEnable,
-            child: const Text('Activer'),
+            child: Text(context.tr('Activer')),
           ),
         ],
       ),

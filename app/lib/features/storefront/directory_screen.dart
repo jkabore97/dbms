@@ -17,6 +17,7 @@ import '../../core/storefront/storefront_repository.dart';
 import 'directory_map.dart';
 import 'shop_skeleton.dart';
 import 'shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The front door: every open vitrine, the articles à la une, a map with the
 /// shops on it, and one way in for whoever is holding the phone.
@@ -151,7 +152,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     });
     if (!widget.storefront.isConfigured) {
       setState(() {
-        _error = "L'annuaire a besoin d'une connexion.";
+        _error = context.tr('L\'annuaire a besoin d\'une connexion.');
         _loading = false;
       });
       return;
@@ -188,7 +189,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = "L'annuaire n'a pas pu être chargé. Vérifiez le réseau.";
+        _error = context.tr('L\'annuaire n\'a pas pu être chargé. Vérifiez le réseau.');
         _loading = false;
       });
     }
@@ -217,8 +218,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text("Sans votre position, l'annuaire reste par nom."),
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Sans votre position, l\'annuaire reste par nom.')),
         ));
         return;
       }
@@ -232,8 +234,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       _here = LatLng(position.latitude, position.longitude);
       await _load();
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr('Position introuvable. Vérifiez que le GPS est activé.')),
       ));
     } finally {
       if (mounted) setState(() => _locating = false);
@@ -272,7 +275,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return ShopPage(
-      title: 'Mara — les vitrines',
+      title: context.tr('Mara — les vitrines'),
       brand: const MaraWordmark(key: Key('mara-header'), height: 34),
       announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
@@ -282,7 +285,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ? ShopNotice(
                   text: _error!,
                   action: OutlinedButton(
-                      onPressed: _load, child: const Text('Réessayer')),
+                      onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : _Street(
                   entries: _entries,
@@ -332,7 +335,7 @@ class _AccountCorner extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: TextButton(
                 onPressed: () => context.go(Routes.signIn),
-                child: const Text('Se connecter'),
+                child: Text(context.tr('Se connecter')),
               ),
             );
           case SessionPhase.locked:
@@ -341,7 +344,7 @@ class _AccountCorner extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: TextButton(
                 onPressed: () => context.go(Routes.pin),
-                child: const Text('Ouvrir'),
+                child: Text(context.tr('Ouvrir')),
               ),
             );
           case SessionPhase.twoStep:
@@ -349,7 +352,7 @@ class _AccountCorner extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: TextButton(
                 onPressed: () => context.go(Routes.twoStep),
-                child: const Text('Ouvrir'),
+                child: Text(context.tr('Ouvrir')),
               ),
             );
           case SessionPhase.noOrg:
@@ -365,7 +368,7 @@ class _AccountCorner extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  tooltip: member ? 'Ma boutique' : 'Ouvrir ma boutique',
+                  tooltip: member ? context.tr('Ma boutique') : context.tr('Ouvrir ma boutique'),
                   icon: Icon(member
                       ? Icons.store_outlined
                       : Icons.add_business_outlined),
@@ -378,12 +381,12 @@ class _AccountCorner extends StatelessWidget {
                       : Routes.join),
                 ),
                 IconButton(
-                  tooltip: 'Espace livreur',
+                  tooltip: context.tr('Espace livreur'),
                   icon: const Icon(Icons.sports_motorsports_outlined),
                   onPressed: () => context.go(Routes.courier),
                 ),
                 PopupMenuButton<String>(
-                  tooltip: 'Mon compte',
+                  tooltip: context.tr('Mon compte'),
                   icon: const Icon(Icons.person_outline),
                   onSelected: (choice) async {
                     switch (choice) {
@@ -395,27 +398,27 @@ class _AccountCorner extends StatelessWidget {
                         await session.signOut();
                     }
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'orders',
                       child: ListTile(
-                        leading: Icon(Icons.receipt_long_outlined),
-                        title: Text('Mes commandes'),
+                        leading: const Icon(Icons.receipt_long_outlined),
+                        title: Text(context.tr('Mes commandes')),
                       ),
                     ),
                     PopupMenuItem(
                       value: 'profile',
                       child: ListTile(
-                        leading: Icon(Icons.person_outline),
-                        title: Text('Mon profil'),
+                        leading: const Icon(Icons.person_outline),
+                        title: Text(context.tr('Mon profil')),
                       ),
                     ),
-                    PopupMenuDivider(),
+                    const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'out',
                       child: ListTile(
-                        leading: Icon(Icons.logout),
-                        title: Text('Se déconnecter'),
+                        leading: const Icon(Icons.logout),
+                        title: Text(context.tr('Se déconnecter')),
                       ),
                     ),
                   ],
@@ -493,7 +496,7 @@ class _Street extends StatelessWidget {
               children: [
                 // Mara's slogan, then what the street is.
                 Text(
-                  'Au Service du Peuple',
+                  context.tr('Au Service du Peuple'),
                   key: const Key('street-slogan'),
                   style: TextStyle(
                     fontSize: wide ? 32 : 24,
@@ -504,10 +507,9 @@ class _Street extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Les boutiques près de vous : articles, prix et numéro, '
-                  'tenus par chaque boutique.',
-                  style: TextStyle(fontSize: 14, color: ShopStyle.mist),
+                Text(
+                  context.tr('Les boutiques près de vous : articles, prix et numéro, tenus par chaque boutique.'),
+                  style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -526,12 +528,12 @@ class _Street extends StatelessWidget {
                             )
                           : Icon(located ? Icons.near_me : Icons.my_location,
                               size: 18),
-                      label: Text(located ? 'Actualiser' : 'Près de moi'),
+                      label: Text(located ? context.tr('Actualiser') : context.tr('Près de moi')),
                     ),
                     OutlinedButton.icon(
                       onPressed: entries.isEmpty ? null : onToggleMap,
                       icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text('Voir la carte'),
+                      label: Text(context.tr('Voir la carte')),
                     ),
                   ],
                 ),
@@ -545,12 +547,12 @@ class _Street extends StatelessWidget {
                     onChanged: onSearchChanged,
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
-                      hintText: 'Chercher un article — savon, riz, café…',
+                      hintText: context.tr('Chercher un article — savon, riz, café…'),
                       prefixIcon: const Icon(Icons.search, size: 20),
                       suffixIcon: search.text.isEmpty
                           ? null
                           : IconButton(
-                              tooltip: 'Effacer',
+                              tooltip: context.tr('Effacer'),
                               icon: const Icon(Icons.close, size: 18),
                               onPressed: onClearSearch,
                             ),
@@ -631,10 +633,10 @@ class _Street extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               if (entries.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text('Aucune vitrine ouverte pour le moment.',
-                      style: TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(context.tr('Aucune vitrine ouverte pour le moment.'),
+                      style: const TextStyle(fontSize: 15, color: ShopStyle.mist)),
                 )
               else
                 GridView.builder(
@@ -712,7 +714,7 @@ class _SearchResults extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
-              'Aucun article ne répond à « $query ». Essayez un autre mot.',
+              context.tr('Aucun article ne répond à « {query} ». Essayez un autre mot.', {'query': query}),
               style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
             ),
           )
@@ -1218,8 +1220,8 @@ class SponsoredTag extends StatelessWidget {
         color: ShopStyle.paper.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: const Text('Sponsorisé',
-          style: TextStyle(
+      child: Text(context.tr('Sponsorisé'),
+          style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,

@@ -19,6 +19,7 @@ import '../../core/theme/motion.dart';
 import '../common/owned_controller.dart';
 import 'shop_skeleton.dart';
 import 'shop_style.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A shop's window, for the street.
 ///
@@ -149,7 +150,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     });
     if (!widget.storefront.isConfigured) {
       setState(() {
-        _error = "La vitrine a besoin d'une connexion.";
+        _error = context.tr('La vitrine a besoin d\'une connexion.');
         _loading = false;
       });
       return;
@@ -176,7 +177,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = "La vitrine n'a pas pu être chargée. Vérifiez le réseau.";
+        _error = context.tr('La vitrine n\'a pas pu être chargée. Vérifiez le réseau.');
         _loading = false;
       });
     }
@@ -280,8 +281,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (sent == true && mounted) {
       setState(_basket.clear);
       _keepBasket(); // The promise is kept; the device forgets it.
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Commande envoyée. La boutique vous répondra ici.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr('Commande envoyée. La boutique vous répondra ici.')),
       ));
       context.go(Routes.myOrders);
     }
@@ -318,7 +319,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           ? e.message
           : "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
     } catch (_) {
-      return "La commande n'a pas pu être envoyée. Vérifiez le réseau.";
+      if (!mounted) return null;
+      return context.tr('La commande n\'a pas pu être envoyée. Vérifiez le réseau.');
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -351,7 +353,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // stepper — decided by the shop, read by the street.
       accent: shop?.style.accent,
       leading: IconButton(
-        tooltip: 'Toutes les vitrines',
+        tooltip: context.tr('Toutes les vitrines'),
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
@@ -362,14 +364,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               ? ShopNotice(
                   text: _error!,
                   action: OutlinedButton(
-                      onPressed: _load, child: const Text('Réessayer')),
+                      onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : shop == null
                   ? ShopNotice(
                       text: "Cette vitrine n'existe pas, ou n'est pas ouverte.",
                       action: OutlinedButton(
                           onPressed: _directory,
-                          child: const Text('Voir les autres vitrines')),
+                          child: Text(context.tr('Voir les autres vitrines'))),
                     )
                   : NotificationListener<ScrollNotification>(
                       // Measured once the scrolled frame is laid out: during
@@ -484,8 +486,8 @@ class _BasketBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!floating) ...[
-                      const Text('VOTRE PANIER',
-                          style: TextStyle(
+                      Text(context.tr('VOTRE PANIER'),
+                          style: const TextStyle(
                               fontSize: 12,
                               letterSpacing: 1.4,
                               fontWeight: FontWeight.w700,
@@ -537,7 +539,7 @@ class _BasketBar extends StatelessWidget {
                                   height: 18,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: ShopStyle.paper))
-                              : const Text('Commander'),
+                              : Text(context.tr('Commander')),
                         ),
                       ],
                     ),
@@ -625,7 +627,7 @@ class _PickedChip extends StatelessWidget {
           if (qty > 1)
             Padding(
               padding: const EdgeInsets.only(left: 6),
-              child: Text('×$qty',
+              child: Text(context.tr('×{qty}', {'qty': qty}),
                   style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -762,8 +764,9 @@ class _OrderSheetState extends State<OrderSheet> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text("Sans votre position, l'adresse écrite suffit."),
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Sans votre position, l\'adresse écrite suffit.')),
         ));
         return;
       }
@@ -780,8 +783,9 @@ class _OrderSheetState extends State<OrderSheet> {
       });
       await _refreshQuote();
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Position introuvable. Vérifiez que le GPS est activé.'),
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr('Position introuvable. Vérifiez que le GPS est activé.')),
       ));
     } finally {
       if (mounted) setState(() => _locating = false);
@@ -799,22 +803,22 @@ class _OrderSheetState extends State<OrderSheet> {
         data: ShopStyle.theme(dialog),
         child: OwnedController(
           builder: (context, controller) => AlertDialog(
-            title: const Text('Lien Google Maps'),
+            title: Text(context.tr('Lien Google Maps')),
             content: TextField(
               controller: controller,
               autofocus: true,
               maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'https://www.google.com/maps/...@12.37,-1.52,17z',
+              decoration: InputDecoration(
+                hintText: context.tr('https://www.google.com/maps/...@12.37,-1.52,17z'),
               ),
             ),
             actions: [
               TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Annuler')),
+                  child: Text(context.tr('Annuler'))),
               FilledButton(
                   onPressed: () => Navigator.of(context).pop(controller.text),
-                  child: const Text('Utiliser')),
+                  child: Text(context.tr('Utiliser'))),
             ],
           ),
         ),
@@ -823,9 +827,8 @@ class _OrderSheetState extends State<OrderSheet> {
     if (text == null || !mounted) return;
     final position = parseGoogleMapsLink(text);
     if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Ce lien ne contient pas de position. Ouvrez-le dans '
-            "Google Maps et copiez l'adresse complète."),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr('Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.')),
       ));
       return;
     }
@@ -838,7 +841,7 @@ class _OrderSheetState extends State<OrderSheet> {
 
   Future<void> _submit() async {
     if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
-      setState(() => _error = 'Indiquez où livrer.');
+      setState(() => _error = context.tr('Indiquez où livrer.'));
       return;
     }
     if (_fulfilment == 'delivery' && _tooFar) {
@@ -876,8 +879,7 @@ class _OrderSheetState extends State<OrderSheet> {
     final max = _maxKm == null
         ? (km.isEmpty ? '' : ')')
         : '${km.isEmpty ? ' (' : ', '}livraison jusqu\'à ${_maxKm!.toStringAsFixed(0)} km)';
-    return 'Cette boutique ne livre pas aussi loin$km$max. '
-        'Choisissez le retrait en boutique.';
+    return context.tr('Cette boutique ne livre pas aussi loin{km}{max}. Choisissez le retrait en boutique.', {'km': km, 'max': max});
   }
 
   @override
@@ -899,8 +901,8 @@ class _OrderSheetState extends State<OrderSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Votre commande',
-                style: TextStyle(
+            Text(context.tr('Votre commande'),
+                style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: ShopStyle.ink)),
@@ -929,9 +931,9 @@ class _OrderSheetState extends State<OrderSheet> {
             if (_fulfilment == 'delivery') ...[
               Row(
                 children: [
-                  const Expanded(
-                    child: Text('Livraison',
-                        style: TextStyle(fontSize: 15, color: ShopStyle.ink)),
+                  Expanded(
+                    child: Text(context.tr('Livraison'),
+                        style: const TextStyle(fontSize: 15, color: ShopStyle.ink)),
                   ),
                   if (_quoting)
                     const SizedBox(
@@ -971,9 +973,9 @@ class _OrderSheetState extends State<OrderSheet> {
             ],
             Row(
               children: [
-                const Expanded(
-                  child: Text('Total',
-                      style: TextStyle(
+                Expanded(
+                  child: Text(context.tr('Total'),
+                      style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: ShopStyle.ink)),
@@ -992,15 +994,15 @@ class _OrderSheetState extends State<OrderSheet> {
             const SizedBox(height: 18),
             if (widget.delivers)
             SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                     value: 'pickup',
-                    label: Text('Retrait'),
-                    icon: Icon(Icons.storefront_outlined)),
+                    label: Text(context.tr('Retrait')),
+                    icon: const Icon(Icons.storefront_outlined)),
                 ButtonSegment(
                     value: 'delivery',
-                    label: Text('Livraison'),
-                    icon: Icon(Icons.delivery_dining_outlined)),
+                    label: Text(context.tr('Livraison')),
+                    icon: const Icon(Icons.delivery_dining_outlined)),
               ],
               selected: {_fulfilment},
               onSelectionChanged: (s) =>
@@ -1009,15 +1011,15 @@ class _OrderSheetState extends State<OrderSheet> {
             if (widget.waveMerchant != null) ...[
               const SizedBox(height: 12),
               SegmentedButton<String>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                       value: 'cash',
-                      label: Text('Espèces'),
-                      icon: Icon(Icons.payments_outlined)),
+                      label: Text(context.tr('Espèces')),
+                      icon: const Icon(Icons.payments_outlined)),
                   ButtonSegment(
                       value: 'wave',
-                      label: Text('Wave'),
-                      icon: Icon(Icons.phone_iphone_outlined)),
+                      label: Text(context.tr('Wave')),
+                      icon: const Icon(Icons.phone_iphone_outlined)),
                 ],
                 selected: {_payment},
                 onSelectionChanged: (s) =>
@@ -1028,9 +1030,9 @@ class _OrderSheetState extends State<OrderSheet> {
               const SizedBox(height: 12),
               TextField(
                 controller: _address,
-                decoration: const InputDecoration(
-                  labelText: 'Où livrer ?',
-                  hintText: 'Quartier, repère, en face de…',
+                decoration: InputDecoration(
+                  labelText: context.tr('Où livrer ?'),
+                  hintText: context.tr('Quartier, repère, en face de…'),
                 ),
               ),
               const SizedBox(height: 8),
@@ -1051,11 +1053,11 @@ class _OrderSheetState extends State<OrderSheet> {
                               child:
                                   CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.my_location, size: 16),
-                      label: const Text('Épingler ma position'),
+                      label: Text(context.tr('Épingler ma position')),
                     ),
                     TextButton(
                       onPressed: _pasteMapsLink,
-                      child: const Text('Lien Google Maps'),
+                      child: Text(context.tr('Lien Google Maps')),
                     ),
                   ],
                 )
@@ -1065,13 +1067,13 @@ class _OrderSheetState extends State<OrderSheet> {
                     const Icon(Icons.location_on,
                         size: 18, color: ShopStyle.ink),
                     const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text('Position épinglée pour le livreur',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(context.tr('Position épinglée pour le livreur'),
+                          style: const TextStyle(
                               fontSize: 14, color: ShopStyle.ink)),
                     ),
                     IconButton(
-                      tooltip: 'Retirer',
+                      tooltip: context.tr('Retirer'),
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () => setState(() {
                         _dropLat = null;
@@ -1088,8 +1090,8 @@ class _OrderSheetState extends State<OrderSheet> {
             TextField(
               controller: _phone,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Votre numéro (facultatif)',
+              decoration: InputDecoration(
+                labelText: context.tr('Votre numéro (facultatif)'),
                 hintText: '+226 70 00 00 00',
               ),
             ),
@@ -1097,8 +1099,8 @@ class _OrderSheetState extends State<OrderSheet> {
             TextField(
               controller: _note,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Un mot pour la boutique (facultatif)',
+              decoration: InputDecoration(
+                labelText: context.tr('Un mot pour la boutique (facultatif)'),
               ),
             ),
             if (_error != null) ...[
@@ -1121,7 +1123,7 @@ class _OrderSheetState extends State<OrderSheet> {
                         height: 18,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: ShopStyle.paper))
-                    : const Text('Envoyer la commande'),
+                    : Text(context.tr('Envoyer la commande')),
               ),
             ),
             const SizedBox(height: 6),
@@ -1200,7 +1202,7 @@ class _Window extends StatelessWidget {
               child: _Photo(
                 photoKey: style.coverKey,
                 capture: capture,
-                label: 'Photo de ${shop.name}',
+                label: context.tr('Photo de {name}', {'name': shop.name}),
               ),
             ),
           ),
@@ -1232,7 +1234,7 @@ class _Window extends StatelessWidget {
                         child: _Photo(
                           photoKey: style.logoKey,
                           capture: capture,
-                          label: 'Logo de ${shop.name}',
+                          label: context.tr('Logo de {name}', {'name': shop.name}),
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -1344,12 +1346,12 @@ class _Window extends StatelessWidget {
                       if (whatsapp != null)
                         FilledButton(
                           onPressed: () => onOpen(whatsapp),
-                          child: const Text('Écrire sur WhatsApp'),
+                          child: Text(context.tr('Écrire sur WhatsApp')),
                         ),
                       if (phone.isNotEmpty)
                         OutlinedButton(
                           onPressed: () => onOpen('tel:$phone'),
-                          child: const Text('Appeler'),
+                          child: Text(context.tr('Appeler')),
                         ),
                       // The way there, in the maps app the phone already
                       // has: turn-by-turn, no key, no bill (054).
@@ -1358,7 +1360,7 @@ class _Window extends StatelessWidget {
                           onPressed: () =>
                               onOpen(directionsUrl(shop.lat!, shop.lng!)),
                           icon: const Icon(Icons.directions_outlined, size: 18),
-                          label: const Text('Itinéraire'),
+                          label: Text(context.tr('Itinéraire')),
                         ),
                       // A vitrine travels the way news does here: sent on
                       // WhatsApp from one phone to the next. The shop's
@@ -1368,7 +1370,7 @@ class _Window extends StatelessWidget {
                             'Découvrez ${shop.name} sur Mara : '
                             '${publicShopUrl(shop.slug)}')),
                         icon: const Icon(Icons.share_outlined, size: 18),
-                        label: const Text('Partager'),
+                        label: Text(context.tr('Partager')),
                       ),
                     ],
                   ),
@@ -1395,9 +1397,9 @@ class _Window extends StatelessWidget {
               ),
               if (totalCount > 0) ...[
                 const SizedBox(height: 6),
-                const Text(
-                  'Touchez un article pour le voir, « + » pour l\'ajouter.',
-                  style: TextStyle(fontSize: 13, color: ShopStyle.mist),
+                Text(
+                  context.tr('Touchez un article pour le voir, « + » pour l\'ajouter.'),
+                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
               ],
               // The shelf filter, once the shelf is long enough to need
@@ -1411,12 +1413,12 @@ class _Window extends StatelessWidget {
                     onChanged: onFilterChanged,
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
-                      hintText: 'Chercher dans la boutique…',
+                      hintText: context.tr('Chercher dans la boutique…'),
                       prefixIcon: const Icon(Icons.search, size: 20),
                       suffixIcon: filter.text.isEmpty
                           ? null
                           : IconButton(
-                              tooltip: 'Effacer',
+                              tooltip: context.tr('Effacer'),
                               icon: const Icon(Icons.close, size: 18),
                               onPressed: () {
                                 filter.clear();
@@ -1441,10 +1443,10 @@ class _Window extends StatelessWidget {
               ],
               const SizedBox(height: 18),
               if (totalCount == 0)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text('Aucun article affiché pour le moment.',
-                      style: TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(context.tr('Aucun article affiché pour le moment.'),
+                      style: const TextStyle(fontSize: 15, color: ShopStyle.mist)),
                 )
               else if (items.isEmpty)
                 Padding(
@@ -1685,10 +1687,10 @@ class _ItemTile extends StatelessWidget {
                       ),
                     ),
                   if (!item.inStock)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 2),
-                      child: Text('Épuisé',
-                          style: TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(context.tr('Épuisé'),
+                          style: const TextStyle(
                               fontSize: 12,
                               letterSpacing: 0.6,
                               fontWeight: FontWeight.w600,
@@ -1821,7 +1823,7 @@ class _QuickAdd extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
-      label: 'Ajouter un $name au panier',
+      label: context.tr('Ajouter un {name} au panier', {'name': name}),
       excludeSemantics: true,
       onTap: onAdd,
       child: Material(
@@ -1866,7 +1868,7 @@ class _Stepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _StepButton(
-              icon: Icons.remove, label: 'Retirer un $name', onTap: onRemove),
+              icon: Icons.remove, label: context.tr('Retirer un {name}', {'name': name}), onTap: onRemove),
           ExcludeSemantics(
             child: Text('$count',
                 style: const TextStyle(
@@ -1874,7 +1876,7 @@ class _Stepper extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: ShopStyle.paper)),
           ),
-          _StepButton(icon: Icons.add, label: 'Ajouter un $name', onTap: onAdd),
+          _StepButton(icon: Icons.add, label: context.tr('Ajouter un {name}', {'name': name}), onTap: onAdd),
         ],
       ),
     );
@@ -1941,7 +1943,7 @@ class ArticleSheet extends StatelessWidget {
                             child: _Photo(
                                 photoKey: item.photoKey,
                                 capture: capture,
-                                label: 'Photo de ${item.name}'),
+                                label: context.tr('Photo de {name}', {'name': item.name})),
                           ),
                   ),
                 ),
@@ -1985,7 +1987,7 @@ class ArticleSheet extends StatelessWidget {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: onAdd,
-                        child: const Text('Ajouter au panier'),
+                        child: Text(context.tr('Ajouter au panier')),
                       ),
                     )
                   : Row(
@@ -1997,13 +1999,13 @@ class ArticleSheet extends StatelessWidget {
                             onRemove: onRemove),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text('$count dans le panier',
+                          child: Text(context.tr('{count} dans le panier', {'count': count}),
                               style: const TextStyle(
                                   fontSize: 15, color: ShopStyle.ink)),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Continuer'),
+                          child: Text(context.tr('Continuer')),
                         ),
                       ],
                     ),
@@ -2014,7 +2016,7 @@ class ArticleSheet extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => onOpen(ask),
                   icon: const Icon(Icons.chat_outlined, size: 18),
-                  label: const Text('Poser une question sur WhatsApp'),
+                  label: Text(context.tr('Poser une question sur WhatsApp')),
                 ),
               ),
             ],

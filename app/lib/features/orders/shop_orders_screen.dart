@@ -16,6 +16,7 @@ import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_skeleton.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -137,11 +138,11 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
           title: Text(status == 'refused'
               ? 'Refuser cette commande ?'
               : 'Annuler cette commande ?'),
-          content: Text('${order.customerName} en sera informé.'),
+          content: Text(context.tr('{customerName} en sera informé.', {'customerName': order.customerName})),
           actions: [
             TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Retour')),
+                child: Text(context.tr('Retour'))),
             FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 child: Text(orderActionLabel(status))),
@@ -168,16 +169,15 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Livrer vous-même ?'),
-        content: Text("La commande de ${order.customerName} passe « en route ». "
-            'Vous encaissez la livraison ; marquez-la livrée une fois remise.'),
+        title: Text(context.tr('Livrer vous-même ?')),
+        content: Text(context.tr('La commande de {customerName} passe « en route ». Vous encaissez la livraison ; marquez-la livrée une fois remise.', {'customerName': order.customerName})),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Retour')),
+              child: Text(context.tr('Retour'))),
           FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Je livre moi-même')),
+              child: Text(context.tr('Je livre moi-même'))),
         ],
       ),
     );
@@ -227,18 +227,18 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Commandes'),
+          title: Text(context.tr('Commandes')),
           actions: [
             LessonHelpButton(
-                org: widget.org, lessonKey: 'first_order', title: 'Accepter une commande de la vitrine'),
+                org: widget.org, lessonKey: 'first_order', title: context.tr('Accepter une commande de la vitrine')),
             if (widget.org.isAdmin)
               IconButton(
-                tooltip: 'Mes livreurs',
+                tooltip: context.tr('Mes livreurs'),
                 onPressed: _showCouriers,
                 icon: const Icon(Icons.sports_motorsports_outlined),
               ),
             IconButton(
-              tooltip: 'Actualiser',
+              tooltip: context.tr('Actualiser'),
               onPressed: _loading ? null : _load,
               icon: const Icon(Icons.refresh),
             ),
@@ -261,7 +261,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                           const SizedBox(height: 12),
                           OutlinedButton(
                               onPressed: _load,
-                              child: const Text('Réessayer')),
+                              child: Text(context.tr('Réessayer'))),
                         ],
                       ),
                     ),
@@ -451,7 +451,7 @@ class _OrderCard extends StatelessWidget {
                         onPressed: busy ? null : () => onDeliverSelf!(order),
                         icon: const Icon(Icons.directions_bike_outlined,
                             size: 18),
-                        label: const Text('Je livre moi-même'),
+                        label: Text(context.tr('Je livre moi-même')),
                       ),
                     ],
                   ],
@@ -464,13 +464,13 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Text(phone, style: theme.textTheme.bodyMedium),
                   IconButton(
-                    tooltip: 'Appeler',
+                    tooltip: context.tr('Appeler'),
                     icon: const Icon(Icons.call_outlined, size: 20),
                     onPressed: () => onOpen('tel:$phone'),
                   ),
                   if (whatsapp != null)
                     IconButton(
-                      tooltip: 'WhatsApp',
+                      tooltip: context.tr('WhatsApp'),
                       icon: const Icon(Icons.chat_outlined, size: 20),
                       onPressed: () => onOpen(whatsapp),
                     ),
@@ -497,7 +497,7 @@ class _OrderCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                    child: Text('Total',
+                    child: Text(context.tr('Total'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w600))),
                 Text(money.format(order.total),
@@ -519,26 +519,26 @@ class _OrderCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text('Livraison : ${order.address}',
+                    child: Text(context.tr('Livraison : {address}', {'address': order.address}),
                         style: theme.textTheme.bodySmall),
                   ),
                   if (order.hasDropPin)
                     TextButton(
                       onPressed: () => onOpen(
                           directionsUrl(order.dropLat!, order.dropLng!)),
-                      child: const Text('Itinéraire'),
+                      child: Text(context.tr('Itinéraire')),
                     ),
                 ],
               ),
             ],
             if ((order.courierName ?? '').isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('Livreur : ${order.courierName}',
+              Text(context.tr('Livreur : {courierName}', {'courierName': order.courierName}),
                   style: theme.textTheme.bodySmall),
             ],
             if ((order.note ?? '').isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text('Note : ${order.note}', style: theme.textTheme.bodySmall),
+              Text(context.tr('Note : {note}', {'note': order.note}), style: theme.textTheme.bodySmall),
             ],
             if (next.isNotEmpty || order.isOpen || order.isPaid) ...[
               const SizedBox(height: 12),
@@ -553,13 +553,13 @@ class _OrderCard extends StatelessWidget {
                       onPressed:
                           busy ? null : () => onSetPaid(order, true),
                       icon: const Icon(Icons.price_check_outlined, size: 18),
-                      label: const Text('Paiement reçu'),
+                      label: Text(context.tr('Paiement reçu')),
                     )
                   else if (order.isPaid)
                     TextButton(
                       onPressed:
                           busy ? null : () => onSetPaid(order, false),
-                      child: const Text('Annuler le paiement'),
+                      child: Text(context.tr('Annuler le paiement')),
                     ),
                   for (var i = 0; i < next.length; i++)
                     if (next[i] == 'refused' || next[i] == 'cancelled')
@@ -673,17 +673,16 @@ class _CashSheetState extends State<_CashSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Argent chez les livreurs',
+              Text(context.tr('Argent chez les livreurs'),
                   style: theme.textTheme.titleLarge),
               const SizedBox(height: 4),
-              Text("Touchez « Reçu » quand le livreur vous a remis l'argent "
-                  'de la commande.',
+              Text(context.tr('Touchez « Reçu » quand le livreur vous a remis l\'argent de la commande.'),
                   style: theme.textTheme.bodySmall),
               const SizedBox(height: 8),
               if (_left.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Tout est réglé.', textAlign: TextAlign.center),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(context.tr('Tout est réglé.'), textAlign: TextAlign.center),
                 ),
               for (final c in _left)
                 ListTile(
@@ -697,7 +696,7 @@ class _CashSheetState extends State<_CashSheet> {
                   ].join(' · ')),
                   trailing: FilledButton.tonal(
                     onPressed: _busy != null ? null : () => _received(c),
-                    child: const Text('Reçu'),
+                    child: Text(context.tr('Reçu')),
                   ),
                 ),
             ],
@@ -784,11 +783,10 @@ class _CouriersSheetState extends State<_CouriersSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Mes livreurs', style: theme.textTheme.titleLarge),
+            Text(context.tr('Mes livreurs'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-                'Vos commandes prêtes leur sont proposées en premier, seuls, '
-                'pendant 10 minutes ; ensuite à tous les livreurs Mara.',
+                context.tr('Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Mara.'),
                 style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             for (final c in _list)
@@ -798,7 +796,7 @@ class _CouriersSheetState extends State<_CouriersSheet> {
                 title: Text(c.name),
                 subtitle: c.phone == null ? null : Text(c.phone!),
                 trailing: IconButton(
-                  tooltip: 'Retirer ${c.name}',
+                  tooltip: context.tr('Retirer {name}', {'name': c.name}),
                   icon: const Icon(Icons.close),
                   onPressed: _busy ? null : () => _remove(c),
                 ),
@@ -811,17 +809,17 @@ class _CouriersSheetState extends State<_CouriersSheet> {
                     controller: _phone,
                     enabled: !_busy,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Numéro du livreur',
-                      hintText: 'Inscrit et validé comme livreur Mara',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Numéro du livreur'),
+                      hintText: context.tr('Inscrit et validé comme livreur Mara'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _busy ? null : _add,
-                  child: const Text('Ajouter'),
+                  child: Text(context.tr('Ajouter')),
                 ),
               ],
             ),

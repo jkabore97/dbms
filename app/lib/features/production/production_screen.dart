@@ -13,6 +13,7 @@ import '../../core/production/production_repository.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../l10n/strings.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The transformation tool: ingredients in, a product out, and the app doing
 /// the division the maker used to do in her head.
@@ -183,7 +184,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
                                         onPressed: () => _edit(r),
                                         icon: const Icon(Icons.edit_outlined,
                                             size: 18),
-                                        label: const Text('Modifier'),
+                                        label: Text(context.tr('Modifier')),
                                       ),
                                       // Day two of any real bakery: the same
                                       // cakes as yesterday. One tap brings the
@@ -496,7 +497,7 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
                     ),
                     if (_rows.length > 1)
                       IconButton(
-                        tooltip: 'Retirer cet ingrédient',
+                        tooltip: context.tr('Retirer cet ingrédient'),
                         icon: const Icon(Icons.close),
                         onPressed: _busy
                             ? null
@@ -676,11 +677,11 @@ class _EditRunSheetState extends State<_EditRunSheet> {
     final qty = double.tryParse(_quantity.text.trim().replaceAll(',', '.'));
     final name = _name.text.trim();
     if (qty == null || qty <= 0) {
-      setState(() => _error = 'Entrez la quantité produite.');
+      setState(() => _error = context.tr('Entrez la quantité produite.'));
       return;
     }
     if (name.isEmpty) {
-      setState(() => _error = 'Entrez le nom du produit.');
+      setState(() => _error = context.tr('Entrez le nom du produit.'));
       return;
     }
     setState(() {
@@ -714,27 +715,27 @@ class _EditRunSheetState extends State<_EditRunSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Corriger la production', style: theme.textTheme.titleLarge),
+          Text(context.tr('Corriger la production'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            'Les ingrédients ne changent pas. Le coût unitaire est recalculé.',
+            context.tr('Les ingrédients ne changent pas. Le coût unitaire est recalculé.'),
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(
-              labelText: 'Produit',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Produit'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _quantity,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Quantité produite',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('Quantité produite'),
+              border: const OutlineInputBorder(),
             ),
           ),
           if (_error != null) ...[
@@ -749,7 +750,7 @@ class _EditRunSheetState extends State<_EditRunSheet> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Enregistrer la correction'),
+                : Text(context.tr('Enregistrer la correction')),
           ),
         ],
       ),

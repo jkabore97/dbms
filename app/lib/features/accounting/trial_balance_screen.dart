@@ -4,6 +4,7 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Debits and credits, uninterpreted.
 ///
@@ -84,7 +85,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     final balanced = (debit - credit).abs() < 1;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Balance générale')),
+      appBar: AppBar(title: Text(context.tr('Balance générale'))),
       body: Column(
         children: [
           const SizedBox(height: 12),
@@ -120,14 +121,14 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
                           children: [
                             Expanded(
                               child: StatTile(
-                                label: 'Débit',
+                                label: context.tr('Débit'),
                                 amount: debit,
                                 money: money,
                               ),
                             ),
                             Expanded(
                               child: StatTile(
-                                label: 'Crédit',
+                                label: context.tr('Crédit'),
                                 amount: credit,
                                 money: money,
                               ),
@@ -170,11 +171,11 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                     child: Row(
                       children: [
-                        const Expanded(flex: 5, child: Text('Compte')),
+                        Expanded(flex: 5, child: Text(context.tr('Compte'))),
                         Expanded(
                           flex: 3,
                           child: Text(
-                            'Débit',
+                            context.tr('Débit'),
                             textAlign: TextAlign.right,
                             style: theme.textTheme.labelMedium,
                           ),
@@ -182,7 +183,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
                         Expanded(
                           flex: 3,
                           child: Text(
-                            'Crédit',
+                            context.tr('Crédit'),
                             textAlign: TextAlign.right,
                             style: theme.textTheme.labelMedium,
                           ),

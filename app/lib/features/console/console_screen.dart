@@ -8,6 +8,7 @@ import '../../core/db/local_db.dart';
 import 'activity_log_tab.dart';
 import 'database_tab.dart';
 import 'device_tab.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The super admin's console.
 ///
@@ -54,7 +55,7 @@ class _ConsoleScreenState extends State<ConsoleScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Console'),
+        title: Text(context.tr('Console')),
         bottom: TabBar(
           controller: tabs,
           tabs: const [

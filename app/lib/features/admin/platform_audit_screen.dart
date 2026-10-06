@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The activity log across every business (048) — the platform admin's
 /// oversight view. Newest first, keyset-paged, filterable to the actions a
@@ -23,7 +24,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
   /// null = every action; otherwise 'update' or 'delete'.
   String? _action;
 
-  List<PlatformAuditEvent> _events = const [];
+  List<PlatformAuditEvent> _events = [];
   bool _loading = true;
   bool _loadingMore = false;
   bool _atEnd = false;
@@ -88,17 +89,17 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Activité de la plateforme')),
+      appBar: AppBar(title: Text(context.tr('Activité de la plateforme'))),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: SegmentedButton<String>(
               showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(value: 'all', label: Text('Tout')),
-                ButtonSegment(value: 'update', label: Text('Modifications')),
-                ButtonSegment(value: 'delete', label: Text('Suppressions')),
+              segments: [
+                ButtonSegment(value: 'all', label: Text(context.tr('Tout'))),
+                ButtonSegment(value: 'update', label: Text(context.tr('Modifications'))),
+                ButtonSegment(value: 'delete', label: Text(context.tr('Suppressions'))),
               ],
               selected: {_action ?? 'all'},
               onSelectionChanged: (s) =>
@@ -118,10 +119,10 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
                       ),
                     ])
                   : (_events.isEmpty && !_loading)
-                      ? ListView(children: const [
+                      ? ListView(children: [
                           Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Center(child: Text('Aucune activité.')),
+                            padding: const EdgeInsets.all(40),
+                            child: Center(child: Text(context.tr('Aucune activité.'))),
                           ),
                         ])
                       : ListView.separated(
@@ -142,9 +143,9 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
 
   Widget _footer(ThemeData theme) {
     if (_atEnd || _events.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: Text('— fin —')),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(child: Text(context.tr('— fin —'))),
       );
     }
     return Padding(
@@ -153,7 +154,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
         child: _loadingMore
             ? const CircularProgressIndicator()
             : OutlinedButton(
-                onPressed: _more, child: const Text('Charger plus')),
+                onPressed: _more, child: Text(context.tr('Charger plus'))),
       ),
     );
   }

@@ -3,6 +3,7 @@ import '../../core/format/money.dart';
 
 import '../../core/db/local_db.dart';
 import 'entry_controls.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Money moved between two places the business already keeps it: cash banked
 /// at the end of the week, a withdrawal for Monday's purchases, a mobile money
@@ -147,7 +148,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
                   Icon(Icons.swap_horiz, size: 20, color: accent),
                   const SizedBox(width: 8),
                   Text(
-                    'Transfert',
+                    context.tr('Transfert'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: accent,
                       fontWeight: FontWeight.w700,
@@ -159,7 +160,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
             const SizedBox(height: 4),
             Center(
               child: Text(
-                "Ni une recette ni une dépense : l'argent change de place.",
+                context.tr('Ni une recette ni une dépense : l\'argent change de place.'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -179,11 +180,11 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('De', style: theme.textTheme.labelLarge),
+            Text(context.tr('De'), style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             ChoiceChipRow(values: _places, selected: _from, onSelect: _setFrom),
             const SizedBox(height: 16),
-            Text('Vers', style: theme.textTheme.labelLarge),
+            Text(context.tr('Vers'), style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             ChoiceChipRow(values: _places, selected: _to, onSelect: _setTo),
             const SizedBox(height: 16),
@@ -192,8 +193,8 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               enabled: !_saving,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                labelText: "Nom de l'entrée",
-                hintText: 'Dépôt de la collecte du dimanche',
+                labelText: context.tr('Nom de l\'entrée'),
+                hintText: context.tr('Dépôt de la collecte du dimanche'),
                 helperText: _labelController.text.trim().isEmpty
                     ? 'Sans nom, ce sera « Transfert »'
                     : null,
@@ -218,9 +219,9 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
                         height: 24,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        'Enregistrer le transfert',
-                        style: TextStyle(
+                    : Text(
+                        context.tr('Enregistrer le transfert'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -230,7 +231,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Fonctionne sans connexion',
+                context.tr('Fonctionne sans connexion'),
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
             ),

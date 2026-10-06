@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The Sunday summary.
 ///
@@ -144,12 +145,12 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Résumé de la semaine'),
+        title: Text(context.tr('Résumé de la semaine')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
+            tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
@@ -182,7 +183,7 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
                         ),
                         TextButton(
                           onPressed: _load,
-                          child: const Text('Réessayer'),
+                          child: Text(context.tr('Réessayer')),
                         ),
                       ],
                     ),
@@ -211,16 +212,16 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.share),
-                      label: const Text(
-                        'Partager (WhatsApp)',
-                        style: TextStyle(fontSize: 17),
+                      label: Text(
+                        context.tr('Partager (WhatsApp)'),
+                        style: const TextStyle(fontSize: 17),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      "Envoie une image du résumé — lisible sans l'application.",
+                      context.tr('Envoie une image du résumé — lisible sans l\'application.'),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -293,13 +294,13 @@ class SummaryCard extends StatelessWidget {
           const SizedBox(height: 20),
 
           _Total(
-            label: 'Total reçu',
+            label: context.tr('Total reçu'),
             amount: money.format(summary.totalIn),
             color: _green,
           ),
           const SizedBox(height: 10),
           _Total(
-            label: 'Total dépensé',
+            label: context.tr('Total dépensé'),
             amount: money.format(summary.totalOut),
             color: _orange,
           ),
@@ -311,9 +312,9 @@ class SummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Solde de la semaine',
-                style: TextStyle(
+              Text(
+                context.tr('Solde de la semaine'),
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: _ink,
@@ -357,9 +358,9 @@ class SummaryCard extends StatelessWidget {
 
           if (summary.isEmpty) ...[
             const SizedBox(height: 20),
-            const Text(
-              'Rien enregistré cette semaine.',
-              style: TextStyle(fontSize: 14, color: _muted),
+            Text(
+              context.tr('Rien enregistré cette semaine.'),
+              style: const TextStyle(fontSize: 14, color: _muted),
             ),
           ],
 
@@ -479,7 +480,7 @@ class _WeekPicker extends StatelessWidget {
         IconButton(
           onPressed: () => onShift(-7),
           icon: const Icon(Icons.chevron_left),
-          tooltip: 'Semaine précédente',
+          tooltip: context.tr('Semaine précédente'),
         ),
         Text(
           isThisWeek
@@ -492,7 +493,7 @@ class _WeekPicker extends StatelessWidget {
           // page of zeros that reads like a collapse in giving.
           onPressed: isThisWeek ? null : () => onShift(7),
           icon: const Icon(Icons.chevron_right),
-          tooltip: 'Semaine suivante',
+          tooltip: context.tr('Semaine suivante'),
         ),
       ],
     );

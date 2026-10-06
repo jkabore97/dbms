@@ -11,6 +11,7 @@ import '../../core/db/local_db.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../account/pro_sheet.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The administration hub.
 ///
@@ -54,7 +55,7 @@ class AdminHomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.storefront_outlined),
-            tooltip: 'Les vitrines',
+            tooltip: context.tr('Les vitrines'),
             onPressed: () => context.go(Routes.directory),
           ),
         ],
@@ -109,8 +110,8 @@ class AdminHomeScreen extends StatelessWidget {
           // softly — this screen also lives in bare test trees.
           _AdminTile(
             icon: Icons.key_outlined,
-            title: "Accès de l'équipe",
-            subtitle: 'Qui voit quoi, qui modifie quoi',
+            title: context.tr('Accès de l\'équipe'),
+            subtitle: context.tr('Qui voit quoi, qui modifie quoi'),
             pro: scope?.session.accessFor(org.id).isProLocked('team_access') ??
                 false,
             onTap: () {
@@ -203,7 +204,7 @@ class _AdminTile extends StatelessWidget {
                   color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text('Pro',
+                child: Text(context.tr('Pro'),
                     style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.w700)),

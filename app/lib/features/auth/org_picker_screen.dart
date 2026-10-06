@@ -8,6 +8,7 @@ import '../../core/nav/router.dart';
 
 import '../../core/auth/models.dart';
 import '../../l10n/strings.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Shown when someone belongs to more than one business — the accountant who
 /// keeps books for a church and a farm, or an owner with two shops.
@@ -72,7 +73,7 @@ class OrgPickerScreen extends StatelessWidget {
           IconButton(
             onPressed: () => context.go(Routes.directory),
             icon: const Icon(Icons.storefront_outlined),
-            tooltip: 'Les vitrines',
+            tooltip: context.tr('Les vitrines'),
           ),
           if (onBusinesses != null)
             IconButton(
@@ -121,7 +122,7 @@ class OrgPickerScreen extends StatelessWidget {
               size: 48, color: theme.colorScheme.outline),
           const SizedBox(height: 16),
           Text(
-            "Aucune entreprise pour l'instant.",
+            context.tr('Aucune entreprise pour l\'instant.'),
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium,
           ),
@@ -225,12 +226,12 @@ class _LoadingWithEscapeState extends State<_LoadingWithEscape> {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 20),
-          Text('Chargement de vos entreprises…',
+          Text(context.tr('Chargement de vos entreprises…'),
               style: theme.textTheme.bodyMedium),
           if (_stuck) ...[
             const SizedBox(height: 24),
             Text(
-              'Cela prend plus de temps que prévu.',
+              context.tr('Cela prend plus de temps que prévu.'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall,
             ),
@@ -246,12 +247,12 @@ class _LoadingWithEscapeState extends State<_LoadingWithEscape> {
                   widget.onRetry!();
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Réessayer'),
+                label: Text(context.tr('Réessayer')),
               ),
             if (widget.onSignOut != null)
               TextButton(
                 onPressed: widget.onSignOut,
-                child: const Text('Se déconnecter'),
+                child: Text(context.tr('Se déconnecter')),
               ),
           ],
         ],

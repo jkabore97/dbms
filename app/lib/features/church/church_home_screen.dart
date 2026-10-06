@@ -22,6 +22,7 @@ import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Israel's home screen.
 ///
@@ -187,9 +188,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(Strings.of(context).cancelEntryTitle),
-        content: const Text(
-          "L'entrée reste visible dans l'historique, marquée comme corrigée. "
-          "Rien n'est supprimé.",
+        content: Text(
+          context.tr('L\'entrée reste visible dans l\'historique, marquée comme corrigée. Rien n\'est supprimé.'),
         ),
         actions: [
           TextButton(
@@ -257,11 +257,11 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                   Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   if (_entries.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
                       child: Center(
                         child: Text(
-                          'Rien enregistré aujourd\'hui.\nAppuyez sur le bouton pour commencer.',
+                          context.tr('Rien enregistré aujourd\'hui.\nAppuyez sur le bouton pour commencer.'),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -288,7 +288,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                             : Icons.check_circle_outline,
                       ),
                       label: Text(
-                        _dayClosed ? 'Journée clôturée' : 'Clôturer la journée',
+                        _dayClosed ? context.tr('Journée clôturée') : context.tr('Clôturer la journée'),
                         style: const TextStyle(fontSize: 16),
                       ),
                     ),
@@ -328,9 +328,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
             backgroundColor: Colors.orange.shade100,
             foregroundColor: Colors.orange.shade900,
             icon: const Icon(Icons.arrow_upward, size: 20),
-            label: const Text(
-              'Dépense',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            label: Text(
+              context.tr('Dépense'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(height: 12),
@@ -338,9 +338,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
             heroTag: 'record-income',
             onPressed: () => _openRecordSheet('in'),
             icon: const Icon(Icons.arrow_downward, size: 28),
-            label: const Text(
-              'Recette',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            label: Text(
+              context.tr('Recette'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             extendedPadding: const EdgeInsets.symmetric(horizontal: 32),
           ),
@@ -360,7 +360,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
         selectedIcon: Icons.volunteer_activism,
         // Not "Aujourd'hui": that is already the heading of the day's list
         // on this page, and one word twice on a screen reads as two places.
-        label: 'Accueil',
+        label: context.tr('Accueil'),
         onTap: () {},
       ),
       primary: [
@@ -464,7 +464,7 @@ class _TodayCard extends StatelessWidget {
               ),
             ),
             Text(
-              'reçu aujourd\'hui',
+              context.tr('reçu aujourd\'hui'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: on,
               ),
@@ -588,7 +588,7 @@ class _EntryTile extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.more_vert),
               onPressed: onUndo,
-              tooltip: 'Annuler',
+              tooltip: context.tr('Annuler'),
             ),
         ],
       ),

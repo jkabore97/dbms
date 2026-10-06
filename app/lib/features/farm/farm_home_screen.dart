@@ -20,6 +20,7 @@ import '../cauris/path_card.dart';
 import '../home/home_nav.dart';
 import 'farm_sheets.dart';
 import '../../core/nav/router.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Ignace's home screen.
 ///
@@ -199,10 +200,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   Future<void> _recordFlockEvent() async {
     if (_flocks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Aucune bande enregistrée. Ouvrez-en une dans « Bandes » — "
-            'cela demande le réseau.',
+            context.tr('Aucune bande enregistrée. Ouvrez-en une dans « Bandes » — cela demande le réseau.'),
           ),
         ),
       );
@@ -401,7 +401,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
         selectedIcon: Icons.agriculture,
         // Not "Aujourd'hui": that is already the heading of the day's list
         // on this page, and one word twice on a screen reads as two places.
-        label: 'Accueil',
+        label: context.tr('Accueil'),
         onTap: () {},
       ),
       primary: [
@@ -427,23 +427,23 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
         // The farm's vitrine (083): what it sells, and the orders for it.
         HomeDestination(
           icon: Icons.storefront_outlined,
-          label: 'À vendre',
+          label: context.tr('À vendre'),
           onTap: () => _push(Routes.inside(id, 'a-vendre')),
         ),
         HomeDestination(
           icon: Icons.shopping_bag_outlined,
-          label: 'Commandes',
+          label: context.tr('Commandes'),
           onTap: () => _push(Routes.inside(id, 'commandes')),
         ),
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.savings_outlined,
-            label: 'Mes cauris',
+            label: context.tr('Mes cauris'),
             onTap: () => _push(Routes.inside(id, 'cauris')),
           ),
         HomeDestination(
           icon: Icons.school_outlined,
-          label: 'Académie',
+          label: context.tr('Académie'),
           onTap: () => _push(Routes.inside(id, 'academie')),
         ),
         if (widget.access.canSee('credits'))
@@ -657,9 +657,7 @@ class _StaleBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              "Chiffres de cet appareil seulement. Le stock et l'effectif des "
-              'bandes se calculent sur tous les appareils et seront à jour au '
-              'retour du réseau.',
+              context.tr('Chiffres de cet appareil seulement. Le stock et l\'effectif des bandes se calculent sur tous les appareils et seront à jour au retour du réseau.'),
               style: theme.textTheme.bodySmall,
             ),
           ),
@@ -747,7 +745,7 @@ class _FlockPicker extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 16),
-          Text('Quelle bande ?',
+          Text(context.tr('Quelle bande ?'),
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           for (final flock in flocks)
@@ -791,7 +789,7 @@ class _FarmShapeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Élevage et cultures', style: theme.textTheme.titleMedium),
+            Text(context.tr('Élevage et cultures'), style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
               shape.isEmpty

@@ -10,6 +10,7 @@ import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../../core/storefront/storefront_repository.dart' show publicShopUrl;
 import 'cauri_icon.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « Classement » (086): this week's race in the business's league.
 ///
@@ -85,7 +86,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
     final theme = Theme.of(context);
     final b = _board;
     return Scaffold(
-      appBar: AppBar(title: const Text('Classement')),
+      appBar: AppBar(title: Text(context.tr('Classement'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -99,7 +100,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
             else if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error))
             else if (b == null)
-              const Text('Le classement n\'est pas encore ouvert.')
+              Text(context.tr('Le classement n\'est pas encore ouvert.'))
             else ...[
               Text(b.label.toUpperCase(),
                   key: const Key('league-label'),
@@ -128,7 +129,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
                   key: const Key('league-share'),
                   onPressed: () => _share(b),
                   icon: const Icon(Icons.share_outlined),
-                  label: const Text('Le dire sur WhatsApp'),
+                  label: Text(context.tr('Le dire sur WhatsApp')),
                 ),
               ],
               const SizedBox(height: 22),
@@ -140,25 +141,23 @@ class _LeagueScreenState extends State<LeagueScreen> {
                       key: const Key('league-notify'),
                       value: b.notify,
                       onChanged: (v) => _prefs(notify: v),
-                      title: const Text('Le classement 4 fois par semaine'),
-                      subtitle: const Text('Lundi, mercredi, vendredi, dimanche à 19 h'),
+                      title: Text(context.tr('Le classement 4 fois par semaine')),
+                      subtitle: Text(context.tr('Lundi, mercredi, vendredi, dimanche à 19 h')),
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
                       key: const Key('league-hidden'),
                       value: b.hidden,
                       onChanged: (v) => _prefs(hidden: v),
-                      title: const Text('Cacher mon nom aux autres'),
-                      subtitle: const Text('Ils voient « une boutique de … »'),
+                      title: Text(context.tr('Cacher mon nom aux autres')),
+                      subtitle: Text(context.tr('Ils voient « une boutique de … »')),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
               Text(
-                'Chaque lundi, les 3 premiers de chaque ligue gagnent des cauris, '
-                'le badge « Top 3 » sur leur vitrine pour la semaine, et le '
-                'premier est mis en avant 7 jours.',
+                context.tr('Chaque lundi, les 3 premiers de chaque ligue gagnent des cauris, le badge « Top 3 » sur leur vitrine pour la semaine, et le premier est mis en avant 7 jours.'),
                 style: theme.textTheme.bodySmall?.copyWith(color: kMist),
               ),
             ],
@@ -183,8 +182,7 @@ class _Podium extends StatelessWidget {
         margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: Text('Personne n\'a encore gagné de cauris cette semaine '
-              'dans votre ligue : la première commande prend la tête.',
+          child: Text(context.tr('Personne n\'a encore gagné de cauris cette semaine dans votre ligue : la première commande prend la tête.'),
               style: theme.textTheme.bodyMedium),
         ),
       );

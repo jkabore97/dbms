@@ -21,6 +21,7 @@ import '../capture/capture_action.dart';
 import '../admin/spots_card.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -184,7 +185,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final capture = widget.capture;
     if (capture == null) return;
 
-    final code = await BarcodeSheet.scan(context, title: 'Scanner un article');
+    final code = await BarcodeSheet.scan(context, title: context.tr('Scanner un article'));
     if (code == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
@@ -241,7 +242,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   /// the photo are.
   Widget _vitrineButton(Product p, ThemeData theme) => IconButton(
         tooltip:
-            p.isPublished ? 'Sur la vitrine — modifier' : 'Mettre sur la vitrine',
+            p.isPublished ? context.tr('Sur la vitrine — modifier') : context.tr('Mettre sur la vitrine'),
         icon: Icon(
           p.isPublished ? Icons.storefront : Icons.storefront_outlined,
           color: p.isPublished
@@ -368,27 +369,27 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Articles'),
+        title: Text(context.tr('Articles')),
         actions: [
           LessonHelpButton(
-              org: widget.org, lessonKey: 'first_article', title: 'Mettre un article en vente'),
+              org: widget.org, lessonKey: 'first_article', title: context.tr('Mettre un article en vente')),
           IconButton(
             key: const Key('products-view'),
             onPressed: _toggleView,
             icon: Icon(_cards ? Icons.view_list_outlined : Icons.grid_view),
-            tooltip: _cards ? 'Afficher en liste' : 'Afficher en cartes',
+            tooltip: _cards ? context.tr('Afficher en liste') : context.tr('Afficher en cartes'),
           ),
           if (widget.access.canEdit('products'))
             IconButton(
               onPressed: _bulkAdd,
               icon: const Icon(Icons.playlist_add),
-              tooltip: 'Ajout multiple',
+              tooltip: context.tr('Ajout multiple'),
             ),
           if (widget.capture != null)
             IconButton(
               onPressed: _scan,
               icon: const Icon(Icons.qr_code_scanner),
-              tooltip: 'Scanner un code-barres',
+              tooltip: context.tr('Scanner un code-barres'),
             ),
         ],
       ),
@@ -396,7 +397,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ? FloatingActionButton.extended(
               onPressed: _addStock,
               icon: const Icon(Icons.add),
-              label: const Text('Entrée de stock'),
+              label: Text(context.tr('Entrée de stock')),
             )
           : null,
       body: RefreshIndicator(
@@ -443,12 +444,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       controller: _search,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Rechercher un article…',
+                        hintText: context.tr('Rechercher un article…'),
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _search.text.isEmpty
                             ? null
                             : IconButton(
-                                tooltip: 'Effacer',
+                                tooltip: context.tr('Effacer'),
                                 icon: const Icon(Icons.close),
                                 onPressed: () => setState(_search.clear),
                               ),
@@ -466,10 +467,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           Icon(Icons.inventory_2_outlined,
                               size: 48, color: theme.colorScheme.outline),
                           const SizedBox(height: 12),
-                          const Text(
-                            "Aucun article pour l'instant.\n"
-                            'Enregistrez une entrée de stock, ou vendez '
-                            "directement — l'article sera créé tout seul.",
+                          Text(
+                            context.tr('Aucun article pour l\'instant.\nEnregistrez une entrée de stock, ou vendez directement — l\'article sera créé tout seul.'),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -542,14 +541,13 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
   Future<void> _save() async {
     final lines = parseBulkLines(_text.text);
     if (lines.isEmpty) {
-      setState(() => _error = 'Écrivez au moins une ligne.');
+      setState(() => _error = context.tr('Écrivez au moins une ligne.'));
       return;
     }
     if (lines.any((l) => !l.ok)) {
       // Saving around a broken line would silently drop what somebody
       // typed; the preview already points at it.
-      setState(() => _error = 'Corrigez les lignes en rouge avant '
-          "d'enregistrer.");
+      setState(() => _error = context.tr('Corrigez les lignes en rouge avant d\'enregistrer.'));
       return;
     }
     setState(() {
@@ -608,11 +606,10 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Ajout multiple', style: theme.textTheme.titleLarge),
+            Text(context.tr('Ajout multiple'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Un article par ligne : nom quantité prix (coût facultatif). '
-              'Exemple : Savon 20 300 200',
+              context.tr('Un article par ligne : nom quantité prix (coût facultatif). Exemple : Savon 20 300 200'),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
@@ -621,9 +618,9 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
               enabled: !_busy,
               maxLines: 8,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                hintText: 'Savon 20 300\nSucre 1kg 10 600 450\nHuile 2,5 1500',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: context.tr('Savon 20 300\nSucre 1kg 10 600 450\nHuile 2,5 1500'),
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),
@@ -639,7 +636,7 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
                           style: theme.textTheme.bodySmall,
                         )
                       : Text(
-                          'Ligne ${l.lineNumber} : ${l.error}',
+                          context.tr('Ligne {lineNumber} : {error}', {'lineNumber': l.lineNumber, 'error': l.error}),
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: theme.colorScheme.error),
                         ),
@@ -655,8 +652,8 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
               child: FilledButton(
                 onPressed: _busy || good == 0 ? null : _save,
                 child: _busy
-                    ? Text('Enregistrement… $_saved/$good')
-                    : Text('Enregistrer $good article(s)',
+                    ? Text(context.tr('Enregistrement… {_saved}/{good}', {'_saved': _saved, 'good': good}))
+                    : Text(context.tr('Enregistrer {good} article(s)', {'good': good}),
                         style: const TextStyle(fontSize: 17)),
               ),
             ),
@@ -776,9 +773,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         // Queued for later: the bytes are safe, but with no server id there
         // is nothing to hang on the article yet. Filing it from Documents
         // once it lands is the honest path, so say exactly that.
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Photo gardée, en attente de réseau. Une fois '
-              'envoyée, liez-la à l\'article depuis Documents.'),
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Photo gardée, en attente de réseau. Une fois envoyée, liez-la à l\'article depuis Documents.')),
         ));
         return;
       }
@@ -788,8 +785,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         _photoBytes = picked.bytes;
         _photoKnown = true;
       });
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Photo de l\'article enregistrée.'),
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr('Photo de l\'article enregistrée.')),
       ));
     } catch (error) {
       messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
@@ -873,11 +870,11 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             TextField(
               controller: _name,
               enabled: !_busy,
-              decoration: const InputDecoration(
-                labelText: 'Nom du produit',
+              decoration: InputDecoration(
+                labelText: context.tr('Nom du produit'),
                 // Renaming cannot rewrite history — receipts snapshot names.
-                helperText: "Les ventes déjà faites gardent l'ancien nom.",
-                border: OutlineInputBorder(),
+                helperText: context.tr('Les ventes déjà faites gardent l\'ancien nom.'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -889,9 +886,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     enabled: !_busy,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      labelText: 'Prix de vente',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Prix de vente'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -903,13 +900,13 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      labelText: 'Coût unitaire',
+                      labelText: context.tr('Coût unitaire'),
                       border: const OutlineInputBorder(),
                       // Goods bought in another currency: convert, and the
                       // field receives the home-currency figure.
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.currency_exchange, size: 20),
-                        tooltip: 'Payé dans une autre monnaie',
+                        tooltip: context.tr('Payé dans une autre monnaie'),
                         onPressed: _busy
                             ? null
                             : () async {
@@ -944,9 +941,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               controller: _low,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "Seuil d'alerte stock bas (facultatif)",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Seuil d\'alerte stock bas (facultatif)'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -977,9 +974,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               value: _isIngredient,
               onChanged:
                   _busy ? null : (v) => setState(() => _isIngredient = v),
-              title: const Text('Ingrédient de production'),
-              subtitle: const Text(
-                  'Caché de la vente, proposé en premier en production.'),
+              title: Text(context.tr('Ingrédient de production')),
+              subtitle: Text(
+                  context.tr('Caché de la vente, proposé en premier en production.')),
             ),
             // The article's picture: the newest photo hung on the article is
             // what the vitrine, the à-la-une strip and the search all show.
@@ -1033,8 +1030,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'La photo paraît sur la vitrine et dans la '
-                          'recherche.',
+                          context.tr('La photo paraît sur la vitrine et dans la recherche.'),
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -1052,10 +1048,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               value: _isPublished,
               onChanged:
                   _busy ? null : (v) => setState(() => _isPublished = v),
-              title: const Text('Afficher sur la vitrine en ligne'),
-              subtitle: const Text(
-                  'Visible du public, avec sa photo et son prix, si la '
-                  'vitrine de la boutique est ouverte.'),
+              title: Text(context.tr('Afficher sur la vitrine en ligne')),
+              subtitle: Text(
+                  context.tr('Visible du public, avec sa photo et son prix, si la vitrine de la boutique est ouverte.')),
             ),
             // A spot on the street for this article (071), for the person
             // who pays for it; the sheet checks photo, price and stock.
@@ -1077,7 +1072,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                               productId: widget.product.id);
                         },
                   icon: const Icon(Icons.campaign_outlined),
-                  label: const Text('Mettre cet article en avant'),
+                  label: Text(context.tr('Mettre cet article en avant')),
                 ),
               ),
             // What the shopkeeper would say across the counter, under the
@@ -1090,11 +1085,10 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               enabled: !_busy,
               maxLines: 3,
               maxLength: 300,
-              decoration: const InputDecoration(
-                labelText: 'Description pour la vitrine (facultatif)',
-                hintText: 'Taille, goût, origine — ce que le client demande '
-                    'au comptoir.',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Description pour la vitrine (facultatif)'),
+                hintText: context.tr('Taille, goût, origine — ce que le client demande au comptoir.'),
+                border: const OutlineInputBorder(),
               ),
             ),
             if (_error != null) ...[
@@ -1112,7 +1106,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
               ),
             ),
             if (widget.canArchive) ...[
@@ -1121,7 +1115,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                 onPressed: _busy ? null : _archive,
                 icon: Icon(Icons.delete_outline,
                     color: theme.colorScheme.error),
-                label: Text('Retirer de la boutique',
+                label: Text(context.tr('Retirer de la boutique'),
                     style: TextStyle(color: theme.colorScheme.error)),
               ),
             ],
@@ -1137,18 +1131,17 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Retirer ${widget.product.name} ?'),
-        content: const Text(
-            'Le produit disparaîtra des listes et de la vente. '
-            "L'historique de ses ventes et de son stock est conservé."),
+        title: Text(context.tr('Retirer {name} ?', {'name': widget.product.name})),
+        content: Text(
+            context.tr('Le produit disparaîtra des listes et de la vente. L\'historique de ses ventes et de son stock est conservé.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Retirer'),
+            child: Text(context.tr('Retirer')),
           ),
         ],
       ),
@@ -1271,16 +1264,16 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Entrée de stock', style: theme.textTheme.titleLarge),
+            Text(context.tr('Entrée de stock'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
               enabled: !_busy,
               autofocus: true,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Article',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Article'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -1293,9 +1286,9 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      labelText: 'Quantité',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Quantité'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -1306,13 +1299,13 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                     enabled: !_busy,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Coût unitaire',
+                      labelText: context.tr('Coût unitaire'),
                       border: const OutlineInputBorder(),
                       // Goods bought in another currency: convert, and the
                       // field receives the home-currency figure.
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.currency_exchange, size: 20),
-                        tooltip: 'Payé dans une autre monnaie',
+                        tooltip: context.tr('Payé dans une autre monnaie'),
                         onPressed: _busy
                             ? null
                             : () async {
@@ -1339,21 +1332,21 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
               controller: _price,
               enabled: !_busy,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Prix de vente',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.tr('Prix de vente'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _serial,
               enabled: !_busy,
-              decoration: const InputDecoration(
-                labelText: 'Numéro de série (facultatif)',
+              decoration: InputDecoration(
+                labelText: context.tr('Numéro de série (facultatif)'),
                 // Only matters for the goods where it matters: a phone, a
                 // radio, a panel. It is what a warranty claim is looked up by.
-                helperText: 'Pour un téléphone, une radio, un panneau…',
-                border: OutlineInputBorder(),
+                helperText: context.tr('Pour un téléphone, une radio, un panneau…'),
+                border: const OutlineInputBorder(),
               ),
             ),
             if (widget.barcode != null) ...[
@@ -1362,7 +1355,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                 children: [
                   const Icon(Icons.qr_code_2, size: 16),
                   const SizedBox(width: 6),
-                  Text('Code-barres scanné : ${widget.barcode}',
+                  Text(context.tr('Code-barres scanné : {barcode}', {'barcode': widget.barcode}),
                       style: theme.textTheme.bodySmall),
                 ],
               ),
@@ -1404,7 +1397,7 @@ class _ReceiveSheetState extends State<_ReceiveSheet> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
+                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
               ),
             ),
           ],

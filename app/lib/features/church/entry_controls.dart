@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The two controls both recording sheets are built from.
 ///
@@ -106,7 +107,7 @@ class CategoryChips extends StatelessWidget {
           ),
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('Autre…'),
+          label: Text(context.tr('Autre…')),
           onPressed: onAddNew,
         ),
       ],
@@ -155,11 +156,11 @@ class CharacteristicsEditor extends StatelessWidget {
                     initialValue: values[i].name,
                     enabled: enabled,
                     style: theme.textTheme.bodyMedium,
-                    decoration: const InputDecoration(
-                      labelText: 'Quoi',
-                      hintText: 'Fournisseur',
+                    decoration: InputDecoration(
+                      labelText: context.tr('Quoi'),
+                      hintText: context.tr('Fournisseur'),
                       isDense: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (v) =>
                         _replace(i, (name: v, value: values[i].value)),
@@ -172,18 +173,18 @@ class CharacteristicsEditor extends StatelessWidget {
                     initialValue: values[i].value,
                     enabled: enabled,
                     style: theme.textTheme.bodyMedium,
-                    decoration: const InputDecoration(
-                      labelText: 'Détail',
-                      hintText: 'Kaboré',
+                    decoration: InputDecoration(
+                      labelText: context.tr('Détail'),
+                      hintText: context.tr('Kaboré'),
                       isDense: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (v) =>
                         _replace(i, (name: values[i].name, value: v)),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Retirer',
+                  tooltip: context.tr('Retirer'),
                   icon: const Icon(Icons.close, size: 20),
                   onPressed: enabled
                       ? () => onChanged([...values]..removeAt(i))
@@ -199,7 +200,7 @@ class CharacteristicsEditor extends StatelessWidget {
                 ? () => onChanged([...values, (name: '', value: '')])
                 : null,
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Ajouter une caractéristique'),
+            label: Text(context.tr('Ajouter une caractéristique')),
           ),
         ),
       ],
@@ -289,11 +290,11 @@ class _NamePromptState extends State<_NamePrompt> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          child: const Text('Valider'),
+          child: Text(context.tr('Valider')),
         ),
       ],
     );

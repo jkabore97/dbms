@@ -17,6 +17,7 @@ import '../../core/nav/router.dart';
 import '../accounting/report_shell.dart';
 import 'invoice_paper.dart';
 import '../../core/errors.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The invoice as a document somebody can actually be handed.
 ///
@@ -126,7 +127,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
       // Sharing a file is not available everywhere this build runs; on the
       // web it depends on the browser. Say so rather than failing mute.
       messenger.showSnackBar(SnackBar(
-        content: Text("Partage impossible sur cet appareil. $error"),
+        content: Text(context.tr('Partage impossible sur cet appareil. {error}', {'error': error})),
       ));
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -165,7 +166,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     } catch (error) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
-        content: Text("Impression impossible sur cet appareil. $error"),
+        content: Text(context.tr('Impression impossible sur cet appareil. {error}', {'error': error})),
       ));
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -188,7 +189,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     } catch (error) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
-        content: Text("Téléchargement impossible sur cet appareil. $error"),
+        content: Text(context.tr('Téléchargement impossible sur cet appareil. {error}', {'error': error})),
       ));
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -247,19 +248,18 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Annuler la facture ${doc.number} ?'),
-        content: const Text(
-          "L'écriture comptable sera contre-passée, pas effacée : la facture "
-          'reste dans l’historique et la créance disparaît du bilan.',
+        title: Text(context.tr('Annuler la facture {number} ?', {'number': doc.number})),
+        content: Text(
+          context.tr('L\'écriture comptable sera contre-passée, pas effacée : la facture reste dans l’historique et la créance disparaît du bilan.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Non'),
+            child: Text(context.tr('Non')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Annuler la facture'),
+            child: Text(context.tr('Annuler la facture')),
           ),
         ],
       ),
@@ -286,18 +286,18 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(doc == null ? 'Facture' : 'Facture ${doc.number}'),
+        title: Text(doc == null ? context.tr('Facture') : context.tr('Facture {number}', {'number': doc.number})),
         actions: [
           if (doc != null)
             IconButton(
               icon: const Icon(Icons.download_outlined),
-              tooltip: 'Télécharger (PDF)',
+              tooltip: context.tr('Télécharger (PDF)'),
               onPressed: _sharing ? null : _download,
             ),
           if (doc != null)
             IconButton(
               icon: const Icon(Icons.print_outlined),
-              tooltip: 'Imprimer',
+              tooltip: context.tr('Imprimer'),
               onPressed: _sharing ? null : _print,
             ),
           if (doc != null && _canWrite && !doc.isCancelled)
@@ -309,21 +309,21 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
               },
               itemBuilder: (_) => [
                 if (doc.outstanding > 0)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'payment',
-                    child: Text('Enregistrer un paiement'),
+                    child: Text(context.tr('Enregistrer un paiement')),
                   ),
                 // The owner's pen: withdraws this document and issues a
                 // corrected one. Gone once money has arrived — from there the
                 // path is a refund or credit note.
                 if (widget.org.isAdmin && doc.paid == 0)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'revise',
-                    child: Text('Modifier la facture'),
+                    child: Text(context.tr('Modifier la facture')),
                   ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'cancel',
-                  child: Text('Annuler la facture'),
+                  child: Text(context.tr('Annuler la facture')),
                 ),
               ],
             ),
@@ -365,7 +365,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.send),
-              label: const Text('Envoyer'),
+              label: Text(context.tr('Envoyer')),
             ),
     );
   }
@@ -400,7 +400,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
     // ledger never carries a negative receivable.
     final tooMuch = _amount > widget.outstanding;
     return AlertDialog(
-      title: const Text('Paiement reçu'),
+      title: Text(context.tr('Paiement reçu')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -413,7 +413,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Montant',
+              labelText: context.tr('Montant'),
               border: const OutlineInputBorder(),
               errorText: tooMuch ? 'Plus que ce qui est dû.' : null,
             ),
@@ -423,13 +423,13 @@ class _PaymentDialogState extends State<_PaymentDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(context.tr('Annuler')),
         ),
         FilledButton(
           onPressed: _amount > 0 && !tooMuch
               ? () => Navigator.pop(context, _amount)
               : null,
-          child: const Text('Enregistrer'),
+          child: Text(context.tr('Enregistrer')),
         ),
       ],
     );
@@ -455,7 +455,7 @@ class _Failed extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Réessayer'),
+              label: Text(context.tr('Réessayer')),
             ),
           ],
         ),
