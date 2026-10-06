@@ -17,6 +17,7 @@ import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/motion.dart';
 import '../common/owned_controller.dart';
+import 'open_badge.dart';
 import 'shop_skeleton.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -114,8 +115,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _keepBasket() {
     final db = widget.session.db;
-    unawaited(db.writePref(
-        _basketKey, _basket.isEmpty ? null : jsonEncode(_basket)));
+    unawaited(
+      db.writePref(_basketKey, _basket.isEmpty ? null : jsonEncode(_basket)),
+    );
   }
 
   /// The shelf filter: instant, on the list already fetched, accent-blind
@@ -126,9 +128,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   List<PublicItem> get _visible {
     final q = foldSearchText(_filter.text.trim());
     if (q.isEmpty) return _items;
-    return _items
-        .where((i) => foldSearchText(i.name).contains(q))
-        .toList();
+    return _items.where((i) => foldSearchText(i.name).contains(q)).toList();
   }
 
   @override
@@ -177,7 +177,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = context.tr('La vitrine n\'a pas pu être chargée. Vérifiez le réseau.');
+        _error = context.tr(
+          'La vitrine n\'a pas pu être chargée. Vérifiez le réseau.',
+        );
         _loading = false;
       });
     }
@@ -209,8 +211,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _add(PublicItem item) {
     if ((_basket[item.id] ?? 0) == 0) {
-      unawaited(widget.storefront
-          .recordVisit(widget.slug, 'added', productId: item.id));
+      unawaited(
+        widget.storefront.recordVisit(widget.slug, 'added', productId: item.id),
+      );
     }
     setState(() => _basket[item.id] = (_basket[item.id] ?? 0) + 1);
     _keepBasket();
@@ -228,11 +231,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     _keepBasket();
   }
 
-  double get _total => _items.fold(
-      0, (sum, i) => sum + (_basket[i.id] ?? 0) * i.price);
+  double get _total =>
+      _items.fold(0, (sum, i) => sum + (_basket[i.id] ?? 0) * i.price);
 
-  int get _count =>
-      _basket.values.fold(0, (sum, q) => sum + q.round());
+  int get _count => _basket.values.fold(0, (sum, q) => sum + q.round());
 
   /// "Commander": the one act that needs a name. A stranger is sent through
   /// sign-in and brought back to this very vitrine — and the basket now
@@ -281,9 +283,13 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (sent == true && mounted) {
       setState(_basket.clear);
       _keepBasket(); // The promise is kept; the device forgets it.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr('Commande envoyée. La boutique vous répondra ici.')),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Commande envoyée. La boutique vous répondra ici.'),
+          ),
+        ),
+      );
       context.go(Routes.myOrders);
     }
   }
@@ -318,10 +324,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       if (!mounted) return null;
       return e.code == 'P0001'
           ? e.message
-          : context.tr('La commande n\'a pas pu être envoyée. Vérifiez le réseau.');
+          : context.tr(
+              'La commande n\'a pas pu être envoyée. Vérifiez le réseau.',
+            );
     } catch (_) {
       if (!mounted) return null;
-      return context.tr('La commande n\'a pas pu être envoyée. Vérifiez le réseau.');
+      return context.tr(
+        'La commande n\'a pas pu être envoyée. Vérifiez le réseau.',
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -333,23 +343,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     // into view (a short shelf, or scrolled to the end)?
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkInline());
     Widget basketBar({required bool floating}) => _BasketBar(
-          floating: floating,
-          picked: [
-            for (final i in _items)
-              if ((_basket[i.id] ?? 0) > 0) (i, (_basket[i.id] ?? 0).round()),
-          ],
-          capture: widget.capture,
-          count: _count,
-          total: moneyFormat(_shop?.currency ?? 'XOF').format(_total),
-          sending: _sending,
-          onOrder: _order,
-        );
+      floating: floating,
+      picked: [
+        for (final i in _items)
+          if ((_basket[i.id] ?? 0) > 0) (i, (_basket[i.id] ?? 0).round()),
+      ],
+      capture: widget.capture,
+      count: _count,
+      total: moneyFormat(_shop?.currency ?? 'XOF').format(_total),
+      sending: _sending,
+      onOrder: _order,
+    );
     final shop = _shop;
 
     return ShopPage(
       title: shop?.name ?? context.tr('Vitrine'),
-      announcements:
-          shop?.profile == 'farm' ? ShopPage.farm : ShopPage.street,
+      announcements: shop?.profile == 'farm' ? ShopPage.farm : ShopPage.street,
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
       accent: shop?.style.accent,
@@ -358,50 +367,57 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
-      overlay: _basket.isEmpty || _inlineShown ? null : basketBar(floating: true),
+      overlay: _basket.isEmpty || _inlineShown
+          ? null
+          : basketBar(floating: true),
       body: _loading
           ? const ShopSkeleton.shelf()
           : _error != null
-              ? ShopNotice(
-                  text: _error!,
-                  action: OutlinedButton(
-                      onPressed: _load, child: Text(context.tr('Réessayer'))),
-                )
-              : shop == null
-                  ? ShopNotice(
-                      text: "Cette vitrine n'existe pas, ou n'est pas ouverte.",
-                      action: OutlinedButton(
-                          onPressed: _directory,
-                          child: Text(context.tr('Voir les autres vitrines'))),
-                    )
-                  : NotificationListener<ScrollNotification>(
-                      // Measured once the scrolled frame is laid out: during
-                      // the notification the page has not moved yet.
-                      onNotification: (_) {
-                        WidgetsBinding.instance
-                            .addPostFrameCallback((_) => _checkInline());
-                        return false;
-                      },
-                      child: _Window(
-                      basketCard: _basket.isEmpty
-                          ? null
-                          : KeyedSubtree(
-                              key: _inlineBasket,
-                              child: basketBar(floating: false)),
-                      shop: shop,
-                      items: _visible,
-                      totalCount: _items.length,
-                      filter: _filter,
-                      onFilterChanged: (_) => setState(() {}),
-                      capture: widget.capture,
-                      basket: _basket,
-                      onOpen: _open,
-                      onDirectory: _directory,
-                      onAdd: _add,
-                      onRemove: _remove,
-                      onDetails: _details,
-                    ),
-                    ),
+          ? ShopNotice(
+              text: _error!,
+              action: OutlinedButton(
+                onPressed: _load,
+                child: Text(context.tr('Réessayer')),
+              ),
+            )
+          : shop == null
+          ? ShopNotice(
+              text: "Cette vitrine n'existe pas, ou n'est pas ouverte.",
+              action: OutlinedButton(
+                onPressed: _directory,
+                child: Text(context.tr('Voir les autres vitrines')),
+              ),
+            )
+          : NotificationListener<ScrollNotification>(
+              // Measured once the scrolled frame is laid out: during
+              // the notification the page has not moved yet.
+              onNotification: (_) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _checkInline(),
+                );
+                return false;
+              },
+              child: _Window(
+                basketCard: _basket.isEmpty
+                    ? null
+                    : KeyedSubtree(
+                        key: _inlineBasket,
+                        child: basketBar(floating: false),
+                      ),
+                shop: shop,
+                items: _visible,
+                totalCount: _items.length,
+                filter: _filter,
+                onFilterChanged: (_) => setState(() {}),
+                capture: widget.capture,
+                basket: _basket,
+                onOpen: _open,
+                onDirectory: _directory,
+                onAdd: _add,
+                onRemove: _remove,
+                onDetails: _details,
+              ),
+            ),
     );
   }
 
@@ -412,8 +428,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   Future<void> _details(PublicItem item) async {
     final shop = _shop;
     if (shop == null) return;
-    unawaited(widget.storefront
-        .recordVisit(widget.slug, 'opened', productId: item.id));
+    unawaited(
+      widget.storefront.recordVisit(widget.slug, 'opened', productId: item.id),
+    );
     await showShopSheet<void>(
       context: context,
       showDragHandle: true,
@@ -472,82 +489,96 @@ class _BasketBar extends StatelessWidget {
     // goods; at the end of the page the same card sits in it, above
     // « Toutes les vitrines » and the footer — never under them.
     final card = Material(
-              key: Key(floating ? 'basket-bar' : 'basket-inline'),
-              color: ShopStyle.paper,
-              elevation: floating ? 4 : 0,
-              shadowColor: const Color(0x22000000),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: const BorderSide(color: ShopStyle.line),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!floating) ...[
-                      Text(context.tr('VOTRE PANIER'),
-                          style: const TextStyle(
-                              fontSize: 12,
-                              letterSpacing: 1.4,
-                              fontWeight: FontWeight.w700,
-                              color: ShopStyle.ink)),
-                      const SizedBox(height: 8),
-                    ],
-                    // Each article picked: its photo, small, and its name.
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        key: const Key('basket-picked'),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: picked.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 8),
-                        itemBuilder: (context, i) {
-                          final (item, qty) = picked[i];
-                          return _PickedChip(
-                              key: ValueKey(item.id),
-                              item: item,
-                              qty: qty,
-                              capture: capture);
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('$count article${count > 1 ? 's' : ''}',
-                                  style: const TextStyle(
-                                      fontSize: 13, color: ShopStyle.mist)),
-                              Text(total,
-                                  style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: ShopStyle.ink)),
-                            ],
-                          ),
-                        ),
-                        FilledButton(
-                          onPressed: sending ? null : onOrder,
-                          child: sending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: ShopStyle.paper))
-                              : Text(context.tr('Commander')),
-                        ),
-                      ],
-                    ),
-                  ],
+      key: Key(floating ? 'basket-bar' : 'basket-inline'),
+      color: ShopStyle.paper,
+      elevation: floating ? 4 : 0,
+      shadowColor: const Color(0x22000000),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: ShopStyle.line),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!floating) ...[
+              Text(
+                context.tr('VOTRE PANIER'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w700,
+                  color: ShopStyle.ink,
                 ),
               ),
-            );
+              const SizedBox(height: 8),
+            ],
+            // Each article picked: its photo, small, and its name.
+            SizedBox(
+              height: 44,
+              child: ListView.separated(
+                key: const Key('basket-picked'),
+                scrollDirection: Axis.horizontal,
+                itemCount: picked.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, i) {
+                  final (item, qty) = picked[i];
+                  return _PickedChip(
+                    key: ValueKey(item.id),
+                    item: item,
+                    qty: qty,
+                    capture: capture,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$count article${count > 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: ShopStyle.mist,
+                        ),
+                      ),
+                      Text(
+                        total,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: ShopStyle.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                FilledButton(
+                  onPressed: sending ? null : onOrder,
+                  child: sending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: ShopStyle.paper,
+                          ),
+                        )
+                      : Text(context.tr('Commander')),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
     if (!floating) return card;
     return SafeArea(
       top: false,
@@ -604,8 +635,9 @@ class _PickedChip extends StatelessWidget {
                               ? '?'
                               : item.name.characters.first.toUpperCase(),
                           style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: ShopStyle.mist),
+                            fontWeight: FontWeight.w700,
+                            color: ShopStyle.mist,
+                          ),
                         ),
                       ),
                     )
@@ -620,19 +652,24 @@ class _PickedChip extends StatelessWidget {
           const SizedBox(width: 8),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 140),
-            child: Text(item.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, color: ShopStyle.ink)),
+            child: Text(
+              item.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14, color: ShopStyle.ink),
+            ),
           ),
           if (qty > 1)
             Padding(
               padding: const EdgeInsets.only(left: 6),
-              child: Text(context.tr('×{qty}', {'qty': qty}),
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ShopStyle.mist)),
+              child: Text(
+                context.tr('×{qty}', {'qty': qty}),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: ShopStyle.mist,
+                ),
+              ),
             ),
         ],
       ),
@@ -677,7 +714,8 @@ class OrderSheet extends StatefulWidget {
     required String payment,
     double? dropLat,
     double? dropLng,
-  }) onSubmit;
+  })
+  onSubmit;
 
   /// What a delivery to a pin would cost and whether the shop goes that far
   /// (061, 069) — asked the moment the customer pins their door, so the
@@ -766,9 +804,13 @@ class _OrderSheetState extends State<OrderSheet> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (!mounted) return;
-        messenger.showSnackBar(SnackBar(
-          content: Text(context.tr('Sans votre position, l\'adresse écrite suffit.')),
-        ));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr('Sans votre position, l\'adresse écrite suffit.'),
+            ),
+          ),
+        );
         return;
       }
       final position = await Geolocator.getCurrentPosition(
@@ -785,9 +827,13 @@ class _OrderSheetState extends State<OrderSheet> {
       await _refreshQuote();
     } catch (_) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-        content: Text(context.tr('Position introuvable. Vérifiez que le GPS est activé.')),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Position introuvable. Vérifiez que le GPS est activé.'),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -810,16 +856,20 @@ class _OrderSheetState extends State<OrderSheet> {
               autofocus: true,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: context.tr('https://www.google.com/maps/...@12.37,-1.52,17z'),
+                hintText: context.tr(
+                  'https://www.google.com/maps/...@12.37,-1.52,17z',
+                ),
               ),
             ),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(context.tr('Annuler'))),
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(context.tr('Annuler')),
+              ),
               FilledButton(
-                  onPressed: () => Navigator.of(context).pop(controller.text),
-                  child: Text(context.tr('Utiliser'))),
+                onPressed: () => Navigator.of(context).pop(controller.text),
+                child: Text(context.tr('Utiliser')),
+              ),
             ],
           ),
         ),
@@ -828,9 +878,15 @@ class _OrderSheetState extends State<OrderSheet> {
     if (text == null || !mounted) return;
     final position = parseGoogleMapsLink(text);
     if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr('Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.')),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr(
+              'Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.',
+            ),
+          ),
+        ),
+      );
       return;
     }
     setState(() {
@@ -876,11 +932,16 @@ class _OrderSheetState extends State<OrderSheet> {
 
   /// "Trop loin" said with its numbers, and the way out.
   String get _tooFarSentence {
-    final km = _distanceKm == null ? '' : ' (${_distanceKm!.toStringAsFixed(1)} km';
+    final km = _distanceKm == null
+        ? ''
+        : ' (${_distanceKm!.toStringAsFixed(1)} km';
     final max = _maxKm == null
         ? (km.isEmpty ? '' : ')')
         : '${km.isEmpty ? ' (' : ', '}livraison jusqu\'à ${_maxKm!.toStringAsFixed(0)} km)';
-    return context.tr('Cette boutique ne livre pas aussi loin{km}{max}. Choisissez le retrait en boutique.', {'km': km, 'max': max});
+    return context.tr(
+      'Cette boutique ne livre pas aussi loin{km}{max}. Choisissez le retrait en boutique.',
+      {'km': km, 'max': max},
+    );
   }
 
   @override
@@ -891,22 +952,28 @@ class _OrderSheetState extends State<OrderSheet> {
         if ((widget.basket[item.id] ?? 0) > 0) item,
     ];
     final total = lines.fold<double>(
-        0, (sum, i) => sum + widget.basket[i.id]! * i.price);
+      0,
+      (sum, i) => sum + widget.basket[i.id]! * i.price,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr('Votre commande'),
-                style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ShopStyle.ink)),
+            Text(
+              context.tr('Votre commande'),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: ShopStyle.ink,
+              ),
+            ),
             const SizedBox(height: 14),
             for (final item in lines)
               Padding(
@@ -915,13 +982,20 @@ class _OrderSheetState extends State<OrderSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                          '${widget.basket[item.id]!.round()} × ${item.name}',
-                          style: const TextStyle(
-                              fontSize: 15, color: ShopStyle.ink)),
-                    ),
-                    Text(money.format(widget.basket[item.id]! * item.price),
+                        '${widget.basket[item.id]!.round()} × ${item.name}',
                         style: const TextStyle(
-                            fontSize: 14, color: ShopStyle.mist)),
+                          fontSize: 15,
+                          color: ShopStyle.ink,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      money.format(widget.basket[item.id]! * item.price),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: ShopStyle.mist,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -933,98 +1007,118 @@ class _OrderSheetState extends State<OrderSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(context.tr('Livraison'),
-                        style: const TextStyle(fontSize: 15, color: ShopStyle.ink)),
+                    child: Text(
+                      context.tr('Livraison'),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: ShopStyle.ink,
+                      ),
+                    ),
                   ),
                   if (_quoting)
                     const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   else
                     Text(
                       !_feeKnown
                           ? context.tr('épinglez votre porte pour le prix')
                           : _tooFar
-                              ? context.tr('trop loin')
-                              : _fee == null
-                                  ? context.tr('à discuter avec la boutique')
-                                  : money.format(_fee!),
+                          ? context.tr('trop loin')
+                          : _fee == null
+                          ? context.tr('à discuter avec la boutique')
+                          : money.format(_fee!),
                       style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: _fee == null && !_tooFar
-                              ? FontWeight.w400
-                              : FontWeight.w600,
-                          color: _tooFar
-                              ? Theme.of(context).colorScheme.error
-                              : _fee == null
-                                  ? ShopStyle.mist
-                                  : ShopStyle.ink),
+                        fontSize: 14,
+                        fontWeight: _fee == null && !_tooFar
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                        color: _tooFar
+                            ? Theme.of(context).colorScheme.error
+                            : _fee == null
+                            ? ShopStyle.mist
+                            : ShopStyle.ink,
+                      ),
                     ),
                 ],
               ),
               if (_tooFar) ...[
                 const SizedBox(height: 4),
-                Text(_tooFarSentence,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.error)),
+                Text(
+                  _tooFarSentence,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
               ],
               const SizedBox(height: 6),
             ],
             Row(
               children: [
                 Expanded(
-                  child: Text(context.tr('Total'),
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: ShopStyle.ink)),
+                  child: Text(
+                    context.tr('Total'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: ShopStyle.ink,
+                    ),
+                  ),
                 ),
                 Text(
-                    money.format(total +
+                  money.format(
+                    total +
                         (_fulfilment == 'delivery' && !_tooFar
                             ? (_fee ?? 0)
-                            : 0)),
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: ShopStyle.ink)),
+                            : 0),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: ShopStyle.ink,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 18),
             if (widget.delivers)
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
                     value: 'pickup',
                     label: Text(context.tr('Retrait')),
-                    icon: const Icon(Icons.storefront_outlined)),
-                ButtonSegment(
+                    icon: const Icon(Icons.storefront_outlined),
+                  ),
+                  ButtonSegment(
                     value: 'delivery',
                     label: Text(context.tr('Livraison')),
-                    icon: const Icon(Icons.delivery_dining_outlined)),
-              ],
-              selected: {_fulfilment},
-              onSelectionChanged: (s) =>
-                  setState(() => _fulfilment = s.first),
-            ),
+                    icon: const Icon(Icons.delivery_dining_outlined),
+                  ),
+                ],
+                selected: {_fulfilment},
+                onSelectionChanged: (s) =>
+                    setState(() => _fulfilment = s.first),
+              ),
             if (widget.waveMerchant != null) ...[
               const SizedBox(height: 12),
               SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
-                      value: 'cash',
-                      label: Text(context.tr('Espèces')),
-                      icon: const Icon(Icons.payments_outlined)),
+                    value: 'cash',
+                    label: Text(context.tr('Espèces')),
+                    icon: const Icon(Icons.payments_outlined),
+                  ),
                   ButtonSegment(
-                      value: 'wave',
-                      label: Text(context.tr('Wave')),
-                      icon: const Icon(Icons.phone_iphone_outlined)),
+                    value: 'wave',
+                    label: Text(context.tr('Wave')),
+                    icon: const Icon(Icons.phone_iphone_outlined),
+                  ),
                 ],
                 selected: {_payment},
-                onSelectionChanged: (s) =>
-                    setState(() => _payment = s.first),
+                onSelectionChanged: (s) => setState(() => _payment = s.first),
               ),
             ],
             if (_fulfilment == 'delivery') ...[
@@ -1051,8 +1145,8 @@ class _OrderSheetState extends State<OrderSheet> {
                           ? const SizedBox(
                               width: 14,
                               height: 14,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Icon(Icons.my_location, size: 16),
                       label: Text(context.tr('Épingler ma position')),
                     ),
@@ -1065,13 +1159,20 @@ class _OrderSheetState extends State<OrderSheet> {
               else
                 Row(
                   children: [
-                    const Icon(Icons.location_on,
-                        size: 18, color: ShopStyle.ink),
+                    const Icon(
+                      Icons.location_on,
+                      size: 18,
+                      color: ShopStyle.ink,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(context.tr('Position épinglée pour le livreur'),
-                          style: const TextStyle(
-                              fontSize: 14, color: ShopStyle.ink)),
+                      child: Text(
+                        context.tr('Position épinglée pour le livreur'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: ShopStyle.ink,
+                        ),
+                      ),
                     ),
                     IconButton(
                       tooltip: context.tr('Retirer'),
@@ -1106,32 +1207,39 @@ class _OrderSheetState extends State<OrderSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!,
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.error)),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed:
-                    _busy || (_fulfilment == 'delivery' && _tooFar)
-                        ? null
-                        : _submit,
+                onPressed: _busy || (_fulfilment == 'delivery' && _tooFar)
+                    ? null
+                    : _submit,
                 child: _busy
                     ? const SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: ShopStyle.paper))
+                          strokeWidth: 2,
+                          color: ShopStyle.paper,
+                        ),
+                      )
                     : Text(context.tr('Envoyer la commande')),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               _payment == 'wave'
-                  ? context.tr('Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.')
-                  : context.tr('Rien à payer maintenant : vous payez à la boutique, au retrait ou à la livraison.'),
+                  ? context.tr(
+                      'Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.',
+                    )
+                  : context.tr(
+                      'Rien à payer maintenant : vous payez à la boutique, au retrait ou à la livraison.',
+                    ),
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
           ],
@@ -1186,6 +1294,10 @@ class _Window extends StatelessWidget {
     final style = shop.style;
     final width = MediaQuery.sizeOf(context).width;
     final columns = ShopStyle.columnsFor(width);
+    // « Grandes photos » (093, Pro): half as many columns, never fewer than one.
+    final shelfColumns = style.layout == VitrineLayout.large
+        ? (columns ~/ 2).clamp(1, 3)
+        : columns;
     final wide = width >= 560;
 
     return ListView(
@@ -1208,176 +1320,212 @@ class _Window extends StatelessWidget {
         // The band: who this is, in a word or two, and the ways to act.
         // It settles in as the page opens.
         Reveal(
-        child: ColoredBox(
-          color: ShopStyle.stone,
-          child: ShopWidth(
-            padding: EdgeInsets.symmetric(
-                horizontal: 20, vertical: wide ? 40 : 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // The shop's logo (080) beside its name, for every plan.
-                Row(
-                  children: [
-                    if (style.logoKey != null) ...[
-                      Container(
-                        key: const Key('shop-logo'),
-                        width: wide ? 72 : 56,
-                        height: wide ? 72 : 56,
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0x14000000)),
+          child: ColoredBox(
+            color: ShopStyle.stone,
+            child: ShopWidth(
+              padding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: wide ? 40 : 24,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // The shop's logo (080) beside its name, for every plan.
+                  Row(
+                    children: [
+                      if (style.logoKey != null) ...[
+                        Container(
+                          key: const Key('shop-logo'),
+                          width: wide ? 72 : 56,
+                          height: wide ? 72 : 56,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0x14000000)),
+                          ),
+                          child: _Photo(
+                            photoKey: style.logoKey,
+                            capture: capture,
+                            label: context.tr('Logo de {name}', {
+                              'name': shop.name,
+                            }),
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                        child: _Photo(
-                          photoKey: style.logoKey,
-                          capture: capture,
-                          label: context.tr('Logo de {name}', {'name': shop.name}),
-                          fit: BoxFit.contain,
+                        SizedBox(width: wide ? 18 : 14),
+                      ],
+                      Expanded(
+                        child: Text(
+                          shop.name,
+                          style: TextStyle(
+                            fontSize: wide ? 40 : 30,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.6,
+                            color: ShopStyle.ink,
+                          ),
                         ),
                       ),
-                      SizedBox(width: wide ? 18 : 14),
                     ],
-                    Expanded(
+                  ),
+                  // The tagline (068): one line, in the shop's colour when
+                  // it chose one.
+                  if (style.tagline != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      style.tagline!,
+                      style: TextStyle(
+                        fontSize: wide ? 20 : 17,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                        color: style.accent ?? ShopStyle.ink,
+                      ),
+                    ),
+                  ],
+                  if (blurb.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
                       child: Text(
-                        shop.name,
-                        style: TextStyle(
-                          fontSize: wide ? 40 : 30,
-                          height: 1.1,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.6,
+                        blurb,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          height: 1.45,
                           color: ShopStyle.ink,
                         ),
                       ),
                     ),
                   ],
-                ),
-                // The tagline (068): one line, in the shop's colour when
-                // it chose one.
-                if (style.tagline != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    style.tagline!,
-                    style: TextStyle(
-                      fontSize: wide ? 20 : 17,
-                      height: 1.3,
-                      fontWeight: FontWeight.w600,
-                      color: style.accent ?? ShopStyle.ink,
-                    ),
-                  ),
-                ],
-                if (blurb.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Text(blurb,
+                  // The facts a shopper looks for first, on one quiet line:
+                  // what kind of place, where, and how the goods reach them.
+                  // A fact the shop has not given is left out, never shown
+                  // empty (070).
+                  const SizedBox(height: 10),
+                  // Last week's podium (086): a shop customers can trust.
+                  if (style.topWeekRank != null) ...[
+                    Container(
+                      key: const Key('top-week-badge'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2B63D),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        style.topWeekRank == 1
+                            ? context.tr('🏆 1er de la semaine')
+                            : context.tr('🏆 Top 3 de la semaine'),
                         style: const TextStyle(
-                            fontSize: 17,
-                            height: 1.45,
-                            color: ShopStyle.ink)),
-                  ),
-                ],
-                // The facts a shopper looks for first, on one quiet line:
-                // what kind of place, where, and how the goods reach them.
-                // A fact the shop has not given is left out, never shown
-                // empty (070).
-                const SizedBox(height: 10),
-                // Last week's podium (086): a shop customers can trust.
-                if (style.topWeekRank != null) ...[
-                  Container(
-                    key: const Key('top-week-badge'),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2B63D),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      style.topWeekRank == 1
-                          ? context.tr('🏆 1er de la semaine')
-                          : context.tr('🏆 Top 3 de la semaine'),
-                      style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E2560)),
+                          color: Color(0xFF1E2560),
+                        ),
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    [
+                      _kindOf(shop.profile),
+                      if (address.isNotEmpty) address,
+                      shop.delivers
+                          ? context.tr('Retrait ou livraison')
+                          : shop.profile == 'farm'
+                          ? context.tr('Retrait à la ferme')
+                          : context.tr('Retrait en boutique'),
+                    ].join(' · '),
+                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
                   ),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  [
-                    _kindOf(shop.profile),
-                    if (address.isNotEmpty) address,
-                    shop.delivers
-                        ? context.tr('Retrait ou livraison')
-                        : shop.profile == 'farm'
-                            ? context.tr('Retrait à la ferme')
-                            : context.tr('Retrait en boutique'),
-                  ].join(' · '),
-                  style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
-                ),
-                // Opening hours (068), the question every caller asks.
-                if (style.hours != null) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule_outlined,
-                          size: 15, color: ShopStyle.mist),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(style.hours!,
+                  // Opening hours (068; days and times since 093), the
+                  // question every caller asks — in the reader's language.
+                  if (style.schedule != null || style.hours != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule_outlined,
+                          size: 15,
+                          color: ShopStyle.mist,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            style.schedule?.label(context.trLanguage) ??
+                                style.hours!,
+                            key: const Key('shop-hours'),
                             style: const TextStyle(
-                                fontSize: 14, color: ShopStyle.mist)),
-                      ),
-                    ],
-                  ),
-                ],
-                // Always shown: even a shop with no phone and no pin can be
-                // passed along, and Partager is how that happens.
-                ...[
-                  const SizedBox(height: 22),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 10,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      if (whatsapp != null)
-                        FilledButton(
-                          onPressed: () => onOpen(whatsapp),
-                          child: Text(context.tr('Écrire sur WhatsApp')),
+                              fontSize: 14,
+                              color: ShopStyle.mist,
+                            ),
+                          ),
                         ),
-                      if (phone.isNotEmpty)
-                        OutlinedButton(
-                          onPressed: () => onOpen('tel:$phone'),
-                          child: Text(context.tr('Appeler')),
-                        ),
-                      // The way there, in the maps app the phone already
-                      // has: turn-by-turn, no key, no bill (054).
-                      if (shop.hasLocation)
+                      ],
+                    ),
+                  ],
+                  // « Ouvert maintenant » / « Fermé » (093, Pro): the server
+                  // reads the schedule against Ouagadougou's clock.
+                  if (style.openNow != null) ...[
+                    const SizedBox(height: 10),
+                    OpenBadge(
+                      key: const Key('shop-open'),
+                      open: style.openNow!,
+                      large: true,
+                    ),
+                  ],
+                  // Always shown: even a shop with no phone and no pin can be
+                  // passed along, and Partager is how that happens.
+                  ...[
+                    const SizedBox(height: 22),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (whatsapp != null)
+                          FilledButton(
+                            onPressed: () => onOpen(whatsapp),
+                            child: Text(context.tr('Écrire sur WhatsApp')),
+                          ),
+                        if (phone.isNotEmpty)
+                          OutlinedButton(
+                            onPressed: () => onOpen('tel:$phone'),
+                            child: Text(context.tr('Appeler')),
+                          ),
+                        // The way there, in the maps app the phone already
+                        // has: turn-by-turn, no key, no bill (054).
+                        if (shop.hasLocation)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                onOpen(directionsUrl(shop.lat!, shop.lng!)),
+                            icon: const Icon(
+                              Icons.directions_outlined,
+                              size: 18,
+                            ),
+                            label: Text(context.tr('Itinéraire')),
+                          ),
+                        // A vitrine travels the way news does here: sent on
+                        // WhatsApp from one phone to the next. The shop's
+                        // customers are its advertisers.
                         OutlinedButton.icon(
-                          onPressed: () =>
-                              onOpen(directionsUrl(shop.lat!, shop.lng!)),
-                          icon: const Icon(Icons.directions_outlined, size: 18),
-                          label: Text(context.tr('Itinéraire')),
+                          onPressed: () => onOpen(
+                            whatsappShareUrl(
+                              'Découvrez ${shop.name} sur Mara : '
+                              '${publicShopUrl(shop.slug)}',
+                            ),
+                          ),
+                          icon: const Icon(Icons.share_outlined, size: 18),
+                          label: Text(context.tr('Partager')),
                         ),
-                      // A vitrine travels the way news does here: sent on
-                      // WhatsApp from one phone to the next. The shop's
-                      // customers are its advertisers.
-                      OutlinedButton.icon(
-                        onPressed: () => onOpen(whatsappShareUrl(
-                            'Découvrez ${shop.name} sur Mara : '
-                            '${publicShopUrl(shop.slug)}')),
-                        icon: const Icon(Icons.share_outlined, size: 18),
-                        label: Text(context.tr('Partager')),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
         ),
 
         // The goods.
@@ -1391,13 +1539,18 @@ class _Window extends StatelessWidget {
                 note: totalCount == 0
                     ? null
                     : items.length == totalCount
-                        ? '$totalCount article${totalCount > 1 ? 's' : ''}'
-                        : context.tr('{length} sur {totalCount}', {'length': items.length, 'totalCount': totalCount}),
+                    ? '$totalCount article${totalCount > 1 ? 's' : ''}'
+                    : context.tr('{length} sur {totalCount}', {
+                        'length': items.length,
+                        'totalCount': totalCount,
+                      }),
               ),
               if (totalCount > 0) ...[
                 const SizedBox(height: 6),
                 Text(
-                  context.tr('Touchez un article pour le voir, « + » pour l\'ajouter.'),
+                  context.tr(
+                    'Touchez un article pour le voir, « + » pour l\'ajouter.',
+                  ),
                   style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
               ],
@@ -1434,7 +1587,9 @@ class _Window extends StatelessWidget {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(999),
                         borderSide: const BorderSide(
-                            color: ShopStyle.ink, width: 1.4),
+                          color: ShopStyle.ink,
+                          width: 1.4,
+                        ),
                       ),
                     ),
                   ),
@@ -1444,8 +1599,10 @@ class _Window extends StatelessWidget {
               if (totalCount == 0)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(context.tr('Aucun article affiché pour le moment.'),
-                      style: const TextStyle(fontSize: 15, color: ShopStyle.mist)),
+                  child: Text(
+                    context.tr('Aucun article affiché pour le moment.'),
+                    style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
+                  ),
                 )
               else if (items.isEmpty)
                 Padding(
@@ -1453,62 +1610,71 @@ class _Window extends StatelessWidget {
                   child: Text(
                     'Aucun article ne répond à « ${filter.text.trim()} » '
                     'dans cette boutique.',
-                    style:
-                        const TextStyle(fontSize: 15, color: ShopStyle.mist),
+                    style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
                   ),
                 )
+              else if (style.layout == VitrineLayout.list ||
+                  style.layout == VitrineLayout.menu)
+                _rows(context, money)
               else
-                LayoutBuilder(builder: (context, box) {
-                  final gap = wide ? 24.0 : 14.0;
-                  final cell = (box.maxWidth - gap * (columns - 1)) / columns;
-                  return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: gap,
-                    mainAxisSpacing: wide ? 28 : 20,
-                    // The cell is the square plus the text under it, added
-                    // up rather than guessed as a ratio: the ratio left a
-                    // band of empty space under every row on a phone (the
-                    // audit's screenshot), and clipped when names ran long.
-                    mainAxisExtent: cell +
-                        _ItemTile.textHeight(
-                          context,
-                          description: items.any((i) => i.hasDescription),
-                          soldOut: items.any((i) => !i.inStock),
-                        ),
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, i) {
-                    final tile = Lift(
-                      // The photograph leans in (ZoomOnHover); the tile holds still.
-                      scale: 1.0,
-                      // Steady while the basket is open: a tile with the
-                      // stepper on it must not slide under the thumb.
-                      enabled: (basket[items[i].id] ?? 0) == 0,
-                      child: _ItemTile(
-                        item: items[i],
-                        money: money,
-                        capture: capture,
-                        quantity: basket[items[i].id] ?? 0,
-                        accent: shop.style.accent,
-                        onAdd: () => onAdd(items[i]),
-                        onRemove: () => onRemove(items[i]),
-                        onOpen: () => onDetails(items[i]),
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final gap = wide ? 24.0 : 14.0;
+                    final cell =
+                        (box.maxWidth - gap * (shelfColumns - 1)) /
+                        shelfColumns;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: shelfColumns,
+                        crossAxisSpacing: gap,
+                        mainAxisSpacing: wide ? 28 : 20,
+                        // The cell is the square plus the text under it, added
+                        // up rather than guessed as a ratio: the ratio left a
+                        // band of empty space under every row on a phone (the
+                        // audit's screenshot), and clipped when names ran long.
+                        mainAxisExtent:
+                            cell +
+                            _ItemTile.textHeight(
+                              context,
+                              description: items.any((i) => i.hasDescription),
+                              soldOut: items.any((i) => !i.inStock),
+                            ),
                       ),
+                      itemCount: items.length,
+                      itemBuilder: (context, i) {
+                        final tile = Lift(
+                          // The photograph leans in (ZoomOnHover); the tile holds still.
+                          scale: 1.0,
+                          // Steady while the basket is open: a tile with the
+                          // stepper on it must not slide under the thumb.
+                          enabled: (basket[items[i].id] ?? 0) == 0,
+                          child: _ItemTile(
+                            item: items[i],
+                            money: money,
+                            capture: capture,
+                            quantity: basket[items[i].id] ?? 0,
+                            accent: shop.style.accent,
+                            onAdd: () => onAdd(items[i]),
+                            onRemove: () => onRemove(items[i]),
+                            onOpen: () => onDetails(items[i]),
+                          ),
+                        );
+                        // The entrance plays when the shelf appears — not on
+                        // every keystroke of the filter, which rebuilds these
+                        // tiles: a page that re-enters as you type flickers.
+                        if (filter.text.isNotEmpty) return tile;
+                        // Each row rises as the reader reaches it, the tiles of a
+                        // row a beat apart (the goods sites' collection grid).
+                        return ScrollReveal(
+                          delay: KajMotion.stagger(i % shelfColumns),
+                          child: tile,
+                        );
+                      },
                     );
-                    // The entrance plays when the shelf appears — not on
-                    // every keystroke of the filter, which rebuilds these
-                    // tiles: a page that re-enters as you type flickers.
-                    if (filter.text.isNotEmpty) return tile;
-                    // Each row rises as the reader reaches it, the tiles of a
-                    // row a beat apart (the goods sites' collection grid).
-                    return ScrollReveal(
-                        delay: KajMotion.stagger(i % columns), child: tile);
                   },
-                );
-                }),
+                ),
               if (basketCard != null) ...[
                 const SizedBox(height: 32),
                 basketCard!,
@@ -1518,6 +1684,230 @@ class _Window extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+extension on _Window {
+  /// « Liste » and « Menu » (093, Pro): one article to a line — a small
+  /// photo, the name and the price for a list; the name, a dotted leader
+  /// and the price for a menu, the way a maquis writes its board.
+  Widget _rows(BuildContext context, NumberFormat money) {
+    final menu = shop.style.layout == VitrineLayout.menu;
+    return Column(
+      key: Key(menu ? 'shelf-menu' : 'shelf-list'),
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) const Divider(height: 1, color: ShopStyle.line),
+          _ItemRow(
+            item: items[i],
+            menu: menu,
+            money: money,
+            capture: capture,
+            quantity: basket[items[i].id] ?? 0,
+            accent: shop.style.accent,
+            onAdd: () => onAdd(items[i]),
+            onRemove: () => onRemove(items[i]),
+            onOpen: () => onDetails(items[i]),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ItemRow extends StatelessWidget {
+  const _ItemRow({
+    required this.item,
+    required this.menu,
+    required this.money,
+    required this.capture,
+    required this.quantity,
+    required this.onAdd,
+    required this.onRemove,
+    required this.onOpen,
+    this.accent,
+  });
+
+  final PublicItem item;
+  final bool menu;
+  final NumberFormat money;
+  final CaptureRepository capture;
+  final double quantity;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+  final VoidCallback onOpen;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = quantity.round();
+    final price = Text(
+      priceOf(money, item),
+      style: TextStyle(
+        fontSize: menu ? 15 : 14,
+        fontWeight: menu ? FontWeight.w700 : FontWeight.w600,
+        color: ShopStyle.ink,
+      ),
+    );
+    final name = Text(
+      item.name,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.25,
+        color: ShopStyle.ink,
+      ),
+    );
+    final action = !item.inStock
+        ? Text(
+            context.tr('Épuisé'),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: ShopStyle.mist,
+            ),
+          )
+        : count > 0
+        ? _Stepper(
+            name: item.name,
+            count: count,
+            onAdd: onAdd,
+            onRemove: onRemove,
+          )
+        : _QuickAdd(name: item.name, onAdd: onAdd);
+    return Semantics(
+      container: true,
+      button: true,
+      label: [
+        item.name,
+        priceOf(money, item),
+        if (!item.inStock) 'épuisé',
+        if (count > 0) '$count dans le panier',
+      ].join(', '),
+      hint: "Voir l'article",
+      onTap: onOpen,
+      child: InkWell(
+        onTap: onOpen,
+        excludeFromSemantics: true,
+        child: Opacity(
+          opacity: item.inStock ? 1 : 0.55,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (!menu) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 72,
+                      height: 72,
+                      child: ExcludeSemantics(
+                        // Too small for the name set large: its initial.
+                        child: item.photoKey == null
+                            ? ColoredBox(
+                                color: (accent ?? ShopStyle.ink).withValues(
+                                  alpha: 0.10,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    item.name.isEmpty
+                                        ? '?'
+                                        : item.name.characters.first
+                                              .toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      color: accent ?? ShopStyle.ink,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : ColoredBox(
+                                color: ShopStyle.stone,
+                                child: _Photo(
+                                  photoKey: item.photoKey,
+                                  capture: capture,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                ],
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (menu)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(child: name),
+                              const Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(6, 0, 6, 4),
+                                  child: Text(
+                                    '. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.clip,
+                                    softWrap: false,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: ShopStyle.mist,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              price,
+                            ],
+                          )
+                        else ...[
+                          name,
+                          const SizedBox(height: 3),
+                          price,
+                        ],
+                        if (item.isPreorder)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              preorderLine(item),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: ShopStyle.ink,
+                              ),
+                            ),
+                          ),
+                        if (item.hasDescription)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              item.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.3,
+                                color: ShopStyle.mist,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                action,
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1535,10 +1925,10 @@ String preorderLine(PublicItem item) =>
 
 /// What kind of place this is, in the word a shopper uses.
 String _kindOf(String profile) => switch (profile) {
-      'farm' => 'Ferme',
-      'association' || 'church' => 'Association',
-      _ => 'Boutique',
-    };
+  'farm' => 'Ferme',
+  'association' || 'church' => 'Association',
+  _ => 'Boutique',
+};
 
 /// One article: its square — the photograph, or the name set large when
 /// there is none — then the name and the price in small type. Tapping the
@@ -1569,8 +1959,11 @@ class _ItemTile extends StatelessWidget {
   /// The height of everything under the square, measured from the type
   /// sizes below and the text scale in force — so the grid's cells fit
   /// their tiles exactly, with no band of white under each row.
-  static double textHeight(BuildContext context,
-      {required bool description, required bool soldOut}) {
+  static double textHeight(
+    BuildContext context, {
+    required bool description,
+    required bool soldOut,
+  }) {
     final k = MediaQuery.textScalerOf(context).scale(1);
     var h = 10.0; // gap under the square
     h += 15 * 1.25 * 2 * k; // name, two lines
@@ -1593,115 +1986,132 @@ class _ItemTile extends StatelessWidget {
     ].join(', ');
     return _HoverScope(
       child: Semantics(
-      container: true,
-      button: true,
-      label: label,
-      hint: "Voir l'article",
-      onTap: onOpen,
-      child: InkWell(
+        container: true,
+        button: true,
+        label: label,
+        hint: "Voir l'article",
         onTap: onOpen,
-        excludeFromSemantics: true,
-        borderRadius: BorderRadius.circular(6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Stack(
-                  fit: StackFit.expand,
+        child: InkWell(
+          onTap: onOpen,
+          excludeFromSemantics: true,
+          borderRadius: BorderRadius.circular(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ExcludeSemantics(
+                        child: Opacity(
+                          opacity: item.inStock ? 1 : 0.45,
+                          child: item.photoKey == null
+                              ? NoPhotoPanel(name: item.name, accent: accent)
+                              : ColoredBox(
+                                  color: ShopStyle.stone,
+                                  child: _Photo(
+                                    photoKey: item.photoKey,
+                                    capture: capture,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      if (item.inStock)
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: count > 0
+                              ? _Stepper(
+                                  name: item.name,
+                                  count: count,
+                                  onAdd: onAdd,
+                                  onRemove: onRemove,
+                                )
+                              : _ShowOnHover(
+                                  child: _QuickAdd(
+                                    name: item.name,
+                                    onAdd: onAdd,
+                                  ),
+                                ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ExcludeSemantics(
-                      child: Opacity(
-                        opacity: item.inStock ? 1 : 0.45,
-                        child: item.photoKey == null
-                            ? NoPhotoPanel(name: item.name, accent: accent)
-                            : ColoredBox(
-                                color: ShopStyle.stone,
-                                child: _Photo(
-                                    photoKey: item.photoKey, capture: capture),
-                              ),
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                        color: ShopStyle.ink,
                       ),
                     ),
-                    if (item.inStock)
-                      Positioned(
-                        right: 8,
-                        bottom: 8,
-                        child: count > 0
-                            ? _Stepper(
-                                name: item.name,
-                                count: count,
-                                onAdd: onAdd,
-                                onRemove: onRemove)
-                            : _ShowOnHover(
-                                child: _QuickAdd(name: item.name, onAdd: onAdd)),
+                    const SizedBox(height: 3),
+                    Text(
+                      priceOf(money, item),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: ShopStyle.mist,
+                      ),
+                    ),
+                    if (item.isPreorder)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          preorderLine(item),
+                          key: const Key('preorder-line'),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: ShopStyle.ink,
+                          ),
+                        ),
+                      ),
+                    if (item.hasDescription)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          item.description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.3,
+                            color: ShopStyle.mist,
+                          ),
+                        ),
+                      ),
+                    if (!item.inStock)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          context.tr('Épuisé'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            letterSpacing: 0.6,
+                            fontWeight: FontWeight.w600,
+                            color: ShopStyle.mist,
+                          ),
+                        ),
                       ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            ExcludeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.25,
-                        color: ShopStyle.ink),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    priceOf(money, item),
-                    style:
-                        const TextStyle(fontSize: 14, color: ShopStyle.mist),
-                  ),
-                  if (item.isPreorder)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Text(preorderLine(item),
-                          key: const Key('preorder-line'),
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: ShopStyle.ink)),
-                    ),
-                  if (item.hasDescription)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        item.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            height: 1.3,
-                            color: ShopStyle.mist),
-                      ),
-                    ),
-                  if (!item.inStock)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(context.tr('Épuisé'),
-                          style: const TextStyle(
-                              fontSize: 12,
-                              letterSpacing: 0.6,
-                              fontWeight: FontWeight.w600,
-                              color: ShopStyle.mist)),
-                    ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -1727,10 +2137,10 @@ class _HoverScopeState extends State<_HoverScope> {
 
   @override
   Widget build(BuildContext context) => MouseRegion(
-        onEnter: (_) => setState(() => _on = true),
-        onExit: (_) => setState(() => _on = false),
-        child: _Hovered(on: _on, child: widget.child),
-      );
+    onEnter: (_) => setState(() => _on = true),
+    onExit: (_) => setState(() => _on = false),
+    child: _Hovered(on: _on, child: widget.child),
+  );
 }
 
 class _Hovered extends InheritedWidget {
@@ -1773,7 +2183,12 @@ class _ShowOnHover extends StatelessWidget {
 /// picture. The audit found one photo in seventy articles; the grey icon
 /// this replaces made every one of the other sixty-nine read as broken.
 class NoPhotoPanel extends StatelessWidget {
-  const NoPhotoPanel({super.key, required this.name, this.accent, this.large = false});
+  const NoPhotoPanel({
+    super.key,
+    required this.name,
+    this.accent,
+    this.large = false,
+  });
 
   final String name;
   final Color? accent;
@@ -1785,7 +2200,9 @@ class NoPhotoPanel extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Color.alphaBlend(tint.withValues(alpha: 0.07), ShopStyle.stone),
-        border: Border(left: BorderSide(color: tint.withValues(alpha: 0.55), width: 3)),
+        border: Border(
+          left: BorderSide(color: tint.withValues(alpha: 0.55), width: 3),
+        ),
       ),
       child: Padding(
         padding: EdgeInsets.all(large ? 28 : 14),
@@ -1800,7 +2217,10 @@ class NoPhotoPanel extends StatelessWidget {
               height: 1.15,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
-              color: Color.alphaBlend(tint.withValues(alpha: 0.75), ShopStyle.ink),
+              color: Color.alphaBlend(
+                tint.withValues(alpha: 0.75),
+                ShopStyle.ink,
+              ),
             ),
           ),
         ),
@@ -1867,15 +2287,25 @@ class _Stepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _StepButton(
-              icon: Icons.remove, label: context.tr('Retirer un {name}', {'name': name}), onTap: onRemove),
-          ExcludeSemantics(
-            child: Text('$count',
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: ShopStyle.paper)),
+            icon: Icons.remove,
+            label: context.tr('Retirer un {name}', {'name': name}),
+            onTap: onRemove,
           ),
-          _StepButton(icon: Icons.add, label: context.tr('Ajouter un {name}', {'name': name}), onTap: onAdd),
+          ExcludeSemantics(
+            child: Text(
+              '$count',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: ShopStyle.paper,
+              ),
+            ),
+          ),
+          _StepButton(
+            icon: Icons.add,
+            label: context.tr('Ajouter un {name}', {'name': name}),
+            onTap: onAdd,
+          ),
         ],
       ),
     );
@@ -1914,8 +2344,11 @@ class ArticleSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final money = moneyFormat(currency);
     final count = quantity.round();
-    final ask = whatsappUrl(phone, text:
-        'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Mara.');
+    final ask = whatsappUrl(
+      phone,
+      text:
+          'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Mara.',
+    );
     final accent = Theme.of(context).colorScheme.primary;
     return SafeArea(
       child: SingleChildScrollView(
@@ -1936,48 +2369,64 @@ class ArticleSheet extends StatelessWidget {
                     child: item.photoKey == null
                         ? NoPhotoPanel(
                             name: item.name,
-                            accent: accent == ShopStyle.ink ? null : accent)
+                            accent: accent == ShopStyle.ink ? null : accent,
+                          )
                         : ColoredBox(
                             color: ShopStyle.stone,
                             child: _Photo(
-                                photoKey: item.photoKey,
-                                capture: capture,
-                                label: context.tr('Photo de {name}', {'name': item.name})),
+                              photoKey: item.photoKey,
+                              capture: capture,
+                              label: context.tr('Photo de {name}', {
+                                'name': item.name,
+                              }),
+                            ),
                           ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-            Text(item.name,
-                style: const TextStyle(
-                    fontSize: 22,
-                    height: 1.2,
-                    fontWeight: FontWeight.w700,
-                    color: ShopStyle.ink)),
+            Text(
+              item.name,
+              style: const TextStyle(
+                fontSize: 22,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+                color: ShopStyle.ink,
+              ),
+            ),
             const SizedBox(height: 6),
             Row(
               children: [
-                Text(priceOf(money, item),
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: ShopStyle.ink)),
+                Text(
+                  priceOf(money, item),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: ShopStyle.ink,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Text(
-                    item.isPreorder
-                        ? preorderLine(item)
-                        : item.inStock
-                            ? context.tr('En stock')
-                            : context.tr('Épuisé'),
-                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
+                  item.isPreorder
+                      ? preorderLine(item)
+                      : item.inStock
+                      ? context.tr('En stock')
+                      : context.tr('Épuisé'),
+                  style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
+                ),
               ],
             ),
             if (item.hasDescription) ...[
               const SizedBox(height: 12),
-              Text(item.description!,
-                  style: const TextStyle(
-                      fontSize: 15, height: 1.45, color: ShopStyle.ink)),
+              Text(
+                item.description!,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.45,
+                  color: ShopStyle.ink,
+                ),
+              ),
             ],
             const SizedBox(height: 20),
             if (item.inStock)
@@ -1992,15 +2441,22 @@ class ArticleSheet extends StatelessWidget {
                   : Row(
                       children: [
                         _Stepper(
-                            name: item.name,
-                            count: count,
-                            onAdd: onAdd,
-                            onRemove: onRemove),
+                          name: item.name,
+                          count: count,
+                          onAdd: onAdd,
+                          onRemove: onRemove,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(context.tr('{count} dans le panier', {'count': count}),
-                              style: const TextStyle(
-                                  fontSize: 15, color: ShopStyle.ink)),
+                          child: Text(
+                            context.tr('{count} dans le panier', {
+                              'count': count,
+                            }),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: ShopStyle.ink,
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
@@ -2102,8 +2558,11 @@ class _PhotoState extends State<_Photo> {
       builder: (context, snapshot) {
         final bytes = snapshot.data;
         if (bytes == null) return placeholder;
-        final image =
-            Image.memory(bytes, fit: widget.fit, semanticLabel: widget.label);
+        final image = Image.memory(
+          bytes,
+          fit: widget.fit,
+          semanticLabel: widget.label,
+        );
         // A product photograph leans in under the pointer; a logo, shown
         // whole, holds still.
         if (widget.fit != BoxFit.cover || !widget.lean) return image;
@@ -2112,4 +2571,3 @@ class _PhotoState extends State<_Photo> {
     );
   }
 }
-

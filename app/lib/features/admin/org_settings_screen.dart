@@ -1194,8 +1194,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         retail: widget.retail,
       ),
       const SizedBox(height: 12),
-      // Not a first step: the spots for sale (071) and the Pro dressing
-      // (068) wait under « Vitrine avancée », folded.
+      // Not a first step: the dressing (093) and the spots for sale (071)
+      // wait under « Vitrine avancée », folded.
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -1204,19 +1204,22 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           leading: const Icon(Icons.tune),
           title: Text(context.tr('Vitrine avancée'),
               style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(context.tr('Mettre en avant · Habillage Pro')),
+          subtitle: Text(context.tr('Habiller ma vitrine · Mettre en avant')),
           children: [
-            SpotsCard(
-              orgId: widget.orgId,
-              admin: widget.admin,
-              retail: widget.retail,
-            ),
-            const SizedBox(height: 20),
             VitrinePlusCard(
               orgId: widget.orgId,
               admin: widget.admin,
               retail: widget.retail,
               capture: widget.capture,
+              shopName: _nameController.text.trim().isEmpty
+                  ? null
+                  : _nameController.text.trim(),
+            ),
+            const SizedBox(height: 20),
+            SpotsCard(
+              orgId: widget.orgId,
+              admin: widget.admin,
+              retail: widget.retail,
             ),
           ],
         ),

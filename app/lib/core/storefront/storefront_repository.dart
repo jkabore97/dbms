@@ -303,9 +303,23 @@ class StorefrontStyle {
     this.delivers = false,
     this.topWeekRank,
     this.topWeekLeague,
+    this.layout = VitrineLayout.grid,
+    this.schedule,
+    this.openNow,
   });
 
   static const none = StorefrontStyle();
+
+  /// How the shelf is drawn (093, Pro): grille, grandes photos, liste, menu.
+  final VitrineLayout layout;
+
+  /// The days and times the shop is open (093, every plan); [hours] is the
+  /// line written from it.
+  final VitrineSchedule? schedule;
+
+  /// « Ouvert maintenant » / « Fermé », said by the server from [schedule]
+  /// in Ouagadougou's time (093, Pro). Null: no banner.
+  final bool? openNow;
 
   /// One line under the name, 80 characters at most.
   final String? tagline;
@@ -344,7 +358,9 @@ class StorefrontStyle {
       accent == null &&
       coverKey == null &&
       pinned.isEmpty &&
-      !hideOutOfStock;
+      !hideOutOfStock &&
+      layout == VitrineLayout.grid &&
+      schedule == null;
 
   factory StorefrontStyle.fromJson(Map<String, dynamic>? json) {
     if (json == null) return none;
@@ -371,8 +387,32 @@ class StorefrontStyle {
       topWeekLeague: json['top_week'] is Map
           ? (json['top_week'] as Map)['league'] as String?
           : null,
+      layout: VitrineLayout.parse(s('layout')),
+      schedule: VitrineSchedule.fromJson(json['schedule']),
+      openNow: json['open_now'] is bool ? json['open_now'] as bool : null,
     );
   }
+
+  StorefrontStyle copyWith({
+    VitrineLayout? layout,
+    List<String>? pinned,
+    bool? hideOutOfStock,
+  }) =>
+      StorefrontStyle(
+        tagline: tagline,
+        hours: hours,
+        accent: accent,
+        coverKey: coverKey,
+        pinned: pinned ?? this.pinned,
+        hideOutOfStock: hideOutOfStock ?? this.hideOutOfStock,
+        logoKey: logoKey,
+        delivers: delivers,
+        topWeekRank: topWeekRank,
+        topWeekLeague: topWeekLeague,
+        layout: layout ?? this.layout,
+        schedule: schedule,
+        openNow: openNow,
+      );
 
   Map<String, Object?> toJson() => {
         if (tagline != null) 'tagline': tagline,
@@ -381,6 +421,8 @@ class StorefrontStyle {
         if (coverKey != null) 'cover_key': coverKey,
         if (pinned.isNotEmpty) 'pinned': pinned,
         if (hideOutOfStock) 'hide_out_of_stock': true,
+        if (layout != VitrineLayout.grid) 'layout': layout.name,
+        if (schedule != null) 'schedule': schedule!.toJson(),
       };
 
   /// '#RRGGBB' → a colour; anything else → null.
@@ -407,6 +449,92 @@ class StorefrontStyle {
     }
     first.sort((a, b) => rank[a.id]!.compareTo(rank[b.id]!));
     return [...first, ...rest];
+  }
+}
+
+/// How a vitrine's shelf is drawn (093). Grille is the street's common
+/// design; the others are Mara Pro.
+enum VitrineLayout {
+  grid,
+  large,
+  list,
+  menu;
+
+  static VitrineLayout parse(String? name) => VitrineLayout.values
+      .firstWhere((l) => l.name == name, orElse: () => VitrineLayout.grid);
+}
+
+/// The days and hours a shop is open (093): ISO days (1 = lundi) and two
+/// « HH:MM » times. A close before the open is a night shop.
+class VitrineSchedule {
+  const VitrineSchedule(
+      {required this.days, required this.open, required this.close});
+
+  final List<int> days;
+  final String open;
+  final String close;
+
+  static final _time = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
+
+  bool get isValid =>
+      days.isNotEmpty &&
+      _time.hasMatch(open) &&
+      _time.hasMatch(close) &&
+      open != close;
+
+  static VitrineSchedule? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final days = json['days'];
+    final open = json['open'];
+    final close = json['close'];
+    if (days is! List || open is! String || close is! String) return null;
+    final s = VitrineSchedule(
+      days: (days.whereType<num>().map((d) => d.toInt()).toList()..sort()),
+      open: open,
+      close: close,
+    );
+    return s.isValid ? s : null;
+  }
+
+  Map<String, Object?> toJson() =>
+      {'days': [...days]..sort(), 'open': open, 'close': close};
+
+  static const _fr = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  static const _en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  /// « 8h », « 8h30 » — or « 8:30 » in English.
+  static String clock(String hhmm, [String lang = 'fr']) {
+    final h = int.parse(hhmm.substring(0, 2));
+    final m = hhmm.substring(3);
+    if (lang == 'en') return m == '00' ? '$h:00' : '$h:$m';
+    return m == '00' ? '${h}h' : '${h}h$m';
+  }
+
+  /// « Lun–Sam 8h–19h », « Lun, Mer–Ven 7h30–18h », « Tous les jours … ».
+  String label([String lang = 'fr']) {
+    final names = lang == 'en' ? _en : _fr;
+    final sorted = [...days]..sort();
+    final String when;
+    if (sorted.length == 7) {
+      when = lang == 'en' ? 'Every day' : 'Tous les jours';
+    } else {
+      final runs = <String>[];
+      var i = 0;
+      while (i < sorted.length) {
+        var j = i;
+        while (j + 1 < sorted.length && sorted[j + 1] == sorted[j] + 1) {
+          j++;
+        }
+        runs.add(j == i
+            ? names[sorted[i] - 1]
+            : j == i + 1
+                ? '${names[sorted[i] - 1]}, ${names[sorted[j] - 1]}'
+                : '${names[sorted[i] - 1]}–${names[sorted[j] - 1]}');
+        i = j + 1;
+      }
+      when = runs.join(', ');
+    }
+    return '$when ${clock(open, lang)}–${clock(close, lang)}';
   }
 }
 
