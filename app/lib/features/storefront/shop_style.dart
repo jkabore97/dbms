@@ -24,19 +24,19 @@ class ShopStyle {
   ShopStyle._();
 
   /// Near-black for type and the one button. Pure black looks printed.
-  static const ink = Color(0xFF1F1F1F);
+  static const ink = Color(0xFF14161C);
 
   /// The page.
   static const paper = Color(0xFFFFFFFF);
 
   /// The warm off-white every photo sits on, and the hero band.
-  static const stone = Color(0xFFF4F3EF);
+  static const stone = Color(0xFFF6F2EA);
 
   /// Secondary text: prices, addresses, distances, the footer.
   static const mist = Color(0xFF6E6E6B);
 
   /// Hairlines.
-  static const line = Color(0xFFE7E5E0);
+  static const line = Color(0xFFE8E3D8);
 
   /// The page never grows wider than this on a desktop screen: a grid of
   /// eight tiny photos across a monitor sells nothing.
@@ -409,7 +409,10 @@ class ShopSectionLabel extends StatelessWidget {
   }
 }
 
-/// The bottom of every street page: who built it and the way to the rest.
+/// The bottom of every street page. First the way to the rest of the street
+/// (« Toutes les vitrines »), on the page itself; then the footer proper: one
+/// centred band of cream, with Mara and what it is, and under it « POWERED BY »
+/// over Kaj Consulting's logo on its white card.
 class ShopFooter extends StatelessWidget {
   const ShopFooter({super.key, this.onDirectory});
 
@@ -418,61 +421,78 @@ class ShopFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 48),
-        const Divider(),
-        const SizedBox(height: 28),
-        // Mara, the street's own name, then who makes it.
-        const MaraWordmark(key: Key('mara-footer'), height: 44),
-        const SizedBox(height: 6),
-        const Text('Les boutiques près de vous',
-            style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
-        const SizedBox(height: 26),
-        // « POWERED BY » over the owner's logo — KAJ Consulting's, in full,
-        // on a white card — as on the owner's example; in place of the old
-        // wordmark and tagline.
-        Semantics(
-          label: 'Powered by KAJ Consulting',
-          child: ExcludeSemantics(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('POWERED BY',
-                    style: TextStyle(
-                        fontSize: 11,
-                        letterSpacing: 3,
-                        color: ShopStyle.mist)),
-                const SizedBox(height: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0x14000000)),
-                    boxShadow: const [
-                      BoxShadow(
-                          color: Color(0x1A000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 4)),
+        if (onDirectory != null) ...[
+          const SizedBox(height: 40),
+          Center(
+            child: UnderlineLink(
+                key: const Key('footer-directory'),
+                label: 'Toutes les vitrines',
+                onTap: onDirectory,
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: ShopStyle.ink)),
+          ),
+        ],
+        const SizedBox(height: 40),
+        Container(
+          key: const Key('shop-footer'),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+          decoration: BoxDecoration(
+            color: ShopStyle.stone,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const MaraWordmark(key: Key('mara-footer'), height: 40),
+              const SizedBox(height: 4),
+              const Text('Les boutiques près de vous',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
+              const SizedBox(height: 24),
+              Semantics(
+                label: 'Powered by KAJ Consulting',
+                child: ExcludeSemantics(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('POWERED BY',
+                          style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 3,
+                              color: ShopStyle.mist)),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 22, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0x14000000)),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Color(0x14000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4)),
+                          ],
+                        ),
+                        child: Image.asset('assets/brand/kaj_logo.png',
+                            key: const Key('kaj-logo'), height: 56),
+                      ),
                     ],
                   ),
-                  child: Image.asset('assets/brand/kaj_logo.png',
-                      key: const Key('kaj-logo'), height: 64),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+              Text('© ${DateTime.now().year} Mara',
+                  style: const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        if (onDirectory != null) ...[
-          const SizedBox(height: 6),
-          UnderlineLink(
-              label: 'Toutes les vitrines',
-              onTap: onDirectory,
-              style: const TextStyle(fontSize: 14, color: ShopStyle.ink)),
-        ],
-        const SizedBox(height: 36),
+        const SizedBox(height: 24),
       ],
     );
   }
