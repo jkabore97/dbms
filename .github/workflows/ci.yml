@@ -645,6 +645,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_association_trust.sql
 
+      - name: Prove the earned locks — invoices 70 %, production 90 %, credit 3 orders, second business Pro (089)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_earned_locks.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

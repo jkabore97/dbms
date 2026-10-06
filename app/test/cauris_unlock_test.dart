@@ -34,7 +34,8 @@ FeatureStates _states({int balance = 260}) => FeatureStates.fromJson({
       ],
       'progress': {
         'gated': true, 'in_trial': false, 'score': 67, 'orders': 3,
-        'street_pct': 60, 'tools_pct': 90, 'orders_needed': 10, 'on_street': true,
+        'street_pct': 60, 'invoices_pct': 70, 'production_pct': 90,
+        'credit_orders': 3, 'on_street': true,
       },
     });
 
@@ -109,35 +110,33 @@ void main() {
     expect(pro[1].free, isNull, reason: 'no price, no lock');
   });
 
-  test('the Basic path: 90 % opens the tools, 10 orders a second business, '
-      'the trial opens everything, an old business is not gated', () {
+  test('the earned path (089): the server\'s locks rule, no trial', () {
     final p = _states().progress;
-    expect(p.locks('invoices'), isTrue);
+    expect(p.locks('invoices'), isTrue, reason: '67 % < 70 %');
     expect(p.locks('production'), isTrue);
-    expect(p.locks('credits'), isTrue);
-    expect(p.locks('second_business'), isTrue);
-    expect(p.locks('payroll'), isFalse, reason: 'not a Basic path tool');
-    expect(p.needFor('second_business'), '3 commandes terminées sur 10');
-    expect(const BasicProgress(gated: true, inTrial: true, score: 10).locks('invoices'),
-        isFalse);
-    expect(const BasicProgress(gated: false, score: 10).locks('invoices'), isFalse);
-    expect(const BasicProgress(gated: true, score: 100, orders: 12).locks('credits'),
-        isFalse);
+    expect(p.locks('credits'), isFalse, reason: '3 orders done');
+    expect(p.locks('second_business'), isTrue, reason: 'not Pro');
+    expect(p.locks('payroll'), isFalse, reason: 'not a path tool');
+    expect(p.goalFor('invoices'), 'Vitrine à 70 %');
+    expect(p.needFor('invoices'), 'Vitrine : 67 %');
+    expect(p.progressFor('invoices'), closeTo(67 / 70, 0.001));
+    final server = BasicProgress.fromJson(const {
+      'gated': true, 'score': 0, 'locks': {'invoices': false, 'credits': true},
+    });
+    expect(server.locks('invoices'), isFalse, reason: 'the server said open');
+    expect(server.locks('credits'), isTrue);
   });
 
-  testWidgets('the path card fills and says what each step opens',
+  testWidgets('the path card draws the four tools, open or with their goal',
       (tester) async {
     await sheet(tester, PathCard(org: _owner, progress: _states().progress));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('67 %'), findsOneWidget);
-    expect(find.textContaining('60 % : votre vitrine sur le marché'), findsOneWidget);
-    expect(find.textContaining('90 % : reçus et factures'), findsOneWidget);
-    expect(find.byIcon(Icons.check_circle), findsOneWidget, reason: 'the street');
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(2));
-    await sheet(tester, PathCard(
-        org: _owner,
-        progress: BasicProgress(gated: true, inTrial: true, score: 20,
-            trialUntil: DateTime(2026, 10, 13))));
-    expect(find.text('Essai : tout est ouvert jusqu\'au 13 octobre.'), findsOneWidget);
+    expect(find.text('Factures'), findsOneWidget);
+    expect(find.text('Vitrine à 70 %'), findsOneWidget);
+    expect(find.text('Vitrine à 90 %'), findsOneWidget);
+    expect(find.text('Ouvert'), findsOneWidget, reason: 'the credit book');
+    expect(find.text('Mara Pro'), findsOneWidget);
+    expect(find.byIcon(Icons.lock), findsNWidgets(3));
   });
 }

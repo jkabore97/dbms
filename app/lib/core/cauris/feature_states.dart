@@ -73,11 +73,18 @@ class BasicProgress {
     this.orders = 0,
     this.streetPct = 60,
     this.toolsPct = 90,
-    this.ordersNeeded = 10,
+    this.invoicesPct = 70,
+    this.productionPct = 90,
+    this.creditOrders = 3,
+    this.ordersNeeded = 3,
     this.onStreet = true,
+    this.pro = false,
+    this.serverLocks,
   });
 
   final bool gated;
+
+  /// 085's first days; never true since 089 — kept so an older answer reads.
   final bool inTrial;
   final DateTime? trialUntil;
 
@@ -88,29 +95,62 @@ class BasicProgress {
   final int orders;
   final int streetPct;
   final int toolsPct;
+  final int invoicesPct;
+  final int productionPct;
+  final int creditOrders;
   final int ordersNeeded;
   final bool onStreet;
+  final bool pro;
 
-  /// The tools a growing vitrine opens: invoices and receipts, production,
-  /// the credit book.
+  /// The server's own answer (089), step by step: the rule the database
+  /// enforces, so the app never draws a door the server would not open.
+  final Map<String, bool>? serverLocks;
+
+  /// The tools a growing vitrine opens.
   static const vitrineTools = {'invoices', 'production', 'credits'};
 
-  /// Whether a Basic tool is still on the path for this business.
+  /// Whether a Basic tool is still ahead of this business.
   bool locks(String feature) {
+    final server = serverLocks;
+    if (server != null) return server[feature] ?? false;
     if (!gated || inTrial) return false;
-    if (vitrineTools.contains(feature)) return score < toolsPct;
-    if (feature == 'second_business') return orders < ordersNeeded;
-    return false;
+    return switch (feature) {
+      'invoices' => score < invoicesPct,
+      'production' => score < productionPct,
+      'credits' => orders < creditOrders,
+      'second_business' => !pro,
+      _ => false,
+    };
   }
 
-  /// One line on what still opens it.
-  String needFor(String feature) => feature == 'second_business'
-      ? '$orders commande${orders > 1 ? 's' : ''} terminée${orders > 1 ? 's' : ''} '
-          'sur $ordersNeeded'
-      : 'Vitrine à $score % — elle s\'ouvre à $toolsPct %';
+  /// How far along, 0–1, for the bar on the lock.
+  double progressFor(String feature) => switch (feature) {
+        'invoices' => (score / invoicesPct).clamp(0, 1).toDouble(),
+        'production' => (score / productionPct).clamp(0, 1).toDouble(),
+        'credits' => creditOrders == 0 ? 1 : (orders / creditOrders).clamp(0, 1).toDouble(),
+        _ => pro ? 1 : 0,
+      };
+
+  /// The goal, in a few words.
+  String goalFor(String feature) => switch (feature) {
+        'invoices' => 'Vitrine à $invoicesPct %',
+        'production' => 'Vitrine à $productionPct %',
+        'credits' => '$creditOrders commandes',
+        'second_business' => 'Mara Pro',
+        _ => '',
+      };
+
+  /// Where it stands, in a few words.
+  String needFor(String feature) => switch (feature) {
+        'invoices' || 'production' => 'Vitrine : $score %',
+        'credits' => 'Commandes : $orders / $creditOrders',
+        'second_business' => 'Avec Mara Pro',
+        _ => '',
+      };
 
   factory BasicProgress.fromJson(Map<String, dynamic> j) {
     int n(Object? v, int d) => v is num ? v.toInt() : int.tryParse('$v') ?? d;
+    final l = j['locks'];
     return BasicProgress(
       gated: j['gated'] == true,
       inTrial: j['in_trial'] == true,
@@ -119,8 +159,15 @@ class BasicProgress {
       orders: n(j['orders'], 0),
       streetPct: n(j['street_pct'], 60),
       toolsPct: n(j['tools_pct'], 90),
-      ordersNeeded: n(j['orders_needed'], 10),
+      invoicesPct: n(j['invoices_pct'], 70),
+      productionPct: n(j['production_pct'], 90),
+      creditOrders: n(j['credit_orders'], 3),
+      ordersNeeded: n(j['orders_needed'], 3),
       onStreet: j['on_street'] != false,
+      pro: j['pro'] == true,
+      serverLocks: l is Map
+          ? {for (final e in l.entries) '${e.key}': e.value == true}
+          : null,
     );
   }
 }

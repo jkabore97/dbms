@@ -232,7 +232,7 @@ class CompteScreen extends StatelessWidget {
                   _Tile(
                     icon: Icons.handshake_outlined,
                     title: Strings.of(context).creditBook,
-                    onTap: () => PathGate.guard(context, org, 'credits',
+                    onTap: () => PathGate.open(context, org, 'credits',
                         () => context.push(inside('credits'))),
                   ),
                 if (access.canSee('tontines'))

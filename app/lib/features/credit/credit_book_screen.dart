@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../cauris/path_card.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 import 'package:go_router/go_router.dart';
@@ -83,6 +85,10 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
   /// cost, and the debt it records is linked to that sale — not a free-text
   /// line unrelated to the inventory.
   Future<void> _newSale() async {
+    // Locked (089): what was kept is read, nothing new is written.
+    if (PathGate.locks(context, widget.org, 'credits')) {
+      return PathGate.guard(context, widget.org, 'credits', () {});
+    }
     List<Product> products = const [];
     try {
       products = await widget.retail.products(widget.org.id);
@@ -108,6 +114,10 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
   /// deliberate secondary path: most carnet entries are goods taken on trust,
   /// which now go through _newSale; this is the exception, not the door.
   Future<void> _newLoan() async {
+    // Locked (089): what was kept is read, nothing new is written.
+    if (PathGate.locks(context, widget.org, 'credits')) {
+      return PathGate.guard(context, widget.org, 'credits', () {});
+    }
     final done = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
