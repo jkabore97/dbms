@@ -2,6 +2,8 @@
 
 Brouillon à relire. Ne citez que des fonctions déjà disponibles dans l'app.
 
+**Slogan** : Au Service du Peuple
+
 ## Google Play
 
 **Nom (30 car. max)**
@@ -33,7 +35,7 @@ Mara est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, adap
 **Sous-titre (30 car. max)** Boutiques, caisse et stock
 **Mots-clés (100 car. max)**
 boutique,commerce,caisse,stock,livraison,vitrine,commande,marché,Ouagadougou,Burkina,FCFA
-**Texte promotionnel** Les boutiques près de vous, dans votre poche.
+**Texte promotionnel** Au Service du Peuple : les boutiques près de vous, dans votre poche.
 **Description** : reprendre la description complète Google Play.
 
 ## YouTube

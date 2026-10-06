@@ -449,7 +449,8 @@ class ShopFooter extends StatelessWidget {
             children: [
               const MaraWordmark(key: Key('mara-footer'), height: 40),
               const SizedBox(height: 4),
-              const Text('Les boutiques près de vous',
+              const Text('Au Service du Peuple',
+                  key: Key('footer-slogan'),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: ShopStyle.mist)),
               const SizedBox(height: 24),

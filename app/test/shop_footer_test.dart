@@ -10,6 +10,7 @@ void main() {
       home: Scaffold(body: SingleChildScrollView(child: ShopFooter())),
     ));
     expect(find.text('POWERED BY'), findsOneWidget);
+    expect(find.text('Au Service du Peuple'), findsOneWidget);
     expect(find.byKey(const Key('kaj-logo')), findsOneWidget);
     expect(find.bySemanticsLabel('Powered by KAJ Consulting'), findsOneWidget);
     expect(find.text('Des vitrines de quartier, tenues par les boutiques.'),
