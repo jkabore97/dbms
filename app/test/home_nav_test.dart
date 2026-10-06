@@ -130,7 +130,7 @@ void main() {
           .map((t) => (t.title as Text).data)
           .toList();
       expect(sheet,
-          ['Mes cauris', 'Production', 'Voir ma vitrine', 'Voir le marché', 'Compte']);
+          ['Mes cauris', 'Académie', 'Production', 'Voir ma vitrine', 'Voir le marché', 'Compte']);
     });
 
     testWidgets('a tool the owner hid is not on the bar, and it closes up',
@@ -167,6 +167,10 @@ void main() {
   });
 
   testWidgets('the farm: Stock, Bandes, Factures on the bar', (tester) async {
+    // Tall enough for the whole Plus sheet.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(_app(FarmHomeScreen(
       db: db,
       org: const OrgSummary(

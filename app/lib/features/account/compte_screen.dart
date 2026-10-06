@@ -171,6 +171,15 @@ class CompteScreen extends StatelessWidget {
                     subtitle: 'Gagnés en vendant bien, à dépenser en outils Pro',
                     onTap: () => context.push(inside('cauris')),
                   ),
+                // Académie Mara (087): every member learns, each at their
+                // own level.
+                _Tile(
+                  key: const Key('compte-academy'),
+                  icon: Icons.school_outlined,
+                  title: 'Académie Mara',
+                  subtitle: 'Des leçons de deux minutes, en images',
+                  onTap: () => context.push(inside('academie')),
+                ),
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
                   title: org.isPro ? 'Mara Pro' : 'Passer à Mara Pro',

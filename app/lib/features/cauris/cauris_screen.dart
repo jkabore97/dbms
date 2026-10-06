@@ -130,6 +130,13 @@ class _CaurisScreenState extends State<CaurisScreen> {
                 icon: const Icon(Icons.emoji_events_outlined),
                 label: Text('Classement de la semaine · +${w.week}'),
               ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const Key('open-academy'),
+                onPressed: () => context.push(Routes.inside(widget.org.id, 'academie')),
+                icon: const Icon(Icons.school_outlined),
+                label: const Text('Apprendre et gagner · Académie Mara'),
+              ),
               const SizedBox(height: 22),
               _label(theme, 'Comment gagner des cauris'),
               KajCard(
