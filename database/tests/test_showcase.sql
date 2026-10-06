@@ -119,6 +119,19 @@ end $$;
 commit;
 
 \echo ''
+\echo '--- TEST 2b: the most photographed first (095) ---'
+\i database/migrations/095_showcase_order.sql
+do $$
+declare v text[] := array(select showcase_slugs());
+begin
+    if v[array_length(v, 1)] <> 'bob-electronics'
+       or v[1] not in ('rowan-bike-shop', 'thomas-university-restaurant') then
+        raise exception 'FAIL: the order is %', v;
+    end if;
+    raise notice 'PASS: photographed shelves first, Bob Electronics last';
+end $$;
+
+\echo ''
 \echo '--- TEST 3: nobody orders; no cauris ---'
 -- As the database itself: the trigger stands whatever the path, the
 -- storefront's place_order() or a direct insert.

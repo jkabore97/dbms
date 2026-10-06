@@ -166,11 +166,18 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           // A Pro shop's shelf order (068): pinned first, out-of-stock
           // left off when it asked. The street reads it, the shop set it.
           : shop.style.arrange(await widget.storefront.items(widget.slug));
+      // A vitrine d'exemple shows its photographed articles first (095).
+      final shelf = showcase
+          ? [
+              ...items.where((i) => i.photoKey != null),
+              ...items.where((i) => i.photoKey == null),
+            ]
+          : items;
       if (!mounted) return;
       setState(() {
         _shop = shop;
         _showcase = showcase;
-        _items = items;
+        _items = shelf;
         _loading = false;
       });
       // The street's counter (071): a window opened. Never in the way.

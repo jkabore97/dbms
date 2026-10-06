@@ -211,19 +211,51 @@ class ScrollReveal extends StatefulWidget {
 
 class _ScrollRevealState extends State<ScrollReveal> {
   bool _in = false;
-  ScrollPosition? _position;
+
+  /// Every scrollable around the tile, nearest first. The nearest is often
+  /// a grid that never scrolls itself (shrink-wrapped inside the page): only
+  /// listening to it left every tile below the first screen invisible
+  /// forever — the street showed two shops of seven.
+  List<ScrollPosition> _positions = const [];
   Timer? _timer;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final position = Scrollable.maybeOf(context)?.position;
-    if (!identical(position, _position)) {
-      _position?.removeListener(_check);
-      _position = position;
-      _position?.addListener(_check);
+    final found = <ScrollPosition>[];
+    var scrollable = Scrollable.maybeOf(context);
+    while (scrollable != null) {
+      found.add(scrollable.position);
+      scrollable = Scrollable.maybeOf(scrollable.context);
+    }
+    for (final p in _positions) {
+      p.removeListener(_onScroll);
+    }
+    _positions = found;
+    for (final p in _positions) {
+      p.addListener(_onScroll);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  void _stopListening() {
+    for (final p in _positions) {
+      p.removeListener(_onScroll);
+    }
+    _positions = const [];
+  }
+
+  /// A scroll is announced before the page is laid out again, so the tile
+  /// is measured after the frame — or the last notification of a fling
+  /// would measure it where it was, and leave it hidden.
+  bool _pending = false;
+  void _onScroll() {
+    if (_pending || _in) return;
+    _pending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pending = false;
+      _check();
+    });
   }
 
   void _check() {
@@ -239,7 +271,7 @@ class _ScrollRevealState extends State<ScrollReveal> {
         top.dx < screen.width &&
         top.dx + box.size.width > 0;
     if (!visible) return;
-    _position?.removeListener(_check);
+    _stopListening();
     if (widget.delay == Duration.zero) {
       setState(() => _in = true);
     } else {
@@ -251,7 +283,7 @@ class _ScrollRevealState extends State<ScrollReveal> {
 
   @override
   void dispose() {
-    _position?.removeListener(_check);
+    _stopListening();
     _timer?.cancel();
     super.dispose();
   }
