@@ -19,6 +19,12 @@ compatibility_date = "2026-01-01"
 # what you test on before any DNS exists.
 workers_dev = true
 
+# marakaj.com and www.marakaj.com are Custom Domains of this Worker, attached
+# once in the dashboard (Workers & Pages > dbms > Settings > Domains & Routes).
+# Deliberately not listed as [[routes]] here: wrangler would then try to
+# manage them on every deploy, which needs a zone-level permission the
+# deploy token does not carry. A deploy without [[routes]] leaves them alone.
+
 [assets]
 # Written by `scripts/build-web.sh`. Not committed — build/ is gitignored, so
 # the bundle is always built fresh at deploy time from the current source.

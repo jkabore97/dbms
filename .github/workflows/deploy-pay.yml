@@ -39,8 +39,8 @@ jobs:
       WAVE_WEBHOOK_SECRET: ${{ secrets.WAVE_WEBHOOK_SECRET }}
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-      APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://dbms.kabore-boss.workers.dev' }}
-      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+      APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://marakaj.com' }}
+      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
     steps:
       - uses: actions/checkout@v4
 

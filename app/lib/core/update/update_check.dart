@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import '../site/site.dart';
 
 /// Which build this is, and whether a newer one is out.
 ///
@@ -22,7 +23,7 @@ const buildSha = String.fromEnvironment('BUILD_SHA');
 /// Where the deployed app lives, and therefore where its version.json is.
 /// On the web the page's own origin is used instead, so a preview deploy
 /// compares against itself rather than against production.
-const productionSite = 'https://dbms.kabore-boss.workers.dev';
+const productionSite = siteOrigin;
 
 /// What `version.json` says about the deployed build.
 class UpdateInfo {

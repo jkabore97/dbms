@@ -569,6 +569,7 @@ To switch it on (owner, once — no secret goes in the repository or in chat):
 3. **Supabase dashboard** → Authentication → Providers → Google: on, paste
    the client ID and secret, save.
 4. Authentication → URL Configuration → Redirect URLs, add both:
+   `https://marakaj.com/**`, `https://www.marakaj.com/**`,
    `https://dbms.kabore-boss.workers.dev/**` (the web app comes back to
    `/connexion`) and `bf.kaj.app://login-callback` (the Android app; the
    intent filter in `AndroidManifest.xml` catches it).
@@ -605,8 +606,16 @@ The **Deploy to Cloudflare** workflow publishes the web build over the `dbms`
 Worker:
 
 ```
+https://marakaj.com/
 https://dbms.kabore-boss.workers.dev/
 ```
+
+marakaj.com is a Custom Domain of the `dbms` Worker, attached once in the
+Cloudflare dashboard (Workers & Pages → dbms → Settings → Domains & Routes →
+Add → Custom Domain: `marakaj.com`, then `www.marakaj.com`). The Android app
+and every shared vitrine link point there (`app/lib/core/site/site.dart`;
+`--dart-define=SITE_URL=…` overrides it). Supabase's Site URL is
+`https://marakaj.com`.
 
 It needs one repository secret, `CLOUDFLARE_API_TOKEN`, with the *Edit
 Cloudflare Workers* permission ([create one

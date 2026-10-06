@@ -26,6 +26,7 @@ import '../../core/theme/mara_mark.dart';
 import '../cauris/unlock_sheet.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/site/site.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The business's own details.
@@ -149,7 +150,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   String get _storefrontUrl {
     final origin = Uri.base.scheme.startsWith('http')
         ? Uri.base.origin
-        : 'https://dbms.kabore-boss.workers.dev';
+        : siteOrigin;
     return '$origin/s/$_slug';
   }
 

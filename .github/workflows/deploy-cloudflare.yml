@@ -2,6 +2,7 @@ name: Deploy to Cloudflare
 
 # Publishes the web build over the `dbms` Worker:
 #
+#   https://marakaj.com/   (custom domain, attached once in the dashboard)
 #   https://dbms.kabore-boss.workers.dev/
 #
 # That Worker existed before this workflow and answered "Hello world" — the
@@ -175,7 +176,7 @@ jobs:
         run: |
           echo "### Deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "https://dbms.kabore-boss.workers.dev/" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://marakaj.com/ (also https://dbms.kabore-boss.workers.dev/)" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Hard-reload it: a Flutter web build registers a service worker" >> "$GITHUB_STEP_SUMMARY"
           echo "that serves the previous bundle from cache." >> "$GITHUB_STEP_SUMMARY"
