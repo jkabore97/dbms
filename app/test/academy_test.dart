@@ -62,10 +62,12 @@ void main() {
     await open(tester, _Academy(lived: true));
     expect(find.byKey(const Key('academy-level')), findsOneWidget);
     expect(find.text('Apprenti'), findsOneWidget);
-    expect(find.text('0 leçon sur 3 · Apprenti › Commerçant › Maître'), findsOneWidget);
+    expect(find.text('Commerçant'), findsOneWidget, reason: 'the three medals');
+    expect(find.text('Maître'), findsOneWidget);
+    expect(find.text('0 / 3'), findsOneWidget);
     expect(find.byKey(const Key('lesson-welcome')), findsOneWidget);
-    expect(find.text('Mission réussie : touchez pour la valider'), findsOneWidget);
-    expect(find.text('Guide · 1 min'), findsNWidgets(2));
+    expect(find.text('Réussie !'), findsOneWidget, reason: 'the lived mission');
+    expect(find.text('1 min'), findsNWidgets(2));
   });
 
   testWidgets('a guide played to its end pays, and the level climbs', (tester) async {
@@ -90,7 +92,8 @@ void main() {
 
     await tester.pageBack();
     await settle(tester);
-    expect(find.text('Commerçant'), findsOneWidget);
+    expect(find.text('2 / 3'), findsNothing);
+    expect(find.text('1 / 3'), findsOneWidget);
   });
 
   testWidgets('a mission is refused until it is lived', (tester) async {

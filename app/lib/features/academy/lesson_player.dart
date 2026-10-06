@@ -293,6 +293,32 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
+            // The button the hand is going to, drawn in the app's words.
+            if (point != null && widget.step.target != null)
+              Positioned(
+                left: w * point.dx,
+                top: h * point.dy,
+                child: FractionalTranslation(
+                  translation: const Offset(-0.5, -0.5),
+                  child: Container(
+                    key: const Key('lesson-target'),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: maraGold,
+                      borderRadius: BorderRadius.circular(99),
+                      boxShadow: [
+                        BoxShadow(
+                            color: maraGold.withValues(alpha: 0.45),
+                            blurRadius: 14,
+                            spreadRadius: 2),
+                      ],
+                    ),
+                    child: Text(widget.step.target!,
+                        style: const TextStyle(
+                            color: maraIndigo, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ),
             // The hand, travelling in from below and tapping.
             if (point != null)
               AnimatedBuilder(
@@ -320,8 +346,8 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                         ),
                       ),
                       Positioned(
-                        left: x - 8,
-                        top: y - 4,
+                        left: x + 6,
+                        top: y + 8,
                         child: Transform.scale(
                           scale: 1 - 0.12 * tap,
                           child: const Icon(Icons.touch_app,

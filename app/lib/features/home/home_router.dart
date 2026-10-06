@@ -13,6 +13,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../church/church_home_screen.dart';
 import '../farm/farm_home_screen.dart';
 import '../retail/store_home_screen.dart';
+import '../setup/setup_screen.dart';
 import 'profile_pending_screen.dart';
 
 /// Which screen a business opens on.
@@ -60,7 +61,7 @@ Widget homeScreenFor({
           onHistory: onHistory,
           access: access,
         ),
-      'farm' => FarmHomeScreen(
+      'farm' => SetupGate(org: org, child: FarmHomeScreen(
           invoicing: invoicing,
           db: db,
           org: org,
@@ -69,8 +70,8 @@ Widget homeScreenFor({
           staff: staff,
           accountAction: accountAction,
           access: access,
-        ),
-      'retail' => StoreHomeScreen(
+        )),
+      'retail' => SetupGate(org: org, child: StoreHomeScreen(
           invoicing: invoicing,
           org: org,
           retail: retail,
@@ -78,7 +79,7 @@ Widget homeScreenFor({
           capture: capture,
           accountAction: accountAction,
           access: access,
-        ),
+        )),
       // Anything else — a profile added server-side that this build has never
       // heard of — lands here rather than failing.
       _ => ProfilePendingScreen(org: org, accountAction: accountAction),

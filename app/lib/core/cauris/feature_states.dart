@@ -7,6 +7,7 @@ class FeatureStates {
     this.tools = const {},
     this.progress = const BasicProgress(),
     this.waveAllowed = false,
+    this.setupDone = true,
   });
 
   final String plan;
@@ -19,6 +20,10 @@ class FeatureStates {
   /// Mara's tick (090): until it is given, every order is paid in cash and
   /// the Wave settings and buttons stay out of sight.
   final bool waveAllowed;
+
+  /// The first setup was gone through (091). True when the server does
+  /// not say, so an older database never shuts anybody out.
+  final bool setupDone;
 
   bool get isPro => plan == 'pro';
 
@@ -50,6 +55,7 @@ class FeatureStates {
           ? BasicProgress.fromJson(Map<String, dynamic>.from(p))
           : const BasicProgress(),
       waveAllowed: j['wave_allowed'] == true,
+      setupDone: j['setup_done'] != false,
     );
   }
 }

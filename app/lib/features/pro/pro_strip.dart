@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/nav/app_scope.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
@@ -28,6 +30,11 @@ class ProStrip extends StatelessWidget {
     // The comparison page itself does not invite to itself.
     final here = GoRouterState.of(context).matchedLocation;
     if (here.endsWith('/kaj-pro')) return child;
+    // Not over the first setup (091) nor the business settings: the first
+    // steps are the free essentials, without an invitation to pay.
+    if (here.contains('/administration/parametres')) return child;
+    final features = AppScope.maybeOf(context)?.session.featuresFor(org.id);
+    if (features != null && !features.setupDone) return child;
     final top = MediaQuery.paddingOf(context).top;
     return Column(
       children: [

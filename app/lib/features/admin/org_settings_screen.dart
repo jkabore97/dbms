@@ -369,10 +369,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       }
       widget.onSaved?.call();
       if (!mounted) return;
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enregistré')));
+      setState(() {
+        _saving = false;
+        _saved = _open;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -662,6 +662,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// opens on its own page; the fields live in this one State, so moving
   /// between parts loses nothing typed.
   _Part? _open;
+
+  /// The part just saved: its page then offers the next one, so a new
+  /// owner walks the settings in order instead of hunting the index.
+  _Part? _saved;
+
+  /// The order a new business is walked through.
+  static const _flow = [_Part.identity, _Part.vitrine, _Part.position, _Part.payments];
+
+  _Part? get _next {
+    final i = _flow.indexOf(_saved ?? _Part.identity);
+    return i >= 0 && i + 1 < _flow.length ? _flow[i + 1] : null;
+  }
 
   /// The team's lock rule (075): the code after at most this many minutes
   /// on every member's phone. Null: no rule.
@@ -1137,20 +1149,32 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         retail: widget.retail,
       ),
       const SizedBox(height: 12),
-      // Spots for sale on the street (071).
-      SpotsCard(
-        orgId: widget.orgId,
-        admin: widget.admin,
-        retail: widget.retail,
-      ),
-      const SizedBox(height: 20),
-      // The Pro dressing (068): badged and held for a Free
-      // business, a form for a Pro one.
-      VitrinePlusCard(
-        orgId: widget.orgId,
-        admin: widget.admin,
-        retail: widget.retail,
-        capture: widget.capture,
+      // Not a first step: the spots for sale (071) and the Pro dressing
+      // (068) wait under « Vitrine avancée », folded.
+      Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const Key('vitrine-advanced'),
+          tilePadding: EdgeInsets.zero,
+          leading: const Icon(Icons.tune),
+          title: const Text('Vitrine avancée',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: const Text('Mettre en avant · Habillage Pro'),
+          children: [
+            SpotsCard(
+              orgId: widget.orgId,
+              admin: widget.admin,
+              retail: widget.retail,
+            ),
+            const SizedBox(height: 20),
+            VitrinePlusCard(
+              orgId: widget.orgId,
+              admin: widget.admin,
+              retail: widget.retail,
+              capture: widget.capture,
+            ),
+          ],
+        ),
       ),
     ],
   ];
@@ -1531,6 +1555,38 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             : const Text('Enregistrer', style: TextStyle(fontSize: 17)),
       ),
     ),
+    if (_saved != null && _saved == _open) ...[
+      const SizedBox(height: 16),
+      Container(
+        key: const Key('settings-next'),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 30),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Enregistré',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+            ),
+            FilledButton.icon(
+              key: const Key('settings-next-go'),
+              onPressed: () => setState(() {
+                final next = _next;
+                _saved = null;
+                _open = next;
+              }),
+              icon: Icon(_next?.icon ?? Icons.done_all),
+              label: Text(_next == null ? 'Terminé' : 'Suivant : ${_next!.label}'),
+            ),
+          ],
+        ),
+      ),
+    ],
   ];
 
   List<Widget> _partBody(_Part part, ThemeData theme) => switch (part) {
@@ -1607,13 +1663,17 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   List<_Part> get _parts => [
     _Part.identity,
-    _Part.payments,
     _Part.vitrine,
-    _Part.delivery,
     _Part.position,
+    _Part.payments,
     _Part.team,
+    _Part.delivery,
     if (widget.canSetPlan || widget.canSuspend) _Part.platform,
   ];
+
+  /// Mara Pro's own: kept apart, under their badge, so the first setup is
+  /// the free essentials only.
+  static const _proParts = {_Part.delivery};
 
   Widget _index(ThemeData theme, {required bool wide}) {
     return ListView(
@@ -1621,21 +1681,53 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       children: [
         _Group(
           children: [
-            for (final part in _parts.where((p) => p != _Part.platform))
+            for (final part in _parts.where(
+                (p) => p != _Part.platform && !_proParts.contains(p)))
               _PartRow(
                 part: part,
                 state: _stateOf(part),
                 warn: _warns(part),
                 selected: wide && _open == part,
-                onTap: () => setState(() => _open = part),
+                onTap: () => setState(() {
+                  _open = part;
+                  _saved = null;
+                }),
               ),
           ],
         ),
-        // The team's access is its own screen (031); a row here so the
-        // owner finds it where the rest of the business is set.
-        const SizedBox(height: 16),
+        // Mara Pro (081, 031): delivery and the team's access, apart and
+        // badged — not part of a new business's first steps.
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Icon(Icons.workspace_premium, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'MARA PRO',
+                key: const Key('settings-pro-group'),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.2,
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
         _Group(
           children: [
+            for (final part in _parts.where(_proParts.contains))
+              _PartRow(
+                part: part,
+                state: _stateOf(part),
+                selected: wide && _open == part,
+                onTap: () => setState(() {
+                  _open = part;
+                  _saved = null;
+                }),
+              ),
             _PartRow.link(
               icon: Icons.groups_outlined,
               label: 'Équipe et accès',
