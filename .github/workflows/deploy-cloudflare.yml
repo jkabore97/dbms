@@ -107,7 +107,14 @@ jobs:
       # opens its local database.
       - name: Install sqflite web assets
         working-directory: app
-        run: dart run sqflite_common_ffi_web:setup
+        # Tracked in the repository (see app/.gitignore); regenerated only
+        # when missing, because the generator's own toolchain can break.
+        run: |
+          if [ -f web/sqflite_sw.js ] && [ -f web/sqlite3.wasm ]; then
+            echo "sqflite web assets are in the repository"
+          else
+            dart run sqflite_common_ffi_web:setup
+          fi
 
       # The gate. This workflow fires on push to main independently of CI, so
       # without this a merge whose tests were red deployed anyway — the build
