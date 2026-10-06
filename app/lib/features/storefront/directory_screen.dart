@@ -184,7 +184,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _entries = [
           ...entries.where((e) => real(e) && spotlights.contains(e.slug)),
           ...entries.where((e) => real(e) && !spotlights.contains(e.slug)),
-          ...entries.where((e) => !real(e)),
+          // In the server's order: the most photographed first (095).
+          for (final slug in showcases)
+            ...entries.where((e) => e.slug == slug),
         ];
         _spotlights = spotlights;
         _showcases = showcases;

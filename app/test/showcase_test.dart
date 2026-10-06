@@ -36,7 +36,14 @@ class _Shop extends StorefrontRepository {
 
   @override
   Future<List<PublicItem>> items(String slug) async => const [
-    PublicItem(id: 'p1', name: 'Pizza pepperoni', price: 6500, inStock: true),
+    PublicItem(id: 'p0', name: 'Coca', price: 500, inStock: true),
+    PublicItem(
+      id: 'p1',
+      name: 'Pizza pepperoni',
+      price: 6500,
+      inStock: true,
+      photoKey: 'showcase/tony-pizza/pizza-pepperoni.jpg',
+    ),
   ];
 
   @override
@@ -162,6 +169,11 @@ void main() {
     ) async {
       await open(tester, _Shop());
       expect(find.byKey(const Key('shop-far')), findsOneWidget);
+      // The photographed article first, though it came second (095).
+      expect(
+          tester.getTopLeft(find.text('Pizza pepperoni').last).dx <
+              tester.getTopLeft(find.text('Coca').last).dx,
+          isTrue);
       await tester.tap(
         find.bySemanticsLabel('Ajouter un Pizza pepperoni au panier'),
       );
