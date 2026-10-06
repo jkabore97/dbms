@@ -1142,7 +1142,7 @@ class _Window extends StatelessWidget {
                       // customers are its advertisers.
                       OutlinedButton.icon(
                         onPressed: () => onOpen(whatsappShareUrl(
-                            'Découvrez ${shop.name} sur Kaj : '
+                            'Découvrez ${shop.name} sur Mara : '
                             '${publicShopUrl(shop.slug)}')),
                         icon: const Icon(Icons.share_outlined, size: 18),
                         label: const Text('Partager'),
@@ -1665,7 +1665,7 @@ class ArticleSheet extends StatelessWidget {
     final money = moneyFormat(currency);
     final count = quantity.round();
     final ask = whatsappUrl(phone, text:
-        'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Kaj.');
+        'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Mara.');
     final accent = Theme.of(context).colorScheme.primary;
     return SafeArea(
       child: SingleChildScrollView(

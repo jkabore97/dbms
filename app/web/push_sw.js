@@ -20,7 +20,7 @@ self.addEventListener("push", (event) => {
   } catch {
     data = { body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "Kaj";
+  const title = data.title || "Mara";
   const options = {
     body: data.body || "",
     icon: "/icons/Icon-192.png",

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:kaj_app/core/theme/kaj_mark.dart';
+import 'package:kaj_app/core/theme/mara_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -124,9 +124,9 @@ void main() {
     final auth = await reloadAt(tester, '/o/org-1/produits');
 
     // Mid-resolve: the address is right, the list is not here yet, so the
-    // page holds the door with the splash (the KAJ mark over a progress
+    // page holds the door with the splash (Mara's seal over a progress
     // line).
-    expect(find.byType(KajMark), findsOneWidget);
+    expect(find.byType(MaraStacked), findsOneWidget);
     expect(find.text('Articles'), findsNothing);
 
     // my_orgs answers.
@@ -136,12 +136,12 @@ void main() {
     expect(find.text('Articles'), findsOneWidget,
         reason: 'the org list landed with the address unchanged, and the '
             'page never redrew — the spinner the owner saw on every reload');
-    expect(find.byType(KajMark), findsNothing);
+    expect(find.byType(MaraStacked), findsNothing);
   });
 
   testWidgets('the same reload on the business home', (tester) async {
     final auth = await reloadAt(tester, '/o/org-1');
-    expect(find.byType(KajMark), findsOneWidget);
+    expect(find.byType(MaraStacked), findsOneWidget);
 
     auth.gate.complete(const [org]);
     await flush(tester);

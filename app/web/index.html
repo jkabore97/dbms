@@ -10,76 +10,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Les boutiques près de vous : leurs articles, leurs prix, leurs livraisons. Et pour les commerçants, la caisse, le stock et la vitrine en ligne.">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#1E2560">
 
   <!--
     What a shared link looks like on WhatsApp and elsewhere. A vitrine
     travels from one phone to the next as a link, and the preview card is
-    the first thing the next person sees — it must say Kaj, not "a new
+    the first thing the next person sees — it must say Mara, not "a new
     Flutter project". The image is absolute because previewers do not
     resolve relative paths.
   -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Kaj">
-  <meta property="og:title" content="Kaj — les boutiques près de vous">
+  <meta property="og:site_name" content="Mara">
+  <meta property="og:title" content="Mara — les boutiques près de vous">
   <meta property="og:description" content="Leurs articles, leurs prix, leurs livraisons. Commandez à emporter ou en livraison.">
-  <meta property="og:image" content="https://dbms.kabore-boss.workers.dev/icons/Icon-512.png">
+  <meta property="og:image" content="https://dbms.kabore-boss.workers.dev/brand/og.jpg">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="500">
   <meta property="og:locale" content="fr_FR">
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Installed on a phone's home screen -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Kaj">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mara">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
 
-  <title>Kaj</title>
+  <title>Mara — les boutiques près de vous</title>
 
   <style>
     /*
-      The page before the app: paper, the wordmark, one thin line moving.
-      Flutter's engine takes a few seconds to arrive on a market's
-      connection, and a blank white tab for that long reads as "broken" —
-      a person closes it. This is the same paper and ink the app opens
-      on, so the app's first frame replaces it without a jump.
+      The page before the app: Mara's seal on indigo, one thin gold line
+      moving. Flutter's engine takes a few seconds to arrive on a market's
+      connection, and a blank tab for that long reads as "broken". The
+      app's own splash is the same seal on the same indigo, so its first
+      frame replaces this one without a jump.
     */
-    html, body { margin: 0; height: 100%; background: #FFFFFF; }
-    #kaj-splash {
+    html, body { margin: 0; height: 100%; background: #1E2560; }
+    #mara-splash {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: #FFFFFF; color: #1F1F1F;
-      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #1E2560;
       transition: opacity 260ms ease-out;
     }
-    #kaj-splash .mark {
-      font-size: 44px; font-weight: 800; letter-spacing: -1.5px; line-height: 1;
-    }
-    #kaj-splash .line {
-      margin-top: 22px; width: 96px; height: 2px; background: #E7E5E0;
+    #mara-splash img { width: 160px; height: 200px; }
+    #mara-splash .line {
+      margin-top: 28px; width: 96px; height: 2px; background: rgba(243, 238, 228, 0.18);
       overflow: hidden; border-radius: 2px;
     }
-    #kaj-splash .line::after {
-      content: ""; display: block; width: 40%; height: 100%; background: #1F1F1F;
-      animation: kaj-slide 1.1s ease-in-out infinite;
+    #mara-splash .line::after {
+      content: ""; display: block; width: 40%; height: 100%; background: #F2B63D;
+      animation: mara-slide 1.1s ease-in-out infinite;
     }
-    @keyframes kaj-slide {
+    @keyframes mara-slide {
       0%   { transform: translateX(-100%); }
       100% { transform: translateX(250%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #mara-splash .line::after { animation: none; width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div id="kaj-splash" aria-hidden="true">
-    <div class="mark">Kaj</div>
+  <div id="mara-splash" aria-hidden="true">
+    <img src="brand/mara-stacked.png" alt="">
     <div class="line"></div>
   </div>
   <script>
-    // The engine says when it has painted; the paper page steps aside.
+    // The engine says when it has painted; the indigo page steps aside.
     window.addEventListener('flutter-first-frame', function () {
-      var s = document.getElementById('kaj-splash');
+      var s = document.getElementById('mara-splash');
       if (!s) return;
       s.style.opacity = '0';
       setTimeout(function () { s.remove(); }, 300);

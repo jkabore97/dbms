@@ -27,7 +27,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 ///   * **Out of date.** The app is asking for something this database has not
 ///     been migrated to yet — `PGRST202`. That is an operator problem, and
 ///     saying so stops somebody hunting for a setting that does not exist.
-String describeError(Object error) {
+String describeError(Object error) => brandText(_describe(error));
+
+/// The app is Mara; the database and the Worker still say « Kaj » in the
+/// sentences they send (« Kaj Pro : la livraison… », « Kaj Pro est actif »),
+/// written before the name changed. Whatever reaches a screen from them
+/// goes through here, so the person reads one name. « Kaj Consulting »,
+/// who runs Mara, keeps its own.
+String brandText(String text) => text.replaceAllMapped(
+    RegExp(r'\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)'),
+    (_) => 'Mara');
+
+String _describe(Object error) {
   if (error is AuthException) return _auth(error);
   if (error is PostgrestException) return _postgrest(error);
   if (error is StateError) return error.message;
@@ -65,10 +76,10 @@ bool isSchemaOutOfDate(Object error) =>
         error.message.contains('Could not find the function'));
 
 /// True when the server refused because the business is on the free plan and
-/// the tool or the cap is Kaj Pro's (066). Every such refusal starts with
-/// "Kaj Pro :" on purpose, so a screen can open the door to pay instead of
+/// the tool or the cap is Mara Pro's (066). Every such refusal starts with
+/// "Kaj Pro :" in the database (read « Mara Pro : » here) on purpose, so a screen can open the door to pay instead of
 /// showing a wall.
-bool isProRefusal(Object error) => describeError(error).startsWith('Kaj Pro');
+bool isProRefusal(Object error) => describeError(error).startsWith('Mara Pro');
 
 String _postgrest(PostgrestException error) {
   final code = error.code ?? '';

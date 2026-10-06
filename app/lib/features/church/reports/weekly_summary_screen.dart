@@ -365,7 +365,7 @@ class SummaryCard extends StatelessWidget {
 
           const SizedBox(height: 20),
           Text(
-            'Kaj · ${DateFormat('d MMMM yyyy', 'fr_FR').format(DateTime.now())}',
+            'Mara · ${DateFormat('d MMMM yyyy', 'fr_FR').format(DateTime.now())}',
             style: const TextStyle(fontSize: 11, color: _muted),
           ),
         ],

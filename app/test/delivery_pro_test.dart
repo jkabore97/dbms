@@ -169,10 +169,10 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('a Free shop is told delivery is Kaj Pro', (tester) async {
+    testWidgets('a Free shop is told delivery is Mara Pro', (tester) async {
       await open(tester, _Admin());
       expect(find.byKey(const Key('delivery-pro-note')), findsOneWidget);
-      expect(find.text('La livraison fait partie de Kaj Pro'), findsOneWidget);
+      expect(find.text('La livraison fait partie de Mara Pro'), findsOneWidget);
     });
 
     testWidgets('a Pro shop: no note; « Minimum, puis au km » asks how far', (

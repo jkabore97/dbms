@@ -197,7 +197,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bienvenue sur Kaj'),
+        title: const Text('Bienvenue sur Mara'),
         actions: [
           IconButton(
             onPressed: widget.onSignOut,

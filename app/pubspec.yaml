@@ -141,4 +141,7 @@ flutter:
   # the foot of every street page.
   assets:
     - assets/brand/kaj_logo.png
-    - assets/brand/kaj_mark.png
+    - assets/brand/mara_seal.png
+    - assets/brand/mara_horizontal.png
+    - assets/brand/mara_horizontal_dark.png
+    - assets/brand/mara_stacked_indigo.png

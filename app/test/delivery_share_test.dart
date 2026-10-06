@@ -94,7 +94,7 @@ void main() {
       await tester.pump();
 
       // Narrow no-break spaces in the French thousands: match around them.
-      expect(find.textContaining(RegExp(r'1.200 F CFA dus à Kaj')), findsOneWidget);
+      expect(find.textContaining(RegExp(r'1.200 F CFA dus à Mara')), findsOneWidget);
       expect(find.text('Moussa'), findsOneWidget);
       expect(find.textContaining(RegExp(r'12 courses · encaissé 9.600 F · gardé 8.640 F')),
           findsOneWidget);
@@ -136,7 +136,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(find.text('Aucune livraison ce mois-ci.'), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^0 F CFA dus à Kaj')), findsOneWidget);
+      expect(find.textContaining(RegExp(r'^0 F CFA dus à Mara')), findsOneWidget);
       expect(find.textContaining("Aujourd'hui : 15 %"), findsOneWidget);
       expect(find.widgetWithText(TextField, '15'), findsOneWidget);
     });

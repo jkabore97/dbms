@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/motion.dart';
-import '../../core/theme/kaj_mark.dart';
+import '../../core/theme/mara_mark.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
@@ -360,16 +360,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: Text(Strings.of(context).languageName),
                   ),
                 ),
-                const Center(child: KajMark(size: 72)),
-                const SizedBox(height: 20),
-                Text(
-                  Strings.of(context).appTitle,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                // Mara's seal and name, as one picture: the name is in it.
+                Semantics(
+                  header: true,
+                  label: Strings.of(context).appTitle,
+                  child: const ExcludeSemantics(
+                    child: Center(child: MaraWordmark(height: 84)),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   _isSignUp
                       ? Strings.of(context).signUpTagline

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/kaj_mark.dart';
+import '../theme/mara_mark.dart';
 import '../../features/pro/pro_strip.dart';
 import '../../features/pay/stripe_button.dart';
 import '../../features/pro/pro_plans_screen.dart';
@@ -1416,7 +1416,7 @@ class NotFoundScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const KajMark(size: 64),
+                const MaraMark(size: 72),
                 const SizedBox(height: 24),
                 Text('Cette page n\'existe pas',
                     textAlign: TextAlign.center,
@@ -1447,18 +1447,24 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The mark, and a hairline of progress under it: the first thing every
-    // launch shows is who made the app, not a bare spinner.
+    // Mara's seal on indigo and a gold hairline of progress — the same page
+    // the browser and Android show before the app, so launch reads as one
+    // picture rather than three.
     return const Scaffold(
+      backgroundColor: maraIndigo,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            KajMark(size: 80),
+            MaraStacked(height: 200),
             SizedBox(height: 28),
             SizedBox(
-              width: 120,
-              child: LinearProgressIndicator(minHeight: 2),
+              width: 96,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: maraGold,
+                backgroundColor: Color(0x2EF3EEE4),
+              ),
             ),
           ],
         ),

@@ -302,7 +302,7 @@ class Invitation {
   /// happens, so the code is on its own line and the instruction is short
   /// enough to read on a lock screen.
   String get message =>
-      'Bonjour ! Vous êtes invité(e) à rejoindre « $orgName » sur Kaj.\n\n'
+      'Bonjour ! Vous êtes invité(e) à rejoindre « $orgName » sur Mara.\n\n'
       '1. Installez l\'application\n'
       '2. Créez votre compte\n'
       '3. Entrez ce code :\n\n'

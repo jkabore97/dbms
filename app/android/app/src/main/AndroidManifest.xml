@@ -20,7 +20,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
-        android:label="Kaj"
+        android:label="Mara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- Downloads the text-recognition model at install time instead of

@@ -128,6 +128,13 @@ test("a tap lands where the bell points", () => {
   assert.equal(payloadFor({ kind: "org_application", message: "m", id: "n1" }, env).tag, "kaj-n1");
 });
 
+test("the bell says Mara, whatever name the database's sentence was written in", () => {
+  const p = payloadFor({ kind: "pro_active", org_id: "o1",
+    message: "Kaj Pro est actif jusqu'au 10/03/2030. Kaj Consulting vous remercie." }, {});
+  assert.equal(p.title, "Mara");
+  assert.equal(p.body, "Mara Pro est actif jusqu'au 10/03/2030. Kaj Consulting vous remercie.");
+});
+
 test("deliver counts what was sent, what was dead, and what failed", async () => {
   const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
   const env = {

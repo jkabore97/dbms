@@ -72,7 +72,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
     final todo = <_Todo>[
       _Todo('Demandes d\'entreprise', c(t, 'applications'),
           Icons.assignment_ind_outlined, Routes.applications),
-      _Todo('Kaj Pro : « J\'ai payé »', c(t, 'pro_requests'),
+      _Todo('Mara Pro : « J\'ai payé »', c(t, 'pro_requests'),
           Icons.workspace_premium_outlined, Routes.consolePro),
       _Todo(
           c(t, 'spots_paid') > 0
@@ -136,7 +136,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
         _Heading('Ce mois',
             trailing: 'gagné ${money.format(today.earnedMonth)}'),
         _Figures([
-          _Figure('Kaj Pro', money.format(m['pro'] ?? 0)),
+          _Figure('Mara Pro', money.format(m['pro'] ?? 0)),
           _Figure('Mises en avant', money.format(m['spots'] ?? 0)),
           _Figure('Part livraison', money.format(m['delivery_cut'] ?? 0)),
           _Figure('Vendu par les vitrines', money.format(m['shops_sold'] ?? 0)),

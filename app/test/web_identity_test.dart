@@ -16,13 +16,13 @@ void main() {
   test('the manifest names the app and wears its colours', () {
     final manifest = jsonDecode(File('$web/manifest.json').readAsStringSync())
         as Map<String, dynamic>;
-    expect(manifest['short_name'], 'Kaj');
-    expect(manifest['name'], startsWith('Kaj'));
+    expect(manifest['short_name'], 'Mara');
+    expect(manifest['name'], startsWith('Mara'));
     expect(manifest['description'], isNot(contains('Flutter')));
     expect(manifest['lang'], 'fr');
     // The paper, not Flutter's blue.
-    expect(manifest['theme_color'], '#FFFFFF');
-    expect(manifest['background_color'], '#FFFFFF');
+    expect(manifest['theme_color'], '#1E2560');
+    expect(manifest['background_color'], '#1E2560');
     // A tablet or a desktop window is not forced to portrait.
     expect(manifest['orientation'], 'any');
   });
@@ -30,14 +30,14 @@ void main() {
   test('the page carries the title, the description and the share card', () {
     final html = File('$web/index.html').readAsStringSync();
     expect(html, contains('<html lang="fr">'));
-    expect(html, contains('<title>Kaj</title>'));
+    expect(html, contains('<title>Mara — les boutiques près de vous</title>'));
     expect(html, isNot(contains('kaj_app')));
     expect(html, isNot(contains('A new Flutter project')));
     expect(html, contains('property="og:title"'));
     expect(html, contains('property="og:image" content="https://'));
-    expect(html, contains('name="theme-color" content="#FFFFFF"'));
+    expect(html, contains('name="theme-color" content="#1E2560"'));
     // The paper page shown while the engine loads, and its exit.
-    expect(html, contains('id="kaj-splash"'));
+    expect(html, contains('id="mara-splash"'));
     expect(html, contains('flutter-first-frame'));
   });
 

@@ -169,7 +169,7 @@ class _SpotRow extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              [dates, if (spot.free) 'offerte par Kaj Pro'].join(' · '),
+              [dates, if (spot.free) 'offerte par Mara Pro'].join(' · '),
               style: theme.textTheme.bodySmall,
             ),
             if (running) ...[
@@ -504,7 +504,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       const SizedBox(height: 16),
       Text(
         _proFree
-            ? 'Offert : Kaj Pro inclut une mise en avant de 7 jours par mois.'
+            ? 'Offert : Mara Pro inclut une mise en avant de 7 jours par mois.'
             : 'Prix : ${_money(price)}',
         style: theme.textTheme.titleMedium,
       ),
@@ -565,12 +565,12 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         )
       else
         Text(
-            'Pour payer, contactez Kaj : le numéro de paiement vous sera '
+            'Pour payer, contactez Mara : le numéro de paiement vous sera '
             'donné directement.',
             style: muted),
       const SizedBox(height: 12),
       Text(
-          "Une fois le paiement envoyé, dites-le ici : Kaj le vérifie et la "
+          "Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la "
           'mise en avant commence.',
           style: muted),
       const SizedBox(height: 10),
@@ -611,7 +611,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           subtitle: Text(free
               ? 'Votre article est à la une. Ses vues et commandes '
                   's\'affichent dans « Mettre en avant ».'
-              : 'Kaj vérifie le paiement et lance la mise en avant. Vous '
+              : 'Mara vérifie le paiement et lance la mise en avant. Vous '
                   'serez prévenu dans la cloche.'),
         ),
       ),

@@ -71,7 +71,7 @@ class ProPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Passer à Kaj Pro',
+      label: 'Passer à Mara Pro',
       excludeSemantics: true,
       child: Material(
         key: const Key('pro-pill'),

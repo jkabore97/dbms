@@ -784,7 +784,7 @@ class _CouriersSheetState extends State<_CouriersSheet> {
             const SizedBox(height: 4),
             Text(
                 'Vos commandes prêtes leur sont proposées en premier, seuls, '
-                'pendant 10 minutes ; ensuite à tous les livreurs Kaj.',
+                'pendant 10 minutes ; ensuite à tous les livreurs Mara.',
                 style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             for (final c in _list)
@@ -809,7 +809,7 @@ class _CouriersSheetState extends State<_CouriersSheet> {
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
                       labelText: 'Numéro du livreur',
-                      hintText: 'Inscrit et validé comme livreur Kaj',
+                      hintText: 'Inscrit et validé comme livreur Mara',
                       border: OutlineInputBorder(),
                     ),
                   ),

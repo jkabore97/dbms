@@ -1,4 +1,13 @@
-# Kaj App — Multi-Tenant Business Management Platform
+# Mara — Multi-Tenant Business Management Platform
+
+**Mara** (« les boutiques près de vous ») is the app's name; it is made and
+run by Kaj Consulting, which signs the street's footer (« POWERED BY »).
+The code keeps its old internal names — the `kaj_app` package, the
+Android id `bf.kaj.app` (changing it would orphan every installed phone),
+`KajCard`, the `kaj-pay` Worker — and the database's own sentences still
+say « Kaj », read as « Mara » by the app (`brandText`) and the push Worker.
+Brand files: `app/assets/brand/mara_*`, the icons in `app/web/icons` and
+`app/android/.../mipmap-*`; store texts in `docs/brand/mara-store-listing.md`.
 
 One offline-first app for Kaj-consulting's clients — churches, farms, retail shops,
 and whatever comes next. Each business is a tenant (`org`) with its own subdomain,

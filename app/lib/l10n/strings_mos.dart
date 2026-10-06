@@ -9,7 +9,7 @@ class StringsMos extends Strings {
   StringsMos([String locale = 'mos']) : super(locale);
 
   @override
-  String get appTitle => 'Kaj';
+  String get appTitle => 'Mara';
 
   @override
   String get languageName => 'Mòoré';

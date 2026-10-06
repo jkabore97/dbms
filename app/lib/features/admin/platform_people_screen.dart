@@ -162,7 +162,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
         subtitle: Text(subtitle),
         trailing: person.isPlatformAdmin
             ? Chip(
-                label: const Text('Kaj'),
+                label: const Text('Mara'),
                 visualDensity: VisualDensity.compact,
                 backgroundColor: theme.colorScheme.primaryContainer,
               )
@@ -406,7 +406,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                 ),
                 if (_isPlatformAdmin)
                   Chip(
-                    label: const Text('Kaj'),
+                    label: const Text('Mara'),
                     backgroundColor: theme.colorScheme.primaryContainer,
                   ),
               ],
@@ -452,7 +452,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _isPlatformAdmin,
                 onChanged: _busy ? null : (_) => _togglePlatform(),
-                title: const Text('Accès plateforme (Kaj)'),
+                title: const Text('Accès plateforme (Mara)'),
                 subtitle: const Text(
                     'Voir et gérer toutes les entreprises de la plateforme.'),
               ),

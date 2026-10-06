@@ -54,8 +54,8 @@ class UpdateBanner extends StatelessWidget {
                       Expanded(
                         child: Text(
                           check.isWeb
-                              ? 'Une nouvelle version de Kaj est en ligne.'
-                              : 'Une nouvelle version de Kaj est disponible.',
+                              ? 'Une nouvelle version de Mara est en ligne.'
+                              : 'Une nouvelle version de Mara est disponible.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onInverseSurface),
                         ),

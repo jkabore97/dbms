@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/kaj_mark.dart';
+import '../../core/theme/mara_mark.dart';
 import '../../l10n/strings.dart';
 
 import '../../core/auth/models.dart';
@@ -216,7 +216,7 @@ class _PinScreenState extends State<PinScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const KajMark(size: 56),
+                        const MaraMark(size: 64),
                         const SizedBox(height: 20),
                         Text(_title, style: theme.textTheme.headlineSmall),
                         const SizedBox(height: 8),

@@ -49,7 +49,7 @@ class PrivacyScreen extends StatelessWidget {
     return const _DocScaffold(
       title: 'Politique de confidentialité',
       blocks: [
-        'Kaj enregistre les informations que vous saisissez pour faire '
+        'Mara enregistre les informations que vous saisissez pour faire '
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
             'photos de pièces justificatives, et les personnes de votre équipe.',
         '# Ce que nous collectons',
@@ -85,14 +85,14 @@ class TermsScreen extends StatelessWidget {
     return const _DocScaffold(
       title: "Conditions d'utilisation",
       blocks: [
-        'En utilisant Kaj, vous acceptez ces conditions.',
+        'En utilisant Mara, vous acceptez ces conditions.',
         '# Votre compte',
         'Vous êtes responsable de l\'exactitude des informations que vous '
             'saisissez et de la confidentialité de votre code (PIN). Ne '
             'partagez pas votre accès avec une personne qui ne devrait pas voir '
             'vos données.',
         '# Utilisation correcte',
-        'Kaj est un outil de gestion pour votre activité. N\'utilisez pas '
+        'Mara est un outil de gestion pour votre activité. N\'utilisez pas '
             'l\'application pour enregistrer des activités illégales ou pour '
             'nuire à autrui.',
         '# Disponibilité',
@@ -101,7 +101,7 @@ class TermsScreen extends StatelessWidget {
             'continue de fonctionner hors ligne et synchronise dès que la '
             'connexion revient.',
         '# Responsabilité',
-        'Kaj vous aide à tenir vos comptes, mais la responsabilité finale de '
+        'Mara vous aide à tenir vos comptes, mais la responsabilité finale de '
             'vos décisions commerciales et de vos obligations légales vous '
             'revient.',
         '# Modifications',

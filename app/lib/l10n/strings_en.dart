@@ -9,7 +9,7 @@ class StringsEn extends Strings {
   StringsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Kaj';
+  String get appTitle => 'Mara';
 
   @override
   String get languageName => 'English';

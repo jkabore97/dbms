@@ -14,7 +14,7 @@ class Support {
   /// Burkina country code so a wrong number never silently reaches a stranger.
   static const String whatsAppNumber = '22600000000';
 
-  static const String _greeting = "Bonjour, j'ai besoin d'aide avec Kaj.";
+  static const String _greeting = "Bonjour, j'ai besoin d'aide avec Mara.";
 
   /// Opens the support chat in WhatsApp (or a browser tab on the web). Shows a
   /// gentle message if nothing can handle the link rather than failing quietly.
