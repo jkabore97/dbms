@@ -691,6 +691,34 @@ class AdminRepository {
         params: {'p_org_id': orgId, 'p_allowed': allowed});
   }
 
+  // ----------------------------------------------------------------
+  // Vitrines d'exemple (094)
+  // ----------------------------------------------------------------
+
+  Future<List<Showcase>> showcases() async {
+    final rows =
+        await _requireClient().rpc('showcase_list') as List<dynamic>;
+    return rows
+        .map((r) => Showcase.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// The platform admin becomes its owner, so every business screen opens.
+  Future<void> joinShowcase(String orgId) async {
+    await _requireClient().rpc('showcase_join', params: {'p_org_id': orgId});
+  }
+
+  Future<void> setShowcaseVisible(String orgId, bool visible) async {
+    await _requireClient().rpc('set_showcase_visible',
+        params: {'p_org_id': orgId, 'p_visible': visible});
+  }
+
+  /// Makes the ones that are missing; returns how many.
+  Future<int> seedShowcases() async {
+    final made = await _requireClient().rpc('showcase_seed');
+    return (made as num?)?.toInt() ?? 0;
+  }
+
   Future<void> setOrgSuspended(String orgId, bool suspend) async {
     final client = _requireClient();
     await client.rpc('set_org_suspended',
@@ -1423,4 +1451,45 @@ class VitrineChecklist {
     final s = steps;
     return (100 * s.where((x) => x.done).length / s.length).round();
   }
+}
+
+
+/// A vitrine d'exemple (094), as the console lists it.
+class Showcase {
+  const Showcase({
+    required this.orgId,
+    required this.name,
+    required this.slug,
+    this.blurb,
+    this.items = 0,
+    this.photos = 0,
+    this.visible = true,
+    this.managing = false,
+  });
+
+  final String orgId;
+  final String name;
+  final String slug;
+  final String? blurb;
+
+  /// Articles on sale, and how many of them carry a photo.
+  final int items;
+  final int photos;
+
+  /// On the street.
+  final bool visible;
+
+  /// The caller is already one of its owners.
+  final bool managing;
+
+  factory Showcase.fromRow(Map<String, dynamic> r) => Showcase(
+        orgId: r['org_id'] as String,
+        name: r['name'] as String,
+        slug: r['slug'] as String,
+        blurb: r['blurb'] as String?,
+        items: (r['items'] as num?)?.toInt() ?? 0,
+        photos: (r['photos'] as num?)?.toInt() ?? 0,
+        visible: r['visible'] == true,
+        managing: r['managing'] == true,
+      );
 }

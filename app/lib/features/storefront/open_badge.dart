@@ -43,3 +43,45 @@ class OpenBadge extends StatelessWidget {
     );
   }
 }
+
+/// « Pas à proximité » (094): a vitrine d'exemple, browsed but never
+/// ordered from — no pin, no map, no delivery to anyone.
+class FarBadge extends StatelessWidget {
+  const FarBadge({super.key, this.large = false});
+
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    const colour = Color(0xFF8A5A00);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: large ? 12 : 8,
+        vertical: large ? 5 : 3,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1D6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.location_off_outlined,
+            size: large ? 15 : 12,
+            color: colour,
+          ),
+          SizedBox(width: large ? 6 : 4),
+          Text(
+            context.tr('Pas à proximité'),
+            style: TextStyle(
+              fontSize: large ? 13 : 10.5,
+              fontWeight: FontWeight.w700,
+              color: colour,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

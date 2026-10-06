@@ -917,6 +917,8 @@ class _Tools extends StatelessWidget {
           () => context.push(Routes.trainers)),
       (Icons.star_outline, 'À la une',
           () => context.push(Routes.consoleFeatured)),
+      (Icons.storefront, 'Vitrines d\'exemple',
+          () => context.push(Routes.consoleShowcase)),
       (Icons.sports_motorsports_outlined, 'Livreurs',
           () => context.push(Routes.consoleCouriers)),
       (Icons.workspace_premium_outlined, 'Mara Pro',
