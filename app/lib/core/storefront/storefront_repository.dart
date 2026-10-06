@@ -598,12 +598,23 @@ class PublicItem {
     required this.inStock,
     this.photoKey,
     this.description,
+    this.unit,
+    this.availableFrom,
   });
 
   final String id;
   final String name;
   final double price;
   final bool inStock;
+
+  /// « plateau », « kg », « tête » (083): shown after the price. Null is a
+  /// plain price, the way a shop's article reads.
+  final String? unit;
+
+  /// A pre-order (083): the day it will be there. Null when it is there now.
+  final DateTime? availableFrom;
+
+  bool get isPreorder => availableFrom != null;
 
   /// The R2 key of the newest photo the shop took of it, served publicly by
   /// the uploads Worker; null when there is none.
@@ -629,6 +640,13 @@ class PublicItem {
       description: (row['description'] as String?)?.trim().isEmpty == true
           ? null
           : row['description'] as String?,
+      // Absent before 083: a plain price, there now.
+      unit: (row['unit'] as String?)?.trim().isEmpty == true
+          ? null
+          : row['unit'] as String?,
+      availableFrom: row['available_from'] == null
+          ? null
+          : DateTime.tryParse('${row['available_from']}'),
     );
   }
 }

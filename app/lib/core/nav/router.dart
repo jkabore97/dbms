@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/mara_mark.dart';
 import '../../features/pro/pro_strip.dart';
+import '../../features/farm/for_sale_screen.dart';
 import '../../features/pay/stripe_button.dart';
 import '../../features/pro/pro_plans_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -1109,6 +1110,19 @@ GoRouter buildRouter(SessionController session) {
                 ),
               ),
             ],
+          ),
+          // What a farm sells on its vitrine (083).
+          GoRoute(
+            path: 'a-vendre',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => ForSaleScreen(
+                org: org,
+                retail: scope.retail,
+                capture: scope.capture,
+              ),
+            ),
           ),
           GoRoute(
             path: 'produits',

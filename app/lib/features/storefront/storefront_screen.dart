@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -326,7 +327,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
     return ShopPage(
       title: shop?.name ?? 'Vitrine',
-      announcements: ShopPage.street,
+      announcements:
+          shop?.profile == 'farm' ? ShopPage.farm : ShopPage.street,
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
       accent: shop?.style.accent,
@@ -1268,7 +1270,9 @@ class _Window extends StatelessWidget {
                     if (address.isNotEmpty) address,
                     shop.delivers
                         ? 'Retrait ou livraison'
-                        : 'Retrait en boutique',
+                        : shop.profile == 'farm'
+                            ? 'Retrait à la ferme'
+                            : 'Retrait en boutique',
                   ].join(' · '),
                   style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
@@ -1477,6 +1481,17 @@ class _Window extends StatelessWidget {
   }
 }
 
+/// The price as the street reads it: « 2 500 F / plateau » when the
+/// business sells by a unit (083), the plain price otherwise.
+String priceOf(NumberFormat money, PublicItem item) => item.unit == null
+    ? money.format(item.price)
+    : '${money.format(item.price)} / ${item.unit}';
+
+/// « Disponible à partir du 15/11 » — a batch or a harvest still to come,
+/// orderable now (083).
+String preorderLine(PublicItem item) =>
+    'Disponible à partir du ${DateFormat('dd/MM').format(item.availableFrom!)}';
+
 /// What kind of place this is, in the word a shopper uses.
 String _kindOf(String profile) => switch (profile) {
       'farm' => 'Ferme',
@@ -1529,7 +1544,8 @@ class _ItemTile extends StatelessWidget {
     final count = quantity.round();
     final label = [
       item.name,
-      money.format(item.price),
+      priceOf(money, item),
+      if (item.isPreorder) preorderLine(item),
       if (item.hasDescription) item.description!,
       if (!item.inStock) 'épuisé',
       if (count > 0) '$count dans le panier',
@@ -1601,10 +1617,20 @@ class _ItemTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    money.format(item.price),
+                    priceOf(money, item),
                     style:
                         const TextStyle(fontSize: 14, color: ShopStyle.mist),
                   ),
+                  if (item.isPreorder)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(preorderLine(item),
+                          key: const Key('preorder-line'),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: ShopStyle.ink)),
+                    ),
                   if (item.hasDescription)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -1891,13 +1917,18 @@ class ArticleSheet extends StatelessWidget {
             const SizedBox(height: 6),
             Row(
               children: [
-                Text(money.format(item.price),
+                Text(priceOf(money, item),
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: ShopStyle.ink)),
                 const SizedBox(width: 10),
-                Text(item.inStock ? 'En stock' : 'Épuisé',
+                Text(
+                    item.isPreorder
+                        ? preorderLine(item)
+                        : item.inStock
+                            ? 'En stock'
+                            : 'Épuisé',
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
               ],
             ),
