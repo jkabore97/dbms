@@ -1,10 +1,11 @@
-# Wave checkout for Kaj. See src/index.js for its three doors and why it is
+# Wave checkout and Kaj Pro by card (Stripe). See src/index.js for its doors and why it is
 # the Worker that holds the Wave key.
 #
 # Deployed by workflows/deploy-pay.yml, which writes the [vars] below from
 # repository variables and sets the secrets with `wrangler secret put`:
 #
 #   secrets   SUPABASE_SERVICE_ROLE_KEY   WAVE_API_KEY   WAVE_WEBHOOK_SECRET
+#             STRIPE_SECRET_KEY   STRIPE_WEBHOOK_SECRET
 #   vars      SUPABASE_URL  SUPABASE_PUBLISHABLE_KEY  APP_ORIGIN  ALLOWED_ORIGINS
 
 name = "kaj-pay"

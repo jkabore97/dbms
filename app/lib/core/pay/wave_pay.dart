@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Paying by Wave — or by card on Wave's page — through the kaj-pay Worker
-/// (migration 076).
+/// (migration 076); and Kaj Pro by card as a Stripe subscription, through
+/// the same Worker (082).
 ///
 /// Armed by --dart-define=PAY_URL, the Worker's origin, and by the platform
 /// switching `wave_checkout` on. Without either, nothing here is drawn and
@@ -144,6 +145,63 @@ class WavePay {
         params: {'p_org_id': orgId, 'p_ref': ref});
   }
 
+  /// Kaj Pro by card, as a Stripe subscription (082), through the same
+  /// Worker: returns Stripe's checkout page for [orgId], monthly or yearly.
+  /// The price is the platform's; the Worker reads it from the database.
+  Future<String> subscribeByCard({
+    required String orgId,
+    required String period,
+  }) =>
+      _postForUrl('/v1/stripe/checkout', {'org_id': orgId, 'period': period});
+
+  /// Stripe's own page where the owner changes the card or cancels.
+  Future<String> cardPortal(String orgId) =>
+      _postForUrl('/v1/stripe/portal', {'org_id': orgId});
+
+  /// Where the card subscription stands, or null when there is none.
+  Future<CardSubscription?> cardSubscription(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client
+          .rpc('my_stripe_subscription', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      return CardSubscription(
+        status: '${v['status'] ?? ''}',
+        period: '${v['period'] ?? ''}',
+        until: DateTime.tryParse('${v['current_period_end'] ?? ''}'),
+        cancelAtEnd: v['cancel_at_period_end'] == true,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String> _postForUrl(String path, Map<String, Object?> json) async {
+    final token = _client?.auth.currentSession?.accessToken;
+    if (!compiledIn || token == null) {
+      throw StateError('Connectez-vous pour payer.');
+    }
+    final response = await _http.post(
+      Uri.parse('${_url.replaceAll(RegExp(r'/$'), '')}$path'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(json),
+    );
+    Map<String, dynamic> body;
+    try {
+      body = Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    } catch (_) {
+      body = const {};
+    }
+    if (response.statusCode != 200 || body['url'] == null) {
+      throw StateError('${body['error'] ?? 'Le paiement n\'a pas pu commencer.'}');
+    }
+    return '${body['url']}';
+  }
+
   /// The platform's switches, through 061's set_platform_setting.
   Future<void> setSwitch(String key, Object value) async {
     await _client!.rpc('set_platform_setting',
@@ -165,6 +223,24 @@ class WaveTerms {
 
   /// The platform's share of an order paid by Wave, in percent.
   final double commissionPct;
+}
+
+/// A business's Kaj Pro paid by card (082), as the owner reads it.
+class CardSubscription {
+  const CardSubscription({
+    required this.status,
+    required this.period,
+    this.until,
+    this.cancelAtEnd = false,
+  });
+
+  /// Stripe's word: active, past_due, canceled…
+  final String status;
+  final String period;
+  final DateTime? until;
+  final bool cancelAtEnd;
+
+  bool get active => status == 'active' || status == 'trialing';
 }
 
 class WaveCheckout {

@@ -1,11 +1,14 @@
-name: Deploy the Wave Worker
+name: Deploy the payments Worker
 
 # Publishes workers/pay — Wave checkout for orders, Kaj Pro and spots, and
-# the payouts that send each shop its money (migration 076). See README
-# "Wave checkout" for the one-time setup with Wave.
+# the payouts that send each shop its money (migration 076) — and Kaj Pro
+# by card, as a Stripe subscription (082). See README "Wave checkout" and
+# "Kaj Pro by card (Stripe)" for the one-time setup with each.
 #
-# Dormant until the owner has a Wave Business key: without WAVE_API_KEY and
-# WAVE_WEBHOOK_SECRET the job says so and succeeds, and nothing is deployed.
+# Dormant until the owner has a Wave or a Stripe key: with neither pair
+# (WAVE_API_KEY + WAVE_WEBHOOK_SECRET, STRIPE_SECRET_KEY +
+# STRIPE_WEBHOOK_SECRET) the job says so and succeeds, and nothing is
+# deployed. Either pair alone is enough; the other's doors answer 503.
 # Kept apart from "Deploy to Cloudflare" like the push Worker: it holds the
 # service-role key and Kaj's Wave key, and a mistake in its setup must not
 # stop the app itself going out.
@@ -34,6 +37,8 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       WAVE_API_KEY: ${{ secrets.WAVE_API_KEY }}
       WAVE_WEBHOOK_SECRET: ${{ secrets.WAVE_WEBHOOK_SECRET }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
       APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://dbms.kabore-boss.workers.dev' }}
       ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
     steps:
@@ -42,11 +47,16 @@ jobs:
       - name: The Worker's own tests
         run: node --test workers/pay/test/*.test.mjs
 
-      - name: Say so when Wave is not set up yet
+      - name: Say so when neither Wave nor Stripe is set up yet
         id: ready
         run: |
-          if [ -z "$WAVE_API_KEY" ] || [ -z "$WAVE_WEBHOOK_SECRET" ]; then
-            echo "::notice::WAVE_API_KEY / WAVE_WEBHOOK_SECRET are not set: the Wave Worker was not deployed. README, 'Wave checkout'."
+          wave=false; stripe=false
+          if [ -n "$WAVE_API_KEY" ] && [ -n "$WAVE_WEBHOOK_SECRET" ]; then wave=true; fi
+          if [ -n "$STRIPE_SECRET_KEY" ] && [ -n "$STRIPE_WEBHOOK_SECRET" ]; then stripe=true; fi
+          echo "wave=$wave" >> "$GITHUB_OUTPUT"
+          echo "stripe=$stripe" >> "$GITHUB_OUTPUT"
+          if [ "$wave" = false ] && [ "$stripe" = false ]; then
+            echo "::notice::Neither WAVE_API_KEY + WAVE_WEBHOOK_SECRET nor STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET is set: the payments Worker was not deployed. README, 'Wave checkout' and 'Kaj Pro by card (Stripe)'."
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
             echo "go=true" >> "$GITHUB_OUTPUT"
@@ -81,16 +91,23 @@ jobs:
         if: steps.ready.outputs.go == 'true'
         run: |
           printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/pay/wrangler.toml
-          printf '%s' "$WAVE_API_KEY"              | npx --yes wrangler@4 secret put WAVE_API_KEY              --config workers/pay/wrangler.toml
-          printf '%s' "$WAVE_WEBHOOK_SECRET"       | npx --yes wrangler@4 secret put WAVE_WEBHOOK_SECRET       --config workers/pay/wrangler.toml
+          if [ "${{ steps.ready.outputs.wave }}" = true ]; then
+            printf '%s' "$WAVE_API_KEY"          | npx --yes wrangler@4 secret put WAVE_API_KEY          --config workers/pay/wrangler.toml
+            printf '%s' "$WAVE_WEBHOOK_SECRET"   | npx --yes wrangler@4 secret put WAVE_WEBHOOK_SECRET   --config workers/pay/wrangler.toml
+          fi
+          if [ "${{ steps.ready.outputs.stripe }}" = true ]; then
+            printf '%s' "$STRIPE_SECRET_KEY"     | npx --yes wrangler@4 secret put STRIPE_SECRET_KEY     --config workers/pay/wrangler.toml
+            printf '%s' "$STRIPE_WEBHOOK_SECRET" | npx --yes wrangler@4 secret put STRIPE_WEBHOOK_SECRET --config workers/pay/wrangler.toml
+          fi
 
       - name: Say what is left to do
         if: steps.ready.outputs.go == 'true'
         run: |
           {
-            echo "### Wave Worker deployed"
+            echo "### Payments Worker deployed (Wave: ${{ steps.ready.outputs.wave }}, Stripe: ${{ steps.ready.outputs.stripe }})"
             echo
-            echo "1. In the Wave Business portal, set the webhook URL to \`<kaj-pay origin>/v1/wave\` (events: checkout.session.completed, checkout.session.payment_failed)."
-            echo "2. Set the repository variable \`PAY_URL\` to the kaj-pay origin and re-run *Deploy to Cloudflare*."
-            echo "3. In the console, Paramètres de la plateforme: switch Wave checkout on; card too if Wave's page takes cards for the account."
+            echo "1. Wave: in the Wave Business portal, set the webhook URL to \`<kaj-pay origin>/v1/wave\` (events: checkout.session.completed, checkout.session.payment_failed)."
+            echo "2. Stripe: in Developers, Webhooks, add \`<kaj-pay origin>/v1/stripe\` (events: checkout.session.completed, invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted)."
+            echo "3. Set the repository variable \`PAY_URL\` to the kaj-pay origin and re-run *Deploy to Cloudflare*."
+            echo "4. In the console: switch Wave checkout on; for cards, Kaj Pro, « Paiement par carte (Stripe) »."
           } >> "$GITHUB_STEP_SUMMARY"

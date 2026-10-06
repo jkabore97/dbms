@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -24,6 +26,9 @@ class ProPlansScreen extends StatefulWidget {
     required this.terms,
     required this.admin,
     this.cardButton,
+    this.cardManage,
+    this.stripeReturn,
+    this.onPaid,
   });
 
   final OrgSummary org;
@@ -33,6 +38,16 @@ class ProPlansScreen extends StatefulWidget {
   /// « Payer par carte » (Stripe), when the platform has opened it; given
   /// the period chosen at the top.
   final Widget Function(String period)? cardButton;
+
+  /// For a Pro business paying by card: Stripe's page to change it.
+  final Widget? cardManage;
+
+  /// `?stripe=` on the way back from Stripe: 'ok' or 'annule'.
+  final String? stripeReturn;
+
+  /// Asked to read the business again once Stripe says it is paid (the
+  /// webhook may land a few seconds after the owner).
+  final VoidCallback? onPaid;
 
   @override
   State<ProPlansScreen> createState() => _ProPlansScreenState();
@@ -50,6 +65,26 @@ class PlanRow {
 
 class _ProPlansScreenState extends State<ProPlansScreen> {
   String _period = 'year';
+  final _timers = <Timer>[];
+
+  @override
+  void initState() {
+    super.initState();
+    final onPaid = widget.onPaid;
+    if (widget.stripeReturn == 'ok' && !widget.org.isPro && onPaid != null) {
+      for (final s in const [3, 10, 30]) {
+        _timers.add(Timer(Duration(seconds: s), onPaid));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final t in _timers) {
+      t.cancel();
+    }
+    super.dispose();
+  }
 
   String _money(int amount) =>
       '${NumberFormat.decimalPattern('fr_FR').format(amount)} F';
@@ -86,6 +121,13 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (widget.stripeReturn == 'ok' || widget.stripeReturn == 'annule') ...[
+                    _Returned(
+                      paid: widget.stripeReturn == 'ok',
+                      active: org.isPro,
+                    ),
+                    const SizedBox(height: 18),
+                  ],
                   Reveal(
                     child: Column(
                       children: [
@@ -163,6 +205,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                     ),
                   ],
                   const SizedBox(height: 28),
+                  if (org.isPro && widget.cardManage != null) widget.cardManage!,
                   if (!org.isPro)
                     ProPayPanel(
                       org: org,
@@ -177,6 +220,51 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The way back from Stripe: paid (Pro on its way, or already on), or
+/// cancelled (nothing taken).
+class _Returned extends StatelessWidget {
+  const _Returned({required this.paid, required this.active});
+
+  final bool paid;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = !paid
+        ? 'Paiement annulé : rien n\'a été prélevé.'
+        : active
+            ? 'Merci ! Kaj Pro est actif.'
+            : 'Merci ! Paiement reçu — Kaj Pro s\'active dans quelques secondes.';
+    return Container(
+      key: const Key('stripe-returned'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: paid ? kInk : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(paid ? Icons.check_circle_outline : Icons.info_outline,
+              color: paid ? kPaper : kInk),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: paid ? kPaper : kInk)),
+          ),
+          if (paid && !active)
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: kPaper),
+            ),
         ],
       ),
     );

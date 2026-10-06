@@ -31,6 +31,8 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
   bool _saving = false;
   String? _error;
   String? _saved;
+  bool _stripeOn = false;
+  bool _stripeSaving = false;
 
   final _wave = TextEditingController();
   final _waveName = TextEditingController();
@@ -68,6 +70,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
         _waveName.text = terms.waveName;
         _month.text = '${terms.priceMonth}';
         _year.text = '${terms.priceYear}';
+        _stripeOn = terms.stripeOn;
         _loading = false;
       });
     } catch (error) {
@@ -107,6 +110,25 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
         _saving = false;
         _saved = describeError(error);
       });
+    }
+  }
+
+  /// Kaj Pro by card (082): Stripe charges the two prices above, monthly
+  /// or yearly. Saved at once — the comparison page reads it next time.
+  Future<void> _setStripe(bool on) async {
+    setState(() {
+      _stripeSaving = true;
+      _stripeOn = on;
+    });
+    try {
+      await widget.admin.setPlatformSetting('stripe_on', on);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _stripeOn = !on);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(error))));
+    } finally {
+      if (mounted) setState(() => _stripeSaving = false);
     }
   }
 
@@ -305,6 +327,22 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                         : const Icon(Icons.save_outlined),
                     label: const Text('Enregistrer le numéro et les prix',
                         style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SwitchListTile(
+                  key: const Key('stripe-on'),
+                  contentPadding: EdgeInsets.zero,
+                  value: _stripeOn,
+                  onChanged: _stripeSaving ? null : _setStripe,
+                  title: const Text('Abonnement par carte (Stripe)'),
+                  subtitle: Text(
+                    'Les propriétaires s\'abonnent par carte, au prix ci-dessus, '
+                    'renouvelé chaque mois ou chaque année. À ouvrir une fois les '
+                    'clés Stripe installées (README, « Kaj Pro by card »). Un '
+                    'nouveau prix vaut pour les nouveaux abonnements.',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
                 const SizedBox(height: 16),
