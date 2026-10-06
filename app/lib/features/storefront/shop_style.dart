@@ -444,7 +444,7 @@ class ShopFooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (onDirectory != null) ...[
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           Center(
             child: UnderlineLink(
                 key: const Key('footer-directory'),
@@ -456,49 +456,62 @@ class ShopFooter extends StatelessWidget {
                     color: ShopStyle.ink)),
           ),
         ],
-        const SizedBox(height: 40),
+        const SizedBox(height: 28),
+        // Small on purpose (the owner: « Make footer smaller »): the mark
+        // and the slogan on one line, the credit and the year on another.
         Container(
           key: const Key('shop-footer'),
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(
             color: ShopStyle.stone,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const MaraWordmark(key: Key('mara-footer'), height: 40),
-              const SizedBox(height: 4),
-              Text(context.tr('Au Service du Peuple'),
-                  key: const Key('footer-slogan'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
-              const SizedBox(height: 24),
-              // « POWERED BY KAJ », KAJ in bold.
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 4,
+                children: [
+                  const MaraWordmark(key: Key('mara-footer'), height: 22),
+                  Text(context.tr('Au Service du Peuple'),
+                      key: const Key('footer-slogan'),
+                      textAlign: TextAlign.center,
+                      style:
+                          const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // « POWERED BY KAJ », KAJ in bold, and the year.
               Semantics(
                 label: context.tr('Powered by KAJ'),
-                child: const ExcludeSemantics(
+                child: ExcludeSemantics(
                   child: Text.rich(
-                    key: Key('powered-by'),
+                    key: const Key('powered-by'),
                     TextSpan(
                       text: 'POWERED BY ',
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'KAJ',
                           style: TextStyle(
                               fontWeight: FontWeight.w800,
                               color: ShopStyle.ink),
                         ),
+                        TextSpan(
+                            text: '  ·  © ${DateTime.now().year} Mara',
+                            style: const TextStyle(letterSpacing: 0.4)),
                       ],
                     ),
-                    style: TextStyle(
-                        fontSize: 12, letterSpacing: 3, color: ShopStyle.mist),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 10.5,
+                        letterSpacing: 2,
+                        color: ShopStyle.mist),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Text('© ${DateTime.now().year} Mara',
-                  style: const TextStyle(fontSize: 12, color: ShopStyle.mist)),
             ],
           ),
         ),
