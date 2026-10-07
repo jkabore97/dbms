@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaj_app/core/admin/admin_repository.dart';
+import 'package:kaj_app/core/admin/models.dart';
+import 'package:kaj_app/core/admin/team.dart';
 import 'package:kaj_app/core/analytics/analytics_repository.dart';
+import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/core/cauris/feature_states.dart';
+import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
+import 'package:kaj_app/core/invoicing/models.dart';
+import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/analytics/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/errors.dart';
 import 'package:kaj_app/core/retail/stock_rule.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
+import 'package:kaj_app/features/admin/team_access_screen.dart';
+import 'package:kaj_app/features/admin/team_screen.dart';
 import 'package:kaj_app/features/analytics/farm_analytics_screen.dart';
+import 'package:kaj_app/features/invoicing/billing_details_screen.dart';
 import 'package:kaj_app/features/farm/farm_sheets.dart';
 import 'package:kaj_app/l10n/strings.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -16,6 +27,47 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Batch 101 on the phone: one sentence for stock that is not there, the
 /// vitrine's basket capped at what is left, a farm's feed stopped before it
 /// leaves the phone, and a farm's analyses.
+/// Équipe's people with a grant on one site, totals only; the dial and
+/// the invoice's identity read by an admin who is not the owner.
+class _Admin extends AdminRepository {
+  _Admin() : super(null);
+
+  @override
+  String? get currentUserId => 'me';
+
+  @override
+  Future<TeamOverview?> teamOverview(String orgId) async => const TeamOverview(
+        seats: TeamSeats(free: 1, used: 1, open: true),
+        members: [
+          TeamMember(userId: 'u1', name: 'Awa', roles: ['employee'],
+              membershipIds: ['m1']),
+        ],
+      );
+
+  @override
+  Future<List<Member>> fetchMembers(String orgId) async => const [
+        Member(membershipId: 'm1', userId: 'u1', role: 'employee',
+            scopeKind: 'entity', scopeId: 'e1', visibility: 'summary',
+            fullName: 'Awa'),
+      ];
+
+  @override
+  Future<List<Entity>> fetchStructure(String orgId) async =>
+      const [Entity(id: 'e1', orgId: 'o1', name: 'Marché central')];
+
+  @override
+  Future<Map<String, Map<String, String>>> featureRules(String orgId) async =>
+      const {};
+}
+
+class _Invoicing extends InvoicingRepository {
+  _Invoicing() : super(null);
+
+  @override
+  Future<BillingDetails> billingDetails(String orgId) async =>
+      const BillingDetails(email: 'boutique@exemple.bf', taxId: 'IFU-1', footer: 'Merci');
+}
+
 Widget _fr(Widget home) => MaterialApp(
       locale: const Locale('fr'),
       localizationsDelegates: Strings.localizationsDelegates,
@@ -70,9 +122,19 @@ void main() {
 
     test('the server\'s sentence is read back in the reader\'s language', () {
       expect(stockShortText('en', 'Il ne reste que 3 Gâteau 69'), 'Only 3 Gâteau 69 left');
-      expect(stockShortText('en', 'Plus de Huile en stock'), 'No Huile left in stock');
+      expect(stockShortText('en', 'Plus d\'Huile en stock'), 'No Huile left in stock');
       expect(stockShortText('en', 'Autre chose'), isNull);
-      expect(isStockRefusal('Plus de Huile en stock'), isTrue);
+      expect(isStockRefusal('Plus d\'Huile en stock'), isTrue);
+      expect(isStockRefusal('anything', code: stockRefusalCode), isTrue);
+      // De elides before a vowel or an h, as the server says it (101).
+      expect(stockShortMessage('fr', 'Aliment', 0), 'Plus d\'Aliment en stock');
+      expect(stockShortMessage('fr', 'huile', 0), 'Plus d\'huile en stock');
+      expect(stockShortMessage('fr', 'Œufs', 0), 'Plus d\'Œufs en stock');
+      expect(stockShortMessage('en', 'Aliment', 0), 'No Aliment left in stock');
+      expect(stockShortText('fr', 'Plus d\'Aliment 35 en stock'),
+          'Plus d\'Aliment 35 en stock');
+      expect(stockShortItem('Il ne reste que 3 Gâteau 69'), (name: 'Gâteau 69', left: 3.0));
+      expect(stockShortItem('Plus d\'Aliment en stock'), (name: 'Aliment', left: 0.0));
       expect(isStockRefusal('Kaj Pro : les analyses font partie de Kaj Pro.'), isFalse);
       expect(
           describeError(const PostgrestException(
@@ -155,5 +217,53 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(find.textContaining('Mara Pro : les analyses'), findsOneWidget);
+  });
+
+  group('Équipe and the owner\'s settings (101 / 103)', () {
+    testWidgets('each grant says what it covers, as « Personnes » did', (tester) async {
+      await tester.pumpWidget(_fr(TeamScreen(
+        org: const OrgSummary(id: 'o1', name: 'Boutique', profile: 'retail', roles: ['admin']),
+        admin: _Admin(),
+        onboarding: OnboardingRepository(null),
+      )));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Marché central · totaux seulement'), findsOneWidget);
+    });
+
+    testWidgets('the dial is read, not saved, by anybody but the owner', (tester) async {
+      await tester.pumpWidget(_fr(TeamAccessScreen(admin: _Admin(), orgId: 'o1', canSave: false)));
+      await tester.pumpAndSettle();
+      expect(find.text('Réservé au propriétaire'), findsOneWidget);
+      expect(find.text('Enregistrer'), findsNothing);
+      await tester.pumpWidget(_fr(TeamAccessScreen(admin: _Admin(), orgId: 'o1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Enregistrer'), findsOneWidget);
+    });
+
+    testWidgets('the invoice\'s e-mail, tax number and footer are the owner\'s', (tester) async {
+      tester.view.physicalSize = const Size(480, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_fr(BillingDetailsScreen(
+        org: const OrgSummary(id: 'o1', name: 'Boutique', profile: 'retail', roles: ['admin']),
+        invoicing: _Invoicing(),
+      )));
+      await tester.pumpAndSettle();
+      for (final k in ['billing-email', 'billing-tax-id', 'billing-footer']) {
+        expect(tester.widget<TextField>(find.byKey(Key(k))).enabled, isFalse, reason: k);
+      }
+      expect(find.text('Réservé au propriétaire'), findsNWidgets(3));
+      await tester.pumpWidget(_fr(BillingDetailsScreen(
+        org: const OrgSummary(id: 'o2', name: 'Boutique', profile: 'retail', roles: ['owner']),
+        invoicing: _Invoicing(),
+      )));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(find.byKey(const Key('billing-email'))).enabled, isTrue);
+    });
+  });
+
+  test('roles are offered down the ladder', () {
+    final ranks = [for (final r in adminGrantableRoles.keys) accountRoleRank(r)];
+    expect(ranks, [...ranks]..sort((a, b) => b.compareTo(a)));
   });
 }

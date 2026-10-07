@@ -25,8 +25,9 @@ insert into auth.users (id, phone, raw_user_meta_data) values
     (:owner, '+22620000001', '{"full_name": "Patronne"}'),
     (:clerk, '+22620000002', '{"full_name": "Vendeuse"}');
 
-insert into orgs (id, name, slug, profile, default_currency)
-values (:org, 'Boutique Correction', 'boutique-correction-20', 'retail', 'XOF');
+-- Pro: the analytics it checks are a Pro tool, held by the server (101).
+insert into orgs (id, name, slug, profile, default_currency, plan)
+values (:org, 'Boutique Correction', 'boutique-correction-20', 'retail', 'XOF', 'pro');
 select seed_retail_accounts(:org);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:org, :owner, 'owner',    'org', :org, 'full'),

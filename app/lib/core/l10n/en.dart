@@ -208,8 +208,6 @@ const enStrings = <String, String>{
       'No stock deliveries.',
   'Aucune entrée pour l’instant.':
       'No entries yet.',
-  'Aucune invitation en attente.':
-      'No pending invitations.',
   'Aucune livraison ce mois-ci.':
       'No deliveries this month.',
   'Aucune photo pour le moment.':
@@ -782,8 +780,6 @@ const enStrings = <String, String>{
       'Registered and approved as a Mara courier',
   'Invisibles pour leurs membres, complètes, restaurables. La suppression définitive n’est possible qu’ici.':
       'Invisible to their members, complete, restorable. Permanent deletion is only possible here.',
-  'Invitations en attente ({length})':
-      'Pending invitations ({length})',
   'Inviter':
       'Invite',
   'Inviter quelqu’un':
@@ -1022,8 +1018,6 @@ const enStrings = <String, String>{
       'Hide',
   'Membre':
       'Member',
-  'Membres ({length})':
-      'Members ({length})',
   'Mensuel':
       'Monthly',
   'Merci, c\'est noté.':
@@ -1566,8 +1560,6 @@ const enStrings = <String, String>{
       'Remove',
   'Retirer cet ingrédient':
       'Remove this ingredient',
-  'Retirer de l\'entreprise':
-      'Remove from the business',
   'Retirer de la boutique':
       'Remove from the shop',
   'Retirer de la vente':
@@ -1576,8 +1568,6 @@ const enStrings = <String, String>{
       'Remove the line',
   'Retirer un {name}':
       'Remove a {name}',
-  'Retirer {label} ?':
-      'Remove {label}?',
   'Retirer {name}':
       'Remove {name}',
   'Retirer {name} ?':
@@ -1770,8 +1760,6 @@ const enStrings = <String, String>{
       'Tap an item to see it, « + » to add it.',
   'Touchez « Reçu » quand le livreur vous a remis l\'argent de la commande.':
       'Tap « Received » when the courier has handed you the order\'s money.',
-  'Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'entreprise ».':
-      'All their phones and browsers will have to sign in again with the password, within the hour at most. Their access to the business does not change: to remove it, use « Remove from the business ».',
   'Tout':
       'All',
   'Tout effacer':
@@ -2624,8 +2612,6 @@ const enStrings = <String, String>{
       'Wave reports a problem; we are checking.',
   'Wave · {waveName}':
       'Wave · {waveName}',
-  '\nRéservé à {phone}':
-      '\nFor {phone} only',
   'active':
       'active',
   'année':
@@ -3308,4 +3294,13 @@ const enStrings = <String, String>{
   'Le numéro qui reçoit l\'argent de vos ventes a été changé': 'The number that receives your sales money was changed',
   'Le compte Wave de vos ventes a été changé': 'The Wave account for your sales was changed',
   'Le genre de votre activité a été changé': 'The kind of your business was changed',
+  'Plus d\'{name} en stock': 'No {name} left in stock',
+  'Plus que {n}': 'Only {n} left',
+  'Corriger le stock puis refaire la vente': 'Fix the stock, then redo the sale',
+  'Stock corrigé : la vente repart.': 'Stock fixed: the sale is sent again.',
+  'La vente est enregistrée quand la commande est remise ou livrée — ne la passez pas à la caisse': 'The sale is recorded when the order is handed over or delivered — do not ring it up at the till',
+  'Toute l\'activité': 'The whole business',
+  'Site': 'Site',
+  'Département': 'Department',
+  'Réservé au propriétaire': 'Owner only',
 };

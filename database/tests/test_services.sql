@@ -360,7 +360,7 @@ end $$;
 commit;
 
 \echo ''
-\echo '--- TEST 6: a finished service order moves nothing in the books or the stock ---'
+\echo '--- TEST 6: a finished service order is one sale in the books (101), no stock ---'
 create temp table t67books as
 select o.id as org_id,
        (select count(*) from sales s where s.org_id = o.id) as sales,
@@ -396,13 +396,20 @@ commit;
 do $$
 declare r record;
 begin
+    -- 101: a finished order books itself — once, as a sale of the order,
+    -- its money to 'Ventes' — the shop's and the association's alike.
     for r in select b.org_id, b.sales, b.entries,
                     (select count(*) from sales s where s.org_id = b.org_id) as sales_now,
-                    (select count(*) from journal_entries j where j.org_id = b.org_id) as entries_now
+                    (select count(*) from journal_entries j where j.org_id = b.org_id) as entries_now,
+                    (select o.total from orders o
+                      where o.org_id = b.org_id and o.status = 'picked_up') as total,
+                    (select s.total from sales s
+                      where s.org_id = b.org_id and s.order_id is not null) as booked
                from t67books b loop
-        if r.sales_now <> r.sales or r.entries_now <> r.entries then
-            raise exception 'FAIL: a finished order wrote to the books of %: sales % → %, entries % → %',
-                r.org_id, r.sales, r.sales_now, r.entries, r.entries_now;
+        if r.sales_now <> r.sales + 1 or r.entries_now <> r.entries + 1
+           or r.booked is distinct from r.total then
+            raise exception 'FAIL: a finished order did not book itself once in %: sales % → %, entries % → %, % of %',
+                r.org_id, r.sales, r.sales_now, r.entries, r.entries_now, r.booked, r.total;
         end if;
     end loop;
     if (select quantity from products
@@ -420,7 +427,7 @@ begin
     if exists (select 1 from cauris_ledger where org_id = '67000000-0000-0000-0000-000000000002') then
         raise exception 'FAIL: an association earned cauris';
     end if;
-    raise notice 'PASS: finished, as any order: no sale, no entry, no stock; the shop''s cauris, none for the association';
+    raise notice 'PASS: finished, as any order: one sale and one entry, no stock; the shop''s cauris, none for the association';
 end $$;
 
 \echo ''

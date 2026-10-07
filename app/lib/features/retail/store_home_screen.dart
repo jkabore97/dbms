@@ -23,6 +23,7 @@ import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
 import '../home/home_nav.dart';
+import 'products_screen.dart' show ReceiveSheet;
 import 'sale_sheet.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
@@ -312,6 +313,35 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     }
   }
 
+  /// A sale the server refused for want of stock: the stock entry opens on
+  /// the article it named and the number missing; once received, the same
+  /// sale (same client_uuid) is sent again.
+  Future<void> _fixRefused(RefusedAction a) async {
+    final retail = widget.retail;
+    final short = a.shortfall;
+    if (retail == null || short == null) return;
+    final received = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ReceiveSheet(
+        org: widget.org,
+        retail: retail,
+        initialName: short.name,
+        initialQuantity: short.missing,
+      ),
+    );
+    if (received != true || !mounted) return;
+    await retail.requeueRefused(a.clientUuid);
+    if (!mounted) return;
+    setState(() => _refused = [
+          for (final r in _refused)
+            if (r.clientUuid != a.clientUuid) r,
+        ]);
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text(context.tr('Stock corrigé : la vente repart.'))));
+    await _load();
+  }
+
   Future<void> _sell() async {
     final retail = widget.retail;
     if (retail == null) return;
@@ -477,6 +507,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                         ]);
                   }
                 },
+                onFix: widget.retail != null && widget.access.canEdit('products')
+                    ? _fixRefused
+                    : null,
               ),
             if (_salesWaiting > 0) ...[
               _Panel(

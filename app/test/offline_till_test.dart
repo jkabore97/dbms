@@ -206,4 +206,122 @@ void main() {
     await tester.tap(find.text('Compris'));
     expect(put?.clientUuid, 'c-1');
   });
+
+  test('a refusal is known by its code first, MA001, whatever its words (101)',
+      () async {
+    final db = await LocalDb.open(path: inMemoryDatabasePath);
+    addTearDown(db.close);
+    await db.queueSale(orgId: 'o1', clientUuid: 'c-9', params: {
+      'p_org_id': 'o1',
+      'p_lines': [
+        {'product_id': 'p1', 'name': 'Savon', 'quantity': 4, 'unit_price': 450},
+      ],
+      'p_client_uuid': 'c-9',
+    });
+    final sync = SyncService(
+      db,
+      SupabaseClient('https://example.supabase.co', 'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false)),
+      currentUserId: () => 'u1',
+      post: (action, params) async => throw const PostgrestException(
+          message: 'Only 1 left (a later wording)', code: stockRefusalCode),
+    );
+    await sync.syncNow();
+    expect((await db.refusedActions('o1')).single['client_uuid'], 'c-9');
+  });
+
+  test('« Corriger le stock » sends the same sale again; waiting sales count against the shelf',
+      () async {
+    final db = await LocalDb.open(path: inMemoryDatabasePath);
+    addTearDown(db.close);
+    for (final (id, q) in [('c-1', 2), ('c-2', 1)]) {
+      await db.queueSale(orgId: 'o1', clientUuid: id, params: {
+        'p_org_id': 'o1',
+        'p_lines': [
+          {'product_id': 'p1', 'name': 'Savon', 'quantity': q, 'unit_price': 450},
+          {'name': 'Bougie', 'quantity': 1, 'unit_price': 100},
+        ],
+        'p_client_uuid': id,
+      });
+    }
+    expect(await db.pendingSaleQuantities('o1'),
+        {'p1': 3.0, 'name:bougie': 2.0});
+    await db.markRefused('c-1', 'Il ne reste que 1 Savon');
+    expect(await db.pendingSaleQuantities('o1'), {'p1': 1.0, 'name:bougie': 1.0},
+        reason: 'a refused sale takes nothing');
+    final notice = RefusedAction.fromRow((await db.refusedActions('o1')).single);
+    expect(notice.shortfall, (name: 'Savon', missing: 1.0));
+    await db.requeueRefused('c-1');
+    expect(await db.refusedActions('o1'), isEmpty);
+    expect(await db.pendingSales('o1'), 2, reason: 'the same sale, waiting again');
+  });
+
+  testWidgets('the refused sale offers « Corriger le stock puis refaire la vente »',
+      (tester) async {
+    RefusedAction? fixed;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: RefusedNotice(
+          actions: const [
+            RefusedAction(
+                clientUuid: 'c-1',
+                action: 'record_sale',
+                what: '3 × Savon',
+                reason: 'Il ne reste que 2 Savon',
+                lines: {'Savon': 3}),
+          ],
+          onDismiss: (_) {},
+          onFix: (a) => fixed = a,
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Corriger le stock puis refaire la vente'));
+    expect(fixed?.shortfall, (name: 'Savon', missing: 1.0));
+    expect(find.text('Compris'), findsOneWidget);
+  });
+
+  testWidgets('the till counts the sales still waiting on the phone (101)',
+      (tester) async {
+    tester.view.physicalSize = const Size(600, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final db = (await tester
+        .runAsync(() => LocalDb.open(path: inMemoryDatabasePath)))!;
+    addTearDown(() => tester.runAsync(db.close));
+    await tester.runAsync(() => db.queueSale(orgId: 'o1', clientUuid: 'w-1', params: {
+          'p_org_id': 'o1',
+          'p_lines': [
+            {'product_id': 'p1', 'name': 'Savon', 'quantity': 2, 'unit_price': 450},
+          ],
+          'p_client_uuid': 'w-1',
+        }));
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: Scaffold(
+        body: SaleSheet(
+          orgId: 'o1',
+          retail: _NoSignal(db),
+          products: const [
+            Product(id: 'p1', name: 'Savon', salePrice: 450, quantity: 2),
+          ],
+        ),
+      ),
+    ));
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 30)));
+      await tester.pump();
+    }
+    await tester.tap(find.text('Savon'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajouter au panier'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enregistrer la vente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Plus de Savon en stock'), findsOneWidget,
+        reason: 'the server shows 2, but 2 already wait on this phone');
+    expect(await tester.runAsync(() => db.pendingSales('o1')), 1);
+  });
 }

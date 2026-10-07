@@ -114,10 +114,23 @@ class _SaleSheetState extends State<SaleSheet> {
   /// as dollars.
   CurrencyRate? _tender;
 
+  /// What this phone's sales still waiting for the network will take from
+  /// the shelf (by product id, or `name:<name>`): the shelf in [products]
+  /// is the server's, which has not seen them yet.
+  Map<String, double> _waiting = const {};
+
   @override
   void initState() {
     super.initState();
     _loadPaymentOptions();
+    _loadWaiting();
+  }
+
+  Future<void> _loadWaiting() async {
+    try {
+      final waiting = await widget.retail.pendingSaleQuantities(widget.orgId);
+      if (mounted) setState(() => _waiting = waiting);
+    } catch (_) {}
   }
 
   Future<void> _loadPaymentOptions() async {
@@ -350,8 +363,10 @@ class _SaleSheetState extends State<SaleSheet> {
   /// up; a typed name is the article of that name, and one never received
   /// has nothing on the shelf. A service (098) has no stock to run out of.
   /// An article this sheet was not given (no catalogue loaded) is left to
-  /// the server.
-  bool _stockAllows() {
+  /// the server. Sales still waiting on this phone are taken off first, so
+  /// two offline sales cannot both take the last one. [fresh], when given,
+  /// is the shelf the server holds right now (the Wave till asks it).
+  bool _stockAllows({Map<String, double>? fresh}) {
     Product? find(SaleLineDraft line) {
       for (final p in widget.products) {
         if (line.productId != null
@@ -381,7 +396,9 @@ class _SaleSheetState extends State<SaleSheet> {
       if (product.isService) continue;
       sold[product.id] = (sold[product.id] ?? 0) + line.quantity;
       names[product.id] = product.name;
-      left[product.id] = product.quantity;
+      left[product.id] = (fresh?[product.id] ?? product.quantity) -
+          (_waiting[product.id] ?? 0) -
+          (_waiting['name:${product.name.trim().toLowerCase()}'] ?? 0);
     }
     for (final entry in sold.entries) {
       final have = left[entry.key]!;
@@ -400,6 +417,21 @@ class _SaleSheetState extends State<SaleSheet> {
   Future<void> _saveWave() async {
     final merchant = _waveMerchant;
     if (merchant == null) return;
+
+    // The shelf as the server holds it now, before the customer pays: a
+    // QR scanned for what the server will then refuse is money taken for
+    // nothing. Without signal the phone's own check above stands.
+    final ids = {for (final l in _lines) ?l.productId}.toList();
+    if (ids.isNotEmpty) {
+      setState(() => _busy = true);
+      Map<String, double>? fresh;
+      try {
+        fresh = await widget.retail.freshStock(widget.orgId, ids);
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() => _busy = false);
+      if (fresh != null && !_stockAllows(fresh: fresh)) return;
+    }
 
     final sender = await showModalBottomSheet<String>(
       context: context,

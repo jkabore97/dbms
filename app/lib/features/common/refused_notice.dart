@@ -16,6 +16,7 @@ class RefusedAction {
     required this.action,
     required this.what,
     required this.reason,
+    this.lines = const {},
   });
 
   final String clientUuid;
@@ -29,12 +30,34 @@ class RefusedAction {
   /// The server's sentence, as it came.
   final String reason;
 
+  /// A refused sale's quantities by article name, as it was rung up.
+  final Map<String, double> lines;
+
+  /// How many of the article the server named are missing for this sale to
+  /// go through: what it asks for less what the server said is left. Null
+  /// when the reason names no article.
+  ({String name, double missing})? get shortfall {
+    final item = stockShortItem(reason);
+    if (item == null) return null;
+    final asked = lines.entries
+        .where((e) => e.key.trim().toLowerCase() == item.name.trim().toLowerCase())
+        .fold<double>(0, (sum, e) => sum + e.value);
+    final left = item.left < 0 ? 0.0 : item.left;
+    return (name: item.name, missing: asked > left ? asked - left : 1);
+  }
+
   static RefusedAction fromRow(Map<String, Object?> row) {
     final action = row['action'] as String;
     var what = '';
+    final lines = <String, double>{};
     try {
       final payload = jsonDecode(row['payload'] as String) as Map<String, dynamic>;
       if (action == 'record_sale') {
+        for (final l in (payload['p_lines'] as List? ?? const [])) {
+          final name = '${(l as Map)['name'] ?? ''}';
+          lines[name] =
+              (lines[name] ?? 0) + ((l['quantity'] as num?)?.toDouble() ?? 0);
+        }
         what = [
           for (final l in (payload['p_lines'] as List? ?? const []))
             '${stockQty(((l as Map)['quantity'] as num?)?.toDouble() ?? 0)} × ${l['name'] ?? ''}',
@@ -49,17 +72,25 @@ class RefusedAction {
       action: action,
       what: what.trim(),
       reason: (row['last_error'] as String?) ?? '',
+      lines: lines,
     );
   }
 }
 
 /// One card per refused action, on the home: what it was, why, and
-/// « Compris » to put it away.
+/// « Compris » to put it away — and, for a sale, « Corriger le stock puis
+/// refaire la vente » when [onFix] is given.
 class RefusedNotice extends StatelessWidget {
-  const RefusedNotice({super.key, required this.actions, required this.onDismiss});
+  const RefusedNotice(
+      {super.key, required this.actions, required this.onDismiss, this.onFix});
 
   final List<RefusedAction> actions;
   final ValueChanged<RefusedAction> onDismiss;
+
+  /// Opens the stock entry for the article the server named, then sends the
+  /// same sale again. Offered for a refused sale only; null hides it (a
+  /// farm's feed, a person who cannot enter stock).
+  final ValueChanged<RefusedAction>? onFix;
 
   @override
   Widget build(BuildContext context) {
@@ -111,12 +142,26 @@ class RefusedNotice extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => onDismiss(a),
-                      child: Text(context.tr('Compris')),
-                    ),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 4,
+                    children: [
+                      if (onFix != null &&
+                          a.action == 'record_sale' &&
+                          a.shortfall != null)
+                        TextButton.icon(
+                          key: Key('refused-fix-${a.clientUuid}'),
+                          onPressed: () => onFix!(a),
+                          icon: const Icon(Icons.inventory_2_outlined, size: 20),
+                          label: Text(
+                              context.tr('Corriger le stock puis refaire la vente')),
+                        ),
+                      TextButton(
+                        onPressed: () => onDismiss(a),
+                        child: Text(context.tr('Compris')),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -24,9 +24,9 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// is everything that is done.
 ///
 /// Accepting an order takes its articles off the shelf (101), and a
-/// cancellation after that puts them back; refusing moves nothing. The
-/// money is not recorded here: this screen is the list on the wall behind
-/// the counter, not the till.
+/// cancellation after that puts them back; refusing moves nothing. Handed
+/// over or delivered, the order records its own sale on the server — the
+/// till must not ring it again, and the list says so.
 class ShopOrdersScreen extends StatefulWidget {
   const ShopOrdersScreen({super.key, required this.org, required this.retail});
 
@@ -296,6 +296,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       header: _cash.isEmpty
                           ? null
                           : _CashBanner(cash: _cash, onTap: _showCash),
+                      // 101: the order books its own sale when it is done.
+                      note: context.tr('La vente est enregistrée quand la commande est remise ou livrée — ne la passez pas à la caisse'),
                     ),
                     _List(
                       orders: past,
@@ -323,7 +325,11 @@ class _List extends StatelessWidget {
     this.clocks = const {},
     this.onDeliverSelf,
     this.header,
+    this.note,
   });
+
+  /// One line above the cards, when there are any.
+  final String? note;
 
   final Map<String, OrderClock> clocks;
   final Future<void> Function(ShopOrder)? onDeliverSelf;
@@ -354,6 +360,23 @@ class _List extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         ?header,
+        if (note != null && orders.isNotEmpty)
+          Padding(
+            key: const Key('orders-sale-note'),
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.point_of_sale_outlined,
+                    size: 20, color: maraBrown),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(note!,
+                      style: const TextStyle(color: maraDeep, fontSize: 13)),
+                ),
+              ],
+            ),
+          ),
         for (final o in orders)
           _OrderCard(
             order: o,

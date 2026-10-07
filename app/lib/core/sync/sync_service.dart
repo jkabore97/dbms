@@ -125,7 +125,8 @@ class SyncService {
           // offline that the server will refuse every time. Retrying forever
           // would hide it; it is set aside for the owner to read instead
           // (RefusedNotice on the home).
-          if (e is PostgrestException && isStockRefusal(e.message)) {
+          if (e is PostgrestException &&
+              isStockRefusal(e.message, code: e.code)) {
             await _db.markRefused(clientUuid, e.message);
             continue;
           }

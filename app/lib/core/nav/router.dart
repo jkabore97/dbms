@@ -862,8 +862,12 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) =>
-                      biz.TeamAccessScreen(admin: scope.admin, orgId: org.id),
+                  (scope, org) => biz.TeamAccessScreen(
+                      admin: scope.admin,
+                      orgId: org.id,
+                      // The owner's dial (103): the others read it.
+                      canSave: org.roles.contains('owner') ||
+                          scope.session.isPlatformAdmin),
                   allow: _admins,
                 ),
               ),

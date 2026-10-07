@@ -1544,6 +1544,48 @@ class LocalDb {
         whereArgs: [clientUuid]);
   }
 
+  /// The owner corrected the stock: the same sale, with its same
+  /// client_uuid (so the server still records it once), goes back in line.
+  Future<void> requeueRefused(String clientUuid) async {
+    await _db.rawUpdate(
+      'UPDATE outbox SET refused_at = NULL, last_error = NULL, attempts = 0 '
+      'WHERE client_uuid = ? AND refused_at IS NOT NULL AND synced_at IS NULL',
+      [clientUuid],
+    );
+  }
+
+  /// What the till's sales still waiting on this phone will take from the
+  /// shelf once they reach the server, for [orgId]: by product id, and by
+  /// lower-cased name (`name:<name>`) for a line typed without one. The
+  /// shelf the till reads is the server's, which has not seen them yet.
+  Future<Map<String, double>> pendingSaleQuantities(String orgId) async {
+    final rows = await _db.query(
+      'outbox',
+      columns: ['payload'],
+      where: "org_id = ? AND action = 'record_sale' "
+          'AND synced_at IS NULL AND refused_at IS NULL',
+      whereArgs: [orgId],
+    );
+    final taken = <String, double>{};
+    for (final r in rows) {
+      try {
+        final payload =
+            jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        for (final l in (payload['p_lines'] as List? ?? const [])) {
+          final line = l as Map;
+          final q = (line['quantity'] as num?)?.toDouble() ?? 0;
+          if (q <= 0) continue;
+          final id = line['product_id'] as String?;
+          final key = id != null && id.isNotEmpty
+              ? id
+              : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
+          taken[key] = (taken[key] ?? 0) + q;
+        }
+      } catch (_) {}
+    }
+    return taken;
+  }
+
   static String _labelFor(String kind) {
     switch (kind) {
       case 'tithe':

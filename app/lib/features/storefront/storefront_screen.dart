@@ -230,15 +230,18 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   }
 
   void _add(PublicItem item) {
-    // No more than is left on the shelf (101): the stepper stops there, and
-    // says why.
+    // No more than is left on the shelf (101): the stepper stops there. The
+    // window says how many only when few are left (« Plus que 3 »); with
+    // more, the count stays the shop's and the stepper just stops.
     final cap = item.stockLeft;
     if (cap != null && (_basket[item.id] ?? 0) + 1 > cap) {
-      ScaffoldMessenger.maybeOf(context)
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text(stockShortMessage(context.trLanguage, item.name, cap)),
-        ));
+      if (cap > 0 && cap <= 5) {
+        ScaffoldMessenger.maybeOf(context)
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text(context.tr('Plus que {n}', {'n': stockQty(cap)})),
+          ));
+      }
       return;
     }
     if ((_basket[item.id] ?? 0) == 0) {
@@ -401,7 +404,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       if (!mounted) return null;
       // Said in the reader's language when the app has the sentence (098's
       // « Un service se réserve sur rendez-vous… », say).
-      return e.code == 'P0001'
+      // A stock refusal (101) carries its own code, MA001.
+      return e.code == 'P0001' || e.code == stockRefusalCode
           ? (stockShortText(context.trLanguage, e.message) ?? context.tr(e.message))
           : context.tr(
               'La commande n\'a pas pu être envoyée. Vérifiez le réseau.',

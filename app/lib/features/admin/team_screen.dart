@@ -57,6 +57,10 @@ class _TeamScreenState extends State<TeamScreen> {
   /// account — the responsibility to change, the profile to read and edit.
   /// Best-effort: without it the sheet keeps the salary and the removal.
   Map<String, List<Member>> _accounts = const {};
+
+  /// Names for the scope a grant covers — a site, « Site · département » —
+  /// so a grant reads « Boutique du marché » rather than an id. Best-effort.
+  Map<String, String> _scopeNames = const {};
   bool _loading = true;
   String? _error;
 
@@ -81,10 +85,22 @@ class _TeamScreenState extends State<TeamScreen> {
           (accounts[r.userId] ??= []).add(r);
         }
       } catch (_) {}
+      var names = _scopeNames;
+      try {
+        final structure = await widget.admin.fetchStructure(widget.org.id);
+        names = {};
+        for (final entity in structure) {
+          names[entity.id] = entity.name;
+          for (final dept in entity.departments) {
+            names[dept.id] = '${entity.name} · ${dept.name}';
+          }
+        }
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _team = team;
         _accounts = accounts;
+        _scopeNames = names;
         _loading = false;
       });
     } catch (e) {
@@ -152,6 +168,33 @@ class _TeamScreenState extends State<TeamScreen> {
   /// person.
   bool _seesPay(TeamMember m) =>
       widget.org.roles.contains('owner') || _canManage(m);
+
+  /// What each of the person's grants covers, as the old « Personnes »
+  /// screen said it: « Toute l'activité », a site, « Site · département »,
+  /// and « · totaux seulement » for a grant that sees the totals only. The
+  /// role is named per grant only when there are several. Null while the
+  /// grants are unknown.
+  String? _scopeLine(TeamMember m) {
+    final rows = _accounts[m.userId];
+    if (rows == null || rows.isEmpty) return null;
+    String label(Member g) {
+      final named = _scopeNames[g.scopeId];
+      final scope = named ??
+          switch (g.scopeKind) {
+            'org' => context.tr('Toute l\'activité'),
+            'entity' => context.tr('Site'),
+            'department' => context.tr('Département'),
+            _ => g.scopeKind,
+          };
+      return [
+        if (rows.length > 1) context.tr(roleLabel(g.role)),
+        scope,
+      ].join(' · ') +
+          (g.visibility == 'summary' ? context.tr(' · totaux seulement') : '');
+    }
+
+    return rows.map(label).join('\n');
+  }
 
   /// The grant whose responsibility is changed: the person's highest.
   Member? _primary(TeamMember m) {
@@ -369,7 +412,9 @@ class _TeamScreenState extends State<TeamScreen> {
   /// The responsibilities below the caller's own; never an owner nor a
   /// super administrator.
   Future<void> _changeRole(TeamMember m, Member account, List<String> roles) async {
-    var selected = roles.contains(account.role) ? account.role : roles.last;
+    // On the person's current responsibility; none picked when it is not
+    // one the caller may give, so the dialog never suggests a wrong one.
+    String? selected = roles.contains(account.role) ? account.role : null;
     final chosen = await showDialog<String>(
       context: context,
       builder: (dialog) => AlertDialog(
@@ -667,6 +712,7 @@ class _TeamScreenState extends State<TeamScreen> {
                         member: m,
                         currency: widget.org.currency,
                         showPay: _seesPay(m),
+                        scope: _scopeLine(m),
                         onTap: () => _member(m),
                       ),
                     ],
@@ -893,10 +939,15 @@ class _MemberRow extends StatelessWidget {
     required this.currency,
     required this.onTap,
     this.showPay = true,
+    this.scope,
   });
 
   final TeamMember member;
   final String currency;
+
+  /// What the person's grants cover (« Toute l'activité · totaux
+  /// seulement »), one line per grant; null when unknown.
+  final String? scope;
 
   /// A salary is shown to the owner, and to whoever outranks the person.
   final bool showPay;
@@ -926,7 +977,10 @@ class _MemberRow extends StatelessWidget {
                 color: maraDeep, fontWeight: FontWeight.w800, fontSize: 18)),
       ),
       title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text([context.tr(roleLabel(m.role)), ?pay].join(' · ')),
+      subtitle: Text([
+        [context.tr(roleLabel(m.role)), ?pay].join(' · '),
+        ?scope,
+      ].join('\n')),
       trailing: Icon(Icons.more_vert, color: theme.colorScheme.onSurfaceVariant),
       onTap: onTap,
     );

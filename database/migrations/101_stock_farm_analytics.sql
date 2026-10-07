@@ -44,13 +44,27 @@
 --      caught; idempotent by the table's unique key (an order takes once,
 --      gives back once). No return of goods is added: a return is a
 --      Correction (owner's word).
+--      Handed over or delivered, the order is a sale: the trigger writes
+--      it (sales.order_id, once per order) with the order's lines and its
+--      money booked as record_sale books a cash or Wave sale — 'Ventes'
+--      against the cash box or mobile money — without touching the shelf
+--      again. Nobody rings a vitrine order at the till any more. An order
+--      accepted before 101 (nothing taken) has its articles taken then, as
+--      far as the shelf goes. Every kind: a shop's or a farm's order, and
+--      an association's service booking (« terminée ») books its income
+--      the same way. A finished order cannot be cancelled — no path ever
+--      allowed it; the trigger now refuses it too.
 --   3. The vitrine: place_order() refuses an article with nothing left
 --      and a quantity above what is left (pre-orders and services aside),
 --      and storefront_stock() tells the vitrine how many it may put in a
 --      basket, so the stepper stops there. A new function rather than a
 --      column on storefront_products(): 100 re-creates that one with its
 --      own return type each time the bundle runs.
---   4. A farm's analyses (Pro, or 'analytics' unlocked with cauris):
+--   4. Analyses (Pro, or 'analytics' unlocked with cauris), held by the
+--      server for a shop as for a farm: the five shop functions (043)
+--      refuse without the tool, platform admins aside, as farm_analytics
+--      does.
+--      A farm's analyses:
 --      farm_analytics() reads what the farm sold, what it spent, what its
 --      flocks laid and lost and ate, this month against the last. Security
 --      invoker: bound by the same RLS as the screens, and refused to
@@ -72,7 +86,9 @@
 
 -- The one sentence, wherever the stock runs out. Numbers without trailing
 -- zeros (3, not 3.000). The app reads it back (errors.dart) to say it in
--- the reader's language.
+-- the reader's language. Every refusal of stock is raised with SQLSTATE
+-- MA001, so the till's outbox knows a refusal from a lost signal by its
+-- code, not by its words.
 create or replace function stock_short_message(p_name text, p_left numeric)
 returns text
 language sql
@@ -80,6 +96,11 @@ immutable
 set search_path = public
 as $$
     select case
+        -- « Plus d'Aliment », « Plus d'huile »: de elides before a vowel or
+        -- an h, as the app's own sentence does (stock_rule.dart).
+        when coalesce(p_left, 0) <= 0
+             and p_name ~ '^[AEIOUYHÀÂÄÉÈÊËÎÏÔÖÙÛÜŒÆaeiouyhàâäéèêëîïôöùûüœæ]'
+            then format('Plus d''%s en stock', p_name)
         when coalesce(p_left, 0) <= 0 then format('Plus de %s en stock', p_name)
         else format('Il ne reste que %s %s', trim_scale(p_left)::text, p_name)
     end;
@@ -100,7 +121,8 @@ begin
     -- Below zero and lower than before: refused. An existing negative
     -- count may rise (a delivery, a return), never fall.
     if new.quantity < 0 and new.quantity < v_before then
-        raise exception '%', stock_short_message(new.name, v_before);
+        raise exception using message = stock_short_message(new.name, v_before),
+                              errcode = 'MA001';
     end if;
     return new;
 end;
@@ -144,7 +166,8 @@ begin
       from stock_movements
      where item_id = new.item_id;
     if v_on_hand + v_delta < 0 then
-        raise exception '%', stock_short_message(coalesce(v_name, 'cet article'), v_on_hand);
+        raise exception using message = stock_short_message(coalesce(v_name, 'cet article'), v_on_hand),
+                              errcode = 'MA001';
     end if;
     return new;
 end;
@@ -183,6 +206,52 @@ drop policy if exists "order stock moves readable within org" on order_stock_mov
 create policy "order stock moves readable within org"
 on order_stock_moves for select using (is_org_member(org_id));
 
+-- Read and written by the trigger alone: the app reads, nobody writes.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke insert, update, delete, truncate on order_stock_moves from authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke insert, update, delete, truncate on order_stock_moves from anon;
+    end if;
+end $$;
+
+-- A finished order is a sale (B1). Until now its money reached the books
+-- only if someone rang it up again at the till — which, with the stock
+-- already taken at acceptance, took the shelf twice (or was refused). The
+-- order now records its own sale when it is handed over or delivered:
+-- one sale per order, by this key, and no other.
+alter table sales add column if not exists order_id uuid references orders(id);
+create unique index if not exists sales_order_id_key on sales (order_id);
+
+comment on column sales.order_id is
+    'The vitrine order this sale is (101): written by the orders trigger '
+    'when the order is picked up or delivered, never by the app.';
+
+-- Staff may insert a sale under RLS (011). They may not claim an order's
+-- sale: a row with that order's id would stop the order booking its own.
+-- Invoker on purpose: the orders trigger writes as the table owner, the
+-- API as authenticated.
+create or replace function trg_sale_order_by_trigger()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+    if new.order_id is not null and current_user in ('authenticated', 'anon') then
+        raise exception 'La vente d''une commande est enregistrée par la commande elle-même';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists sale_order_by_trigger on sales;
+create trigger sale_order_by_trigger
+before insert or update of order_id on sales
+for each row execute function trg_sale_order_by_trigger();
+
 create or replace function trg_order_moves_stock()
 returns trigger
 language plpgsql
@@ -190,8 +259,20 @@ security definer
 set search_path = public
 as $$
 declare
-    r record;
+    r          record;
+    v_actor    uuid;
+    v_sale     uuid;
+    v_total    numeric := 0;
+    v_entry    uuid;
+    v_take     numeric;
 begin
+    -- Handed over or delivered cannot be cancelled: its sale is in the
+    -- books and its goods are gone (decide_order has no way out of it, a
+    -- courier fails only in transit). A return is a Correction.
+    if old.status in ('picked_up', 'delivered') and new.status = 'cancelled' then
+        raise exception 'Une commande remise ou livrée ne peut plus être annulée';
+    end if;
+
     -- Accepted (or moved on from pending by any path): the articles leave.
     if old.status = 'pending'
        and new.status not in ('pending', 'refused', 'cancelled') then
@@ -213,6 +294,87 @@ begin
                 update products set quantity = quantity - r.qty where id = r.product_id;
             end if;
         end loop;
+    end if;
+
+    -- Handed over or delivered: the order is a sale, booked once.
+    if new.status in ('picked_up', 'delivered') then
+        -- What did not leave at acceptance leaves now: an order accepted
+        -- before 101, or a pre-order whose day has come. The goods are
+        -- already in the customer's hands, so this takes what the shelf
+        -- has and no more — a wrong count must not stop a courier at the
+        -- door; the owner corrects it (Correction).
+        for r in
+            select l.product_id, sum(l.quantity) as qty
+              from order_lines l
+              join products p on p.id = l.product_id
+             where l.order_id = new.id
+               and not l.is_service
+               and not p.is_service
+               and not coalesce(p.available_from > (now() at time zone 'Africa/Ouagadougou')::date, false)
+               and not exists (select 1 from order_stock_moves m
+                                where m.order_id = new.id and m.product_id = l.product_id
+                                  and m.direction = 'out')
+             group by l.product_id
+        loop
+            select least(r.qty, greatest(quantity, 0)) into v_take
+              from products where id = r.product_id for update;
+            if v_take > 0 then
+                insert into order_stock_moves (org_id, order_id, product_id, direction, quantity)
+                values (new.org_id, new.id, r.product_id, 'out', v_take)
+                on conflict (order_id, product_id, direction) do nothing;
+                if found then
+                    update products set quantity = quantity - v_take where id = r.product_id;
+                end if;
+            end if;
+        end loop;
+
+        -- Who closed it; a courier (073) or the platform is a profile too.
+        -- A write with nobody signed in falls back to the owner.
+        v_actor := coalesce(auth.uid(),
+                            (select m.user_id from memberships m
+                              where m.org_id = new.org_id and m.role = 'owner'
+                              order by m.created_at limit 1),
+                            new.customer_id);
+
+        insert into sales (org_id, kind, occurred_at, method, note, recorded_by, order_id)
+        values (new.org_id, 'sale', now(), coalesce(new.payment_method, 'cash'),
+                'Commande de ' || new.customer_name, v_actor, new.id)
+        on conflict (order_id) do nothing
+        returning id into v_sale;
+
+        if v_sale is not null then
+            -- The lines as the customer was told them; the shelf is not
+            -- touched here (it moved at acceptance, or just above).
+            insert into sale_lines (sale_id, product_id, name, quantity,
+                                    unit_price, unit_cost, line_total)
+            select v_sale, l.product_id, l.name, l.quantity, l.unit_price,
+                   coalesce(p.cost_price, 0), l.quantity * l.unit_price
+              from order_lines l
+              left join products p on p.id = l.product_id
+             where l.order_id = new.id;
+            select coalesce(sum(l.quantity * l.unit_price), 0) into v_total
+              from order_lines l where l.order_id = new.id;
+
+            -- The money, as record_sale books a cash or Wave sale: the cash
+            -- box (or mobile money, 037) in, 'Ventes' credited. Written here
+            -- rather than through record_entry, whose can_write_org a
+            -- courier closing at the door does not pass.
+            if v_total > 0 then
+                insert into journal_entries (org_id, label, memo, details,
+                                             created_by, created_at)
+                values (new.org_id, 'Vente', 'Commande de ' || new.customer_name,
+                        jsonb_build_object('sale_id', v_sale, 'order_id', new.id),
+                        v_actor, now())
+                returning id into v_entry;
+                insert into journal_lines (journal_entry_id, account_id, debit, credit)
+                values (v_entry, resolve_cash_account(new.org_id,
+                                     coalesce(new.payment_method, 'cash'), v_actor),
+                        v_total, 0),
+                       (v_entry, ensure_account(new.org_id, 'Ventes', 'income', v_actor),
+                        0, v_total);
+            end if;
+            update sales set total = v_total, entry_id = v_entry where id = v_sale;
+        end if;
     end if;
 
     -- Cancelled after it took: exactly what it took comes back, once.
@@ -346,7 +508,8 @@ begin
      order by p.name
      limit 1;
     if found then
-        raise exception '%', stock_short_message(v_short.name, v_short.quantity);
+        raise exception using message = stock_short_message(v_short.name, v_short.quantity),
+                              errcode = 'MA001';
     end if;
 
     if p_fulfilment = 'delivery' and v_address is null then
@@ -487,6 +650,16 @@ begin
           join accounts a on a.id = jl.account_id
          where je.org_id = p_org_id
            and a.type in ('income', 'expense')
+    ),
+    -- A finished order, dated when it was handed over or delivered: the
+    -- sale written at that moment. Before 101 there is no such sale and
+    -- the order's last change is the best date there is.
+    done as (
+        select o.total,
+               coalesce((select s.occurred_at from sales s where s.order_id = o.id),
+                        o.updated_at) as at
+          from orders o
+         where o.org_id = p_org_id and o.status in ('picked_up', 'delivered')
     )
     select jsonb_object_agg(pr.key, jsonb_build_object(
         'income', (select coalesce(sum(m.credit - m.debit), 0) from money m
@@ -501,12 +674,10 @@ begin
                     join flocks f on f.id = fe.flock_id
                    where f.org_id = p_org_id and fe.kind = 'mortality'
                      and fe.occurred_at >= pr.t0 and fe.occurred_at < pr.t1),
-        'orders', (select count(*) from orders o
-                    where o.org_id = p_org_id and o.status in ('picked_up', 'delivered')
-                      and o.updated_at >= pr.t0 and o.updated_at < pr.t1),
-        'orders_total', (select coalesce(sum(o.total), 0) from orders o
-                          where o.org_id = p_org_id and o.status in ('picked_up', 'delivered')
-                            and o.updated_at >= pr.t0 and o.updated_at < pr.t1),
+        'orders', (select count(*) from done d
+                    where d.at >= pr.t0 and d.at < pr.t1),
+        'orders_total', (select coalesce(sum(d.total), 0) from done d
+                          where d.at >= pr.t0 and d.at < pr.t1),
         'production_cost', (select coalesce(sum(r.total_cost), 0) from production_runs r
                              where r.org_id = p_org_id
                                and r.occurred_at >= pr.t0 and r.occurred_at < pr.t1)
@@ -516,8 +687,9 @@ begin
 
     select jsonb_build_object(
         'periods', v_periods,
-        -- What sold, best first: the till's lines (a sale undone by a
-        -- correction is out, as in 043) and the vitrine's finished orders.
+        -- What sold, best first: the sales' lines (a sale undone by a
+        -- correction is out, as in 043). A finished vitrine order is a
+        -- sale of its own since 101, so it is counted there, once.
         'products', coalesce((
             select jsonb_agg(jsonb_build_object('name', x.name, 'units', trim_scale(x.units),
                                                 'revenue', x.revenue)
@@ -532,12 +704,6 @@ begin
                      where sa.org_id = p_org_id and sa.kind = 'sale'
                        and not exists (select 1 from sales r where r.reverses_id = sa.id)
                        and sa.occurred_at >= v_since
-                    union all
-                    select ol.name, ol.quantity, ol.quantity * ol.unit_price
-                      from order_lines ol
-                      join orders o on o.id = ol.order_id
-                     where o.org_id = p_org_id and o.status in ('picked_up', 'delivered')
-                       and o.updated_at >= v_since
                   ) s
                  group by lower(btrim(s.name))
                  limit 50
@@ -610,6 +776,240 @@ begin
     ) into v_out;
 
     return v_out;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 4b. A shop's analyses, held by the server too
+-- ------------------------------------------------------------
+-- Until now only the app kept a free shop out of its Analyses: the five
+-- functions behind the screen (043) answered anyone with full visibility.
+-- They now refuse without the 'analytics' tool (Pro, or unlocked with
+-- cauris), with the farm's words; pro_locked() lets a platform admin
+-- through. Bodies are 043's verbatim apart from that check; return types
+-- unchanged, so create or replace keeps their grants.
+create or replace function org_sales_headline(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    sale_count      bigint,
+    revenue         numeric,
+    cost            numeric,
+    margin          numeric,
+    units           numeric,
+    avg_basket      numeric,
+    products_sold   bigint
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    with s as (
+        select sa.id, sa.total
+        from sales sa
+        where sa.org_id = p_org_id
+          and sa.kind = 'sale'
+          and not exists (select 1 from sales r where r.reverses_id = sa.id)
+          and (p_since is null or sa.occurred_at >= p_since)
+    ),
+    lines as (
+        select sl.quantity, sl.unit_cost, sl.line_total, sl.name
+        from sale_lines sl
+        join s on s.id = sl.sale_id
+    )
+    select
+        (select count(*) from s),
+        coalesce((select sum(total) from s), 0),
+        coalesce((select sum(quantity * unit_cost) from lines), 0),
+        coalesce((select sum(line_total) from lines), 0)
+            - coalesce((select sum(quantity * unit_cost) from lines), 0),
+        coalesce((select sum(quantity) from lines), 0),
+        case when (select count(*) from s) = 0 then 0
+             else round(coalesce((select sum(total) from s), 0)
+                  / (select count(*) from s), 2) end,
+        (select count(distinct lower(btrim(name))) from lines);
+end;
+$$;
+
+create or replace function org_product_performance(
+    p_org_id uuid,
+    p_since  timestamptz default null,
+    p_limit  int default 100
+)
+returns table (
+    name          text,
+    units         numeric,
+    revenue       numeric,
+    margin        numeric,
+    sale_count    bigint,
+    first_sold    timestamptz,
+    last_sold     timestamptz,
+    per_day       numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    with lines as (
+        select lower(btrim(sl.name)) as key,
+               sl.name as raw_name,
+               sl.quantity, sl.unit_cost, sl.line_total, sa.occurred_at
+        from sale_lines sl
+        join sales sa on sa.id = sl.sale_id
+        where sa.org_id = p_org_id
+          and sa.kind = 'sale'
+          and not exists (select 1 from sales r where r.reverses_id = sa.id)
+          and (p_since is null or sa.occurred_at >= p_since)
+    )
+    select
+        min(raw_name),
+        sum(quantity),
+        sum(line_total),
+        sum(line_total) - sum(quantity * unit_cost),
+        count(*),
+        min(occurred_at),
+        max(occurred_at),
+        round(
+            sum(quantity)
+            / greatest(1, extract(epoch from (max(occurred_at) - min(occurred_at))) / 86400.0),
+            2
+        )
+    from lines
+    group by key
+    order by 3 desc
+    limit greatest(1, p_limit);
+end;
+$$;
+
+create or replace function org_sales_by_hour(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    hour        int,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        extract(hour from sa.occurred_at)::int,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
+end;
+$$;
+
+create or replace function org_sales_by_weekday(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    dow         int,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        extract(dow from sa.occurred_at)::int,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
+end;
+$$;
+
+create or replace function org_sales_daily(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    day         date,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        (sa.occurred_at at time zone 'UTC')::date,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
 end;
 $$;
 
@@ -712,6 +1112,7 @@ revoke execute on function stock_short_message(text, numeric)   from public;
 revoke execute on function trg_stock_not_below_zero()           from public;
 revoke execute on function trg_movement_not_below_zero()        from public;
 revoke execute on function trg_order_moves_stock()              from public;
+revoke execute on function trg_sale_order_by_trigger()          from public;
 revoke execute on function storefront_stock(text)               from public;
 revoke execute on function farm_analytics(uuid, timestamptz)    from public;
 revoke execute on function place_order(text, jsonb, text, text, text, text, text, double precision, double precision) from public;
@@ -724,6 +1125,7 @@ begin
         revoke execute on function trg_stock_not_below_zero()           from anon;
         revoke execute on function trg_movement_not_below_zero()        from anon;
         revoke execute on function trg_order_moves_stock()              from anon;
+        revoke execute on function trg_sale_order_by_trigger()          from anon;
         revoke execute on function farm_analytics(uuid, timestamptz)    from anon;
         revoke execute on function place_order(text, jsonb, text, text, text, text, text, double precision, double precision) from anon;
         revoke execute on function apply_for_org(text, text, text, text, text, text, text) from anon;
@@ -736,6 +1138,7 @@ begin
         revoke execute on function stock_short_message(text, numeric)   from authenticated;
         revoke execute on function trg_movement_not_below_zero()        from authenticated;
         revoke execute on function trg_order_moves_stock()              from authenticated;
+        revoke execute on function trg_sale_order_by_trigger()          from authenticated;
         revoke execute on function trg_stock_not_below_zero()           from authenticated;
         grant execute on function storefront_stock(text)                to authenticated;
         grant execute on function farm_analytics(uuid, timestamptz)    to authenticated;

@@ -10,9 +10,10 @@ create table auth.users (
     email              varchar(255) unique,
     raw_user_meta_data jsonb not null default '{}'::jsonb,
     -- When the sign-in proved the number or the address (103's sweep claims
-    -- only those). A fixture's are proved unless a test says otherwise.
-    phone_confirmed_at timestamptz default now(),
-    email_confirmed_at timestamptz default now()
+    -- only those). Null, as Supabase leaves an account nobody proved: a
+    -- test that needs a proved one says so.
+    phone_confirmed_at timestamptz,
+    email_confirmed_at timestamptz
 );
 
 -- Supabase resolves the current user from the JWT it puts on the request.

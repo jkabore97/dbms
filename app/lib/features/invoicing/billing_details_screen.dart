@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
@@ -129,9 +130,18 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
     }
   }
 
+  /// The invoice's identity — its e-mail, its tax number, its footer — is
+  /// the owner's (and the platform's) since 103; anybody else reads it here
+  /// and saves the rest (the server lets an unchanged value pass).
+  bool get _ownsIdentity =>
+      widget.org.roles.contains('owner') ||
+      (AppScope.maybeOf(context)?.session.isPlatformAdmin ?? false);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final owner = _ownsIdentity;
+    final ownerOnly = owner ? null : context.tr('Réservé au propriétaire');
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('En-tête de facture'))),
@@ -171,10 +181,14 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
+                  key: const Key('billing-email'),
                   controller: _email,
+                  readOnly: !owner,
+                  enabled: owner,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: context.tr('E-mail (facultatif)'),
+                    helperText: ownerOnly,
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -193,6 +207,7 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                       width: 130,
                       child: DropdownButtonFormField<String>(
                         initialValue: _taxLabel,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           labelText: context.tr('Type'),
                           border: const OutlineInputBorder(),
@@ -201,7 +216,7 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                           for (final label in _taxLabels)
                             DropdownMenuItem(value: label, child: Text(label)),
                         ],
-                        onChanged: _saving
+                        onChanged: _saving || !owner
                             ? null
                             : (v) => setState(() => _taxLabel = v ?? _taxLabel),
                       ),
@@ -209,11 +224,15 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
+                        key: const Key('billing-tax-id'),
                         controller: _taxId,
+                        readOnly: !owner,
+                        enabled: owner,
                         textCapitalization: TextCapitalization.characters,
                         decoration: InputDecoration(
                           labelText: context.tr('Numéro'),
                           hintText: '00012345A',
+                          helperText: ownerOnly,
                           border: const OutlineInputBorder(),
                         ),
                       ),
@@ -222,12 +241,16 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                 ),
                 const SizedBox(height: 24),
                 TextField(
+                  key: const Key('billing-footer'),
                   controller: _footer,
+                  readOnly: !owner,
+                  enabled: owner,
                   textCapitalization: TextCapitalization.sentences,
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: context.tr('Bas de page'),
-                    helperText: context.tr('Conditions de paiement, numéro Orange Money, remerciements…'),
+                    helperText: ownerOnly ??
+                        context.tr('Conditions de paiement, numéro Orange Money, remerciements…'),
                     border: const OutlineInputBorder(),
                   ),
                 ),

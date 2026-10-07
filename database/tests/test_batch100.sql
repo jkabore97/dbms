@@ -817,7 +817,7 @@ begin
         perform record_sale(v_org, jsonb_build_array(
             jsonb_build_object('product_id', v_cake, 'quantity', 4, 'unit_price', 300)));
         raise exception 'FAIL: the till sold past the shelf';
-    exception when raise_exception then
+    exception when sqlstate 'MA001' then
         if sqlerrm <> 'Il ne reste que 2 Gâteau 69' then raise; end if;
     end;
     if (select quantity from products where id = v_cake) <> 2 then

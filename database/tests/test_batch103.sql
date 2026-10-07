@@ -74,9 +74,10 @@ insert into auth.users (id, phone, raw_user_meta_data) values
     (:eve,     null,           '{"full_name": "Eve"}'),
     (:newbie,  '+22610000099', '{"full_name": "Nouvelle"}'),
     (:trainer, '+22610000013', '{"full_name": "Formatrice"}');
--- A number the sign-in never proved.
+-- A number the sign-in never proved (the stub's default), and one it did.
 insert into auth.users (id, phone, phone_confirmed_at, raw_user_meta_data) values
     (:unv, '+22610000097', null, '{"full_name": "Pas vérifiée"}');
+update auth.users set phone_confirmed_at = now() where id = :newbie;
 update profiles set is_platform_admin = true where id = :mara;
 update profiles set is_trainer = true where id = :trainer;
 insert into orgs (id, name, slug, profile, default_currency, plan, plan_note, wave_payout_number, tax_id) values
@@ -780,3 +781,88 @@ begin
     end if;
     raise notice 'PASS: no TRUNCATE for the app''s roles; the doors open to the signed-in, the helpers to nobody';
 end $$;
+
+\echo ''
+\echo '--- TEST 17: the dial still read by members; the platform''s super_admin kept from the owner; a super_admin invitation never claimed; the street writes no grant ---'
+-- An invitation for super_admin left from before 103 (or written by hand,
+-- no caller): a claim refuses it.
+insert into pending_invitations (org_id, role, scope_kind, scope_id, code, created_by)
+values (:shop, 'super_admin', 'org', :shop, 'B103-OLDS', :owner);
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '10101010-0000-0000-0000-000000000001';
+insert into org_feature_rules (org_id, tier, feature, access)
+values ('10000000-0000-0000-0000-000000000001', 'employee', 'reports', 'hidden');
+do $$ begin
+    -- The owner outranks no platform-named super_admin.
+    begin
+        delete from memberships where user_id = '10101010-0000-0000-0000-000000000004'
+           and org_id = '10000000-0000-0000-0000-000000000001';
+        raise exception 'FAIL: the owner removed the platform''s super_admin';
+    exception when insufficient_privilege then
+        if sqlerrm not like 'Vous ne pouvez retirer que%' then raise; end if;
+    end;
+    begin
+        perform revoke_membership((select id from memberships
+                                    where user_id = '10101010-0000-0000-0000-000000000004'
+                                      and org_id = '10000000-0000-0000-0000-000000000001'));
+        raise exception 'FAIL: the owner revoked the platform''s super_admin';
+    exception when insufficient_privilege then null;
+    end;
+end $$;
+-- A member who is no admin still reads the dial the owner set (031's read).
+set local "request.jwt.claim.sub" = '10101010-0000-0000-0000-000000000003';
+do $$ begin
+    if not exists (select 1 from org_feature_rules
+                    where org_id = '10000000-0000-0000-0000-000000000001'
+                      and tier = 'employee' and feature = 'reports')
+       or feature_access('10000000-0000-0000-0000-000000000001', 'reports') <> 'hidden' then
+        raise exception 'FAIL: a member no longer reads the dial';
+    end if;
+end $$;
+-- Eve, a stranger, holds the super_admin code: refused, nothing granted.
+set local "request.jwt.claim.sub" = '10101010-0000-0000-0000-000000000010';
+do $$ begin
+    begin
+        perform claim_invitation('B103-OLDS');
+        raise exception 'FAIL: a super_admin invitation was claimed';
+    exception when insufficient_privilege then
+        if sqlerrm not like 'Seule la plateforme%' then raise; end if;
+    end;
+    if exists (select 1 from memberships where user_id = '10101010-0000-0000-0000-000000000010'
+                  and role = 'super_admin') then
+        raise exception 'FAIL: the claim left a super_admin grant';
+    end if;
+    raise notice 'PASS: the owner keeps the platform''s super_admin; members read the dial; a super_admin code claims nothing';
+end $$;
+rollback;
+begin;
+set local role anon;
+do $$
+declare t text;
+begin
+    foreach t in array array['memberships', 'pending_invitations'] loop
+        if has_table_privilege('anon', t, 'INSERT') or has_table_privilege('anon', t, 'UPDATE')
+           or has_table_privilege('anon', t, 'DELETE') then
+            raise exception 'FAIL: the street holds a write on %', t;
+        end if;
+    end loop;
+    begin
+        insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+        values ('10000000-0000-0000-0000-000000000001', '10101010-0000-0000-0000-000000000010',
+                'admin', 'org', '10000000-0000-0000-0000-000000000001', 'full');
+        raise exception 'FAIL: the street wrote a grant';
+    exception when insufficient_privilege then null;
+    end;
+    begin
+        insert into pending_invitations (org_id, role, scope_kind, scope_id, code, created_by)
+        values ('10000000-0000-0000-0000-000000000001', 'employee', 'org',
+                '10000000-0000-0000-0000-000000000001', 'B103-ANON',
+                '10101010-0000-0000-0000-000000000001');
+        raise exception 'FAIL: the street wrote an invitation';
+    exception when insufficient_privilege then null;
+    end;
+    raise notice 'PASS: the street writes no grant and no invitation';
+end $$;
+rollback;
+delete from pending_invitations where code = 'B103-OLDS';
