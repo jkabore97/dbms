@@ -19,6 +19,7 @@ import '../../core/theme/motion.dart';
 import '../common/owned_controller.dart';
 import 'open_badge.dart';
 import 'shop_skeleton.dart';
+import 'share_vitrine.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -1564,11 +1565,12 @@ class _Window extends StatelessWidget {
                         // WhatsApp from one phone to the next. The shop's
                         // customers are its advertisers.
                         OutlinedButton.icon(
-                          onPressed: () => onOpen(
-                            whatsappShareUrl(
-                              'Découvrez ${shop.name} sur Mara : '
-                              '${publicShopUrl(shop.slug)}',
-                            ),
+                          key: const Key('shop-share'),
+                          onPressed: () => ShareVitrine.open(
+                            context,
+                            shop: shop,
+                            items: items,
+                            capture: capture,
                           ),
                           icon: const Icon(Icons.share_outlined, size: 18),
                           label: Text(context.tr('Partager')),

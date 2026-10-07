@@ -846,14 +846,16 @@ String foldSearchText(String text) {
   return out.toString();
 }
 
-/// The public address of a vitrine, fit to be sent to anyone. On the web
-/// the running origin is the truth (a preview stays a preview); in the
-/// Android app there is no origin, so the production site is the address.
+/// The public address of a vitrine, fit to be sent to anyone: always the
+/// site's own name (marakaj.com), whatever address the app was opened at —
+/// a link sent from the old workers.dev address kept that address alive.
+/// Only a build running on this machine (localhost) shares its own origin,
+/// so a test link stays a test link.
 String publicShopUrl(String slug) {
-  final origin = Uri.base.scheme.startsWith('http')
-      ? Uri.base.origin
-      : siteOrigin;
-  return '$origin/s/$slug';
+  final here = Uri.base;
+  final local = here.scheme.startsWith('http') &&
+      (here.host == 'localhost' || here.host == '127.0.0.1');
+  return '${local ? here.origin : siteOrigin}/s/$slug';
 }
 
 /// A WhatsApp link that opens the "send to…" picker with [text] already

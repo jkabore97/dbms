@@ -385,7 +385,8 @@ String _securityLine(AppScope scope) {
   ].join(' · ');
 }
 
-/// English or French (Compte › Préférences): French unless switched.
+/// English or French (Compte › Préférences): the phone's language unless
+/// switched here.
 class _EnglishSwitch extends StatelessWidget {
   const _EnglishSwitch({required this.controller});
 
@@ -399,7 +400,7 @@ class _EnglishSwitch extends StatelessWidget {
           secondary: const Icon(Icons.translate),
           // Each language named in itself.
           title: const Text('English'),
-          subtitle: const Text('Français par défaut'),
+          subtitle: Text(context.tr('Langue du téléphone par défaut')),
           value: controller.effective.languageCode == 'en',
           onChanged: (on) =>
               controller.choose(on ? const Locale('en') : const Locale('fr')),

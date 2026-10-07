@@ -1,9 +1,11 @@
 # Serves the Flutter web build as a static site on Cloudflare.
 #
-# There is no `main` here on purpose: this is an assets-only Worker. The app
-# needs no server-side logic to decide which business it is showing — the org
-# comes from the signed-in user's memberships (see app/lib/main.dart), never
-# from the hostname. So every tenant hostname can serve this same bundle.
+# src/index.js runs first on every request, for two things only: the old
+# workers.dev name redirects to marakaj.com, and /s/<slug> gets the shop's
+# own link preview (og tags) written into index.html. Everything else is the
+# static bundle, unchanged. The app still needs no server-side logic to
+# decide which business it shows — the org comes from the signed-in user's
+# memberships (see app/lib/main.dart), never from the hostname.
 #
 # `kaj-tenant-router` (../tenant-router) is a separate concern: it attaches
 # tenant headers for server-side callers. Deploying this does not need it.
@@ -13,6 +15,7 @@
 # URL serving whatever it serves today and publish the app somewhere nobody
 # is looking.
 name = "dbms"
+main = "src/index.js"
 compatibility_date = "2026-01-01"
 
 # Gives kaj-app.<your-subdomain>.workers.dev straight after deploy, which is
@@ -29,10 +32,19 @@ workers_dev = true
 # Written by `scripts/build-web.sh`. Not committed — build/ is gitignored, so
 # the bundle is always built fresh at deploy time from the current source.
 directory = "../../app/build/web"
+binding = "ASSETS"
+run_worker_first = true
 
 # A Flutter web app is one page: every route is resolved by Dart after
 # index.html has loaded. Without this, a reload on any deep link 404s.
 not_found_handling = "single-page-application"
+
+# Filled at deploy (deploy-cloudflare.yml passes --var from the repository's
+# secrets and variables): never committed.
+[vars]
+SUPABASE_URL = ""
+SUPABASE_PUBLISHABLE_KEY = ""
+UPLOADS_URL = ""
 
 # Deploy with:  wrangler deploy --config workers/kaj-app/wrangler.toml
 # Needs `wrangler login` once, or CLOUDFLARE_API_TOKEN in the environment.
