@@ -130,7 +130,7 @@ void main() {
           .map((t) => (t.title as Text).data)
           .toList();
       expect(sheet,
-          ['Mes cauris', 'Académie', 'Production', 'Voir ma vitrine', 'Voir le marché', 'Compte']);
+          ['Mon chemin', 'Production', 'Voir ma vitrine', 'Voir le marché', 'Compte']);
     });
 
     testWidgets('a tool the owner hid is not on the bar, and it closes up',

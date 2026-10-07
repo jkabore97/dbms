@@ -2,26 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
-import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/rates/currency_rates.dart';
 import 'package:kaj_app/features/admin/org_settings_screen.dart';
 import 'package:kaj_app/features/cauris/unlock_celebration.dart';
-import 'package:kaj_app/features/cauris/vitrine_guide.dart';
 
 /// The owner: « In Paramètres de l'activité we do not know what is
 /// completed or not », « more focus on teaching how to add items », « the
 /// payment part is not necessary », and the vitrine card should lead to
 /// 100 % « in a logical and nice way ».
 const _half = VitrineChecklist(
-  open: true,
   published: 3,
+  unpublished: 57,
   withPhoto: 1,
-  blurb: true,
-  phone: false,
-  address: false,
-  pin: false,
   minItems: 8,
 );
+
+class _Retail extends RetailRepository {
+  _Retail() : super(null);
+
+  int published = 0;
+
+  @override
+  Future<int> publishAll(String orgId) async {
+    published++;
+    return 57;
+  }
+}
 
 class _Admin extends AdminRepository {
   _Admin({this.list = _half, this.phone, this.lat}) : super(null);
@@ -84,12 +91,14 @@ void main() {
     await initializeDateFormatting('fr_FR', null);
   });
 
-  Future<void> pump(WidgetTester tester, _Admin admin, {String? part}) async {
+  Future<void> pump(WidgetTester tester, _Admin admin,
+      {String? part, RetailRepository? retail}) async {
     tester.view.physicalSize = const Size(600, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
-      home: OrgSettingsScreen(admin: admin, orgId: 'org-1', initialPart: part),
+      home: OrgSettingsScreen(
+          admin: admin, orgId: 'org-1', initialPart: part, retail: retail),
     ));
     await tester.pump();
     await tester.pump();
@@ -118,13 +127,8 @@ void main() {
       tester,
       _Admin(
         list: const VitrineChecklist(
-          open: true,
           published: 9,
           withPhoto: 4,
-          blurb: true,
-          phone: true,
-          address: true,
-          pin: true,
           minItems: 8,
         ),
         phone: '+22670000000',
@@ -157,31 +161,15 @@ void main() {
     expect(find.byKey(const Key('vitrine-address')), findsOneWidget);
   });
 
-  testWidgets('the guide lights the next step, in order', (tester) async {
-    const org = OrgSummary(
-      id: 'org-1',
-      name: 'Boutique Awa',
-      slug: 'boutique-awa',
-      profile: 'retail',
-      roles: ['owner'],
-    );
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: VitrineGuide(org: org, load: () async => _half),
-      ),
-    ));
+  testWidgets('« Tout publier » puts the waiting articles on the vitrine',
+      (tester) async {
+    final retail = _Retail();
+    await pump(tester, _Admin(), part: 'articles', retail: retail);
+    await tester.tap(find.byKey(const Key('articles-publish-all')));
     await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    expect(find.text('Vers 100 %, pas à pas'), findsOneWidget);
-    // Articles (3/8) is the first not done: lit, with « Faire maintenant ».
-    expect(find.byKey(const Key('guide-go')), findsOneWidget);
-    final go = tester.getTopLeft(find.byKey(const Key('guide-go'))).dy;
-    final first = tester.getTopLeft(find.byKey(const Key('guide-step-0'))).dy;
-    final second = tester.getTopLeft(find.byKey(const Key('guide-step-1'))).dy;
-    expect(go > first && go < second, isTrue);
-    expect(find.text('3 / 8'), findsOneWidget);
-    // The blurb is done.
-    expect(find.text('Fait'), findsOneWidget);
+    await tester.pump();
+    expect(retail.published, 1);
+    expect(find.text('57 article(s) publié(s) sur la vitrine.'), findsOneWidget);
   });
 
   testWidgets('a tool that opens is celebrated', (tester) async {

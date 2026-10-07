@@ -172,25 +172,19 @@ class CompteScreen extends StatelessWidget {
                 // The plan, said plainly (066): what this business is on, and
                 // the door to the other one. Drawn for every member so an
                 // employee who meets a badge knows what it is.
-                // Cauris (084): what doing well earns. Businesses only: an
-                // association does not compete.
+                // Le Chemin (097): the steps, the tools they open and the
+                // cauris they pay. Businesses only: an association does not
+                // compete.
                 if (admin && org.profile != 'church' && org.profile != 'association')
                   _Tile(
-                    key: const Key('compte-cauris'),
-                    icon: Icons.savings_outlined,
-                    title: context.tr('Mes cauris'),
-                    subtitle: context.tr('Gagnés en vendant bien, à dépenser en outils Pro'),
-                    onTap: () => context.push(inside('cauris')),
+                    key: const Key('compte-chemin'),
+                    icon: Icons.route_outlined,
+                    title: context.tr('Mon chemin'),
+                    subtitle: context.tr('{n} cauris', {
+                      'n': session.featuresFor(org.id)?.balance ?? 0,
+                    }),
+                    onTap: () => context.push(inside('chemin')),
                   ),
-                // Académie Mara (087): every member learns, each at their
-                // own level.
-                _Tile(
-                  key: const Key('compte-academy'),
-                  icon: Icons.school_outlined,
-                  title: context.tr('Académie Mara'),
-                  subtitle: context.tr('Des leçons de deux minutes, en images'),
-                  onTap: () => context.push(inside('academie')),
-                ),
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
                   title: org.isPro ? context.tr('Mara Pro') : context.tr('Passer à Mara Pro'),

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/cauris/cauris_repository.dart';
 import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
@@ -107,6 +108,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   /// opens on birds and eggs exactly as it did.
   FarmShape _shape = const FarmShape();
 
+  /// Le Chemin (097), for an admin: the card with the next step. Null
+  /// hides it.
+  PathState? _path;
+
   Future<void> _openLivestock({int tab = 0}) async {
     final farm = widget.farm;
     if (farm == null) return;
@@ -143,6 +148,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
     });
 
     await _refreshFromServer();
+    await _readPath();
 
     if (!mounted) return;
     final flocks = await widget.db.cachedFlocks(widget.org.id);
@@ -153,6 +159,17 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
       _lowStock =
           items.where((i) => (i['below_reorder'] as int? ?? 0) == 1).toList();
     });
+  }
+
+  /// The next step on the path: best-effort, and only with signal.
+  Future<void> _readPath() async {
+    if (!mounted) return;
+    final client = AppScope.read(context)?.auth.client;
+    if (!widget.org.isAdmin || client == null) return;
+    try {
+      final path = await CaurisRepository(client).pathState(widget.org.id);
+      if (mounted) setState(() => _path = path);
+    } catch (_) {}
   }
 
   /// Pulls the counts only this device cannot compute, and writes them to the
@@ -260,10 +277,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // A new farm's path (085): its vitrine opens its tools.
-                  if (AppScope.read(context)?.session.featuresFor(widget.org.id)?.progress
-                      case final p? when PathCard.shows(p)) ...[
-                    PathCard(org: widget.org, progress: p, onChanged: _refresh),
+                  // Le Chemin (097): the one next thing to do. Gone once
+                  // the path is walked.
+                  if (PathCard.shows(widget.org, _path)) ...[
+                    PathCard(org: widget.org, state: _path!, onChanged: _refresh),
                     const SizedBox(height: 16),
                   ],
                   _TodayCard(
@@ -437,15 +454,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
         ),
         if (widget.org.isAdmin)
           HomeDestination(
-            icon: Icons.savings_outlined,
-            label: context.tr('Mes cauris'),
-            onTap: () => _push(Routes.inside(id, 'cauris')),
+            icon: Icons.route_outlined,
+            label: context.tr('Mon chemin'),
+            onTap: () => _push(Routes.inside(id, 'chemin')),
           ),
-        HomeDestination(
-          icon: Icons.school_outlined,
-          label: context.tr('Académie'),
-          onTap: () => _push(Routes.inside(id, 'academie')),
-        ),
         if (widget.access.canSee('credits'))
           HomeDestination(
             icon: Icons.handshake_outlined,

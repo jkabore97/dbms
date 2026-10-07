@@ -11,7 +11,7 @@ import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/nav/session.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/features/admin/cauris_console_card.dart';
-import 'package:kaj_app/features/cauris/cauris_screen.dart';
+import 'package:kaj_app/features/cauris/chemin_screen.dart';
 import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -44,6 +44,10 @@ class _Cauris extends CaurisRepository {
 
   @override
   Future<void> milestones(String orgId) async => milestoneCalls++;
+
+  /// Off the path (a database before 097): the wallet alone.
+  @override
+  Future<PathState?> pathState(String orgId) async => null;
 
   @override
   Future<String> setReferral(String orgId, String code) async {
@@ -99,18 +103,24 @@ void main() {
     await initializeDateFormatting('fr_FR');
   });
 
-  testWidgets('the wallet counts up, says the week and how to earn, and '
-      'traces every cauri', (tester) async {
+  testWidgets('off the path, Mon chemin is the wallet: it counts up, says '
+      'the week and how to earn, and traces every cauri', (tester) async {
     tester.view.physicalSize = const Size(600, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final cauris = _Cauris();
-    await tester.pumpWidget(MaterialApp(home: CaurisScreen(org: _org, cauris: cauris)));
+    await tester.pumpWidget(MaterialApp(home: CheminScreen(org: _org, cauris: cauris)));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('260'), findsOneWidget);
     expect(find.text('Cette semaine : +45'), findsOneWidget);
     expect(cauris.milestoneCalls, 1, reason: 'a complete vitrine is checked on the way in');
+    expect(find.byKey(const Key('chemin-league')), findsOneWidget,
+        reason: 'a business off the path keeps its door to the league');
+    // The rules and the history are folded under « Détails ».
+    expect(find.text('Commande terminée'), findsNothing);
+    await tester.tap(find.byKey(const Key('chemin-details')));
+    await tester.pumpAndSettle();
     expect(find.text('Commande terminée'), findsOneWidget);
     expect(find.text('jusqu\'à 30 par jour'), findsOneWidget);
     expect(find.text('+15'), findsOneWidget);

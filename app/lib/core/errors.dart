@@ -28,8 +28,40 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 ///   * **Out of date.** The app is asking for something this database has not
 ///     been migrated to yet — `PGRST202`. That is an operator problem, and
 ///     saying so stops somebody hunting for a setting that does not exist.
-String describeError(Object error) =>
-    translate(trCurrent, brandText(_describe(error)));
+String describeError(Object error) {
+  final text = brandText(_describe(error));
+  return pathLockText(trCurrent, text) ?? translate(trCurrent, text);
+}
+
+/// A tool still locked on Le Chemin (097's path_lock_message): the server's
+/// sentence is read for its tool and its numbers, and said by the app in
+/// [language]. Null for any other sentence.
+String? pathLockText(String language, String message) {
+  final invoices = RegExp(
+          r'^Factures : (\d+) articles en vente et (\d+) en photo pour les débloquer\.$')
+      .firstMatch(message);
+  final credits = RegExp(
+          r'^Carnet de crédit : (\d+) commandes terminées pour le débloquer\.$')
+      .firstMatch(message);
+  final tool = invoices != null
+      ? 'invoices'
+      : credits != null
+          ? 'credits'
+          : message.startsWith('Production : terminez l')
+              ? 'production'
+              : null;
+  return switch (tool) {
+    'invoices' => translate(language,
+        'Factures : {n} articles en vente et {p} en photo pour les débloquer.',
+        {'n': invoices!.group(1), 'p': invoices.group(2)}),
+    'production' => translate(
+        language, 'Production : terminez l\'étape Remplir pour la débloquer.'),
+    'credits' => translate(language,
+        'Carnet de crédit : {n} commandes terminées pour le débloquer.',
+        {'n': credits!.group(1)}),
+    _ => null,
+  };
+}
 
 /// The app is Mara; the database and the Worker still say « Kaj » in the
 /// sentences they send (« Kaj Pro : la livraison… », « Kaj Pro est actif »),

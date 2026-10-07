@@ -1,5 +1,3 @@
-import '../l10n/tr.dart';
-
 /// What a business's tools cost in cauris, which are open, and its Basic
 /// path (085), read in one call — feature_states().
 class FeatureStates {
@@ -76,111 +74,23 @@ class ToolState {
   final int? waitsDays;
 }
 
-/// The Basic path (085): a business that starts on Mara opens its tools as
-/// its vitrine grows. Businesses already here are not [gated].
+/// The tools on Le Chemin (097) — invoices, production, credits, a second
+/// business — as the server gates them (path_locked): the steps that open
+/// each are counted there, live, so the app never draws a door the server
+/// would not open. Mara Pro and the businesses off the path are never
+/// locked.
 class BasicProgress {
-  const BasicProgress({
-    this.gated = false,
-    this.inTrial = false,
-    this.trialUntil,
-    this.score = 100,
-    this.orders = 0,
-    this.streetPct = 60,
-    this.toolsPct = 90,
-    this.invoicesPct = 70,
-    this.productionPct = 90,
-    this.creditOrders = 3,
-    this.ordersNeeded = 3,
-    this.onStreet = true,
-    this.pro = false,
-    this.serverLocks,
-  });
+  const BasicProgress({this.serverLocks});
 
-  final bool gated;
-
-  /// 085's first days; never true since 089 — kept so an older answer reads.
-  final bool inTrial;
-  final DateTime? trialUntil;
-
-  /// The vitrine's own score, 0–100.
-  final int score;
-
-  /// Orders picked up or delivered, ever.
-  final int orders;
-  final int streetPct;
-  final int toolsPct;
-  final int invoicesPct;
-  final int productionPct;
-  final int creditOrders;
-  final int ordersNeeded;
-  final bool onStreet;
-  final bool pro;
-
-  /// The server's own answer (089), step by step: the rule the database
-  /// enforces, so the app never draws a door the server would not open.
+  /// Tool → still locked, as org_progress() said it.
   final Map<String, bool>? serverLocks;
 
-  /// The tools a growing vitrine opens.
-  static const vitrineTools = {'invoices', 'production', 'credits'};
-
-  /// Whether a Basic tool is still ahead of this business.
-  bool locks(String feature) {
-    final server = serverLocks;
-    if (server != null) return server[feature] ?? false;
-    if (!gated || inTrial) return false;
-    return switch (feature) {
-      'invoices' => score < invoicesPct,
-      'production' => score < productionPct,
-      'credits' => orders < creditOrders,
-      'second_business' => !pro,
-      _ => false,
-    };
-  }
-
-  /// How far along, 0–1, for the bar on the lock.
-  double progressFor(String feature) => switch (feature) {
-        'invoices' => (score / invoicesPct).clamp(0, 1).toDouble(),
-        'production' => (score / productionPct).clamp(0, 1).toDouble(),
-        'credits' => creditOrders == 0 ? 1 : (orders / creditOrders).clamp(0, 1).toDouble(),
-        _ => pro ? 1 : 0,
-      };
-
-  /// The goal, in a few words, in [language] (fr or en).
-  String goalFor(String feature, [String language = 'fr']) => switch (feature) {
-        'invoices' => translate(language, 'Vitrine à {pct} %', {'pct': invoicesPct}),
-        'production' => translate(language, 'Vitrine à {pct} %', {'pct': productionPct}),
-        'credits' => translate(language, '{n} commandes', {'n': creditOrders}),
-        'second_business' => 'Mara Pro',
-        _ => '',
-      };
-
-  /// Where it stands, in a few words, in [language].
-  String needFor(String feature, [String language = 'fr']) => switch (feature) {
-        'invoices' || 'production' =>
-          translate(language, 'Vitrine : {score} %', {'score': score}),
-        'credits' => translate(language, 'Commandes : {orders} / {need}',
-            {'orders': orders, 'need': creditOrders}),
-        'second_business' => translate(language, 'Avec Mara Pro'),
-        _ => '',
-      };
+  /// Whether a tool on the path is still ahead of this business.
+  bool locks(String feature) => serverLocks?[feature] ?? false;
 
   factory BasicProgress.fromJson(Map<String, dynamic> j) {
-    int n(Object? v, int d) => v is num ? v.toInt() : int.tryParse('$v') ?? d;
     final l = j['locks'];
     return BasicProgress(
-      gated: j['gated'] == true,
-      inTrial: j['in_trial'] == true,
-      trialUntil: DateTime.tryParse('${j['trial_until'] ?? ''}'),
-      score: n(j['score'], 0),
-      orders: n(j['orders'], 0),
-      streetPct: n(j['street_pct'], 60),
-      toolsPct: n(j['tools_pct'], 90),
-      invoicesPct: n(j['invoices_pct'], 70),
-      productionPct: n(j['production_pct'], 90),
-      creditOrders: n(j['credit_orders'], 3),
-      ordersNeeded: n(j['orders_needed'], 3),
-      onStreet: j['on_street'] != false,
-      pro: j['pro'] == true,
       serverLocks: l is Map
           ? {for (final e in l.entries) '${e.key}': e.value == true}
           : null,

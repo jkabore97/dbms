@@ -52,6 +52,13 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled)
     (:farm,   'Ferme Cauris',    'ferme-54',   'farm',        'XOF', true),
     (:church, 'Église Cauris',   'eglise-54',  'association', 'XOF', false),
     (:newbie, 'Nouvelle',        'nouvelle-54','retail',      'XOF', true);
+-- Le Chemin (097) pays its own steps; that is proven in test_le_chemin.sql.
+-- This suite counts the cauris of 084-086 to the unit, so its businesses
+-- have walked the path already.
+insert into org_path_done (org_id, step)
+select o.id, s.key from orgs o cross join path_steps s
+ where o.id::text like '54000000-%'
+on conflict do nothing;
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop,   :owner, 'owner',    'org', :shop,   'full'),
     (:shop,   :clerk, 'employee', 'org', :shop,   'full'),
@@ -184,7 +191,7 @@ end $$;
 \echo ''
 \echo '--- TEST 5: an association earns nothing ---'
 do $$ begin
-    if cauris_award('54000000-0000-0000-0000-000000000003', 'lesson', 'x') <> 0
+    if cauris_award('54000000-0000-0000-0000-000000000003', 'vitrine_complete', 'x') <> 0
        or cauris_balance('54000000-0000-0000-0000-000000000003') <> 0 then
         raise exception 'FAIL: an association earned cauris';
     end if;

@@ -56,6 +56,13 @@ insert into orgs (id, name, slug, profile, default_currency, storefront_enabled,
         12.40, -1.49, null, null, false, true),
     (:bobo, 'Bobo Shop',  'bobo-56',   'retail', 'XOF', true, 11.18, -4.29, null, null, false, true),
     (:farm, 'Ferme 56',   'ferme-56',  'farm',   'XOF', true, 12.37, -1.52, null, null, false, true);
+-- Le Chemin (097) pays its own steps; that is proven in test_le_chemin.sql.
+-- This suite counts the cauris of 084-086 to the unit, so its businesses
+-- have walked the path already.
+insert into org_path_done (org_id, step)
+select o.id, s.key from orgs o cross join path_steps s
+ where o.id::text like '56000000-%'
+on conflict do nothing;
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
 select id, '56565656-0000-0000-0000-000000000001', 'owner', 'org', id, 'full'
   from orgs where slug like '%-56';

@@ -1435,35 +1435,22 @@ class PlatformCourier {
       );
 }
 
-/// What a vitrine has and lacks (070) — the meter on the vitrine settings
-/// and the nudge on the shop's home. Each step is one thing a shopper would
-/// otherwise miss.
+/// What a vitrine has and lacks (070) — read by the settings, whose
+/// « Vos articles » rubrique says done or to do with its counts.
 class VitrineChecklist {
   const VitrineChecklist({
-    this.open = false,
-    this.active = 0,
     this.published = 0,
     this.unpublished = 0,
     this.withPhoto = 0,
-    this.blurb = false,
-    this.address = false,
-    this.phone = false,
-    this.pin = false,
     this.minItems = 1,
   });
 
   factory VitrineChecklist.fromJson(Map<String, dynamic> j) {
     int n(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
     return VitrineChecklist(
-      open: j['open'] == true,
-      active: n(j['active']),
       published: n(j['published']),
       unpublished: n(j['unpublished']),
       withPhoto: n(j['with_photo']),
-      blurb: j['blurb'] == true,
-      address: j['address'] == true,
-      phone: j['phone'] == true,
-      pin: j['pin'] == true,
       minItems: j['min_items'] == null ? 1 : n(j['min_items']),
     );
   }
@@ -1471,38 +1458,13 @@ class VitrineChecklist {
   /// Items on sale before the public sees the vitrine (092).
   final int minItems;
 
-  /// Enough items on sale for the public to see the vitrine.
-  bool get public => published >= minItems;
-
-  final bool open;
-  final int active;
   final int published;
   final int unpublished;
   final int withPhoto;
-  final bool blurb;
-  final bool address;
-  final bool phone;
-  final bool pin;
 
   /// Three photographed articles is "photos done": enough for the card and
   /// the shelf to look like a shop.
   bool get photosDone => withPhoto >= 3 || (published > 0 && withPhoto >= published);
-
-  /// The steps, in the order an owner should take them, each done or not.
-  List<({String label, bool done})> get steps => [
-        (label: 'Des articles sur la vitrine', done: published >= (minItems < 1 ? 1 : minItems)),
-        (label: 'Trois articles en photo', done: photosDone),
-        (label: 'Une phrase de présentation', done: blurb),
-        (label: 'Un numéro de téléphone', done: phone),
-        (label: "L'adresse", done: address),
-        (label: 'La position sur la carte', done: pin),
-      ];
-
-  /// 0–100, the share of steps done.
-  int get score {
-    final s = steps;
-    return (100 * s.where((x) => x.done).length / s.length).round();
-  }
 }
 
 

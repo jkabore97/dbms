@@ -5,7 +5,6 @@ import 'package:kaj_app/core/access/plan_terms.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/cauris/feature_states.dart';
-import 'package:kaj_app/features/cauris/path_card.dart';
 import 'package:kaj_app/features/cauris/unlock_sheet.dart';
 import 'package:kaj_app/features/pro/pro_plans_screen.dart';
 
@@ -33,9 +32,9 @@ FeatureStates _states({int balance = 260}) => FeatureStates.fromJson({
         {'feature': 'pro_all', 'cost': 1500},
       ],
       'progress': {
-        'gated': true, 'in_trial': false, 'score': 67, 'orders': 3,
-        'street_pct': 60, 'invoices_pct': 70, 'production_pct': 90,
-        'credit_orders': 3, 'on_street': true,
+        'gated': true,
+        'locks': {'invoices': true, 'production': true, 'credits': false,
+                  'second_business': true},
       },
     });
 
@@ -110,33 +109,14 @@ void main() {
     expect(pro[1].free, isNull, reason: 'no price, no lock');
   });
 
-  test('the earned path (089): the server\'s locks rule, no trial', () {
+  test('the path\'s gates (097) are the server\'s locks, step by step', () {
     final p = _states().progress;
-    expect(p.locks('invoices'), isTrue, reason: '67 % < 70 %');
+    expect(p.locks('invoices'), isTrue);
     expect(p.locks('production'), isTrue);
-    expect(p.locks('credits'), isFalse, reason: '3 orders done');
-    expect(p.locks('second_business'), isTrue, reason: 'not Pro');
+    expect(p.locks('credits'), isFalse);
+    expect(p.locks('second_business'), isTrue);
     expect(p.locks('payroll'), isFalse, reason: 'not a path tool');
-    expect(p.goalFor('invoices'), 'Vitrine à 70 %');
-    expect(p.needFor('invoices'), 'Vitrine : 67 %');
-    expect(p.progressFor('invoices'), closeTo(67 / 70, 0.001));
-    final server = BasicProgress.fromJson(const {
-      'gated': true, 'score': 0, 'locks': {'invoices': false, 'credits': true},
-    });
-    expect(server.locks('invoices'), isFalse, reason: 'the server said open');
-    expect(server.locks('credits'), isTrue);
-  });
-
-  testWidgets('the path card draws the four tools, open or with their goal',
-      (tester) async {
-    await sheet(tester, PathCard(org: _owner, progress: _states().progress));
-    await tester.pump(const Duration(seconds: 1));
-    expect(find.text('67 %'), findsOneWidget);
-    expect(find.text('Factures'), findsOneWidget);
-    expect(find.text('Vitrine à 70 %'), findsOneWidget);
-    expect(find.text('Vitrine à 90 %'), findsOneWidget);
-    expect(find.text('Ouvert'), findsOneWidget, reason: 'the credit book');
-    expect(find.text('Mara Pro'), findsOneWidget);
-    expect(find.byIcon(Icons.lock), findsNWidgets(3));
+    expect(const BasicProgress().locks('invoices'), isFalse,
+        reason: 'no answer locks nothing');
   });
 }

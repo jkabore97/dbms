@@ -6,9 +6,7 @@ import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/nav/session.dart';
-import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
-import 'package:kaj_app/features/admin/vitrine_checklist_card.dart';
 import 'package:kaj_app/features/storefront/directory_screen.dart';
 import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -56,27 +54,6 @@ class _Shop extends StorefrontRepository {
           ShopPreview(slug: 'boutique-awa', productId: 'p2', name: 'Chaussette', price: 700),
         ],
       };
-}
-
-class _Admin extends AdminRepository {
-  _Admin(this.list) : super(null);
-
-  VitrineChecklist list;
-
-  @override
-  Future<VitrineChecklist?> vitrineChecklist(String orgId) async => list;
-}
-
-class _Retail extends RetailRepository {
-  _Retail() : super(null);
-
-  int published = 0;
-
-  @override
-  Future<int> publishAll(String orgId) async {
-    published++;
-    return 57;
-  }
 }
 
 void main() {
@@ -184,53 +161,6 @@ void main() {
         ),
     ]);
     expect(tester.takeException(), isNull);
-  });
-
-  group('the checklist', () {
-    test('scores six steps and names what is missing', () {
-      const list = VitrineChecklist(
-          open: true, published: 0, unpublished: 57, withPhoto: 0, phone: true);
-      expect(list.score, 17);
-      expect(list.steps.where((s) => !s.done).first.label,
-          'Des articles sur la vitrine');
-      const full = VitrineChecklist(
-          open: true,
-          published: 7,
-          withPhoto: 3,
-          blurb: true,
-          address: true,
-          phone: true,
-          pin: true);
-      expect(full.score, 100);
-    });
-
-    testWidgets('Tout publier publishes the waiting articles', (tester) async {
-      final retail = _Retail();
-      final admin = _Admin(const VitrineChecklist(open: true, unpublished: 57));
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: VitrineChecklistCard(
-                orgId: 'o1', admin: admin, retail: retail),
-          ),
-        ),
-      ));
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('0 %'), findsOneWidget);
-      expect(find.text('Remplissez votre vitrine'), findsOneWidget);
-      expect(find.byKey(const Key('vitrine-step-0')), findsOneWidget);
-      expect(find.textContaining("n'apparaît pas dans l'annuaire"),
-          findsOneWidget);
-
-      admin.list = const VitrineChecklist(open: true, published: 57);
-      await tester.tap(find.text('Tout publier (57)'));
-      await tester.pump();
-      await tester.pump();
-      expect(retail.published, 1);
-      expect(find.text('57 articles publiés sur la vitrine.'), findsOneWidget);
-      expect(find.text('Tout publier (57)'), findsNothing);
-    });
   });
 
   testWidgets('a directory card shows what the shop sells', (tester) async {

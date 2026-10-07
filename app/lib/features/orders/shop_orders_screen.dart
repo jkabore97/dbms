@@ -3,7 +3,6 @@ import 'dart:async';
 import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 
-import '../academy/academy_screen.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/nav/url_tabs.dart';
@@ -229,8 +228,6 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
         appBar: AppBar(
           title: Text(context.tr('Commandes')),
           actions: [
-            LessonHelpButton(
-                org: widget.org, lessonKey: 'first_order', title: context.tr('Accepter une commande de la vitrine')),
             if (widget.org.isAdmin)
               IconButton(
                 tooltip: context.tr('Mes livreurs'),
