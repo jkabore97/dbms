@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/retail/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/retail/stock_rule.dart';
 import '../capture/barcode_sheet.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -113,10 +114,23 @@ class _SaleSheetState extends State<SaleSheet> {
   /// as dollars.
   CurrencyRate? _tender;
 
+  /// What this phone's sales still waiting for the network will take from
+  /// the shelf (by product id, or `name:<name>`): the shelf in [products]
+  /// is the server's, which has not seen them yet.
+  Map<String, double> _waiting = const {};
+
   @override
   void initState() {
     super.initState();
     _loadPaymentOptions();
+    _loadWaiting();
+  }
+
+  Future<void> _loadWaiting() async {
+    try {
+      final waiting = await widget.retail.pendingSaleQuantities(widget.orgId);
+      if (mounted) setState(() => _waiting = waiting);
+    } catch (_) {}
   }
 
   Future<void> _loadPaymentOptions() async {
@@ -265,7 +279,7 @@ class _SaleSheetState extends State<SaleSheet> {
       setState(() => _error = context.tr('Entrez le nom du client pour un crédit.'));
       return;
     }
-    if (!await _stockAllows()) return;
+    if (!_stockAllows()) return;
     if (_method == 'wave') {
       return _saveWave();
     }
@@ -344,58 +358,58 @@ class _SaleSheetState extends State<SaleSheet> {
     }
   }
 
-  /// Selling past the shelf, asked once (the audit: ELIM SHOP had 7 articles
-  /// below zero, sold with no word said). Only for an article that has stock
-  /// and that this sale would take below zero: a shop that does not count
-  /// its stock sits at zero or below already, and is never nagged.
-  Future<bool> _stockAllows() async {
-    final sold = <String, double>{};
-    for (final line in _lines) {
-      final id = line.productId;
-      if (id != null) sold[id] = (sold[id] ?? 0) + line.quantity;
-    }
-    final short = <String>[];
-    for (final entry in sold.entries) {
-      Product? product;
+  /// Stock never goes below zero (101): the till says so before it asks
+  /// the server, which refuses the same way. Lines of one article are added
+  /// up; a typed name is the article of that name, and one never received
+  /// has nothing on the shelf. A service (098) has no stock to run out of.
+  /// An article this sheet was not given (no catalogue loaded) is left to
+  /// the server. Sales still waiting on this phone are taken off first, so
+  /// two offline sales cannot both take the last one. [fresh], when given,
+  /// is the shelf the server holds right now (the Wave till asks it).
+  bool _stockAllows({Map<String, double>? fresh}) {
+    Product? find(SaleLineDraft line) {
       for (final p in widget.products) {
-        if (p.id == entry.key) {
-          product = p;
-          break;
+        if (line.productId != null
+            ? p.id == line.productId
+            : p.name.trim().toLowerCase() == line.name.trim().toLowerCase()) {
+          return p;
         }
       }
-      // A service (098) has no stock to sell past.
-      if (product == null || product.isService || product.quantity <= 0) {
+      return null;
+    }
+
+    final sold = <String, double>{};
+    final names = <String, String>{};
+    final left = <String, double>{};
+    for (final line in _lines) {
+      final product = find(line);
+      if (product == null) {
+        // A typed name the catalogue does not hold: never received.
+        if (line.productId == null && widget.products.isNotEmpty) {
+          final key = 'typed:${line.name.trim().toLowerCase()}';
+          sold[key] = (sold[key] ?? 0) + line.quantity;
+          names[key] = line.name.trim();
+          left[key] = 0;
+        }
         continue;
       }
-      if (entry.value > product.quantity) {
-        short.add('${product.name} : ${_qty(product.quantity)} en stock, '
-            '${_qty(entry.value)} vendu${entry.value > 1 ? 's' : ''}');
+      if (product.isService) continue;
+      sold[product.id] = (sold[product.id] ?? 0) + line.quantity;
+      names[product.id] = product.name;
+      left[product.id] = (fresh?[product.id] ?? product.quantity) -
+          (_waiting[product.id] ?? 0) -
+          (_waiting['name:${product.name.trim().toLowerCase()}'] ?? 0);
+    }
+    for (final entry in sold.entries) {
+      final have = left[entry.key]!;
+      if (entry.value > have) {
+        setState(() => _error =
+            stockShortMessage(context.trLanguage, names[entry.key]!, have));
+        return false;
       }
     }
-    if (short.isEmpty) return true;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: Text(context.tr('Stock insuffisant')),
-        content: Text('${short.join('\n')}\n\nLe stock passera sous zéro. '
-            'Vendre quand même ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: Text(context.tr('Corriger')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialog).pop(true),
-            child: Text(context.tr('Vendre quand même')),
-          ),
-        ],
-      ),
-    );
-    return go == true && mounted;
+    return true;
   }
-
-  static String _qty(double q) =>
-      q == q.roundToDouble() ? q.toStringAsFixed(0) : q.toStringAsFixed(1);
 
   /// The Wave path: show the QR for the customer to scan, take the sender's
   /// name, record the sale, confirm it, and hand back a receipt. Nothing is
@@ -403,6 +417,21 @@ class _SaleSheetState extends State<SaleSheet> {
   Future<void> _saveWave() async {
     final merchant = _waveMerchant;
     if (merchant == null) return;
+
+    // The shelf as the server holds it now, before the customer pays: a
+    // QR scanned for what the server will then refuse is money taken for
+    // nothing. Without signal the phone's own check above stands.
+    final ids = {for (final l in _lines) ?l.productId}.toList();
+    if (ids.isNotEmpty) {
+      setState(() => _busy = true);
+      Map<String, double>? fresh;
+      try {
+        fresh = await widget.retail.freshStock(widget.orgId, ids);
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() => _busy = false);
+      if (fresh != null && !_stockAllows(fresh: fresh)) return;
+    }
 
     final sender = await showModalBottomSheet<String>(
       context: context,

@@ -361,6 +361,44 @@ class RetailRepository {
   Future<int> pendingSales(String orgId) async =>
       await _outbox?.pendingSales(orgId) ?? 0;
 
+  /// Sales this phone kept offline that the server then refused for good
+  /// (101: the stock was not there), for the owner to read.
+  Future<List<Map<String, Object?>>> refusedSales(String orgId) async =>
+      await _outbox?.refusedActions(orgId) ?? const [];
+
+  /// The owner has read it; nothing was recorded, so nothing else moves.
+  Future<void> dismissRefused(String clientUuid) async =>
+      _outbox?.dismissRefused(clientUuid);
+
+  /// The stock is corrected: the refused sale is sent again as it was, with
+  /// its own client_uuid, and the outbox is woken.
+  Future<void> requeueRefused(String clientUuid) async {
+    await _outbox?.requeueRefused(clientUuid);
+    _onQueued?.call();
+  }
+
+  /// What the sales waiting on this phone will still take from the shelf
+  /// (by product id, or `name:<name>` for a typed line).
+  Future<Map<String, double>> pendingSaleQuantities(String orgId) async =>
+      await _outbox?.pendingSaleQuantities(orgId) ?? const {};
+
+  /// The shelf as the server holds it now, for [productIds]: the Wave till
+  /// asks before it shows its QR, so a customer never pays for what the
+  /// server will refuse.
+  Future<Map<String, double>> freshStock(
+      String orgId, List<String> productIds) async {
+    if (productIds.isEmpty) return const {};
+    final rows = await _requireClient()
+        .from('products')
+        .select('id, quantity')
+        .eq('org_id', orgId)
+        .inFilter('id', productIds);
+    return {
+      for (final r in rows as List)
+        '${(r as Map)['id']}': (r['quantity'] as num?)?.toDouble() ?? 0,
+    };
+  }
+
   /// "Tout publier" (070): every active, priced, non-ingredient article on
   /// the vitrine at once. Returns how many were published. Refused unless
   /// the articles dial lets this person edit.

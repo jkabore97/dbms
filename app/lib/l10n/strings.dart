@@ -821,54 +821,6 @@ abstract class Strings {
   /// **'La preuve que les comptes sont équilibrés'**
   String get trialBalanceSubtitle;
 
-  /// No description provided for @people.
-  ///
-  /// In fr, this message translates to:
-  /// **'Personnes'**
-  String get people;
-
-  /// No description provided for @peopleSubtitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Membres, rôles et invitations'**
-  String get peopleSubtitle;
-
-  /// No description provided for @sitesAndDepartments.
-  ///
-  /// In fr, this message translates to:
-  /// **'Sites et départements'**
-  String get sitesAndDepartments;
-
-  /// No description provided for @structureSubtitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'La structure de l\'activité'**
-  String get structureSubtitle;
-
-  /// No description provided for @orgSettingsTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Paramètres de l\'activité'**
-  String get orgSettingsTitle;
-
-  /// No description provided for @orgSettingsSubtitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nom et monnaie'**
-  String get orgSettingsSubtitle;
-
-  /// No description provided for @consoleTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Console'**
-  String get consoleTitle;
-
-  /// No description provided for @consoleSubtitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Journal d\'activité, données, état de l\'appareil'**
-  String get consoleSubtitle;
-
   /// No description provided for @creditBook.
   ///
   /// In fr, this message translates to:

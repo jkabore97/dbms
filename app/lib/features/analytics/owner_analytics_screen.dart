@@ -98,7 +98,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _ErrorState(message: _error!, onRetry: _load)
+              ? AnalyticsErrorState(message: _error!, onRetry: _load)
               : _body(context),
     );
   }
@@ -108,7 +108,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _WindowPicker(
+        WindowPicker(
           windows: [for (final w in _windows) w.$1],
           selected: _windowIndex,
           onSelect: _pickWindow,
@@ -380,33 +380,6 @@ class _Superlative extends StatelessWidget {
   }
 }
 
-class _WindowPicker extends StatelessWidget {
-  const _WindowPicker({
-    required this.windows,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final List<String> windows;
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (var i = 0; i < windows.length; i++)
-          ChoiceChip(
-            label: Text(windows[i]),
-            selected: i == selected,
-            onSelected: (_) => onSelect(i),
-          ),
-      ],
-    );
-  }
-}
-
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
@@ -427,29 +400,6 @@ class _EmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: scheme.onSurfaceVariant),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_outlined, size: 40),
-          const SizedBox(height: 12),
-          Text(message),
-          const SizedBox(height: 12),
-          FilledButton.tonal(onPressed: onRetry, child: Text(context.tr('Réessayer'))),
         ],
       ),
     );

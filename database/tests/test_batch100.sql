@@ -803,7 +803,7 @@ begin
     select quantity into q from products where id = v_cake;
     if q <> 30 then raise exception 'FAIL: a note moved the shelf (%)', q; end if;
 
-    -- The till: 28 sold, past the shelf allowed (011); the bell rings once.
+    -- The till: 28 sold; past the shelf refused (101); the bell rings once.
     v_sale := record_sale(v_org, jsonb_build_array(
         jsonb_build_object('product_id', v_cake, 'quantity', 28, 'unit_price', 300),
         jsonb_build_object('product_id', v_lav, 'quantity', 2, 'unit_price', 1000)));
@@ -812,10 +812,16 @@ begin
     if (select quantity from products where id = v_lav) <> 0 then
         raise exception 'FAIL: a service has stock after a sale';
     end if;
-    perform record_sale(v_org, jsonb_build_array(
-        jsonb_build_object('product_id', v_cake, 'quantity', 4, 'unit_price', 300)));
-    if (select quantity from products where id = v_cake) <> -2 then
-        raise exception 'FAIL: the till refused to sell past the shelf';
+    -- 101: past the shelf is refused now, in French, and nothing moves.
+    begin
+        perform record_sale(v_org, jsonb_build_array(
+            jsonb_build_object('product_id', v_cake, 'quantity', 4, 'unit_price', 300)));
+        raise exception 'FAIL: the till sold past the shelf';
+    exception when sqlstate 'MA001' then
+        if sqlerrm <> 'Il ne reste que 2 Gâteau 69' then raise; end if;
+    end;
+    if (select quantity from products where id = v_cake) <> 2 then
+        raise exception 'FAIL: a refused sale moved the shelf';
     end if;
     if (select count(*) from notifications
          where org_id = v_org and kind = 'low_stock'
@@ -824,7 +830,7 @@ begin
     end if;
     -- A return puts them back, the service stays at none.
     perform record_return(v_sale);
-    if (select quantity from products where id = v_cake) <> 26
+    if (select quantity from products where id = v_cake) <> 30
        or (select quantity from products where id = v_lav) <> 0 then
         raise exception 'FAIL: the return did not restore the shelf';
     end if;
@@ -832,7 +838,7 @@ begin
     perform record_sale(v_org, jsonb_build_array(
         jsonb_build_object('product_id', v_cake, 'quantity', 6, 'unit_price', 300)),
         p_method => 'credit', p_customer_name => 'Awa');
-    if (select quantity from products where id = v_cake) <> 20 then
+    if (select quantity from products where id = v_cake) <> 24 then
         raise exception 'FAIL: a credit sale did not move the stock';
     end if;
     -- A delivery received and reversed.
@@ -851,7 +857,7 @@ begin
     exception when raise_exception then
         if sqlerrm not like 'Un service n''a pas de stock%' then raise; end if;
     end;
-    raise notice 'PASS: production corrected on the shelf; till, past the shelf, the bell, a return, credit, a delivery and its reversal';
+    raise notice 'PASS: production corrected on the shelf; till, past the shelf refused, the bell, a return, credit, a delivery and its reversal';
 end $$;
 commit;
 begin;

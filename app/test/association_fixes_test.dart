@@ -129,8 +129,9 @@ void main() {
       }
       expect(CompteScreen.toolsFor(_shop, OrgAccess.allEdit, admin: true),
           ['analytics', 'accounting', 'corrections', 'credits', 'tontines', 'production']);
+      // A farm reads its own analyses (101).
       expect(CompteScreen.toolsFor(_farm, OrgAccess.allEdit, admin: true),
-          ['accounting', 'credits', 'tontines', 'production']);
+          ['analytics', 'accounting', 'credits', 'tontines', 'production']);
       // The owner's dial still hides what it hides.
       expect(
           CompteScreen.toolsFor(

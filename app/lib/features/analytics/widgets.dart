@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The two glass panes analytics reuses: a small number on a card, and a titled
 /// section that wraps a chart or a list. Kept here so the owner and platform
@@ -121,6 +122,59 @@ class SectionCard extends StatelessWidget {
           ],
           const SizedBox(height: 14),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+/// The window the figures cover: chips, one selected.
+class WindowPicker extends StatelessWidget {
+  const WindowPicker({
+    super.key,
+    required this.windows,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<String> windows;
+  final int selected;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      children: [
+        for (var i = 0; i < windows.length; i++)
+          ChoiceChip(
+            label: Text(windows[i]),
+            selected: i == selected,
+            onSelected: (_) => onSelect(i),
+          ),
+      ],
+    );
+  }
+}
+
+/// The figures could not be read: say so, and offer to try again.
+class AnalyticsErrorState extends StatelessWidget {
+  const AnalyticsErrorState({super.key, required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_outlined, size: 40),
+          const SizedBox(height: 12),
+          Text(message),
+          const SizedBox(height: 12),
+          FilledButton.tonal(onPressed: onRetry, child: Text(context.tr('Réessayer'))),
         ],
       ),
     );

@@ -99,16 +99,15 @@ class WavePay {
   }
 
   /// What the shop gave (its payout number) and what the platform set (its
-  /// Wave merchant id). Nulls on a database before 076.
+  /// Wave merchant id), to the owner and the platform; nulls for anyone else.
   Future<({String? number, String? merchantRef})> shopWave(String orgId) async {
     final client = _client;
     if (client == null) return (number: null, merchantRef: null);
     try {
-      final row = await client
-          .from('orgs')
-          .select('wave_payout_number, wave_merchant_ref')
-          .eq('id', orgId)
-          .maybeSingle();
+      // Through org_private_details (103): the owner's and the platform's.
+      final raw =
+          await client.rpc('org_private_details', params: {'p_org_id': orgId});
+      final row = raw is Map ? raw : null;
       return (
         number: row?['wave_payout_number'] as String?,
         merchantRef: row?['wave_merchant_ref'] as String?,
@@ -118,7 +117,7 @@ class WavePay {
     }
   }
 
-  /// The shop's own number, where its sales are sent (admins only).
+  /// The shop's own number, where its sales are sent (the owner's, 103).
   Future<void> setPayoutNumber(String orgId, String? number) async {
     await _client!.rpc('set_wave_payout_number',
         params: {'p_org_id': orgId, 'p_number': number});

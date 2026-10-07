@@ -23,9 +23,11 @@ import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
 import '../home/home_nav.dart';
+import 'products_screen.dart' show ReceiveSheet;
 import 'sale_sheet.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
+import '../common/refused_notice.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Esperance's home screen.
@@ -103,6 +105,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
   /// Sales kept on this phone for want of signal (package 7).
   int _salesWaiting = 0;
+
+  /// Sales kept offline that the server refused (101), until read.
+  List<RefusedAction> _refused = const [];
 
   /// Le Chemin (097), for an admin: the card with the next step. Null
   /// hides it.
@@ -233,7 +238,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     try {
       await sync?.syncNow();
       final waiting = await retail.pendingSales(widget.org.id);
-      if (mounted) setState(() => _salesWaiting = waiting);
+      final refused = [
+        for (final r in await retail.refusedSales(widget.org.id))
+          RefusedAction.fromRow(r),
+      ];
+      if (mounted) {
+        setState(() {
+          _salesWaiting = waiting;
+          _refused = refused;
+        });
+      }
     } catch (_) {}
 
     try {
@@ -297,6 +311,35 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         _error = describeError(error);
       });
     }
+  }
+
+  /// A sale the server refused for want of stock: the stock entry opens on
+  /// the article it named and the number missing; once received, the same
+  /// sale (same client_uuid) is sent again.
+  Future<void> _fixRefused(RefusedAction a) async {
+    final retail = widget.retail;
+    final short = a.shortfall;
+    if (retail == null || short == null) return;
+    final received = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ReceiveSheet(
+        org: widget.org,
+        retail: retail,
+        initialName: short.name,
+        initialQuantity: short.missing,
+      ),
+    );
+    if (received != true || !mounted) return;
+    await retail.requeueRefused(a.clientUuid);
+    if (!mounted) return;
+    setState(() => _refused = [
+          for (final r in _refused)
+            if (r.clientUuid != a.clientUuid) r,
+        ]);
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text(context.tr('Stock corrigé : la vente repart.'))));
+    await _load();
   }
 
   Future<void> _sell() async {
@@ -452,6 +495,22 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             // Pictures this phone is still holding. Not an error: taking one
             // with no signal is the module working, and calling it a failure
             // would teach her to stop taking them exactly when they matter.
+            if (_refused.isNotEmpty)
+              RefusedNotice(
+                actions: _refused,
+                onDismiss: (a) async {
+                  await widget.retail?.dismissRefused(a.clientUuid);
+                  if (mounted) {
+                    setState(() => _refused = [
+                          for (final r in _refused)
+                            if (r.clientUuid != a.clientUuid) r,
+                        ]);
+                  }
+                },
+                onFix: widget.retail != null && widget.access.canEdit('products')
+                    ? _fixRefused
+                    : null,
+              ),
             if (_salesWaiting > 0) ...[
               _Panel(
                 colour: theme.colorScheme.secondaryContainer,
@@ -733,6 +792,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             icon: Icons.photo_library_outlined,
             label: s.photos,
             onTap: _openGallery,
+          ),
+        // The business's people (100), as on the farm's and the
+        // association's homes.
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.groups_outlined,
+            label: context.tr('Équipe'),
+            onTap: () => context.push(Routes.inside(widget.org.id, 'equipe')),
           ),
         // The doors out to the public side, said in words: going to the
         // street is a choice, never something to fall into backwards.

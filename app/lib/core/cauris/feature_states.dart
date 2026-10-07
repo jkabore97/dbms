@@ -8,6 +8,7 @@ class FeatureStates {
     this.progress = const BasicProgress(),
     this.waveAllowed = false,
     this.setupDone = true,
+    this.firstIncome,
     this.promo = const [],
     this.photos,
     this.team,
@@ -27,6 +28,12 @@ class FeatureStates {
   /// The first setup was gone through (091). True when the server does
   /// not say, so an older database never shuts anybody out.
   final bool setupDone;
+
+  /// An association's first money in (102): false until a contribution or
+  /// any income is recorded — the home's « Encaissez la première
+  /// cotisation » card. Null for a shop or a farm, and on an older
+  /// database (no card).
+  final bool? firstIncome;
 
   /// Promotional cauris the platform gave (100), soonest first: each must
   /// be spent before its day. Part of [balance], never more than it.
@@ -71,6 +78,7 @@ class FeatureStates {
           : const BasicProgress(),
       waveAllowed: j['wave_allowed'] == true,
       setupDone: j['setup_done'] != false,
+      firstIncome: j['first_income'] is bool ? j['first_income'] as bool : null,
       promo: PromoLot.listOf(j['promo']),
       photos: j['photos'] is Map
           ? PhotoQuota.fromJson(Map<String, dynamic>.from(j['photos'] as Map))

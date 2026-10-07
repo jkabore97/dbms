@@ -11,8 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// access — nothing about completing the form does — so somebody who fills in
 /// every field and has no code belongs to no business and can see nothing.
 ///
-/// **A manager asks for a business to exist.** They fill in the same form,
-/// describe the business, and wait for somebody at Kaj-consulting to look at
+/// **A manager asks for a business to exist.** They describe the business —
+/// only the business: the signed-in account says who they are (101) — and
+/// wait for somebody at Kaj-consulting to look at
 /// it. `create_org()` has been platform-admin-only since 010 and stays that
 /// way: whether a new tenant appears is a decision, not a form submission.
 class OnboardingRepository {
@@ -84,14 +85,15 @@ class OnboardingRepository {
   // Asking for a business
   // ----------------------------------------------------------------
 
+  /// Asks for a business. Only the business: who is asking is the signed-in
+  /// account, and 101's apply_for_org() takes their name, phone and email
+  /// from the profile and the account.
   Future<String> applyForOrg({
     required String name,
     required String slug,
     required String profile,
     String currency = 'XOF',
     String? description,
-    String? phone,
-    String? email,
   }) async {
     final client = _requireClient();
     final id = await client.rpc('apply_for_org', params: {
@@ -101,8 +103,6 @@ class OnboardingRepository {
       'p_currency': currency,
       if (description != null && description.isNotEmpty)
         'p_description': description,
-      if (phone != null && phone.isNotEmpty) 'p_phone': phone,
-      if (email != null && email.isNotEmpty) 'p_email': email,
     });
     return id as String;
   }

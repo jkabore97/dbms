@@ -177,6 +177,8 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('depuis 25 min'), findsOneWidget);
+    // 101: the order books its own sale; the till must not ring it again.
+    expect(find.textContaining('ne la passez pas à la caisse'), findsOneWidget);
     expect(find.textContaining("Aucun livreur ne l'a prise"), findsOneWidget);
     expect(find.textContaining('Argent chez les livreurs'), findsOneWidget);
 

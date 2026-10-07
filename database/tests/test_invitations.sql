@@ -61,6 +61,9 @@ insert into auth.users (id, phone, email, raw_user_meta_data) values
     (:bearer,   '+22671000004', 'bearer@test.local',   '{"full_name": "Porteur"}'),
     (:imposter, '+22671000005', 'imposter@test.local', '{"full_name": "Imposteur"}'),
     (:employee, '+22671000006', 'employee@test.local', '{"full_name": "Employé"}');
+-- The bearer signed in with their number: proved, so the sweep (TEST 6,
+-- 103) may claim what was addressed to it.
+update auth.users set phone_confirmed_at = now() where id = :bearer;
 
 insert into orgs (id, name, slug, profile) values
     (:org_a, 'Église Test A', 'test-a', 'church'),

@@ -16,6 +16,7 @@ import 'convert_dialog.dart';
 import 'photo_quota.dart';
 import 'product_photo.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/retail/stock_rule.dart';
 import '../capture/barcode_sheet.dart';
 import '../capture/capture_action.dart';
 import '../admin/spots_card.dart';
@@ -151,7 +152,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final added = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _ReceiveSheet(org: widget.org, retail: widget.retail),
+      builder: (_) => ReceiveSheet(org: widget.org, retail: widget.retail),
     );
     if (added == true) await _load();
   }
@@ -224,7 +225,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       final added = await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
-        builder: (_) => _ReceiveSheet(
+        builder: (_) => ReceiveSheet(
           org: widget.org,
           retail: widget.retail,
           barcode: code,
@@ -1187,12 +1188,22 @@ class _EditProductSheetState extends State<_EditProductSheet> {
 }
 
 /// A delivery arriving. Creates the product if it is new.
-class _ReceiveSheet extends StatefulWidget {
-  const _ReceiveSheet({
+/// « Entrée de stock »: an article received onto the shelf. Also what a
+/// refused offline sale's « Corriger le stock » opens (store home), on the
+/// article the server named and the number missing.
+class ReceiveSheet extends StatefulWidget {
+  const ReceiveSheet({
+    super.key,
     required this.org,
     required this.retail,
     this.barcode,
+    this.initialName,
+    this.initialQuantity,
   });
+
+  /// The article and the count to open on; the person can change both.
+  final String? initialName;
+  final double? initialQuantity;
 
   final OrgSummary org;
   final RetailRepository retail;
@@ -1203,12 +1214,15 @@ class _ReceiveSheet extends StatefulWidget {
   final String? barcode;
 
   @override
-  State<_ReceiveSheet> createState() => _ReceiveSheetState();
+  State<ReceiveSheet> createState() => _ReceiveSheetState();
 }
 
-class _ReceiveSheetState extends State<_ReceiveSheet> {
-  final _name = TextEditingController();
-  final _quantity = TextEditingController(text: '1');
+class _ReceiveSheetState extends State<ReceiveSheet> {
+  late final _name = TextEditingController(text: widget.initialName ?? '');
+  late final _quantity = TextEditingController(
+      text: widget.initialQuantity == null
+          ? '1'
+          : stockQty(widget.initialQuantity!));
   final _cost = TextEditingController();
   final _price = TextEditingController();
   final _serial = TextEditingController();

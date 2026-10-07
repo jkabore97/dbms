@@ -362,11 +362,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         name: name,
         currency: _currency,
       );
-      final wave = _waveController.text.trim();
-      await widget.admin.setWaveMerchant(
-        widget.orgId,
-        wave.isEmpty ? null : wave,
-      );
+      // The Wave handle is the owner's (103): an admin's save leaves it.
+      if (_ownerOrPlatform) {
+        final wave = _waveController.text.trim();
+        await widget.admin.setWaveMerchant(
+          widget.orgId,
+          wave.isEmpty ? null : wave,
+        );
+      }
       await widget.admin.setStorefront(
         widget.orgId,
         enabled: _storefrontEnabled,
@@ -780,7 +783,33 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     }
   }
 
-  List<Widget> _waveReceive(ThemeData theme) => [
+  /// Where the money is paid and the Wave handle are the owner's (and the
+  /// platform's) since 103: an admin reads « Réservé au propriétaire » and
+  /// the server refuses a change from them all the same. With no session
+  /// (a build with no server) the server is left to decide.
+  bool get _ownerOrPlatform {
+    final session = AppScope.maybeOf(context)?.session;
+    if (session == null) return true;
+    return session.isPlatformAdmin ||
+        (session.orgById(widget.orgId)?.roles.contains('owner') ?? false);
+  }
+
+  List<Widget> _waveReceive(ThemeData theme) => !_ownerOrPlatform
+      ? [
+          const SizedBox(height: 24),
+          Text(context.tr('Recevoir les paiements des clients'),
+              style: theme.textTheme.labelLarge),
+          const SizedBox(height: 4),
+          Row(
+            key: const Key('payout-owner-only'),
+            children: [
+              const Icon(Icons.lock_outline, size: 18),
+              const SizedBox(width: 6),
+              Expanded(child: Text(context.tr('Réservé au propriétaire'))),
+            ],
+          ),
+        ]
+      : [
         const SizedBox(height: 24),
         Text(context.tr('Recevoir les paiements des clients'),
             style: theme.textTheme.labelLarge),
@@ -1121,7 +1150,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     ),
     const SizedBox(height: 12),
-    _ReadOnlyRow(label: context.tr('Adresse web'), value: '$_slug.kajapp.com'),
+    _ReadOnlyRow(label: context.tr('Adresse web'), value: 'marakaj.com/s/$_slug'),
     _ReadOnlyRow(
       label: context.tr('Type d\'activité'),
       value: switch (_profile) {
@@ -1156,15 +1185,18 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(context.tr('Paiement Wave'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     TextField(
+      key: const Key('wave-handle'),
       controller: _waveController,
-      enabled: !_saving,
+      enabled: !_saving && _ownerOrPlatform,
+      readOnly: !_ownerOrPlatform,
       keyboardType: TextInputType.text,
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
         hintText: '+226 70 00 00 00',
         prefixIcon: const Icon(Icons.qr_code_2),
-        helperText:
-            context.tr('Le numéro Wave du commerce. Laissez vide pour ne pas proposer Wave à la vente.'),
+        helperText: _ownerOrPlatform
+            ? context.tr('Le numéro Wave du commerce. Laissez vide pour ne pas proposer Wave à la vente.')
+            : context.tr('Réservé au propriétaire'),
         helperMaxLines: 2,
       ),
     ),

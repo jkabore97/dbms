@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/kaj_card.dart';
-import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/admin/models.dart' show roleLabel, roleLabels;
 import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -48,10 +49,15 @@ class AdminHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scope = AppScope.maybeOf(context);
+    final roles = [
+      for (final r in org.roles)
+        if (roleLabels.containsKey(r)) context.tr(roleLabel(r)),
+    ];
 
     return Scaffold(
+      backgroundColor: maraPaper,
       appBar: AppBar(
-        title: Text(Strings.of(context).administration),
+        title: Text(context.tr('Administration')),
         actions: [
           IconButton(
             icon: const Icon(Icons.storefront_outlined),
@@ -61,47 +67,68 @@ class AdminHomeScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          KajCard(
-            elevation: 0,
-            color: theme.colorScheme.primaryContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    org.name,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
+          // The business, graphite with its caramel mark — the app's own
+          // colours, whatever the business's palette.
+          Container(
+            key: const Key('admin-header'),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: maraDeep,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: maraCaramel,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    org.roles.map(_roleWord).join(' · '),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
+                  child: const Icon(Icons.admin_panel_settings_outlined,
+                      color: maraDeep, size: 30),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        org.name,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                            color: maraPaper, fontWeight: FontWeight.w800),
+                      ),
+                      if (roles.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          roles.join(' · '),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                              color: maraCaramel, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
+          // The business's people: one place, Équipe (101 folded the old
+          // « Personnes » screen into it).
           _AdminTile(
-            icon: Icons.group_outlined,
-            title: Strings.of(context).people,
-            subtitle: Strings.of(context).peopleSubtitle,
-            onTap: () =>
-                context.push(Routes.inside(org.id, 'administration/personnel')),
+            key: const Key('admin-team'),
+            icon: Icons.groups_outlined,
+            title: context.tr('Équipe'),
+            subtitle: context.tr('Les personnes, leur responsabilité, les invitations'),
+            onTap: () => context.push(Routes.inside(org.id, 'equipe')),
           ),
           _AdminTile(
             icon: Icons.account_tree_outlined,
-            title: Strings.of(context).sitesAndDepartments,
-            subtitle: Strings.of(context).structureSubtitle,
+            title: context.tr('Sites et départements'),
+            subtitle: context.tr('La structure de l\'activité'),
             onTap: () =>
                 context.push(Routes.inside(org.id, 'administration/structure')),
           ),
@@ -133,22 +160,22 @@ class AdminHomeScreen extends StatelessWidget {
           ),
           _AdminTile(
             icon: Icons.settings_outlined,
-            title: Strings.of(context).orgSettingsTitle,
-            subtitle: Strings.of(context).orgSettingsSubtitle,
-            onTap: () => context
-                .push(Routes.orgSettings(org.id)),
+            title: context.tr('Paramètres de l\'activité'),
+            subtitle: context.tr('Nom et monnaie'),
+            onTap: () => context.push(Routes.orgSettings(org.id)),
           ),
 
-          // Last, and behind the narrower role test. Everything above is
-          // running the business; this is looking at the machinery underneath
-          // it, and it is the only screen in the app that says what every
-          // colleague has been doing.
+          // Last, and behind the narrower role test (the owner, a super
+          // administrator). Everything above is running the business; this
+          // is looking at the machinery underneath it, and it is the only
+          // screen in the app that says what every colleague has been doing.
           if (org.isSuperAdmin && console != null && db != null) ...[
             const SizedBox(height: 8),
             _AdminTile(
+              key: const Key('admin-console'),
               icon: Icons.terminal,
-              title: Strings.of(context).consoleTitle,
-              subtitle: Strings.of(context).consoleSubtitle,
+              title: context.tr('Console'),
+              subtitle: context.tr('Journal d\'activité, données, état de l\'appareil'),
               onTap: () =>
                   context.push(Routes.inside(org.id, 'administration/console')),
             ),
@@ -157,17 +184,12 @@ class AdminHomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  static String _roleWord(String role) => switch (role) {
-        'owner' => 'Propriétaire',
-        'super_admin' => 'Super administrateur',
-        'admin' => 'Administrateur',
-        _ => role,
-      };
 }
 
+/// One door of the hub: a paper square with its picture, a word, a line.
 class _AdminTile extends StatelessWidget {
   const _AdminTile({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -180,36 +202,41 @@ class _AdminTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  /// Behind Kaj Pro on this business (066): badged, never hidden.
+  /// Behind Mara Pro on this business (066): badged, never hidden.
   final bool pro;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return KajCard(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      color: theme.colorScheme.surfaceContainerHighest,
+      margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Icon(icon,
-            size: 28, color: pro ? theme.colorScheme.onSurfaceVariant : null),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        minVerticalPadding: 14,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: maraPaper,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, size: 26, color: pro ? maraBrown : maraDeep),
+        ),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w700, color: maraDeep)),
         subtitle: Text(subtitle),
         trailing: pro
             ? Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
+                  color: maraBrown,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(context.tr('Pro'),
                     style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w700)),
+                        color: maraPaper, fontWeight: FontWeight.w800)),
               )
-            : const Icon(Icons.chevron_right),
+            : const Icon(Icons.chevron_right, color: maraGrey),
         onTap: onTap,
       ),
     );

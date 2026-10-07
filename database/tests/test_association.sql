@@ -79,7 +79,8 @@ declare v_org uuid; v_profile text;
 begin
     -- Born on the old profile, then dragged forward exactly as 035 does it.
     v_org := create_org('Eglise Bethel', 'eglise-bethel-13', 'church');
-    update orgs set profile = 'association' where profile = 'church' and id = v_org;
+    -- The owner, through update_org: a client no longer writes orgs directly (103).
+    perform update_org(v_org, p_profile => 'association');
 
     select profile into v_profile from orgs where id = v_org;
     if v_profile <> 'association' then

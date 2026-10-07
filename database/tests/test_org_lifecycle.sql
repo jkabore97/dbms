@@ -473,6 +473,8 @@ begin
     v_product := ensure_product('81000000-0000-0000-0000-000000000002',
                                 'Savon', 500, 300,
                                 '81818181-0000-0000-0000-000000000001');
+    -- 101: stock never goes below zero, so the shelf has some first.
+    update products set quantity = 10 where id = v_product;
     v_sale := record_sale('81000000-0000-0000-0000-000000000002',
                           jsonb_build_array(
                               jsonb_build_object('product_id', v_product,

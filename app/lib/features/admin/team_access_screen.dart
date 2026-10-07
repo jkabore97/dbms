@@ -17,10 +17,15 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// database whatever the buttons say. This screen writes the rules; the
 /// tools redraw themselves the next time the business opens.
 class TeamAccessScreen extends StatefulWidget {
-  const TeamAccessScreen({super.key, required this.admin, required this.orgId});
+  const TeamAccessScreen(
+      {super.key, required this.admin, required this.orgId, this.canSave = true});
 
   final AdminRepository admin;
   final String orgId;
+
+  /// The dial is the owner's (and the platform's) since 103: anybody else
+  /// reads it and cannot save it — the server refuses the same.
+  final bool canSave;
 
   @override
   State<TeamAccessScreen> createState() => _TeamAccessScreenState();
@@ -143,7 +148,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                   ButtonSegment(value: 'edit', label: Text(context.tr('Modifier'))),
               ],
               selected: {value},
-              onSelectionChanged: _busy
+              onSelectionChanged: _busy || !widget.canSave
                   ? null
                   : (s) =>
                       setState(() => _rules[tier]![feature.key] = s.first),
@@ -168,6 +173,22 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                   context.tr('Ce que chaque niveau voit et peut modifier. Les propriétaires et administrateurs gardent toujours tout. Les prix, le crédit et la production sont aussi refusés par le serveur — pas seulement cachés.'),
                   style: theme.textTheme.bodyMedium,
                 ),
+                if (!widget.canSave) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    key: const Key('team-access-owner-only'),
+                    children: [
+                      const Icon(Icons.lock_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.tr('Réservé au propriétaire'),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
                 for (final f in _features)
                   KajCard(
@@ -211,7 +232,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                   ),
               ],
             ),
-      floatingActionButton: _loading
+      floatingActionButton: _loading || !widget.canSave
           ? null
           : FloatingActionButton.extended(
               onPressed: _busy ? null : _save,

@@ -215,3 +215,201 @@ class OwnerAnalytics {
 
   bool get isEmpty => headline.saleCount == 0;
 }
+
+// ------------------------------------------------------------------
+// A farm's analyses (101's farm_analytics): one jsonb, read as it comes.
+// ------------------------------------------------------------------
+
+/// What came in and went out over one stretch of time, and what the flocks
+/// did in it.
+class FarmPeriod {
+  const FarmPeriod({
+    this.income = 0,
+    this.expenses = 0,
+    this.eggs = 0,
+    this.deaths = 0,
+    this.orders = 0,
+    this.ordersTotal = 0,
+    this.productionCost = 0,
+  });
+
+  final double income;
+  final double expenses;
+  final double eggs;
+  final double deaths;
+  final int orders;
+  final double ordersTotal;
+  final double productionCost;
+
+  double get result => income - expenses;
+
+  factory FarmPeriod.fromJson(Map<String, dynamic>? r) => r == null
+      ? const FarmPeriod()
+      : FarmPeriod(
+          income: _d(r['income']),
+          expenses: _d(r['expenses']),
+          eggs: _d(r['eggs']),
+          deaths: _d(r['deaths']),
+          orders: _i(r['orders']),
+          ordersTotal: _d(r['orders_total']),
+          productionCost: _d(r['production_cost']),
+        );
+}
+
+/// One name and an amount: an article sold, an account of the books.
+class NamedAmount {
+  const NamedAmount({required this.name, required this.amount, this.units = 0});
+
+  final String name;
+  final double amount;
+  final double units;
+}
+
+/// An open flock: how many are left of how many, and how well it lays.
+class FlockFigure {
+  const FlockFigure({
+    required this.batchCode,
+    required this.started,
+    required this.alive,
+    required this.died,
+    required this.diedInWindow,
+    required this.eggs7d,
+    required this.layRate,
+  });
+
+  final String batchCode;
+  final int started;
+  final int alive;
+  final double died;
+  final double diedInWindow;
+  final int eggs7d;
+
+  /// Eggs a day per bird alive, over the last seven days (009), 0..1.
+  final double layRate;
+
+  /// Birds lost of those that arrived, 0..1.
+  double get mortality => started == 0 ? 0 : died / started;
+}
+
+/// What was eaten or used of one item: this month, last month, the window.
+class FeedUse {
+  const FeedUse({
+    required this.name,
+    required this.unit,
+    required this.month,
+    required this.lastMonth,
+    required this.window,
+  });
+
+  final String name;
+  final String unit;
+  final double month;
+  final double lastMonth;
+  final double window;
+}
+
+/// Money in and out on one day.
+class FarmDay {
+  const FarmDay({required this.day, required this.income, required this.expenses});
+
+  final DateTime day;
+  final double income;
+  final double expenses;
+}
+
+class FarmAnalytics {
+  const FarmAnalytics({
+    required this.month,
+    required this.lastMonth,
+    required this.window,
+    required this.products,
+    required this.expenses,
+    required this.income,
+    required this.flocks,
+    required this.feed,
+    required this.daily,
+  });
+
+  final FarmPeriod month;
+  final FarmPeriod lastMonth;
+  final FarmPeriod window;
+
+  /// What sold, best first (the till's lines and the vitrine's finished
+  /// orders).
+  final List<NamedAmount> products;
+  final List<NamedAmount> expenses;
+  final List<NamedAmount> income;
+  final List<FlockFigure> flocks;
+  final List<FeedUse> feed;
+  final List<FarmDay> daily;
+
+  bool get isEmpty =>
+      window.income == 0 &&
+      window.expenses == 0 &&
+      window.eggs == 0 &&
+      window.deaths == 0 &&
+      products.isEmpty &&
+      flocks.isEmpty &&
+      feed.isEmpty;
+
+  factory FarmAnalytics.fromJson(Map<String, dynamic> j) {
+    List<Map<String, dynamic>> list(String key) => [
+          for (final r in (j[key] as List? ?? const []))
+            Map<String, dynamic>.from(r as Map),
+        ];
+    final periods = Map<String, dynamic>.from((j['periods'] as Map?) ?? const {});
+    Map<String, dynamic>? period(String key) => periods[key] == null
+        ? null
+        : Map<String, dynamic>.from(periods[key] as Map);
+    return FarmAnalytics(
+      month: FarmPeriod.fromJson(period('month')),
+      lastMonth: FarmPeriod.fromJson(period('last_month')),
+      window: FarmPeriod.fromJson(period('window')),
+      products: [
+        for (final r in list('products'))
+          NamedAmount(
+              name: (r['name'] ?? '') as String,
+              amount: _d(r['revenue']),
+              units: _d(r['units'])),
+      ],
+      expenses: [
+        for (final r in list('expenses'))
+          NamedAmount(name: (r['name'] ?? '') as String, amount: _d(r['amount'])),
+      ],
+      income: [
+        for (final r in list('income'))
+          NamedAmount(name: (r['name'] ?? '') as String, amount: _d(r['amount'])),
+      ],
+      flocks: [
+        for (final r in list('flocks'))
+          FlockFigure(
+            batchCode: (r['batch_code'] ?? '') as String,
+            started: _i(r['started']),
+            alive: _i(r['alive']),
+            died: _d(r['died']),
+            diedInWindow: _d(r['died_window']),
+            eggs7d: _i(r['eggs_7d']),
+            layRate: _d(r['lay_rate']),
+          ),
+      ],
+      feed: [
+        for (final r in list('feed'))
+          FeedUse(
+            name: (r['name'] ?? '') as String,
+            unit: (r['unit'] ?? '') as String,
+            month: _d(r['month']),
+            lastMonth: _d(r['last_month']),
+            window: _d(r['window']),
+          ),
+      ],
+      daily: [
+        for (final r in list('daily'))
+          FarmDay(
+            day: DateTime.parse(r['day'] as String),
+            income: _d(r['income']),
+            expenses: _d(r['expenses']),
+          ),
+      ],
+    );
+  }
+}

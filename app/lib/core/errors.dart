@@ -1,4 +1,5 @@
 import 'l10n/tr.dart';
+import 'retail/stock_rule.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Turns whatever the server threw into something a person can act on.
@@ -30,7 +31,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 ///     saying so stops somebody hunting for a setting that does not exist.
 String describeError(Object error) {
   final text = brandText(_describe(error));
-  return pathLockText(trCurrent, text) ?? translate(trCurrent, text);
+  return pathLockText(trCurrent, text) ??
+      stockShortText(trCurrent, text) ??
+      translate(trCurrent, text);
 }
 
 /// A tool still locked on Le Chemin (097's path_lock_message): the server's

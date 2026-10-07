@@ -35,8 +35,9 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 update profiles set is_platform_admin = true where id = :admin;
 
 -- The shop, seeded, with the owner on full visibility and the clerk on summary.
-insert into orgs (id, name, slug, profile, default_currency)
-values (:org, 'Boutique Analyse', 'boutique-analyse-14', 'retail', 'XOF');
+-- Pro: analytics is a Pro tool, held by the server since 101 (TEST 6).
+insert into orgs (id, name, slug, profile, default_currency, plan)
+values (:org, 'Boutique Analyse', 'boutique-analyse-14', 'retail', 'XOF', 'pro');
 select seed_retail_accounts(:org);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:org, :owner, 'owner',   'org', :org, 'full'),
@@ -181,6 +182,61 @@ begin
     raise notice 'PASS: the owner is refused the platform view';
 end $$;
 rollback;
+
+\echo ''
+\echo '--- TEST 6: without the tool the server refuses; cauris open it; the platform reads (101) ---'
+-- Analytics among the Pro tools, whatever an earlier suite left; put back after.
+create temp table t14_pro as select value from platform_settings where key = 'pro_features';
+update platform_settings set value = value || '["analytics"]'::jsonb
+ where key = 'pro_features' and not (value ? 'analytics');
+update orgs set plan = 'free' where id = :org;
+begin;
+set local "request.jwt.claim.sub" = '14141414-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$
+declare
+    v_org uuid := '14000000-0000-0000-0000-000000000001';
+    f text;
+begin
+    foreach f in array array['org_sales_headline', 'org_product_performance', 'org_sales_by_hour',
+                             'org_sales_by_weekday', 'org_sales_daily'] loop
+        begin
+            execute format('select count(*) from %I($1)', f) using v_org;
+            raise exception 'FAIL: a free shop read % without the tool', f;
+        exception when raise_exception then
+            if sqlerrm not like 'Kaj Pro : les analyses%' then raise; end if;
+        end;
+    end loop;
+    raise notice 'PASS: a free shop is refused all five, with the Pro words';
+end $$;
+rollback;
+begin;
+set local "request.jwt.claim.sub" = '14141414-0000-0000-0000-000000000001';
+set local role authenticated;
+do $$ begin
+    if (select sale_count from org_sales_headline('14000000-0000-0000-0000-000000000001')) <> 3 then
+        raise exception 'FAIL: the platform admin is held by the shop''s Pro line';
+    end if;
+    raise notice 'PASS: a platform admin reads a free shop''s analytics';
+end $$;
+rollback;
+insert into cauris_unlocks (org_id, feature, until)
+values (:org, 'analytics', now() + interval '30 days')
+on conflict (org_id, feature) do update set until = excluded.until;
+begin;
+set local "request.jwt.claim.sub" = '14141414-0000-0000-0000-000000000002';
+set local role authenticated;
+do $$ begin
+    if (select sale_count from org_sales_headline('14000000-0000-0000-0000-000000000001')) <> 3
+       or (select count(*) from org_sales_daily('14000000-0000-0000-0000-000000000001')) = 0 then
+        raise exception 'FAIL: unlocked with cauris, the shop still cannot read its analytics';
+    end if;
+    raise notice 'PASS: the cauris unlock opens them, as Pro does';
+end $$;
+rollback;
+delete from cauris_unlocks where org_id = :org;
+update orgs set plan = 'pro' where id = :org;
+update platform_settings set value = (select value from t14_pro) where key = 'pro_features';
 
 \echo ''
 \echo '=== test_analytics.sql: all checks passed ==='

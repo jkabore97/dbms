@@ -94,6 +94,12 @@ async function setPassword(request, env, userId) {
   if (!(await rpcBool(env, token, "manages_user", { p_user_id: userId }))) {
     return problem(403, "Vous ne gérez pas ce compte.");
   }
+  // The platform's own people are nobody's to reset from here — the database
+  // says so too (103's manages_user); this is the second lock, read with the
+  // service-role key because it is a fact about the target, not a decision.
+  if (await isPlatformAdmin(env, userId)) {
+    return problem(403, "Ce compte ne se gère pas ici.");
+  }
 
   // email_confirm: true is what makes the reset actually usable. GoTrue will
   // accept the new password on an unconfirmed account and answer 200 — but then
@@ -129,6 +135,9 @@ async function deleteUser(request, env, userId) {
   if (!(await rpcBool(env, token, "can_delete_user", { p_user_id: userId }))) {
     return problem(403, "Ce compte ne peut pas être supprimé.");
   }
+  if (await isPlatformAdmin(env, userId)) {
+    return problem(403, "Ce compte ne peut pas être supprimé.");
+  }
 
   const res = await admin(env, "DELETE", userId, null);
   // GoTrue answers 200 with the deleted user, or 404 if it was already gone —
@@ -154,6 +163,24 @@ function admin(env, method, userId, body) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+}
+
+// Whether the target is one of the platform's admins. Fails closed: an
+// answer that cannot be read counts as yes, so nothing is reset on a doubt.
+async function isPlatformAdmin(env, userId) {
+  const res = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=is_platform_admin`,
+    {
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        Accept: "application/json",
+      },
+    },
+  );
+  if (!res.ok) return true;
+  const rows = await res.json();
+  return !Array.isArray(rows) || rows.some((r) => r && r.is_platform_admin === true);
 }
 
 // ------------------------------------------------------------

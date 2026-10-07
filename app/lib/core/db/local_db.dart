@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -127,6 +127,19 @@ class LocalDb {
         if (oldVersion >= 2 && oldVersion < 12) {
           await db.execute('ALTER TABLE cached_orgs ADD COLUMN owner_name TEXT');
         }
+        // v12 -> v13: an action the server refused for good (101: stock
+        // that is not there) is marked, kept for the owner to read, and no
+        // longer retried. Asked of the table itself rather than assumed
+        // from the version: adding a column twice, or to a table that is not
+        // there, fails the open — and an app that will not open is the worst
+        // outcome on the oldest phones.
+        if (oldVersion < 13) {
+          final columns = await db.rawQuery('PRAGMA table_info(outbox)');
+          if (columns.isNotEmpty &&
+              !columns.any((c) => c['name'] == 'refused_at')) {
+            await db.execute('ALTER TABLE outbox ADD COLUMN refused_at TEXT');
+          }
+        }
       },
     );
     return LocalDb._(db);
@@ -173,7 +186,8 @@ class LocalDb {
         created_at    TEXT NOT NULL,
         synced_at     TEXT,
         attempts      INTEGER NOT NULL DEFAULT 0,
-        last_error    TEXT
+        last_error    TEXT,
+        refused_at    TEXT
       )
     ''');
 
@@ -1412,7 +1426,7 @@ class LocalDb {
   Future<int> pendingSales(String orgId) async {
     final result = await _db.rawQuery(
       "SELECT COUNT(*) AS c FROM outbox WHERE synced_at IS NULL "
-      "AND action = 'record_sale' AND org_id = ?",
+      "AND refused_at IS NULL AND action = 'record_sale' AND org_id = ?",
       [orgId],
     );
     return (result.first['c'] as int?) ?? 0;
@@ -1422,7 +1436,7 @@ class LocalDb {
   /// the user always knows whether their work has left the device.
   Future<int> pendingCount() async {
     final result = await _db.rawQuery(
-      'SELECT COUNT(*) AS c FROM outbox WHERE synced_at IS NULL',
+      'SELECT COUNT(*) AS c FROM outbox WHERE synced_at IS NULL AND refused_at IS NULL',
     );
     return (result.first['c'] as int?) ?? 0;
   }
@@ -1430,7 +1444,7 @@ class LocalDb {
   Future<List<Map<String, Object?>>> pendingActions({int limit = 50}) {
     return _db.query(
       'outbox',
-      where: 'synced_at IS NULL',
+      where: 'synced_at IS NULL AND refused_at IS NULL',
       orderBy: 'created_at ASC',
       limit: limit,
     );
@@ -1464,7 +1478,7 @@ class LocalDb {
   Future<({int pending, int stuck, int sent})> outboxHealth() async {
     final rows = await _db.rawQuery('''
       SELECT
-        SUM(CASE WHEN synced_at IS NULL THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN synced_at IS NULL AND refused_at IS NULL THEN 1 ELSE 0 END) AS pending,
         SUM(CASE WHEN synced_at IS NULL AND attempts > 0 THEN 1 ELSE 0 END) AS stuck,
         SUM(CASE WHEN synced_at IS NOT NULL THEN 1 ELSE 0 END) AS sent
       FROM outbox
@@ -1493,6 +1507,83 @@ class LocalDb {
       'UPDATE outbox SET attempts = attempts + 1, last_error = ? WHERE client_uuid = ?',
       [error, clientUuid],
     );
+  }
+
+  /// The server said no for good (101: the stock is not there): the row is
+  /// no longer sent, and waits for the owner to read why. What the phone
+  /// showed of it (a farm's « sortie de stock » in the day's list) goes,
+  /// since it never happened.
+  Future<void> markRefused(String clientUuid, String reason) async {
+    await _db.transaction((txn) async {
+      await txn.rawUpdate(
+        'UPDATE outbox SET attempts = attempts + 1, last_error = ?, refused_at = ? '
+        'WHERE client_uuid = ?',
+        [reason, DateTime.now().toUtc().toIso8601String(), clientUuid],
+      );
+      await txn.delete('farm_events',
+          where: 'client_uuid = ?', whereArgs: [clientUuid]);
+    });
+  }
+
+  /// What the server refused for this business and the owner has not yet
+  /// read, oldest first: the action, what it carried, and why.
+  Future<List<Map<String, Object?>>> refusedActions(String orgId) {
+    return _db.query(
+      'outbox',
+      where: 'org_id = ? AND synced_at IS NULL AND refused_at IS NOT NULL',
+      whereArgs: [orgId],
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  /// The owner has read it: the refused row goes. Nothing was recorded on
+  /// the server, so nothing else is undone.
+  Future<void> dismissRefused(String clientUuid) async {
+    await _db.delete('outbox',
+        where: 'client_uuid = ? AND refused_at IS NOT NULL',
+        whereArgs: [clientUuid]);
+  }
+
+  /// The owner corrected the stock: the same sale, with its same
+  /// client_uuid (so the server still records it once), goes back in line.
+  Future<void> requeueRefused(String clientUuid) async {
+    await _db.rawUpdate(
+      'UPDATE outbox SET refused_at = NULL, last_error = NULL, attempts = 0 '
+      'WHERE client_uuid = ? AND refused_at IS NOT NULL AND synced_at IS NULL',
+      [clientUuid],
+    );
+  }
+
+  /// What the till's sales still waiting on this phone will take from the
+  /// shelf once they reach the server, for [orgId]: by product id, and by
+  /// lower-cased name (`name:<name>`) for a line typed without one. The
+  /// shelf the till reads is the server's, which has not seen them yet.
+  Future<Map<String, double>> pendingSaleQuantities(String orgId) async {
+    final rows = await _db.query(
+      'outbox',
+      columns: ['payload'],
+      where: "org_id = ? AND action = 'record_sale' "
+          'AND synced_at IS NULL AND refused_at IS NULL',
+      whereArgs: [orgId],
+    );
+    final taken = <String, double>{};
+    for (final r in rows) {
+      try {
+        final payload =
+            jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        for (final l in (payload['p_lines'] as List? ?? const [])) {
+          final line = l as Map;
+          final q = (line['quantity'] as num?)?.toDouble() ?? 0;
+          if (q <= 0) continue;
+          final id = line['product_id'] as String?;
+          final key = id != null && id.isNotEmpty
+              ? id
+              : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
+          taken[key] = (taken[key] ?? 0) + q;
+        }
+      } catch (_) {}
+    }
+    return taken;
   }
 
   static String _labelFor(String kind) {

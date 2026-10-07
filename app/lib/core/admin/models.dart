@@ -180,12 +180,14 @@ class Invitation {
 /// `super_admin` is deliberately absent: it exists in the schema for
 /// Kaj-consulting's own staff, and an org admin has no business minting one
 /// from a phone.
+/// Highest first, in role_rank()'s order (045), so a picker reads down the
+/// ladder.
 const adminGrantableRoles = <String, String>{
   'admin': 'Administrateur',
   'manager': 'Responsable',
   'supervisor': 'Superviseur',
-  'employee': 'Employé',
   'approver': 'Approbateur',
+  'employee': 'Employé',
   'observer': 'Observateur',
 };
 

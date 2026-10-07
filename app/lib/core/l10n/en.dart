@@ -208,8 +208,6 @@ const enStrings = <String, String>{
       'No stock deliveries.',
   'Aucune entrée pour l’instant.':
       'No entries yet.',
-  'Aucune invitation en attente.':
-      'No pending invitations.',
   'Aucune livraison ce mois-ci.':
       'No deliveries this month.',
   'Aucune photo pour le moment.':
@@ -782,8 +780,6 @@ const enStrings = <String, String>{
       'Registered and approved as a Mara courier',
   'Invisibles pour leurs membres, complètes, restaurables. La suppression définitive n’est possible qu’ici.':
       'Invisible to their members, complete, restorable. Permanent deletion is only possible here.',
-  'Invitations en attente ({length})':
-      'Pending invitations ({length})',
   'Inviter':
       'Invite',
   'Inviter quelqu’un':
@@ -1022,8 +1018,6 @@ const enStrings = <String, String>{
       'Hide',
   'Membre':
       'Member',
-  'Membres ({length})':
-      'Members ({length})',
   'Mensuel':
       'Monthly',
   'Merci, c\'est noté.':
@@ -1566,8 +1560,6 @@ const enStrings = <String, String>{
       'Remove',
   'Retirer cet ingrédient':
       'Remove this ingredient',
-  'Retirer de l\'entreprise':
-      'Remove from the business',
   'Retirer de la boutique':
       'Remove from the shop',
   'Retirer de la vente':
@@ -1576,8 +1568,6 @@ const enStrings = <String, String>{
       'Remove the line',
   'Retirer un {name}':
       'Remove a {name}',
-  'Retirer {label} ?':
-      'Remove {label}?',
   'Retirer {name}':
       'Remove {name}',
   'Retirer {name} ?':
@@ -1706,8 +1696,6 @@ const enStrings = <String, String>{
       'Sponsored',
   'Stock':
       'Stock',
-  'Stock insuffisant':
-      'Not enough stock',
   'Sucre 1kg':
       'Sugar 1kg',
   'Suggestions':
@@ -1772,8 +1760,6 @@ const enStrings = <String, String>{
       'Tap an item to see it, « + » to add it.',
   'Touchez « Reçu » quand le livreur vous a remis l\'argent de la commande.':
       'Tap « Received » when the courier has handed you the order\'s money.',
-  'Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'entreprise ».':
-      'All their phones and browsers will have to sign in again with the password, within the hour at most. Their access to the business does not change: to remove it, use « Remove from the business ».',
   'Tout':
       'All',
   'Tout effacer':
@@ -1858,8 +1844,6 @@ const enStrings = <String, String>{
       'Saleswoman, guard, accountant…',
   'Vendeuse, gérant, comptable…':
       'Saleswoman, manager, accountant…',
-  'Vendre quand même':
-      'Sell anyway',
   'Vente enregistrée':
       'Sale recorded',
   'Ventes':
@@ -2628,8 +2612,6 @@ const enStrings = <String, String>{
       'Wave reports a problem; we are checking.',
   'Wave · {waveName}':
       'Wave · {waveName}',
-  '\nRéservé à {phone}':
-      '\nFor {phone} only',
   'active':
       'active',
   'année':
@@ -3197,4 +3179,128 @@ const enStrings = <String, String>{
   'Seule la plateforme nomme un propriétaire': 'Only the platform names an owner',
   'Cette personne est payée à l\'heure dans « Paie et journées » : son taux se change là-bas.': 'This person is paid by the hour in « Payroll and days »: their rate is changed there.',
   'Cette entreprise a déjà ses photos sans limite': 'This business already has photos without limit',
+  // Batch 101/102 (builder A): the association walkthrough, Équipe, the hub, the domain.
+  'Adresse de la vitrine : marakaj.com/s/{slug}': 'Vitrine address: marakaj.com/s/{slug}',
+  'Né(e) le {date}': 'Born on {date}',
+  'Titre': 'Title',
+  'Vos informations se changent dans Compte.': 'Your own details are changed in Account.',
+  'Responsabilité mise à jour.': 'Responsibility updated.',
+  'Les deux ne correspondent pas.': 'The two do not match.',
+  'Mot de passe changé.': 'Password changed.',
+  'Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'équipe ».': 'All their phones and browsers will have to sign in again with the password, within an hour at most. Their access to the business does not change: to remove it, use « Remove from the team ».',
+  '{label} est déconnecté de {n} appareil(s).': '{label} is signed out of {n} device(s).',
+  'Compte supprimé.': 'Account deleted.',
+  'Administration': 'Administration',
+  'Les personnes, leur responsabilité, les invitations': 'The people, their responsibility, the invitations',
+  'Sites et départements': 'Sites and departments',
+  'La structure de l\'activité': 'How the business is organised',
+  'Nom et monnaie': 'Name and currency',
+  'Journal d\'activité, données, état de l\'appareil': 'Activity log, data, device status',
+  'Tontine': 'Tontine',
+  'On cotise, chacun reçoit à son tour.': 'Everyone pays in, each receives in turn.',
+  'Église': 'Church',
+  'Offrandes, dîmes et dons des fidèles.': 'Offerings, tithes and gifts of the faithful.',
+  'Groupement': 'Group',
+  'On produit et on vend ensemble.': 'We produce and sell together.',
+  'Culturelle': 'Cultural',
+  'Danse, musique, fêtes du quartier.': 'Dance, music, neighbourhood celebrations.',
+  'Sportive': 'Sports',
+  'Un club, une équipe, ses cotisations.': 'A club, a team, its dues.',
+  'Une autre association.': 'Another kind of association.',
+  'Choisissez ce qu\'elle est.': 'Choose what it is.',
+  'Le nom du membre, s\'il vous plaît.': 'The member\'s name, please.',
+  'Bonjour ! Je vous inscris comme membre de *{name}* sur Mara. Envoyez-moi votre nom et votre numéro de téléphone.': 'Hello! I am registering you as a member of *{name}* on Mara. Send me your name and your phone number.',
+  'WhatsApp ne s\'est pas ouvert.': 'WhatsApp did not open.',
+  'Votre association': 'Your association',
+  'Son nom, et ce qu\'elle est.': 'Its name, and what it is.',
+  'Vos premiers membres': 'Your first members',
+  'Trois pour commencer : un nom, un téléphone.': 'Three to start: a name, a phone.',
+  'Un service, votre téléphone, votre quartier.': 'A service, your phone, your area.',
+  'Nom de l\'association': 'Name of the association',
+  'En une phrase (facultatif)': 'In one sentence (optional)',
+  'Ex. : L\'entraide des femmes de Gounghin': 'E.g.: The Gounghin women\'s mutual aid',
+  'Des membres, pas des comptes : gratuits, sans Pro.': 'Members, not accounts: free, no Pro needed.',
+  'Inviter sur WhatsApp': 'Invite on WhatsApp',
+  'Passer': 'Skip',
+  'Un service (facultatif)': 'A service (optional)',
+  'Ex. : Location de la salle': 'E.g.: Hall rental',
+  'Ouvrir mon association': 'Open my association',
+  'Encaissez la première cotisation': 'Collect the first contribution',
+  'Touchez ici, le montant, c\'est noté.': 'Tap here, the amount, it is recorded.',
+  'Réservé aux administrateurs': 'For administrators only',
+  'Demandez au propriétaire de l\'entreprise.': 'Ask the owner of the business.',
+  'Réservé aux associations': 'For associations only',
+  'Type d\'association inconnu': 'Unknown kind of association',
+  'Réservé aux membres de l\'association': 'For the association\'s members only',
+  // 101: stock never below zero, a farm's analyses.
+  'Il ne reste que {n} {name}': 'Only {n} {name} left',
+  'Plus de {name} en stock': 'No {name} left in stock',
+  'Vente refusée : rien n\'a été enregistré': 'Sale refused: nothing was recorded',
+  'Sortie de stock refusée : rien n\'a été enregistré': 'Stock use refused: nothing was recorded',
+  'Mara Pro : les analyses font partie de Mara Pro. Ouvrez Compte › Mara Pro, ou débloquez-les avec vos cauris.': 'Mara Pro: the analyses are part of Mara Pro. Open Account › Mara Pro, or unlock them with your cauris.',
+  'Les analyses ne concernent pas une association': 'Analyses are not for an association',
+  '7 j': '7 d',
+  '30 j': '30 d',
+  '90 j': '90 d',
+  'Entrées': 'Money in',
+  'Résultat': 'Result',
+  'Commandes livrées': 'Orders handed over',
+  'Œufs ramassés': 'Eggs collected',
+  'Coût de production': 'Production cost',
+  'Où va l\'argent': 'Where the money goes',
+  'Dépenses par poste sur la période': 'Spending by heading over the period',
+  'Mes bandes': 'My flocks',
+  'Vivants, pertes et ponte de chaque bande ouverte': 'Alive, lost and laying, for each open flock',
+  '{alive} vivants sur {started}': '{alive} alive of {started}',
+  'pertes': 'losses',
+  'ponte': 'laying',
+  'Ce que les bêtes mangent': 'What the animals eat',
+  'Consommé ce mois-ci, et le mois dernier': 'Used this month, against last month',
+  'Entrées par jour': 'Money in by day',
+  'Ce mois-ci': 'This month',
+  'comparé au mois dernier': 'compared with last month',
+  'Œufs': 'Eggs',
+  'Bêtes perdues': 'Animals lost',
+  'en hausse': 'up',
+  'en baisse': 'down',
+  'Rien sur cette période': 'Nothing in this period',
+  'Vos ventes, dépenses, récoltes et bandes apparaîtront ici.': 'Your sales, spending, harvests and flocks will show here.',
+  // 103: the administration's doors (the server's refusals and the owner's bells).
+  'Un accès ne passe pas à une autre personne ni à une autre entreprise': 'Access cannot be moved to another person or business',
+  'Seule la plateforme nomme ou retire un super administrateur': 'Only the platform names or removes a super administrator',
+  'Seule la plateforme retire une formatrice ou un formateur': 'Only the platform removes a trainer',
+  'Le propriétaire ne se retire pas de son entreprise': 'The owner cannot be removed from their business',
+  'Vous ne pouvez retirer que quelqu\'un en dessous de vous': 'You can only remove someone below you',
+  'Connectez-vous d\'abord': 'Sign in first',
+  'Cet accès n\'existe plus': 'This access no longer exists',
+  'Seul un administrateur retire un accès': 'Only an admin removes access',
+  'Seul un administrateur change une responsabilité': 'Only an admin changes a role',
+  'La responsabilité du propriétaire ne se change pas ici': 'The owner\'s role cannot be changed here',
+  'Le propriétaire se transmet par la plateforme, pas par un changement de responsabilité': 'Ownership is handed over by the platform, not by a role change',
+  'L\'accès d\'une formatrice ou d\'un formateur est celui de la plateforme': 'A trainer\'s access belongs to the platform',
+  'Votre propre responsabilité se change par quelqu\'un au-dessus de vous': 'Your own role is changed by someone above you',
+  'Vous ne pouvez donner qu\'une responsabilité en dessous de la vôtre': 'You can only give a role below your own',
+  'Seule la plateforme nomme un super administrateur': 'Only the platform names a super administrator',
+  'Vous ne pouvez inviter que pour une responsabilité en dessous de la vôtre': 'You can only invite for a role below your own',
+  'Seul un administrateur invite dans cette entreprise': 'Only an admin invites people to this business',
+  'Cette responsabilité ne se donne pas par une invitation': 'This role is not given by invitation',
+  'Vous ne pouvez déconnecter que quelqu\'un en dessous de vous': 'You can only sign out someone below you',
+  'Votre propre salaire ne se note pas ici': 'Your own salary is not recorded here',
+  'Seul le propriétaire, ou quelqu\'un au-dessus de cette personne, note son salaire': 'Only the owner, or someone above this person, records their salary',
+  'Seul le propriétaire choisit le numéro qui reçoit l\'argent': 'Only the owner chooses the number that receives the money',
+  'Seul le propriétaire change le compte Wave': 'Only the owner changes the Wave account',
+  'Seul le propriétaire change le genre d\'activité': 'Only the owner changes the kind of business',
+  'Seul le propriétaire change l\'identité des factures (e-mail, numéro fiscal, pied de page)': 'Only the owner changes the invoice identity (email, tax number, footer)',
+  'Le numéro qui reçoit l\'argent de vos ventes a été changé': 'The number that receives your sales money was changed',
+  'Le compte Wave de vos ventes a été changé': 'The Wave account for your sales was changed',
+  'Le genre de votre activité a été changé': 'The kind of your business was changed',
+  'Plus d\'{name} en stock': 'No {name} left in stock',
+  'Plus que {n}': 'Only {n} left',
+  'Corriger le stock puis refaire la vente': 'Fix the stock, then redo the sale',
+  'Stock corrigé : la vente repart.': 'Stock fixed: the sale is sent again.',
+  'La vente est enregistrée quand la commande est remise ou livrée — ne la passez pas à la caisse': 'The sale is recorded when the order is handed over or delivered — do not ring it up at the till',
+  'Toute l\'activité': 'The whole business',
+  'Site': 'Site',
+  'Département': 'Department',
+  'Réservé au propriétaire': 'Owner only',
 };
