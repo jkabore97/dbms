@@ -6,12 +6,15 @@ import 'package:flutter/material.dart';
 /// street's footer (« POWERED BY KAJ »).
 ///
 /// The palette they are drawn in — the neutral kit (docs/brand/mara-neutre):
-/// no red, no blue. Dark brown [maraDeep] for the grounds (splash, setup,
-/// the street's announcement bar), caramel [maraCaramel] for what shines on
-/// it, off-white [maraPaper] behind, near-black [maraBlack] for type.
+/// no red, no blue, and not all brown. Graphite [maraDeep] for the grounds
+/// (splash, setup, the street's announcement bar, the path), caramel
+/// [maraCaramel] and brown [maraBrown] for what shines on them, off-white
+/// [maraPaper] behind, near-black [maraBlack] for type. Dark brown
+/// [maraEspresso] stays for a touch, never a whole ground.
 const maraBlack = Color(0xFF0E0D0C);
 const maraPaper = Color(0xFFF4F2EE);
-const maraDeep = Color(0xFF4A3122);
+const maraDeep = Color(0xFF3B3A38);
+const maraEspresso = Color(0xFF4A3122);
 const maraBrown = Color(0xFF8B5A3C);
 const maraCaramel = Color(0xFFC49A6C);
 const maraGrey = Color(0xFFA3A09B);

@@ -492,8 +492,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
             // A new business's path (085): the vitrine opens its tools.
             if (_path case final p? when p.gated) ...[
-              PathCard(org: widget.org, progress: p),
-              const SizedBox(height: 16),
+              // Gone at 100 %: the guide's work is done.
+              if (PathCard.shows(p)) ...[
+                PathCard(org: widget.org, progress: p, onChanged: _load),
+                const SizedBox(height: 16),
+              ],
             ] else if (_vitrine != null && _vitrine!.open && _vitrine!.score < 100) ...[
               _VitrineNudge(
                 list: _vitrine!,

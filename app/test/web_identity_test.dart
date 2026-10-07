@@ -21,8 +21,8 @@ void main() {
     expect(manifest['description'], isNot(contains('Flutter')));
     expect(manifest['lang'], 'fr');
     // The paper, not Flutter's blue.
-    expect(manifest['theme_color'], '#4A3122');
-    expect(manifest['background_color'], '#4A3122');
+    expect(manifest['theme_color'], '#3B3A38');
+    expect(manifest['background_color'], '#3B3A38');
     // A tablet or a desktop window is not forced to portrait.
     expect(manifest['orientation'], 'any');
   });
@@ -35,7 +35,7 @@ void main() {
     expect(html, isNot(contains('A new Flutter project')));
     expect(html, contains('property="og:title"'));
     expect(html, contains('property="og:image" content="https://'));
-    expect(html, contains('name="theme-color" content="#4A3122"'));
+    expect(html, contains('name="theme-color" content="#3B3A38"'));
     // The paper page shown while the engine loads, and its exit.
     expect(html, contains('id="mara-splash"'));
     expect(html, contains('flutter-first-frame'));

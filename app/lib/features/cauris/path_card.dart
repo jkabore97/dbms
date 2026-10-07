@@ -7,6 +7,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import 'vitrine_guide.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One tool on the path (089): its picture, its name, what opens it.
@@ -21,12 +22,25 @@ const _steps = <_Step>[
 
 /// The path on the home (089): the vitrine's ring, and the four tools it
 /// opens drawn as tiles — locked grey with the goal under it, open gold.
-/// Pictures first, a few words each.
+/// Pictures first, a few words each. Touched, it opens the way to 100 %
+/// ([VitrineGuide]); the home shows it only below 100 %.
 class PathCard extends StatelessWidget {
-  const PathCard({super.key, required this.org, required this.progress});
+  const PathCard({
+    super.key,
+    required this.org,
+    required this.progress,
+    this.onChanged,
+  });
 
   final OrgSummary org;
   final BasicProgress progress;
+
+  /// After the guide closes: the home reads its vitrine again.
+  final VoidCallback? onChanged;
+
+  /// Whether the home still shows the card: a business on the path whose
+  /// vitrine is not yet full.
+  static bool shows(BasicProgress p) => p.gated && p.score < 100;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +50,10 @@ class PathCard extends StatelessWidget {
     return InkWell(
       key: const Key('path-card'),
       borderRadius: BorderRadius.circular(20),
-      onTap: () => context.push(Routes.orgSettings(org.id)),
+      onTap: () async {
+        await VitrineGuide.open(context, org);
+        onChanged?.call();
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -275,7 +292,7 @@ class PathGate {
                     key: const Key('path-go'),
                     onPressed: () {
                       Navigator.of(sheet).pop();
-                      context.push(Routes.orgSettings(org.id));
+                      VitrineGuide.open(context, org);
                     },
                     icon: const Icon(Icons.storefront),
                     label: Text(context.tr('Compléter ma vitrine')),

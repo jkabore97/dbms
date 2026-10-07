@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -11,6 +10,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import '../storefront/open_badge.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -387,123 +387,105 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             style: muted,
           ),
           const SizedBox(height: 22),
-          Row(
-            children: [
-              _SectionTitle(text: context.tr('AVEC MARA PRO')),
-              const SizedBox(width: 8),
-              const _ProSeal(),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            locked
-                ? context.tr(
-                    'Essayez ici ; vos clients le verront avec Mara Pro.',
-                  )
-                : context.tr(
-                    'La présentation, les articles à la une et « Ouvert maintenant ».',
-                  ),
-            style: muted,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            context.tr('Présentation des articles'),
-            style: theme.textTheme.labelLarge,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final l in VitrineLayout.values) ...[
-                Expanded(
-                  child: _LayoutChoice(
-                    layout: l,
-                    selected: _layout == l,
-                    onTap: _saving ? null : () => setState(() => _layout = l),
-                  ),
-                ),
-                if (l != VitrineLayout.values.last) const SizedBox(width: 8),
-              ],
-            ],
-          ),
-          const SizedBox(height: 14),
-          Opacity(
-            opacity: locked ? 0.55 : 1,
-            child: AbsorbPointer(
-              absorbing: locked,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr('Articles en tête ({length}/6)', {
-                      'length': _pinned.length,
-                    }),
-                    style: theme.textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  if (_products.isEmpty)
-                    Text(
-                      context.tr(
-                        'Mettez d\'abord des articles sur la vitrine.',
-                      ),
-                      style: muted,
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        for (final p in _products)
-                          FilterChip(
-                            label: Text(p.name),
-                            selected: _pinned.contains(p.id),
-                            onSelected: _saving
-                                ? null
-                                : (on) => setState(() {
-                                    if (on) {
-                                      if (_pinned.length >= 6) return;
-                                      _pinned = [..._pinned, p.id];
-                                    } else {
-                                      _pinned = _pinned
-                                          .where((id) => id != p.id)
-                                          .toList();
-                                    }
-                                  }),
-                          ),
-                      ],
-                    ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _hideOut,
-                    onChanged: _saving
-                        ? null
-                        : (v) => setState(() => _hideOut = v),
-                    title: Text(
-                      context.tr('Ne pas afficher les articles épuisés'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Locked: one card that says so plainly — what Pro adds, in three
+          // lines, and the layouts to try in the preview above. Not the
+          // greyed form: a shop read it as settings it had and could not use.
           if (locked)
-            KajCard(
-              key: const Key('dressing-pro'),
-              elevation: 0,
-              color: theme.colorScheme.surfaceContainerHighest,
-              child: ListTile(
-                leading: const Icon(Icons.workspace_premium_outlined),
-                title: Text(context.tr('Réservé à Mara Pro')),
-                subtitle: Text(
-                  context.tr(
-                    'La présentation, les articles à la une et « Ouvert maintenant » s\'affichent avec Mara Pro.',
+            _ProLocked(
+              layout: _layout,
+              onLayout: _saving ? null : (l) => setState(() => _layout = l),
+              onPro: _openPro,
+            )
+          else ...[
+            Row(
+              children: [
+                _SectionTitle(text: context.tr('AVEC MARA PRO')),
+                const SizedBox(width: 8),
+                const _ProSeal(),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.tr(
+                'La présentation, les articles à la une et « Ouvert maintenant ».',
+              ),
+              style: muted,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              context.tr('Présentation des articles'),
+              style: theme.textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                for (final l in VitrineLayout.values) ...[
+                  Expanded(
+                    child: _LayoutChoice(
+                      layout: l,
+                      selected: _layout == l,
+                      onTap: _saving ? null : () => setState(() => _layout = l),
+                    ),
+                  ),
+                  if (l != VitrineLayout.values.last) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+            const SizedBox(height: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('Articles en tête ({length}/6)', {
+                    'length': _pinned.length,
+                  }),
+                  style: theme.textTheme.labelLarge,
+                ),
+                const SizedBox(height: 4),
+                if (_products.isEmpty)
+                  Text(
+                    context.tr(
+                      'Mettez d\'abord des articles sur la vitrine.',
+                    ),
+                    style: muted,
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      for (final p in _products)
+                        FilterChip(
+                          label: Text(p.name),
+                          selected: _pinned.contains(p.id),
+                          onSelected: _saving
+                              ? null
+                              : (on) => setState(() {
+                                  if (on) {
+                                    if (_pinned.length >= 6) return;
+                                    _pinned = [..._pinned, p.id];
+                                  } else {
+                                    _pinned = _pinned
+                                        .where((id) => id != p.id)
+                                        .toList();
+                                  }
+                                }),
+                        ),
+                    ],
+                  ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _hideOut,
+                  onChanged: _saving
+                      ? null
+                      : (v) => setState(() => _hideOut = v),
+                  title: Text(
+                    context.tr('Ne pas afficher les articles épuisés'),
                   ),
                 ),
-                trailing: FilledButton.tonal(
-                  onPressed: _openPro,
-                  child: Text(context.tr('Voir')),
-                ),
-              ),
+              ],
             ),
+          ],
           if (_message != null) ...[
             const SizedBox(height: 4),
             Text(_message!, style: theme.textTheme.bodySmall),
@@ -551,6 +533,137 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
   static String _dayLetter(int d, String lang) => lang == 'en'
       ? const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d - 1]
       : const ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][d - 1];
+}
+
+/// « Vitrine avancée · Mara Pro », locked: a dark card with the seal, what
+/// it adds, the three layouts to try in the preview, and the way to Pro.
+class _ProLocked extends StatelessWidget {
+  const _ProLocked({
+    required this.layout,
+    required this.onLayout,
+    required this.onPro,
+  });
+
+  final VitrineLayout layout;
+  final ValueChanged<VitrineLayout>? onLayout;
+  final VoidCallback onPro;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final soft = theme.textTheme.bodyMedium
+        ?.copyWith(color: maraPaper.withValues(alpha: 0.85));
+    Widget line(IconData icon, String text) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: maraCaramel),
+              const SizedBox(width: 10),
+              Expanded(child: Text(context.tr(text), style: soft)),
+            ],
+          ),
+        );
+    return Container(
+      key: const Key('dressing-pro'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: maraDeep,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(
+                radius: 16,
+                backgroundColor: maraCaramel,
+                child: Icon(Icons.lock, size: 17, color: maraDeep),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.tr('Vitrine avancée'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                      color: maraPaper, fontWeight: FontWeight.w800),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: maraCaramel,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  context.tr('MARA PRO'),
+                  style: const TextStyle(
+                      color: maraDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.tr('Verrouillé : vos clients ne le voient qu\'avec Mara Pro.'),
+            key: const Key('dressing-pro-locked'),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: maraPaper.withValues(alpha: 0.7)),
+          ),
+          const SizedBox(height: 14),
+          line(Icons.view_list, 'Vos articles en liste ou en menu'),
+          line(Icons.push_pin, 'Six articles à la une, en tête'),
+          line(Icons.schedule, '« Ouvert maintenant » et les épuisés cachés'),
+          const SizedBox(height: 6),
+          Text(
+            context.tr('Essayez dans l\'aperçu :'),
+            style: theme.textTheme.labelLarge?.copyWith(color: maraPaper),
+          ),
+          const SizedBox(height: 8),
+          Theme(
+            data: theme.copyWith(
+              colorScheme: theme.colorScheme.copyWith(
+                surface: maraPaper,
+                onSurface: maraBlack,
+              ),
+            ),
+            child: Row(
+              children: [
+                for (final l in VitrineLayout.values) ...[
+                  Expanded(
+                    child: Material(
+                      color: maraPaper,
+                      borderRadius: BorderRadius.circular(12),
+                      child: _LayoutChoice(
+                        layout: l,
+                        selected: layout == l,
+                        onTap: onLayout == null ? null : () => onLayout!(l),
+                      ),
+                    ),
+                  ),
+                  if (l != VitrineLayout.values.last) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: const Key('dressing-pro-go'),
+              style: FilledButton.styleFrom(
+                  backgroundColor: maraCaramel, foregroundColor: maraDeep),
+              onPressed: onPro,
+              icon: const Icon(Icons.workspace_premium),
+              label: Text(context.tr('Voir Mara Pro')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {

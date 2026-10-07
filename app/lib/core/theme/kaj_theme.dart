@@ -134,15 +134,16 @@ const retailPalette = KajPalette(
 
 /// Sign-in, the business picker, the platform console: everything that belongs
 /// to the app rather than to one business — and the shop's and the generic
-/// business's default. The neutral kit's dark brown (docs/brand/mara-neutre):
-/// ink in brun foncé, a wash of blanc cassé and sand, tints that stay in the
-/// kit's browns and greys with two muted hues so neighbouring tiles differ.
+/// business's default. The neutral kit (docs/brand/mara-neutre), grey and
+/// brown rather than all brown: ink in gris foncé, a brown seed so the
+/// containers stay warm, a wash of blanc cassé and sand, tints in the kit's
+/// browns and greys with two muted hues so neighbouring tiles differ.
 const kajPalette = KajPalette(
   name: 'mara',
   label: 'Mara',
   seed: Color(0xFF8B5A3C),
-  ink: Color(0xFF4A3122),
-  hero: [Color(0xFFF4F2EE), Color(0xFFEDE3D7)],
+  ink: Color(0xFF3B3A38),
+  hero: [Color(0xFFF2F1EF), Color(0xFFEDE3D7)],
   tints: [
     Color(0xFF8B5A3C),
     Color(0xFF3B3A38),
@@ -176,7 +177,7 @@ const graphitePalette = KajPalette(
   name: 'graphite',
   label: 'Graphite',
   seed: Color(0xFFA3A09B),
-  ink: Color(0xFF3B3A38),
+  ink: Color(0xFF0E0D0C),
   hero: [Color(0xFFF2F1EF), Color(0xFFE9E7E3)],
   tints: [
     Color(0xFF3B3A38),
