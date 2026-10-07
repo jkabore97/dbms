@@ -60,6 +60,11 @@ class OrgSummary {
 
   bool get isPro => plan == 'pro';
 
+  /// An association ('church' is its older name, 035): members, money given
+  /// and spent, services on a vitrine — no stock, no production, no
+  /// delivery, no cauris.
+  bool get isAssociation => profile == 'association' || profile == 'church';
+
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
 

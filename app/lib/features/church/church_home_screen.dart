@@ -574,7 +574,8 @@ class _TodayCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
+              DateFormat('EEEE d MMMM', context.trLanguage == 'en' ? 'en' : 'fr_FR')
+                  .format(DateTime.now()),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: on.withValues(alpha: 0.72),
               ),
@@ -596,7 +597,7 @@ class _TodayCard extends StatelessWidget {
             if (moneyOut > 0) ...[
               const SizedBox(height: 12),
               Text(
-                '${currency.format(moneyOut)} dépensé',
+                context.tr('{amount} dépensé', {'amount': currency.format(moneyOut)}),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: on.withValues(alpha: 0.82),
                 ),
@@ -693,7 +694,7 @@ class _EntryTile extends StatelessWidget {
           DateFormat.Hm().format(time),
           ?categoryNote,
           ?memberName,
-          if (reversed) 'corrigé',
+          if (reversed) context.tr('corrigé'),
         ].join(' · '),
       ),
       trailing: Row(

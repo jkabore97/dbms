@@ -12,13 +12,26 @@ class NotificationRow {
     required this.message,
     required this.createdAt,
     this.readAt,
+    this.orgId,
+    this.params = const {},
   });
 
   final String id;
   final String kind;
+
+  /// The server's line, in French — what the push said, and what is shown
+  /// when the app has nothing better (a row from before 099, a French phone).
   final String message;
   final DateTime createdAt;
   final DateTime? readAt;
+
+  /// The business it is about; null for the platform's and the person's own
+  /// (a new device, a courier's decision).
+  final String? orgId;
+
+  /// The event's facts (099): ids, names, amounts, and `to` — 'shop',
+  /// 'customer' or 'courier' — whom it was written for. Empty on older rows.
+  final Map<String, dynamic> params;
 
   bool get isUnread => readAt == null;
 
@@ -30,6 +43,10 @@ class NotificationRow {
         readAt: r['read_at'] == null
             ? null
             : DateTime.parse(r['read_at'] as String),
+        orgId: r['org_id'] as String?,
+        params: r['params'] is Map
+            ? Map<String, dynamic>.from(r['params'] as Map)
+            : const {},
       );
 }
 
@@ -71,13 +88,24 @@ class NotificationsRepository {
 
   /// The most recent rings, newest first. Unread count is derived from the
   /// same fetch — one round trip feeds both the badge and the list.
+  ///
+  /// The business and the facts (099) come with each row; a database before
+  /// 099 has no params column, and then the rows come without them rather
+  /// than the bell going silent.
   Future<List<NotificationRow>> recent({int limit = 50}) async {
-    final rows = await _c
+    Future<List<dynamic>> read(String columns) => _c
         .from('notifications')
-        .select('id, kind, message, created_at, read_at')
+        .select(columns)
         .order('created_at', ascending: false)
         .limit(limit);
-    return (rows as List)
+    List<dynamic> rows;
+    try {
+      rows = await read('id, kind, message, created_at, read_at, org_id, params');
+    } on PostgrestException catch (e) {
+      if (e.code != '42703' && e.code != 'PGRST204') rethrow;
+      rows = await read('id, kind, message, created_at, read_at, org_id');
+    }
+    return rows
         .map((r) => NotificationRow.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
   }

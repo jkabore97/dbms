@@ -30,6 +30,34 @@ void main() {
       });
       expect(n.isUnread, isFalse);
     });
+
+    test('the business and the facts ride along (099)', () {
+      final n = NotificationRow.fromRow({
+        'id': 'n2',
+        'kind': 'new_order',
+        'message': 'Nouvelle demande de Awa : 2 000,00 XOF',
+        'created_at': '2026-10-07T08:00:00Z',
+        'read_at': null,
+        'org_id': 'org-1',
+        'params': {'to': 'shop', 'order_id': 'o1', 'booking': true},
+      });
+      expect(n.orgId, 'org-1');
+      expect(n.params['to'], 'shop');
+      expect(n.params['booking'], isTrue);
+    });
+
+    test('a row from before 099 has no facts, and still reads', () {
+      final n = NotificationRow.fromRow({
+        'id': 'n3',
+        'kind': 'low_stock',
+        'message': 'Stock bas : Savon (3 restant)',
+        'created_at': '2026-08-15T08:00:00Z',
+        'read_at': null,
+      });
+      expect(n.orgId, isNull);
+      expect(n.params, isEmpty);
+      expect(n.message, 'Stock bas : Savon (3 restant)');
+    });
   });
 
   group('a build with no server says so', () {

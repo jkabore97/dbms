@@ -4,6 +4,7 @@ import '../../core/l10n/locale_controller.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/security/security_settings.dart';
@@ -34,6 +35,29 @@ class CompteScreen extends StatelessWidget {
 
   final OrgSummary org;
 
+  /// The rows of Compte › Outils for this business, in order, by key.
+  ///
+  /// A shop and a farm see what they sell and make; an association keeps
+  /// its books (comptabilité), its carnet — a cotisation, the hall's rent, a
+  /// loan to a member are debts with no article — and its tontines, and
+  /// never the shop's tools: no production (nothing is made from
+  /// ingredients), no analyses or corrections of sales and deliveries.
+  static List<String> toolsFor(OrgSummary org, OrgAccess access,
+          {required bool admin}) =>
+      [
+        // Owner-only, the same full visibility the server requires for the
+        // analytics functions themselves.
+        if (org.visibility == 'full' && org.profile == 'retail') 'analytics',
+        if (access.canSee('reports')) 'accounting',
+        // Undo a sale or a purchase entered by mistake — or test data.
+        // Owner/admin only, and only where there are sales and deliveries to
+        // undo; the server refuses everyone else regardless.
+        if (admin && org.profile == 'retail') 'corrections',
+        if (access.canSee('credits')) 'credits',
+        if (access.canSee('tontines')) 'tontines',
+        if (access.canSee('production') && !org.isAssociation) 'production',
+      ];
+
   @override
   Widget build(BuildContext context) {
     final scope = AppScope.of(context);
@@ -45,6 +69,7 @@ class CompteScreen extends StatelessWidget {
     final identity = session.identity;
 
     String inside(String rest) => Routes.inside(org.id, rest);
+    final tools = toolsFor(org, access, admin: admin);
 
     // The door to pay (066): every badged tool opens it, and so does the
     // Kaj Pro tile below. Only an admin of the business may say "J'ai payé".
@@ -66,9 +91,11 @@ class CompteScreen extends StatelessWidget {
                   feature: feature,
                 )
             : go;
-    // Its price in cauris (085), on the grey badge.
-    int? costOf(String feature) =>
-        session.featuresFor(org.id)?.toolOf(feature)?.cost;
+    // Its price in cauris (085), on the grey badge. An association earns
+    // no cauris and pays none (084): its badge says Pro, no price.
+    int? costOf(String feature) => org.isAssociation
+        ? null
+        : session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
@@ -127,6 +154,7 @@ class CompteScreen extends StatelessWidget {
                 ),
               if (live && !session.isPlatformAdmin)
                 _Tile(
+                  key: const Key('compte-second-business'),
                   icon: Icons.business_center_outlined,
                   title: Strings.of(context).applyForBusiness,
                   locked: PathGate.locks(context, org, 'second_business'),
@@ -175,7 +203,7 @@ class CompteScreen extends StatelessWidget {
                 // Le Chemin (097): the steps, the tools they open and the
                 // cauris they pay. Businesses only: an association does not
                 // compete.
-                if (admin && org.profile != 'church' && org.profile != 'association')
+                if (admin && !org.isAssociation)
                   _Tile(
                     key: const Key('compte-chemin'),
                     icon: Icons.route_outlined,
@@ -200,9 +228,7 @@ class CompteScreen extends StatelessWidget {
             _Group(
               title: context.tr('Outils'),
               children: [
-                // Owner-only, the same full visibility the server requires for
-                // the analytics functions themselves.
-                if (org.visibility == 'full' && org.profile == 'retail')
+                if (tools.contains('analytics'))
                   _Tile(
                     icon: Icons.insights_outlined,
                     title: context.tr('Analyses'),
@@ -213,8 +239,9 @@ class CompteScreen extends StatelessWidget {
                       () => context.push(inside('rapports/analyse')),
                     ),
                   ),
-                if (access.canSee('reports'))
+                if (tools.contains('accounting'))
                   _Tile(
+                    key: const Key('compte-accounting'),
                     icon: Icons.menu_book_outlined,
                     title: Strings.of(context).accounting,
                     pro: access.isProLocked('accounting'),
@@ -224,25 +251,24 @@ class CompteScreen extends StatelessWidget {
                       () => context.push(inside('comptabilite')),
                     ),
                   ),
-                // Undo a sale or a purchase entered by mistake — or test data.
-                // Owner/admin only, and only where there are sales and deliveries
-                // to undo; the server refuses everyone else regardless.
-                if (admin && org.profile == 'retail')
+                if (tools.contains('corrections'))
                   _Tile(
                     icon: Icons.history_toggle_off_outlined,
                     title: context.tr('Corrections'),
                     onTap: () => context.push(inside('corrections')),
                   ),
-                if (access.canSee('credits'))
+                if (tools.contains('credits'))
                   _Tile(
+                    key: const Key('compte-credits'),
                     icon: Icons.handshake_outlined,
                     title: Strings.of(context).creditBook,
                     locked: PathGate.locks(context, org, 'credits'),
                     onTap: () => PathGate.open(context, org, 'credits',
                         () => context.push(inside('credits'))),
                   ),
-                if (access.canSee('tontines'))
+                if (tools.contains('tontines'))
                   _Tile(
+                    key: const Key('compte-tontines'),
                     icon: Icons.group_outlined,
                     title: Strings.of(context).tontines,
                     pro: access.isProLocked('tontines'),
@@ -252,8 +278,9 @@ class CompteScreen extends StatelessWidget {
                       () => context.push(inside('tontines')),
                     ),
                   ),
-                if (access.canSee('production'))
+                if (tools.contains('production'))
                   _Tile(
+                    key: const Key('compte-production'),
                     icon: Icons.precision_manufacturing_outlined,
                     title: Strings.of(context).production,
                     locked: PathGate.locks(context, org, 'production'),

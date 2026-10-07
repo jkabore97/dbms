@@ -1498,7 +1498,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           ],
         ),
       ),
-      // The spots for sale (071), folded on their own.
+      // The spots for sale (071), folded on their own. An association
+      // buys the whole-vitrine spot only — an article in « À la une »
+      // needs stock — and sees here the spots it already asked or paid.
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -1513,6 +1515,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               orgId: widget.orgId,
               admin: widget.admin,
               retail: widget.retail,
+              vitrineOnly: _association,
             ),
           ],
         ),
@@ -2056,7 +2059,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // Cash only (090): nothing to set until Mara allows Wave.
     if (_waveAllowed) _Part.payments,
     _Part.team,
-    _Part.delivery,
+    // An association's services are booked, not carried (098).
+    if (!_association) _Part.delivery,
     if (widget.canSetPlan || widget.canSuspend) _Part.platform,
   ];
 

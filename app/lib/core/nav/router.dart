@@ -219,6 +219,20 @@ GoRouter buildRouter(SessionController session) {
         !at(Routes.pin) &&
         !at(Routes.twoStep);
 
+    // A customer's order ring, pushed (060), opens /o/<shop>/commandes —
+    // the Worker cannot tell the shop's ring from the customer's. Somebody
+    // who is not of that business is a customer there: their own orders.
+    if (session.phase == SessionPhase.noOrg ||
+        session.phase == SessionPhase.picking ||
+        session.phase == SessionPhase.ready) {
+      final id = _orgIdOf(here);
+      if (id != null &&
+          here == Routes.inside(id, 'commandes') &&
+          session.orgById(id) == null) {
+        return Routes.myOrders;
+      }
+    }
+
     switch (session.phase) {
       case SessionPhase.booting:
       case SessionPhase.resolving:
@@ -1212,6 +1226,8 @@ GoRouter buildRouter(SessionController session) {
                 retail: scope.retail,
                 capture: scope.capture,
                 access: scope.session.accessFor(org.id),
+                // ?q=Savon: the article a « Stock bas » ring is about.
+                initialQuery: state.uri.queryParameters['q'],
               ),
             ),
           ),

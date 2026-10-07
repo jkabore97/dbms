@@ -37,7 +37,12 @@ class ProductsScreen extends StatefulWidget {
     required this.retail,
     this.capture,
     this.access = OrgAccess.allEdit,
+    this.initialQuery,
   });
+
+  /// What the search opens with: the article a « Stock bas » ring is about
+  /// (099), so a tap on the bell lands on it.
+  final String? initialQuery;
 
   /// The owner's dial from 031. At 'view' the shelves are read-only: no
   /// receiving, no bulk add, no edit sheet — the server refuses price edits
@@ -91,6 +96,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   void initState() {
     super.initState();
+    _search.text = widget.initialQuery?.trim() ?? '';
     _load();
     _readView();
   }
