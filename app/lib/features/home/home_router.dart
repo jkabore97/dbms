@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../offline/offline_sheet.dart';
+
 import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
@@ -48,7 +50,7 @@ Widget homeScreenFor({
       // business not yet migrated by 035. Same home screen (kept as the
       // ChurchHomeScreen class internally) — associations and churches keep
       // members and money the same way.
-      'church' || 'association' => ChurchHomeScreen(
+      'church' || 'association' => OfflineOffer(org: org, child: ChurchHomeScreen(
           invoicing: invoicing,
           db: db,
           orgId: org.id,
@@ -60,8 +62,8 @@ Widget homeScreenFor({
           accountAction: accountAction,
           onHistory: onHistory,
           access: access,
-        ),
-      'farm' => SetupGate(org: org, child: FarmHomeScreen(
+        )),
+      'farm' => SetupGate(org: org, child: OfflineOffer(org: org, child: FarmHomeScreen(
           invoicing: invoicing,
           db: db,
           org: org,
@@ -70,8 +72,8 @@ Widget homeScreenFor({
           staff: staff,
           accountAction: accountAction,
           access: access,
-        )),
-      'retail' => SetupGate(org: org, child: StoreHomeScreen(
+        ))),
+      'retail' => SetupGate(org: org, child: OfflineOffer(org: org, child: StoreHomeScreen(
           invoicing: invoicing,
           org: org,
           retail: retail,
@@ -79,7 +81,7 @@ Widget homeScreenFor({
           capture: capture,
           accountAction: accountAction,
           access: access,
-        )),
+        ))),
       // Anything else — a profile added server-side that this build has never
       // heard of — lands here rather than failing.
       _ => ProfilePendingScreen(org: org, accountAction: accountAction),

@@ -36,7 +36,13 @@ class PushPlatform {
       if (key == null || key.isEmpty) return null;
 
       final container = web.window.navigator.serviceWorker;
-      await container.register('push_sw.js'.toJS).toDart;
+      // The offline copy's worker (offline_sw.js) carries the push handlers
+      // too; registering push_sw.js over it would throw the copy away.
+      final current = await container.getRegistration('/').toDart;
+      final script = current?.active?.scriptURL ?? '';
+      if (!script.endsWith('offline_sw.js')) {
+        await container.register('push_sw.js'.toJS).toDart;
+      }
       final registration = await container.ready.toDart;
       final subscription = await registration.pushManager
           .subscribe(web.PushSubscriptionOptionsInit(

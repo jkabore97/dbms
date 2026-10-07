@@ -3042,4 +3042,26 @@ const enStrings = <String, String>{
   'Réservé à l\'administration de la plateforme': 'For the platform administration only',
   'Ce n\'est pas une vitrine d\'exemple': 'This is not an example vitrine',
   'Photo indisponible pour le moment.': 'Photo unavailable for now.',
+  // Offline, on request (business admins only).
+  'L\'application sur ce téléphone': 'The app on this phone',
+  'Vos catégories et vos comptes': 'Your categories and accounts',
+  'Votre stock et vos bandes': 'Your stock and your flocks',
+  'Prêt : Mara fonctionne sans connexion': 'Ready: Mara works without a connection',
+  'Presque prêt': 'Almost ready',
+  'Utiliser Mara sans connexion ?': 'Use Mara without a connection?',
+  'Sans réseau, vos écritures restent sur ce téléphone et partent dès que la connexion revient.':
+      'With no network, your entries stay on this phone and are sent as soon as the connection is back.',
+  'Certaines parties n\'ont pas pu être téléchargées. Réessayez avec une meilleure connexion.':
+      'Some parts could not be downloaded. Try again with a better connection.',
+  'Mara peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.':
+      'Mara can keep what you need to work without a network on this phone. Your vitrine\'s customers do not need it.',
+  '{done} fichiers sur {total}': '{done} of {total} files',
+  'Oui': 'Yes',
+  'Télécharger pour hors ligne': 'Download for offline use',
+  'Téléchargement…': 'Downloading…',
+  'Vous pourrez le faire plus tard dans Compte › Hors ligne.':
+      'You can do it later in Account › Offline.',
+  'Hors ligne': 'Offline',
+  'Prêt sur ce téléphone': 'Ready on this phone',
+  'Pas encore préparé': 'Not prepared yet',
 };
