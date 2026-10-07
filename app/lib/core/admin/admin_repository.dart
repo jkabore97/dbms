@@ -334,10 +334,11 @@ class AdminRepository {
     ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
 
   /// Revoking a grant, not deleting a person. Someone who holds two roles
-  /// keeps the other one.
+  /// keeps the other one. The server (103) follows the ladder: never the
+  /// owner, never a trainer, only someone below the caller — or one's own.
   Future<void> revokeMembership(String membershipId) async {
-    final client = _requireClient();
-    await client.from('memberships').delete().eq('id', membershipId);
+    await _requireClient()
+        .rpc('revoke_membership', params: {'p_membership_id': membershipId});
   }
 
   /// Changes a member's responsibility. Owner-of-the-org only, and never the
@@ -696,27 +697,19 @@ class AdminRepository {
   /// Which plan a business is on (065), as the platform set it: the raw plan,
   /// its paid-until date and the platform's note. The *effective* plan — a
   /// lapsed Pro reads free — comes from `my_orgs()` on the org summary; this
-  /// is the form's view, which needs the date to show and edit it. A database
-  /// that has not run 065 has only free businesses.
+  /// is the form's view, which needs the date to show and edit it.
   Future<({String plan, DateTime? until, String? note})> orgPlan(
       String orgId) async {
-    final client = _requireClient();
-    try {
-      final row = await client
-          .from('orgs')
-          .select('plan, plan_until, plan_note')
-          .eq('id', orgId)
-          .maybeSingle();
-      final until = row?['plan_until'] as String?;
-      return (
-        plan: (row?['plan'] as String?) ?? 'free',
-        until: until == null ? null : DateTime.tryParse(until),
-        note: row?['plan_note'] as String?,
-      );
-    } on PostgrestException catch (error) {
-      if (error.code == '42703') return (plan: 'free', until: null, note: null);
-      rethrow;
-    }
+    // Through org_private_details (103): the note is the platform's alone.
+    final raw = await _requireClient()
+        .rpc('org_private_details', params: {'p_org_id': orgId});
+    final row = raw is Map ? raw : null;
+    final until = row?['plan_until'] as String?;
+    return (
+      plan: (row?['plan'] as String?) ?? 'free',
+      until: until == null ? null : DateTime.tryParse(until),
+      note: row?['plan_note'] as String?,
+    );
   }
 
   /// Puts a business on a plan (065). Platform admin only — the server

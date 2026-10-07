@@ -116,6 +116,10 @@ void main() {
 
     testWidgets('Plus lists the rest by name, the street doors in words',
         (tester) async {
+      // Tall enough for the whole sheet: a lazy list builds only what shows.
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(_app(StoreHomeScreen(
         org: _shop,
         retail: _Shop(client),
@@ -133,6 +137,8 @@ void main() {
         'Mon chemin',
         'Mes services',
         'Production',
+        // Its people (101), as on the farm's and the association's homes.
+        'Équipe',
         'Voir ma vitrine',
         'Voir le marché',
         'Compte'

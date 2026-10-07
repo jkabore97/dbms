@@ -129,10 +129,16 @@ class LocalDb {
         }
         // v12 -> v13: an action the server refused for good (101: stock
         // that is not there) is marked, kept for the owner to read, and no
-        // longer retried. The outbox exists from v1, so every device
-        // upgrading has the table and none has the column.
+        // longer retried. Asked of the table itself rather than assumed
+        // from the version: adding a column twice, or to a table that is not
+        // there, fails the open — and an app that will not open is the worst
+        // outcome on the oldest phones.
         if (oldVersion < 13) {
-          await db.execute('ALTER TABLE outbox ADD COLUMN refused_at TEXT');
+          final columns = await db.rawQuery('PRAGMA table_info(outbox)');
+          if (columns.isNotEmpty &&
+              !columns.any((c) => c['name'] == 'refused_at')) {
+            await db.execute('ALTER TABLE outbox ADD COLUMN refused_at TEXT');
+          }
         }
       },
     );

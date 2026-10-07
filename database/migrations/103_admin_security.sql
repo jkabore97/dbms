@@ -442,10 +442,11 @@ begin
     if not is_org_admin(p_org_id) then
         raise exception 'Seul un administrateur invite dans cette entreprise';
     end if;
-    if p_role in ('owner', 'super_admin') then
+    if p_role = 'super_admin' then
         raise exception 'Cette responsabilité ne se donne pas par une invitation';
     end if;
-    if not caller_is_platform_admin()
+    -- An owner is refused by the seat trigger (100), in its own words.
+    if p_role <> 'owner' and not caller_is_platform_admin()
        and org_rank_of(p_org_id, v_actor) <= role_rank(p_role) then
         raise exception 'Vous ne pouvez inviter que pour une responsabilité en dessous de la vôtre';
     end if;

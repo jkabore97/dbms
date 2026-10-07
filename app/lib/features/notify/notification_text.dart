@@ -183,6 +183,12 @@ String notificationLine(BuildContext context, NotificationRow n) {
             : PlanTerms.labelOf(s('feature')),
         'date': date('until'),
       });
+    case 'payout_changed':
+      return s('what') == 'wave'
+          ? context.tr('Le compte Wave de vos ventes a été changé')
+          : context.tr('Le numéro qui reçoit l\'argent de vos ventes a été changé');
+    case 'org_kind_changed':
+      return context.tr('Le genre de votre activité a été changé');
   }
   return n.message;
 }
