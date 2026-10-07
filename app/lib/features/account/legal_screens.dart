@@ -8,7 +8,10 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// The text is plain and in French, the app's primary language. It is written
 /// to be true of what the app actually does today (Supabase storage, no resale
-/// of data, WhatsApp support); update it when that changes.
+/// of data, WhatsApp support); update it when that changes. The site serves
+/// the same two documents as plain pages (workers/kaj-app/src/legal.js), for
+/// readers that run no JavaScript — Google's verification among them;
+/// test/legal_pages_test.dart keeps the two copies saying the same thing.
 
 class _DocScaffold extends StatelessWidget {
   const _DocScaffold({required this.title, required this.blocks});
@@ -57,6 +60,12 @@ class PrivacyScreen extends StatelessWidget {
         'Votre nom et votre numéro de téléphone, les données que vous entrez '
             'dans l\'application, et les photos que vous prenez pour vos reçus '
             'et livraisons.',
+        '# Connexion avec Google',
+        'Si vous vous connectez avec Google, nous recevons de Google votre nom, '
+            'votre adresse e-mail et votre photo de profil. Ils servent '
+            'uniquement à vous identifier et à afficher votre nom dans '
+            'l\'application. Nous ne lisons rien d\'autre de votre compte Google '
+            'et ne transmettons ces informations à personne.',
         '# Comment elles sont utilisées',
         'Uniquement pour vous fournir le service : afficher vos livres, vos '
             'rapports et vos stocks à vous et aux personnes que vous autorisez. '

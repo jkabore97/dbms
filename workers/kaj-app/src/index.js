@@ -1,6 +1,6 @@
 // The site in front of the Flutter web build (assets in ../../app/build/web).
 //
-// Two jobs, then the static files as before:
+// Three jobs, then the static files as before:
 //
 //  1. One address. Every request that reaches the old
 //     dbms.kabore-boss.workers.dev name is sent, for good, to the same path
@@ -14,10 +14,16 @@
 //     pizza du quartier », with the pizza. Anything that goes wrong (no such
 //     shop, Supabase down) serves the page untouched, with Mara's tags.
 //
+//  3. /confidentialite and /conditions are plain pages (legal.js), readable
+//     with no JavaScript — what Google's verification of the sign-in screen
+//     reads.
+//
 // SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and UPLOADS_URL come from the deploy
 // (deploy-cloudflare.yml, from the repository's secrets and variables),
 // never from this file. The publishable key is the one the web app already
 // ships to every browser.
+
+import { legalPage } from "./legal.js";
 
 const SITE = "https://marakaj.com";
 
@@ -27,6 +33,12 @@ export default {
 
     if (url.hostname.endsWith(".workers.dev")) {
       return Response.redirect(`${SITE}${url.pathname}${url.search}`, 301);
+    }
+
+    // The privacy policy and the terms, as plain pages (legal.js).
+    if (request.method === "GET") {
+      const legal = legalPage(url.pathname);
+      if (legal) return legal;
     }
 
     const shop = url.pathname.match(/^\/s\/([a-z0-9-]+)\/?$/);
