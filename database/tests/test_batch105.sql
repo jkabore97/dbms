@@ -514,14 +514,27 @@ declare
     a1 uuid;
     a2 uuid;
     n0 int;
+    v_had boolean := exists (select 1 from platform_settings where key = 'application_form');
 begin
+    -- The request page (107) is its own setter's: never a Réglages setting.
+    if not v_had then
+        insert into platform_settings (key, value) values ('application_form', '{"welcome": "B105"}');
+    end if;
     perform set_config('request.jwt.claim.sub', '10510510-0000-0000-0000-000000000001', true);
     execute 'set local role authenticated';
     v := platform_settings_board();
     if not v ? 'pro_price_month' or not v ? 'admin_two_step' or v ? 'path_seeded'
-       or v ? 'team_seats_seeded' or v ? 'association_setup_marked' then
-        raise exception 'FAIL: the board is not every setting but the markers: %', v;
+       or v ? 'team_seats_seeded' or v ? 'association_setup_marked' or v ? 'application_form' then
+        raise exception 'FAIL: the board is not every setting but the markers and the request page: %', v;
     end if;
+    begin perform platform_set_setting('application_form', '{"welcome": "Bonjour"}');
+          raise exception 'FAIL: the request page written past its own setter';
+    exception when others then if sqlerrm <> 'Réglage inconnu : application_form' then raise; end if; end;
+    execute 'reset role';
+    if not v_had then
+        delete from platform_settings where key = 'application_form';
+    end if;
+    execute 'set local role authenticated';
 
     a1 := platform_set_setting('pro_price_month', to_jsonb((v_before #>> '{}')::numeric + 500));
     if a1 is null or (select value from platform_settings where key = 'pro_price_month')
@@ -597,14 +610,14 @@ begin
     if two_step_on() then
         raise exception 'FAIL: the two-step switch did not come back off';
     end if;
-    raise notice 'PASS: the board hides the markers and names who changed what; a change of its own type is journaled with its before, undone, not over a later one; a word, a negative, 150 %%, a number for a switch, a marker, a new key refused; the two-step switch on and back off';
+    raise notice 'PASS: the board hides the markers and the request page (107''s own) and names who changed what; a change of its own type is journaled with its before, undone, not over a later one; a word, a negative, 150 %%, a number for a switch, a marker, a new key refused; the two-step switch on and back off';
 end $$;
 
 \echo ''
 \echo '--- TEST 7: no dead switch in Réglages — every key the app lists exists and is read by the server ---'
 do $$
 declare
-    -- The app's list: app/lib/features/console/settings_section.dart
+    -- The app's list: app/lib/features/admin/center/settings_section.dart
     -- (test/command_center_test.dart checks the two lists are the same).
     v_keys text[] := array[
         'pro_price_month', 'pro_price_year', 'pro_currency', 'platform_wave', 'platform_wave_name',

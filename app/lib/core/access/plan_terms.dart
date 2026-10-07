@@ -20,6 +20,7 @@ class PlanTerms {
     this.waveName = '',
     this.deliverySharePct = 10,
     this.stripeOn = false,
+    this.kinds = const {},
   });
 
   /// What 066 seeds, so a build ahead of its database badges the same tools.
@@ -69,6 +70,35 @@ class PlanTerms {
 
   bool get hasWave => wave.trim().isNotEmpty;
 
+  /// A kind's own free numbers, set by Mara (107's kind_settings), keyed
+  /// 'retail' | 'farm' | 'association', then by the setting's key. Empty
+  /// when no kind has one: every business reads the numbers above.
+  final Map<String, Map<String, int>> kinds;
+
+  /// The terms a business of [profile] lives under: its kind's own free
+  /// numbers where Mara set them (a legacy church reads as an
+  /// association), the platform's otherwise — what the server enforces.
+  PlanTerms forProfile(String profile) {
+    final own = kinds[profile == 'church' ? 'association' : profile];
+    if (own == null || own.isEmpty) return this;
+    return PlanTerms(
+      proFeatures: proFeatures,
+      freeMaxStaff: own['free_max_staff'] ?? freeMaxStaff,
+      freeMaxInvoicesMonth: own['free_max_invoices_month'] ?? freeMaxInvoicesMonth,
+      freeMaxPhotos: freeMaxPhotos,
+      freePhotoItems: own['free_photo_items'] ?? freePhotoItems,
+      freeHistoryMonths: freeHistoryMonths,
+      priceMonth: priceMonth,
+      priceYear: priceYear,
+      currency: currency,
+      wave: wave,
+      waveName: waveName,
+      deliverySharePct: deliverySharePct,
+      stripeOn: stripeOn,
+      kinds: kinds,
+    );
+  }
+
   factory PlanTerms.fromJson(Map<String, dynamic> json) {
     int n(String key, int fallback) {
       final v = json[key];
@@ -96,6 +126,15 @@ class PlanTerms {
       waveName: s('platform_wave_name'),
       deliverySharePct: n('delivery_share_pct', 10),
       stripeOn: json['stripe_on'] == true,
+      kinds: {
+        if (json['kinds'] is Map)
+          for (final e in (json['kinds'] as Map).entries)
+            if (e.value is Map)
+              '${e.key}': {
+                for (final v in (e.value as Map).entries)
+                  if (v.value is num) '${v.key}': (v.value as num).toInt(),
+              },
+      },
     );
   }
 

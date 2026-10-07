@@ -81,7 +81,8 @@ class _ProPayPanelState extends State<ProPayPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final terms = widget.terms;
+    // The free numbers of this business's kind (107), as the server holds it.
+    final terms = widget.terms.forProfile(widget.org.profile);
     final muted = theme.textTheme.bodyMedium
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 

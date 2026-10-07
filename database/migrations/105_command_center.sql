@@ -638,14 +638,18 @@ on conflict do nothing;
 -- ------------------------------------------------------------
 -- 5. Réglages
 -- ------------------------------------------------------------
--- The markers a migration leaves to remember it ran once are not settings.
+-- Not a Réglages setting: the markers a migration leaves to remember it
+-- ran once, and a key with a page and a checked setter of its own — the
+-- request page (107's application_form, platform_set_application_form),
+-- which only its own setter may write, with its own undo.
 create or replace function platform_setting_internal(p_key text)
 returns boolean
 language sql
 immutable
 set search_path = public
 as $$
-    select p_key like '%\_seeded' or p_key like '%\_marked';
+    select p_key like '%\_seeded' or p_key like '%\_marked'
+        or p_key in ('application_form');
 $$;
 
 create or replace function platform_settings_board()
@@ -665,7 +669,8 @@ begin
                                    where a.kind = 'setting' and a.after->>'key' = s.key
                                    order by a.at desc limit 1)))
           from platform_settings s
-         where not platform_setting_internal(s.key)), '{}'::jsonb);
+         where not platform_setting_internal(s.key)
+           and jsonb_typeof(s.value) <> 'object'), '{}'::jsonb);
 end;
 $$;
 
@@ -685,6 +690,10 @@ begin
         raise exception 'Réglage inconnu : %', coalesce(p_key, '');
     end if;
     v_type := jsonb_typeof(v_before);
+    -- A whole object is a page's, never a single setting.
+    if v_type = 'object' then
+        raise exception 'Réglage inconnu : %', p_key;
+    end if;
     if p_value is null or jsonb_typeof(p_value) <> v_type then
         raise exception '%', case v_type
             when 'number'  then 'Ce réglage attend un nombre.'
