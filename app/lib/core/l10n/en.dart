@@ -32,12 +32,6 @@ const enStrings = <String, String>{
       'TODAY',
   'Abonnement par carte (Stripe)':
       'Card subscription (Stripe)',
-  'Académie':
-      'Academy',
-  'Académie Mara':
-      'Mara Academy',
-  'Accepter une commande de la vitrine':
-      'Accept an order from the vitrine',
   'Accueil':
       'Home',
   'Accès de l\'équipe':
@@ -136,8 +130,6 @@ const enStrings = <String, String>{
       'Call',
   'Appeler la boutique':
       'Call the shop',
-  'Apprendre et gagner · Académie Mara':
-      'Learn and earn · Mara Academy',
   'Approuver':
       'Approve',
   'Archiver':
@@ -276,8 +268,6 @@ const enStrings = <String, String>{
       'CODE TO GIVE THE COURIER',
   'C\'est en ligne.':
       'It\'s online.',
-  'C\'est fait !':
-      'Done!',
   'C\'est prêt !':
       'All set!',
   'Cacher les montants à l\'accueil':
@@ -444,14 +434,10 @@ const enStrings = <String, String>{
       'Orders',
   'Commandes, Mara Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.':
       'Orders, Mara Pro and featured spots. To open once the Wave key is installed and a test has worked.',
-  'Comment faire ?':
-      'How to do it?',
   'Comment gagner des cauris':
       'How to earn cauris',
   'Commerce':
       'Shop',
-  'Compléter ma vitrine':
-      'Complete my vitrine',
   'Complétez vos informations':
       'Complete your details',
   'Compris':
@@ -556,8 +542,6 @@ const enStrings = <String, String>{
       'Ask the customer for the 4 digits shown in their order: they prove the parcel really arrived.',
   'Derrière la maison':
       'Behind the house',
-  'Des leçons de deux minutes, en images':
-      'Two-minute lessons, in pictures',
   'Description pour la vitrine (facultatif)':
       'Description for the vitrine (optional)',
   'Destination (facultatif)':
@@ -778,8 +762,6 @@ const enStrings = <String, String>{
       'Supplier',
   'Frais de livraison':
       'Delivery fee',
-  'Gagnés en vendant bien, à dépenser en outils Pro':
-      'Earned by selling well, to spend on Pro tools',
   'Garder':
       'Keep',
   'Gratuit':
@@ -792,8 +774,6 @@ const enStrings = <String, String>{
       'Manage the card or cancel',
   'Heures travaillées':
       'Hours worked',
-  'Horaires':
-      'Opening hours',
   'Hôtel Indépendance':
       'Hôtel Indépendance',
   'Identifiant marchand Wave':
@@ -834,8 +814,6 @@ const enStrings = <String, String>{
       'Directions',
   'J\'accepte':
       'I accept',
-  'J\'ai compris':
-      'Got it',
   'J\'ai payé':
       'I\'ve paid',
   'J\'ai un code':
@@ -858,8 +836,6 @@ const enStrings = <String, String>{
       'Day worked',
   'Kaboré':
       'Kaboré',
-  'L\'Académie n\'est pas encore ouverte.':
-      'The Academy is not open yet.',
   'L\'adresse web et le type d\'activité changent ce que voient tous les membres. Contactez Kaj-consulting pour les modifier.':
       'The web address and the type of business change what every member sees. Contact Kaj-consulting to change them.',
   'L\'application n\'a pas pu démarrer':
@@ -1070,8 +1046,6 @@ const enStrings = <String, String>{
       'Monthly',
   'Merci, c\'est noté.':
       'Thank you, it\'s noted.',
-  'Mes cauris':
-      'My cauris',
   'Mes commandes':
       'My orders',
   'Mes courses':
@@ -1086,14 +1060,10 @@ const enStrings = <String, String>{
       'Feature this item',
   'Mettre en avant':
       'Feature',
-  'Mettre en avant · Habillage Pro':
-      'Feature · Pro dressing',
   'Mettre en vente':
       'Put on sale',
   'Mettre sur la vitrine':
       'Put on the vitrine',
-  'Mettre un article en vente':
-      'Put an item on sale',
   'Minimum':
       'Minimum',
   'Minimum jusqu\'à (km)':
@@ -1372,14 +1342,10 @@ const enStrings = <String, String>{
       'Share the statement',
   'Pas de réseau : vente gardée sur le téléphone. Elle partira dès le retour de la connexion.':
       'No network: sale kept on the phone. It will go as soon as the connection is back.',
-  'Pas encore de cauris. La première commande terminée en rapporte.':
-      'No cauris yet. The first finished order earns some.',
   'Pas encore prêt':
       'Not ready yet',
   'Passer à Mara Pro':
       'Switch to Mara Pro',
-  'Passez à Mara Pro pour habiller votre vitrine.':
-      'Switch to Mara Pro to dress your vitrine.',
   'Passif':
       'Liabilities',
   'Payer':
@@ -1602,8 +1568,6 @@ const enStrings = <String, String>{
       'Hand over',
   'Remettre en service':
       'Put back in service',
-  'Remplissez votre vitrine':
-      'Fill your vitrine',
   'Rendement attendu en kg (facultatif)':
       'Expected yield in kg (optional)',
   'Renommer':
@@ -1694,8 +1658,6 @@ const enStrings = <String, String>{
       'Mara Pro only',
   'Résumé de la semaine':
       'Week\'s summary',
-  'Réussie !':
-      'Done!',
   'Rôle':
       'Role',
   'Rôles':
@@ -1772,8 +1734,6 @@ const enStrings = <String, String>{
       'Sugar 1kg',
   'Suggestions':
       'Suggestions',
-  'Suivant':
-      'Next',
   'Suivant : {label}':
       'Next: {label}',
   'Suppressions':
@@ -1804,8 +1764,6 @@ const enStrings = <String, String>{
       'TYPE',
   'Taille, goût, origine — ce que le client demande au comptoir.':
       'Size, taste, origin — what the customer asks at the counter.',
-  'Tant qu\'aucun article n\'est publié, la vitrine n\'apparaît pas dans l\'annuaire.':
-      'As long as no item is published, the vitrine does not appear in the directory.',
   'Tapez « {name} » pour confirmer.':
       'Type « {name} » to confirm.',
   'Taux':
@@ -1814,8 +1772,6 @@ const enStrings = <String, String>{
       'Exchange rates',
   'Tendance':
       'Trend',
-  'Tenir le cahier de la ferme':
-      'Keep the farm log',
   'Terminer':
       'Finish',
   'Terminé':
@@ -1904,8 +1860,6 @@ const enStrings = <String, String>{
       'A lost or stolen phone',
   'Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.':
       'Once the payment is sent, say so here: Mara checks it and the featured spot starts.',
-  'Une photo de couverture, une phrase, vos horaires, la couleur de vos boutons et jusqu\'à six articles en tête de la vitrine.':
-      'A cover photo, a sentence, your opening hours, your button colour and up to six items at the top of the vitrine.',
   'Une photo sans nom reste une preuve. La classer la rend trouvable.':
       'A photo without a name is still proof. Filing it makes it findable.',
   'Unité':
@@ -1956,14 +1910,8 @@ const enStrings = <String, String>{
       'Visible to the public, with its photo and price, if the shop\'s vitrine is open.',
   'Vitrine avancée':
       'Advanced vitrine',
-  'Vitrine complète':
-      'Vitrine complete',
-  'Vitrine complète à {score} pour cent':
-      'Vitrine {score} percent complete',
   'Vitrine en ligne':
       'Online vitrine',
-  'Vitrine personnalisée':
-      'Custom vitrine',
   'Vivants':
       'Alive',
   'Voir':
@@ -2014,10 +1962,6 @@ const enStrings = <String, String>{
       'Your manager sent it to you by WhatsApp or SMS.',
   'Votre vitrine':
       'Your vitrine',
-  'Votre vitrine : {score} %':
-      'Your vitrine: {score} %',
-  'Votre vitrine ouvre vos outils':
-      'Your vitrine opens your tools',
   'Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.':
       'Your vitrine offers pickup at the shop. Switch to Mara Pro to deliver to your customers, with the price worked out by distance.',
   'Vous dirigez une entreprise ?':
@@ -2082,8 +2026,6 @@ const enStrings = <String, String>{
       '{days} days',
   '{delta}':
       '{delta}',
-  '{done} / {total}':
-      '{done} / {total}',
   '{fullName} payé.':
       '{fullName} paid.',
   '{headCount}':
@@ -2102,8 +2044,6 @@ const enStrings = <String, String>{
       '{length} shops here',
   '{memberCount}':
       '{memberCount}',
-  '{minutes} min':
-      '{minutes} min',
   '{n} articles':
       '{n} items',
   '{orgName} · {label}':
@@ -2112,8 +2052,6 @@ const enStrings = <String, String>{
       '{points}',
   '{saleCount} ventes · {marginPct} %':
       '{saleCount} sales · {marginPct} %',
-  '{score} %':
-      '{score} %',
   '{seen} vues · {opened} ouvertures · {added} au panier · {ordered} commandes':
       '{seen} views · {opened} opens · {added} to basket · {ordered} orders',
   '{shopName} ne la verra plus.':
@@ -2122,8 +2060,6 @@ const enStrings = <String, String>{
       'To file',
   'À encaisser':
       'To collect',
-  'À faire : {next}':
-      'To do: {next}',
   'À la une':
       'Featured',
   'À payer':
@@ -2274,168 +2210,20 @@ const enStrings = <String, String>{
       '{s} /day',
   'Écrivez au moins une ligne.':
       'Write at least one line.',
-  'Mara tient votre boutique dans votre poche : la caisse, le stock, et une vitrine où les clients du quartier commandent.':
-      'Mara keeps your shop in your pocket: the till, the stock, and a vitrine where customers nearby order.',
-  'L\'accueil':
-      'The home screen',
-  'Chaque matin, l\'accueil vous dit votre journée : ce qui est vendu, ce qui manque, les commandes à traiter.':
-      'Every morning, the home screen tells you your day: what sold, what is missing, the orders to handle.',
-  'Le menu « Plus »':
-      'The « More » menu',
-  'Tout le reste est dans « Plus », en bas à droite : vos articles, votre vitrine, vos cauris.':
-      'Everything else is in « More », bottom right: your items, your vitrine, your cauris.',
-  'Des cauris pour chaque progrès':
-      'Cauris for every step forward',
-  'Chaque leçon de l\'Académie et chaque bonne vente vous rapportent des cauris, à dépenser en outils Pro.':
-      'Every Academy lesson and every good sale earns you cauris, to spend on Pro tools.',
   'Vos articles':
       'Your items',
-  'Ouvrez « Articles » : c\'est votre rayon.':
-      'Open « Items »: it is your shelf.',
-  'Ajoutez-en un':
-      'Add one',
-  'Le bouton « + » : un nom, un prix, combien vous en avez.':
-      'The « + » button: a name, a price, how many you have.',
-  'Cochez « Sur la vitrine » : les clients le voient et peuvent le commander.':
-      'Tick « On the vitrine »: customers see it and can order it.',
-  'Les paramètres':
-      'The settings',
-  'Compte › Administration › Paramètres › Vitrine.':
-      'Account › Administration › Settings › Vitrine.',
-  'Ouvrez-la':
-      'Open it',
-  '« Ouvrir la vitrine » : votre boutique a sa page, à partager sur WhatsApp.':
-      '« Open the vitrine »: your shop has its page, to share on WhatsApp.',
-  'Dites où vous êtes':
-      'Say where you are',
-  'Adresse, téléphone, position sur la carte : les clients vous trouvent, et votre vitrine monte vers 100 %.':
-      'Address, phone, position on the map: customers find you, and your vitrine climbs towards 100 %.',
-  'Une photo vend':
-      'A photo sells',
-  'Un article en photo se vend bien mieux qu\'un nom tout seul.':
-      'An item with a photo sells far better than a name on its own.',
-  'Touchez l\'article':
-      'Tap the item',
-  'Dans Articles, touchez-en un, puis le carré de la photo.':
-      'In Items, tap one, then the photo square.',
-  'À la lumière du jour':
-      'In daylight',
-  'Sur un fond simple, l\'article bien au centre. Trois photos et votre vitrine fait envie.':
-      'On a plain background, the item well in the middle. Three photos and your vitrine looks inviting.',
-  'La caisse':
-      'The till',
-  'Le gros bouton « Vente » de l\'accueil.':
-      'The big « Sale » button on the home screen.',
-  'Choisissez les articles':
-      'Choose the items',
-  'Touchez ce que le client prend ; le total se fait tout seul.':
-      'Tap what the customer takes; the total adds up by itself.',
-  'Encaissez':
-      'Get paid',
-  'Espèces, Wave ou à crédit : touchez, c\'est noté, le stock descend.':
-      'Cash, Wave or on credit: tap, it\'s noted, the stock goes down.',
-  'Vos bandes':
-      'Your batches',
-  'Ouvrez « Bandes » : chaque lot d\'animaux a sa fiche.':
-      'Open « Batches »: each lot of animals has its card.',
-  'Chaque jour, une ligne':
-      'Every day, one line',
-  'Mortalité, pesée, vaccin : notez ce qui s\'est passé.':
-      'Deaths, weighing, vaccine: note what happened.',
-  'Un cahier qui rapporte':
-      'A log that pays',
-  'Un cahier tenu chaque jour rapporte des cauris, et vous dit tôt quand une bande va mal.':
-      'A log kept every day earns cauris, and tells you early when a batch is doing badly.',
-  'Une commande arrive':
-      'An order arrives',
-  'La vitrine vous prévient : « Nouvelle commande ».':
-      'The vitrine tells you: « New order ».',
-  'Acceptez vite':
-      'Accept fast',
-  'Ouvrez-la et touchez « Accepter ». En moins de 15 minutes, elle vous rapporte des cauris.':
-      'Open it and tap « Accept ». Within 15 minutes, it earns you cauris.',
-  'Préparez, remettez':
-      'Prepare, hand over',
-  '« Prête », puis « Remise » quand le client l\'a : la commande est terminée.':
-      '« Ready », then « Handed over » once the customer has it: the order is finished.',
-  'Les cauris':
-      'Cauris',
-  'Comme autrefois au marché, les cauris sont une monnaie : la vôtre sur Mara.':
-      'Like in the market of old, cauris are a currency: yours on Mara.',
-  'On les gagne en vendant bien':
-      'You earn them by selling well',
-  'Commandes terminées, clients qui reviennent, vitrine complète, caisse tenue : chaque bonne habitude rapporte.':
-      'Finished orders, returning customers, a complete vitrine, a kept till: every good habit pays.',
-  'On les dépense en outils':
-      'You spend them on tools',
-  'Un outil Pro grisé ? Débloquez-le 30 jours avec vos cauris, sans payer.':
-      'A greyed Pro tool? Unlock it for 30 days with your cauris, without paying.',
-  'Votre ligue':
-      'Your league',
-  'Vous courez avec les boutiques de votre ville et de votre taille.':
-      'You race with the shops of your town and your size.',
   'Chaque semaine':
       'Every week',
-  'Les cauris gagnés du lundi au dimanche font votre place. Dépenser ne la fait jamais perdre.':
-      'The cauris earned from Monday to Sunday make your place. Spending never loses it.',
-  'Le podium':
-      'The podium',
-  'Les 3 premiers gagnent des cauris et le badge « Top 3 » sur leur vitrine ; le premier est mis en avant.':
-      'The top 3 win cauris and the « Top 3 » badge on their vitrine; the winner is featured.',
   'Plus':
       'More',
   '+':
       '+',
   'Vente':
       'Sale',
-  'Riz ×2':
-      'Rice ×2',
-  'Noter':
-      'Note',
   'Accepter':
       'Accept',
-  'Remise':
-      'Handed over',
   'Débloquer':
       'Unlock',
-  'Ouvrir mes articles':
-      'Open my items',
-  'Prendre mes photos':
-      'Take my photos',
-  'Aller à la caisse':
-      'Go to the till',
-  'Ouvrir mes bandes':
-      'Open my batches',
-  'Voir mes commandes':
-      'See my orders',
-  'Voir mes cauris':
-      'See my cauris',
-  'Voir le classement':
-      'See the ranking',
-  'Ouvrir sa vitrine':
-      'Open your vitrine',
-  'Trois articles en photo':
-      'Three items with photos',
-  'Encaisser une vente':
-      'Ring up a sale',
-  'Gagner et dépenser des cauris':
-      'Earn and spend cauris',
-  'Le classement de la semaine':
-      'This week\'s ranking',
-  'Essayer maintenant':
-      'Try it now',
-  'Y aller':
-      'Go there',
-  'Bientôt dans l\'Académie.':
-      'Coming soon in the Academy.',
-  'Vitrine à {pct} %':
-      'Vitrine at {pct} %',
-  '{n} commandes':
-      '{n} orders',
-  'Vitrine : {score} %':
-      'Vitrine: {score} %',
-  'Commandes : {orders} / {need}':
-      'Orders: {orders} / {need}',
   'Avec Mara Pro':
       'With Mara Pro',
   'Ouvert':
@@ -2446,14 +2234,6 @@ const enStrings = <String, String>{
       'Production',
   '2e entreprise':
       '2nd business',
-  'Présentation':
-      'Description',
-  'Apprenti':
-      'Apprentice',
-  'Commerçant':
-      'Trader',
-  'Maître':
-      'Master',
   'Identité':
       'Identity',
   'Paiements':
@@ -2558,10 +2338,6 @@ const enStrings = <String, String>{
       'No entries in this period.',
   'Bonjour {label}.':
       'Hello {label}.',
-  'Bravo ! +{earned} cauris pour votre entreprise.':
-      'Well done! +{earned} cauris for your business.',
-  'Bravo, leçon terminée !':
-      'Well done, lesson finished!',
   'C\'est ce numéro que votre responsable utilisera.':
       'This is the number your manager will use.',
   'Ce compte gère toutes les entreprises. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.':
@@ -2670,8 +2446,6 @@ const enStrings = <String, String>{
       'The owner manages their own details.',
   'Le taux que vous obtenez réellement.':
       'The rate you really get.',
-  'Lecture':
-      'Play',
   'Lecture seule.':
       'Read only.',
   'Les deux colonnes ne sont pas égales. Signalez-le : une écriture a contourné l\'application.':
@@ -2736,14 +2510,8 @@ const enStrings = <String, String>{
       'Payroll, analytics, accounting, unlimited team…',
   'Paiement annulé : rien n\'a été prélevé.':
       'Payment cancelled: nothing was charged.',
-  'Parrainez une entreprise':
-      'Sponsor a business',
-  'Pas encore : faites-le d\'abord dans l\'application, puis revenez.':
-      'Not yet: do it in the app first, then come back.',
   'Pas sur la vitrine':
       'Not on the vitrine',
-  'Pause':
-      'Pause',
   'Payez par Wave ou Orange Money à ce numéro':
       'Pay by Wave or Orange Money to this number',
   'Payé':
@@ -2836,8 +2604,6 @@ const enStrings = <String, String>{
       'All the tools below are open.',
   'Tout ce qui a été enregistré sur cet appareil est arrivé au serveur.':
       'Everything recorded on this device has reached the server.',
-  'Tout est déjà sur la vitrine.':
-      'Everything is already on the vitrine.',
   'Tout est envoyé':
       'Everything is sent',
   'Tout est payé.':
@@ -2858,8 +2624,6 @@ const enStrings = <String, String>{
       'A public page for the farm, with what you put « For sale » — photo, price, by the unit or the tray — to share on WhatsApp. Customers order, even in advance for a batch or a harvest to come.',
   'Vente de terrain':
       'Land sale',
-  'Visible du public dès {min} articles en vente : {n} / {min}.':
-      'Visible to the public from {min} items on sale: {n} / {min}.',
   'Vitrine {score} % · {orders}/3 commandes':
       'Vitrine {score} % · {orders}/3 orders',
   'Votre accès porte sur les totaux. Le détail des bandes ne vous est pas communiqué.':
@@ -2964,12 +2728,6 @@ const enStrings = <String, String>{
       '{n} other currencies',
   '{n} autre monnaie':
       '{n} other currency',
-  'Factures : vitrine à 70 % pour les débloquer.':
-      'Invoices: vitrine at 70 % to unlock them.',
-  'Production : vitrine à 90 % pour la débloquer.':
-      'Production: vitrine at 90 % to unlock it.',
-  'Carnet de crédit : 3 commandes terminées pour le débloquer.':
-      'Credit book: 3 finished orders to unlock it.',
   'Une deuxième entreprise : avec Mara Pro.':
       'A second business: with Mara Pro.',
   'Paiement en espèces uniquement pour le moment.':
@@ -3000,18 +2758,13 @@ const enStrings = <String, String>{
   'Ferme à': 'Closes at',
   'Choisissez au moins un jour.': 'Choose at least one day.',
   'AVEC MARA PRO': 'WITH MARA PRO',
-  'Essayez ici ; vos clients le verront avec Mara Pro.':
-      'Try it here; your customers will see it with Mara Pro.',
   'La présentation, les articles à la une et « Ouvert maintenant ».':
       'The layout, featured articles and « Open now ».',
   'Présentation des articles': 'How articles are shown',
-  'La présentation, les articles à la une et « Ouvert maintenant » s\'affichent avec Mara Pro.':
-      'The layout, featured articles and « Open now » show with Mara Pro.',
   'Grille': 'Grid',
   'Grandes photos': 'Large photos',
   'Liste': 'List',
   'Menu': 'Menu',
-  'Habiller ma vitrine · Mettre en avant': 'Dress my vitrine · Promote',
   'Ouvert maintenant': 'Open now',
   'Fermé': 'Closed',
   'Les horaires : choisissez les jours, puis une heure d\'ouverture et une de fermeture':
@@ -3100,30 +2853,102 @@ const enStrings = <String, String>{
   'Six articles à la une, en tête': 'Six featured articles, at the top',
   '« Ouvert maintenant » et les épuisés cachés': '“Open now” and sold-out items hidden',
   'Essayez dans l\'aperçu :': 'Try it in the preview:',
-  'Des articles en vente': 'Articles on sale',
-  'Une phrase de présentation': 'A one-line description',
-  'Ce que vous vendez, en une phrase': 'What you sell, in one sentence',
-  'Un numéro de téléphone': 'A phone number',
-  'Pour que vos clients vous appellent': 'So your customers can call you',
-  'L\'adresse': 'The address',
-  'Le quartier, un repère': 'The neighbourhood, a landmark',
-  'La position sur la carte': 'The position on the map',
-  'Vos clients vous trouvent': 'Your customers find you',
-  'Impossible de lire votre vitrine pour le moment. Réessayez avec du réseau.': 'Your shop window can\'t be read right now. Try again with a connection.',
-  'Vitrine complète !': 'Shop window complete!',
-  'Vers 100 %, pas à pas': 'To 100 %, step by step',
-  'Tous vos outils s\'ouvrent.': 'All your tools open.',
-  '{done} sur {total} — chaque étape ouvre un outil de plus.': '{done} of {total} — each step opens one more tool.',
   'Fait': 'Done',
   'Faire maintenant': 'Do it now',
   'Faire': 'Do it',
   'Factures débloquées': 'Invoices unlocked',
-  'Votre vitrine est assez complète : faites vos factures.': 'Your shop window is complete enough: make your invoices.',
   'Production débloquée': 'Production unlocked',
-  'Vitrine complète : suivez ce que vous fabriquez.': 'Shop window complete: track what you make.',
   'Carnet de crédit débloqué': 'Credit book unlocked',
   'Trois commandes terminées : notez ce que vos clients vous doivent.': 'Three orders completed: note what your customers owe you.',
   'Outil débloqué': 'Tool unlocked',
   '{n} outils débloqués !': '{n} tools unlocked!',
   'Super !': 'Great!',
+  'Mon chemin': 'My path',
+  '{n} cauris': '{n} cauris',
+  'Chemin terminé : bravo !': 'Path complete: well done!',
+  'Vos outils': 'Your tools',
+  'Parrainer': 'Refer',
+  'Bientôt, quand votre quartier sera là': 'Soon, when your neighbourhood is here',
+  'Dépenser mes cauris': 'Spend my cauris',
+  'Ouvert jusqu\'au {date}': 'Open until {date}',
+  'Comment gagner des cauris · historique': 'How to earn cauris · history',
+  'Étape {n} · {title}': 'Stage {n} · {title}',
+  'Étape {n} sur 4 · {title}': 'Stage {n} of 4 · {title}',
+  '+{n} cauris': '+{n} cauris',
+  '{n} articles en vente et {p} en photo': '{n} items for sale and {p} with a photo',
+  '{n} produits en vente et {p} en photo': '{n} products for sale and {p} with a photo',
+  'Terminez l\'étape {stage}': 'Finish the {stage} stage',
+  '{n} commandes terminées': '{n} completed orders',
+  'ouvre : {tool}': 'opens: {tool}',
+  'Se débloque : {goal}': 'Unlocks with: {goal}',
+  'Vos articles sont en vente et en photo : faites vos factures.': 'Your items are on sale with photos: make your invoices.',
+  'Étape Remplir terminée : suivez ce que vous fabriquez.': 'Fill stage complete: track what you make.',
+  '{n} articles en vente': '{n} items for sale',
+  '{n} produits en vente': '{n} products for sale',
+  'Avec {n} articles, votre vitrine se montre à tout le monde.': 'With {n} items, your vitrine shows itself to everyone.',
+  'Avec {n} produits, votre vitrine se montre à tout le monde.': 'With {n} products, your vitrine shows itself to everyone.',
+  'Une entreprise vous nomme parrain. Quand elle décolle, +{referral} cauris de plus.': 'A business names you as its sponsor. When it takes off, +{referral} more cauris.',
+  'Faites vos ventes à la caisse, sur l\'accueil.': 'Make your sales at the till, on the home screen.',
+  'Rejoignez Mara, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».': 'Join Mara, the shops near you. When you are asked who referred you, give the code « {code} ».',
+  'Pas encore de cauris. Votre premier article en vente en rapporte.': 'No cauris yet. Your first item for sale earns some.',
+  'Étapes du chemin : {n} cauris chacune': 'Path steps: {n} cauris each',
+  'Étapes du chemin : {min} à {max} cauris chacune': 'Path steps: {min} to {max} cauris each',
+  'd MMM, HH:mm': 'MMM d, HH:mm',
+  'd MMMM yyyy': 'MMMM d, yyyy',
+  'cauris': 'cauris',
+  'Utilisez-les ou gagnez-en d\'autres avant le {date} : sans mouvement pendant 6 mois, ils expirent.': 'Use them or earn more before {date}: after 6 months without movement, they expire.',
+  'Bientôt': 'Soon',
+  'Factures : {n} articles en vente et {p} en photo pour les débloquer.': 'Invoices: {n} items for sale and {p} with a photo to unlock them.',
+  'Production : terminez l\'étape Remplir pour la débloquer.': 'Production: finish the Fill stage to unlock it.',
+  'Carnet de crédit : {n} commandes terminées pour le débloquer.': 'Credit book: {n} completed orders to unlock it.',
+  'Remplir': 'Fill',
+  'Vendre': 'Sell',
+  'Grandir': 'Grow',
+  'Mon premier article': 'My first item',
+  'Mon premier produit en vente': 'My first product for sale',
+  'Mon téléphone et mon adresse': 'My phone and my address',
+  'Trois articles en photo': 'Three items with a photo',
+  'Trois produits en photo': 'Three products with a photo',
+  'Une phrase de présentation': 'A sentence about you',
+  'Ma position sur la carte': 'My place on the map',
+  'Ma première vente à la caisse': 'My first sale at the till',
+  'Mon cahier de la ferme': 'My farm log',
+  'Ma première commande acceptée': 'My first accepted order',
+  'Trois commandes terminées': 'Three completed orders',
+  'Un client revenu': 'A returning customer',
+  'La caisse tenue 7 jours': 'The till kept for 7 days',
+  'Le cahier tenu 7 jours': 'The log kept for 7 days',
+  'Mon premier outil avec mes cauris': 'My first tool with my cauris',
+  'Parrainer une entreprise': 'Refer a business',
+  'Dans le top 3 de la semaine': 'In the week\'s top 3',
+  'Un article en vente, et votre boutique existe pour vos clients.': 'One item for sale, and your shop exists for your customers.',
+  'Un produit en vente, et votre ferme existe pour vos clients.': 'One product for sale, and your farm exists for your customers.',
+  'Votre vitrine, c\'est votre boutique ouverte sur internet.': 'Your vitrine is your shop, open on the internet.',
+  'Votre vitrine, c\'est votre ferme ouverte sur internet.': 'Your vitrine is your farm, open on the internet.',
+  'Vos clients savent vous appeler et vous trouver.': 'Your customers know how to call you and find you.',
+  'Une photo fait vendre : vos clients voient ce qu\'ils achètent.': 'A photo sells: your customers see what they buy.',
+  'Une phrase pour dire qui vous êtes et ce que vous vendez.': 'One sentence to say who you are and what you sell.',
+  'Vos clients vous trouvent sur la carte du quartier.': 'Your customers find you on the neighbourhood map.',
+  'Chaque vente notée, et votre caisse se tient toute seule.': 'Every sale noted, and your till keeps itself.',
+  'Notez une pesée, un vaccin ou une perte : la ferme se suit.': 'Note a weighing, a vaccine or a loss: the farm is followed.',
+  'Un client a commandé sur votre vitrine : répondez-lui vite.': 'A customer ordered on your vitrine: answer quickly.',
+  'Trois commandes remises, et le carnet de crédit s\'ouvre.': 'Three orders handed over, and the credit book opens.',
+  'Un client qui revient, c\'est un client content.': 'A customer who comes back is a happy customer.',
+  'Sept jours de caisse, et vous voyez ce que vous gagnez.': 'Seven days of till, and you see what you earn.',
+  'Sept jours de cahier, et vous voyez votre ferme grandir.': 'Seven days of log, and you see your farm grow.',
+  'Vos cauris ouvrent les outils de Mara Pro.': 'Your cauris open the Mara Pro tools.',
+  'Les trois premiers de la semaine gagnent des cauris en plus.': 'The week\'s top three earn extra cauris.',
+  'Commande terminée': 'Order completed',
+  'Commande acceptée en moins de 15 min': 'Order accepted in under 15 min',
+  'Un visiteur sur la vitrine': 'A visitor on the vitrine',
+  'Caisse tenue 7 jours de suite': 'Till kept 7 days in a row',
+  'Cahier de la ferme tenu': 'Farm log kept',
+  'Vitrine complète': 'Complete vitrine',
+  'Une entreprise parrainée a décollé': 'A referred business took off',
+  'Commande acceptée puis annulée': 'Order accepted then cancelled',
+  'Cauris expirés': 'Expired cauris',
+  'Dépensés': 'Spent',
+  'Étape du chemin': 'Path step',
+  'Podium de la semaine': 'Week\'s podium',
+  'Leçon de l\'Académie Mara': 'Mara Academy lesson',
 };

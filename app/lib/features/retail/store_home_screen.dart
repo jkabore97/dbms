@@ -10,11 +10,9 @@ import '../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/access/org_access.dart';
-import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/cauris/cauris_repository.dart';
-import '../../core/cauris/feature_states.dart';
 import '../cauris/path_card.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
@@ -57,9 +55,13 @@ class StoreHomeScreen extends StatefulWidget {
     this.capture,
     this.accountAction,
     this.access = OrgAccess.allEdit,
+    this.cauris,
   });
 
   final OrgSummary org;
+
+  /// Le Chemin's reader; the app's own unless a test gives one.
+  final CaurisRepository? cauris;
 
   /// The owner's dial from 031: which tools this person is shown here.
   final OrgAccess access;
@@ -101,13 +103,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   /// Sales kept on this phone for want of signal (package 7).
   int _salesWaiting = 0;
 
-  /// The vitrine's checklist (070), for an owner whose window is open and
-  /// unfinished: the nudge card. Null hides it.
-  VitrineChecklist? _vitrine;
-
-  /// The Basic path (085), as the session read it for this business.
-  BasicProgress? get _path =>
-      AppScope.read(context)?.session.featuresFor(widget.org.id)?.progress;
+  /// Le Chemin (097), for an admin: the card with the next step. Null
+  /// hides it.
+  PathState? _path;
 
   bool _loading = true;
   String? _error;
@@ -206,7 +204,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
   Future<void> _load() async {
     // Read before the first await: a context is not for after a gap.
-    final scopeAdmin = AppScope.read(context)?.admin;
     final scopeClient = AppScope.read(context)?.auth.client;
     final sync = AppScope.read(context)?.sync;
     final retail = widget.retail;
@@ -259,19 +256,21 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         waiting = (await capture.queueHealth(widget.org.id)).waiting;
       }
 
-      // The owner's nudge (070): best-effort, never in the way of the day.
-      VitrineChecklist? vitrine;
+      // The owner's next step (097): best-effort, never in the way of the
+      // day.
+      PathState? path;
       if (widget.org.isAdmin) {
-        try {
-          vitrine = await scopeAdmin?.vitrineChecklist(widget.org.id);
-        } catch (_) {}
+        final cauris = widget.cauris ?? CaurisRepository(scopeClient);
         // Cauris for a complete vitrine (084), read where it is seen.
-        unawaited(CaurisRepository(scopeClient).milestones(widget.org.id));
+        unawaited(cauris.milestones(widget.org.id));
+        try {
+          path = await cauris.pathState(widget.org.id);
+        } catch (_) {}
       }
 
       if (!mounted) return;
       setState(() {
-        _vitrine = vitrine;
+        _path = path;
         _day = day;
         _pendingOrders = pending;
         _expiring = expiring;
@@ -490,21 +489,15 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
               const SizedBox(height: 16),
             ],
 
-            // A new business's path (085): the vitrine opens its tools.
-            if (_path case final p? when p.gated) ...[
-              // Gone at 100 %: the guide's work is done.
-              if (PathCard.shows(p)) ...[
-                PathCard(org: widget.org, progress: p, onChanged: _load),
-                const SizedBox(height: 16),
-              ],
-            ] else if (_vitrine != null && _vitrine!.open && _vitrine!.score < 100) ...[
-              _VitrineNudge(
-                list: _vitrine!,
-                onTap: () async {
-                  await context
-                      .push(Routes.orgSettings(widget.org.id));
-                  if (mounted) await _load();
-                },
+            // Le Chemin (097): the one next thing to do. Gone once the
+            // path is walked.
+            if (PathCard.shows(widget.org, _path)) ...[
+              PathCard(
+                org: widget.org,
+                state: _path!,
+                onChanged: _load,
+                // The first sale is made here, at the till.
+                onHere: widget.retail == null ? null : _sell,
               ),
               const SizedBox(height: 16),
             ],
@@ -652,6 +645,18 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     if (mounted) await _load();
   }
 
+  /// Mon chemin, from the till: a step done at the till comes back here
+  /// and opens the sale sheet. The gates and the path are read again.
+  Future<void> _openChemin() async {
+    final session = AppScope.read(context)?.session;
+    final r = await context.push<Object?>(Routes.inside(
+        widget.org.id, pathCheminRest(fromTill: widget.retail != null)));
+    await session?.reloadFeatures(widget.org.id);
+    if (!mounted) return;
+    await _load();
+    if (r == pathSellResult && mounted) await _sell();
+  }
+
   /// The shop's five: Vente (this screen), Articles, Commandes, Factures,
   /// and Plus for what is consulted rather than worked in.
   HomeNav _nav(bool cameraReady) {
@@ -690,15 +695,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       more: [
         if (widget.org.isAdmin)
           HomeDestination(
-            icon: Icons.savings_outlined,
-            label: context.tr('Mes cauris'),
-            onTap: () => _openThenReload('cauris'),
+            icon: Icons.route_outlined,
+            label: context.tr('Mon chemin'),
+            onTap: _openChemin,
           ),
-        HomeDestination(
-          icon: Icons.school_outlined,
-          label: context.tr('Académie'),
-          onTap: () => _openThenReload('academie'),
-        ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
@@ -731,46 +731,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
         ),
       ],
-    );
-  }
-}
-
-/// "Votre vitrine : 40 %" on the shop's home (070): what the window still
-/// lacks, one tap from the settings that fix it.
-class _VitrineNudge extends StatelessWidget {
-  const _VitrineNudge({required this.list, required this.onTap});
-
-  final VitrineChecklist list;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final next = list.steps.where((s) => !s.done).map((s) => s.label).first;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: _Panel(
-        colour: theme.colorScheme.secondaryContainer,
-        child: Row(
-          children: [
-            const Icon(Icons.storefront_outlined),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.tr('Votre vitrine : {score} %', {'score': list.score}),
-                      style: theme.textTheme.titleSmall),
-                  Text(context.tr('À faire : {next}', {'next': next}),
-                      style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-      ),
     );
   }
 }

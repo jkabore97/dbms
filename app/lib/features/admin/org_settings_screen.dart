@@ -17,7 +17,6 @@ import '../retail/product_photo.dart';
 import '../common/owned_controller.dart';
 import 'pin_preview.dart';
 import 'spots_card.dart';
-import 'vitrine_checklist_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/kaj_theme.dart';
@@ -1449,13 +1448,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 10),
       _LinkRow(url: _storefrontUrl),
       const SizedBox(height: 16),
-      // What the window has and lacks (070), and "Tout publier".
-      VitrineChecklistCard(
-        orgId: widget.orgId,
-        admin: widget.admin,
-        retail: widget.retail,
-      ),
-      const SizedBox(height: 12),
       // Not a first step: the dressing (093) waits under « Vitrine
       // avancée », folded — its free basics and preview, and the Pro part
       // as one locked card.

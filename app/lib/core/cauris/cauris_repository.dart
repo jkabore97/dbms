@@ -29,6 +29,25 @@ class CaurisRepository {
     }
   }
 
+  /// Where the business stands on Le Chemin (097): its four stages, every
+  /// step with its count, the tools they open and the wallet — recorded
+  /// and paid on the way (path_sync). Null for anyone but a member, for a
+  /// profile off the path (an association, a church), or on a database
+  /// before 097.
+  Future<PathState?> pathState(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    // A database before 097 has no path_state: PGRST202 (or 42883).
+    try {
+      final v = await client.rpc('path_state', params: {'p_org': orgId});
+      if (v is! Map) return null;
+      return PathState.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (_missing(e)) return null;
+      rethrow;
+    }
+  }
+
   /// The milestones only a look at the business can see — its vitrine
   /// complete, a business it brought in that took off. Best-effort.
   Future<void> milestones(String orgId) async {
@@ -139,6 +158,183 @@ class CaurisRepository {
 }
 
 int _int(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+
+/// Le Chemin (097): one path from a new business to a busy one, in four
+/// stages — Ouvrir, Remplir, Vendre, Grandir. The server is its single
+/// truth: it counts each step, records it once reached (for good) and pays
+/// its cauris; the app only draws what it is told.
+class PathState {
+  const PathState({
+    required this.stage,
+    this.stages = const [],
+    this.next,
+    this.steps = const [],
+    this.tools = const {},
+    this.balance,
+    this.week,
+    this.leagueOpen = false,
+  });
+
+  /// The current stage, 1–4; 5 once every step is done.
+  final int stage;
+  final List<PathStage> stages;
+
+  /// The first step not yet done, in order; null when none is left.
+  final String? next;
+
+  /// Every step of every stage, in order (the app hides the stages ahead).
+  final List<PathStep> steps;
+
+  /// Tool → open: 'invoices', 'production', 'credits', 'second_business'.
+  final Map<String, bool> tools;
+
+  /// The wallet, and what was earned since Monday (the league's score) —
+  /// for the business's admins; null for its other members.
+  final int? balance;
+  final int? week;
+
+  /// From stage 4, once the business's league has three racing.
+  final bool leagueOpen;
+
+  bool get finished => stage >= 5;
+
+  PathStep? get nextStep {
+    for (final s in steps) {
+      if (s.key == next) return s;
+    }
+    return null;
+  }
+
+  /// The step worth proposing now: the next one, in order — but never the
+  /// podium while the league is not yet a race (it says « Bientôt »).
+  /// Null when nothing can be done today.
+  PathStep? get proposed {
+    for (final s in steps) {
+      if (s.done || soon(s)) continue;
+      return s;
+    }
+    return null;
+  }
+
+  /// A step that cannot be done yet: the week's podium, while the
+  /// business's league has too few racing.
+  bool soon(PathStep s) => s.key == 'podium' && !leagueOpen && !s.done;
+
+  PathStep? step(String key) {
+    for (final s in steps) {
+      if (s.key == key) return s;
+    }
+    return null;
+  }
+
+  List<PathStep> stepsOf(int n) => [
+        for (final s in steps)
+          if (s.stage == n) s,
+      ];
+
+  /// The stage's name: « Remplir ».
+  String titleOf(int n) {
+    for (final s in stages) {
+      if (s.n == n) return s.title;
+    }
+    return '';
+  }
+
+  factory PathState.fromJson(Map<String, dynamic> j) {
+    final t = j['tools'];
+    return PathState(
+      stage: _int(j['stage']),
+      stages: [
+        for (final s in (j['stages'] as List? ?? const []))
+          if (s is Map)
+            PathStage(
+              n: _int(s['n']),
+              title: '${s['title'] ?? ''}',
+              done: s['done'] == true,
+            ),
+      ],
+      next: j['next'] as String?,
+      steps: [
+        for (final s in (j['steps'] as List? ?? const []))
+          if (s is Map) PathStep.fromJson(Map<String, dynamic>.from(s)),
+      ],
+      tools: t is Map
+          ? {for (final e in t.entries) '${e.key}': e.value == true}
+          : const {},
+      balance: j['balance'] == null ? null : _int(j['balance']),
+      week: j['week'] == null ? null : _int(j['week']),
+      leagueOpen: j['league_open'] == true,
+    );
+  }
+}
+
+class PathStage {
+  const PathStage({required this.n, required this.title, this.done = false});
+
+  final int n;
+  final String title;
+  final bool done;
+}
+
+/// One step on the path: what to do, why, how far, what it pays.
+class PathStep {
+  const PathStep({
+    required this.key,
+    required this.stage,
+    required this.title,
+    this.line = '',
+    this.go = '',
+    this.progress = 0,
+    int? live,
+    this.goal = 1,
+    this.done = false,
+    this.reward = 0,
+    this.opens,
+  }) : live = live ?? progress;
+
+  final String key;
+  final int stage;
+
+  /// Already in the business's own words (a farm's « produit »), with the
+  /// numbers filled in.
+  final String title;
+
+  /// Why it matters, in one sentence.
+  final String line;
+
+  /// Where it is done, under `/o/<id>/` — may carry `?partie=`; empty for
+  /// the home itself (the till).
+  final String go;
+
+  /// Toward the goal, as remembered: a step reached shows its goal met.
+  final int progress;
+
+  /// What the data says right now (capped at the goal) — what the gates
+  /// read, so a photo taken off shows here.
+  final int live;
+  final int goal;
+  final bool done;
+
+  /// Its cauris, paid once.
+  final int reward;
+
+  /// The tool it opens: 'invoices', 'production', 'credits'; null for none.
+  final String? opens;
+
+  factory PathStep.fromJson(Map<String, dynamic> j) => PathStep(
+        key: '${j['key']}',
+        stage: _int(j['stage']),
+        title: '${j['title'] ?? ''}',
+        line: '${j['line'] ?? ''}',
+        go: '${j['go'] ?? ''}',
+        progress: _int(j['progress']),
+        live: j['live'] == null ? null : _int(j['live']),
+        goal: j['goal'] == null ? 1 : _int(j['goal']),
+        done: j['done'] == true,
+        reward: _int(j['reward']),
+        opens: j['opens'] as String?,
+      );
+}
 
 /// This week's race in the business's league (086).
 class LeagueBoard {

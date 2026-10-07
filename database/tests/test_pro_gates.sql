@@ -15,11 +15,11 @@
 -- platform lists and handles it; and plan_terms() says the price.
 -- ============================================================
 \set ON_ERROR_STOP on
--- 089 locks invoices, production and the credit book until earned; that
--- rule is proven in test_earned_locks.sql. This suite is about something
--- else, so it opens the three doors for its own fixtures.
-update platform_settings set value = '0'
- where key in ('progress_invoices_pct', 'progress_production_pct', 'progress_credit_orders');
+-- 089 locks invoices, production and the credit book until earned (by the
+-- steps of Le Chemin since 097); that rule is proven in test_earned_locks.sql
+-- and test_le_chemin.sql. This suite is about something else, so it opens
+-- the three doors for its own fixtures.
+update platform_settings set value = '1' where key = 'path_gates_open';
 
 \set plat     '''38383838-0000-0000-0000-000000000001'''
 \set owner_f  '''38383838-0000-0000-0000-000000000002'''

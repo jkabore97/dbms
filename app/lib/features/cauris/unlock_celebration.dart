@@ -63,12 +63,12 @@ class _UnlockCelebrationState extends State<UnlockCelebration> {
       'invoices' => (
           icon: Icons.receipt_long,
           title: 'Factures débloquées',
-          line: 'Votre vitrine est assez complète : faites vos factures.',
+          line: 'Vos articles sont en vente et en photo : faites vos factures.',
         ),
       'production' => (
           icon: Icons.precision_manufacturing,
           title: 'Production débloquée',
-          line: 'Vitrine complète : suivez ce que vous fabriquez.',
+          line: 'Étape Remplir terminée : suivez ce que vous fabriquez.',
         ),
       'credits' => (
           icon: Icons.handshake,

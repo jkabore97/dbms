@@ -231,7 +231,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   key: const Key('unlock-earn'),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.push(Routes.inside(widget.org.id, 'cauris'));
+                    context.push(Routes.inside(widget.org.id, 'chemin'));
                   },
                   child: Text(context.tr('Comment gagner des cauris')),
                 ),

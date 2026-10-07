@@ -1,9 +1,11 @@
 -- ============================================================
--- test_earned_locks.sql — tools are earned (089). Phone block 59.
+-- test_earned_locks.sql — tools are earned (089), by the steps of Le
+-- Chemin (097). Phone block 59.
 --
 -- The claims: a shop starts with invoices, production and the credit book
--- locked, with no trial; invoices open at 70 % of vitrine, production at
--- 90 %, the credit book after 3 finished orders; a locked tool still reads
+-- locked, with no trial; invoices open with the articles on sale and three
+-- in photo, production once stage 2 (« Remplir ») is complete, the credit
+-- book after 3 finished orders; a locked tool still reads
 -- what was kept and still takes a repayment; Pro opens all three; a
 -- second business needs Pro; an association is not on the path; and a
 -- farm follows the same rule as a shop.
@@ -34,11 +36,12 @@ grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant execute on all functions in schema public to authenticated;
 -- Earlier suites open the doors for their own fixtures: this one puts the
--- owner's numbers back, and takes 089's grants back.
-update platform_settings set value = '70' where key = 'progress_invoices_pct';
-update platform_settings set value = '90' where key = 'progress_production_pct';
-update platform_settings set value = '3'  where key = 'progress_credit_orders';
+-- owner's numbers back, and takes 089's grants back — then 097's rule,
+-- which replaces 089's functions.
+update platform_settings set value = '0' where key = 'path_gates_open';
+update platform_settings set value = '3' where key = 'progress_credit_orders';
 \i database/migrations/089_earned_locks.sql
+\i database/migrations/097_le_chemin.sql
 
 insert into auth.users (id, phone, raw_user_meta_data) values
     (:owner, '+22659000001', '{"full_name": "Awa"}'),
@@ -76,7 +79,7 @@ begin
             '[{"description": "Riz", "quantity": 1, "unit_price": 1000}]'::jsonb);
         raise exception 'FAIL: an invoice on a locked shop';
     exception when others then
-        if sqlerrm not like 'Factures : vitrine à 70 %%' then raise; end if;
+        if sqlerrm not like 'Factures : 1 articles en vente et 3 en photo%%' then raise; end if;
     end;
     begin
         perform record_credit_sale('59000000-0000-0000-0000-000000000001', 'Awa', 2000, 'Riz');
@@ -89,8 +92,9 @@ end $$;
 commit;
 
 \echo ''
-\echo '--- TEST 2: invoices at 70 %, production at 90 % ---'
--- Five of six: articles, photos, blurb, phone, address — no pin (83 %).
+\echo '--- TEST 2: invoices with articles and photos, production with stage 2 ---'
+-- Articles (the minimum is 1 here), three in photo, the sentence, phone
+-- and address — no pin, no sale yet: stage 2 is not complete.
 update orgs set storefront_enabled = true, storefront_blurb = 'Le riz du quartier',
                phone = '+22659000001', address = 'Gounghin'
  where id = '59000000-0000-0000-0000-000000000001';
@@ -107,21 +111,31 @@ do $$
 declare p jsonb := org_progress('59000000-0000-0000-0000-000000000001');
 begin
     if (p -> 'locks' ->> 'invoices')::boolean or not (p -> 'locks' ->> 'production')::boolean then
-        raise exception 'FAIL: at % %% invoices/production are wrong: %', p ->> 'score', p;
+        raise exception 'FAIL: with articles and photos invoices/production are wrong: %', p;
     end if;
     perform create_invoice('59000000-0000-0000-0000-000000000001', 'Awa',
         '[{"description": "Riz", "quantity": 1, "unit_price": 1000}]'::jsonb);
 end $$;
 commit;
 update orgs set lat = 12.37, lng = -1.52 where id = '59000000-0000-0000-0000-000000000001';
+do $$ begin
+    -- A vitrine at 100 % is not the step: the first sale is still ahead.
+    if not path_locked('59000000-0000-0000-0000-000000000001', 'production') then
+        raise exception 'FAIL: production open without the first sale';
+    end if;
+    if path_lock_message('production') <> 'Production : terminez l''étape Remplir pour la débloquer.' then
+        raise exception 'FAIL: the production lock says %', path_lock_message('production');
+    end if;
+end $$;
+insert into sales (org_id, total) values ('59000000-0000-0000-0000-000000000001', 1000);
 begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '59595959-0000-0000-0000-000000000001';
 do $$ begin
     if path_locked('59000000-0000-0000-0000-000000000001', 'production') then
-        raise exception 'FAIL: production still locked at 100 %%';
+        raise exception 'FAIL: production still locked with stage 2 complete';
     end if;
-    raise notice 'PASS: invoices open at 83 %%, production at 100 %%';
+    raise notice 'PASS: invoices open with articles and photos, production with stage 2';
 end $$;
 commit;
 

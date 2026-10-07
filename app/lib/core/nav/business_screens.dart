@@ -7,9 +7,8 @@
 library;
 
 export '../../features/pro/pro_strip.dart';
-export '../../features/cauris/cauris_screen.dart';
+export '../../features/cauris/chemin_screen.dart';
 export '../../features/cauris/league_screen.dart';
-export '../../features/academy/academy_screen.dart';
 export '../../features/farm/for_sale_screen.dart';
 export '../../features/pay/stripe_button.dart';
 export '../../features/pro/pro_plans_screen.dart';

@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../theme/mara_mark.dart';
 import '../cauris/cauris_repository.dart';
-import '../academy/academy_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
 
@@ -1160,27 +1159,20 @@ GoRouter buildRouter(SessionController session) {
               ),
             ),
           ),
-          // Académie Mara (087): lessons to watch, missions to live.
+          // Le Chemin (097): the business's one path — its steps, its
+          // tools, its cauris.
           GoRoute(
-            path: 'academie',
+            path: 'chemin',
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.AcademyScreen(
-                org: org,
-                academy: AcademyRepository(scope.auth.client),
-              ),
-            ),
-          ),
-          // Cauris (084): the business's wallet.
-          GoRoute(
-            path: 'cauris',
-            builder: (context, state) => _withOrg(
-              context,
-              state,
-              (scope, org) => biz.CaurisScreen(
+              (scope, org) => biz.CheminScreen(
                 org: org,
                 cauris: CaurisRepository(scope.auth.client),
+                // ?partie=depenser|parrainer opens on that section;
+                // ?caisse=1 when the home with the till opened it.
+                initialPart: state.uri.queryParameters['partie'],
+                fromTill: state.uri.queryParameters['caisse'] == '1',
               ),
             ),
           ),

@@ -635,17 +635,12 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_cauris_leagues.sql
 
-      - name: Prove Académie Mara — guides seen, missions lived, paid once (087)
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_academy.sql
-
       - name: Prove the association trust level — read off the books, verified by Mara only (088)
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_association_trust.sql
 
-      - name: Prove the earned locks — invoices 70 %, production 90 %, credit 3 orders, second business Pro (089)
+      - name: Prove the earned locks — invoices with articles and photos, production with stage 2, credit 3 orders, second business Pro (089, 097)
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_earned_locks.sql
@@ -679,6 +674,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_unlock_notices.sql
+
+      - name: Prove Le Chemin — four stages, each step paid once, the tools opened by the steps (097)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_le_chemin.sql
 
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
