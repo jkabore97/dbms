@@ -13,6 +13,7 @@ import '../../l10n/strings.dart';
 import '../admin/invite_generator_sheet.dart';
 import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
+import 'alert_tone_tile.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
@@ -137,6 +138,8 @@ class CompteScreen extends StatelessWidget {
             title: context.tr('Préférences'),
             children: [
               _EnglishSwitch(controller: scope.localeController),
+              // The app's own ring: which tone, and the buzz (batch 100).
+              AlertToneTile(db: scope.db),
               // Working with no signal: the business's admins prepare it.
               if (admin) OfflineTile(org: org),
             ],

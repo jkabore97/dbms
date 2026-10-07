@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/nav/router.dart';
+import '../../core/theme/mara_mark.dart';
 
 import '../../core/auth/models.dart';
 import '../../l10n/strings.dart';
@@ -15,7 +16,12 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// There is no "remember my choice": picking the wrong set of books and not
 /// noticing is worse than one extra tap at launch.
-class OrgPickerScreen extends StatelessWidget {
+///
+/// Each activity wears its kind (100): a colour and a picture for a shop, a
+/// farm, an association, and the owner's name under it, so a platform admin
+/// — whose list is every business — recognises one at a glance. A long list
+/// gets a search box; a mixed one gets a chip per kind.
+class OrgPickerScreen extends StatefulWidget {
   const OrgPickerScreen({
     super.key,
     required this.orgs,
@@ -62,34 +68,55 @@ class OrgPickerScreen extends StatelessWidget {
   /// something narrower than "choose".
   final String? title;
 
+  /// More than this many activities and the search box appears; below it,
+  /// the whole list fits on a phone and a box would only be in the way.
+  static const searchFrom = 6;
+
+  @override
+  State<OrgPickerScreen> createState() => _OrgPickerScreenState();
+}
+
+class _OrgPickerScreenState extends State<OrgPickerScreen> {
+  final _search = TextEditingController();
+
+  /// 'retail' | 'farm' | 'association', or null for all of them.
+  String? _kind;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final widget = this.widget;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title ?? Strings.of(context).pickBusiness),
+        title: Text(widget.title ?? Strings.of(context).pickBusiness),
         actions: [
           IconButton(
             onPressed: () => context.go(Routes.directory),
             icon: const Icon(Icons.storefront_outlined),
             tooltip: context.tr('Les vitrines'),
           ),
-          if (onBusinesses != null)
+          if (widget.onBusinesses != null)
             IconButton(
-              onPressed: onBusinesses,
+              onPressed: widget.onBusinesses,
               icon: const Icon(Icons.business_outlined),
               tooltip: Strings.of(context).manageBusinesses,
             ),
-          if (onCreateBusiness != null)
+          if (widget.onCreateBusiness != null)
             IconButton(
-              onPressed: onCreateBusiness,
+              onPressed: widget.onCreateBusiness,
               icon: const Icon(Icons.add_business_outlined),
               tooltip: Strings.of(context).newBusiness,
             ),
-          if (onSignOut != null)
+          if (widget.onSignOut != null)
             IconButton(
-              onPressed: onSignOut,
+              onPressed: widget.onSignOut,
               icon: const Icon(Icons.logout),
               tooltip: Strings.of(context).signOut,
             ),
@@ -98,7 +125,8 @@ class OrgPickerScreen extends StatelessWidget {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
-          child: orgs.isEmpty ? _empty(context) : _list(context, theme),
+          child:
+              widget.orgs.isEmpty ? _empty(context) : _list(context, theme),
         ),
       ),
     );
@@ -110,8 +138,9 @@ class OrgPickerScreen extends StatelessWidget {
   /// is a plain message rather than a screen that looks broken.
   Widget _empty(BuildContext context) {
     final theme = Theme.of(context);
-    if (loading) {
-      return _LoadingWithEscape(onRetry: onRetry, onSignOut: onSignOut);
+    if (widget.loading) {
+      return _LoadingWithEscape(
+          onRetry: widget.onRetry, onSignOut: widget.onSignOut);
     }
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -132,49 +161,263 @@ class OrgPickerScreen extends StatelessWidget {
   }
 
   Widget _list(BuildContext context, ThemeData theme) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: orgs.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        final org = orgs[i];
-        return KajCard(
-                elevation: 0,
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  leading: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Icon(
-                      iconForProfile(org.profile),
-                      color: theme.colorScheme.onPrimaryContainer,
+    final orgs = widget.orgs;
+    final counts = <String, int>{};
+    for (final o in orgs) {
+      final k = kindOfProfile(o.profile);
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    // A chip per kind only when there is more than one kind to tell apart.
+    final kinds = [
+      for (final k in const ['retail', 'farm', 'association'])
+        if ((counts[k] ?? 0) > 0) k,
+    ];
+    final showChips = kinds.length > 1;
+    final showSearch = orgs.length >= OrgPickerScreen.searchFrom;
+    final kind = showChips ? _kind : null;
+    final query = showSearch ? _fold(_search.text.trim()) : '';
+    final shown = [
+      for (final o in orgs)
+        if ((kind == null || kindOfProfile(o.profile) == kind) &&
+            (query.isEmpty ||
+                _fold(o.name).contains(query) ||
+                _fold(o.ownerName ?? '').contains(query)))
+          o,
+    ];
+
+    final header = <Widget>[
+      if (showSearch)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: TextField(
+            key: const Key('picker-search'),
+            controller: _search,
+            onChanged: (_) => setState(() {}),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: context.tr('Nom ou propriétaire'),
+              border: const OutlineInputBorder(),
+              suffixIcon: _search.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: context.tr('Effacer'),
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(_search.clear),
                     ),
-                  ),
-                  title: Text(
-                    org.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    [
-                      localizedProfile(context, org.profile),
-                      if (org.roles.isNotEmpty) labelForRole(org.roles.first),
-                    ].join(' · '),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => onSelected(org),
+            ),
+          ),
+        ),
+      if (showChips)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                key: const Key('picker-kind-all'),
+                label: Text(context.tr('Toutes')),
+                showCheckmark: false,
+                selectedColor: maraDeep.withValues(alpha: 0.16),
+                side: _chipSide(kind == null, maraDeep),
+                selected: kind == null,
+                onSelected: (_) => setState(() => _kind = null),
+              ),
+              for (final k in kinds)
+                ChoiceChip(
+                  key: Key('picker-kind-$k'),
+                  avatar: Icon(iconForProfile(k),
+                      size: 18, color: kindColour(k)),
+                  label: Text('${kindPlural(context, k)} · ${counts[k]}'),
+                  showCheckmark: false,
+                  selectedColor: kindColour(k).withValues(alpha: 0.22),
+                  side: _chipSide(kind == k, kindColour(k)),
+                  selected: kind == k,
+                  onSelected: (on) => setState(() => _kind = on ? k : null),
                 ),
-              );
-      },
+            ],
+          ),
+        ),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ...header,
+        if (shown.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Text(
+              context.tr('Aucune activité ne correspond.'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ),
+        for (var i = 0; i < shown.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _OrgCard(org: shown[i], onTap: () => widget.onSelected(shown[i])),
+        ],
+      ],
     );
   }
 }
+
+/// One activity: its kind's colour and picture, its name, what it is and
+/// your role, and — when the server says — whose it is.
+class _OrgCard extends StatelessWidget {
+  const _OrgCard({required this.org, required this.onTap});
+
+  final OrgSummary org;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final kind = kindOfProfile(org.profile);
+    final owner = org.ownerName;
+    return KajCard(
+      key: Key('picker-org-${org.id}'),
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // The kind's colour down the edge, so a long list reads in
+              // colour before a word of it is read.
+              Container(width: 6, color: kindColour(kind)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: kindColour(kind),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          iconForProfile(org.profile),
+                          size: 28,
+                          color: kindInk(kind),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              org.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              [
+                                localizedProfile(context, org.profile),
+                                if (org.roles.isNotEmpty)
+                                  labelForRole(org.roles.first),
+                              ].join(' · '),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant),
+                            ),
+                            if (owner != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(Icons.person_outline,
+                                      size: 16,
+                                      color:
+                                          theme.colorScheme.onSurfaceVariant),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      owner,
+                                      key: Key('picker-owner-${org.id}'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A chip's edge: the kind's colour, firm when chosen.
+BorderSide? _chipSide(bool selected, Color colour) =>
+    selected ? BorderSide(color: colour, width: 1.5) : null;
+
+/// Lowercase without accents, so « eglise » finds « Église ».
+String _fold(String text) {
+  const from = 'àâäáãåçéèêëíìîïñóòôöõúùûüýÿœæ';
+  const to = 'aaaaaaceeeeiiiinooooouuuuyyoa';
+  final lower = text.toLowerCase();
+  final out = StringBuffer();
+  for (final ch in lower.split('')) {
+    final i = from.indexOf(ch);
+    out.write(i < 0 ? ch : to[i]);
+  }
+  return out.toString();
+}
+
+/// The three kinds of business (100): 'church' is the association's older
+/// name; anything unknown is 'other'.
+String kindOfProfile(String profile) => switch (profile) {
+      'church' || 'association' => 'association',
+      'farm' => 'farm',
+      'retail' => 'retail',
+      _ => 'other',
+    };
+
+/// Each kind's colour, from the brand palette: caramel for a shop, green for
+/// a farm, brown for an association, graphite for anything else.
+Color kindColour(String kind) => switch (kindOfProfile(kind)) {
+      'retail' => maraCaramel,
+      'farm' => maraGreen,
+      'association' => maraBrown,
+      _ => maraDeep,
+    };
+
+/// What is drawn on [kindColour]: ink on caramel, paper on the dark ones.
+Color kindInk(String kind) =>
+    kindOfProfile(kind) == 'retail' ? maraBlack : maraPaper;
+
+/// The chip's word: the kind, in the plural.
+String kindPlural(BuildContext context, String kind) =>
+    switch (kindOfProfile(kind)) {
+      'retail' => context.tr('Boutiques'),
+      'farm' => context.tr('Fermes'),
+      'association' => context.tr('Associations'),
+      _ => context.tr('Autres'),
+    };
 
 /// The loading state, with an escape hatch.
 ///
@@ -310,6 +553,10 @@ String labelForRole(String role) {
   switch (role) {
     case 'owner':
       return 'Propriétaire';
+    // What my_orgs() says for the platform's own team, who belong to no
+    // business and see all of them (010) — shown raw until now.
+    case 'platform_admin':
+      return 'Plateforme';
     case 'super_admin':
       return 'Super administrateur';
     case 'admin':

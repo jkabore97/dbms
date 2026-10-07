@@ -41,6 +41,8 @@ insert into auth.users (id, phone, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile) values
     (:org,   'Boutique Test', 'boutique-test', 'retail'),
     (:other, 'Voisine Test',  'voisine-test',  'retail');
+-- The free worker opens once the first setup is done (100).
+update orgs set setup_done_at = now() where id in (:org, :other);
 
 insert into memberships (org_id, user_id, role, scope_kind, scope_id) values
     (:org,   :owner,    'owner', 'org', :org),

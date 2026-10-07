@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -120,6 +120,12 @@ class LocalDb {
         if (oldVersion >= 2 && oldVersion < 11) {
           await db.execute(
               "ALTER TABLE cached_orgs ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'");
+        }
+        // v11 -> v12: the owner's name (100), under each business in the
+        // picker. Same `>= 2` guard as the columns above, for the same
+        // reason.
+        if (oldVersion >= 2 && oldVersion < 12) {
+          await db.execute('ALTER TABLE cached_orgs ADD COLUMN owner_name TEXT');
         }
       },
     );
@@ -278,7 +284,8 @@ class LocalDb {
         visibility TEXT,
         theme      TEXT,
         suspended  INTEGER NOT NULL DEFAULT 0,
-        plan       TEXT NOT NULL DEFAULT 'free'
+        plan       TEXT NOT NULL DEFAULT 'free',
+        owner_name TEXT
       )
     ''');
   }

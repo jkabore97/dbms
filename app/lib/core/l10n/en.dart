@@ -3098,4 +3098,18 @@ const enStrings = <String, String>{
   'corrigé': 'corrected',
   'Une somme due': 'An amount owed',
   'Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.': 'Your shop window at the top of the list, for 7 or 30 days.',
+  // Batch 100 (app): the picker, the tones.
+  'Nom ou propriétaire': 'Name or owner',
+  'Aucune activité ne correspond.': 'No business matches.',
+  'Associations': 'Associations',
+  'Autres': 'Others',
+  'Sons des notifications': 'Notification sounds',
+  'vibreur': 'vibrate',
+  'Vibrer': 'Vibrate',
+  'Écouter': 'Play',
+  'Carillon': 'Chime',
+  'Balafon': 'Balafon',
+  'Clochette': 'Little bell',
+  'Goutte': 'Drop',
+  'Ce son retentit quand l\'application est ouverte. Application fermée, une notification web sonne avec le son du téléphone ; sur Android, pas encore de notification application fermée.': 'This sound plays while the app is open. With the app closed, a web notification uses the phone\'s own sound; Android has no closed-app notifications yet.',
 };

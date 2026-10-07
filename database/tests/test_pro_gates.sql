@@ -406,7 +406,7 @@ set local "request.jwt.claim.sub" = '38383838-0000-0000-0000-000000000002';
 do $$
 declare v jsonb := plan_terms();
 begin
-    if not (v -> 'pro_features') ? 'analytics' or (v ->> 'free_max_staff')::int <> 3
+    if not (v -> 'pro_features') ? 'analytics' or (v ->> 'free_max_staff')::int <> 1  -- one worker free since 100
        or (v ->> 'pro_price_month')::int <> 2500 or (v ->> 'pro_price_year')::int <> 25000 then
         raise exception 'FAIL: plan_terms() reads %', v;
     end if;

@@ -65,6 +65,9 @@ insert into auth.users (id, phone, email, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile) values
     (:org_a, 'Église Test A', 'test-a', 'church'),
     (:org_b, 'Ferme Test B',  'test-b', 'farm');
+-- These businesses hold several invited people: Mara Pro, since a Basic
+-- one has a single free worker (100). The suite tests the invitation itself.
+update orgs set plan = 'pro' where id in (:org_a, :org_b);
 
 insert into entities (id, org_id, name, kind) values
     (:site_a, :org_a, 'Campus principal', 'campus');
