@@ -89,6 +89,15 @@ abstract final class Routes {
   /// delivery fees (067).
   static const consoleSettlement = '/console/livreurs/reglement';
   static const applications = '/demandes';
+  /// The command center's own sections (104): the businesses, one
+  /// business's fiche, the types of business, the request page, the
+  /// settings and the journal.
+  static const consoleBusinesses = '/console/entreprises';
+  static String consoleOrg(String orgId) => '/console/entreprises/$orgId';
+  static const consoleKinds = '/console/types';
+  static const consoleRequestForm = '/demandes/formulaire';
+  static const consoleSettings = '/console/reglages';
+  static const consoleJournal = '/console/journal';
   static const language = '/langue';
   static const security = '/securite';
   /// Where Wave sends the person back after paying (076): the payment's own
@@ -771,6 +780,7 @@ GoRouter buildRouter(SessionController session) {
                 // offering real category names once the signal has gone.
                 db: scope.db,
               ),
+              feature: 'accounting',
             ),
             routes: [
               GoRoute(
@@ -780,6 +790,7 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) => biz.IncomeStatementScreen(
                       accounting: scope.accounting, org: org),
+                  feature: 'accounting',
                 ),
               ),
               GoRoute(
@@ -789,6 +800,7 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) => biz.BalanceSheetScreen(
                       accounting: scope.accounting, org: org),
+                  feature: 'accounting',
                 ),
               ),
               GoRoute(
@@ -802,6 +814,7 @@ GoRouter buildRouter(SessionController session) {
                     db: scope.db,
                     canEdit: org.isAdmin,
                   ),
+                  feature: 'accounting',
                 ),
               ),
               GoRoute(
@@ -811,6 +824,7 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) => biz.TrialBalanceScreen(
                       accounting: scope.accounting, org: org),
+                  feature: 'accounting',
                 ),
               ),
               GoRoute(
@@ -835,6 +849,7 @@ GoRouter buildRouter(SessionController session) {
                       account: account.account,
                     );
                   },
+                  feature: 'accounting',
                 ),
               ),
             ],
@@ -967,6 +982,7 @@ GoRouter buildRouter(SessionController session) {
               state,
               (scope, org) =>
                   biz.InvoicesScreen(org: org, invoicing: scope.invoicing),
+              feature: 'invoices',
             ),
             routes: [
               GoRoute(
@@ -976,6 +992,7 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) =>
                       biz.NewInvoiceScreen(org: org, invoicing: scope.invoicing),
+                  feature: 'invoices',
                 ),
               ),
               GoRoute(
@@ -985,6 +1002,7 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) => biz.BillingDetailsScreen(
                       org: org, invoicing: scope.invoicing),
+                  feature: 'invoices',
                 ),
               ),
               GoRoute(
@@ -1007,6 +1025,7 @@ GoRouter buildRouter(SessionController session) {
                       revisionOf: doc,
                     );
                   },
+                  feature: 'invoices',
                 ),
               ),
               // Last, so the named siblings are not swallowed by it.
@@ -1020,6 +1039,7 @@ GoRouter buildRouter(SessionController session) {
                     invoicing: scope.invoicing,
                     invoiceId: state.pathParameters['invoiceId']!,
                   ),
+                  feature: 'invoices',
                 ),
               ),
             ],
@@ -1125,6 +1145,7 @@ GoRouter buildRouter(SessionController session) {
                           orgName: org.name,
                           currency: org.currency,
                         ),
+                  feature: 'analytics',
                 ),
               ),
             ],
@@ -1264,6 +1285,7 @@ GoRouter buildRouter(SessionController session) {
               state,
               (scope, org) =>
                   biz.CorrectionsScreen(org: org, retail: scope.retail),
+              feature: 'corrections',
             ),
           ),
           GoRoute(
@@ -1272,6 +1294,7 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) => biz.StaffScreen(org: org, staff: scope.staff),
+              feature: 'payroll',
             ),
           ),
           // « Équipe » (100): the people, adding one, their salary.
@@ -1299,6 +1322,7 @@ GoRouter buildRouter(SessionController session) {
                 retail: scope.retail,
                 access: scope.session.accessFor(org.id),
               ),
+              feature: 'credits',
             ),
             routes: [
               GoRoute(
@@ -1312,6 +1336,7 @@ GoRouter buildRouter(SessionController session) {
                     customerId: state.pathParameters['customerId']!,
                     access: scope.session.accessFor(org.id),
                   ),
+                  feature: 'credits',
                 ),
               ),
             ],
@@ -1326,6 +1351,7 @@ GoRouter buildRouter(SessionController session) {
                 tontine: scope.tontine,
                 access: scope.session.accessFor(org.id),
               ),
+              feature: 'tontines',
             ),
             routes: [
               GoRoute(
@@ -1339,6 +1365,7 @@ GoRouter buildRouter(SessionController session) {
                     tontineId: state.pathParameters['tontineId']!,
                     access: scope.session.accessFor(org.id),
                   ),
+                  feature: 'tontines',
                 ),
               ),
             ],
@@ -1362,6 +1389,7 @@ GoRouter buildRouter(SessionController session) {
                 retail: scope.retail,
                 access: scope.session.accessFor(org.id),
               ),
+              feature: 'production',
             ),
           ),
           GoRoute(
@@ -1439,6 +1467,7 @@ Widget _withOrg(
   GoRouterState state,
   Widget Function(AppScope scope, OrgSummary org) build, {
   bool Function(OrgSummary org)? allow,
+  String? feature,
 }) {
   final scope = AppScope.of(context);
   // Listening here, and not only through the router: go_router keeps a
@@ -1476,9 +1505,14 @@ Widget _withOrg(
         // A page for the business's administrators (101): anybody else
         // reaching its address — a link, a typed URL — is told so politely
         // rather than shown a form the server would refuse.
+        // A tool Mara's switchboard hid for this business (104): its
+        // address says so — a bookmark, a bell's link — never the screen.
         child: allow != null && !allow(org)
             ? _AdminOnly(org: org)
-            : biz.ProStrip(org: org, child: build(scope, org)),
+            : feature != null &&
+                    scope.session.accessFor(org.id).isHidden(feature)
+                ? FeatureUnavailableScreen(org: org)
+                : biz.ProStrip(org: org, child: build(scope, org)),
       );
     },
   );
@@ -1523,6 +1557,63 @@ class _AdminOnly extends StatelessWidget {
               const SizedBox(height: 8),
               Text(context.tr('Demandez au propriétaire de l\'entreprise.'),
                   textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: () => context.go(Routes.org(org.id)),
+                  icon: const Icon(Icons.home_outlined),
+                  label: Text(context.tr('Retour à l\'accueil')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// « Pas disponible »: what a tool's address shows once Mara's switchboard
+/// hid the tool for this business (104) — a word and the way home.
+class FeatureUnavailableScreen extends StatelessWidget {
+  const FeatureUnavailableScreen({super.key, required this.org});
+
+  final OrgSummary org;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      key: const Key('feature-unavailable'),
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: maraDeep,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: const Icon(Icons.visibility_off_outlined,
+                    size: 48, color: maraCaramel),
+              ),
+              const SizedBox(height: 18),
+              Text(context.tr('Pas disponible pour votre activité'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(
+                  context.tr('Cette fonction n\'est pas proposée pour {name}. Pour en parler, contactez Mara.',
+                      {'name': org.name}),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge),
               const SizedBox(height: 24),
               SizedBox(
                 height: 52,

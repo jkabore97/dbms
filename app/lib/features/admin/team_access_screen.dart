@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The owner's dial: per tool, per tier, who sees and who edits.
@@ -77,6 +78,17 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  /// The dial's tools, less those Mara's switchboard hid here (104): a
+  /// hidden tool has no dial, and its rule is kept as it was and saved
+  /// back unchanged.
+  List<_Feature> get _shownFeatures {
+    final access = AppScope.maybeOf(context)?.session.accessFor(widget.orgId);
+    return [
+      for (final f in _features)
+        if (!(access?.isHidden(f.key) ?? false)) f,
+    ];
   }
 
   String _defaultFor(String feature) =>
@@ -190,7 +202,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                for (final f in _features)
+                for (final f in _shownFeatures)
                   KajCard(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Padding(

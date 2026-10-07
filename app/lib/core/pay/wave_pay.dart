@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../admin/platform_writes.dart';
+
 /// Paying by Wave — or by card on Wave's page — through the kaj-pay Worker
 /// (migration 076); and Kaj Pro by card as a Stripe subscription, through
 /// the same Worker (082).
@@ -201,10 +203,10 @@ class WavePay {
     return '${body['url']}';
   }
 
-  /// The platform's switches, through 061's set_platform_setting.
+  /// The platform's switches, written in the command center's journal
+  /// (105) — or through 061's set_platform_setting before it.
   Future<void> setSwitch(String key, Object value) async {
-    await _client!.rpc('set_platform_setting',
-        params: {'p_key': key, 'p_value': value});
+    await writePlatformSetting(_client!, key, value);
   }
 }
 

@@ -118,6 +118,16 @@ bool isSchemaOutOfDate(Object error) =>
 /// showing a wall.
 bool isProRefusal(Object error) => describeError(error).startsWith('Mara Pro');
 
+/// The SQLSTATE feature_guard (104) raises when Mara's switchboard hid the
+/// tool for this business: « Cette fonction n'est pas disponible pour
+/// votre activité. »
+const featureHiddenCode = 'MA002';
+
+/// True when the server refused because the platform hid the tool here
+/// (104). Retrying will not change it until Mara does.
+bool isFeatureHidden(Object error) =>
+    error is PostgrestException && error.code == featureHiddenCode;
+
 String _postgrest(PostgrestException error) {
   final code = error.code ?? '';
   final message = error.message;

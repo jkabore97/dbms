@@ -12,6 +12,7 @@ class FeatureStates {
     this.promo = const [],
     this.photos,
     this.team,
+    this.hidden = const {},
   });
 
   final String plan;
@@ -45,6 +46,11 @@ class FeatureStates {
 
   /// The team's free seat (100); null on a database before 100.
   final TeamSeats? team;
+
+  /// The tools Mara's switchboard hides for this business (104): catalog
+  /// keys ('credits', 'invoices', …). Empty — today's app — until the
+  /// platform writes a rule, and on a database before 104.
+  final Set<String> hidden;
 
   bool get isPro => plan == 'pro';
 
@@ -86,6 +92,10 @@ class FeatureStates {
       team: j['team'] is Map
           ? TeamSeats.fromJson(Map<String, dynamic>.from(j['team'] as Map))
           : null,
+      hidden: {
+        for (final k in (j['hidden'] is List ? j['hidden'] as List : const []))
+          '$k',
+      },
     );
   }
 }

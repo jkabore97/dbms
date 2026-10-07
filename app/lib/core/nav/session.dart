@@ -136,11 +136,21 @@ class SessionController extends ChangeNotifier {
     // the default terms — so what screens see first is what the load will
     // confirm, and an owner's load emits nothing (see _loadAccess).
     final locked = _lockedFor(org);
+    final hidden = _hiddenFor(org);
     if (org.isAdmin) {
-      return locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
+      return locked.isEmpty && hidden.isEmpty
+          ? OrgAccess.allEdit
+          : OrgAccess.admin(proLocked: locked, hidden: hidden);
     }
-    return OrgAccess.forTier(const {}, proLocked: locked);
+    return OrgAccess.forTier(const {}, proLocked: locked, hidden: hidden);
   }
+
+  /// What Mara's switchboard hid for this business (104), as its feature
+  /// states said — for everyone in it, Mara's own people included (they
+  /// see what the business sees). Nothing until they are read, and nothing
+  /// on a business no rule touches.
+  Set<String> _hiddenFor(OrgSummary org) =>
+      _features[org.id]?.hidden ?? const <String>{};
 
   /// Which tools the plan locks for this business: none on Pro, none for
   /// the platform admin, the Pro list otherwise. The server decides the
@@ -200,11 +210,14 @@ class SessionController extends ChangeNotifier {
     final s = await states;
     if (s is FeatureStates) _features[org.id] = s;
     final locked = _lockedFor(org);
+    final hidden = _hiddenFor(org);
     final OrgAccess next;
     if (rules == null) {
-      next = locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
+      next = locked.isEmpty && hidden.isEmpty
+          ? OrgAccess.allEdit
+          : OrgAccess.admin(proLocked: locked, hidden: hidden);
     } else {
-      next = OrgAccess.forTier(await rules, proLocked: locked);
+      next = OrgAccess.forTier(await rules, proLocked: locked, hidden: hidden);
     }
     // Emit only if this changes what screens already see — an unchanged dial
     // (an admin, an untouched business, an offline fetch that came back empty)

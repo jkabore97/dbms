@@ -246,7 +246,9 @@ class _TeamScreenState extends State<TeamScreen> {
                       : DateFormat('d MMMM y', locale).format(account.dateOfBirth!)),
               const Divider(),
             ],
-            if (manage)
+            // An hourly wage lives in the payroll: no row for it once Mara's
+            // switchboard hid the payroll (104).
+            if (manage && !(m.hourly != null && _payrollHidden))
               ListTile(
                 key: const Key('team-action-salary'),
                 minVerticalPadding: 14,
@@ -642,6 +644,11 @@ class _TeamScreenState extends State<TeamScreen> {
     }
   }
 
+  /// Mara's switchboard hid the payroll for this business (104).
+  bool get _payrollHidden =>
+      AppScope.maybeOf(context)?.session.accessFor(widget.org.id).isHidden('payroll') ??
+      false;
+
   void _payroll() {
     final scope = AppScope.of(context);
     final access = scope.session.accessFor(widget.org.id);
@@ -739,26 +746,28 @@ class _TeamScreenState extends State<TeamScreen> {
                 ),
               ],
             ],
-            const SizedBox(height: 20),
-            _label(theme, context.tr('Payer')),
-            KajCard(
-              margin: EdgeInsets.zero,
-              child: ListTile(
-                key: const Key('team-payroll'),
-                minVerticalPadding: 14,
-                leading: const CircleAvatar(
-                  backgroundColor: maraPaper,
-                  child: Icon(Icons.payments_outlined, color: maraDeep),
+            if (!_payrollHidden) ...[
+              const SizedBox(height: 20),
+              _label(theme, context.tr('Payer')),
+              KajCard(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  key: const Key('team-payroll'),
+                  minVerticalPadding: 14,
+                  leading: const CircleAvatar(
+                    backgroundColor: maraPaper,
+                    child: Icon(Icons.payments_outlined, color: maraDeep),
+                  ),
+                  title: Text(context.tr('Paie et journées')),
+                  subtitle: Text(context.tr('Payer un salaire, noter une journée, les personnes sans compte')),
+                  trailing: payrollLocked
+                      ? ProCostBadge(
+                          cost: session?.featuresFor(widget.org.id)?.toolOf('payroll')?.cost)
+                      : const Icon(Icons.chevron_right),
+                  onTap: _payroll,
                 ),
-                title: Text(context.tr('Paie et journées')),
-                subtitle: Text(context.tr('Payer un salaire, noter une journée, les personnes sans compte')),
-                trailing: payrollLocked
-                    ? ProCostBadge(
-                        cost: session?.featuresFor(widget.org.id)?.toolOf('payroll')?.cost)
-                    : const Icon(Icons.chevron_right),
-                onTap: _payroll,
               ),
-            ),
+            ],
           ],
         ),
       ),

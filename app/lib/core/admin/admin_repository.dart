@@ -9,6 +9,7 @@ import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../storefront/storefront_repository.dart' show StorefrontStyle;
 import 'models.dart';
+import 'platform_writes.dart';
 import 'spots.dart';
 import 'team.dart';
 
@@ -618,14 +619,17 @@ class AdminRepository {
   /// Puts a business away. Reversible, keeps every entry, and takes it off
   /// every member's home screen at once — which is why it is platform-admin
   /// only even though renaming is not.
+  /// Through the journal (105), so « Annuler » restores it.
   Future<void> archiveOrg(String orgId) async {
     final client = _requireClient();
-    await client.rpc('archive_org', params: {'p_org_id': orgId});
+    await platformActOn(client, 'archive', orgId, const {},
+        fallback: () => client.rpc('archive_org', params: {'p_org_id': orgId}));
   }
 
   Future<void> restoreOrg(String orgId) async {
     final client = _requireClient();
-    await client.rpc('restore_org', params: {'p_org_id': orgId});
+    await platformActOn(client, 'restore', orgId, const {},
+        fallback: () => client.rpc('restore_org', params: {'p_org_id': orgId}));
   }
 
   /// Freeze a business, or thaw it (049). Platform admin only — the server
@@ -793,27 +797,40 @@ class AdminRepository {
   }
 
   /// The platform gives a business cauris (100); with [expiresOn], they
-  /// are promotional and must be spent before that day.
+  /// are promotional and must be spent before that day. Through the
+  /// journal (105), so « Annuler » takes back what is left.
   Future<void> platformGiveCauris(String orgId, int points,
       {String? note, DateTime? expiresOn}) async {
-    await _requireClient().rpc('platform_give_cauris', params: {
-      'p_org_id': orgId,
-      'p_points': points,
-      if (note != null && note.trim().isNotEmpty) 'p_note': note.trim(),
-      if (expiresOn != null) 'p_expires_on': _dateOnly(expiresOn),
-    });
+    final client = _requireClient();
+    final words = note != null && note.trim().isNotEmpty ? note.trim() : null;
+    await platformActOn(client, 'cauris', orgId, {
+      'points': points,
+      'note': ?words,
+      if (expiresOn != null) 'expires_on': _dateOnly(expiresOn),
+    }, fallback: () => client.rpc('platform_give_cauris', params: {
+          'p_org_id': orgId,
+          'p_points': points,
+          'p_note': ?words,
+          if (expiresOn != null) 'p_expires_on': _dateOnly(expiresOn),
+        }));
   }
 
   /// The platform opens a Pro tool for a business until [until], that day
-  /// included (100). No cauris move.
+  /// included (100). No cauris move. Through the journal (105).
   Future<void> platformGiveUnlock(String orgId, String feature, DateTime until,
       {String? note}) async {
-    await _requireClient().rpc('platform_give_unlock', params: {
-      'p_org_id': orgId,
-      'p_feature': feature,
-      'p_until': _dateOnly(until),
-      if (note != null && note.trim().isNotEmpty) 'p_note': note.trim(),
-    });
+    final client = _requireClient();
+    final words = note != null && note.trim().isNotEmpty ? note.trim() : null;
+    await platformActOn(client, 'unlock', orgId, {
+      'feature': feature,
+      'until': _dateOnly(until),
+      'note': ?words,
+    }, fallback: () => client.rpc('platform_give_unlock', params: {
+          'p_org_id': orgId,
+          'p_feature': feature,
+          'p_until': _dateOnly(until),
+          'p_note': ?words,
+        }));
   }
 
   Future<PlanTerms> planTerms() async {
@@ -857,11 +874,10 @@ class AdminRepository {
 
   /// One platform setting (061): the Wave number, a price, a cap. Platform
   /// admin only. [value] is sent as JSON — a string stays a string, a number
-  /// a number — which is how the settings are read back.
+  /// a number — which is how the settings are read back. Through the
+  /// journal (105), where « Annuler » puts it back.
   Future<void> setPlatformSetting(String key, Object? value) async {
-    final client = _requireClient();
-    await client.rpc('set_platform_setting',
-        params: {'p_key': key, 'p_value': value});
+    await writePlatformSetting(_requireClient(), key, value);
   }
 
   /// The vitrine switch and its blurb (052). A database that has not run 052

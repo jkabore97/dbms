@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/nav/look_only.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -29,15 +30,33 @@ class _UnlockCelebrationState extends State<UnlockCelebration> {
     if (_checked) return;
     _checked = true;
     final scope = AppScope.maybeOf(context);
-    if (scope == null || !scope.auth.hasLiveSession || !widget.org.isAdmin) {
+    // The moment is the owner's: Mara opening the business (or seeing it
+    // as its owner, 106) must not spend it — it is marked seen on the
+    // server for everybody.
+    if (scope == null ||
+        !scope.auth.hasLiveSession ||
+        !widget.org.isAdmin ||
+        scope.session.isPlatformAdmin ||
+        LookOnly.of(context)) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _check(scope));
   }
 
   Future<void> _check(AppScope scope) async {
-    final steps = await scope.admin.unseenUnlocks(widget.org.id);
-    if (steps.isEmpty || !mounted) return;
+    final unseen = await scope.admin.unseenUnlocks(widget.org.id);
+    if (unseen.isEmpty || !mounted) return;
+    // A tool Mara's switchboard hid here (104) opens on the path all the
+    // same, but is not celebrated: there is no door to show.
+    final access = scope.session.accessFor(widget.org.id);
+    final steps = [
+      for (final s in unseen)
+        if (!access.isHidden(s)) s,
+    ];
+    if (steps.isEmpty) {
+      await scope.admin.markUnlocksSeen(widget.org.id);
+      return;
+    }
     // Another sheet first (the offline offer): wait for it to close rather
     // than stacking two.
     for (var i = 0; i < 20; i++) {

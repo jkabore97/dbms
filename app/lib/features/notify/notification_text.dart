@@ -189,6 +189,15 @@ String notificationLine(BuildContext context, NotificationRow n) {
           : context.tr('Le numéro qui reçoit l\'argent de vos ventes a été changé');
     case 'org_kind_changed':
       return context.tr('Le genre de votre activité a été changé');
+    // Mara's switchboard (104): one of the business's tools shown, hidden
+    // or set back to its default.
+    case 'feature_rule':
+      final tool = context.tr(s('label'));
+      return switch (s('state')) {
+        'hidden' => context.tr('Mara a masqué « {tool} » pour votre activité.', {'tool': tool}),
+        'visible' => context.tr('Mara a rendu « {tool} » visible pour votre activité.', {'tool': tool}),
+        _ => context.tr('Mara a remis « {tool} » comme par défaut pour votre activité.', {'tool': tool}),
+      };
   }
   return n.message;
 }

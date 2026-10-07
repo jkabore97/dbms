@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/nav/look_only.dart';
 import '../../core/offline/offline_app.dart';
 import '../../core/offline/offline_prep.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -29,7 +30,10 @@ class _OfflineOfferState extends State<OfflineOffer> {
     if (_checked) return;
     _checked = true;
     final scope = AppScope.maybeOf(context);
-    if (scope == null || !scope.auth.hasLiveSession) return;
+    // A business only looked at as its owner (106) asks nothing.
+    if (scope == null || !scope.auth.hasLiveSession || LookOnly.of(context)) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _ask(scope));
   }
 
