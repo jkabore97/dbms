@@ -114,16 +114,22 @@ PathState _shop(int stage,
 }
 
 class _Cauris extends CaurisRepository {
-  _Cauris(this.path, {this.admin = true}) : super(null);
+  _Cauris(this.path, {this.admin = true, this.missing = false}) : super(null);
 
   final PathState? path;
   final bool admin;
+
+  /// A database before 097: no path_state at all.
+  final bool missing;
 
   @override
   Future<void> milestones(String orgId) async {}
 
   @override
-  Future<PathState?> pathState(String orgId) async => path;
+  Future<PathState?> pathState(String orgId, {void Function()? onMissing}) async {
+    if (missing) onMissing?.call();
+    return path;
+  }
 
   @override
   Future<CaurisWallet?> wallet(String orgId) async => !admin
@@ -220,7 +226,12 @@ void main() {
             request: request,
             headers: {'content-type': 'application/json'})));
     addTearDown(client.dispose);
-    expect(await CaurisRepository(client).pathState('o1'), isNull);
+    var missing = false;
+    expect(
+        await CaurisRepository(client)
+            .pathState('o1', onMissing: () => missing = true),
+        isNull);
+    expect(missing, isTrue, reason: 'the home is told, to show its fallback');
   });
 
   test('the podium is never proposed while the league says « Bientôt »', () {
@@ -241,18 +252,33 @@ void main() {
         SupabaseClient('https://example.supabase.co', 'sb_publishable_test'));
     tearDown(() => client.dispose());
 
-    Future<void> home(WidgetTester tester, OrgSummary org, PathState p) async {
+    Future<void> home(WidgetTester tester, OrgSummary org, PathState? p,
+        {bool missing = false}) async {
       await tall(tester);
       await tester.pumpWidget(_app(StoreHomeScreen(
         org: org,
         retail: _Till(client),
         invoicing: InvoicingRepository(client),
-        cauris: _Cauris(p),
+        cauris: _Cauris(p, missing: missing),
       )));
       await tester.pump();
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
     }
+
+    testWidgets('a server with no path yet: the fallback card, not nothing',
+        (tester) async {
+      await home(tester, _owner, null, missing: true);
+      expect(find.byKey(const Key('path-card')), findsNothing);
+      expect(find.byKey(const Key('path-fallback')), findsOneWidget);
+      expect(find.text('Voir ce qui manque'), findsOneWidget);
+    });
+
+    testWidgets('no fallback when the path simply did not load (no signal)',
+        (tester) async {
+      await home(tester, _owner, null);
+      expect(find.byKey(const Key('path-fallback')), findsNothing);
+    });
 
     testWidgets('an admin at stage 2 sees the card', (tester) async {
       await home(tester, _owner, _shop(2));

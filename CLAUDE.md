@@ -23,6 +23,12 @@ in this project. Follow them without being asked again.
   the same as a page that renders — a real regression shipped that way once.
 - If a task specifies "own branch, open a PR" for one piece of work, don't
   fold it into a different branch already in progress, even if it's related.
+- Never merge app code that needs a migration until that migration is
+  applied live. Merging deploys the app at once; an app that calls a
+  function the live database does not have yet shows nothing. Le Chemin
+  (097) shipped before its migration and left every unfinished shop's
+  home empty for a day. Order: apply live (or have the owner run the
+  SQL), verify, then merge — or keep the app working without it.
 
 ## Scope
 

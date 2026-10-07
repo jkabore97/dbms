@@ -2960,4 +2960,7 @@ const enStrings = <String, String>{
   'Votre statut': 'Your status',
   'Partager sur WhatsApp': 'Share on WhatsApp',
   'Choisissez WhatsApp, puis « Mon statut ».': 'Choose WhatsApp, then “My status”.',
+  'Complétez votre activité': 'Complete your business',
+  'Chaque étape faite ouvre un outil de plus.': 'Each step done opens one more tool.',
+  'Voir ce qui manque': 'See what\'s missing',
 };
