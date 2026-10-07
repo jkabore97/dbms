@@ -40,7 +40,7 @@ class PathCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: maraIndigo,
+          color: maraDeep,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -64,14 +64,14 @@ class PathCard extends StatelessWidget {
                           child: CircularProgressIndicator(
                             value: v,
                             strokeWidth: 6,
-                            color: maraGold,
-                            backgroundColor: maraCream.withValues(alpha: 0.18),
+                            color: maraCaramel,
+                            backgroundColor: maraPaper.withValues(alpha: 0.18),
                           ),
                         ),
                         Text('${(v * 100).round()} %',
                             key: const Key('path-score'),
                             style: theme.textTheme.labelLarge?.copyWith(
-                                color: maraCream, fontWeight: FontWeight.w800)),
+                                color: maraPaper, fontWeight: FontWeight.w800)),
                       ],
                     ),
                   ),
@@ -80,9 +80,9 @@ class PathCard extends StatelessWidget {
                 Expanded(
                   child: Text(context.tr('Votre vitrine ouvre vos outils'),
                       style: theme.textTheme.titleMedium?.copyWith(
-                          color: maraCream, fontWeight: FontWeight.w800)),
+                          color: maraPaper, fontWeight: FontWeight.w800)),
                 ),
-                const Icon(Icons.chevron_right, color: maraCream),
+                const Icon(Icons.chevron_right, color: maraPaper),
               ],
             ),
             const SizedBox(height: 14),
@@ -119,20 +119,20 @@ class _Tile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: open ? maraGold : maraCream.withValues(alpha: 0.12),
+                color: open ? maraCaramel : maraPaper.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(step.icon,
-                  color: open ? maraIndigo : maraCream.withValues(alpha: 0.55)),
+                  color: open ? maraDeep : maraPaper.withValues(alpha: 0.55)),
             ),
             Positioned(
               right: -4,
               bottom: -4,
               child: CircleAvatar(
                 radius: 10,
-                backgroundColor: open ? maraGreen : maraIndigo,
+                backgroundColor: open ? maraGreen : maraDeep,
                 child: Icon(open ? Icons.check : Icons.lock,
-                    size: 12, color: maraCream),
+                    size: 12, color: maraPaper),
               ),
             ),
           ],
@@ -141,11 +141,11 @@ class _Tile extends StatelessWidget {
         Text(context.tr(step.label),
             textAlign: TextAlign.center,
             style: theme.textTheme.labelSmall
-                ?.copyWith(color: maraCream, fontWeight: FontWeight.w700)),
+                ?.copyWith(color: maraPaper, fontWeight: FontWeight.w700)),
         Text(open ? context.tr('Ouvert') : progress.goalFor(step.key, context.trLanguage),
             textAlign: TextAlign.center,
             style: theme.textTheme.labelSmall
-                ?.copyWith(color: maraCream.withValues(alpha: 0.7), fontSize: 10)),
+                ?.copyWith(color: maraPaper.withValues(alpha: 0.7), fontSize: 10)),
       ],
     );
   }
@@ -202,18 +202,18 @@ class PathGate {
                         width: 84,
                         height: 84,
                         decoration: BoxDecoration(
-                          color: maraIndigo,
+                          color: maraDeep,
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: Icon(step.icon, size: 44, color: maraCream),
+                        child: Icon(step.icon, size: 44, color: maraPaper),
                       ),
                       const Positioned(
                         right: -6,
                         bottom: -6,
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundColor: maraGold,
-                          child: Icon(Icons.lock, color: maraIndigo, size: 20),
+                          backgroundColor: maraCaramel,
+                          child: Icon(Icons.lock, color: maraDeep, size: 20),
                         ),
                       ),
                     ],
@@ -239,8 +239,8 @@ class PathGate {
                     child: LinearProgressIndicator(
                       value: v,
                       minHeight: 10,
-                      color: maraGold,
-                      backgroundColor: maraIndigo.withValues(alpha: 0.1),
+                      color: maraCaramel,
+                      backgroundColor: maraDeep.withValues(alpha: 0.1),
                     ),
                   ),
                 ),

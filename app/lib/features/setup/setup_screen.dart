@@ -291,7 +291,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         height: 6,
                         decoration: BoxDecoration(
-                          color: i <= _at ? maraGold : maraIndigo.withValues(alpha: 0.12),
+                          color: i <= _at ? maraCaramel : maraDeep.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
@@ -546,10 +546,10 @@ class _Picture extends StatelessWidget {
         width: 120,
         height: 120,
         decoration: BoxDecoration(
-          color: maraIndigo,
+          color: maraDeep,
           borderRadius: BorderRadius.circular(36),
         ),
-        child: Icon(icon, size: 64, color: maraGold),
+        child: Icon(icon, size: 64, color: maraCaramel),
       ),
     );
   }
@@ -599,7 +599,7 @@ class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
             for (var i = 0; i < n; i++) ...[
               if (i > 0)
                 Icon(Icons.arrow_forward,
-                    size: 18, color: i <= lit ? maraIndigo : maraIndigo.withValues(alpha: 0.2)),
+                    size: 18, color: i <= lit ? maraDeep : maraDeep.withValues(alpha: 0.2)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Column(
@@ -609,11 +609,11 @@ class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: i < lit ? maraGold : maraIndigo.withValues(alpha: 0.08),
+                        color: i < lit ? maraCaramel : maraDeep.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(widget.items[i].$1,
-                          color: i < lit ? maraIndigo : maraIndigo.withValues(alpha: 0.5)),
+                          color: i < lit ? maraDeep : maraDeep.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 4),
                     Text(widget.items[i].$2, style: theme.textTheme.labelMedium),
@@ -639,7 +639,7 @@ class _Ready extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: maraIndigo,
+      backgroundColor: maraDeep,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -653,18 +653,18 @@ class _Ready extends StatelessWidget {
                   key: const Key('setup-ready'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium
-                      ?.copyWith(color: maraCream, fontWeight: FontWeight.w800)),
+                      ?.copyWith(color: maraPaper, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(org.name,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(color: maraGold)),
+                  style: theme.textTheme.titleMedium?.copyWith(color: maraCaramel)),
               const SizedBox(height: 32),
               SizedBox(
                 height: 56,
                 child: FilledButton.icon(
                   key: const Key('setup-enter'),
                   style: FilledButton.styleFrom(
-                      backgroundColor: maraGold, foregroundColor: maraIndigo),
+                      backgroundColor: maraCaramel, foregroundColor: maraDeep),
                   onPressed: onDone,
                   icon: const Icon(Icons.storefront),
                   label: Text(context.tr('Ouvrir ma boutique'), style: const TextStyle(fontSize: 17)),

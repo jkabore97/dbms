@@ -6,7 +6,7 @@ import '../../core/theme/mara_mark.dart';
 /// drawn rather than borrowed from an icon font, which has none: an oval
 /// shell, its slit, and the small teeth either side.
 class CauriIcon extends StatelessWidget {
-  const CauriIcon({super.key, this.size = 20, this.color = maraGold});
+  const CauriIcon({super.key, this.size = 20, this.color = maraCaramel});
 
   final double size;
   final Color color;

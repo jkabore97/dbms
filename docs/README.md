@@ -19,6 +19,13 @@ Send the short one first. The dossier follows once the project is understood.
 `kit.js` holds the shared formatting helpers — colours, headings, tables,
 callouts — so the two documents stay visually consistent.
 
+## Brand
+
+`brand/mara-store-listing.md` holds the store and YouTube copy.
+`brand/mara-neutre/` is the Mara kit in black, white, brown and grey (store
+icons, YouTube art, web icons, logos); its README says which file goes where,
+and `python3 brand/build_mara_neutre.py` regenerates it.
+
 ## Register
 
 The short document uses **tu** (father to son). The dossier uses **vous**, as

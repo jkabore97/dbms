@@ -1460,7 +1460,7 @@ class _Window extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF2B63D),
+                        color: const Color(0xFFC49A6C),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -1470,7 +1470,7 @@ class _Window extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E2560),
+                          color: Color(0xFF0E0D0C),
                         ),
                       ),
                     ),

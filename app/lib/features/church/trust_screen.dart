@@ -235,7 +235,7 @@ class _Steps extends StatelessWidget {
               width: wide ? 40 : 26,
               height: 6,
               decoration: BoxDecoration(
-                color: i <= step ? maraGold : maraIndigo.withValues(alpha: 0.12),
+                color: i <= step ? maraCaramel : maraDeep.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
@@ -243,7 +243,7 @@ class _Steps extends StatelessWidget {
       );
 }
 
-/// A round seal, indigo, its shield gold once verified.
+/// A round seal, dark brown, its shield caramel once verified.
 class _Seal extends StatelessWidget {
   const _Seal({required this.level, required this.size});
 
@@ -254,10 +254,10 @@ class _Seal extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(color: maraIndigo, shape: BoxShape.circle),
+        decoration: const BoxDecoration(color: maraDeep, shape: BoxShape.circle),
         child: Icon(
           level.verified ? Icons.verified_user : Icons.shield_outlined,
-          color: level.verified ? maraGold : maraCream,
+          color: level.verified ? maraCaramel : maraPaper,
           size: size * 0.55,
         ),
       );

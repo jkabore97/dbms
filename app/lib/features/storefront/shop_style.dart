@@ -24,20 +24,22 @@ import 'package:kaj_app/core/l10n/tr.dart';
 class ShopStyle {
   ShopStyle._();
 
-  /// Near-black for type and the one button. Pure black looks printed.
-  static const ink = Color(0xFF14161C);
+  /// Near-black for type and the one button (the neutral kit's noir).
+  static const ink = Color(0xFF0E0D0C);
 
   /// The page.
   static const paper = Color(0xFFFFFFFF);
 
-  /// The warm off-white every photo sits on, and the hero band.
-  static const stone = Color(0xFFF6F2EA);
+  /// The warm off-white every photo sits on, and the hero band: the kit's
+  /// blanc cassé.
+  static const stone = Color(0xFFF4F2EE);
 
-  /// Secondary text: prices, addresses, distances, the footer.
-  static const mist = Color(0xFF6E6E6B);
+  /// Secondary text: prices, addresses, distances, the footer — the kit's
+  /// grey, deepened to read on white.
+  static const mist = Color(0xFF6B6660);
 
   /// Hairlines.
-  static const line = Color(0xFFE8E3D8);
+  static const line = Color(0xFFE6E1D8);
 
   /// The page never grows wider than this on a desktop screen: a grid of
   /// eight tiny photos across a monitor sells nothing.
@@ -334,7 +336,7 @@ class _ShopAnnouncementState extends State<ShopAnnouncement> {
   Widget build(BuildContext context) {
     final line = widget.lines[_i % widget.lines.length];
     return Material(
-      color: maraIndigo, // Mara's own ground, over every street page
+      color: maraDeep, // Mara's own ground, over every street page
       child: SafeArea(
         bottom: false,
         child: SizedBox(

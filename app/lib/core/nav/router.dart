@@ -1529,11 +1529,11 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mara's seal on indigo and a gold hairline of progress — the same page
+    // Mara's seal on dark brown and a caramel hairline of progress — the same page
     // the browser and Android show before the app, so launch reads as one
     // picture rather than three.
     return const Scaffold(
-      backgroundColor: maraIndigo,
+      backgroundColor: maraDeep,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1544,7 +1544,7 @@ class _Splash extends StatelessWidget {
               width: 96,
               child: LinearProgressIndicator(
                 minHeight: 2,
-                color: maraGold,
+                color: maraCaramel,
                 backgroundColor: Color(0x2EF3EEE4),
               ),
             ),

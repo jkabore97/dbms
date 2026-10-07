@@ -337,7 +337,7 @@ class _Wallet extends StatelessWidget {
       key: const Key('cauris-wallet'),
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
       decoration: BoxDecoration(
-        color: maraIndigo,
+        color: maraDeep,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -357,7 +357,7 @@ class _Wallet extends StatelessWidget {
                   NumberFormat.decimalPattern('fr_FR').format(v.round()),
                   key: const Key('cauris-balance'),
                   style: theme.textTheme.displaySmall?.copyWith(
-                      color: maraCream, fontWeight: FontWeight.w800),
+                      color: maraPaper, fontWeight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
@@ -365,7 +365,7 @@ class _Wallet extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 10),
                 child: Text('cauris',
                     style: theme.textTheme.titleMedium
-                        ?.copyWith(color: maraCream.withValues(alpha: 0.8))),
+                        ?.copyWith(color: maraPaper.withValues(alpha: 0.8))),
               ),
             ],
           ),
@@ -373,7 +373,7 @@ class _Wallet extends StatelessWidget {
           Text(
             context.tr('Cette semaine : +{week}', {'week': wallet.week}),
             key: const Key('cauris-week'),
-            style: theme.textTheme.titleSmall?.copyWith(color: maraGold),
+            style: theme.textTheme.titleSmall?.copyWith(color: maraCaramel),
           ),
           if (wallet.expiresOn != null && wallet.balance > 0) ...[
             const SizedBox(height: 4),
@@ -382,7 +382,7 @@ class _Wallet extends StatelessWidget {
               '${DateFormat('d MMMM yyyy', 'fr_FR').format(wallet.expiresOn!)} : '
               'sans mouvement pendant 6 mois, ils expirent.',
               style: theme.textTheme.bodySmall
-                  ?.copyWith(color: maraCream.withValues(alpha: 0.75)),
+                  ?.copyWith(color: maraPaper.withValues(alpha: 0.75)),
             ),
           ],
         ],

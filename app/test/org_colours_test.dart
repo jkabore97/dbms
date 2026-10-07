@@ -136,7 +136,7 @@ void main() {
     expect(saveCallback(tester), isNotNull);
     final context = tester.element(find.byType(Scaffold).first);
     expect(Theme.of(context).colorScheme.primary,
-        retailPalette.ink);
+        kajPalette.ink);
   });
 
   testWidgets('a colour this build does not know shows as the default',
@@ -150,6 +150,6 @@ void main() {
     expect(saveCallback(tester), isNull);
     final context = tester.element(find.byType(Scaffold).first);
     expect(Theme.of(context).colorScheme.primary,
-        churchPalette.ink);
+        graphitePalette.ink);
   });
 }

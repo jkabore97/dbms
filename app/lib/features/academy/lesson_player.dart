@@ -160,7 +160,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
                     width: i == _at ? 22 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: i == _at ? maraIndigo : maraIndigo.withValues(alpha: 0.25),
+                      color: i == _at ? maraDeep : maraDeep.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -207,7 +207,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
                     FilledButton.icon(
                       key: const Key('lesson-finish'),
                       onPressed: _busy ? null : _finish,
-                      icon: const CauriIcon(size: 16, color: maraGold),
+                      icon: const CauriIcon(size: 16, color: maraCaramel),
                       label: Text(widget.mission ? context.tr('C\'est fait !') : context.tr('J\'ai compris')),
                     ),
                   ],
@@ -232,7 +232,7 @@ class _MockScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final small = TextStyle(fontSize: w * 0.04, color: maraIndigo);
+    final small = TextStyle(fontSize: w * 0.04, color: maraDeep);
     Widget bar(double f, {Color c = const Color(0xFFE8E3D8), double t = 0.018}) => Container(
           height: h * t,
           width: w * f,
@@ -249,25 +249,25 @@ class _MockScreen extends StatelessWidget {
               children: [
                 Text('9:41', style: small.copyWith(fontWeight: FontWeight.w700)),
                 const Spacer(),
-                Icon(Icons.signal_cellular_alt, size: w * 0.045, color: maraIndigo),
-                Icon(Icons.battery_full, size: w * 0.045, color: maraIndigo),
+                Icon(Icons.signal_cellular_alt, size: w * 0.045, color: maraDeep),
+                Icon(Icons.battery_full, size: w * 0.045, color: maraDeep),
               ],
             ),
           ),
           // The app's bar.
           Container(
-            color: maraIndigo,
+            color: maraDeep,
             padding: EdgeInsets.symmetric(horizontal: w * 0.05, vertical: h * 0.018),
             child: Row(
               children: [
-                Icon(Icons.storefront, size: w * 0.06, color: maraGold),
+                Icon(Icons.storefront, size: w * 0.06, color: maraCaramel),
                 SizedBox(width: w * 0.03),
                 Expanded(
                   child: Text(context.tr(step.title),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          color: maraCream, fontSize: w * 0.045, fontWeight: FontWeight.w700)),
+                          color: maraPaper, fontSize: w * 0.045, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
@@ -287,17 +287,17 @@ class _MockScreen extends StatelessWidget {
                   width: w * 0.16,
                   height: w * 0.16,
                   decoration: BoxDecoration(
-                    color: maraIndigo,
+                    color: maraDeep,
                     borderRadius: BorderRadius.circular(w * 0.04),
                   ),
-                  child: Icon(step.icon, size: w * 0.09, color: maraGold),
+                  child: Icon(step.icon, size: w * 0.09, color: maraCaramel),
                 ),
                 SizedBox(width: w * 0.04),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      bar(0.4, c: maraIndigo.withValues(alpha: 0.7)),
+                      bar(0.4, c: maraDeep.withValues(alpha: 0.7)),
                       SizedBox(height: h * 0.01),
                       bar(0.28),
                     ],
@@ -320,7 +320,7 @@ class _MockScreen extends StatelessWidget {
                       children: [bar(f), SizedBox(height: h * 0.006), bar(f * 0.6, t: 0.012)],
                     ),
                   ),
-                  bar(0.12, c: maraGold.withValues(alpha: 0.6)),
+                  bar(0.12, c: maraCaramel.withValues(alpha: 0.6)),
                 ],
               ),
             ),
@@ -336,7 +336,7 @@ class _MockScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 for (final i in const [Icons.home, Icons.inventory_2_outlined, Icons.shopping_bag_outlined, Icons.menu])
-                  Icon(i, size: w * 0.07, color: maraIndigo.withValues(alpha: i == Icons.home ? 1 : 0.45)),
+                  Icon(i, size: w * 0.07, color: maraDeep.withValues(alpha: i == Icons.home ? 1 : 0.45)),
               ],
             ),
           ),
@@ -418,7 +418,7 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: maraIndigo,
+                  color: maraDeep,
                   borderRadius: BorderRadius.circular(w * 0.12),
                 ),
                 child: Padding(
@@ -450,18 +450,18 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                     key: const Key('lesson-target'),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: maraGold,
+                      color: maraCaramel,
                       borderRadius: BorderRadius.circular(99),
                       boxShadow: [
                         BoxShadow(
-                            color: maraGold.withValues(alpha: 0.45),
+                            color: maraCaramel.withValues(alpha: 0.45),
                             blurRadius: 14,
                             spreadRadius: 2),
                       ],
                     ),
                     child: Text(context.tr(widget.step.target!),
                         style: const TextStyle(
-                            color: maraIndigo, fontWeight: FontWeight.w800)),
+                            color: maraDeep, fontWeight: FontWeight.w800)),
                   ),
                 ),
               ),
@@ -487,7 +487,7 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                             width: 44 * (1 + tap),
                             height: 44 * (1 + tap),
                             decoration: const BoxDecoration(
-                                color: maraGold, shape: BoxShape.circle),
+                                color: maraCaramel, shape: BoxShape.circle),
                           ),
                         ),
                       ),
@@ -499,7 +499,7 @@ class _PhoneState extends State<_Phone> with SingleTickerProviderStateMixin {
                           child: const Icon(Icons.touch_app,
                               key: Key('lesson-hand'),
                               size: 46,
-                              color: maraTerracotta),
+                              color: maraBrown),
                         ),
                       ),
                     ],

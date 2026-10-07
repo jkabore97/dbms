@@ -14,8 +14,9 @@ import 'motion.dart';
 ///
 /// So colour carries meaning here rather than decorating:
 ///
-///   * **Each profile has its own palette.** Green grows, indigo is the
-///     church, amber is the shop. The org's `profile` column picks it — the
+///   * **Each profile has its own palette** — in the neutral kit since
+///     the new logo: Mara's brown is the shop, caramel the farm, graphite
+///     the association. The org's `profile` column picks it — the
 ///     same rule that picks the home screen, so the two can never disagree.
 ///   * **The hero card is a gradient in that palette**, which is what makes a
 ///     screen look alive rather than printed.
@@ -132,22 +133,58 @@ const retailPalette = KajPalette(
 );
 
 /// Sign-in, the business picker, the platform console: everything that belongs
-/// to the app rather than to one business. Mara's indigo (the brand's own
-/// ground), so it is nobody's profile; its tints are the seal's terracotta,
-/// gold, green and violet, deepened until a white icon reads on each.
+/// to the app rather than to one business — and the shop's and the generic
+/// business's default. The neutral kit's dark brown (docs/brand/mara-neutre):
+/// ink in brun foncé, a wash of blanc cassé and sand, tints that stay in the
+/// kit's browns and greys with two muted hues so neighbouring tiles differ.
 const kajPalette = KajPalette(
   name: 'mara',
   label: 'Mara',
-  seed: Color(0xFF3D4CC4),
-  ink: Color(0xFF1E2560),
-  hero: [Color(0xFFF6F2EA), Color(0xFFE6E8F8)],
+  seed: Color(0xFF8B5A3C),
+  ink: Color(0xFF4A3122),
+  hero: [Color(0xFFF4F2EE), Color(0xFFEDE3D7)],
   tints: [
-    Color(0xFF3D4CC4),
-    Color(0xFFB8441F),
-    Color(0xFF9A6408),
-    Color(0xFF1C7A52),
-    Color(0xFF5B3FA8),
-    Color(0xFF1E2560),
+    Color(0xFF8B5A3C),
+    Color(0xFF3B3A38),
+    Color(0xFF7A5230),
+    Color(0xFF4F6B4A),
+    Color(0xFF6B4A5E),
+    Color(0xFF4A3122),
+  ],
+);
+
+/// The kit's caramel, deepened until it reads as ink: the farm's default.
+const caramelPalette = KajPalette(
+  name: 'caramel',
+  label: 'Caramel',
+  seed: Color(0xFFC49A6C),
+  ink: Color(0xFF7A5230),
+  hero: [Color(0xFFF7EFE5), Color(0xFFF1E6D8)],
+  tints: [
+    Color(0xFF7A5230),
+    Color(0xFF4F6B4A),
+    Color(0xFF3B3A38),
+    Color(0xFF8B5A3C),
+    Color(0xFF6B4A5E),
+    Color(0xFF4A3122),
+  ],
+);
+
+/// The kit's dark grey: the association's default — the quietest of the
+/// three, for the business where money is counted rather than sold.
+const graphitePalette = KajPalette(
+  name: 'graphite',
+  label: 'Graphite',
+  seed: Color(0xFFA3A09B),
+  ink: Color(0xFF3B3A38),
+  hero: [Color(0xFFF2F1EF), Color(0xFFE9E7E3)],
+  tints: [
+    Color(0xFF3B3A38),
+    Color(0xFF8B5A3C),
+    Color(0xFF4F6B4A),
+    Color(0xFF7A5230),
+    Color(0xFF6B4A5E),
+    Color(0xFF4A3122),
   ],
 );
 
@@ -258,10 +295,13 @@ const ardoisePalette = KajPalette(
 /// looks like; the rest follow. Tests iterate this rather than a hand-kept
 /// list, so adding a palette here is what subjects it to the contrast bar.
 const allPalettes = <KajPalette>[
+  // The kit's three first: what a business looks like until it chooses.
+  kajPalette,
+  caramelPalette,
+  graphitePalette,
   farmPalette,
   churchPalette,
   retailPalette,
-  kajPalette,
   lagunePalette,
   oceanPalette,
   prunePalette,
@@ -292,10 +332,12 @@ KajPalette? paletteNamed(String? name) {
 /// added server-side may break an APK already in somebody's hand.
 KajPalette paletteFor(String? profile, {String? theme}) =>
     paletteNamed(theme) ??
+    // The neutral kit for every business that has not chosen: a shop is
+    // Mara's brown, a farm caramel, an association graphite. A business
+    // that chose a colour (orgs.theme) keeps it, above.
     switch (profile) {
-      'farm' => farmPalette,
-      'church' || 'association' => churchPalette,
-      'retail' => retailPalette,
+      'farm' => caramelPalette,
+      'church' || 'association' => graphitePalette,
       _ => kajPalette,
     };
 
@@ -312,13 +354,14 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
 /// hero wash is the flat band behind the home screen's figure. Everything
 /// else is paper, ink and stone, the same for every business, so a shop and
 /// a farm are told apart by their accent rather than by a different page.
-// Mara's paper: white pages, the brand's near-black ink, and its warm
-// cream for every quiet block.
+// Mara's paper (the neutral kit): white pages, the kit's near-black ink,
+// its blanc cassé for every quiet block, a warm grey for secondary type
+// (the kit's #A3A09B deepened to read on white at 5:1) and a sand hairline.
 const kPaper = Color(0xFFFFFFFF);
-const kInk = Color(0xFF14161C);
-const kStone = Color(0xFFF6F2EA);
-const kMist = Color(0xFF6B6A66);
-const kLine = Color(0xFFE8E3D8);
+const kInk = Color(0xFF0E0D0C);
+const kStone = Color(0xFFF4F2EE);
+const kMist = Color(0xFF6B6660);
+const kLine = Color(0xFFE6E1D8);
 
 /// Builds the app's `ThemeData` from a palette — the paper edition.
 ///
