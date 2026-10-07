@@ -395,6 +395,8 @@ rollback;
 
 \echo ''
 \echo '--- TEST 10: a manager invites somebody, and the code is what grants access ---'
+-- The free worker opens once the first setup is done (100).
+update orgs set setup_done_at = now() where slug = 'ferme-du-plateau';
 begin;
 set local "request.jwt.claim.sub" = '83838383-0000-0000-0000-000000000002';
 set local role authenticated;

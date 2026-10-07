@@ -80,8 +80,10 @@ class UnlockSheet extends StatefulWidget {
     final scope = AppScope.read(context);
     final states = scope?.session.featuresFor(org.id);
     final tool = states?.toolOf(feature);
+    // An association earns no cauris (084) but spends what Mara gives it
+    // (100): the sheet once it has some, the plans otherwise.
     if (scope == null || states == null || tool == null ||
-        org.profile == 'church' || org.profile == 'association') {
+        (org.isAssociation && states.balance <= 0)) {
       await GoRouter.of(context).push(Routes.inside(org.id, 'kaj-pro'));
       return;
     }
@@ -187,7 +189,10 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   CaurisAmount(widget.states.balance,
                       style: theme.textTheme.bodyMedium),
                   if (_missing > 0)
-                    Text(context.tr(' — encore {_missing} à gagner', {'_missing': _missing}),
+                    Text(
+                        widget.org.isAssociation
+                            ? context.tr(' — il en manque {_missing}', {'_missing': _missing})
+                            : context.tr(' — encore {_missing} à gagner', {'_missing': _missing}),
                         key: const Key('unlock-missing'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w700)),
@@ -226,7 +231,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              if (widget.org.isAdmin)
+              if (widget.org.isAdmin && !widget.org.isAssociation)
                 OutlinedButton(
                   key: const Key('unlock-earn'),
                   onPressed: () {

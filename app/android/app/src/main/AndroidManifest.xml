@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Unlock with a fingerprint instead of the code (Sécurité). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- The buzz of a new order (Compte › Préférences › Sons des
+         notifications, switchable off). A normal permission: granted at
+         install, never asked. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- The vitrine map: "utiliser ma position" places a shop on the map
          from where the phone is, and "près de moi" sorts the directory by

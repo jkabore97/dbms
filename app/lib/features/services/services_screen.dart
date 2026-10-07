@@ -13,7 +13,9 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
+import '../../core/nav/app_scope.dart';
 import '../capture/capture_action.dart';
+import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
@@ -387,6 +389,11 @@ class _ServiceSheetState extends State<ServiceSheet> {
   }
 
   Future<void> _pickPhoto() async {
+    // Every place taken on Basic (100): one more first, or nothing.
+    if (!await photoAllowed(context, widget.org, hasPhoto: widget.photoKey != null) ||
+        !mounted) {
+      return;
+    }
     final picked = await CaptureAction.pick(context);
     if (picked == null || !mounted) return;
     setState(() {
@@ -440,6 +447,7 @@ class _ServiceSheetState extends State<ServiceSheet> {
         );
         if (doc != null) {
           await capture.file(documentId: doc, productId: id);
+          if (mounted) await AppScope.read(context)?.session.reloadFeatures(widget.org.id);
         }
       }
       if (mounted) Navigator.of(context).pop(true);
@@ -555,6 +563,7 @@ class _ServiceSheetState extends State<ServiceSheet> {
                 ),
               ],
             ),
+            PhotoCounter(org: widget.org, hasPhoto: widget.photoKey != null),
             const SizedBox(height: 12),
             Row(
               children: [

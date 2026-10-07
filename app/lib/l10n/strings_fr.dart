@@ -197,9 +197,6 @@ class StringsFr extends Strings {
   String get myProfile => 'Mes informations';
 
   @override
-  String get inviteSomeone => 'Inviter quelqu’un';
-
-  @override
   String get applications => 'Demandes';
 
   @override
@@ -266,9 +263,6 @@ class StringsFr extends Strings {
 
   @override
   String get photos => 'Photos';
-
-  @override
-  String get staffLabel => 'Personnel';
 
   @override
   String pendingCount(int count) {

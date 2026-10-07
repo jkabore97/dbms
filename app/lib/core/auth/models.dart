@@ -18,6 +18,7 @@ class OrgSummary {
     this.theme,
     this.suspended = false,
     this.plan = 'free',
+    this.ownerName,
   });
 
   final String id;
@@ -59,6 +60,12 @@ class OrgSummary {
   final String plan;
 
   bool get isPro => plan == 'pro';
+
+  /// The owner's name (100), under the business in « Changer d'activité » so
+  /// a platform admin — whose list is every business — tells two « Boutique
+  /// Sanou » apart. Null when the server does not say (before 100, or no
+  /// named owner): the picker then shows no owner line.
+  final String? ownerName;
 
   /// An association ('church' is its older name, 035): members, money given
   /// and spent, services on a vitrine — no stock, no production, no
@@ -121,7 +128,14 @@ class OrgSummary {
       suspended: (row['suspended'] as bool?) ?? false,
       // Absent before 065: a database that has no plans has only free ones.
       plan: (row['plan'] as String?) ?? 'free',
+      // Absent before 100: no owner line, never a crash.
+      ownerName: _nonBlank(row['owner_name']),
     );
+  }
+
+  static String? _nonBlank(Object? value) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? null : text;
   }
 
   factory OrgSummary.fromCache(Map<String, Object?> row) {
@@ -140,6 +154,7 @@ class OrgSummary {
       suspended: (row['suspended'] as int? ?? 0) == 1,
       // A row written before the column existed reads null, which is free.
       plan: (row['plan'] as String?) ?? 'free',
+      ownerName: _nonBlank(row['owner_name']),
     );
   }
 
@@ -154,6 +169,7 @@ class OrgSummary {
         'theme': theme,
         'suspended': suspended ? 1 : 0,
         'plan': plan,
+        'owner_name': ownerName,
       };
 }
 

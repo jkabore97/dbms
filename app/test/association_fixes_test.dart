@@ -277,7 +277,7 @@ void main() {
               params: {'name': 'Savon noir', 'product_id': 'p1'})),
           '/o/a1/produits?q=Savon+noir');
       expect(target(_row('low_stock', ''), profile: 'farm'), '/o/a1/a-vendre');
-      expect(target(_row('member_joined', '')), '/o/a1/administration/personnel');
+      expect(target(_row('member_joined', '')), '/o/a1/equipe');
       expect(target(_row('debt_settled', '', params: {'customer_id': 'k1'})),
           '/o/a1/credits/k1');
       expect(target(_row('tontine_ready', '', params: {'tontine_id': 't1'})),

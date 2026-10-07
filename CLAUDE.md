@@ -32,6 +32,8 @@ in this project. Follow them without being asked again.
 
 ## Scope
 
+- Every change is checked for all three kinds of business — shop, farm,
+  association. Say, for each, whether it needs the change.
 - If building the requested thing surfaces a real bug (a security issue, a
   broken assumption), fix it and say so clearly — don't stay silent about
   scope growing.

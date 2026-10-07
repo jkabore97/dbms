@@ -60,6 +60,10 @@ class BusinessShell extends StatelessWidget {
         accountAction: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // « Changer d'activité » (100), just left of the bell, for
+            // whoever has more than one — every home, shop, farm and
+            // association alike, since they all ride this one slot.
+            SwitchActivityButton(activities: session.orgs.length),
             NotificationBell(
               notify: scope.notify,
               listRoute: Routes.inside(org.id, 'notifications'),
@@ -86,6 +90,26 @@ class BusinessShell extends StatelessWidget {
         const _SuspendedBanner(),
         Expanded(child: home),
       ],
+    );
+  }
+}
+
+/// « Changer d'activité » on the home's app bar (100): only for someone with
+/// more than one activity — for everybody else it takes no room at all.
+class SwitchActivityButton extends StatelessWidget {
+  const SwitchActivityButton({super.key, required this.activities});
+
+  /// How many activities the signed-in person can open.
+  final int activities;
+
+  @override
+  Widget build(BuildContext context) {
+    if (activities < 2) return const SizedBox.shrink();
+    return IconButton(
+      key: const Key('switch-activity'),
+      icon: const Icon(Icons.swap_horiz),
+      tooltip: Strings.of(context).switchBusiness,
+      onPressed: () => context.go(Routes.picker),
     );
   }
 }

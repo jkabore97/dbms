@@ -2,8 +2,6 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
-  '    {name} · {name2}':
-      '{name} · {name2}',
   ' — encore {_missing} à gagner':
       ' — {_missing} more to earn',
   '+{delta}':
@@ -12,12 +10,8 @@ const enStrings = <String, String>{
       '+{points}',
   '+{week}':
       '+{week}',
-  '1 jour':
-      '1 day',
   '1 min':
       '1 min',
-  '14 jours':
-      '14 days',
   '15 min':
       '15 min',
   '30 jours':
@@ -238,8 +232,6 @@ const enStrings = <String, String>{
       'Other colours',
   'Autre…':
       'Other…',
-  'Avec un numéro, le code ne fonctionne que pour cette personne et s\'active tout seul à sa connexion. Sans numéro, il fonctionne pour quiconque le détient — à remettre en main propre.':
-      'With a number, the code only works for that person and activates by itself when they sign in. Without a number, it works for whoever holds it — hand it over in person.',
   'Avec un numéro, le code ne marche que pour lui.':
       'With a number, the code only works for them.',
   'Balance générale':
@@ -328,8 +320,6 @@ const enStrings = <String, String>{
       'This page does not exist',
   'Cette page s\'ouvre depuis la liste.':
       'This page opens from the list.',
-  'Cette personne ne verra rien en dehors de cette portée.':
-      'This person will see nothing outside this scope.',
   'Cette position est loin de la zone franc CFA. Si le téléphone n\'était pas à la boutique, touchez la carte au bon endroit ou collez le lien Google Maps.':
       'This position is far from the CFA franc zone. If the phone was not at the shop, tap the map at the right place or paste the Google Maps link.',
   'Cette semaine : +{week}':
@@ -404,8 +394,6 @@ const enStrings = <String, String>{
       'Code copied',
   'Code copié.':
       'Code copied.',
-  'Code créé':
-      'Code created',
   'Code d\'invitation':
       'Invitation code',
   'Code de la bande':
@@ -448,8 +436,8 @@ const enStrings = <String, String>{
       'Income statement',
   'Compter ce qui est distribué chaque jour est ce qui permet de savoir lundi que l\'aliment finira jeudi.':
       'Counting what is given out each day is how you know on Monday that the feed will run out on Thursday.',
-  'Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos)':
-      'Accounts, invoices and photos without limit (free: {freeMaxInvoicesMonth} invoices a month, {freeMaxPhotos} photos)',
+  'Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo)':
+      'Accounts, invoices and photos without limit (free: {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo)',
   'Compté en':
       'Counted in',
   'Conditions d\'utilisation':
@@ -518,8 +506,6 @@ const enStrings = <String, String>{
       'Credit',
   'Créer':
       'Create',
-  'Créer le code':
-      'Create the code',
   'Créer le groupe':
       'Create the group',
   'Créée automatiquement si elle est nouvelle.':
@@ -598,8 +584,6 @@ const enStrings = <String, String>{
       'Description',
   'Détail':
       'Detail',
-  'Détail complet':
-      'Full detail',
   'Détails':
       'Details',
   'Déverrouiller avec l\'empreinte':
@@ -802,8 +786,6 @@ const enStrings = <String, String>{
       'Pending invitations ({length})',
   'Inviter':
       'Invite',
-  'Inviter quelqu\'un':
-      'Invite someone',
   'Inviter quelqu’un':
       'Invite someone',
   'Inviter quelqu’un d’autre':
@@ -870,8 +852,8 @@ const enStrings = <String, String>{
       'Trust cannot be bought or compared: it is read in your books. Keep them every week and back every expense with its receipt: that is what a donor looks at.',
   'La console fonctionne en mode réduit : recherche et filtres sont appliqués sur cet appareil. Appliquez la migration 021 pour la recherche côté serveur.':
       'The console runs in reduced mode: search and filters are applied on this device. Apply migration 021 for server-side search.',
-  'La liste des outils Pro et les plafonds gratuits ({freeMaxStaff} comptes, {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos) se changent dans platform_settings.':
-      'The list of Pro tools and the free caps ({freeMaxStaff} accounts, {freeMaxInvoicesMonth} invoices a month, {freeMaxPhotos} photos) are changed in platform_settings.',
+  'La liste des outils Pro et les plafonds gratuits ({staff}, {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo, {freeMaxPhotos} autres photos) se changent dans platform_settings.':
+      'The list of Pro tools and the free caps ({staff}, {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo, {freeMaxPhotos} other photos) are changed in platform_settings.',
   'La livraison fait partie de Mara Pro':
       'Delivery is part of Mara Pro',
   'La part de Mara':
@@ -1234,8 +1216,6 @@ const enStrings = <String, String>{
       'Serial number (optional)',
   'Numéro de téléphone':
       'Phone number',
-  'Numéro de téléphone (optionnel)':
-      'Phone number (optional)',
   'Numéro du livreur':
       'Courier\'s number',
   'Numéro fiscal':
@@ -1418,8 +1398,6 @@ const enStrings = <String, String>{
       'Privacy policy',
   'Ponte (7 j)':
       'Laying (7 d)',
-  'Portée':
-      'Scope',
   'Poser une question sur WhatsApp':
       'Ask a question on WhatsApp',
   'Position introuvable. Vérifiez que le GPS est activé.':
@@ -1788,8 +1766,6 @@ const enStrings = <String, String>{
       'Total spent',
   'Total reçu':
       'Total received',
-  'Totaux seulement':
-      'Totals only',
   'Touchez la carte pour déplacer le repère sur la porte.':
       'Tap the map to move the pin onto the door.',
   'Touchez un article pour le voir, « + » pour l\'ajouter.':
@@ -1808,8 +1784,6 @@ const enStrings = <String, String>{
       'Everyone',
   'Tout publier ({unpublished})':
       'Publish all ({unpublished})',
-  'Toute l\'activité':
-      'All activity',
   'Toutes':
       'All',
   'Toutes les vitrines':
@@ -1850,8 +1824,6 @@ const enStrings = <String, String>{
       'A word for the shop (optional)',
   'Un nom, un prix, combien vous en avez.':
       'A name, a price, how many you have.',
-  'Un observateur lit les comptes sans jamais pouvoir les modifier.':
-      'An observer reads the books without ever being able to change them.',
   'Un propriétaire a tapé « J\'ai payé ». Vérifiez le paiement dans Wave, passez l\'entreprise en Pro depuis sa formule, puis marquez la demande traitée.':
       'An owner tapped « I\'ve paid ». Check the payment in Wave, switch the business to Pro from its plan, then mark the request handled.',
   'Un rapport est un chiffre à un instant. Mieux vaut pas de chiffre du tout que le chiffre de la semaine dernière présenté comme celui d\'aujourd\'hui.':
@@ -1872,8 +1844,6 @@ const enStrings = <String, String>{
       'YOUR BASKET',
   'Vaccin':
       'Vaccine',
-  'Valable':
-      'Valid',
   'Validation en deux étapes':
       'Two-step sign-in',
   'Valider':
@@ -2470,8 +2440,8 @@ const enStrings = <String, String>{
       'Full Mara Pro',
   'Mara Pro complet : tous les outils, sans limite':
       'Full Mara Pro: every tool, without limit',
-  'Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et jusqu\'à {freeMaxStaff} comptes en plus du propriétaire. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :':
-      'Mara stays free for everyday work: stock, sales, the credit book, the vitrine and up to {freeMaxStaff} accounts besides the owner. Mara Pro adds what a growing business needs:',
+  'Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :':
+      'Mara stays free for everyday work: stock, sales, the credit book, the vitrine and {freeMaxStaff} person(s) besides the owner, once the first setup is done. Mara Pro adds what a growing business needs:',
   'Mara reste gratuit pour le quotidien. Mara Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.':
       'Mara stays free for everyday work. Mara Pro adds delivery, online payment and the tools of a growing business.',
   'Mara vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.':
@@ -3098,4 +3068,133 @@ const enStrings = <String, String>{
   'corrigé': 'corrected',
   'Une somme due': 'An amount owed',
   'Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.': 'Your shop window at the top of the list, for 7 or 30 days.',
+  // Batch 100 (app): the picker, the tones.
+  'Nom ou propriétaire': 'Name or owner',
+  'Aucune activité ne correspond.': 'No business matches.',
+  'Associations': 'Associations',
+  'Autres': 'Others',
+  'Sons des notifications': 'Notification sounds',
+  'vibreur': 'vibrate',
+  'Vibrer': 'Vibrate',
+  'Écouter': 'Play',
+  'Carillon': 'Chime',
+  'Balafon': 'Balafon',
+  'Clochette': 'Little bell',
+  'Goutte': 'Drop',
+  'Ce son retentit quand l\'application est ouverte. Application fermée, une notification web sonne avec le son du téléphone ; sur Android, pas encore de notification application fermée.': 'This sound plays while the app is open. With the app closed, a web notification uses the phone\'s own sound; Android has no closed-app notifications yet.',
+  // Batch 100 (server side): the team, the photos, the platform's gifts.
+  'Équipe': 'Team',
+  'Les personnes': 'The people',
+  'Invitations en attente': 'Invitations waiting',
+  'Invitation': 'Invitation',
+  'Code {code}': 'Code {code}',
+  'Paie et journées': 'Payroll and days',
+  'Payer un salaire, noter une journée, les personnes sans compte': 'Pay a salary, record a day, people without an account',
+  'Équipe sans limite': 'Team without limit',
+  'Débloquée avec vos cauris jusqu\'au {date}': 'Unlocked with your cauris until {date}',
+  'Avec Mara Pro, ajoutez autant de personnes que vous voulez.': 'With Mara Pro, add as many people as you like.',
+  '1 personne offerte': '1 person free',
+  'Elle s\'ouvre une fois la mise en route terminée.': 'It opens once the first setup is done.',
+  'Votre personne offerte est là': 'Your free person is in',
+  'Pour ajouter quelqu\'un d\'autre : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'To add someone else: Mara Pro, or the team unlocked with cauris.',
+  'Débloquer l\'équipe': 'Unlock the team',
+  'Débloquer l\'équipe ({cost} cauris)': 'Unlock the team ({cost} cauris)',
+  'Salaire : pas encore noté': 'Salary: not recorded yet',
+  '/ semaine': '/ week',
+  '/ jour': '/ day',
+  '/ mois': '/ month',
+  'Entrez un montant.': 'Enter an amount.',
+  'Salaire de {name}': 'Salary of {name}',
+  'Facultatif. Le noter est gratuit ; le payer passe par la paie.': 'Optional. Recording it is free; paying it goes through payroll.',
+  'par mois': 'per month',
+  'par semaine': 'per week',
+  'par jour': 'per day',
+  'Effacer le salaire': 'Clear the salary',
+  'Offert à {name}. Ses administrateurs sont prévenus.': 'Given to {name}. Its admins are told.',
+  'Offrir des cauris': 'Give cauris',
+  'Nom de l\'entreprise': 'Business name',
+  'Ils restent jusqu\'à ce qu\'ils soient dépensés.': 'They stay until they are spent.',
+  'Cauris à utiliser avant une date': 'Cauris to spend before a date',
+  'Dépensés en premier ; ce qui reste disparaît ce jour-là.': 'Spent first; what is left goes on that day.',
+  'Ouvrir un outil jusqu\'à une date': 'Open a tool until a date',
+  'Offert par Mara : aucun cauri dépensé.': 'A gift from Mara: no cauris spent.',
+  'Boutique': 'Shop',
+  'Entreprise': 'Business',
+  'dont {n} à utiliser avant le {date}': 'of which {n} to spend before {date}',
+  '{tool} ouvert jusqu\'au {date}': '{tool} open until {date}',
+  'Combien de cauris ?': 'How many cauris?',
+  'Quel outil ?': 'Which tool?',
+  'Outil': 'Tool',
+  'À utiliser avant le {date}': 'To spend before {date}',
+  'Ouvert jusqu\'au {date} inclus': 'Open until {date} included',
+  'Un mot pour eux (facultatif)': 'A word for them (optional)',
+  'Offrir': 'Give',
+  '{used} / {limit} photos': '{used} / {limit} photos',
+  'Une photo de plus': 'One more photo',
+  'Acheter une photo ({cost} cauris)': 'Buy a photo ({cost} cauris)',
+  'Toutes vos places photo sont prises': 'All your photo places are taken',
+  'Une place de plus, pour toujours : ': 'One more place, for good: ',
+  'Le propriétaire ou un administrateur peut l\'acheter.': 'The owner or an admin can buy it.',
+  'Ou passer à Mara Pro : photos sans limite': 'Or go Mara Pro: photos without limit',
+  'Mes cauris': 'My cauris',
+  ' — il en manque {_missing}': ' — {_missing} short',
+  'Mara vous offre {n} cauris, à utiliser avant le {date}': 'Mara gives you {n} cauris, to spend before {date}',
+  'Mara vous offre {n} cauris': 'Mara gives you {n} cauris',
+  'Mara vous offre {tool} jusqu\'au {date}.': 'Mara gives you {tool} until {date}.',
+  'Offrir à une entreprise': 'Give to a business',
+  'Cadeau de Mara': 'A gift from Mara',
+  'Cauris offerts par Mara': 'Cauris given by Mara',
+  'Articles en photo': 'Items with a photo',
+  'Une place photo de plus, pour toujours': 'One more photo place, for good',
+  'Mara Pro : cette entreprise a déjà sa personne offerte en plus du propriétaire. Pour ajouter quelqu\'un : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'Mara Pro: this business already has its free person besides the owner. To add someone: Mara Pro, or the team unlocked with cauris.',
+  'Mara Pro : la personne offerte s\'ouvre une fois la mise en route de l\'entreprise terminée. Avant : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'Mara Pro: the free person opens once the business\'s first setup is done. Before that: Mara Pro, or the team unlocked with cauris.',
+  'Mara Pro : toutes vos places photo sont prises. Pour photographier un article de plus : Mara Pro, ou une place photo achetée avec des cauris.': 'Mara Pro: all your photo places are taken. To photograph one more item: Mara Pro, or a photo place bought with cauris.',
+  'Seul un administrateur note le salaire de l\'équipe': 'Only an admin records the team\'s salaries',
+  'Cette personne n\'est pas dans l\'équipe': 'This person is not in the team',
+  'Le salaire doit être un montant positif': 'The salary must be a positive amount',
+  'Seule la plateforme offre des cauris': 'Only the platform gives cauris',
+  'Seule la plateforme offre un outil': 'Only the platform gives a tool',
+  'Une vitrine d\'exemple ne reçoit pas de cauris': 'A sample vitrine receives no cauris',
+  'Le nombre de cauris doit être entre 1 et 100 000': 'The number of cauris must be between 1 and 100,000',
+  'La date doit être après aujourd\'hui': 'The date must be after today',
+  'La date doit être aujourd\'hui ou plus tard': 'The date must be today or later',
+  'Entreprise inconnue': 'Unknown business',
+  'Les places photo ne s\'achètent pas avec des cauris': 'Photo places are not bought with cauris',
+  // Batch 100, corrections: the team in one place, the seat said once,
+  // paperwork kept off the vitrine, the farm's and association's doorbell.
+  '1 personne en plus du propriétaire': '1 person besides the owner',
+  '{n} personnes en plus du propriétaire': '{n} people besides the owner',
+  'Annuler l\'invitation': 'Withdraw the invitation',
+  'Cette personne ne pourra plus ouvrir l\'entreprise. Tout ce qu\'elle a enregistré reste.': 'This person will no longer open the business. Everything they recorded stays.',
+  'Dans Équipe : la place offerte, le code à envoyer, le salaire': 'In Team: the free place, the code to send, the salary',
+  'En plus de vous, sans rien payer.': 'Besides you, at no cost.',
+  'Nouvelle demande : {pending} à traiter sur la vitrine.': 'New request: {pending} to handle on the vitrine.',
+  'Offert par Mara jusqu\'au {date}': 'A gift from Mara until {date}',
+  'Offrir {n} cauris ?': 'Give {n} cauris?',
+  'À {name}. C\'est plus de {limit} cauris.': 'To {name}. That is more than {limit} cauris.',
+  'Pas encore de cauris.': 'No cauris yet.',
+  'Payé à l\'heure : se change dans « Paie et journées »': 'Paid by the hour: changed in « Payroll and days »',
+  'Place libre': 'Place free',
+  'Remplacer': 'Replace',
+  'Remplacer {name} ?': 'Replace {name}?',
+  'Renvoyer': 'Send again',
+  'Retirer cette personne, puis inviter qui prend sa place': 'Remove this person, then invite whoever takes their place',
+  'Retirer de l\'équipe': 'Remove from the team',
+  'Retirer {name} de l\'équipe ?': 'Remove {name} from the team?',
+  'Salaire': 'Salary',
+  'Terminer la mise en route': 'Finish the first setup',
+  'Terminez la mise en route pour inviter une personne': 'Finish the first setup to invite a person',
+  'en attente': 'waiting',
+  'ne peut pas entrer : place prise': 'cannot come in: place taken',
+  '{n} personnes offertes': '{n} people free',
+  '{rate} / heure': '{rate} / hour',
+  '{used} / {free}': '{used} / {free}',
+  '{used} personnes (limite : {free})': '{used} people (limit: {free})',
+  'Mara Pro : toutes vos places photo sont prises. La photo reste dans vos documents, sans article. Pour la mettre sur l\'article : Mara Pro, ou une place photo achetée avec des cauris.': 'Mara Pro: all your photo places are taken. The photo stays in your documents, with no item. To put it on the item: Mara Pro, or a photo place bought with cauris.',
+  'Mara Pro : cet article a une photo et toutes vos places photo sont prises. Pour le remettre : Mara Pro, une place photo achetée avec des cauris, ou un autre article photographié retiré.': 'Mara Pro: this item has a photo and all your photo places are taken. To bring it back: Mara Pro, a photo place bought with cauris, or another photographed item removed.',
+  'Seule la plateforme nomme une formatrice ou un formateur': 'Only the platform names a trainer',
+  'Le propriétaire ne se change pas ici': 'The owner is not changed here',
+  'Seule la plateforme nomme un propriétaire': 'Only the platform names an owner',
+  'Cette personne est payée à l\'heure dans « Paie et journées » : son taux se change là-bas.': 'This person is paid by the hour in « Payroll and days »: their rate is changed there.',
+  'Cette entreprise a déjà ses photos sans limite': 'This business already has photos without limit',
 };

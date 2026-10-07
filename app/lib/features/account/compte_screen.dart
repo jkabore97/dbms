@@ -10,9 +10,12 @@ import '../../core/nav/app_scope.dart';
 import '../../core/security/security_settings.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
-import '../admin/invite_generator_sheet.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/cauris/feature_states.dart';
 import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
+import 'alert_tone_tile.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
@@ -58,6 +61,23 @@ class CompteScreen extends StatelessWidget {
         if (access.canSee('production') && !org.isAssociation) 'production',
       ];
 
+  /// The row for the business's people (100): « Équipe » for an admin
+  /// (adding people, their salary); for somebody the owner gave the staff
+  /// tool (031's dial) who is not an admin, the payroll they were trusted
+  /// with; nothing for anyone else.
+  static String? peopleRow(OrgAccess access, {required bool admin}) =>
+      admin ? 'team' : (access.canSee('staff') ? 'payroll' : null);
+
+  /// « 1 personne offerte », « Équipe sans limite », the seat taken — or,
+  /// before the first setup, what opens it.
+  static String? teamLine(BuildContext context, TeamSeats? t) {
+    if (t == null) return null;
+    if (t.unlimited) return context.tr('Équipe sans limite');
+    if (!t.setupDone) return context.tr('Terminez la mise en route pour inviter une personne');
+    if (t.open) return context.tr('1 personne offerte');
+    return context.tr('Votre personne offerte est là');
+  }
+
   @override
   Widget build(BuildContext context) {
     final scope = AppScope.of(context);
@@ -92,10 +112,12 @@ class CompteScreen extends StatelessWidget {
                 )
             : go;
     // Its price in cauris (085), on the grey badge. An association earns
-    // no cauris and pays none (084): its badge says Pro, no price.
-    int? costOf(String feature) => org.isAssociation
-        ? null
-        : session.featuresFor(org.id)?.toolOf(feature)?.cost;
+    // no cauris (084): its badge says a price only once Mara has given it
+    // some to spend (100).
+    int? costOf(String feature) =>
+        org.isAssociation && !_hasWallet(session.featuresFor(org.id))
+            ? null
+            : session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
@@ -137,6 +159,8 @@ class CompteScreen extends StatelessWidget {
             title: context.tr('Préférences'),
             children: [
               _EnglishSwitch(controller: scope.localeController),
+              // The app's own ring: which tone, and the buzz (batch 100).
+              AlertToneTile(db: scope.db),
               // Working with no signal: the business's admins prepare it.
               if (admin) OfflineTile(org: org),
             ],
@@ -181,21 +205,35 @@ class CompteScreen extends StatelessWidget {
                     title: Strings.of(context).administration,
                     onTap: () => context.push(inside('administration')),
                   ),
-                if (access.canSee('staff'))
+                // « Équipe » (100): the people, adding one, their salary —
+                // one place where « Personnel » and « Inviter » were two.
+                if (peopleRow(access, admin: admin) == 'team')
                   _Tile(
+                    key: const Key('compte-team'),
                     icon: Icons.groups_outlined,
-                    title: Strings.of(context).staffLabel,
-                    onTap: () => context.push(inside('personnel')),
-                  ),
-                if (admin)
+                    title: context.tr('Équipe'),
+                    subtitle: teamLine(context, session.featuresFor(org.id)?.team),
+                    onTap: () => context.push(inside('equipe')),
+                  )
+                else if (peopleRow(access, admin: admin) == 'payroll')
                   _Tile(
-                    icon: Icons.person_add_alt,
-                    title: Strings.of(context).inviteSomeone,
-                    onTap: () => InviteGeneratorSheet.open(
-                      context,
-                      orgId: org.id,
-                      onboarding: scope.onboarding,
-                    ),
+                    key: const Key('compte-payroll'),
+                    icon: Icons.payments_outlined,
+                    title: context.tr('Paie et journées'),
+                    pro: access.isProLocked('payroll'),
+                    proCost: costOf('payroll'),
+                    onTap: gated('payroll', () => context.push(inside('personnel'))),
+                  ),
+                // An association earns no cauris (084), but spends what Mara
+                // gives it (100): its wallet shows once there is something
+                // in it.
+                if (admin && org.isAssociation && _hasWallet(session.featuresFor(org.id)))
+                  _Tile(
+                    key: const Key('compte-cauris'),
+                    icon: Icons.savings_outlined,
+                    title: context.tr('Mes cauris'),
+                    subtitle: _walletLine(context, session.featuresFor(org.id)!),
+                    onTap: () => context.push(inside('chemin')),
                   ),
                 // The plan, said plainly (066): what this business is on, and
                 // the door to the other one. Drawn for every member so an
@@ -397,6 +435,20 @@ class CompteScreen extends StatelessWidget {
     if (confirmed == true) session.signOut();
   }
 }
+
+/// The wallet is worth a row: something in it, or promotional points.
+bool _hasWallet(FeatureStates? f) =>
+    f != null && (f.balance > 0 || f.promo.isNotEmpty);
+
+/// « 250 cauris · dont 200 avant le 30/11 ».
+String _walletLine(BuildContext context, FeatureStates f) => [
+      context.tr('{n} cauris', {'n': f.balance}),
+      if (f.promo.isNotEmpty)
+        context.tr('dont {n} à utiliser avant le {date}', {
+          'n': f.promo.first.points,
+          'date': DateFormat('dd/MM').format(f.promo.first.until),
+        }),
+    ].join(' · ');
 
 /// A titled card of rows with hairlines between them (the settings fold).
 /// Draws nothing when every row is conditional and none applies.

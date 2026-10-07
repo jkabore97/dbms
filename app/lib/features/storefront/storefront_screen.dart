@@ -16,6 +16,7 @@ import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/motion.dart';
+import '../../core/theme/mara_mark.dart';
 import '../common/owned_controller.dart';
 import 'open_badge.dart';
 import 'shop_skeleton.dart';
@@ -1690,6 +1691,49 @@ class _Window extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ],
+                  // The number itself (100): tapped, it opens the business's
+                  // WhatsApp chat — wa.me reaches regular and Business
+                  // WhatsApp alike. « Appeler » below still dials it.
+                  if (whatsapp != null && phone.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    InkWell(
+                      key: const Key('shop-phone'),
+                      onTap: () => onOpen(whatsapp),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.chat_outlined,
+                              size: 16,
+                              color: maraGreen,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                phone,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: ShopStyle.ink,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              ' · WhatsApp',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: ShopStyle.mist,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                   // A vitrine d'exemple (094): far from everyone, said plainly.

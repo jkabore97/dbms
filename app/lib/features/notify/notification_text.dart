@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/plan_terms.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
@@ -167,6 +168,21 @@ String notificationLine(BuildContext context, NotificationRow n) {
             {'n': s('orders')}),
         _ => n.message,
       };
+    // The platform's gifts (100).
+    case 'cauris_gift' || 'cauris_promo':
+      final note = s('note');
+      final line = n.kind == 'cauris_promo'
+          ? context.tr('Mara vous offre {n} cauris, à utiliser avant le {date}',
+              {'n': s('points'), 'date': date('until')})
+          : context.tr('Mara vous offre {n} cauris', {'n': s('points')});
+      return note.isEmpty ? '$line.' : '$line: $note.';
+    case 'feature_gift':
+      return context.tr('Mara vous offre {tool} jusqu\'au {date}.', {
+        'tool': s('feature') == 'pro_all'
+            ? context.tr('Mara Pro complet')
+            : PlanTerms.labelOf(s('feature')),
+        'date': date('until'),
+      });
   }
   return n.message;
 }
@@ -245,14 +261,15 @@ String? notificationTarget(
           ? inside('produits')
           : '${inside('produits')}?q=${Uri.encodeQueryComponent(name)}';
     case 'member_joined':
-      return inside('administration/personnel');
+      return inside('equipe');
     case 'debt_settled':
       final customer = p['customer_id'] as String?;
       return customer == null ? inside('credits') : inside('credits/$customer');
     case 'tontine_ready':
       final tontine = p['tontine_id'] as String?;
       return tontine == null ? inside('tontines') : inside('tontines/$tontine');
-    case 'unlock' || 'cauris_prize':
+    case 'unlock' || 'cauris_prize' || 'cauris_gift' || 'cauris_promo' ||
+          'feature_gift':
       return inside('chemin');
     case 'cauris_board':
       return inside('classement');

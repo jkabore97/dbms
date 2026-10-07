@@ -65,6 +65,9 @@ insert into auth.users (id, phone, email, raw_user_meta_data) values
 insert into orgs (id, name, slug, profile) values
     (:org_a, 'Église Test A', 'test-a', 'church'),
     (:org_b, 'Ferme Test B',  'test-b', 'farm');
+-- These businesses hold several invited people: Mara Pro, since a Basic
+-- one has a single free worker (100). The suite tests the invitation itself.
+update orgs set plan = 'pro' where id in (:org_a, :org_b);
 
 insert into entities (id, org_id, name, kind) values
     (:site_a, :org_a, 'Campus principal', 'campus');
@@ -568,9 +571,11 @@ begin
     -- code, and claim_invitation() would otherwise have two rows to choose
     -- between for one spoken secret.
     begin
+        -- An employee's code: since 100 an owner's invitation is refused
+        -- before its code is even looked at (only the platform names an owner).
         insert into pending_invitations
             (org_id, role, scope_kind, scope_id, code, created_by)
-        values ('dddddddd-0000-0000-0000-00000000000a', 'owner', 'org',
+        values ('dddddddd-0000-0000-0000-00000000000a', 'employee', 'org',
                 'dddddddd-0000-0000-0000-00000000000a', 'open7777',
                 'cccccccc-0000-0000-0000-000000000001');
         raise exception 'FAIL: a duplicate code was accepted in different punctuation';

@@ -28,6 +28,7 @@ import 'core/invoicing/invoicing_repository.dart';
 import 'core/l10n/locale_controller.dart';
 import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
+import 'core/notify/alert_tone.dart';
 import 'core/notify/notifications_repository.dart';
 import 'core/observability/crash_reporting.dart';
 import 'core/production/production_repository.dart';
@@ -138,6 +139,8 @@ Future<void> _startup() async {
   // the setting did not work.
   final locale = LocaleController(db);
   await locale.load();
+  // The ring this phone chose (Compte › Préférences › Sons des notifications).
+  await AlertTone.load(db);
 
   runApp(KajApp(
     locale: locale,

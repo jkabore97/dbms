@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/nav/router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
-import 'invite_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Who belongs to this business, and who has been asked to.
@@ -44,7 +45,6 @@ class PeopleScreen extends StatefulWidget {
 class _PeopleScreenState extends State<PeopleScreen> {
   List<Member> _members = const [];
   List<Invitation> _invitations = const [];
-  List<Entity> _structure = const [];
 
   bool _loading = true;
   String? _error;
@@ -83,7 +83,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
       setState(() {
         _members = members;
         _invitations = invitations;
-        _structure = structure;
         _loading = false;
       });
     } catch (error) {
@@ -98,18 +97,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
   String _scopeLabel(Member m) =>
       _scopeNames[m.scopeId] ?? scopeKindLabel(m.scopeKind);
 
-  Future<void> _invite() async {
-    final created = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => InviteSheet(
-        admin: widget.admin,
-        orgId: widget.orgId,
-        orgName: widget.orgName,
-        structure: _structure,
-      ),
-    );
-    if (created == true) await _load();
+  /// Adding somebody happens in one place, « Équipe » (100), where the
+  /// free seat and its lock are said before the code is made.
+  Future<void> _openTeam() async {
+    await context.push(Routes.inside(widget.orgId, 'equipe'));
+    if (mounted) await _load();
   }
 
   Future<void> _revokeMembership(Member member) async {
@@ -547,6 +539,20 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     _Banner(message: _error!, onRetry: _load),
                     const SizedBox(height: 16),
                   ],
+                  // One place to add somebody: Équipe.
+                  KajCard(
+                    elevation: 0,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    color: theme.colorScheme.primaryContainer,
+                    child: ListTile(
+                      key: const Key('people-open-team'),
+                      leading: const Icon(Icons.person_add_alt),
+                      title: Text(context.tr('Ajouter une personne')),
+                      subtitle: Text(context.tr('Dans Équipe : la place offerte, le code à envoyer, le salaire')),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _openTeam,
+                    ),
+                  ),
                   Text(context.tr('Membres ({length})', {'length': _members.length}),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -643,15 +649,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: 96),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loading ? null : _invite,
-        icon: const Icon(Icons.person_add_alt),
-        label: Text(context.tr('Inviter')),
-      ),
     );
   }
 }

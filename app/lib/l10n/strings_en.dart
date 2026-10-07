@@ -195,9 +195,6 @@ class StringsEn extends Strings {
   String get myProfile => 'My details';
 
   @override
-  String get inviteSomeone => 'Invite someone';
-
-  @override
   String get applications => 'Requests';
 
   @override
@@ -264,9 +261,6 @@ class StringsEn extends Strings {
 
   @override
   String get photos => 'Photos';
-
-  @override
-  String get staffLabel => 'Staff';
 
   @override
   String pendingCount(int count) {

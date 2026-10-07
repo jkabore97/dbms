@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/format/money.dart';
+import '../../core/notify/alert_tone.dart';
 import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
@@ -41,6 +42,10 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   List<String> get tabSlugs => const ['a-traiter', 'historique'];
 
   List<ShopOrder> _orders = const [];
+
+  /// Whether [_orders] has been read once: before that, every order is
+  /// "unseen" and none of them is news.
+  bool _listed = false;
 
   /// How long each open order has sat, and which are stuck (073).
   Map<String, OrderClock> _clocks = const {};
@@ -100,8 +105,16 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
             .catchError((_) => const <CashOwed>[]),
       ]);
       if (!mounted) return;
+      // A quiet re-read that brings an order this list has never shown is
+      // a new order: the phone rings as Compte › Préférences says.
+      final fresh = results[0] as List<ShopOrder>;
+      final seen = {for (final o in _orders) o.id};
+      if (silent && _listed && fresh.any((o) => !seen.contains(o.id))) {
+        unawaited(AlertTone.ring());
+      }
+      _listed = true;
       setState(() {
-        _orders = results[0] as List<ShopOrder>;
+        _orders = fresh;
         _clocks = results[1] as Map<String, OrderClock>;
         _cash = results[2] as List<CashOwed>;
         _loading = false;

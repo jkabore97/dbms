@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/notify/alert_tone.dart';
 import '../../core/notify/push_client.dart';
 import '../../core/orders/order_alert.dart';
 
@@ -150,6 +151,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     final rose = pending > _pendingOrders;
     setState(() => _pendingOrders = pending);
     if (!rose) return;
+    // Rung here only while this home is the page on top: the orders list,
+    // pushed over it, rings for itself the moment an order lands.
+    if (ModalRoute.of(context)?.isCurrent ?? true) unawaited(AlertTone.ring());
     OrderAlert.show(
       'Nouvelle commande — ${widget.org.name}',
       '$pending commande${pending > 1 ? 's' : ''} à traiter sur la vitrine.',
@@ -355,8 +359,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 
     final nav = _nav(cameraReady);
     return nav.frame(context, Scaffold(
-      // The name, the bell and the account — nothing else. Every tool has
-      // its place, with its word, on the bar at the foot (HomeNav).
+      // The name, the switch (several activities only), the bell and the
+      // account — nothing else. Every tool has its place, with its word, on
+      // the bar at the foot (HomeNav).
       appBar: AppBar(
         title: Text(widget.org.name),
         actions: [

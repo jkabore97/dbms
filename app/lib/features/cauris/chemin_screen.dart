@@ -191,7 +191,11 @@ class _CheminScreenState extends State<CheminScreen> {
     final p = _path;
     final w = _wallet;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Mon chemin'))),
+      // An association has no path (097), only the wallet Mara fills (100).
+      appBar: AppBar(
+          title: Text(widget.org.isAssociation
+              ? context.tr('Mes cauris')
+              : context.tr('Mon chemin'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -214,6 +218,9 @@ class _CheminScreenState extends State<CheminScreen> {
                   balance: balance,
                   week: p?.week ?? w?.week ?? 0,
                   expiresOn: w?.expiresOn,
+                  promo: w?.promo ?? _features?.promo ?? const [],
+                  // An association earns nothing (084): no week to count.
+                  showWeek: !widget.org.isAssociation,
                   locale: _dateLocale,
                 ),
                 const SizedBox(height: 22),
@@ -249,12 +256,16 @@ class _CheminScreenState extends State<CheminScreen> {
                   ),
                 ),
               ],
-              ..._league(theme, p, w),
+              // An association does not race nor earn (084): no league, no
+              // referral — what Mara gave it, and what that buys.
+              if (!widget.org.isAssociation) ..._league(theme, p, w),
               ..._spending(theme),
               if (w != null) ...[
-                const SizedBox(height: 22),
-                _label(theme, context.tr('Parrainer'), key: _referralKey),
-                _referral(theme, w),
+                if (!widget.org.isAssociation) ...[
+                  const SizedBox(height: 22),
+                  _label(theme, context.tr('Parrainer'), key: _referralKey),
+                  _referral(theme, w),
+                ],
                 const SizedBox(height: 22),
                 _details(theme, w, p),
               ],
@@ -308,8 +319,13 @@ class _CheminScreenState extends State<CheminScreen> {
   List<Widget> _spending(ThemeData theme) {
     final f = _features;
     if (f == null || f.isPro || f.tools.isEmpty) return const [];
-    final tools = f.tools.entries.toList()
-      ..sort((a, b) => a.value.cost.compareTo(b.value.cost));
+    // Only the tools this kind of business has (an association: none of
+    // the shop's analyses, no delivery — 099).
+    final tools = [
+      for (final e in f.tools.entries)
+        if (PlanTerms.fits(e.key, widget.org.profile)) e,
+    ]..sort((a, b) => a.value.cost.compareTo(b.value.cost));
+    if (tools.isEmpty) return const [];
     return [
       const SizedBox(height: 22),
       _label(theme, context.tr('Dépenser mes cauris'), key: _spendKey),
@@ -325,10 +341,16 @@ class _CheminScreenState extends State<CheminScreen> {
                     ? context.tr('Mara Pro complet : tous les outils, sans limite')
                     : PlanTerms.labelOf(e.key)),
                 subtitle: e.value.until != null
-                    ? Text(context.tr('Ouvert jusqu\'au {date}', {
-                        'date': DateFormat('d MMMM', _dateLocale)
-                            .format(e.value.until!.toLocal()),
-                      }))
+                    ? Text(e.value.gift
+                        // Opened by Mara, not with the business's cauris.
+                        ? context.tr('Offert par Mara jusqu\'au {date}', {
+                            'date': DateFormat('d MMMM', _dateLocale)
+                                .format(e.value.until!.toLocal()),
+                          })
+                        : context.tr('Ouvert jusqu\'au {date}', {
+                            'date': DateFormat('d MMMM', _dateLocale)
+                                .format(e.value.until!.toLocal()),
+                          }))
                     : null,
                 trailing: e.value.until != null
                     ? const Icon(Icons.lock_open, color: maraGreen)
@@ -475,42 +497,51 @@ class _CheminScreenState extends State<CheminScreen> {
           leading: const Icon(Icons.receipt_long_outlined),
           title: Text(context.tr('Détails'),
               style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(context.tr('Comment gagner des cauris · historique')),
+          // An association earns nothing (084): no rules to earn by, only
+          // what Mara gave and what it spent.
+          subtitle: Text(widget.org.isAssociation
+              ? context.tr('Historique')
+              : context.tr('Comment gagner des cauris · historique')),
           children: [
-            KajCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  if (rewards.isNotEmpty)
-                    ListTile(
-                      key: const Key('chemin-rule-path'),
-                      dense: true,
-                      title: Text(rewards.first == rewards.last
-                          ? context.tr('Étapes du chemin : {n} cauris chacune',
-                              {'n': rewards.first})
-                          : context.tr('Étapes du chemin : {min} à {max} cauris chacune',
-                              {'min': rewards.first, 'max': rewards.last})),
-                    ),
-                  for (final (i, r) in w.rules.indexed) ...[
-                    if (i > 0 || rewards.isNotEmpty) const Divider(height: 1),
-                    ListTile(
-                      dense: true,
-                      title: Text(caurisText(context, r.label)),
-                      subtitle: r.dailyCap == null
-                          ? null
-                          : Text(context.tr('jusqu\'à {dailyCap} par jour', {'dailyCap': r.dailyCap})),
-                      trailing: Text(context.tr('+{points}', {'points': r.points}),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700)),
-                    ),
+            if (!widget.org.isAssociation) ...[
+              KajCard(
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    if (rewards.isNotEmpty)
+                      ListTile(
+                        key: const Key('chemin-rule-path'),
+                        dense: true,
+                        title: Text(rewards.first == rewards.last
+                            ? context.tr('Étapes du chemin : {n} cauris chacune',
+                                {'n': rewards.first})
+                            : context.tr('Étapes du chemin : {min} à {max} cauris chacune',
+                                {'min': rewards.first, 'max': rewards.last})),
+                      ),
+                    for (final (i, r) in w.rules.indexed) ...[
+                      if (i > 0 || rewards.isNotEmpty) const Divider(height: 1),
+                      ListTile(
+                        dense: true,
+                        title: Text(caurisText(context, r.label)),
+                        subtitle: r.dailyCap == null
+                            ? null
+                            : Text(context.tr('jusqu\'à {dailyCap} par jour', {'dailyCap': r.dailyCap})),
+                        trailing: Text(context.tr('+{points}', {'points': r.points}),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700)),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
             _label(theme, context.tr('Historique')),
             if (w.history.isEmpty)
-              Text(context.tr('Pas encore de cauris. Votre premier article en vente en rapporte.'),
+              Text(
+                  widget.org.isAssociation
+                      ? context.tr('Pas encore de cauris.')
+                      : context.tr('Pas encore de cauris. Votre premier article en vente en rapporte.'),
                   style: theme.textTheme.bodyMedium?.copyWith(color: kMist))
             else
               KajCard(
@@ -562,12 +593,20 @@ class _Wallet extends StatelessWidget {
     required this.balance,
     required this.week,
     this.expiresOn,
+    this.promo = const [],
+    this.showWeek = true,
     this.locale = 'fr_FR',
   });
+
+  final bool showWeek;
 
   final int balance;
   final int week;
   final DateTime? expiresOn;
+
+  /// What Mara gave to spend before a day (100): « dont 200 à utiliser
+  /// avant le 30/11 ».
+  final List<PromoLot> promo;
 
   /// The dates' and numbers' language.
   final String locale;
@@ -612,12 +651,27 @@ class _Wallet extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            context.tr('Cette semaine : +{week}', {'week': week}),
-            key: const Key('cauris-week'),
-            style: theme.textTheme.titleSmall?.copyWith(color: maraCaramel),
-          ),
+          for (final p in promo)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                context.tr('dont {n} à utiliser avant le {date}', {
+                  'n': p.points,
+                  'date': DateFormat('dd/MM', locale).format(p.until),
+                }),
+                key: const Key('cauris-promo'),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(color: maraPaper, fontWeight: FontWeight.w700),
+              ),
+            ),
+          if (showWeek) ...[
+            const SizedBox(height: 10),
+            Text(
+              context.tr('Cette semaine : +{week}', {'week': week}),
+              key: const Key('cauris-week'),
+              style: theme.textTheme.titleSmall?.copyWith(color: maraCaramel),
+            ),
+          ],
           if (expiresOn != null && balance > 0) ...[
             const SizedBox(height: 4),
             Text(
