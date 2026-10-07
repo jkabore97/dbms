@@ -655,3 +655,77 @@ class _PathGateSheetState extends State<PathGateSheet> {
     );
   }
 }
+
+/// The home's card when the server has no path yet (a database before
+/// 097): never an empty home. It cannot count steps, so it says where the
+/// counting is — the settings, whose rubriques each say « fait » or « à
+/// faire » — and opens them.
+class PathFallbackCard extends StatelessWidget {
+  const PathFallbackCard({super.key, required this.org, this.onBack});
+
+  final OrgSummary org;
+
+  /// After the settings close: the home reads its path again.
+  final VoidCallback? onBack;
+
+  static bool shows(OrgSummary org) =>
+      org.isAdmin && (org.profile == 'retail' || org.profile == 'farm');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('path-fallback'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: maraDeep,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: maraCaramel,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.storefront, color: maraDeep),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.tr('Complétez votre activité'),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                            color: maraPaper, fontWeight: FontWeight.w800)),
+                    Text(
+                        context.tr('Chaque étape faite ouvre un outil de plus.'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: maraPaper.withValues(alpha: 0.75))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            key: const Key('path-fallback-go'),
+            style: FilledButton.styleFrom(
+                backgroundColor: maraCaramel, foregroundColor: maraDeep),
+            onPressed: () async {
+              await context.push(Routes.orgSettings(org.id));
+              onBack?.call();
+            },
+            icon: const Icon(Icons.arrow_forward),
+            label: Text(context.tr('Voir ce qui manque')),
+          ),
+        ],
+      ),
+    );
+  }
+}

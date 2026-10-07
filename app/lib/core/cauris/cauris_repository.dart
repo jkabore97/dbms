@@ -34,16 +34,22 @@ class CaurisRepository {
   /// and paid on the way (path_sync). Null for anyone but a member, for a
   /// profile off the path (an association, a church), or on a database
   /// before 097.
-  Future<PathState?> pathState(String orgId) async {
+  ///
+  /// [onMissing] hears when the database has no path_state at all (before
+  /// 097: PGRST202 or 42883) — the home then shows its fallback card
+  /// rather than nothing.
+  Future<PathState?> pathState(String orgId, {void Function()? onMissing}) async {
     final client = _client;
     if (client == null) return null;
-    // A database before 097 has no path_state: PGRST202 (or 42883).
     try {
       final v = await client.rpc('path_state', params: {'p_org': orgId});
       if (v is! Map) return null;
       return PathState.fromJson(Map<String, dynamic>.from(v));
     } on PostgrestException catch (e) {
-      if (_missing(e)) return null;
+      if (_missing(e)) {
+        onMissing?.call();
+        return null;
+      }
       rethrow;
     }
   }

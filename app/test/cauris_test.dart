@@ -47,7 +47,8 @@ class _Cauris extends CaurisRepository {
 
   /// Off the path (a database before 097): the wallet alone.
   @override
-  Future<PathState?> pathState(String orgId) async => null;
+  Future<PathState?> pathState(String orgId, {void Function()? onMissing}) async =>
+      null;
 
   @override
   Future<String> setReferral(String orgId, String code) async {

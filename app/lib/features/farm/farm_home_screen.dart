@@ -112,6 +112,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   /// hides it.
   PathState? _path;
 
+  /// The server has no path yet (before 097): the fallback card.
+  bool _pathMissing = false;
+
   Future<void> _openLivestock({int tab = 0}) async {
     final farm = widget.farm;
     if (farm == null) return;
@@ -167,8 +170,15 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
     final client = AppScope.read(context)?.auth.client;
     if (!widget.org.isAdmin || client == null) return;
     try {
-      final path = await CaurisRepository(client).pathState(widget.org.id);
-      if (mounted) setState(() => _path = path);
+      var missing = false;
+      final path = await CaurisRepository(client)
+          .pathState(widget.org.id, onMissing: () => missing = true);
+      if (mounted) {
+        setState(() {
+          _path = path;
+          _pathMissing = missing;
+        });
+      }
     } catch (_) {}
   }
 
@@ -281,6 +291,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                   // the path is walked.
                   if (PathCard.shows(widget.org, _path)) ...[
                     PathCard(org: widget.org, state: _path!, onChanged: _refresh),
+                    const SizedBox(height: 16),
+                  ] else if (_pathMissing && PathFallbackCard.shows(widget.org)) ...[
+                    PathFallbackCard(org: widget.org, onBack: _refresh),
                     const SizedBox(height: 16),
                   ],
                   _TodayCard(

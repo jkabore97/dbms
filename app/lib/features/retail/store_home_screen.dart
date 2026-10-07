@@ -107,6 +107,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   /// hides it.
   PathState? _path;
 
+  /// The server has no path yet (before 097): the fallback card, never
+  /// an empty home.
+  bool _pathMissing = false;
+
   bool _loading = true;
   String? _error;
 
@@ -259,18 +263,21 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
       // The owner's next step (097): best-effort, never in the way of the
       // day.
       PathState? path;
+      var pathMissing = false;
       if (widget.org.isAdmin) {
         final cauris = widget.cauris ?? CaurisRepository(scopeClient);
         // Cauris for a complete vitrine (084), read where it is seen.
         unawaited(cauris.milestones(widget.org.id));
         try {
-          path = await cauris.pathState(widget.org.id);
+          path = await cauris.pathState(widget.org.id,
+              onMissing: () => pathMissing = true);
         } catch (_) {}
       }
 
       if (!mounted) return;
       setState(() {
         _path = path;
+        _pathMissing = pathMissing;
         _day = day;
         _pendingOrders = pending;
         _expiring = expiring;
@@ -499,6 +506,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
                 // The first sale is made here, at the till.
                 onHere: widget.retail == null ? null : _sell,
               ),
+              const SizedBox(height: 16),
+            ] else if (_pathMissing && PathFallbackCard.shows(widget.org)) ...[
+              PathFallbackCard(org: widget.org, onBack: _load),
               const SizedBox(height: 16),
             ],
 
