@@ -160,8 +160,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
       appBar: AppBar(
         title: Text(context.tr('Photos')),
         actions: [
-          // Only a shop stocks products, so only a shop reads carnets.
-          if (widget.retail != null && widget.capture.isConfigured)
+          // Only a shop stocks products, so only a shop reads carnets — an
+          // association keeps no stock.
+          if (widget.retail != null &&
+              !widget.org.isAssociation &&
+              widget.capture.isConfigured)
             IconButton(
               onPressed: _readNotebook,
               icon: const Icon(Icons.auto_stories_outlined),
@@ -505,7 +508,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final document = widget.document;
-    final canReadInvoice = widget.retail != null && _invoiceLines.isNotEmpty;
+    final canReadInvoice = widget.retail != null &&
+        !widget.org.isAssociation &&
+        _invoiceLines.isNotEmpty;
 
     return PopScope(
       canPop: true,

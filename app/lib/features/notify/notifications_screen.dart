@@ -3,8 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/errors.dart';
+import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
+import 'notification_text.dart';
 
 /// The bell on every home screen's app bar: a badge with the unread count,
 /// opening the list. Self-contained so each home screen adds one widget and
@@ -83,7 +86,9 @@ class _NotificationBellState extends State<NotificationBell> {
 }
 
 /// The list behind the bell. Opening it marks everything read — a bell that
-/// stays red after being looked at trains people to ignore it.
+/// stays red after being looked at trains people to ignore it. Each ring
+/// says its line in the phone's language and opens what it is about
+/// (notification_text.dart).
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key, required this.notify});
 
@@ -132,13 +137,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'debt_settled' => Icons.handshake_outlined,
         'tontine_ready' => Icons.group_outlined,
         'org_application' => Icons.business_outlined,
+        'unlock' => Icons.lock_open_outlined,
+        'cauris_board' || 'cauris_prize' => Icons.emoji_events_outlined,
+        'pro_active' => Icons.workspace_premium_outlined,
+        'new_device' => Icons.shield_outlined,
+        'spot_approved' || 'spot_refused' => Icons.campaign_outlined,
+        final k when k.startsWith('courier_') || k.startsWith('delivery_') =>
+          Icons.delivery_dining_outlined,
+        final k when k.startsWith('order_') || k == 'new_order' =>
+          Icons.receipt_long_outlined,
         _ => Icons.notifications_outlined,
       };
+
+  /// Where this ring opens (notificationTarget): the business's own screen
+  /// when the person answers for it, theirs as a customer otherwise.
+  String? _targetOf(NotificationRow n) {
+    final session = AppScope.maybeOf(context)?.session;
+    return notificationTarget(
+      n,
+      isAdminOf: (id) => session?.orgById(id)?.isAdmin ?? false,
+      profileOf: (id) => session?.orgById(id)?.profile,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final strings = Strings.of(context);
-    final dates = DateFormat('d MMM à HH:mm', 'fr_FR');
+    final english = context.trLanguage == 'en';
+    final dates = english
+        ? DateFormat('d MMM, HH:mm', 'en')
+        : DateFormat('d MMM à HH:mm', 'fr_FR');
     return Scaffold(
       appBar: AppBar(title: Text(strings.notifications)),
       body: _loading
@@ -159,10 +187,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) {
                         final n = _rows[i];
+                        final target = _targetOf(n);
                         return ListTile(
+                          key: Key('notification-${n.id}'),
                           leading: Icon(_iconFor(n.kind)),
+                          trailing: target == null
+                              ? null
+                              : const Icon(Icons.chevron_right),
+                          onTap: target == null
+                              ? null
+                              : () => context.push(target),
                           title: Text(
-                            n.message,
+                            notificationLine(context, n),
                             style: n.isUnread
                                 ? const TextStyle(fontWeight: FontWeight.w600)
                                 : null,

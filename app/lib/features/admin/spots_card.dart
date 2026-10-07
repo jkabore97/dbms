@@ -27,6 +27,7 @@ class SpotsCard extends StatefulWidget {
     required this.admin,
     required this.retail,
     this.isPro = false,
+    this.vitrineOnly = false,
   });
 
   final String orgId;
@@ -35,6 +36,9 @@ class SpotsCard extends StatefulWidget {
 
   /// Pro includes one 7-day article spot a month; the sheet says so.
   final bool isPro;
+
+  /// An association (no stock): only the whole-vitrine spot is offered.
+  final bool vitrineOnly;
 
   @override
   State<SpotsCard> createState() => _SpotsCardState();
@@ -73,7 +77,8 @@ class _SpotsCardState extends State<SpotsCard> {
         orgId: widget.orgId,
         admin: widget.admin,
         retail: widget.retail,
-        isPro: _isPro);
+        isPro: _isPro,
+        vitrineOnly: widget.vitrineOnly);
     if (changed == true) await _load();
   }
 
@@ -108,7 +113,9 @@ class _SpotsCardState extends State<SpotsCard> {
             ),
             const SizedBox(height: 6),
             Text(
-              context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la boutique en haut de la liste, pour 7 ou 30 jours.'),
+              widget.vitrineOnly
+                  ? context.tr('Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.')
+                  : context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la boutique en haut de la liste, pour 7 ou 30 jours.'),
               style: muted,
             ),
             if (_loaded && _spots.isNotEmpty) ...[
@@ -230,6 +237,7 @@ class SpotSheet {
     required RetailRepository? retail,
     bool isPro = false,
     String? productId,
+    bool vitrineOnly = false,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -241,6 +249,7 @@ class SpotSheet {
         retail: retail,
         isPro: isPro,
         productId: productId,
+        vitrineOnly: vitrineOnly,
       ),
     );
   }
@@ -273,6 +282,7 @@ class _SpotSheetBody extends StatefulWidget {
     this.isPro = false,
     this.productId,
     this.asked,
+    this.vitrineOnly = false,
   });
 
   final String orgId;
@@ -280,6 +290,9 @@ class _SpotSheetBody extends StatefulWidget {
   final RetailRepository? retail;
   final bool isPro;
   final String? productId;
+
+  /// No article choice: the whole vitrine only (an association).
+  final bool vitrineOnly;
 
   /// A spot already asked for: the sheet opens on its payment.
   final Promotion? asked;
@@ -293,7 +306,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   List<Product> _articles = const [];
 
   /// The whole shop rather than one article.
-  bool _shop = false;
+  late bool _shop = widget.vitrineOnly;
   String? _productId;
   int _days = 7;
   bool _busy = false;
@@ -431,6 +444,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     final shop = _shop;
     final price = _terms.price(shop: shop, days: _days);
     return [
+      if (!widget.vitrineOnly) ...[
       Text(context.tr('Quoi ?'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 6),
       SegmentedButton<bool>(
@@ -449,6 +463,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             ? null
             : (v) => setState(() => _shop = v.first),
       ),
+      ],
       const SizedBox(height: 10),
       if (!shop && _articles.isEmpty)
         Padding(

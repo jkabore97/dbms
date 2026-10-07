@@ -137,7 +137,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
       appBar: AppBar(
         title: Text(strings.creditBook),
         actions: [
-          if (widget.access.canEdit('credits'))
+          if (widget.access.canEdit('credits') && !widget.org.isAssociation)
             IconButton(
               tooltip: context.tr('Dette sans article (prêt)'),
               icon: const Icon(Icons.request_quote_outlined),
@@ -145,9 +145,19 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
             ),
         ],
       ),
+      // An association keeps no stock: what it is owed — a cotisation, the
+      // hall's rent, a loan to a member — is a debt with no article, and
+      // that is its one button.
       floatingActionButton: !widget.access.canEdit('credits')
           ? null
-          : FloatingActionButton.extended(
+          : widget.org.isAssociation
+              ? FloatingActionButton.extended(
+                  key: const Key('credit-new-debt'),
+                  onPressed: _newLoan,
+                  icon: const Icon(Icons.request_quote_outlined),
+                  label: Text(context.tr('Une somme due')),
+                )
+              : FloatingActionButton.extended(
         onPressed: _newSale,
         icon: const Icon(Icons.handshake_outlined),
         label: Text(strings.creditSale),

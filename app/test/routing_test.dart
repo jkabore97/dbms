@@ -606,6 +606,22 @@ void main() {
       expect(find.text('Choisissez une activité'), findsOneWidget);
       expect(find.text('Articles'), findsNothing);
     });
+
+    testWidgets("a customer's pushed order ring opens their orders, not the picker",
+        (tester) async {
+      // The push Worker (060) sends every order ring to /o/<shop>/commandes:
+      // it cannot tell the shop's ring from the customer's. The customer is
+      // not of that shop, and their orders are where they are going.
+      await seedDevice(tester, orgs: const [
+        OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      ]);
+      await pumpApp(tester);
+      await reloadAt(tester, '/o/shop-elsewhere/commandes');
+      await enterPin(tester, '1379');
+
+      expect(find.text('Choisissez une activité'), findsNothing);
+      expect(find.text('Mes commandes'), findsWidgets);
+    });
   });
 
   group('a reload remembers which business was open', () {
