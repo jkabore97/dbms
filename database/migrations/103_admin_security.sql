@@ -564,7 +564,7 @@ begin
     if not manages_user(p_user_id) then
         raise exception 'Vous ne pouvez déconnecter que quelqu''un en dessous de vous';
     end if;
-    execute 'de' || 'lete from auth.sessions where user_id = $1' using p_user_id;
+    delete from auth.sessions where user_id = p_user_id;
     get diagnostics v_rows = row_count;
     perform security_log(p_user_id, 'signed_out_by_admin',
         (select name from orgs where id = p_org_id));
@@ -596,9 +596,11 @@ begin
         return 0;
     end if;
 
-    -- A number or an address the sign-in proved. profiles.phone is typed
-    -- by the person and proves nothing; with a code, claim_invitation
-    -- still takes it.
+    -- Only what auth.users itself holds as confirmed. profiles.phone is
+    -- typed by the person and proves nothing; with a code,
+    -- claim_invitation still takes it. Today sign-in is e-mail or Google
+    -- and no invitation carries an e-mail, so in practice the code is the
+    -- way in.
     select case when u.phone_confirmed_at is not null then u.phone end,
            case when u.email_confirmed_at is not null then u.email end
       into v_phone, v_email
