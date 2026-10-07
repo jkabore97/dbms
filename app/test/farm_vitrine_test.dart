@@ -38,7 +38,9 @@ class _Farm extends RetailRepository {
     double? costPrice,
     String? barcode,
     DateTime? expiresOn,
+    bool isService = false,
   }) async {
+    expect(isService, isFalse, reason: 'À vendre creates articles');
     created.add(name);
     return 'new-${created.length}';
   }
@@ -59,6 +61,8 @@ class _Farm extends RetailRepository {
     DateTime? availableFrom,
     bool clearAvailableFrom = false,
     double? quantity,
+    bool? isService,
+    bool? priceFrom,
   }) async {
     saved.add({
       'id': productId,

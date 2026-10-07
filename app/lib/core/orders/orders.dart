@@ -14,11 +14,15 @@ class OrderLine {
     required this.name,
     required this.unitPrice,
     required this.quantity,
+    this.isService = false,
   });
 
   final String name;
   final double unitPrice;
   final double quantity;
+
+  /// A service booked, not goods to hand over (098). Absent before 098.
+  final bool isService;
 
   double get total => unitPrice * quantity;
 
@@ -26,6 +30,7 @@ class OrderLine {
         name: (j['name'] as String?) ?? '',
         unitPrice: _num(j['unit_price']) ?? 0,
         quantity: _num(j['quantity']) ?? 0,
+        isService: j['is_service'] == true,
       );
 }
 
@@ -55,21 +60,34 @@ bool orderIsOpen(String status) =>
     status == 'ready' ||
     status == 'in_transit';
 
-/// What a person reads.
-String orderStatusLabel(String status) => switch (status) {
+/// What a person reads (French; the screens pass it through `tr`). A
+/// booking of services (098) is not collected: its end is « Terminée ».
+String orderStatusLabel(String status, {bool booking = false}) =>
+    switch (status) {
       'pending' => 'En attente',
       'accepted' => 'Acceptée',
       'ready' => 'Prête',
       'in_transit' => 'En route',
-      'picked_up' => 'Récupérée',
+      'picked_up' => booking ? 'Terminée' : 'Récupérée',
       'delivered' => 'Livrée',
       'refused' => 'Refusée',
       'cancelled' => 'Annulée',
       _ => status,
     };
 
-String fulfilmentLabel(String fulfilment) =>
-    fulfilment == 'delivery' ? 'Livraison' : 'Retrait en boutique';
+String fulfilmentLabel(String fulfilment, {bool appointment = false}) =>
+    fulfilment == 'delivery'
+        ? 'Livraison'
+        : appointment
+            ? 'Sur rendez-vous'
+            : 'Retrait en boutique';
+
+/// Only services, collected nowhere (098): the order is a booking, « sur
+/// rendez-vous », with the day and time the customer asked for in its note.
+bool isAppointment(String fulfilment, List<OrderLine> lines) =>
+    fulfilment != 'delivery' &&
+    lines.isNotEmpty &&
+    lines.every((l) => l.isService);
 
 /// How the order is paid (057).
 String paymentLabel(String method) =>
@@ -130,6 +148,7 @@ class CustomerOrder {
 
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
+  bool get isBooking => isAppointment(fulfilment, lines);
 
   /// Goods plus the delivery, which is what changes hands.
   double get grandTotal => total + (deliveryFee ?? 0);
@@ -226,6 +245,7 @@ class ShopOrder {
 
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
+  bool get isBooking => isAppointment(fulfilment, lines);
   bool get hasDropPin => dropLat != null && dropLng != null;
 
   /// What the shop may do next, in the order the buttons are shown.
@@ -266,13 +286,15 @@ class ShopOrder {
       );
 }
 
-/// The verb on the button that moves an order to [status].
-String orderActionLabel(String status) => switch (status) {
+/// The verb on the button that moves an order to [status] (French; the
+/// screens pass it through `tr`). A booking (098) ends « Terminée ».
+String orderActionLabel(String status, {bool booking = false}) =>
+    switch (status) {
       'accepted' => 'Accepter',
       'refused' => 'Refuser',
       'ready' => 'Prête',
       'in_transit' => 'En route',
-      'picked_up' => 'Récupérée',
+      'picked_up' => booking ? 'Terminée' : 'Récupérée',
       'delivered' => 'Livrée',
       'cancelled' => 'Annuler',
       _ => status,

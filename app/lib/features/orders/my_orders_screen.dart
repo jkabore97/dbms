@@ -303,12 +303,12 @@ class _OrderCard extends StatelessWidget {
                           color: ShopStyle.ink)),
                 ),
               ),
-              _StatusChip(status: order.status),
+              _StatusChip(status: order.status, booking: order.isBooking),
             ],
           ),
           const SizedBox(height: 2),
           Text(
-              '$when · ${fulfilmentLabel(order.fulfilment)} · '
+              '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
               '${order.isPaid ? context.tr('Payé') : paymentLabel(order.paymentMethod)}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           const SizedBox(height: 12),
@@ -416,9 +416,12 @@ class _OrderCard extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
+  const _StatusChip({required this.status, this.booking = false});
 
   final String status;
+
+  /// A booking of services (098): « Terminée », not « Récupérée ».
+  final bool booking;
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +432,7 @@ class _StatusChip extends StatelessWidget {
         color: open ? ShopStyle.ink : ShopStyle.stone,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(orderStatusLabel(status),
+      child: Text(context.tr(orderStatusLabel(status, booking: booking)),
           style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

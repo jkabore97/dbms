@@ -1216,11 +1216,23 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   List<Widget> _articles(ThemeData theme) {
     final c = _checklist;
     final farm = _profile == 'farm';
+    final association = _association;
     final min = _minItems;
     final published = c?.published ?? 0;
     final muted = theme.textTheme.bodySmall
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
-    final steps = farm
+    final steps = association
+        ? <(IconData, String, String)>[
+            (Icons.add_box_outlined, 'Ajouter un service',
+                'Dans « Mes services », le bouton « Ajouter un service » : le nom et le prix — une adhésion, un cours, la salle.'),
+            (Icons.sell_outlined, 'À partir de, par heure',
+                'Cochez « À partir de » quand le prix peut monter ; « Par » : heure, séance, personne.'),
+            (Icons.photo_camera_outlined, 'Une photo',
+                'Facultative : la salle, l\'atelier, l\'équipe. Une photo donne confiance.'),
+            (Icons.storefront_outlined, 'Sur la vitrine',
+                'Laissez « Sur la vitrine » coché : un service suffit pour que le public voie votre vitrine.'),
+          ]
+        : farm
         ? <(IconData, String, String)>[
             (Icons.add_box_outlined, 'Mettre en vente',
                 'Dans « À vendre », le bouton « Mettre en vente » : quoi, le prix, par quoi (plateau, kg…).'),
@@ -1255,7 +1267,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                published >= min
+                association
+                    ? published > 1
+                        ? context.tr('services en ligne : la vitrine est visible du public.')
+                        : published == 1
+                        ? context.tr('service en ligne : la vitrine est visible du public.')
+                        : context.tr('service en ligne. Il en faut un pour que le public voie votre vitrine.')
+                    : published >= min
                     ? context.tr('articles en vente : la vitrine est visible du public.')
                     : context.tr('articles en vente. Il en faut {min} pour que le public voie votre vitrine.', {'min': min}),
                 style: theme.textTheme.bodyMedium,
@@ -1274,13 +1292,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          context.tr('{n} en photo sur 3 conseillées', {'n': c.withPhoto}),
-          style: muted,
-        ),
+        if (!association)
+          Text(
+            context.tr('{n} en photo sur 3 conseillées', {'n': c.withPhoto}),
+            style: muted,
+          ),
         const SizedBox(height: 20),
       ],
-      Text(context.tr('Ajouter un article, en quatre gestes'),
+      Text(association
+              ? context.tr('Ajouter un service, en quatre gestes')
+              : context.tr('Ajouter un article, en quatre gestes'),
           style: theme.textTheme.titleMedium
               ?.copyWith(fontWeight: FontWeight.w800)),
       const SizedBox(height: 12),
@@ -1340,12 +1361,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         child: FilledButton.icon(
           key: const Key('articles-open'),
           onPressed: () async {
-            await context.push(
-                Routes.inside(widget.orgId, farm ? 'a-vendre' : 'produits'));
+            await context.push(Routes.inside(widget.orgId,
+                association ? 'services' : farm ? 'a-vendre' : 'produits'));
             if (mounted) await _reloadChecklist();
           },
           icon: const Icon(Icons.add),
-          label: Text(farm ? context.tr('Mettre en vente') : context.tr('Ajouter un article')),
+          label: Text(association
+              ? context.tr('Ajouter un service')
+              : farm
+                  ? context.tr('Mettre en vente')
+                  : context.tr('Ajouter un article')),
         ),
       ),
       if (c != null && c.unpublished > 0 && widget.retail != null) ...[
@@ -1388,7 +1413,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(context.tr('Vitrine en ligne'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
-      _profile == 'farm'
+      _association
+          ? context.tr('Une page publique de l\'association, avec les services que vous proposez et leur prix, à partager sur WhatsApp. On vous réserve depuis la vitrine ; vous fixez le rendez-vous.')
+          : _profile == 'farm'
           ? context.tr('Une page publique de la ferme, avec ce que vous mettez « À vendre » — photo, prix, à l\'unité ou au plateau — à partager sur WhatsApp. Les clients commandent, même à l\'avance pour une bande ou une récolte à venir.')
           : context.tr('Une page publique de la boutique, avec les articles que vous choisissez d\'afficher — photo et prix — à partager sur WhatsApp. Les clients commandent depuis la vitrine.'),
       style: theme.textTheme.bodySmall?.copyWith(
@@ -1408,7 +1435,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         maxLines: 2,
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
-          labelText: context.tr('Quelques mots sur la boutique (facultatif)'),
+          labelText: _association
+              ? context.tr('Quelques mots sur l\'association (facultatif)')
+              : context.tr('Quelques mots sur la boutique (facultatif)'),
         ),
       ),
       const SizedBox(height: 12),
@@ -1421,7 +1450,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
-          labelText: context.tr('Téléphone de la boutique'),
+          labelText: _association
+              ? context.tr('Téléphone de l\'association')
+              : context.tr('Téléphone de la boutique'),
           hintText: '+226 70 00 00 00',
           prefixIcon: const Icon(Icons.call_outlined),
         ),
@@ -1872,7 +1903,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 _open = next;
               }),
               icon: Icon(_next?.icon ?? Icons.done_all),
-              label: Text(_next == null ? context.tr('Terminé') : context.tr('Suivant : {label}', {'label': context.tr(_next!.label)})),
+              label: Text(_next == null ? context.tr('Terminé') : context.tr('Suivant : {label}', {'label': context.tr(_labelOf(_next!))})),
             ),
           ],
         ),
@@ -1910,7 +1941,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final c = _checklist;
     switch (part) {
       case _Part.articles:
-        if (c == null) return context.tr('Ce que vous vendez');
+        if (c == null) {
+          return _association
+              ? context.tr('Ce que vous proposez')
+              : context.tr('Ce que vous vendez');
+        }
+        if (_association) {
+          return context.tr('{n} en ligne', {'n': c.published});
+        }
         return [
           context.tr('{n} / {min} en vente', {'n': c.published, 'min': _minItems}),
           context.tr('{n} en photo', {'n': c.withPhoto}),
@@ -1977,18 +2015,29 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         pinLooksMisplaced(pin.$1, pin.$2, _currency);
   }
 
-  /// Items on sale before the public sees the vitrine (092), at least one.
+  /// Items on sale before the public sees the vitrine (092), at least one;
+  /// an association's opens on its first service (098).
   int get _minItems {
+    if (_association) return 1;
     final m = _checklist?.minItems ?? 1;
     return m < 1 ? 1 : m;
   }
+
+  bool get _association => _profile == 'association' || _profile == 'church';
+
+  /// An association offers services, not articles (098): « Vos services ».
+  String _labelOf(_Part part) =>
+      part == _Part.articles && _association ? 'Vos services' : part.label;
 
   /// Each first-steps rubrique done (true) or still to do (false); null for
   /// what is optional and has no « done » (the team's lock, the platform).
   bool? _doneOf(_Part part) {
     final c = _checklist;
     return switch (part) {
-      _Part.articles => c == null ? null : c.published >= _minItems && c.photosDone,
+      // A service needs no photograph to be understood (098).
+      _Part.articles => c == null
+          ? null
+          : c.published >= _minItems && (_association || c.photosDone),
       _Part.identity => _nameController.text.trim().isNotEmpty,
       _Part.vitrine => _storefrontEnabled &&
           _blurbController.text.trim().isNotEmpty &&
@@ -2056,6 +2105,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 (p) => p != _Part.platform && !_proParts.contains(p)))
               _PartRow(
                 part: part,
+                label: _labelOf(part),
                 state: _stateOf(part),
                 done: _doneOf(part),
                 warn: _warns(part),
@@ -2208,7 +2258,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => setState(() => _open = null),
           ),
-          title: Text(context.tr(open.label)),
+          title: Text(context.tr(_labelOf(open))),
         ),
         body: _page(open, theme),
       ),
@@ -2277,8 +2327,8 @@ class _PartRow extends StatelessWidget {
     this.selected = false,
     this.proCost,
     this.done,
-  }) : icon = null,
-       label = null;
+    this.label,
+  }) : icon = null;
 
   const _PartRow.link({
     required IconData this.icon,
@@ -2314,7 +2364,7 @@ class _PartRow extends StatelessWidget {
       selected: selected,
       leading: Icon(part?.icon ?? icon),
       title: Text(
-        context.tr(part?.label ?? label!),
+        context.tr(label ?? part!.label),
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(

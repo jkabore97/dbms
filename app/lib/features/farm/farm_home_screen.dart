@@ -460,6 +460,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
           label: context.tr('À vendre'),
           onTap: () => _push(Routes.inside(id, 'a-vendre')),
         ),
+        // What the farm does for others (098): ploughing, a stud, a visit.
+        HomeDestination(
+          icon: Icons.event_available_outlined,
+          label: context.tr('Mes services'),
+          onTap: () => _push(Routes.inside(id, 'services')),
+        ),
         HomeDestination(
           icon: Icons.shopping_bag_outlined,
           label: context.tr('Commandes'),

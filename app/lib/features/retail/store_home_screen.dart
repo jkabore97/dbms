@@ -709,6 +709,13 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             label: context.tr('Mon chemin'),
             onTap: _openChemin,
           ),
+        // What the shop does rather than sells (098), on the vitrine.
+        if (widget.retail != null && widget.access.canSee('products'))
+          HomeDestination(
+            icon: Icons.event_available_outlined,
+            label: context.tr('Mes services'),
+            onTap: () => _openThenReload('services'),
+          ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,

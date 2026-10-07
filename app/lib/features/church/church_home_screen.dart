@@ -11,7 +11,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
+import '../../core/theme/mara_mark.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
@@ -49,6 +51,7 @@ class ChurchHomeScreen extends StatefulWidget {
     this.accountAction,
     this.onHistory,
     this.access = OrgAccess.allEdit,
+    this.retail,
   });
 
   final LocalDb db;
@@ -94,6 +97,10 @@ class ChurchHomeScreen extends StatefulWidget {
   /// this screen was never given it, so every member saw every tool.
   final OrgAccess access;
 
+  /// The vitrine's side (098): the services the association offers and the
+  /// requests sent for them. Null in a build with no server.
+  final RetailRepository? retail;
+
   @override
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
 }
@@ -108,6 +115,13 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
   bool _loading = true;
   bool _dayClosed = false;
 
+  /// Requests from the vitrine still waiting for an answer (098).
+  int _requests = 0;
+
+  /// The vitrine and its requests are the administrators' (098).
+  bool get _showVitrine =>
+      widget.retail != null && widget.org != null && widget.org!.isAdmin;
+
   @override
   void initState() {
     super.initState();
@@ -120,6 +134,13 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     final entries = await widget.db.entriesForDay(widget.orgId, today);
     final pending = await widget.db.pendingCount();
     final closed = await widget.db.isDayClosed(widget.orgId, today);
+    // Best-effort, like the till's badge: no signal is no badge.
+    var requests = _requests;
+    if (_showVitrine) {
+      try {
+        requests = await widget.retail!.pendingOrders(widget.orgId);
+      } catch (_) {}
+    }
 
     if (!mounted) return;
     setState(() {
@@ -128,6 +149,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
       _moneyOut = totals.moneyOut;
       _entries = entries;
       _pending = pending;
+      _requests = requests;
       _loading = false;
     });
   }
@@ -213,6 +235,11 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
     await _refresh();
   }
 
+  Future<void> _open(String rest) async {
+    await context.push(Routes.inside(widget.orgId, rest));
+    if (mounted) await _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -253,6 +280,32 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
                   ),
                   // Not points: a level read off the books (088).
                   TrustCard(orgId: widget.orgId),
+                  // The vitrine (098): the services on it, and who asked.
+                  if (_showVitrine) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _VitrineTile(
+                            key: const Key('association-services'),
+                            icon: Icons.storefront_outlined,
+                            label: context.tr('Ma vitrine et mes services'),
+                            onTap: () => _open('services'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _VitrineTile(
+                            key: const Key('association-requests'),
+                            icon: Icons.inbox_outlined,
+                            label: context.tr('Demandes'),
+                            badge: _requests,
+                            onTap: () => _open('commandes'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Text(Strings.of(context).today, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -418,6 +471,77 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// One of the vitrine's two doors on the association's home (098): a big
+/// picture and its word, graphite with a caramel mark, and how many
+/// requests wait.
+class _VitrineTile extends StatelessWidget {
+  const _VitrineTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.badge = 0,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final int badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: maraDeep,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 112),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: maraCaramel, size: 32),
+                    const Spacer(),
+                    if (badge > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: maraCaramel,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text('$badge',
+                            style: const TextStyle(
+                                color: maraDeep,
+                                fontWeight: FontWeight.w800)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: maraPaper,
+                    fontSize: 16,
+                    height: 1.25,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

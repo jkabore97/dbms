@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
 import '../db/local_db.dart';
@@ -189,6 +190,11 @@ class RetailRepository {
   // What is on the shelves
   // ----------------------------------------------------------------
 
+  /// True once [products] found a database before 098, with no
+  /// `is_service` column: « Mes services » then says so rather than
+  /// saving a service that would land as an article.
+  bool servicesMissing = false;
+
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async {
     // is_published was missing from this list for a while: the edit sheet
     // then read every article as "not on the vitrine", showed the switch
@@ -197,6 +203,17 @@ class RetailRepository {
     // sheet can write back.
     const columns = 'id, name, barcode, serial, cost_price, sale_price, '
         'quantity, expires_on, low_stock_at, is_ingredient, is_published';
+    try {
+      final rows = await _products(orgId,
+          '$columns, description, unit, available_from, is_service, price_from',
+          activeOnly: activeOnly);
+      servicesMissing = false;
+      return rows;
+    } on PostgrestException catch (error) {
+      // Before 098: no services yet, every row is goods.
+      if (error.code != '42703') rethrow;
+      servicesMissing = true;
+    }
     try {
       return await _products(
           orgId, '$columns, description, unit, available_from',
@@ -497,9 +514,10 @@ class RetailRepository {
     double? costPrice,
     String? barcode,
     DateTime? expiresOn,
+    bool isService = false,
   }) async {
     final client = _requireClient();
-    final id = await client.rpc('ensure_product', params: {
+    final params = {
       'p_org_id': orgId,
       'p_name': name,
       'p_sale_price': ?salePrice,
@@ -507,7 +525,20 @@ class RetailRepository {
       if (barcode != null && barcode.isNotEmpty) 'p_barcode': barcode,
       if (expiresOn != null) 'p_expires_on': _date(expiresOn),
       if (currentUserId != null) 'p_actor': currentUserId,
-    });
+    };
+    // The kind being created (098): a service never revives or converts an
+    // article of that name, an article never takes back a service — the
+    // server refuses either in French.
+    try {
+      final id = await client.rpc('ensure_product',
+          params: {...params, 'p_is_service': isService});
+      return id as String;
+    } on PostgrestException catch (error) {
+      // Before 098 there is no p_is_service, and no service either: an
+      // article is created the way it always was. A service is not.
+      if (isService || !isSchemaOutOfDate(error)) rethrow;
+    }
+    final id = await client.rpc('ensure_product', params: params);
     return id as String;
   }
 
@@ -595,6 +626,8 @@ class RetailRepository {
     DateTime? availableFrom,
     bool clearAvailableFrom = false,
     double? quantity,
+    bool? isService,
+    bool? priceFrom,
   }) async {
     final client = _requireClient();
     // `.select()` turns a silent no-op into a fact we can check. A PostgREST
@@ -627,6 +660,10 @@ class RetailRepository {
           // A farm counts what it has to sell by hand: it grew it, it did
           // not buy it, so no purchase is booked (receive() would).
           'quantity': ?quantity,
+          // 098's service fields: sent only by the services sheet, so an
+          // article's edit on a database before 098 still saves.
+          'is_service': ?isService,
+          'price_from': ?priceFrom,
         })
         .eq('id', productId)
         .select('id');

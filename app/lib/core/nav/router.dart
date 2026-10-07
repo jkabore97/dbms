@@ -1189,6 +1189,19 @@ GoRouter buildRouter(SessionController session) {
               ),
             ),
           ),
+          // « Mes services » (098): the shop's, the farm's, the association's.
+          GoRoute(
+            path: 'services',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.ServicesScreen(
+                org: org,
+                retail: scope.retail,
+                capture: scope.capture,
+              ),
+            ),
+          ),
           GoRoute(
             path: 'produits',
             builder: (context, state) => _withOrg(

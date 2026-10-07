@@ -24,6 +24,8 @@ class Product {
     this.description,
     this.unit,
     this.availableFrom,
+    this.isService = false,
+    this.priceFrom = false,
   });
 
   final String id;
@@ -59,11 +61,20 @@ class Product {
   /// vitrine offers it as a pre-order. Null when it is there now.
   final DateTime? availableFrom;
 
+  /// A service, not goods (098): a haircut, a lesson, a hall for the
+  /// evening. No stock — never « épuisé », never counted, never moved by a
+  /// sale — and its own section on the vitrine, booked rather than added.
+  final bool isService;
+
+  /// « à partir de » (098): the price is where it starts, not what it is.
+  final bool priceFrom;
+
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
   double get margin => salePrice - costPrice;
 
-  bool get isLow => lowStockAt != null && quantity <= lowStockAt!;
+  bool get isLow =>
+      !isService && lowStockAt != null && quantity <= lowStockAt!;
 
   factory Product.fromRow(Map<String, dynamic> row) {
     double parse(Object? v) =>
@@ -94,6 +105,9 @@ class Product {
       availableFrom: row['available_from'] == null
           ? null
           : DateTime.tryParse('${row['available_from']}'),
+      // Absent before 098: goods, at their plain price.
+      isService: row['is_service'] == true,
+      priceFrom: row['price_from'] == true,
     );
   }
 }
