@@ -14,6 +14,7 @@ import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
+import '../offline/offline_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One screen for everything that used to be scattered across a long popup
@@ -107,7 +108,11 @@ class CompteScreen extends StatelessWidget {
           // Préférences: the language, French by default, English on demand.
           _Group(
             title: context.tr('Préférences'),
-            children: [_EnglishSwitch(controller: scope.localeController)],
+            children: [
+              _EnglishSwitch(controller: scope.localeController),
+              // Working with no signal: the business's admins prepare it.
+              if (admin) OfflineTile(org: org),
+            ],
           ),
 
           _Group(
