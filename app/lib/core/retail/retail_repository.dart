@@ -361,6 +361,15 @@ class RetailRepository {
   Future<int> pendingSales(String orgId) async =>
       await _outbox?.pendingSales(orgId) ?? 0;
 
+  /// Sales this phone kept offline that the server then refused for good
+  /// (101: the stock was not there), for the owner to read.
+  Future<List<Map<String, Object?>>> refusedSales(String orgId) async =>
+      await _outbox?.refusedActions(orgId) ?? const [];
+
+  /// The owner has read it; nothing was recorded, so nothing else moves.
+  Future<void> dismissRefused(String clientUuid) async =>
+      _outbox?.dismissRefused(clientUuid);
+
   /// "Tout publier" (070): every active, priced, non-ingredient article on
   /// the vitrine at once. Returns how many were published. Refused unless
   /// the articles dial lets this person edit.

@@ -55,6 +55,8 @@ begin
     if v_price <> 350 then
         raise exception 'FAIL: default no longer lets an employee edit a price';
     end if;
+    -- 101: stock never goes below zero; the production below uses one.
+    update products set quantity = 5 where id = v_soap;
 
     v_debt := record_credit_sale('95000000-0000-0000-0000-000000000001'::uuid,
         'Awa', 500, 'Savon');

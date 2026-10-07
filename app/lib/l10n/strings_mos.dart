@@ -399,31 +399,6 @@ class StringsMos extends Strings {
       'La preuve que les comptes sont équilibrés';
 
   @override
-  String get people => 'Personnes';
-
-  @override
-  String get peopleSubtitle => 'Membres, rôles et invitations';
-
-  @override
-  String get sitesAndDepartments => 'Sites et départements';
-
-  @override
-  String get structureSubtitle => 'La structure de l\'activité';
-
-  @override
-  String get orgSettingsTitle => 'Paramètres de l\'activité';
-
-  @override
-  String get orgSettingsSubtitle => 'Nom et monnaie';
-
-  @override
-  String get consoleTitle => 'Console';
-
-  @override
-  String get consoleSubtitle =>
-      'Journal d\'activité, données, état de l\'appareil';
-
-  @override
   String get creditBook => 'Carnet de crédit';
 
   @override

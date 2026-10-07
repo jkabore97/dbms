@@ -212,8 +212,8 @@ begin
     end if;
 
     -- Archive one and prove the default status hides it.
-    update orgs set archived_at = now()
-     where id = '86000000-0000-0000-0000-000000000003';
+    -- Through its function: a client no longer writes orgs directly (103).
+    perform archive_org('86000000-0000-0000-0000-000000000003');
 
     select max(s.total_count) into v_total
       from search_orgs(p_query => 'boutique-86-', p_profile => 'farm',
@@ -278,15 +278,16 @@ commit;
 \echo ''
 \echo '--- TEST 7: the overview separates "went quiet" from "never started" ---'
 begin;
+-- A business that was alive and has gone quiet: set as the schema's owner,
+-- since no client writes orgs directly (103).
+update orgs set last_activity_at = now() - interval '45 days'
+ where id = '86000000-0000-0000-0000-000000000007';
 set local "request.jwt.claim.sub" = '86868686-0000-0000-0000-000000000001';
 set local role authenticated;
 do $$
 declare
     v_row record;
-    v_org uuid := '86000000-0000-0000-0000-000000000007';
 begin
-    -- A business that was alive and has gone quiet.
-    update orgs set last_activity_at = now() - interval '45 days' where id = v_org;
 
     select * into v_row from platform_overview();
 

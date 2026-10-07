@@ -128,7 +128,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
     }
   }
 
-  Future<void> _editProfile({String? intro, String? nextLabel}) async {
+  Future<void> _editProfile({String? intro}) async {
     // Kept as a pushed page rather than a route of its own: the wording
     // changes with why it was opened (before an application it explains
     // itself differently), and that is content, not an address.
@@ -137,7 +137,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
         builder: (_) => ProfileFormScreen(
           onboarding: widget.onboarding,
           intro: intro,
-          nextLabel: nextLabel ?? context.tr('Enregistrer'),
+          nextLabel: context.tr('Enregistrer'),
         ),
       ),
     );
@@ -175,18 +175,9 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
   }
 
   Future<void> _apply() async {
-    // The business form asks for a slug and a profile; the application then
-    // needs the person's own details, which is why the profile comes first.
-    if (!_profileComplete) {
-      await _editProfile(
-        intro: 'Avant de décrire votre entreprise, dites-nous qui vous êtes. '
-            'Ces informations figureront sur la demande.',
-        nextLabel: 'Continuer',
-      );
-      if (!_profileComplete) return;
-    }
-    if (!mounted) return;
-
+    // Only the business is asked about (101): the person is signed in, and
+    // the server takes their name, phone and email from the profile and the
+    // account.
     final applied = await context.push<bool>(Routes.applyForBusiness);
     if (applied == true) await _load();
   }

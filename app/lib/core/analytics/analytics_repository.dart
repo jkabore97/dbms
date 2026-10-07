@@ -60,6 +60,17 @@ class AnalyticsRepository {
     );
   }
 
+  /// A farm's analyses (101): what it sold and spent, its flocks and its
+  /// feed, this month against the last. Refused by the server without the
+  /// 'analytics' tool (Pro, or unlocked with cauris), as for a shop.
+  Future<FarmAnalytics> farm(String orgId, {int? days = 30}) async {
+    final client = _requireClient();
+    final since = _since(days);
+    final result = await client.rpc('farm_analytics',
+        params: {'p_org_id': orgId, 'p_since': ?since});
+    return FarmAnalytics.fromJson(Map<String, dynamic>.from(result as Map));
+  }
+
   /// The platform-wide total across every business.
   Future<PlatformHeadline> platformHeadline({int? days = 30}) async {
     final client = _requireClient();

@@ -2,11 +2,12 @@
 // forwards the request with tenant context attached.
 //
 // Handles both cases from the plan:
-//   - subdomain.kajapp.com  (default, one DNS record covers every tenant)
+//   - subdomain.marakaj.com (default, one DNS record covers every tenant;
+//                            a vitrine itself lives at marakaj.com/s/<slug>)
 //   - app.theirbusiness.com (custom domain, added per tenant as they grow)
 //
 // KV namespace binding expected: TENANT_ROUTES (see wrangler.toml)
-// Each key   = hostname, e.g. "esperance.kajapp.com" or "app.esperancebeauty.com"
+// Each key   = hostname, e.g. "esperance.marakaj.com" or "app.esperancebeauty.com"
 // Each value = JSON, e.g. {"orgId": "...", "orgSlug": "esperance"}
 
 export default {

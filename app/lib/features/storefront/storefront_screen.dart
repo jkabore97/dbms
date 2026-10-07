@@ -15,6 +15,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/retail/stock_rule.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/mara_mark.dart';
 import '../common/owned_controller.dart';
@@ -103,11 +104,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (raw == null || !mounted) return;
     try {
       final saved = Map<String, dynamic>.from(jsonDecode(raw) as Map);
-      final onShelf = {for (final i in items) i.id};
+      final onShelf = {for (final i in items) i.id: i};
       setState(() {
         for (final e in saved.entries) {
-          final q = (e.value as num).toDouble();
-          if (q > 0 && onShelf.contains(e.key)) _basket[e.key] = q;
+          var q = (e.value as num).toDouble();
+          final item = onShelf[e.key];
+          // No more than is left now (101), and nothing of « Épuisé ».
+          final cap = item?.stockLeft;
+          if (cap != null && q > cap) q = cap.floorToDouble();
+          if (item != null && !item.inStock) q = 0;
+          if (q > 0 && item != null) _basket[e.key] = q;
         }
       });
     } catch (_) {
@@ -224,6 +230,17 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   }
 
   void _add(PublicItem item) {
+    // No more than is left on the shelf (101): the stepper stops there, and
+    // says why.
+    final cap = item.stockLeft;
+    if (cap != null && (_basket[item.id] ?? 0) + 1 > cap) {
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(stockShortMessage(context.trLanguage, item.name, cap)),
+        ));
+      return;
+    }
     if ((_basket[item.id] ?? 0) == 0) {
       unawaited(
         widget.storefront.recordVisit(widget.slug, 'added', productId: item.id),
@@ -385,7 +402,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // Said in the reader's language when the app has the sentence (098's
       // « Un service se réserve sur rendez-vous… », say).
       return e.code == 'P0001'
-          ? context.tr(e.message)
+          ? (stockShortText(context.trLanguage, e.message) ?? context.tr(e.message))
           : context.tr(
               'La commande n\'a pas pu être envoyée. Vérifiez le réseau.',
             );

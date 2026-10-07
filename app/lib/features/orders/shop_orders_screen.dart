@@ -23,9 +23,10 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
 /// is everything that is done.
 ///
-/// Answering an order does not sell anything: when the customer collects,
-/// the till records the sale as it always has. This screen is the list
-/// on the wall behind the counter, not the till.
+/// Accepting an order takes its articles off the shelf (101), and a
+/// cancellation after that puts them back; refusing moves nothing. The
+/// money is not recorded here: this screen is the list on the wall behind
+/// the counter, not the till.
 class ShopOrdersScreen extends StatefulWidget {
   const ShopOrdersScreen({super.key, required this.org, required this.retail});
 

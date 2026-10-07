@@ -13,6 +13,7 @@ import '../../core/theme/motion.dart';
 import '../admin/pin_preview.dart';
 import '../common/phone_field.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'association_setup_screen.dart';
 
 /// What the first setup writes (091), apart so a test can stand in for it.
 abstract class SetupActions {
@@ -257,7 +258,7 @@ class _SetupScreenState extends State<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_done) return _Ready(org: widget.org, onDone: widget.onDone);
+    if (_done) return SetupReady(org: widget.org, onDone: widget.onDone);
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
@@ -328,7 +329,7 @@ class _SetupScreenState extends State<SetupScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       children: [
-        Center(child: _Picture(icon: s.icon, key: ValueKey('setup-pic-$i'))),
+        Center(child: SetupPicture(icon: s.icon, key: ValueKey('setup-pic-$i'))),
         const SizedBox(height: 16),
         Text(s.title,
             textAlign: TextAlign.center,
@@ -529,8 +530,8 @@ class _SetupScreenState extends State<SetupScreen> {
 }
 
 /// The step's picture: a big tile that grows in.
-class _Picture extends StatelessWidget {
-  const _Picture({super.key, required this.icon});
+class SetupPicture extends StatelessWidget {
+  const SetupPicture({super.key, required this.icon});
 
   final IconData icon;
 
@@ -628,12 +629,13 @@ class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
   }
 }
 
-/// « C'est prêt ! »: the store opens.
-class _Ready extends StatelessWidget {
-  const _Ready({required this.org, required this.onDone});
+/// « C'est prêt ! »: the store opens — or the association (102).
+class SetupReady extends StatelessWidget {
+  const SetupReady({super.key, required this.org, required this.onDone, this.association = false});
 
   final OrgSummary org;
   final VoidCallback onDone;
+  final bool association;
 
   @override
   Widget build(BuildContext context) {
@@ -647,7 +649,7 @@ class _Ready extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(child: _Picture(icon: Icons.celebration)),
+              const Center(child: SetupPicture(icon: Icons.celebration)),
               const SizedBox(height: 20),
               Text(context.tr('C\'est prêt !'),
                   key: const Key('setup-ready'),
@@ -666,8 +668,12 @@ class _Ready extends StatelessWidget {
                   style: FilledButton.styleFrom(
                       backgroundColor: maraCaramel, foregroundColor: maraDeep),
                   onPressed: onDone,
-                  icon: const Icon(Icons.storefront),
-                  label: Text(context.tr('Ouvrir ma boutique'), style: const TextStyle(fontSize: 17)),
+                  icon: Icon(association ? Icons.volunteer_activism : Icons.storefront),
+                  label: Text(
+                      association
+                          ? context.tr('Ouvrir mon association')
+                          : context.tr('Ouvrir ma boutique'),
+                      style: const TextStyle(fontSize: 17)),
                 ),
               ),
             ],
@@ -678,10 +684,16 @@ class _Ready extends StatelessWidget {
   }
 }
 
-/// Holds the home back until the first setup is done (091): the business's
-/// admins see the setup; an employee, or a business already set up, the
-/// home. Until the server has answered, the home shows — the app never
-/// blocks on a slow network.
+/// Holds the home back until the first setup is done (091, and 102 for an
+/// association): the business's admins see the setup; an employee, or a
+/// business already set up, the home. Until the server has answered, the
+/// home shows — the app never blocks on a slow network.
+///
+/// An association is held only when its team says so too: before 102 the
+/// server called every association set up there (100's org_setup_done)
+/// while 'setup_done' read the bare column, so an association created
+/// after 091 would otherwise be walked through against a database that
+/// cannot take its answers.
 class SetupGate extends StatelessWidget {
   const SetupGate({super.key, required this.org, required this.child});
 
@@ -697,6 +709,14 @@ class SetupGate extends StatelessWidget {
       builder: (context, _) {
         final f = scope.session.featuresFor(org.id);
         if (f == null || f.setupDone) return child;
+        if (org.isAssociation) {
+          if (f.team == null || f.team!.setupDone) return child;
+          return AssociationSetupScreen(
+            org: org,
+            actions: SupabaseAssociationSetupActions(scope.admin, scope.retail, scope.invoicing),
+            onDone: () => scope.session.reloadFeatures(org.id),
+          );
+        }
         return SetupScreen(
           org: org,
           actions: SupabaseSetupActions(scope.admin, scope.retail, scope.invoicing),

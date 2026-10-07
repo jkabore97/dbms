@@ -457,7 +457,8 @@ themselves are unproven until somebody installs it on a phone.
 > - Deploy workers/tenant-router to Cloudflare and populate the
 >   `kaj-tenant-routing` KV namespace (id 87160dd3344245959ab7ca4532cfe169)
 >   with hostname → org mappings.
-> - Wildcard DNS so every tenant gets `{slug}.kajapp.com`.
+> - Wildcard DNS so every tenant gets `{slug}.marakaj.com` (the vitrine
+>   itself lives at `marakaj.com/s/{slug}`).
 > - Cloudflare for SaaS for custom domains (`app.theirbusiness.com`).
 > - Email domain claim: TXT record verification, then anyone with that email
 >   domain auto-joins the org.

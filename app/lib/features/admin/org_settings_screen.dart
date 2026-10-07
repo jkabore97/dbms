@@ -1121,7 +1121,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     ),
     const SizedBox(height: 12),
-    _ReadOnlyRow(label: context.tr('Adresse web'), value: '$_slug.kajapp.com'),
+    _ReadOnlyRow(label: context.tr('Adresse web'), value: 'marakaj.com/s/$_slug'),
     _ReadOnlyRow(
       label: context.tr('Type d\'activité'),
       value: switch (_profile) {

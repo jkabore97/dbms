@@ -268,11 +268,11 @@ void main() {
         isNull);
   });
 
-  test('an association is offered only its own tools; a farm no shop analyses', () {
+  test('an association is offered only its own tools; a farm its own analyses (101)', () {
     expect(PlanTerms.fits('delivery', 'association'), isFalse);
     expect(PlanTerms.fits('delivery', 'church'), isFalse);
     expect(PlanTerms.fits('analytics', 'association'), isFalse);
-    expect(PlanTerms.fits('analytics', 'farm'), isFalse);
+    expect(PlanTerms.fits('analytics', 'farm'), isTrue);
     expect(PlanTerms.fits('analytics', 'retail'), isTrue);
     expect(PlanTerms.fits('accounting', 'association'), isTrue);
     expect(PlanTerms.fits('team_access', 'association'), isTrue);

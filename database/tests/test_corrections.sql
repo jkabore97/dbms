@@ -167,6 +167,8 @@ declare
     v_revenue numeric;
     v_rows    int;
 begin
+    -- 101: stock never goes below zero, so the shelf has some first.
+    update products set quantity = 5 where id = '20000000-0000-0000-0000-0000000000aa';
     v_sale := record_sale(
         p_org_id => '20000000-0000-0000-0000-000000000001',
         p_lines => '[{"product_id":"20000000-0000-0000-0000-0000000000aa","name":"Savon","quantity":2,"unit_price":500}]'::jsonb,

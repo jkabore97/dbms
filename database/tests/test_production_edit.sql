@@ -40,8 +40,9 @@ insert into memberships (org_id, user_id, role, scope_kind, scope_id) values
     (:org, :observer, 'observer', 'org', :org);
 
 -- One ingredient with a real cost, so total_cost is non-zero.
-insert into products (id, org_id, name, cost_price) values
-    (:flour, :org, 'Farine', 100);
+-- 101: stock never goes below zero, so the flour is on the shelf.
+insert into products (id, org_id, name, cost_price, quantity) values
+    (:flour, :org, 'Farine', 100, 100);
 
 
 \echo ''

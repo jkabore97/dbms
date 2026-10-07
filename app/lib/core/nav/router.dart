@@ -854,6 +854,7 @@ GoRouter buildRouter(SessionController session) {
                 // the settings form.
                 onOrgChanged: scope.session.resolveOrgs,
               ),
+              allow: _admins,
             ),
             routes: [
               GoRoute(
@@ -863,21 +864,15 @@ GoRouter buildRouter(SessionController session) {
                   state,
                   (scope, org) =>
                       biz.TeamAccessScreen(admin: scope.admin, orgId: org.id),
+                  allow: _admins,
                 ),
               ),
+              // The old « Personnes » screen, folded into Équipe (101): an
+              // address kept from before lands there.
               GoRoute(
                 path: 'personnel',
-                builder: (context, state) => _withOrg(
-                  context,
-                  state,
-                  (scope, org) => biz.PeopleScreen(
-                    admin: scope.admin,
-                    orgId: org.id,
-                    orgName: org.name,
-                    // Sets the ceiling on who this person may manage.
-                    callerRoles: org.roles,
-                  ),
-                ),
+                redirect: (context, state) =>
+                    Routes.inside(state.pathParameters['orgId']!, 'equipe'),
               ),
               GoRoute(
                 path: 'structure',
@@ -889,6 +884,7 @@ GoRouter buildRouter(SessionController session) {
                     orgId: org.id,
                     profile: org.profile,
                   ),
+                  allow: _admins,
                 ),
               ),
               GoRoute(
@@ -901,6 +897,7 @@ GoRouter buildRouter(SessionController session) {
                     db: scope.db,
                     org: org,
                   ),
+                  allow: (org) => org.isSuperAdmin,
                 ),
               ),
               GoRoute(
@@ -928,6 +925,7 @@ GoRouter buildRouter(SessionController session) {
                     capture: scope.capture,
                     initialPart: state.uri.queryParameters['partie'],
                   ),
+                  allow: _admins,
                 ),
                 routes: [
                   GoRoute(
@@ -942,6 +940,7 @@ GoRouter buildRouter(SessionController session) {
                         current: org.theme,
                         onSaved: scope.session.resolveOrgs,
                       ),
+                      allow: _admins,
                     ),
                   ),
                 ],
@@ -1108,12 +1107,20 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  (scope, org) => biz.OwnerAnalyticsScreen(
-                    analytics: scope.analytics,
-                    orgId: org.id,
-                    orgName: org.name,
-                    currency: org.currency,
-                  ),
+                  // A farm's own analyses (101); a shop's, as before.
+                  (scope, org) => org.profile == 'farm'
+                      ? biz.FarmAnalyticsScreen(
+                          analytics: scope.analytics,
+                          orgId: org.id,
+                          orgName: org.name,
+                          currency: org.currency,
+                        )
+                      : biz.OwnerAnalyticsScreen(
+                          analytics: scope.analytics,
+                          orgId: org.id,
+                          orgName: org.name,
+                          currency: org.currency,
+                        ),
                 ),
               ),
             ],
@@ -1274,6 +1281,7 @@ GoRouter buildRouter(SessionController session) {
                 admin: scope.admin,
                 onboarding: scope.onboarding,
               ),
+              allow: _admins,
             ),
           ),
           GoRoute(
@@ -1425,8 +1433,9 @@ String? _orgIdOf(String location) {
 Widget _withOrg(
   BuildContext context,
   GoRouterState state,
-  Widget Function(AppScope scope, OrgSummary org) build,
-) {
+  Widget Function(AppScope scope, OrgSummary org) build, {
+  bool Function(OrgSummary org)? allow,
+}) {
   final scope = AppScope.of(context);
   // Listening here, and not only through the router: go_router keeps a
   // page's widget until the *address* changes. A reload with a live token
@@ -1460,10 +1469,71 @@ Widget _withOrg(
         theme: org.theme,
         // The small « Pro » on every page of a business not on Kaj Pro,
         // for its owner and admins (ProStrip decides).
-        child: biz.ProStrip(org: org, child: build(scope, org)),
+        // A page for the business's administrators (101): anybody else
+        // reaching its address — a link, a typed URL — is told so politely
+        // rather than shown a form the server would refuse.
+        child: allow != null && !allow(org)
+            ? _AdminOnly(org: org)
+            : biz.ProStrip(org: org, child: build(scope, org)),
       );
     },
   );
+}
+
+/// Who may open the administration's pages and Équipe: the business's
+/// administrators (the owner, an admin, Mara's own).
+bool _admins(OrgSummary org) => org.isAdmin;
+
+/// « Réservé aux administrateurs »: what somebody else sees at one of their
+/// addresses — a word and the way back, never the form.
+class _AdminOnly extends StatelessWidget {
+  const _AdminOnly({required this.org});
+
+  final OrgSummary org;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      key: const Key('admin-only'),
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: maraDeep,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: const Icon(Icons.lock_outline, size: 48, color: maraCaramel),
+              ),
+              const SizedBox(height: 18),
+              Text(context.tr('Réservé aux administrateurs'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text(context.tr('Demandez au propriétaire de l\'entreprise.'),
+                  textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 52,
+                child: FilledButton.icon(
+                  onPressed: () => context.go(Routes.org(org.id)),
+                  icon: const Icon(Icons.home_outlined),
+                  label: Text(context.tr('Retour à l\'accueil')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A page that reads the session redraws when the session changes.

@@ -18,7 +18,7 @@ create extension if not exists "pgcrypto";
 create table orgs (
     id uuid primary key default gen_random_uuid(),
     name text not null,
-    slug text unique not null,                 -- subdomain: {slug}.kajapp.com
+    slug text unique not null,                 -- the vitrine's address: marakaj.com/s/{slug}
     profile text not null default 'generic',   -- 'church' | 'farm' | 'retail' | 'generic'
     custom_domain text unique,                 -- optional: app.theirbusiness.com
     email_domain text unique,                  -- optional: claimed @theirbusiness.com for auto-join

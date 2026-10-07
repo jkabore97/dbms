@@ -19,6 +19,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/nav/app_scope.dart';
 import '../cauris/path_card.dart';
+import '../common/refused_notice.dart';
 import '../home/home_nav.dart';
 import '../orders/home_doorbell.dart';
 import 'farm_sheets.dart';
@@ -109,6 +110,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
   double _moneyOut = 0;
   int _pending = 0;
 
+  /// Feed or sales kept offline that the server refused (101), until read.
+  List<RefusedAction> _refused = const [];
+
   List<Map<String, Object?>> _events = const [];
   List<Map<String, Object?>> _flocks = const [];
   List<Map<String, Object?>> _lowStock = const [];
@@ -157,6 +161,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     final totals = await widget.db.dayTotals(widget.org.id, today);
     final events = await widget.db.farmEventsForDay(widget.org.id, today);
     final pending = await widget.db.pendingCount();
+    final refused = [
+      for (final r in await widget.db.refusedActions(widget.org.id))
+        RefusedAction.fromRow(r),
+    ];
 
     if (!mounted) return;
     setState(() {
@@ -165,6 +173,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
       _moneyOut = totals.moneyOut;
       _events = events;
       _pending = pending;
+      _refused = refused;
       _loading = false;
     });
 
@@ -320,6 +329,17 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     moneyOut: _moneyOut,
                     currency: _currency,
                   ),
+
+                  if (_refused.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    RefusedNotice(
+                      actions: _refused,
+                      onDismiss: (a) async {
+                        await widget.db.dismissRefused(a.clientUuid);
+                        await _refresh();
+                      },
+                    ),
+                  ],
 
                   if (_lowStock.isNotEmpty) ...[
                     const SizedBox(height: 12),

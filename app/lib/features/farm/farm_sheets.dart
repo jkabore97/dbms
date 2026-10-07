@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
+import '../../core/retail/stock_rule.dart';
 import '../church/entry_controls.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -290,6 +291,9 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
 
   bool get _isWaste => widget.kind == 'wasted';
 
+  /// « Il ne reste que 3 Aliment » (101), when the sheet stopped the save.
+  String? _short;
+
   double get _quantity =>
       double.tryParse(_quantityController.text.replaceAll(',', '.')) ?? 0;
 
@@ -333,9 +337,41 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
     });
   }
 
+  /// Stock never goes below zero (101): what the server last said is on
+  /// hand, checked here first so most refusals never leave the phone. A
+  /// farm whose items were never read from the server is left to it.
+  Future<String?> _stockShort() async {
+    final cached = await widget.db.cachedFarmItems(widget.orgId);
+    if (cached.isEmpty) return null;
+    final name = _item!.trim();
+    var onHand = 0.0;
+    for (final row in cached) {
+      if ((row['name'] as String).trim().toLowerCase() == name.toLowerCase()) {
+        onHand = (row['on_hand'] as num?)?.toDouble() ?? 0;
+        break;
+      }
+    }
+    if (!mounted || _quantity <= onHand) return null;
+    return stockShortMessage(context.trLanguage, name, onHand);
+  }
+
   Future<void> _save() async {
     if (!_valid || _saving) return;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _short = null;
+    });
+
+    final short = await _stockShort();
+    if (short != null) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _short = short;
+        });
+      }
+      return;
+    }
 
     final note = _noteController.text.trim();
 
@@ -436,6 +472,15 @@ class _MoveStockSheetState extends State<MoveStockSheet> {
             context.tr('Compter ce qui est distribué chaque jour est ce qui permet de savoir lundi que l\'aliment finira jeudi.'),
             style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
+        if (_short != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _short!,
+            key: const Key('move-stock-short'),
+            style: TextStyle(
+                color: theme.colorScheme.error, fontWeight: FontWeight.w600),
+          ),
+        ],
         const SizedBox(height: 16),
         _SaveButton(
           label: _isWaste ? context.tr('Enregistrer la perte') : context.tr('Enregistrer'),

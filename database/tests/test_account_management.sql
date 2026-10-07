@@ -199,8 +199,8 @@ do $$ begin
 end $$;
 rollback;
 
--- saA (super_admin) is Kaj's platform staff: they reach the owner and everyone
--- below.
+-- saA (super_admin) reaches everyone below — but since 103 the owner is the
+-- top of a business: nobody but the platform resets an owner.
 begin;
 set local "request.jwt.claim.sub" = '21212121-0000-0000-0000-000000000007';
 set local role authenticated;
@@ -208,10 +208,10 @@ do $$ begin
     if not manages_user('21212121-0000-0000-0000-000000000002') then
         raise exception 'FAIL: a super_admin cannot reset an admin below them';
     end if;
-    if not manages_user('21212121-0000-0000-0000-000000000001') then
-        raise exception 'FAIL: a super_admin cannot reset the owner beneath them';
+    if manages_user('21212121-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: a super_admin reset the owner (103: the platform only)';
     end if;
-    raise notice 'PASS: the super_admin reaches the owner and the admin';
+    raise notice 'PASS: the super_admin reaches the admin, never the owner';
 end $$;
 rollback;
 

@@ -245,7 +245,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               ],
               decoration: InputDecoration(
                 labelText: context.tr('Adresse'),
-                helperText: slugProblem == null ? '$_slug.kajapp.com' : null,
+                helperText: slugProblem == null ? 'marakaj.com/s/$_slug' : null,
                 errorText: slugProblem,
                 border: const OutlineInputBorder(),
               ),

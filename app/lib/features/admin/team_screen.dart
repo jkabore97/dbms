@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/admin/admin_repository.dart';
-import '../../core/admin/models.dart' show accountRankOf, roleLabel;
+import '../../core/admin/models.dart'
+    show Member, accountRankOf, accountRoleRank, roleLabel;
 import '../../core/admin/team.dart';
 import '../../core/auth/models.dart';
 import '../../core/cauris/feature_states.dart';
@@ -18,10 +20,13 @@ import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import '../cauris/unlock_sheet.dart';
 import 'invite_generator_sheet.dart';
+import 'member_edit_sheet.dart';
 
 /// « Équipe » (100): the one place for the business's people — who is in,
 /// adding somebody (the invitation, 017), replacing or removing them, the
-/// invitations still out, and what each person is paid.
+/// invitations still out, and what each person is paid. Since 101 it is
+/// also where a person's information, responsibility and sessions are
+/// managed — the old « Personnes » screen is folded in here.
 ///
 /// On Basic the owner has one person free once the first setup is done (an
 /// association at once); more is Mara Pro or the team unlocked with cauris.
@@ -47,6 +52,11 @@ class TeamScreen extends StatefulWidget {
 
 class _TeamScreenState extends State<TeamScreen> {
   TeamOverview? _team;
+
+  /// Each person's grants with their own information (fetchMembers), by
+  /// account — the responsibility to change, the profile to read and edit.
+  /// Best-effort: without it the sheet keeps the salary and the removal.
+  Map<String, List<Member>> _accounts = const {};
   bool _loading = true;
   String? _error;
 
@@ -63,9 +73,18 @@ class _TeamScreenState extends State<TeamScreen> {
     });
     try {
       final team = await widget.admin.teamOverview(widget.org.id);
+      var accounts = _accounts;
+      try {
+        final rows = await widget.admin.fetchMembers(widget.org.id);
+        accounts = {};
+        for (final r in rows) {
+          (accounts[r.userId] ??= []).add(r);
+        }
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _team = team;
+        _accounts = accounts;
         _loading = false;
       });
     } catch (e) {
@@ -106,51 +125,143 @@ class _TeamScreenState extends State<TeamScreen> {
     if (mounted) await _load();
   }
 
-  /// Before the first setup: a shop or a farm finishes it from its home
-  /// (the walkthrough, 091); anything else from its settings.
+  /// Before the first setup: a shop, a farm or an association finishes it
+  /// from its home (the walkthrough, 091 and 102); anything else from its
+  /// settings.
   void _finishSetup() {
-    final profile = widget.org.profile;
-    if (profile == 'retail' || profile == 'farm') {
+    const walked = {'retail', 'farm', 'association', 'church'};
+    if (walked.contains(widget.org.profile)) {
       context.go(Routes.org(widget.org.id));
     } else {
       context.push(Routes.orgSettings(widget.org.id));
     }
   }
 
-  /// Whether this person may be removed from here: never the owner nor
-  /// oneself, and only somebody below the caller (045's ladder — the server
-  /// holds the owner, 004's policy the rest).
-  bool _canRemove(TeamMember m) =>
-      !m.isOwner &&
-      !m.isMe &&
-      m.membershipIds.isNotEmpty &&
-      accountRankOf(widget.org.roles) > accountRankOf(m.roles);
+  int get _myRank => accountRankOf(widget.org.roles);
+
+  /// Whether this person may be managed from here — their salary, their
+  /// information, their responsibility, their sessions, their removal:
+  /// never the owner nor oneself, and only somebody below the caller (045's
+  /// ladder; the server holds the same).
+  bool _canManage(TeamMember m) =>
+      !m.isOwner && !m.isMe && _myRank > accountRankOf(m.roles);
+
+  bool _canRemove(TeamMember m) => _canManage(m) && m.membershipIds.isNotEmpty;
+
+  /// A salary is the owner's to read, and that of whoever outranks the
+  /// person.
+  bool _seesPay(TeamMember m) =>
+      widget.org.roles.contains('owner') || _canManage(m);
+
+  /// The grant whose responsibility is changed: the person's highest.
+  Member? _primary(TeamMember m) {
+    final rows = _accounts[m.userId];
+    if (rows == null || rows.isEmpty) return null;
+    return rows.reduce((a, b) =>
+        accountRoleRank(b.role) > accountRoleRank(a.role) ? b : a);
+  }
 
   Future<void> _member(TeamMember m) async {
     final theme = Theme.of(context);
     final removable = _canRemove(m);
+    final manage = _canManage(m);
+    final account = _primary(m);
+    final canWorker = widget.admin.canManageAccounts;
+    final roles = grantableRolesFor(widget.org.roles);
+    final hasSessions = AppScope.read(context)?.securityApi != null;
+    final locale = context.trLanguage == 'en' ? 'en' : 'fr_FR';
     final choice = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
+      // Tall with every action: it scrolls on a small phone.
+      isScrollControlled: true,
       builder: (sheet) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
               child: Text(m.name, style: theme.textTheme.titleLarge),
             ),
-            ListTile(
-              key: const Key('team-action-salary'),
-              minVerticalPadding: 14,
-              leading: const Icon(Icons.payments_outlined),
-              title: Text(context.tr('Salaire')),
-              subtitle: m.hourly != null
-                  ? Text(context.tr('Payé à l\'heure : se change dans « Paie et journées »'))
-                  : null,
-              onTap: () => Navigator.pop(sheet, 'salary'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(context.tr(roleLabel(m.role)),
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             ),
+            // Their own information — read by whoever manages the team.
+            if (account != null) ...[
+              _info(sheet, context.tr('Téléphone'), account.phone ?? m.phone),
+              _info(sheet, context.tr('Titre'), account.title),
+              _info(
+                  sheet,
+                  context.tr('Date de naissance'),
+                  account.dateOfBirth == null
+                      ? null
+                      : DateFormat('d MMMM y', locale).format(account.dateOfBirth!)),
+              const Divider(),
+            ],
+            if (manage)
+              ListTile(
+                key: const Key('team-action-salary'),
+                minVerticalPadding: 14,
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(context.tr('Salaire')),
+                subtitle: m.hourly != null
+                    ? Text(context.tr('Payé à l\'heure : se change dans « Paie et journées »'))
+                    : null,
+                onTap: () => Navigator.pop(sheet, 'salary'),
+              ),
+            if (manage && account != null) ...[
+              ListTile(
+                key: const Key('team-action-edit'),
+                minVerticalPadding: 14,
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(context.tr('Modifier les informations')),
+                onTap: () => Navigator.pop(sheet, 'edit'),
+              ),
+              if (roles.isNotEmpty)
+                ListTile(
+                  key: const Key('team-action-role'),
+                  minVerticalPadding: 14,
+                  leading: const Icon(Icons.badge_outlined),
+                  title: Text(context.tr('Changer la responsabilité')),
+                  onTap: () => Navigator.pop(sheet, 'role'),
+                ),
+              if (canWorker)
+                ListTile(
+                  key: const Key('team-action-password'),
+                  minVerticalPadding: 14,
+                  leading: const Icon(Icons.password_outlined),
+                  title: Text(context.tr('Réinitialiser le mot de passe')),
+                  onTap: () => Navigator.pop(sheet, 'password'),
+                ),
+            ],
+            // A lost phone (075): every session of this person closed.
+            if (manage && hasSessions)
+              ListTile(
+                key: const Key('team-action-signout'),
+                minVerticalPadding: 14,
+                leading: const Icon(Icons.phonelink_erase_outlined),
+                title: Text(context.tr('Déconnecter partout')),
+                subtitle: Text(context.tr('Téléphone perdu ou volé')),
+                onTap: () => Navigator.pop(sheet, 'signout'),
+              ),
+            if (!manage)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  m.isOwner
+                      ? context.tr('Le propriétaire gère ses propres informations.')
+                      : m.isMe
+                          ? context.tr('Vos informations se changent dans Compte.')
+                          : context.tr('Vous ne pouvez pas modifier ce compte.'),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ),
             if (removable) ...[
               ListTile(
                 key: const Key('team-action-replace'),
@@ -168,9 +279,19 @@ class _TeamScreenState extends State<TeamScreen> {
                     style: TextStyle(color: theme.colorScheme.error)),
                 onTap: () => Navigator.pop(sheet, 'remove'),
               ),
+              if (canWorker && account != null)
+                ListTile(
+                  key: const Key('team-action-delete'),
+                  minVerticalPadding: 14,
+                  leading: Icon(Icons.delete_forever_outlined, color: theme.colorScheme.error),
+                  title: Text(context.tr('Supprimer le compte'),
+                      style: TextStyle(color: theme.colorScheme.error)),
+                  onTap: () => Navigator.pop(sheet, 'delete'),
+                ),
             ],
             const SizedBox(height: 8),
           ],
+        ),
         ),
       ),
     );
@@ -190,11 +311,230 @@ class _TeamScreenState extends State<TeamScreen> {
         }
       case 'remove':
         await _remove(m);
+      case 'edit':
+        await _edit(account!);
+      case 'role':
+        await _changeRole(m, account!, roles);
+      case 'password':
+        await _resetPassword(m);
+      case 'signout':
+        await _signOutEverywhere(m);
+      case 'delete':
+        await _deleteAccount(m);
     }
   }
 
-  /// Every grant of this person in the business, as Administration ›
-  /// Personnes revokes one: what they recorded stays.
+  Widget _info(BuildContext ctx, String label, String? value) {
+    final theme = Theme.of(ctx);
+    final shown = (value != null && value.trim().isNotEmpty) ? value : '—';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(label,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ),
+          Expanded(child: Text(shown, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  /// Says how an action went, then reloads. One place, so every action
+  /// reports a refusal the same way.
+  Future<void> _act(Future<void> Function() action, {required String done}) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await action();
+      messenger.showSnackBar(SnackBar(content: Text(done)));
+      if (mounted) await _load();
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    }
+  }
+
+  Future<void> _edit(Member account) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => EditMemberSheet(admin: widget.admin, member: account),
+    );
+    if (saved == true && mounted) await _load();
+  }
+
+  /// The responsibilities below the caller's own; never an owner nor a
+  /// super administrator.
+  Future<void> _changeRole(TeamMember m, Member account, List<String> roles) async {
+    var selected = roles.contains(account.role) ? account.role : roles.last;
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(context.tr('Responsabilité de {label}', {'label': m.name})),
+        content: StatefulBuilder(
+          builder: (_, setInner) => RadioGroup<String>(
+            groupValue: selected,
+            onChanged: (v) => setInner(() => selected = v ?? selected),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final r in roles)
+                  RadioListTile<String>(
+                    key: Key('team-role-$r'),
+                    value: r,
+                    title: Text(context.tr(roleLabel(r))),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: Text(context.tr('Annuler')),
+          ),
+          FilledButton(
+            key: const Key('team-role-save'),
+            onPressed: () => Navigator.pop(dialog, selected),
+            child: Text(context.tr('Enregistrer')),
+          ),
+        ],
+      ),
+    );
+    if (chosen == null || chosen == account.role || !mounted) return;
+    await _act(() => widget.admin.setMembershipRole(account.membershipId, chosen),
+        done: context.tr('Responsabilité mise à jour.'));
+  }
+
+  Future<void> _resetPassword(TeamMember m) async {
+    final pw1 = TextEditingController();
+    final pw2 = TextEditingController();
+    String? error;
+    final short = context.tr('Au moins 8 caractères.');
+    final differ = context.tr('Les deux ne correspondent pas.');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => StatefulBuilder(
+        builder: (dialog, setInner) => AlertDialog(
+          title: Text(context.tr('Nouveau mot de passe — {label}', {'label': m.name})),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: pw1,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: context.tr('Nouveau mot de passe'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: pw2,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: context.tr('Confirmer'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 8),
+                Text(error!, style: TextStyle(color: Theme.of(dialog).colorScheme.error)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(context.tr('Annuler')),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (pw1.text.length < 8) {
+                  setInner(() => error = short);
+                  return;
+                }
+                if (pw1.text != pw2.text) {
+                  setInner(() => error = differ);
+                  return;
+                }
+                Navigator.pop(dialog, true);
+              },
+              child: Text(context.tr('Changer')),
+            ),
+          ],
+        ),
+      ),
+    );
+    final password = pw1.text;
+    pw1.dispose();
+    pw2.dispose();
+    if (ok != true || !mounted) return;
+    await _act(() => widget.admin.setUserPassword(m.userId, password),
+        done: context.tr('Mot de passe changé.'));
+  }
+
+  /// A lost phone: closes every session of [m] (075). Their phone asks for
+  /// the password again within the hour; nothing they recorded is lost.
+  Future<void> _signOutEverywhere(TeamMember m) async {
+    final api = AppScope.read(context)?.securityApi;
+    if (api == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(context.tr('Déconnecter {label} partout ?', {'label': m.name})),
+        content: Text(context.tr('Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'équipe ».')),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(context.tr('Annuler'))),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialog, true),
+              child: Text(context.tr('Déconnecter'))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final none = context.tr('{label} n\'était connecté nulle part.', {'label': m.name});
+    String some(int n) =>
+        context.tr('{label} est déconnecté de {n} appareil(s).', {'label': m.name, 'n': n});
+    try {
+      final n = await api.signOutMember(widget.org.id, m.userId);
+      messenger.showSnackBar(SnackBar(content: Text(n == 0 ? none : some(n))));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+    }
+  }
+
+  Future<void> _deleteAccount(TeamMember m) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(context.tr('Supprimer le compte de {label} ?', {'label': m.name})),
+        content: Text(context.tr('Le compte sera supprimé et la personne déconnectée. À sa prochaine connexion, elle arrivera sur la page d\'accueil pour rejoindre une entreprise avec un code ou en demander une.\n\nL\'historique de ce qu\'elle a enregistré reste dans les comptes.')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(context.tr('Annuler')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(dialog).colorScheme.error),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(context.tr('Supprimer')),
+          ),
+        ],
+      ),
+    );
+    if (sure != true || !mounted) return;
+    await _act(() => widget.admin.deleteUserAccount(m.userId),
+        done: context.tr('Compte supprimé.'));
+  }
+
+  /// Every grant of this person in the business: what they recorded stays.
   Future<bool> _remove(TeamMember m, {bool replace = false}) async {
     final sure = await showDialog<bool>(
       context: context,
@@ -326,6 +666,7 @@ class _TeamScreenState extends State<TeamScreen> {
                       _MemberRow(
                         member: m,
                         currency: widget.org.currency,
+                        showPay: _seesPay(m),
                         onTap: () => _member(m),
                       ),
                     ],
@@ -547,10 +888,18 @@ class SeatCard extends StatelessWidget {
 }
 
 class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.member, required this.currency, required this.onTap});
+  const _MemberRow({
+    required this.member,
+    required this.currency,
+    required this.onTap,
+    this.showPay = true,
+  });
 
   final TeamMember member;
   final String currency;
+
+  /// A salary is shown to the owner, and to whoever outranks the person.
+  final bool showPay;
   final VoidCallback onTap;
 
   @override
@@ -559,7 +908,9 @@ class _MemberRow extends StatelessWidget {
     final m = member;
     final money = moneyFormat(currency);
     // The owner's own pay is nobody's line to fill: said only once it is.
-    final pay = m.hourly != null
+    final pay = !showPay
+        ? null
+        : m.hourly != null
         ? context.tr('{rate} / heure', {'rate': money.format(m.hourly)})
         : m.salary != null
             ? '${money.format(m.salary)} ${periodLabel(context, m.period)}'

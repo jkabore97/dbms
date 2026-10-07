@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../retail/stock_rule.dart';
 
 /// Drains the outbox to the server whenever there's a connection.
 ///
@@ -120,6 +121,14 @@ class SyncService {
             await _db.markSynced(clientUuid, serverId: serverId as String?);
           }
         } catch (e) {
+          // The stock is not there (101): a sale or a sack of feed recorded
+          // offline that the server will refuse every time. Retrying forever
+          // would hide it; it is set aside for the owner to read instead
+          // (RefusedNotice on the home).
+          if (e is PostgrestException && isStockRefusal(e.message)) {
+            await _db.markRefused(clientUuid, e.message);
+            continue;
+          }
           // Network down, server busy, a stalled socket past the timeout, or a
           // genuine rejection. Either way the row stays in the outbox. Only the
           // error is recorded.

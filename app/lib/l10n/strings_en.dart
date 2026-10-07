@@ -395,30 +395,6 @@ class StringsEn extends Strings {
   String get trialBalanceSubtitle => 'The proof the books are balanced';
 
   @override
-  String get people => 'People';
-
-  @override
-  String get peopleSubtitle => 'Members, roles and invitations';
-
-  @override
-  String get sitesAndDepartments => 'Sites and departments';
-
-  @override
-  String get structureSubtitle => 'The structure of the business';
-
-  @override
-  String get orgSettingsTitle => 'Business settings';
-
-  @override
-  String get orgSettingsSubtitle => 'Name and currency';
-
-  @override
-  String get consoleTitle => 'Console';
-
-  @override
-  String get consoleSubtitle => 'Activity log, data, device state';
-
-  @override
   String get creditBook => 'Credit book';
 
   @override

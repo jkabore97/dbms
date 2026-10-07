@@ -49,8 +49,10 @@ class CompteScreen extends StatelessWidget {
           {required bool admin}) =>
       [
         // Owner-only, the same full visibility the server requires for the
-        // analytics functions themselves.
-        if (org.visibility == 'full' && org.profile == 'retail') 'analytics',
+        // analytics functions themselves. A shop's, and a farm's (101).
+        if (org.visibility == 'full' &&
+            (org.profile == 'retail' || org.profile == 'farm'))
+          'analytics',
         if (access.canSee('reports')) 'accounting',
         // Undo a sale or a purchase entered by mistake — or test data.
         // Owner/admin only, and only where there are sales and deliveries to

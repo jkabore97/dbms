@@ -39,13 +39,27 @@ class StorefrontRepository {
     return PublicShop.fromRow(Map<String, dynamic>.from(rows.first as Map));
   }
 
-  /// The articles the shop chose to show, alphabetical.
+  /// The articles the shop chose to show, alphabetical, each with how many
+  /// a basket may hold (101's storefront_stock). A database before 101 has
+  /// no such count: the basket is then uncapped, and the server decides.
   Future<List<PublicItem>> items(String slug) async {
-    final rows = await _requireClient()
+    final client = _requireClient();
+    final rows = await client
         .rpc('storefront_products', params: {'p_slug': slug}) as List<dynamic>;
-    return rows
-        .map((r) => PublicItem.fromRow(Map<String, dynamic>.from(r as Map)))
-        .toList();
+    final left = <String, Object?>{};
+    try {
+      final stock = await client
+          .rpc('storefront_stock', params: {'p_slug': slug}) as List<dynamic>;
+      for (final r in stock) {
+        final m = r as Map;
+        left['${m['id']}'] = m['stock_left'];
+      }
+    } catch (_) {}
+    return rows.map((r) {
+      final row = Map<String, dynamic>.from(r as Map);
+      if (left.containsKey('${row['id']}')) row['stock_left'] = left['${row['id']}'];
+      return PublicItem.fromRow(row);
+    }).toList();
   }
 
   // ----------------------------------------------------------------
@@ -761,8 +775,9 @@ class ProductHit {
 String directionsUrl(double lat, double lng) =>
     'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
 
-/// One article in the window. `inStock` is a yes/no on purpose: a shopper is
-/// told whether to come, never how many are on the shelf.
+/// One article in the window. `inStock` is what the window shows: a shopper
+/// is told whether to come, not a count. [stockLeft] only stops the basket's
+/// stepper at what is on the shelf (101: no order for more than is left).
 class PublicItem {
   const PublicItem({
     required this.id,
@@ -775,12 +790,17 @@ class PublicItem {
     this.availableFrom,
     this.isService = false,
     this.priceFrom = false,
+    this.stockLeft,
   });
 
   final String id;
   final String name;
   final double price;
   final bool inStock;
+
+  /// How many a basket may hold; null when there is no count to keep (a
+  /// service, a pre-order, a database before 101).
+  final double? stockLeft;
 
   /// A service (098): its own section, « Réserver », never « épuisé ».
   final bool isService;
@@ -833,6 +853,7 @@ class PublicItem {
       availableFrom: row['available_from'] == null
           ? null
           : DateTime.tryParse('${row['available_from']}'),
+      stockLeft: service ? null : (row['stock_left'] as num?)?.toDouble(),
     );
   }
 }

@@ -25,6 +25,7 @@ import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
 import 'record_transfer_sheet.dart';
 import '../../core/nav/router.dart';
+import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Israel's home screen.
@@ -133,6 +134,10 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
   /// Requests from the vitrine still waiting for an answer (098).
   int _requests = 0;
 
+  /// Money was recorded in on this phone since the screen opened: the
+  /// first-contribution card goes at once, before the server has heard.
+  bool _incomeHere = false;
+
   /// The vitrine and its requests are the administrators' (098).
   bool get _showVitrine =>
       widget.retail != null && widget.org != null && widget.org!.isAdmin;
@@ -173,6 +178,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
   /// Money in and money out are the same sheet with the direction flipped, so
   /// the only thing that varies between the two buttons is what they mean.
   Future<void> _openRecordSheet(String direction) async {
+    final session = AppScope.maybeOf(context)?.session;
     final recorded = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -184,7 +190,14 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
       ),
     );
 
-    if (recorded == true) await _refresh();
+    if (recorded == true) {
+      if (direction == 'in') {
+        setState(() => _incomeHere = true);
+        // Best-effort: the card's own answer, once the entry has synced.
+        session?.reloadFeatures(widget.orgId).ignore();
+      }
+      await _refresh();
+    }
   }
 
   Future<void> _openTransferSheet() async {
@@ -294,6 +307,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                     moneyOut: _moneyOut,
                     currency: _currency,
                   ),
+                  // After the walkthrough (102): « Encaissez la première
+                  // cotisation », until money has come in.
+                  _firstIncomeCard(),
                   // Not points: a level read off the books (088).
                   TrustCard(orgId: widget.orgId),
                   // The vitrine (098): the services on it, and who asked.
@@ -418,6 +434,28 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     ));
   }
 
+  /// The guide card, for somebody who records (not an observer), while the
+  /// server says no money has come in yet (102) and none came in here.
+  Widget _firstIncomeCard() {
+    final scope = AppScope.maybeOf(context);
+    if (scope == null || (widget.org?.isObserverOnly ?? true)) {
+      return const SizedBox.shrink();
+    }
+    return ListenableBuilder(
+      listenable: scope.session,
+      builder: (context, _) {
+        final first = scope.session.featuresFor(widget.orgId)?.firstIncome;
+        if (first != false || _incomeHere || _moneyIn > 0) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: FirstContributionCard(onTap: () => _openRecordSheet('in')),
+        );
+      },
+    );
+  }
+
   /// The association's five: Accueil (this screen), Historique,
   /// Rapports, Factures, and Plus.
   HomeNav _nav() {
@@ -487,6 +525,60 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           ),
         ],
       ],
+    );
+  }
+}
+
+/// « Encaissez la première cotisation » (102): the next step after the
+/// walkthrough, one tap from the Recette sheet.
+class FirstContributionCard extends StatelessWidget {
+  const FirstContributionCard({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      key: const Key('first-contribution'),
+      color: maraDeep,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: maraCaramel,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.savings_outlined, color: maraDeep, size: 32),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.tr('Encaissez la première cotisation'),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(color: maraPaper, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(context.tr('Touchez ici, le montant, c\'est noté.'),
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: maraPaper.withValues(alpha: 0.85))),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward, color: maraCaramel),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

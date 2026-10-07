@@ -527,7 +527,8 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                 labelText: context.tr('Adresse'),
                 border: const OutlineInputBorder(),
                 helperText: _slugProblem == null
-                    ? 'Sert de sous-domaine : ${_slug.text.trim()}.kajapp.com'
+                    ? context.tr('Adresse de la vitrine : marakaj.com/s/{slug}',
+                        {'slug': _slug.text.trim()})
                     : null,
                 errorText: _slugProblem,
               ),

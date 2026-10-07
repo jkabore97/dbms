@@ -51,7 +51,8 @@ Widget homeScreenFor({
       // business not yet migrated by 035. Same home screen (kept as the
       // ChurchHomeScreen class internally) — associations and churches keep
       // members and money the same way.
-      'church' || 'association' => OfflineOffer(org: org, child: ChurchHomeScreen(
+      // Held by its first setup since 102, as a shop and a farm are.
+      'church' || 'association' => SetupGate(org: org, child: OfflineOffer(org: org, child: ChurchHomeScreen(
           invoicing: invoicing,
           db: db,
           orgId: org.id,
@@ -64,7 +65,7 @@ Widget homeScreenFor({
           onHistory: onHistory,
           access: access,
           retail: retail,
-        )),
+        ))),
       'farm' => SetupGate(org: org, child: OfflineOffer(org: org, child: UnlockCelebration(org: org, child: FarmHomeScreen(
           invoicing: invoicing,
           db: db,

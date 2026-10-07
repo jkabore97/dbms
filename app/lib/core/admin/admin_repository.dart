@@ -635,6 +635,23 @@ class AdminRepository {
     await _requireClient().rpc('finish_setup', params: {'p_org_id': orgId});
   }
 
+  /// What an association is, and its line (102): written by an admin, for an
+  /// association only. [about] null leaves the line alone.
+  Future<void> setAssociationKind(String orgId, {required String kind, String? about}) async {
+    await _requireClient().rpc('set_association_kind',
+        params: {'p_org_id': orgId, 'p_kind': kind, 'p_about': about});
+  }
+
+  /// One member of an association (102): a record with a name and a phone,
+  /// not an account — no seat, no Pro. The same phone twice is one member.
+  Future<void> addAssociationMember(String orgId, {required String name, String? phone}) async {
+    await _requireClient().rpc('add_association_member', params: {
+      'p_org_id': orgId,
+      'p_full_name': name,
+      'p_phone': (phone == null || phone.isEmpty) ? null : phone,
+    });
+  }
+
   /// Mara's tick for Wave on one business (090); platform admins only.
   Future<void> setOrgWaveAllowed(String orgId, bool allowed) async {
     final client = _requireClient();
