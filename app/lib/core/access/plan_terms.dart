@@ -8,9 +8,10 @@
 class PlanTerms {
   const PlanTerms({
     this.proFeatures = defaultProFeatures,
-    this.freeMaxStaff = 3,
+    this.freeMaxStaff = 1,
     this.freeMaxInvoicesMonth = 20,
     this.freeMaxPhotos = 50,
+    this.freePhotoItems = 10,
     this.freeHistoryMonths = 12,
     this.priceMonth = 2500,
     this.priceYear = 25000,
@@ -43,6 +44,10 @@ class PlanTerms {
   final int freeMaxStaff;
   final int freeMaxInvoicesMonth;
   final int freeMaxPhotos;
+
+  /// The articles a Basic business may photograph (100); one more per
+  /// photo slot bought with cauris.
+  final int freePhotoItems;
   final int freeHistoryMonths;
   final int priceMonth;
   final int priceYear;
@@ -79,9 +84,10 @@ class PlanTerms {
       proFeatures: features is List
           ? features.map((f) => f.toString()).toList()
           : defaultProFeatures,
-      freeMaxStaff: n('free_max_staff', 3),
+      freeMaxStaff: n('free_max_staff', 1),
       freeMaxInvoicesMonth: n('free_max_invoices_month', 20),
       freeMaxPhotos: n('free_max_photos', 50),
+      freePhotoItems: n('free_photo_items', 10),
       freeHistoryMonths: n('free_history_months', 12),
       priceMonth: n('pro_price_month', 2500),
       priceYear: n('pro_price_year', 25000),
@@ -110,6 +116,7 @@ class PlanTerms {
           'Livraison depuis la vitrine : prix selon la distance, livreurs, suivi',
         'online_payment' =>
           'Paiement en ligne des commandes : Wave ou carte, versé sur votre numéro',
+        'photo_slot' => 'Une place photo de plus, pour toujours',
         _ => feature,
       };
 }

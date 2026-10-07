@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'feature_states.dart';
+
 /// Cauris (084): Mara's points, earned by doing well.
 ///
 /// The database earns them from the events themselves — an order finished,
@@ -417,9 +419,14 @@ class CaurisWallet {
     this.referrals = const [],
     this.history = const [],
     this.rules = const [],
+    this.promo = const [],
   });
 
   final int balance;
+
+  /// Promotional cauris the platform gave (100), soonest first: part of
+  /// [balance], each to spend before its day.
+  final List<PromoLot> promo;
 
   /// Earned since Monday: the league's score (086).
   final int week;
@@ -448,6 +455,7 @@ class CaurisWallet {
         balance: _int(j['balance']),
         week: _int(j['week']),
         expiresOn: DateTime.tryParse('${j['expires_on'] ?? ''}'),
+        promo: PromoLot.listOf(j['promo']),
         referralCode: j['referral_code'] as String?,
         referred: j['referred'] == true,
         referralPoints: _int(j['referral_points']),

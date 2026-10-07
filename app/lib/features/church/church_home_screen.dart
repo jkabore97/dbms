@@ -461,8 +461,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
           if (widget.staff != null && org.isAdmin)
             HomeDestination(
               icon: Icons.groups_outlined,
-              label: s.staffLabel,
-              onTap: () => context.push(Routes.inside(org.id, 'personnel')),
+              label: context.tr('Équipe'),
+              onTap: () => context.push(Routes.inside(org.id, 'equipe')),
             ),
           HomeDestination(
             icon: Icons.account_circle_outlined,

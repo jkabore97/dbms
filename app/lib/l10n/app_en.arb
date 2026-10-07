@@ -67,7 +67,6 @@
   "verify": "Check",
 
   "myProfile": "My details",
-  "inviteSomeone": "Invite someone",
   "applications": "Requests",
   "businesses": "Businesses",
   "applyForBusiness": "Request a business",
@@ -89,7 +88,6 @@
   "reports": "Reports",
   "history": "History",
   "photos": "Photos",
-  "staffLabel": "Staff",
   "pendingCount": "{count} waiting",
   "dayClosed": "Day closed",
   "cancelEntryTitle": "Cancel this entry?",

@@ -191,7 +191,11 @@ class _CheminScreenState extends State<CheminScreen> {
     final p = _path;
     final w = _wallet;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Mon chemin'))),
+      // An association has no path (097), only the wallet Mara fills (100).
+      appBar: AppBar(
+          title: Text(widget.org.isAssociation
+              ? context.tr('Mes cauris')
+              : context.tr('Mon chemin'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -214,6 +218,9 @@ class _CheminScreenState extends State<CheminScreen> {
                   balance: balance,
                   week: p?.week ?? w?.week ?? 0,
                   expiresOn: w?.expiresOn,
+                  promo: w?.promo ?? _features?.promo ?? const [],
+                  // An association earns nothing (084): no week to count.
+                  showWeek: !widget.org.isAssociation,
                   locale: _dateLocale,
                 ),
                 const SizedBox(height: 22),
@@ -249,12 +256,16 @@ class _CheminScreenState extends State<CheminScreen> {
                   ),
                 ),
               ],
-              ..._league(theme, p, w),
+              // An association does not race nor earn (084): no league, no
+              // referral — what Mara gave it, and what that buys.
+              if (!widget.org.isAssociation) ..._league(theme, p, w),
               ..._spending(theme),
               if (w != null) ...[
-                const SizedBox(height: 22),
-                _label(theme, context.tr('Parrainer'), key: _referralKey),
-                _referral(theme, w),
+                if (!widget.org.isAssociation) ...[
+                  const SizedBox(height: 22),
+                  _label(theme, context.tr('Parrainer'), key: _referralKey),
+                  _referral(theme, w),
+                ],
                 const SizedBox(height: 22),
                 _details(theme, w, p),
               ],
@@ -562,12 +573,20 @@ class _Wallet extends StatelessWidget {
     required this.balance,
     required this.week,
     this.expiresOn,
+    this.promo = const [],
+    this.showWeek = true,
     this.locale = 'fr_FR',
   });
+
+  final bool showWeek;
 
   final int balance;
   final int week;
   final DateTime? expiresOn;
+
+  /// What Mara gave to spend before a day (100): « dont 200 à utiliser
+  /// avant le 30/11 ».
+  final List<PromoLot> promo;
 
   /// The dates' and numbers' language.
   final String locale;
@@ -612,12 +631,27 @@ class _Wallet extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            context.tr('Cette semaine : +{week}', {'week': week}),
-            key: const Key('cauris-week'),
-            style: theme.textTheme.titleSmall?.copyWith(color: maraCaramel),
-          ),
+          for (final p in promo)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                context.tr('dont {n} à utiliser avant le {date}', {
+                  'n': p.points,
+                  'date': DateFormat('dd/MM', locale).format(p.until),
+                }),
+                key: const Key('cauris-promo'),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(color: maraPaper, fontWeight: FontWeight.w700),
+              ),
+            ),
+          if (showWeek) ...[
+            const SizedBox(height: 10),
+            Text(
+              context.tr('Cette semaine : +{week}', {'week': week}),
+              key: const Key('cauris-week'),
+              style: theme.textTheme.titleSmall?.copyWith(color: maraCaramel),
+            ),
+          ],
           if (expiresOn != null && balance > 0) ...[
             const SizedBox(height: 4),
             Text(

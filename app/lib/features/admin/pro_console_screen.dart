@@ -353,7 +353,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                 ],
                 const SizedBox(height: 16),
                 Text(
-                  context.tr('La liste des outils Pro et les plafonds gratuits ({freeMaxStaff} comptes, {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos) se changent dans platform_settings.', {'freeMaxStaff': _terms.freeMaxStaff, 'freeMaxInvoicesMonth': _terms.freeMaxInvoicesMonth, 'freeMaxPhotos': _terms.freeMaxPhotos}),
+                  context.tr('La liste des outils Pro et les plafonds gratuits ({freeMaxStaff} comptes, {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo, {freeMaxPhotos} autres photos) se changent dans platform_settings.', {'freeMaxStaff': _terms.freeMaxStaff, 'freeMaxInvoicesMonth': _terms.freeMaxInvoicesMonth, 'freePhotoItems': _terms.freePhotoItems, 'freeMaxPhotos': _terms.freeMaxPhotos}),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),

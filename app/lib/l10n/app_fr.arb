@@ -77,7 +77,6 @@
   "verify": "Vérifier",
 
   "myProfile": "Mes informations",
-  "inviteSomeone": "Inviter quelqu’un",
   "applications": "Demandes",
   "businesses": "Entreprises",
   "applyForBusiness": "Demander une entreprise",
@@ -113,7 +112,6 @@
   "reports": "Rapports",
   "history": "Historique",
   "photos": "Photos",
-  "staffLabel": "Personnel",
   "pendingCount": "{count} en attente",
   "@pendingCount": {"placeholders": {"count": {"type": "int"}}},
   "dayClosed": "Journée clôturée",

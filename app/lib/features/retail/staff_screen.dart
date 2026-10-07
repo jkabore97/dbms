@@ -149,7 +149,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final totalOwed = _owed.fold<double>(0, (sum, w) => sum + w.owed);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Personnel'))),
+      appBar: AppBar(title: Text(context.tr('Paie et journées'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addPerson,
         icon: const Icon(Icons.person_add_alt),

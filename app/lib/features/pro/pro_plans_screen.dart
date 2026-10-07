@@ -472,7 +472,7 @@ class ProPlansScreenRows {
           [
             PlanRow('Comptes de l\'équipe', '${t.freeMaxStaff}', 'Illimité'),
             PlanRow('Factures par mois', '${t.freeMaxInvoicesMonth}', 'Illimité'),
-            PlanRow('Photos', '${t.freeMaxPhotos}', 'Illimité'),
+            PlanRow('Articles en photo', '${t.freePhotoItems}', 'Illimité'),
             PlanRow('Historique', '${t.freeHistoryMonths} mois', 'Complet'),
             const PlanRow('Mise en avant offerte', null, '1 par mois'),
           ],

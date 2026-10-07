@@ -502,8 +502,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
         if (widget.staff != null && widget.org.isAdmin)
           HomeDestination(
             icon: Icons.groups_outlined,
-            label: s.staffLabel,
-            onTap: () => context.push(Routes.inside(id, 'personnel')),
+            label: context.tr('Équipe'),
+            onTap: () => context.push(Routes.inside(id, 'equipe')),
           ),
         HomeDestination(
           icon: Icons.account_circle_outlined,

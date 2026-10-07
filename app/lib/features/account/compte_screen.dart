@@ -10,7 +10,9 @@ import '../../core/nav/app_scope.dart';
 import '../../core/security/security_settings.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
-import '../admin/invite_generator_sheet.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/cauris/feature_states.dart';
 import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
 import 'alert_tone_tile.dart';
@@ -93,10 +95,12 @@ class CompteScreen extends StatelessWidget {
                 )
             : go;
     // Its price in cauris (085), on the grey badge. An association earns
-    // no cauris and pays none (084): its badge says Pro, no price.
-    int? costOf(String feature) => org.isAssociation
-        ? null
-        : session.featuresFor(org.id)?.toolOf(feature)?.cost;
+    // no cauris (084): its badge says a price only once Mara has given it
+    // some to spend (100).
+    int? costOf(String feature) =>
+        org.isAssociation && !_hasWallet(session.featuresFor(org.id))
+            ? null
+            : session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
       appBar: AppBar(title: Text(Strings.of(context).account)),
@@ -184,21 +188,26 @@ class CompteScreen extends StatelessWidget {
                     title: Strings.of(context).administration,
                     onTap: () => context.push(inside('administration')),
                   ),
-                if (access.canSee('staff'))
-                  _Tile(
-                    icon: Icons.groups_outlined,
-                    title: Strings.of(context).staffLabel,
-                    onTap: () => context.push(inside('personnel')),
-                  ),
+                // « Équipe » (100): the people, adding one, their salary —
+                // one place where « Personnel » and « Inviter » were two.
                 if (admin)
                   _Tile(
-                    icon: Icons.person_add_alt,
-                    title: Strings.of(context).inviteSomeone,
-                    onTap: () => InviteGeneratorSheet.open(
-                      context,
-                      orgId: org.id,
-                      onboarding: scope.onboarding,
-                    ),
+                    key: const Key('compte-team'),
+                    icon: Icons.groups_outlined,
+                    title: context.tr('Équipe'),
+                    subtitle: _teamLine(context, session.featuresFor(org.id)?.team),
+                    onTap: () => context.push(inside('equipe')),
+                  ),
+                // An association earns no cauris (084), but spends what Mara
+                // gives it (100): its wallet shows once there is something
+                // in it.
+                if (admin && org.isAssociation && _hasWallet(session.featuresFor(org.id)))
+                  _Tile(
+                    key: const Key('compte-cauris'),
+                    icon: Icons.savings_outlined,
+                    title: context.tr('Mes cauris'),
+                    subtitle: _walletLine(context, session.featuresFor(org.id)!),
+                    onTap: () => context.push(inside('chemin')),
                   ),
                 // The plan, said plainly (066): what this business is on, and
                 // the door to the other one. Drawn for every member so an
@@ -403,6 +412,28 @@ class CompteScreen extends StatelessWidget {
 
 /// A titled card of rows with hairlines between them (the settings fold).
 /// Draws nothing when every row is conditional and none applies.
+/// The wallet is worth a row: something in it, or promotional points.
+bool _hasWallet(FeatureStates? f) =>
+    f != null && (f.balance > 0 || f.promo.isNotEmpty);
+
+/// « 250 cauris · dont 200 avant le 30/11 ».
+String _walletLine(BuildContext context, FeatureStates f) => [
+      context.tr('{n} cauris', {'n': f.balance}),
+      if (f.promo.isNotEmpty)
+        context.tr('dont {n} à utiliser avant le {date}', {
+          'n': f.promo.first.points,
+          'date': DateFormat('dd/MM').format(f.promo.first.until),
+        }),
+    ].join(' · ');
+
+/// « 1 personne offerte », « Équipe sans limite », or the seat taken.
+String? _teamLine(BuildContext context, TeamSeats? t) {
+  if (t == null) return null;
+  if (t.unlimited) return context.tr('Équipe sans limite');
+  if (t.open) return context.tr('1 personne offerte');
+  return context.tr('Votre personne offerte est là');
+}
+
 /// "Verrouillé après 5 min · empreinte" — where the phone's lock stands.
 String _securityLine(AppScope scope) {
   final s = scope.security;

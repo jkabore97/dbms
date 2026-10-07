@@ -10,6 +10,7 @@ import '../rates/currency_rates.dart';
 import '../storefront/storefront_repository.dart' show StorefrontStyle;
 import 'models.dart';
 import 'spots.dart';
+import 'team.dart';
 
 export 'spots.dart';
 
@@ -796,6 +797,63 @@ class AdminRepository {
     final v = await _client!.rpc('spend_cauris',
         params: {'p_org_id': orgId, 'p_feature': feature});
     return v is Map ? DateTime.tryParse('${v['until']}') : null;
+  }
+
+  /// A photo slot bought with cauris (100): one more article photographed
+  /// on Basic, for good. Refused in French when the wallet is short.
+  Future<void> buyPhotoSlot(String orgId) async {
+    await _requireClient().rpc('buy_photo_slot', params: {'p_org_id': orgId});
+  }
+
+  /// The Équipe screen (100): the seats, the people and their salary, the
+  /// invitations out. Null for a non-admin, or on a database before 100.
+  Future<TeamOverview?> teamOverview(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('team_overview', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      return TeamOverview.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+  }
+
+  /// A member's salary (100): [amount] null clears it; [period] is
+  /// 'month', 'week' or 'day'. Free — paying it is the payroll's (Pro).
+  Future<void> setMemberSalary(String orgId, String userId,
+      {double? amount, String period = 'month'}) async {
+    await _requireClient().rpc('set_member_salary', params: {
+      'p_org_id': orgId,
+      'p_user_id': userId,
+      'p_amount': amount,
+      'p_period': period,
+    });
+  }
+
+  /// The platform gives a business cauris (100); with [expiresOn], they
+  /// are promotional and must be spent before that day.
+  Future<void> platformGiveCauris(String orgId, int points,
+      {String? note, DateTime? expiresOn}) async {
+    await _requireClient().rpc('platform_give_cauris', params: {
+      'p_org_id': orgId,
+      'p_points': points,
+      if (note != null && note.trim().isNotEmpty) 'p_note': note.trim(),
+      if (expiresOn != null) 'p_expires_on': _dateOnly(expiresOn),
+    });
+  }
+
+  /// The platform opens a Pro tool for a business until [until], that day
+  /// included (100). No cauris move.
+  Future<void> platformGiveUnlock(String orgId, String feature, DateTime until,
+      {String? note}) async {
+    await _requireClient().rpc('platform_give_unlock', params: {
+      'p_org_id': orgId,
+      'p_feature': feature,
+      'p_until': _dateOnly(until),
+      if (note != null && note.trim().isNotEmpty) 'p_note': note.trim(),
+    });
   }
 
   Future<PlanTerms> planTerms() async {

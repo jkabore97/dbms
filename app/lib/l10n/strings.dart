@@ -461,12 +461,6 @@ abstract class Strings {
   /// **'Mes informations'**
   String get myProfile;
 
-  /// No description provided for @inviteSomeone.
-  ///
-  /// In fr, this message translates to:
-  /// **'Inviter quelqu’un'**
-  String get inviteSomeone;
-
   /// No description provided for @applications.
   ///
   /// In fr, this message translates to:
@@ -580,12 +574,6 @@ abstract class Strings {
   /// In fr, this message translates to:
   /// **'Photos'**
   String get photos;
-
-  /// No description provided for @staffLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Personnel'**
-  String get staffLabel;
 
   /// No description provided for @pendingCount.
   ///

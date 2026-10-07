@@ -111,7 +111,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
               Text(
                 widget.org.isPro
                     ? context.tr('Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.')
-                    : context.tr('Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et jusqu\'à {freeMaxStaff} comptes en plus du propriétaire. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :', {'freeMaxStaff': terms.freeMaxStaff}),
+                    : context.tr('Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :', {'freeMaxStaff': terms.freeMaxStaff}),
                 style: muted,
               ),
               const SizedBox(height: 12),
@@ -137,7 +137,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                         size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(context.tr('Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freeMaxPhotos} photos)', {'freeMaxInvoicesMonth': terms.freeMaxInvoicesMonth, 'freeMaxPhotos': terms.freeMaxPhotos})),
+                      child: Text(context.tr('Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo)', {'freeMaxInvoicesMonth': terms.freeMaxInvoicesMonth, 'freePhotoItems': terms.freePhotoItems})),
                     ),
                   ],
                 ),

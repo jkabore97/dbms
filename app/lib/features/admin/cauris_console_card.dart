@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/access/plan_terms.dart';
 import '../../core/cauris/cauris_repository.dart';
 import '../../core/errors.dart';
+import '../../core/nav/router.dart';
 import '../cauris/cauri_icon.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -156,6 +158,15 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
           context.tr('Ce que chaque action rapporte. Une valeur changée vaut pour les prochaines ; rien de déjà gagné ne bouge.'),
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 8),
+        // The platform's gifts (100): to any business, by name.
+        OutlinedButton.icon(
+          key: const Key('cauris-gifts'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+          onPressed: () => context.push(Routes.consoleCaurisGifts),
+          icon: const Icon(Icons.redeem_outlined),
+          label: Text(context.tr('Offrir à une entreprise')),
         ),
         const SizedBox(height: 8),
         if (_loading)

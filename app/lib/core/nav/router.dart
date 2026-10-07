@@ -80,6 +80,9 @@ abstract final class Routes {
   /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
   /// number and prices the paywall says (066).
   static const consolePro = '/console/kaj-pro';
+  /// The platform's gifts (100): cauris, promotional cauris, a tool opened
+  /// until a date — for any business.
+  static const consoleCaurisGifts = '/console/kaj-pro/cauris';
   /// The platform's Wave switches and every payment with its payout (076).
   static const consoleWave = '/console/wave';
   /// What each courier owes for the month: the platform's part of the
@@ -718,6 +721,18 @@ GoRouter buildRouter(SessionController session) {
       ),
 
       GoRoute(
+        path: Routes.consoleCaurisGifts,
+        builder: (context, _) {
+          final scope = AppScope.of(context);
+          return biz.CaurisGiftsScreen(
+            console: scope.console,
+            admin: scope.admin,
+            cauris: CaurisRepository(scope.auth.client),
+          );
+        },
+      ),
+
+      GoRoute(
         path: Routes.applications,
         builder: (context, _) =>
             biz.ApplicationsScreen(onboarding: AppScope.of(context).onboarding),
@@ -1246,6 +1261,19 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) => biz.StaffScreen(org: org, staff: scope.staff),
+            ),
+          ),
+          // « Équipe » (100): the people, adding one, their salary.
+          GoRoute(
+            path: 'equipe',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.TeamScreen(
+                org: org,
+                admin: scope.admin,
+                onboarding: scope.onboarding,
+              ),
             ),
           ),
           GoRoute(

@@ -12,7 +12,9 @@ import '../../core/nav/router.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/theme/kaj_card.dart';
+import '../../core/nav/app_scope.dart';
 import '../capture/capture_action.dart';
+import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -91,6 +93,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         retail: widget.retail,
         capture: widget.capture,
         product: product,
+        hasPhoto: product != null && _photos.containsKey(product.id),
       ),
     );
     if (saved == true) await _load();
@@ -226,10 +229,14 @@ class ForSaleSheet extends StatefulWidget {
     required this.retail,
     this.capture,
     this.product,
+    this.hasPhoto = false,
   });
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// The article has a photo already: a new one takes no new place (100).
+  final bool hasPhoto;
   final CaptureRepository? capture;
   final Product? product;
 
@@ -276,6 +283,10 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   }
 
   Future<void> _pickPhoto() async {
+    // Every place taken on Basic (100): one more first, or nothing.
+    if (!await photoAllowed(context, widget.org, hasPhoto: widget.hasPhoto) || !mounted) {
+      return;
+    }
     final picked = await CaptureAction.pick(context);
     if (picked == null || !mounted) return;
     setState(() {
@@ -333,6 +344,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         );
         if (doc != null) {
           await capture.file(documentId: doc, productId: id);
+          if (mounted) await AppScope.read(context)?.session.reloadFeatures(widget.org.id);
         }
       }
       if (mounted) Navigator.of(context).pop(true);
@@ -409,6 +421,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                 ),
               ],
             ),
+            PhotoCounter(org: widget.org, hasPhoto: widget.hasPhoto),
             const SizedBox(height: 12),
             Row(
               children: [

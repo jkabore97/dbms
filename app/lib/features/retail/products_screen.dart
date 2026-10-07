@@ -13,6 +13,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
 import 'convert_dialog.dart';
+import 'photo_quota.dart';
 import 'product_photo.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
@@ -728,6 +729,10 @@ class _EditProductSheetState extends State<_EditProductSheet> {
   bool _photoKnown = false;
   bool _photoBusy = false;
 
+  /// The article has a photo on the server: changing it takes no new place
+  /// among the ten a Basic business keeps (100).
+  bool _hasPhoto = false;
+
   static String _plain(double v) =>
       v == v.roundToDouble() ? v.round().toString() : '$v';
 
@@ -747,6 +752,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         if (mounted) setState(() => _photoKnown = true);
         return;
       }
+      if (mounted) setState(() => _hasPhoto = true);
       final bytes = await capture.objectBytes(key);
       if (!mounted) return;
       setState(() {
@@ -763,10 +769,15 @@ class _EditProductSheetState extends State<_EditProductSheet> {
   Future<void> _changePhoto() async {
     final capture = widget.capture;
     if (capture == null) return;
+    // Every place taken on Basic (100): one more first, or nothing.
+    if (!await photoAllowed(context, widget.org, hasPhoto: _hasPhoto) || !mounted) {
+      return;
+    }
     final picked = await CaptureAction.pick(context);
     if (picked == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final scope = AppScope.read(context);
     setState(() => _photoBusy = true);
     try {
       final id = await capture.capture(
@@ -787,10 +798,12 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         return;
       }
       await capture.file(documentId: id, productId: widget.product.id);
+      await scope?.session.reloadFeatures(widget.org.id);
       if (!mounted) return;
       setState(() {
         _photoBytes = picked.bytes;
         _photoKnown = true;
+        _hasPhoto = true;
       });
       messenger.showSnackBar(SnackBar(
         content: Text(context.tr('Photo de l\'article enregistrée.')),
@@ -1040,6 +1053,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                           context.tr('La photo paraît sur la vitrine et dans la recherche.'),
                           style: theme.textTheme.bodySmall,
                         ),
+                        PhotoCounter(org: widget.org, hasPhoto: _hasPhoto),
                       ],
                     ),
                   ),
