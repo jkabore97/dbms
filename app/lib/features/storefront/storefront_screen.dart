@@ -249,6 +249,15 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   int get _count => _basket.values.fold(0, (sum, q) => sum + q.round());
 
+  /// Only services in the basket (098): a booking, said as one.
+  bool get _booking {
+    final picked = [
+      for (final i in _items)
+        if ((_basket[i.id] ?? 0) > 0) i,
+    ];
+    return picked.isNotEmpty && picked.every((i) => i.isService);
+  }
+
   /// "Commander": the one act that needs a name. A stranger is sent through
   /// sign-in and brought back to this very vitrine — and the basket now
   /// survives the trip: it sleeps on the device (_keepBasket) and is
@@ -326,12 +335,17 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       ),
     );
     if (sent == true && mounted) {
+      final booking = _booking;
       setState(_basket.clear);
       _keepBasket(); // The promise is kept; the device forgets it.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.tr('Commande envoyée. La boutique vous répondra ici.'),
+            booking
+                ? context.tr(
+                    'Demande envoyée. Vous recevrez la réponse ici, avec le rendez-vous.',
+                  )
+                : context.tr('Commande envoyée. La boutique vous répondra ici.'),
           ),
         ),
       );
@@ -367,8 +381,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // A refusal the shop's rules made (069: beyond its reach) is said in
       // the server's words; only a failure to reach the server is "network".
       if (!mounted) return null;
+      // Said in the reader's language when the app has the sentence (098's
+      // « Un service se réserve sur rendez-vous… », say).
       return e.code == 'P0001'
-          ? e.message
+          ? context.tr(e.message)
           : context.tr(
               'La commande n\'a pas pu être envoyée. Vérifiez le réseau.',
             );
@@ -395,6 +411,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       ],
       capture: widget.capture,
       count: _count,
+      booking: _booking,
       total: moneyFormat(_shop?.currency ?? 'XOF').format(_total),
       sending: _sending,
       onOrder: _order,
@@ -403,7 +420,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
     return ShopPage(
       title: shop?.name ?? context.tr('Vitrine'),
-      announcements: shop?.profile == 'farm' ? ShopPage.farm : ShopPage.street,
+      announcements: switch (shop?.profile) {
+        'farm' => ShopPage.farm,
+        // An association's window (098): its services, booked.
+        'association' || 'church' => [
+          context.tr('Réservez en ligne, sur rendez-vous'),
+          context.tr('Une association de chez vous, tenue par ses membres'),
+          context.tr('Rien à payer en ligne : vous réglez sur place'),
+        ],
+        _ => ShopPage.street,
+      },
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
       accent: shop?.style.accent,
@@ -453,6 +479,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 showcase: _showcase,
                 items: _visible,
                 totalCount: _items.length,
+                serviceCount: _items.where((i) => i.isService).length,
                 filter: _filter,
                 onFilterChanged: (_) => setState(() {}),
                 capture: widget.capture,
@@ -513,6 +540,7 @@ class _BasketBar extends StatelessWidget {
     required this.picked,
     required this.capture,
     required this.count,
+    this.booking = false,
     required this.total,
     required this.sending,
     required this.onOrder,
@@ -525,6 +553,9 @@ class _BasketBar extends StatelessWidget {
   final List<(PublicItem, int)> picked;
   final CaptureRepository capture;
   final int count;
+
+  /// Only services picked (098): « 2 services », « Réserver ».
+  final bool booking;
   final String total;
   final bool sending;
   final VoidCallback onOrder;
@@ -589,7 +620,15 @@ class _BasketBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '$count article${count > 1 ? 's' : ''}',
+                        booking
+                            ? context.tr(
+                                count > 1 ? '{n} services' : '{n} service',
+                                {'n': count},
+                              )
+                            : context.tr(
+                                count > 1 ? '{n} articles' : '{n} article',
+                                {'n': count},
+                              ),
                         style: const TextStyle(
                           fontSize: 13,
                           color: ShopStyle.mist,
@@ -617,7 +656,11 @@ class _BasketBar extends StatelessWidget {
                             color: ShopStyle.paper,
                           ),
                         )
-                      : Text(context.tr('Commander')),
+                      : Text(
+                          booking
+                              ? context.tr('Réserver')
+                              : context.tr('Commander'),
+                        ),
                 ),
               ],
             ),
@@ -942,7 +985,25 @@ class _OrderSheetState extends State<OrderSheet> {
     await _refreshQuote();
   }
 
+  /// Only services in the basket (098): a booking. Nothing travels, so no
+  /// delivery is offered; the day and time wanted are what the shop needs.
+  bool get _booking {
+    final picked = [
+      for (final item in widget.items)
+        if ((widget.basket[item.id] ?? 0) > 0) item,
+    ];
+    return picked.isNotEmpty && picked.every((i) => i.isService);
+  }
+
   Future<void> _submit() async {
+    if (_booking && _note.text.trim().isEmpty) {
+      setState(
+        () => _error = context.tr(
+          'Dites quel jour et à quelle heure vous souhaitez venir.',
+        ),
+      );
+      return;
+    }
     if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
       setState(() => _error = context.tr('Indiquez où livrer.'));
       return;
@@ -1001,6 +1062,20 @@ class _OrderSheetState extends State<OrderSheet> {
       0,
       (sum, i) => sum + widget.basket[i.id]! * i.price,
     );
+    final booking = _booking;
+    final note = TextField(
+      key: const Key('order-note'),
+      controller: _note,
+      maxLines: 2,
+      decoration: InputDecoration(
+        labelText: booking
+            ? context.tr('Date et heure souhaitées')
+            : context.tr('Un mot pour la boutique (facultatif)'),
+        hintText: booking
+            ? context.tr('Samedi 10 h, ou dès que possible')
+            : null,
+      ),
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1013,7 +1088,9 @@ class _OrderSheetState extends State<OrderSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              context.tr('Votre commande'),
+              booking
+                  ? context.tr('Votre réservation')
+                  : context.tr('Votre commande'),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -1130,7 +1207,31 @@ class _OrderSheetState extends State<OrderSheet> {
               ],
             ),
             const SizedBox(height: 18),
-            if (widget.delivers)
+            // A booking (098): « Sur rendez-vous », said where the way the
+            // goods travel would be chosen.
+            if (booking)
+              Row(
+                key: const Key('order-appointment'),
+                children: [
+                  const Icon(
+                    Icons.event_available_outlined,
+                    size: 22,
+                    color: ShopStyle.ink,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      context.tr('Sur rendez-vous'),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: ShopStyle.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else if (widget.delivers)
               SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
@@ -1234,6 +1335,8 @@ class _OrderSheetState extends State<OrderSheet> {
                   ],
                 ),
             ],
+            // A booking asks first for the day and the hour (098).
+            if (booking) ...[const SizedBox(height: 12), note],
             const SizedBox(height: 12),
             TextField(
               controller: _phone,
@@ -1243,14 +1346,7 @@ class _OrderSheetState extends State<OrderSheet> {
                 hintText: '+226 70 00 00 00',
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _note,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: context.tr('Un mot pour la boutique (facultatif)'),
-              ),
-            ),
+            if (!booking) ...[const SizedBox(height: 12), note],
             if (_error != null) ...[
               const SizedBox(height: 10),
               Text(
@@ -1274,12 +1370,20 @@ class _OrderSheetState extends State<OrderSheet> {
                           color: ShopStyle.paper,
                         ),
                       )
-                    : Text(context.tr('Envoyer la commande')),
+                    : Text(
+                        booking
+                            ? context.tr('Envoyer la réservation')
+                            : context.tr('Envoyer la commande'),
+                      ),
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              _payment == 'wave'
+              booking && _payment != 'wave'
+                  ? context.tr(
+                      'Rien à payer maintenant : vous payez sur place, au rendez-vous.',
+                    )
+                  : _payment == 'wave'
                   ? context.tr(
                       'Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.',
                     )
@@ -1302,6 +1406,7 @@ class _Window extends StatelessWidget {
     this.showcase = false,
     required this.items,
     required this.totalCount,
+    this.serviceCount = 0,
     required this.filter,
     required this.onFilterChanged,
     required this.capture,
@@ -1324,6 +1429,9 @@ class _Window extends StatelessWidget {
   /// How many articles the window really holds — [items] is the filtered
   /// view of them.
   final int totalCount;
+
+  /// How many of them are services (098).
+  final int serviceCount;
   final TextEditingController filter;
   final void Function(String) onFilterChanged;
   final CaptureRepository capture;
@@ -1349,6 +1457,71 @@ class _Window extends StatelessWidget {
         ? (columns ~/ 2).clamp(1, 3)
         : columns;
     final wide = width >= 560;
+    // The goods and the services (098), each in its own section.
+    final goods = [
+      for (final i in items)
+        if (!i.isService) i,
+    ];
+    final services = [
+      for (final i in items)
+        if (i.isService) i,
+    ];
+    final goodsTotal = totalCount - serviceCount;
+    final showGoods = goodsTotal > 0
+        ? goods.isNotEmpty || items.isEmpty
+        : serviceCount == 0;
+    final showServices = serviceCount > 0 && (services.isNotEmpty || !showGoods);
+    // The shelf filter, once the window is long enough to need one — on
+    // six articles a search box is furniture. One fixed place above both
+    // sections, so a query that empties one of them does not move the
+    // field (and take the keyboard away) mid-word.
+    final filterBox = <Widget>[
+      if (totalCount > 6) ...[
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: TextField(
+            key: const Key('shelf-filter'),
+            controller: filter,
+            onChanged: onFilterChanged,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: context.tr('Chercher dans la boutique…'),
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: filter.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: context.tr('Effacer'),
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        filter.clear();
+                        onFilterChanged('');
+                      },
+                    ),
+              filled: true,
+              fillColor: ShopStyle.stone,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+                borderSide: const BorderSide(color: ShopStyle.ink, width: 1.4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    ];
+    final noMatch = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Text(
+        'Aucun article ne répond à « ${filter.text.trim()} » '
+        'dans cette boutique.',
+        style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
+      ),
+    );
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -1481,7 +1654,11 @@ class _Window extends StatelessWidget {
                     [
                       _kindOf(shop.profile),
                       if (address.isNotEmpty) address,
-                      shop.delivers
+                      // A window of services alone (098): booked, not
+                      // collected.
+                      serviceCount > 0 && serviceCount == totalCount
+                          ? context.tr('Sur rendez-vous')
+                          : shop.delivers
                           ? context.tr('Retrait ou livraison')
                           : shop.profile == 'farm'
                           ? context.tr('Retrait à la ferme')
@@ -1590,147 +1767,85 @@ class _Window extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 32),
-              ShopSectionLabel(
-                'Les articles',
-                note: totalCount == 0
-                    ? null
-                    : items.length == totalCount
-                    ? '$totalCount article${totalCount > 1 ? 's' : ''}'
-                    : context.tr('{length} sur {totalCount}', {
-                        'length': items.length,
-                        'totalCount': totalCount,
-                      }),
-              ),
-              if (totalCount > 0) ...[
+              // The filter first, searching both sections; then the goods,
+              // then the services (098), each under its own word; a window
+              // of services alone opens on them.
+              ...filterBox,
+              if (showGoods) ...[
+                ShopSectionLabel(
+                  'Les articles',
+                  note: goodsTotal == 0
+                      ? null
+                      : goods.length == goodsTotal
+                      ? '$goodsTotal article${goodsTotal > 1 ? 's' : ''}'
+                      : context.tr('{length} sur {totalCount}', {
+                          'length': goods.length,
+                          'totalCount': goodsTotal,
+                        }),
+                ),
+                if (goodsTotal > 0) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    context.tr(
+                      'Touchez un article pour le voir, « + » pour l\'ajouter.',
+                    ),
+                    style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                if (totalCount == 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      context.tr('Aucun article affiché pour le moment.'),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: ShopStyle.mist,
+                      ),
+                    ),
+                  )
+                else if (items.isEmpty)
+                  noMatch
+                else if (style.layout == VitrineLayout.list ||
+                    style.layout == VitrineLayout.menu)
+                  _rows(context, money, goods)
+                else
+                  _grid(
+                    context,
+                    money,
+                    goods,
+                    shelfColumns: shelfColumns,
+                    wide: wide,
+                  ),
+              ],
+              if (showServices) ...[
+                if (showGoods) const SizedBox(height: 40),
+                ShopSectionLabel(
+                  context.tr('Services'),
+                  key: const Key('shelf-services'),
+                  note: services.length == serviceCount
+                      ? context.tr(
+                          serviceCount > 1 ? '{n} services' : '{n} service',
+                          {'n': serviceCount},
+                        )
+                      : context.tr('{length} sur {totalCount}', {
+                          'length': services.length,
+                          'totalCount': serviceCount,
+                        }),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   context.tr(
-                    'Touchez un article pour le voir, « + » pour l\'ajouter.',
+                    'Touchez un service pour le voir, « Réserver » pour le choisir.',
                   ),
                   style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
                 ),
+                const SizedBox(height: 10),
+                // One to a line, whatever the shelf's layout: a service is
+                // read — its price, « à partir de », by the hour — more
+                // than looked at, and « Réserver » needs its word.
+                if (services.isEmpty) noMatch else _rows(context, money, services),
               ],
-              // The shelf filter, once the shelf is long enough to need
-              // one — on six articles a search box is furniture.
-              if (totalCount > 6) ...[
-                const SizedBox(height: 14),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: TextField(
-                    controller: filter,
-                    onChanged: onFilterChanged,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: context.tr('Chercher dans la boutique…'),
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      suffixIcon: filter.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: context.tr('Effacer'),
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () {
-                                filter.clear();
-                                onFilterChanged('');
-                              },
-                            ),
-                      filled: true,
-                      fillColor: ShopStyle.stone,
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(999),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(999),
-                        borderSide: const BorderSide(
-                          color: ShopStyle.ink,
-                          width: 1.4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
-              if (totalCount == 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    context.tr('Aucun article affiché pour le moment.'),
-                    style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
-                  ),
-                )
-              else if (items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'Aucun article ne répond à « ${filter.text.trim()} » '
-                    'dans cette boutique.',
-                    style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
-                  ),
-                )
-              else if (style.layout == VitrineLayout.list ||
-                  style.layout == VitrineLayout.menu)
-                _rows(context, money)
-              else
-                LayoutBuilder(
-                  builder: (context, box) {
-                    final gap = wide ? 24.0 : 14.0;
-                    final cell =
-                        (box.maxWidth - gap * (shelfColumns - 1)) /
-                        shelfColumns;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: shelfColumns,
-                        crossAxisSpacing: gap,
-                        mainAxisSpacing: wide ? 28 : 20,
-                        // The cell is the square plus the text under it, added
-                        // up rather than guessed as a ratio: the ratio left a
-                        // band of empty space under every row on a phone (the
-                        // audit's screenshot), and clipped when names ran long.
-                        mainAxisExtent:
-                            cell +
-                            _ItemTile.textHeight(
-                              context,
-                              description: items.any((i) => i.hasDescription),
-                              soldOut: items.any((i) => !i.inStock),
-                            ),
-                      ),
-                      itemCount: items.length,
-                      itemBuilder: (context, i) {
-                        final tile = Lift(
-                          // The photograph leans in (ZoomOnHover); the tile holds still.
-                          scale: 1.0,
-                          // Steady while the basket is open: a tile with the
-                          // stepper on it must not slide under the thumb.
-                          enabled: (basket[items[i].id] ?? 0) == 0,
-                          child: _ItemTile(
-                            item: items[i],
-                            money: money,
-                            capture: capture,
-                            quantity: basket[items[i].id] ?? 0,
-                            accent: shop.style.accent,
-                            onAdd: () => onAdd(items[i]),
-                            onRemove: () => onRemove(items[i]),
-                            onOpen: () => onDetails(items[i]),
-                          ),
-                        );
-                        // The entrance plays when the shelf appears — not on
-                        // every keystroke of the filter, which rebuilds these
-                        // tiles: a page that re-enters as you type flickers.
-                        if (filter.text.isNotEmpty) return tile;
-                        // Each row rises as the reader reaches it, the tiles of a
-                        // row a beat apart (the goods sites' collection grid).
-                        return ScrollReveal(
-                          delay: KajMotion.stagger(i % shelfColumns),
-                          child: tile,
-                        );
-                      },
-                    );
-                  },
-                ),
               if (basketCard != null) ...[
                 const SizedBox(height: 32),
                 basketCard!,
@@ -1747,27 +1862,104 @@ class _Window extends StatelessWidget {
 extension on _Window {
   /// « Liste » and « Menu » (093, Pro): one article to a line — a small
   /// photo, the name and the price for a list; the name, a dotted leader
-  /// and the price for a menu, the way a maquis writes its board.
-  Widget _rows(BuildContext context, NumberFormat money) {
+  /// and the price for a menu, the way a maquis writes its board. The
+  /// services (098) are always drawn this way.
+  Widget _rows(BuildContext context, NumberFormat money, List<PublicItem> list) {
     final menu = shop.style.layout == VitrineLayout.menu;
+    final services = list.isNotEmpty && list.first.isService;
     return Column(
-      key: Key(menu ? 'shelf-menu' : 'shelf-list'),
+      key: Key(
+        services
+            ? 'shelf-service-rows'
+            : menu
+            ? 'shelf-menu'
+            : 'shelf-list',
+      ),
       children: [
-        for (var i = 0; i < items.length; i++) ...[
+        for (var i = 0; i < list.length; i++) ...[
           if (i > 0) const Divider(height: 1, color: ShopStyle.line),
           _ItemRow(
-            item: items[i],
+            item: list[i],
             menu: menu,
             money: money,
             capture: capture,
-            quantity: basket[items[i].id] ?? 0,
+            quantity: basket[list[i].id] ?? 0,
             accent: shop.style.accent,
-            onAdd: () => onAdd(items[i]),
-            onRemove: () => onRemove(items[i]),
-            onOpen: () => onDetails(items[i]),
+            onAdd: () => onAdd(list[i]),
+            onRemove: () => onRemove(list[i]),
+            onOpen: () => onDetails(list[i]),
           ),
         ],
       ],
+    );
+  }
+
+  /// The common shelf: the photographs in a grid, the name and the price
+  /// under each.
+  Widget _grid(
+    BuildContext context,
+    NumberFormat money,
+    List<PublicItem> list, {
+    required int shelfColumns,
+    required bool wide,
+  }) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final gap = wide ? 24.0 : 14.0;
+        final cell =
+            (box.maxWidth - gap * (shelfColumns - 1)) /
+            shelfColumns;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: shelfColumns,
+            crossAxisSpacing: gap,
+            mainAxisSpacing: wide ? 28 : 20,
+            // The cell is the square plus the text under it, added
+            // up rather than guessed as a ratio: the ratio left a
+            // band of empty space under every row on a phone (the
+            // audit's screenshot), and clipped when names ran long.
+            mainAxisExtent:
+                cell +
+                _ItemTile.textHeight(
+                  context,
+                  description: list.any((i) => i.hasDescription),
+                  soldOut: list.any((i) => !i.inStock),
+                ),
+          ),
+          itemCount: list.length,
+          itemBuilder: (context, i) {
+            final tile = Lift(
+              // The photograph leans in (ZoomOnHover); the tile holds still.
+              scale: 1.0,
+              // Steady while the basket is open: a tile with the
+              // stepper on it must not slide under the thumb.
+              enabled: (basket[list[i].id] ?? 0) == 0,
+              child: _ItemTile(
+                item: list[i],
+                money: money,
+                capture: capture,
+                quantity: basket[list[i].id] ?? 0,
+                accent: shop.style.accent,
+                onAdd: () => onAdd(list[i]),
+                onRemove: () => onRemove(list[i]),
+                onOpen: () => onDetails(list[i]),
+              ),
+            );
+            // The entrance plays when the shelf appears — not on
+            // every keystroke of the filter, which rebuilds these
+            // tiles: a page that re-enters as you type flickers.
+            if (filter.text.isNotEmpty) return tile;
+            // Each row rises as the reader reaches it, the tiles of a
+            // row a beat apart (the goods sites' collection grid).
+            return ScrollReveal(
+              delay: KajMotion.stagger(i % shelfColumns),
+              child: tile,
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -1799,7 +1991,7 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = quantity.round();
     final price = Text(
-      priceOf(money, item),
+      priceOf(money, item, context.trLanguage),
       style: TextStyle(
         fontSize: menu ? 15 : 14,
         fontWeight: menu ? FontWeight.w700 : FontWeight.w600,
@@ -1833,13 +2025,15 @@ class _ItemRow extends StatelessWidget {
             onAdd: onAdd,
             onRemove: onRemove,
           )
+        : item.isService
+        ? _BookButton(name: item.name, onAdd: onAdd)
         : _QuickAdd(name: item.name, onAdd: onAdd);
     return Semantics(
       container: true,
       button: true,
       label: [
         item.name,
-        priceOf(money, item),
+        priceOf(money, item, context.trLanguage),
         if (!item.inStock) 'épuisé',
         if (count > 0) '$count dans le panier',
       ].join(', '),
@@ -1970,9 +2164,16 @@ class _ItemRow extends StatelessWidget {
 
 /// The price as the street reads it: « 2 500 F / plateau » when the
 /// business sells by a unit (083), the plain price otherwise.
-String priceOf(NumberFormat money, PublicItem item) => item.unit == null
-    ? money.format(item.price)
-    : '${money.format(item.price)} / ${item.unit}';
+/// A service's « à partir de » (098) goes before it: « à partir de 5 000 F
+/// / heure ».
+String priceOf(NumberFormat money, PublicItem item, [String lang = 'fr']) {
+  final amount = item.priceFrom
+      ? translate(lang, 'à partir de {price}', {
+          'price': money.format(item.price),
+        })
+      : money.format(item.price);
+  return item.unit == null ? amount : '$amount / ${item.unit}';
+}
 
 /// « Disponible à partir du 15/11 » — a batch or a harvest still to come,
 /// orderable now (083).
@@ -2034,7 +2235,7 @@ class _ItemTile extends StatelessWidget {
     final count = quantity.round();
     final label = [
       item.name,
-      priceOf(money, item),
+      priceOf(money, item, context.trLanguage),
       if (item.isPreorder) preorderLine(item),
       if (item.hasDescription) item.description!,
       if (!item.inStock) 'épuisé',
@@ -2115,7 +2316,7 @@ class _ItemTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      priceOf(money, item),
+                      priceOf(money, item, context.trLanguage),
                       style: const TextStyle(
                         fontSize: 14,
                         color: ShopStyle.mist,
@@ -2318,6 +2519,36 @@ class _QuickAdd extends StatelessWidget {
   }
 }
 
+/// « Réserver » on a service's line (098): the word, not a « + » — booking
+/// a lesson is not dropping a tin in a basket.
+class _BookButton extends StatelessWidget {
+  const _BookButton({required this.name, required this.onAdd});
+
+  final String name;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      button: true,
+      label: context.tr('Réserver {name}', {'name': name}),
+      excludeSemantics: true,
+      onTap: onAdd,
+      child: FilledButton(
+        key: const Key('book-service'),
+        onPressed: onAdd,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: const StadiumBorder(),
+        ),
+        child: Text(context.tr('Réserver')),
+      ),
+    );
+  }
+}
+
 /// − count + on a basketed article.
 class _Stepper extends StatelessWidget {
   const _Stepper({
@@ -2452,20 +2683,24 @@ class ArticleSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
-                  priceOf(money, item),
+                  priceOf(money, item, context.trLanguage),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: ShopStyle.ink,
                   ),
                 ),
-                const SizedBox(width: 10),
                 Text(
                   item.isPreorder
                       ? preorderLine(item)
+                      : item.isService
+                      ? context.tr('Sur rendez-vous')
                       : item.inStock
                       ? context.tr('En stock')
                       : context.tr('Épuisé'),
@@ -2491,7 +2726,11 @@ class ArticleSheet extends StatelessWidget {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: onAdd,
-                        child: Text(context.tr('Ajouter au panier')),
+                        child: Text(
+                          item.isService
+                              ? context.tr('Réserver')
+                              : context.tr('Ajouter au panier'),
+                        ),
                       ),
                     )
                   : Row(

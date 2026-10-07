@@ -363,7 +363,10 @@ class _SaleSheetState extends State<SaleSheet> {
           break;
         }
       }
-      if (product == null || product.quantity <= 0) continue;
+      // A service (098) has no stock to sell past.
+      if (product == null || product.isService || product.quantity <= 0) {
+        continue;
+      }
       if (entry.value > product.quantity) {
         short.add('${product.name} : ${_qty(product.quantity)} en stock, '
             '${_qty(entry.value)} vendu${entry.value > 1 ? 's' : ''}');
@@ -518,6 +521,11 @@ class _SaleSheetState extends State<SaleSheet> {
                     itemBuilder: (context, i) {
                       final product = _pickable[i];
                       return ChoiceChip(
+                        // A service (098) is sold the same way, marked so.
+                        avatar: product.isService
+                            ? const Icon(Icons.event_available_outlined,
+                                size: 18)
+                            : null,
                         label: Text(product.name),
                         selected: _picked?.id == product.id,
                         onSelected: _busy ? null : (_) => _pick(product),

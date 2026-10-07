@@ -64,7 +64,11 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
       final photos = await widget.retail.photoKeys(widget.org.id);
       if (!mounted) return;
       setState(() {
-        _items = items;
+        // What the farm grows; its services (098) have their own page.
+        _items = [
+          for (final p in items)
+            if (!p.isService) p,
+        ];
         _photos = photos;
         _loading = false;
       });

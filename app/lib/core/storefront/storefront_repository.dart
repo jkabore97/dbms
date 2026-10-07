@@ -773,12 +773,20 @@ class PublicItem {
     this.description,
     this.unit,
     this.availableFrom,
+    this.isService = false,
+    this.priceFrom = false,
   });
 
   final String id;
   final String name;
   final double price;
   final bool inStock;
+
+  /// A service (098): its own section, « Réserver », never « épuisé ».
+  final bool isService;
+
+  /// « à partir de 5 000 F » (098): the price is where it starts.
+  final bool priceFrom;
 
   /// « plateau », « kg », « tête » (083): shown after the price. Null is a
   /// plain price, the way a shop's article reads.
@@ -803,11 +811,16 @@ class PublicItem {
     final price = raw == null
         ? 0.0
         : (raw is num ? raw.toDouble() : double.tryParse('$raw') ?? 0.0);
+    // Absent before 098: goods, at their plain price.
+    final service = row['is_service'] == true;
     return PublicItem(
       id: row['id'] as String,
       name: row['name'] as String,
       price: price,
-      inStock: row['in_stock'] == true,
+      // A service has no stock to run out of.
+      inStock: service || row['in_stock'] == true,
+      isService: service,
+      priceFrom: row['price_from'] == true,
       photoKey: row['photo_key'] as String?,
       // Absent from a database before 064: no description, not an error.
       description: (row['description'] as String?)?.trim().isEmpty == true

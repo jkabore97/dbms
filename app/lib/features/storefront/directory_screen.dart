@@ -1054,6 +1054,28 @@ class _ShopTile extends StatelessWidget {
                           top: 10,
                           child: FarBadge(key: Key('tile-far')),
                         ),
+                      // An association on the street (098) says so on its
+                      // card: services to book, not a shop.
+                      if (entry.profile == 'association' ||
+                          entry.profile == 'church')
+                        Positioned(
+                          left: 10,
+                          bottom: 10,
+                          child: Container(
+                            key: const Key('tile-association'),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: maraDeep,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(context.tr('Association'),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: maraCaramel)),
+                          ),
+                        ),
                       if (distance != null)
                         Positioned(
                           right: 10,

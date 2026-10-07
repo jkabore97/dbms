@@ -271,7 +271,10 @@ class _NewProductionSheetState extends State<_NewProductionSheet> {
       final products = await widget.retail.products(widget.org.id);
       if (!mounted) return;
       setState(() {
-        _products = orderForPicking(products, widget.recentNames);
+        // A service (098) is never cooked with.
+        _products = orderForPicking(
+            [for (final p in products) if (!p.isService) p],
+            widget.recentNames);
         // A repeated run arrives with names; resolve them to today's
         // products. One that vanished since (renamed, archived) leaves its
         // row unselected with the quantity kept — visible, not silent.

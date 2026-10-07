@@ -63,6 +63,7 @@ Widget homeScreenFor({
           accountAction: accountAction,
           onHistory: onHistory,
           access: access,
+          retail: retail,
         )),
       'farm' => SetupGate(org: org, child: OfflineOffer(org: org, child: UnlockCelebration(org: org, child: FarmHomeScreen(
           invoicing: invoicing,

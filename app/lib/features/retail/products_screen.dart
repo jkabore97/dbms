@@ -123,7 +123,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
       final products = await widget.retail.products(widget.org.id);
       if (!mounted) return;
       setState(() {
-        _products = products;
+        // The shelves hold goods; the services (098) have their own page.
+        _products = [
+          for (final p in products)
+            if (!p.isService) p,
+        ];
         _loading = false;
       });
       unawaited(_loadPhotos());

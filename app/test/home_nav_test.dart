@@ -129,8 +129,14 @@ void main() {
           .widgetList<ListTile>(find.byType(ListTile))
           .map((t) => (t.title as Text).data)
           .toList();
-      expect(sheet,
-          ['Mon chemin', 'Production', 'Voir ma vitrine', 'Voir le marché', 'Compte']);
+      expect(sheet, [
+        'Mon chemin',
+        'Mes services',
+        'Production',
+        'Voir ma vitrine',
+        'Voir le marché',
+        'Compte'
+      ]);
     });
 
     testWidgets('a tool the owner hid is not on the bar, and it closes up',

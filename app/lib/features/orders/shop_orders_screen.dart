@@ -14,6 +14,7 @@ import '../../core/format/money.dart';
 import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_skeleton.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -144,7 +145,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                 child: Text(context.tr('Retour'))),
             FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text(orderActionLabel(status))),
+                child: Text(context.tr(orderActionLabel(status)))),
           ],
         ),
       );
@@ -226,7 +227,11 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(context.tr('Commandes')),
+          // An association is asked for its services, not sold to (098).
+          title: Text(widget.org.profile == 'association' ||
+                  widget.org.profile == 'church'
+              ? context.tr('Demandes')
+              : context.tr('Commandes')),
           actions: [
             if (widget.org.isAdmin)
               IconButton(
@@ -393,13 +398,14 @@ class _OrderCard extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w700)),
                 ),
                 Chip(
-                  label: Text(orderStatusLabel(order.status)),
+                  label: Text(context.tr(
+                      orderStatusLabel(order.status, booking: order.isBooking))),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
             Text(
-                '$when · ${fulfilmentLabel(order.fulfilment)} · '
+                '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
                 '${paymentLabel(order.paymentMethod)}'
                 '${order.isPaid ? context.tr(' · payé') : ''}',
                 style: theme.textTheme.bodySmall
@@ -407,7 +413,7 @@ class _OrderCard extends StatelessWidget {
             // The state's clock (073): "Prête depuis 25 min".
             if (order.isOpen && clock?.since != null)
               Text(
-                  '${orderStatusLabel(order.status)} ${clock!.sinceLabel()}'
+                  '${context.tr(orderStatusLabel(order.status, booking: order.isBooking))} ${clock!.sinceLabel()}'
                   '${clock!.selfDelivered ? context.tr(' · vous livrez') : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -484,6 +490,23 @@ class _OrderCard extends StatelessWidget {
                       child: Text('${_qty(l.quantity)} × ${l.name}',
                           style: theme.textTheme.bodyMedium),
                     ),
+                    // A service booked (098), not goods to prepare.
+                    if (l.isService)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Container(
+                          key: const Key('order-line-service'),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: maraCaramel.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(context.tr('Service'),
+                              style: theme.textTheme.labelSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700)),
+                        ),
+                      ),
                     Text(money.format(l.total),
                         style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant)),
@@ -564,7 +587,8 @@ class _OrderCard extends StatelessWidget {
                         onPressed: busy ? null : () => onMove(order, next[i]),
                         style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.error),
-                        child: Text(orderActionLabel(next[i])),
+                        child: Text(context.tr(
+                            orderActionLabel(next[i], booking: order.isBooking))),
                       )
                     else if (i == 0)
                       FilledButton(
@@ -575,12 +599,14 @@ class _OrderCard extends StatelessWidget {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2))
-                            : Text(orderActionLabel(next[i])),
+                            : Text(context.tr(
+                            orderActionLabel(next[i], booking: order.isBooking))),
                       )
                     else
                       OutlinedButton(
                         onPressed: busy ? null : () => onMove(order, next[i]),
-                        child: Text(orderActionLabel(next[i])),
+                        child: Text(context.tr(
+                            orderActionLabel(next[i], booking: order.isBooking))),
                       ),
                 ],
               ),
