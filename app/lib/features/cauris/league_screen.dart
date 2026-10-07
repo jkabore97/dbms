@@ -190,7 +190,7 @@ class _Podium extends StatelessWidget {
     final byRank = {for (final t in top) t.rank: t};
     final order = [2, 1, 3];
     const heights = {1: 120.0, 2: 90.0, 3: 66.0};
-    const colours = {1: maraGold, 2: Color(0xFFB9BCD6), 3: maraTerracotta};
+    const colours = {1: maraCaramel, 2: Color(0xFFB9BCD6), 3: maraBrown};
     final reduced = KajMotion.reduced(context);
     return SizedBox(
       key: const Key('league-podium'),
@@ -231,14 +231,14 @@ class _Podium extends StatelessWidget {
                               borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(12)),
                               border: byRank[r]!.me
-                                  ? Border.all(color: maraIndigo, width: 3)
+                                  ? Border.all(color: maraDeep, width: 3)
                                   : null,
                             ),
                             alignment: Alignment.topCenter,
                             padding: const EdgeInsets.only(top: 8),
                             child: Text('$r',
                                 style: theme.textTheme.headlineSmall?.copyWith(
-                                    color: maraIndigo,
+                                    color: maraDeep,
                                     fontWeight: FontWeight.w900)),
                           ),
                         ),
@@ -266,14 +266,14 @@ class _You extends StatelessWidget {
       key: const Key('league-you'),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: maraIndigo,
+        color: maraDeep,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Text(place,
               style: theme.textTheme.headlineMedium
-                  ?.copyWith(color: maraGold, fontWeight: FontWeight.w900)),
+                  ?.copyWith(color: maraCaramel, fontWeight: FontWeight.w900)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -281,14 +281,14 @@ class _You extends StatelessWidget {
               children: [
                 CaurisAmount(b.score,
                     style: theme.textTheme.titleMedium?.copyWith(
-                        color: maraCream, fontWeight: FontWeight.w700)),
+                        color: maraPaper, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(
                   b.gap == null
                       ? (b.score > 0 ? context.tr('En tête : gardez-la !') : context.tr('La course commence.'))
                       : context.tr('Encore {gap} cauris pour la place devant.', {'gap': b.gap}),
                   key: const Key('league-gap'),
-                  style: theme.textTheme.bodySmall?.copyWith(color: maraCream),
+                  style: theme.textTheme.bodySmall?.copyWith(color: maraPaper),
                 ),
               ],
             ),

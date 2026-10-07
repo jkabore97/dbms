@@ -37,8 +37,10 @@ Ces fichiers sont générés : `python3 ../build_mara_neutre.py` les refait
 `-transparent.png` = sans fond · `-on-background.png` = avec fond ·
 `.svg` / `.pdf` = vectoriel, pour l'impression et les grandes tailles.
 
-Ce kit n'est pas encore branché dans l'app : `app/assets/brand/`,
-`app/web/icons/` et `app/web/manifest.json` gardent les fichiers actuels.
+Branché dans l'app : `app/assets/brand/` (sceau blanc, horizontal blanc et
+noir, empilé brun), `app/web/icons/`, `favicon.png`, `brand/og.jpg` et
+l'écran de démarrage (brun), les icônes Android (`mipmap-*`, brun), et les
+couleurs de `core/theme/mara_mark.dart` et `kaj_theme.dart`.
 
 ## Couleurs
 

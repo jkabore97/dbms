@@ -55,28 +55,29 @@ void main() {
     // One screen per test: each home screen kicks off an async refresh in
     // initState, and replacing the tree underneath a half-finished one is a
     // race, not an assertion.
-    testWidgets('the farm is green', (tester) async {
-      expect(await appBarColourFor(tester, 'farm'), farmPalette.ink);
+    // The neutral kit (docs/brand/mara-neutre): a shop in Mara's brown, a
+    // farm in caramel, an association in graphite.
+    testWidgets('the farm is caramel', (tester) async {
+      expect(await appBarColourFor(tester, 'farm'), caramelPalette.ink);
     });
 
-    testWidgets('the church is indigo', (tester) async {
-      expect(await appBarColourFor(tester, 'church'), churchPalette.ink);
+    testWidgets('the association is graphite', (tester) async {
+      expect(await appBarColourFor(tester, 'church'), graphitePalette.ink);
     });
 
-    testWidgets('the shop is amber', (tester) async {
-      expect(await appBarColourFor(tester, 'retail'), retailPalette.ink);
+    testWidgets('the shop is Mara brown', (tester) async {
+      expect(await appBarColourFor(tester, 'retail'), kajPalette.ink);
     });
 
     test('and no two of them are the same', () {
       // The whole point: somebody who runs two of these knows which is open
       // before reading a word.
       final heads = {
-        farmPalette.ink,
-        churchPalette.ink,
-        retailPalette.ink,
+        caramelPalette.ink,
+        graphitePalette.ink,
         kajPalette.ink,
       };
-      expect(heads.length, 4);
+      expect(heads.length, 3);
     });
 
     testWidgets('a profile this build has never heard of still opens',
@@ -103,7 +104,7 @@ void main() {
       await tester.pump();
 
       final context = tester.element(find.byType(Scaffold).first);
-      expect(KajTheme.of(context), farmPalette);
+      expect(KajTheme.of(context), caramelPalette);
     });
 
     testWidgets('outside a business it falls back rather than throwing',
@@ -259,10 +260,10 @@ void main() {
       // The old behaviour, and what every business has until somebody opens
       // the colour screen. Both spellings of "nothing" have to work: the
       // server stores null, and a cleared picker can send an empty string.
-      expect(paletteFor('farm'), farmPalette);
-      expect(paletteFor('farm', theme: null), farmPalette);
-      expect(paletteFor('farm', theme: ''), farmPalette);
-      expect(paletteFor('retail'), retailPalette);
+      expect(paletteFor('farm'), caramelPalette);
+      expect(paletteFor('farm', theme: null), caramelPalette);
+      expect(paletteFor('farm', theme: ''), caramelPalette);
+      expect(paletteFor('retail'), kajPalette);
     });
 
     test('a palette this build has never heard of falls back, not fails', () {
@@ -270,8 +271,8 @@ void main() {
       // slug so a newer app can offer a new colour, which means an older APK
       // will meet names it does not know. It must land on the profile's
       // colour rather than on no colour at all.
-      expect(paletteFor('farm', theme: 'couleur-de-2030'), farmPalette);
-      expect(paletteFor('church', theme: 'nonsense'), churchPalette);
+      expect(paletteFor('farm', theme: 'couleur-de-2030'), caramelPalette);
+      expect(paletteFor('church', theme: 'nonsense'), graphitePalette);
       // And an unknown palette on an unknown profile still resolves.
       expect(paletteFor('quarry', theme: 'nonsense'), kajPalette);
     });

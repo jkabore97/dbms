@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Mara's indigo: the splash behind the seal, before Flutter draws. -->
-    <color name="mara_indigo">#1E2560</color>
+    <!-- Mara's dark brown (the neutral kit): the splash behind the seal, before Flutter draws. -->
+    <color name="mara_brown">#4A3122</color>
 </resources>

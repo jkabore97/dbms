@@ -314,7 +314,7 @@ class _EarnIt extends StatelessWidget {
       key: const Key('earn-pro'),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: maraIndigo,
+        color: maraDeep,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -327,21 +327,21 @@ class _EarnIt extends StatelessWidget {
               Expanded(
                 child: Text(context.tr('Ou gagnez Mara Pro'),
                     style: theme.textTheme.titleMedium?.copyWith(
-                        color: maraCream, fontWeight: FontWeight.w700)),
+                        color: maraPaper, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
             context.tr('Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Mara Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.', {'cost': cost}),
-            style: theme.textTheme.bodyMedium?.copyWith(color: maraCream),
+            style: theme.textTheme.bodyMedium?.copyWith(color: maraPaper),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () => UnlockSheet.open(context, org: org, feature: 'pro_all'),
             style: FilledButton.styleFrom(
-                backgroundColor: maraGold, foregroundColor: maraIndigo),
-            icon: const CauriIcon(size: 16, color: maraIndigo),
+                backgroundColor: maraCaramel, foregroundColor: maraDeep),
+            icon: const CauriIcon(size: 16, color: maraDeep),
             label: Text(context.tr('Débloquer avec {cost} cauris', {'cost': cost})),
           ),
         ],

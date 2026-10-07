@@ -11,7 +11,7 @@ class OpenBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colour = open ? const Color(0xFF2E7D32) : const Color(0xFF6E6E6B);
+    final colour = open ? const Color(0xFF3F7A52) : const Color(0xFF6B6660);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: large ? 12 : 8,
@@ -53,14 +53,14 @@ class FarBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colour = Color(0xFF8A5A00);
+    const colour = Color(0xFF7A5230);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: large ? 12 : 8,
         vertical: large ? 5 : 3,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF1D6),
+        color: const Color(0xFFF1E6D8),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

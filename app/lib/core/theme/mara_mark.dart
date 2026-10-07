@@ -5,15 +5,23 @@ import 'package:flutter/material.dart';
 /// one of these, never a stand-in icon. Kaj, who makes Mara, signs the
 /// street's footer (« POWERED BY KAJ »).
 ///
-/// The palette they are drawn in: indigo [maraIndigo] for the grounds,
-/// terracotta, gold and green for the seal's accents, warm paper behind.
-const maraIndigo = Color(0xFF1E2560);
-const maraTerracotta = Color(0xFFD9572B);
-const maraGold = Color(0xFFF2B63D);
-const maraGreen = Color(0xFF1C8A5B);
-const maraCream = Color(0xFFF3EEE4);
+/// The palette they are drawn in — the neutral kit (docs/brand/mara-neutre):
+/// no red, no blue. Dark brown [maraDeep] for the grounds (splash, setup,
+/// the street's announcement bar), caramel [maraCaramel] for what shines on
+/// it, off-white [maraPaper] behind, near-black [maraBlack] for type.
+const maraBlack = Color(0xFF0E0D0C);
+const maraPaper = Color(0xFFF4F2EE);
+const maraDeep = Color(0xFF4A3122);
+const maraBrown = Color(0xFF8B5A3C);
+const maraCaramel = Color(0xFFC49A6C);
+const maraGrey = Color(0xFFA3A09B);
+const maraGraphite = Color(0xFF3B3A38);
 
-/// The seal alone: the M under its gold point, the ring of rays, MMXXVI.
+/// The one colour the kit has no word for: « done », « open ». A muted
+/// green that sits with the browns.
+const maraGreen = Color(0xFF3F7A52);
+
+/// The seal alone: the M under its caramel point, the ring of rays, MMXXVI.
 class MaraMark extends StatelessWidget {
   const MaraMark({super.key, this.size = 56});
 
@@ -32,8 +40,8 @@ class MaraMark extends StatelessWidget {
       );
 }
 
-/// The seal and « mara » side by side. [onDark] picks the cream wordmark
-/// for an indigo or black ground.
+/// The seal and « mara » side by side. [onDark] picks the off-white
+/// wordmark for a brown or black ground.
 class MaraWordmark extends StatelessWidget {
   const MaraWordmark({super.key, this.height = 64, this.onDark = false});
 
@@ -54,13 +62,13 @@ class MaraWordmark extends StatelessWidget {
       );
 }
 
-/// The seal above « mara », cream on indigo: the splash.
+/// The seal above « mara », off-white on dark brown: the splash.
 class MaraStacked extends StatelessWidget {
   const MaraStacked({super.key, this.height = 200});
 
   final double height;
 
-  static const asset = 'assets/brand/mara_stacked_indigo.png';
+  static const asset = 'assets/brand/mara_stacked.png';
 
   @override
   Widget build(BuildContext context) => Image.asset(

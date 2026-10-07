@@ -128,7 +128,7 @@ class _LevelHeader extends StatelessWidget {
       key: const Key('academy-level'),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: maraIndigo,
+        color: maraDeep,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -144,17 +144,17 @@ class _LevelHeader extends StatelessWidget {
                         width: i == at ? 64 : 48,
                         height: i == at ? 64 : 48,
                         decoration: BoxDecoration(
-                          color: i <= at ? maraGold : maraCream.withValues(alpha: 0.12),
+                          color: i <= at ? maraCaramel : maraPaper.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(_levels[i].$2,
                             size: i == at ? 34 : 24,
-                            color: i <= at ? maraIndigo : maraCream.withValues(alpha: 0.5)),
+                            color: i <= at ? maraDeep : maraPaper.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 6),
                       Text(context.tr(_levels[i].$1),
                           style: theme.textTheme.labelMedium?.copyWith(
-                              color: maraCream,
+                              color: maraPaper,
                               fontWeight: i == at ? FontWeight.w800 : FontWeight.w500)),
                     ],
                   ),
@@ -167,13 +167,13 @@ class _LevelHeader extends StatelessWidget {
             child: LinearProgressIndicator(
               value: a.total == 0 ? 0 : a.done / a.total,
               minHeight: 8,
-              color: maraGold,
-              backgroundColor: maraCream.withValues(alpha: 0.2),
+              color: maraCaramel,
+              backgroundColor: maraPaper.withValues(alpha: 0.2),
             ),
           ),
           const SizedBox(height: 6),
           Text(context.tr('{done} / {total}', {'done': a.done, 'total': a.total}),
-              style: theme.textTheme.labelLarge?.copyWith(color: maraCream)),
+              style: theme.textTheme.labelLarge?.copyWith(color: maraPaper)),
         ],
       ),
     );
@@ -215,17 +215,17 @@ class _LessonTile extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: l.done ? maraGreen : maraIndigo,
+                      color: l.done ? maraGreen : maraDeep,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(l.done ? Icons.check : icon,
-                        color: l.done ? Colors.white : maraGold, size: 28),
+                        color: l.done ? Colors.white : maraCaramel, size: 28),
                   ),
                   const Spacer(),
                   Icon(
                     l.mission ? Icons.flag : Icons.play_circle_fill,
                     size: 20,
-                    color: l.ready ? maraTerracotta : maraIndigo.withValues(alpha: 0.4),
+                    color: l.ready ? maraBrown : maraDeep.withValues(alpha: 0.4),
                   ),
                 ],
               ),
@@ -239,7 +239,7 @@ class _LessonTile extends StatelessWidget {
                 children: [
                   Text(l.ready ? context.tr('Réussie !') : context.tr('{minutes} min', {'minutes': l.minutes}),
                       style: theme.textTheme.labelMedium?.copyWith(
-                          color: l.ready ? maraTerracotta : kMist,
+                          color: l.ready ? maraBrown : kMist,
                           fontWeight: l.ready ? FontWeight.w800 : null)),
                   const Spacer(),
                   if (!l.done) CaurisAmount(cauris, style: theme.textTheme.labelLarge),
