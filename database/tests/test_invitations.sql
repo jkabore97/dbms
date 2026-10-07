@@ -571,9 +571,11 @@ begin
     -- code, and claim_invitation() would otherwise have two rows to choose
     -- between for one spoken secret.
     begin
+        -- An employee's code: since 100 an owner's invitation is refused
+        -- before its code is even looked at (only the platform names an owner).
         insert into pending_invitations
             (org_id, role, scope_kind, scope_id, code, created_by)
-        values ('dddddddd-0000-0000-0000-00000000000a', 'owner', 'org',
+        values ('dddddddd-0000-0000-0000-00000000000a', 'employee', 'org',
                 'dddddddd-0000-0000-0000-00000000000a', 'open7777',
                 'cccccccc-0000-0000-0000-000000000001');
         raise exception 'FAIL: a duplicate code was accepted in different punctuation';

@@ -389,13 +389,21 @@ begin
     exception when raise_exception then
         if sqlerrm not like 'Kaj Pro : toutes vos places photo sont prises%' then raise; end if;
     end;
-    -- Filing the receipt onto an eleventh article is the same act.
+    -- Filing the receipt onto an eleventh article is paperwork, not its
+    -- picture: no place taken (B1).
+    update documents set product_id = '69aaaaaa-0000-0000-0000-000000000011'
+     where r2_key = 'org/' || v_org || '/recu.jpg';
+    if (feature_states(v_org) -> 'photos' ->> 'used')::int <> 10 then
+        raise exception 'FAIL: a receipt filed on an article took a photo place';
+    end if;
+    -- Re-filed as its photo, it would be one: refused, and it stays a
+    -- document (the message says so).
     begin
-        update documents set product_id = '69aaaaaa-0000-0000-0000-000000000011'
+        update documents set kind = 'product_photo'
          where r2_key = 'org/' || v_org || '/recu.jpg';
-        raise exception 'FAIL: a capture was filed onto an eleventh article';
+        raise exception 'FAIL: a capture was re-filed as an eleventh article''s photo';
     exception when raise_exception then
-        if sqlerrm not like 'Kaj Pro : toutes vos places photo%' then raise; end if;
+        if sqlerrm not like 'Kaj Pro : toutes vos places photo sont prises. La photo reste dans vos documents%' then raise; end if;
     end;
 end $$;
 commit;
@@ -761,12 +769,24 @@ begin
     v_run := record_production(v_org, 20,
         jsonb_build_array(jsonb_build_object('product_id', v_flour, 'quantity', 10)),
         p_product_id => v_cake);
+    if (select cost_price from products where id = v_cake) <> 50 then
+        raise exception 'FAIL: the batch did not price the cake at 50 (026)';
+    end if;
     perform update_production_run(v_run, p_quantity => 40);
     select quantity into q from products where id = v_cake;
     if q <> 40 then raise exception 'FAIL: corrected to 40, the shelf holds %', q; end if;
+    -- The same 1 000 F of flour over 40 cakes: 25 each, on the article too.
+    if (select cost_price from products where id = v_cake) <> 25 then
+        raise exception 'FAIL: corrected to 40, the cake costs % (25 expected)',
+            (select cost_price from products where id = v_cake);
+    end if;
     perform update_production_run(v_run, p_quantity => 30);
     select quantity into q from products where id = v_cake;
     if q <> 30 then raise exception 'FAIL: corrected to 30, the shelf holds %', q; end if;
+    if (select cost_price from products where id = v_cake) <> 33.33 then
+        raise exception 'FAIL: corrected to 30, the cake costs %',
+            (select cost_price from products where id = v_cake);
+    end if;
     select quantity into q from products where id = v_flour;
     if q <> 40 then raise exception 'FAIL: the flour moved on a correction (%)', q; end if;
     perform update_production_run(v_run, p_note => 'four du matin');
@@ -875,11 +895,480 @@ begin
         'cauris_take(uuid, integer, text, text)', 'cauris_expire(uuid)',
         'cauris_promo_left(uuid)', 'team_full(uuid)', 'team_seats(uuid)',
         'org_workers(uuid)', 'org_photo_items(uuid)', 'photo_state(uuid)',
-        'person_name(uuid)', 'trg_photo_items()', 'trg_invitation_seat()'] loop
+        'person_name(uuid)', 'trg_photo_items()', 'trg_invitation_seat()',
+        'trg_membership_roles()', 'trg_photo_revive()'] loop
         if has_function_privilege('authenticated', f, 'execute')
            or has_function_privilege('anon', f, 'execute') then
             raise exception 'FAIL: % is open to an app role', f;
         end if;
     end loop;
-    raise notice 'PASS: the app''s doors for the signed-in only; the engine closed';
+    -- The street still reads its window and its pictures (B1 replaced them).
+    foreach f in array array[
+        'storefront_photo_allowed(text)', 'storefront_products(text)',
+        'search_products(text, double precision, double precision)',
+        'storefront_featured()', 'storefront_previews(text[])'] loop
+        if not has_function_privilege('anon', f, 'execute') then
+            raise exception 'FAIL: the street lost %', f;
+        end if;
+    end loop;
+    if has_function_privilege('anon', 'doc_is_photo(text, text)', 'execute') then
+        raise exception 'FAIL: doc_is_photo is open to the street';
+    end if;
+    raise notice 'PASS: the app''s doors for the signed-in only; the engine closed; the street keeps its window';
 end $$;
+
+\echo ''
+\echo '--- TEST 12: paperwork on an article is no photo — not counted, never the vitrine''s picture, never served to the street (B1) ---'
+update orgs set storefront_enabled = true where id = '69000000-0000-0000-0000-000000000004';
+insert into products (id, org_id, name, sale_price, quantity, is_active, is_published)
+values ('69cccccc-0000-0000-0000-000000000001', '69000000-0000-0000-0000-000000000004',
+        'Facture Soixante-Neuf', 700, 5, true, true),
+       ('69cccccc-0000-0000-0000-000000000002', '69000000-0000-0000-0000-000000000001',
+        'Livraison 69', 700, 5, true, true);
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000009';
+-- A delivery note filed on the article (confirm_products_screen's 'invoice').
+select record_document('69000000-0000-0000-0000-000000000004', 'org/69000000-0000-0000-0000-000000000004/bl-1.jpg', 'invoice',
+    p_product_id => '69cccccc-0000-0000-0000-000000000001') is not null;
+commit;
+begin;
+set local role anon;
+do $$ begin
+    if (select photo_key from storefront_products('pro-69')
+         where id = '69cccccc-0000-0000-0000-000000000001') is not null then
+        raise exception 'FAIL: a delivery note is the vitrine''s picture of the article';
+    end if;
+    if storefront_photo_allowed('org/69000000-0000-0000-0000-000000000004/bl-1.jpg') then
+        raise exception 'FAIL: the street is served a supplier''s delivery note';
+    end if;
+end $$;
+commit;
+-- Then its real photo (older), and a second delivery note (newer).
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000009';
+select record_document('69000000-0000-0000-0000-000000000004', 'org/69000000-0000-0000-0000-000000000004/facture-photo.jpg',
+    'product_photo', p_captured_at => now() - interval '2 days',
+    p_product_id => '69cccccc-0000-0000-0000-000000000001') is not null;
+select record_document('69000000-0000-0000-0000-000000000004', 'org/69000000-0000-0000-0000-000000000004/bl-2.jpg', 'receipt',
+    p_product_id => '69cccccc-0000-0000-0000-000000000001') is not null;
+select record_document('69000000-0000-0000-0000-000000000004', 'org/69000000-0000-0000-0000-000000000004/bl-3.pdf', 'photo',
+    p_content_type => 'application/pdf',
+    p_product_id => '69cccccc-0000-0000-0000-000000000001') is not null;
+do $$ begin
+    if (select photo_key from product_photo_keys('69000000-0000-0000-0000-000000000004')
+         where product_id = '69cccccc-0000-0000-0000-000000000001') <> 'org/69000000-0000-0000-0000-000000000004/facture-photo.jpg' then
+        raise exception 'FAIL: the Articles page shows paperwork as the picture';
+    end if;
+end $$;
+commit;
+update products set featured_until = now() + interval '1 day'
+ where id = '69cccccc-0000-0000-0000-000000000001';
+begin;
+set local role anon;
+do $$ begin
+    if (select photo_key from storefront_products('pro-69')
+         where id = '69cccccc-0000-0000-0000-000000000001') <> 'org/69000000-0000-0000-0000-000000000004/facture-photo.jpg'
+       or (select photo_key from search_products('Facture Soixante')
+            where id = '69cccccc-0000-0000-0000-000000000001') <> 'org/69000000-0000-0000-0000-000000000004/facture-photo.jpg'
+       or (select photo_key from storefront_featured()
+            where id = '69cccccc-0000-0000-0000-000000000001') <> 'org/69000000-0000-0000-0000-000000000004/facture-photo.jpg' then
+        raise exception 'FAIL: the newest document, not the newest photo, is the picture';
+    end if;
+    if exists (select 1 from storefront_previews(array['pro-69'])
+                where photo_key in ('org/69000000-0000-0000-0000-000000000004/bl-1.jpg', 'org/69000000-0000-0000-0000-000000000004/bl-2.jpg', 'org/69000000-0000-0000-0000-000000000004/bl-3.pdf')) then
+        raise exception 'FAIL: a street card shows paperwork';
+    end if;
+    if not storefront_photo_allowed('org/69000000-0000-0000-0000-000000000004/facture-photo.jpg')
+       or storefront_photo_allowed('org/69000000-0000-0000-0000-000000000004/bl-2.jpg')
+       or storefront_photo_allowed('org/69000000-0000-0000-0000-000000000004/bl-3.pdf') then
+        raise exception 'FAIL: the photo gate serves paperwork, or not the photo';
+    end if;
+end $$;
+commit;
+-- On Basic: the shop is full (11 kept, limit 10). A delivery note still
+-- files on a new article; a photo of it does not — paperwork does not make
+-- it « already photographed ».
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000001';
+do $$
+declare
+    v_org  uuid := '69000000-0000-0000-0000-000000000001';
+    v_used int := (feature_states('69000000-0000-0000-0000-000000000001') -> 'photos' ->> 'used')::int;
+begin
+    perform record_document(v_org, 'org/69000000-0000-0000-0000-000000000001/livraison-bl.jpg', 'invoice',
+        p_product_id => '69cccccc-0000-0000-0000-000000000002');
+    if (feature_states(v_org) -> 'photos' ->> 'used')::int <> v_used then
+        raise exception 'FAIL: a delivery note took a photo place';
+    end if;
+    begin
+        perform record_document(v_org, 'org/69000000-0000-0000-0000-000000000001/livraison.jpg', 'product_photo',
+            p_product_id => '69cccccc-0000-0000-0000-000000000002');
+        raise exception 'FAIL: an article with only paperwork was photographed past the limit';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : toutes vos places photo sont prises. Pour photographier%' then raise; end if;
+    end;
+end $$;
+commit;
+-- Paperwork is under the general cap (066): at the cap, refused there.
+update platform_settings set value = to_jsonb((
+    select count(*) from documents where org_id = '69000000-0000-0000-0000-000000000001'
+       and (product_id is null or not doc_is_photo(kind, content_type))))
+ where key = 'free_max_photos';
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000001';
+do $$ begin
+    begin
+        perform record_document('69000000-0000-0000-0000-000000000001',
+            'org/69000000-0000-0000-0000-000000000001/livraison-bl2.jpg', 'receipt',
+            p_product_id => '69cccccc-0000-0000-0000-000000000002');
+        raise exception 'FAIL: paperwork on an article escaped the general cap';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : la formule gratuite garde%' then raise; end if;
+    end;
+    raise notice 'PASS: paperwork is not a picture — not counted, not on the vitrine, not served; under the general cap';
+end $$;
+commit;
+update platform_settings set value = '50' where key = 'free_max_photos';
+
+\echo ''
+\echo '--- TEST 13: an article brought back with its photo takes a place again; a slot is not sold to Pro ---'
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000001';
+do $$
+declare v_org uuid := '69000000-0000-0000-0000-000000000001';
+begin
+    -- 11 kept, limit 10: archiving two leaves 9, one comes back, not the second.
+    perform archive_product('69aaaaaa-0000-0000-0000-000000000005');
+    perform archive_product('69aaaaaa-0000-0000-0000-000000000006');
+    if (feature_states(v_org) -> 'photos' ->> 'used')::int <> 9 then
+        raise exception 'FAIL: archived articles still take places (%)', (feature_states(v_org) -> 'photos' ->> 'used')::int;
+    end if;
+    perform archive_product('69aaaaaa-0000-0000-0000-000000000005', false);
+    begin
+        perform archive_product('69aaaaaa-0000-0000-0000-000000000006', false);
+        raise exception 'FAIL: an archived photographed article came back past the limit';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : cet article a une photo et toutes vos places photo sont prises%' then raise; end if;
+    end;
+    -- Re-added by its name (051) is the same return.
+    begin
+        perform ensure_product(v_org, 'Article 6');
+        raise exception 'FAIL: re-adding a photographed article by its name passed the limit';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : cet article a une photo%' then raise; end if;
+    end;
+    -- An article with no photo comes back freely.
+    update products set is_active = false where id = '69aaaaaa-0000-0000-0000-000000000012';
+    update products set is_active = true where id = '69aaaaaa-0000-0000-0000-000000000012';
+end $$;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000009';
+do $$ begin
+    begin
+        perform buy_photo_slot('69000000-0000-0000-0000-000000000004');
+        raise exception 'FAIL: a Pro business bought a photo slot';
+    exception when raise_exception then
+        if sqlerrm not like 'Cette entreprise a déjà ses photos sans limite%' then raise; end if;
+    end;
+    raise notice 'PASS: archive frees a place, coming back takes one (or is refused); Pro buys no slot';
+end $$;
+commit;
+
+\echo ''
+\echo '--- TEST 14: a salary for a period the payroll reads; never a kind changed; clearing brings nobody back (B2) ---'
+-- Coumba (w3) works at the Pro shop, already on its payroll by the hour.
+insert into employees (org_id, full_name, kind, hourly_rate, user_id)
+values ('69000000-0000-0000-0000-000000000004', 'Coumba', 'casual', 500,
+        '69696969-0000-0000-0000-000000000004');
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000009';
+do $$
+declare
+    v_org uuid := '69000000-0000-0000-0000-000000000004';
+    m     jsonb;
+begin
+    begin
+        perform set_member_salary(v_org, '69696969-0000-0000-0000-000000000004', 3000, 'week');
+        raise exception 'FAIL: a salary turned an hourly worker into a permanent';
+    exception when raise_exception then
+        if sqlerrm not like 'Cette personne est payée à l''heure%' then raise; end if;
+    end;
+    if (select kind from employees where org_id = v_org
+          and user_id = '69696969-0000-0000-0000-000000000004') <> 'casual' then
+        raise exception 'FAIL: the kind changed';
+    end if;
+    select x into m from jsonb_array_elements(team_overview(v_org) -> 'members') x
+     where x ->> 'user_id' = '69696969-0000-0000-0000-000000000004';
+    if (m ->> 'hourly')::numeric <> 500 or m ->> 'salary' is not null then
+        raise exception 'FAIL: Équipe does not say she is paid by the hour: %', m;
+    end if;
+end $$;
+commit;
+-- A permanent paid by the week: one payment is one week.
+update employees set kind = 'permanent', hourly_rate = 0
+ where org_id = '69000000-0000-0000-0000-000000000004'
+   and user_id = '69696969-0000-0000-0000-000000000004';
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000009';
+do $$
+declare
+    v_org uuid := '69000000-0000-0000-0000-000000000004';
+    v_emp uuid;
+    v_pay uuid;
+begin
+    v_emp := set_member_salary(v_org, '69696969-0000-0000-0000-000000000004', 3000, 'week');
+    if (select pay_period from employees where id = v_emp) <> 'week'
+       or (select salary from employees where id = v_emp) <> 3000 then
+        raise exception 'FAIL: the week''s salary is not on the payroll row';
+    end if;
+    v_pay := pay_employee(v_org, v_emp);
+    if (select amount from staff_payments where id = v_pay) <> 3000 then
+        raise exception 'FAIL: the payroll paid % for a week''s salary of 3000',
+            (select amount from staff_payments where id = v_pay);
+    end if;
+end $$;
+commit;
+-- Awa's row at the Basic shop ends; clearing her salary does not revive it.
+update employees set is_active = false, ended_on = current_date, end_reason = 'resigned',
+       salary = 45000, pay_period = 'month'
+ where org_id = '69000000-0000-0000-0000-000000000001'
+   and user_id = '69696969-0000-0000-0000-000000000002';
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000001';
+select set_member_salary('69000000-0000-0000-0000-000000000001',
+                         '69696969-0000-0000-0000-000000000002', null) is not null;
+commit;
+do $$ begin
+    if (select is_active or ended_on is null or salary <> 0
+          from employees where org_id = '69000000-0000-0000-0000-000000000001'
+           and user_id = '69696969-0000-0000-0000-000000000002') then
+        raise exception 'FAIL: clearing a salary brought an ended employee back';
+    end if;
+    raise notice 'PASS: an hourly worker keeps her kind; a week''s salary pays a week; clearing revives nobody';
+end $$;
+
+\echo ''
+\echo '--- TEST 15: no seat by the back door — a trainer, an owner, a row moved (S1) ---'
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000007';
+-- A code written while the farm's seat is free, then the seat taken.
+insert into pending_invitations (org_id, role, scope_kind, scope_id, code, created_by)
+values ('69000000-0000-0000-0000-000000000003', 'employee', 'org',
+        '69000000-0000-0000-0000-000000000003', 'TEAM-6910',
+        '69696969-0000-0000-0000-000000000007');
+insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+values ('69000000-0000-0000-0000-000000000003', '69696969-0000-0000-0000-000000000002',
+        'employee', 'org', '69000000-0000-0000-0000-000000000003', 'full');
+do $$
+declare
+    v_org uuid := '69000000-0000-0000-0000-000000000003';
+    s     jsonb;
+    n     int;
+begin
+    s := team_overview(v_org);
+    if not (s -> 'invitations' -> 0 ->> 'blocked')::boolean then
+        raise exception 'FAIL: the code waiting for a taken seat is not said blocked: %', s -> 'invitations';
+    end if;
+    -- (a) A trainer's grant, written by the business: the platform's only.
+    begin
+        insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility, is_trainer)
+        values (v_org, '69696969-0000-0000-0000-000000000003', 'observer', 'org', v_org, 'full', true);
+        raise exception 'FAIL: an admin wrote a trainer''s grant (no seat, hidden from Équipe)';
+    exception when insufficient_privilege then
+        if sqlerrm not like 'Seule la plateforme nomme une formatrice%' then raise; end if;
+    end;
+    begin
+        update memberships set is_trainer = true
+         where org_id = v_org and user_id = '69696969-0000-0000-0000-000000000002';
+        raise exception 'FAIL: an admin turned a worker into a trainer';
+    exception when insufficient_privilege then null;
+    end;
+    -- (b) An owner: not by invitation, not by a direct grant.
+    begin
+        perform invite_employee(v_org, 'owner');
+        raise exception 'FAIL: invite_employee wrote an owner''s invitation';
+    exception when insufficient_privilege then
+        if sqlerrm not like 'Seule la plateforme nomme un propriétaire%' then raise; end if;
+    end;
+    begin
+        insert into pending_invitations (org_id, role, scope_kind, scope_id, code, created_by)
+        values (v_org, 'owner', 'org', v_org, 'OWNR-6911', '69696969-0000-0000-0000-000000000007');
+        raise exception 'FAIL: an owner''s invitation was written';
+    exception when insufficient_privilege then null;
+    end;
+    begin
+        update pending_invitations set role = 'owner' where code = 'TEAM-6910';
+        raise exception 'FAIL: an invitation was turned into an owner''s';
+    exception when insufficient_privilege then null;
+    end;
+    begin
+        insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+        values (v_org, '69696969-0000-0000-0000-000000000003', 'owner', 'org', v_org, 'full');
+        raise exception 'FAIL: an admin made a second owner';
+    exception when insufficient_privilege then null;
+    end;
+    -- The owner's row is not moved nor demoted from the app.
+    update memberships set role = 'admin'
+     where org_id = v_org and user_id = '69696969-0000-0000-0000-000000000007';
+    update memberships set user_id = '69696969-0000-0000-0000-000000000002'
+     where org_id = v_org and role = 'owner';
+    if not exists (select 1 from memberships where org_id = v_org and role = 'owner'
+                    and user_id = '69696969-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: the owner''s row was changed from the app';
+    end if;
+    -- (c) A worker's row moved onto somebody new is a new worker: the seat.
+    begin
+        update memberships set user_id = '69696969-0000-0000-0000-000000000003'
+         where org_id = v_org and user_id = '69696969-0000-0000-0000-000000000002';
+        raise exception 'FAIL: a row moved onto a new person dodged the seat';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : cette entreprise a déjà sa personne offerte%' then raise; end if;
+    end;
+    -- A role between workers is no new seat.
+    update memberships set role = 'admin'
+     where org_id = v_org and user_id = '69696969-0000-0000-0000-000000000002';
+    -- An invitation for somebody already in (by number) is written; a
+    -- bearer code with the seat taken is not.
+    insert into pending_invitations (org_id, role, scope_kind, scope_id, code, phone, created_by)
+    values (v_org, 'manager', 'org', v_org, 'TEAM-6912', '+22669000002',
+            '69696969-0000-0000-0000-000000000007');
+    begin
+        insert into pending_invitations (org_id, role, scope_kind, scope_id, code, created_by)
+        values (v_org, 'employee', 'org', v_org, 'TEAM-6913', '69696969-0000-0000-0000-000000000007');
+        raise exception 'FAIL: a bearer code was written with the seat taken';
+    exception when raise_exception then
+        if sqlerrm not like 'Kaj Pro : cette entreprise a déjà%' then raise; end if;
+    end;
+    if (select (x ->> 'blocked')::boolean from jsonb_array_elements(team_overview(v_org) -> 'invitations') x
+         where x ->> 'code' = 'TEAM-6912') then
+        raise exception 'FAIL: an invitation for somebody already in is said blocked';
+    end if;
+end $$;
+commit;
+-- The new admin (Awa) cannot remove the owner either.
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000002';
+delete from memberships where org_id = '69000000-0000-0000-0000-000000000003' and role = 'owner';
+do $$ begin
+    if not exists (select 1 from memberships where org_id = '69000000-0000-0000-0000-000000000003'
+                    and role = 'owner') then
+        raise exception 'FAIL: an admin removed the owner';
+    end if;
+end $$;
+commit;
+-- An owner's invitation from before 100 (written by the database's hand):
+-- claimed, it makes no owner; swept, it is skipped and the sweep goes on.
+insert into pending_invitations (org_id, role, scope_kind, scope_id, code, phone, created_by)
+values ('69000000-0000-0000-0000-000000000003', 'owner', 'org',
+        '69000000-0000-0000-0000-000000000003', 'OWNR-6914', null,
+        '69696969-0000-0000-0000-000000000007'),
+       ('69000000-0000-0000-0000-000000000003', 'owner', 'org',
+        '69000000-0000-0000-0000-000000000003', 'OWNR-6915', '+22669000003',
+        '69696969-0000-0000-0000-000000000007');
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000003';
+do $$ begin
+    begin
+        perform claim_invitation('OWNR-6914');
+        raise exception 'FAIL: an owner''s code made a second owner';
+    exception when insufficient_privilege then null;
+    end;
+    perform claim_my_invitations();
+    if exists (select 1 from memberships where org_id = '69000000-0000-0000-0000-000000000003'
+                and user_id = '69696969-0000-0000-0000-000000000003') then
+        raise exception 'FAIL: the sweep made an owner';
+    end if;
+    raise notice 'PASS: no trainer, no owner, no moved row past the seat; the owner stays; an old owner''s code makes nobody';
+end $$;
+commit;
+
+\echo ''
+\echo '--- TEST 16: the platform''s own ways still work — trainers, a business opened, a showcase joined ---'
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000006';
+select assign_trainer('69000000-0000-0000-0000-000000000003', '69696969-0000-0000-0000-000000000008');
+select create_org('Mara 69', 'mara-69', 'retail') is not null;
+select showcase_join('69000000-0000-0000-0000-000000000005');
+commit;
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000004';
+select apply_for_org('Coumba 69', 'coumba-69', 'farm') is not null;
+commit;
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000006';
+select approve_org_application((select id from org_applications where slug = 'coumba-69')) is not null;
+commit;
+do $$ begin
+    if org_workers('69000000-0000-0000-0000-000000000003') <> 1
+       or not exists (select 1 from memberships where org_id = '69000000-0000-0000-0000-000000000003'
+                       and user_id = '69696969-0000-0000-0000-000000000008' and is_trainer) then
+        raise exception 'FAIL: the platform''s trainer did not join, or took the seat';
+    end if;
+    if not exists (select 1 from memberships m join orgs o on o.id = m.org_id
+                    where o.slug = 'mara-69' and m.role = 'owner'
+                      and m.user_id = '69696969-0000-0000-0000-000000000006')
+       or not exists (select 1 from memberships m join orgs o on o.id = m.org_id
+                       where o.slug = 'coumba-69' and m.role = 'owner'
+                         and m.user_id = '69696969-0000-0000-0000-000000000004')
+       or not exists (select 1 from memberships
+                       where org_id = '69000000-0000-0000-0000-000000000005' and role = 'owner'
+                         and user_id = '69696969-0000-0000-0000-000000000006') then
+        raise exception 'FAIL: a business opened (create_org, an application approved, a showcase) has no owner';
+    end if;
+    raise notice 'PASS: assign_trainer, create_org, approve_org_application and showcase_join still make their grants';
+end $$;
+
+\echo ''
+\echo '--- TEST 17: gifts are not the week''s on Le Chemin; a bought tool stays bought; « Offert par Mara » on the team ---'
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000006';
+select platform_give_cauris('69000000-0000-0000-0000-000000000003', 40, 'Encore') is not null;
+select platform_give_unlock('69000000-0000-0000-0000-000000000003', 'accounting', cauris_today() + 60) is not null;
+select platform_give_unlock('69000000-0000-0000-0000-000000000003', 'team_access', cauris_today() + 5) is not null;
+commit;
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000007';
+do $$
+declare
+    v_org  uuid := '69000000-0000-0000-0000-000000000003';
+    v_old  int;
+    v_gift int;
+    p      jsonb := path_state('69000000-0000-0000-0000-000000000003');
+begin
+    -- 097's sum, and what Mara gave this week.
+    select coalesce(sum(delta), 0) into v_old from cauris_ledger
+     where org_id = v_org and delta > 0
+       and reason not in ('prize', 'expired', 'spent')
+       and created_at >= cauris_week_start();
+    select coalesce(sum(delta), 0) into v_gift from cauris_ledger
+     where org_id = v_org and delta > 0 and reason in ('gift', 'promo')
+       and created_at >= cauris_week_start();
+    if v_gift < 40 or (p ->> 'week')::int <> v_old - v_gift then
+        raise exception 'FAIL: Le Chemin''s week reads % (gifts % of %)', p ->> 'week', v_gift, v_old;
+    end if;
+    if (select gifted_by from cauris_unlocks where org_id = v_org and feature = 'accounting') is not null
+       or (select until from cauris_unlocks where org_id = v_org and feature = 'accounting')
+          < (cauris_today() + 61)::timestamp at time zone 'Africa/Ouagadougou' then
+        raise exception 'FAIL: the tool the farm bought was relabelled, or not lengthened';
+    end if;
+    if not (feature_states(v_org) -> 'team' ->> 'gift')::boolean then
+        raise exception 'FAIL: the team given by Mara does not say so';
+    end if;
+    raise notice 'PASS: gifts out of the week; a bought tool lengthened, still bought; the team says « Offert par Mara »';
+end $$;
+commit;

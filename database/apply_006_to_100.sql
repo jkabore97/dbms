@@ -30148,6 +30148,29 @@ comment on table cauris_promos is
     'Promotional cauris the platform gave (100), to be spent before expires_on. '
     'left_points is what spending has not taken yet; the ledger holds the points.';
 
+comment on column employees.salary is
+    'A permanent''s salary for one pay_period (100; null period = a month, as 012 had it). '
+    'Ignored for casuals, who are paid hourly_rate for their shifts.';
+
+-- A picture of an article, as against the paperwork filed on it. The app
+-- writes 'photo' (record_document's default, « Autre » in the gallery),
+-- 'product_photo' (the article's sheet, À vendre, a service), 'receipt' and
+-- 'invoice' (a receipt; a delivery note, which confirm_products_screen files
+-- on the first article delivered), and 'logo' (080, never an article's);
+-- null reads as a photo. A PDF is never a picture (079). The photo count,
+-- the vitrine and the photo gate (storefront_photo_allowed, read by anon)
+-- take only pictures: a supplier's delivery note filed on an article is not
+-- its public picture.
+create or replace function doc_is_photo(p_kind text, p_content_type text default null)
+returns boolean
+language sql
+immutable
+set search_path = public
+as $$
+    select coalesce(p_kind, 'photo') not in ('invoice', 'receipt', 'logo')
+       and coalesce(p_content_type, '') not ilike '%pdf%';
+$$;
+
 -- ------------------------------------------------------------
 -- 1–2. The team
 -- ------------------------------------------------------------
@@ -30217,7 +30240,11 @@ as $$
         'cost',       (select c.cost from cauris_costs c where c.feature = 'team_access'),
         'until',      (select u.until from cauris_unlocks u
                         where u.org_id = p_org_id and u.feature = 'team_access'
-                          and u.until > now())
+                          and u.until > now()),
+        -- Opened by Mara (platform_give_unlock), not bought: « Offert par Mara ».
+        'gift',       coalesce((select u.gifted_by is not null from cauris_unlocks u
+                                 where u.org_id = p_org_id and u.feature = 'team_access'
+                                   and u.until > now()), false)
     );
 $$;
 
@@ -30270,14 +30297,33 @@ begin
     end if;
 
     if tg_table_name = 'memberships' then
-        -- An owner, a trainer, Mara's own admin, or somebody already in the
-        -- business (another grant to the same person) adds no worker.
+        -- What the row makes of its person. An owner, a trainer (only the
+        -- platform names one: trg_membership_roles) or Mara's own admin is
+        -- no worker.
         if new.role = 'owner' or coalesce(new.is_trainer, false)
-           or exists (select 1 from profiles where id = new.user_id and is_platform_admin)
-           or exists (select 1 from memberships m
-                       where m.org_id = new.org_id and m.user_id = new.user_id) then
+           or exists (select 1 from profiles where id = new.user_id and is_platform_admin) then
             return new;
         end if;
+        -- A worker's row that stays a worker's — another role between
+        -- workers, the same person, the same business — adds nobody. A row
+        -- that stops being an owner's or a trainer's, or that changes hands
+        -- or business, is somebody new: it takes the seat like an insert.
+        if tg_op = 'UPDATE'
+           and old.user_id = new.user_id and old.org_id = new.org_id
+           and old.role <> 'owner' and not coalesce(old.is_trainer, false) then
+            return new;
+        end if;
+        -- Somebody already there by another grant — a worker, or still its
+        -- owner — adds nobody either. A trainer's grant does not count: a
+        -- trainer given a second role becomes a worker.
+        if exists (select 1 from memberships m
+                    where m.org_id = new.org_id and m.user_id = new.user_id
+                      and m.id <> new.id and not m.is_trainer) then
+            return new;
+        end if;
+        -- One at a time per business: two codes claimed at once cannot both
+        -- take the last seat.
+        perform pg_advisory_xact_lock(hashtext('team:' || new.org_id::text));
         if team_full(new.org_id) then
             raise exception '%', team_full_message(new.org_id);
         end if;
@@ -30293,13 +30339,16 @@ begin
         end if;
 
     elsif tg_table_name = 'documents' then
-        -- An article's photo is counted by article (trg_photo_items).
-        if new.product_id is not null then
+        -- An article's picture is counted by article (trg_photo_items); the
+        -- paperwork filed on an article (a delivery note, a receipt) is
+        -- counted here, with every capture that is about no article.
+        if new.product_id is not null and doc_is_photo(new.kind, new.content_type) then
             return new;
         end if;
         v_cap := plan_limit('free_max_photos', 50);
         select count(*) into v_count from documents
-         where org_id = new.org_id and product_id is null;
+         where org_id = new.org_id
+           and (product_id is null or not doc_is_photo(kind, content_type));
         if v_count >= v_cap then
             raise exception 'Kaj Pro : la formule gratuite garde % photos. Ouvrez Compte › Kaj Pro pour en ajouter.', v_cap;
         end if;
@@ -30309,8 +30358,72 @@ begin
 end;
 $$;
 
--- An invitation written when the seat is already taken: said to the owner
--- now, rather than to the invitee later.
+-- 066's cap ran on an insert only: a row edited by an admin (004 lets them)
+-- from an owner's or a trainer's into a worker's, or onto somebody else,
+-- walked past it. Now on an update too.
+drop trigger if exists cap_free_staff on memberships;
+create trigger cap_free_staff
+before insert or update on memberships
+for each row execute function trg_cap_free_plan();
+
+-- Who may make an owner or a trainer. 004 lets a business's admins write
+-- memberships directly, so without this an admin could insert a trainer's
+-- grant (038: a trainer takes no seat and is hidden from the team) or an
+-- owner's, or move the owner's own row onto themselves. The platform names
+-- trainers (assign_trainer) and owners; the functions that open a business
+-- (create_org, approve_org_application, 094's showcases) write its first
+-- owner, and only while it has none. No transfer of ownership exists yet
+-- (044 says it comes first); when it does, it is a platform admin's act or
+-- a definer function of its own.
+--
+-- SECURITY INVOKER on purpose: current_user tells a write straight from the
+-- app (authenticated) from one inside a definer function (its owner). A
+-- caller reads their own profile under 004's policy.
+create or replace function trg_membership_roles()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, auth
+as $$
+begin
+    if auth.uid() is null
+       or exists (select 1 from profiles where id = auth.uid() and is_platform_admin) then
+        return new;
+    end if;
+    if (tg_op = 'INSERT' and coalesce(new.is_trainer, false))
+       or (tg_op = 'UPDATE' and new.is_trainer is distinct from old.is_trainer) then
+        raise exception 'Seule la plateforme nomme une formatrice ou un formateur';
+    end if;
+    -- 044 already refuses it in set_membership_role; a direct update too.
+    if tg_op = 'UPDATE' and old.role = 'owner'
+       and (new.role is distinct from old.role
+            or new.user_id is distinct from old.user_id
+            or new.org_id is distinct from old.org_id) then
+        raise exception 'Le propriétaire ne se change pas ici';
+    end if;
+    if new.role = 'owner' and (tg_op = 'INSERT' or old.role is distinct from 'owner') then
+        if current_user in ('authenticated', 'anon')
+           or exists (select 1 from memberships m
+                       where m.org_id = new.org_id and m.role = 'owner'
+                         and m.id <> new.id) then
+            raise exception 'Seule la plateforme nomme un propriétaire';
+        end if;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists membership_roles on memberships;
+create trigger membership_roles
+before insert or update on memberships
+for each row execute function trg_membership_roles();
+
+-- An invitation: never for an owner (the platform's to name — an invitation
+-- claimed becomes a membership through a definer function, so it is held
+-- here, at its writing, invite_employee's included); and, when the seat is
+-- already taken, said to the owner now rather than to the invitee later —
+-- unless it is for somebody already in the business (by their number), who
+-- takes no new seat.
 create or replace function trg_invitation_seat()
 returns trigger
 language plpgsql
@@ -30319,11 +30432,22 @@ set search_path = public, auth
 as $$
 begin
     if auth.uid() is null
-       or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
-       or new.role = 'owner' then
+       or exists (select 1 from profiles where id = auth.uid() and is_platform_admin) then
         return new;
     end if;
-    if team_full(new.org_id) then
+    if new.role = 'owner' then
+        raise exception 'Seule la plateforme nomme un propriétaire';
+    end if;
+    if tg_op = 'UPDATE' then
+        return new;
+    end if;
+    if team_full(new.org_id)
+       and not (new.phone is not null and exists (
+                select 1 from memberships m
+                  join profiles p on p.id = m.user_id
+                  left join auth.users u on u.id = m.user_id
+                 where m.org_id = new.org_id
+                   and (p.phone = new.phone or u.phone = new.phone))) then
         raise exception '%', team_full_message(new.org_id);
     end if;
     return new;
@@ -30332,7 +30456,7 @@ $$;
 
 drop trigger if exists invitation_seat on pending_invitations;
 create trigger invitation_seat
-before insert on pending_invitations
+before insert or update of role on pending_invitations
 for each row execute function trg_invitation_seat();
 
 -- 017's sweep: an invitation the business has no seat for stays waiting
@@ -30411,6 +30535,13 @@ $$;
 -- The Équipe screen, in one read: the seats, the people (owners first) with
 -- their salary, the invitations still out. The business's admins only:
 -- what a colleague earns is theirs to see (012).
+--
+-- A member's pay is their payroll row's: a permanent's salary for its
+-- period, or — for somebody paid by the hour in « Paie et journées » — the
+-- hourly rate, which is changed there. Each member carries their grants
+-- (to remove them from the team), and each invitation says whether it can
+-- still come in: not when the seat is taken, unless it is for somebody
+-- already in the business.
 create or replace function team_overview(p_org_id uuid)
 returns jsonb
 language plpgsql
@@ -30418,10 +30549,13 @@ stable
 security definer
 set search_path = public, auth
 as $$
+declare
+    v_full boolean;
 begin
     if auth.uid() is null or not is_org_admin(p_org_id) then
         return null;
     end if;
+    v_full := team_full(p_org_id);
     return jsonb_build_object(
         'seats', team_seats(p_org_id),
         'members', coalesce((
@@ -30431,36 +30565,60 @@ begin
                        'phone', p.phone,
                        'roles', to_jsonb(u.roles),
                        'owner', 'owner' = any (u.roles),
+                       'me', u.user_id = auth.uid(),
                        'since', u.since,
-                       'salary', case when e.salary > 0 then e.salary end,
-                       'period', case when e.salary > 0 then coalesce(e.pay_period, 'month') end,
+                       'memberships', to_jsonb(u.ids),
+                       'salary', case when e.kind = 'permanent' and e.salary > 0 then e.salary end,
+                       'period', case when e.kind = 'permanent' and e.salary > 0
+                                      then coalesce(e.pay_period, 'month') end,
+                       'hourly', case when e.kind = 'casual' and e.hourly_rate > 0
+                                      then e.hourly_rate end,
                        'employee_id', e.id)
                    order by ('owner' = any (u.roles)) desc, lower(person_name(u.user_id)))
               from (select m.user_id,
                            array_agg(distinct m.role::text order by m.role::text) as roles,
+                           array_agg(m.id order by m.created_at) as ids,
                            min(m.created_at) as since
                       from memberships m
                      where m.org_id = p_org_id and not m.is_trainer
                      group by m.user_id) u
               join profiles p on p.id = u.user_id
               left join lateral (
-                  select x.id, x.salary, x.pay_period from employees x
+                  select x.id, x.kind, x.salary, x.hourly_rate, x.pay_period from employees x
                    where x.org_id = p_org_id and x.user_id = u.user_id and x.is_active
                    order by x.created_at limit 1) e on true), '[]'::jsonb),
         'invitations', coalesce((
             select jsonb_agg(jsonb_build_object(
                        'id', i.id, 'code', i.code, 'phone', i.phone,
                        'name', i.full_name, 'role', i.role,
-                       'expires_at', i.expires_at) order by i.created_at desc)
+                       'expires_at', i.expires_at,
+                       'blocked', v_full and not (i.phone is not null and exists (
+                           select 1 from memberships m
+                             join profiles q on q.id = m.user_id
+                             left join auth.users a on a.id = m.user_id
+                            where m.org_id = p_org_id
+                              and (q.phone = i.phone or a.phone = i.phone))))
+                   order by i.created_at desc)
               from pending_invitations i
              where i.org_id = p_org_id and i.claimed_at is null
-               and i.expires_at > now()), '[]'::jsonb)
+               and i.expires_at > now()), '[]'::jsonb),
+        'org_name', (select name from orgs where id = p_org_id)
     );
 end;
 $$;
 
--- A member's salary, on their payroll row. Null or 0 clears it. Free: the
--- payroll's Pro guard is on paying (shifts, staff_payments), not here.
+-- A member's salary, on their payroll row (012), for a period: par mois,
+-- par semaine, par jour. Null or 0 clears it. Free: the payroll's Pro guard
+-- is on paying (shifts, staff_payments), not here.
+--
+-- The payroll reads the period (100): a permanent's salary is what one
+-- pay_employee() pays — a month's, a week's or a day's — and « Paie et
+-- journées » writes « / mois », « / semaine », « / jour » beside it. A row's
+-- kind is never changed here: somebody paid by the hour (a casual, whose
+-- shifts are the record) keeps their rate, changed in « Paie et journées »;
+-- a new row is a permanent's. Clearing touches the amount only — an ended
+-- employment stays ended; recording a salary for a member whose row had
+-- ended brings it back, as re-adding them in the payroll does (012).
 create or replace function set_member_salary(
     p_org_id  uuid,
     p_user_id uuid,
@@ -30473,6 +30631,7 @@ security definer
 set search_path = public, auth
 as $$
 declare
+    v_row    employees%rowtype;
     v_id     uuid;
     v_name   text;
     v_phone  text;
@@ -30499,16 +30658,17 @@ begin
 
     -- Their row: by the account, else an unlinked one of the same name
     -- (somebody already on the payroll before they had the app).
-    select id into v_id from employees
+    select * into v_row from employees
      where org_id = p_org_id and user_id = p_user_id
      order by is_active desc, created_at limit 1;
-    if v_id is null then
-        select id into v_id from employees
+    if v_row.id is null then
+        select * into v_row from employees
          where org_id = p_org_id and user_id is null
            and lower(btrim(full_name)) = lower(btrim(v_name))
          order by is_active desc, created_at limit 1;
     end if;
-    if v_id is null then
+
+    if v_row.id is null then
         if v_amount = 0 then
             return null;  -- nothing to clear
         end if;
@@ -30527,23 +30687,41 @@ begin
         return v_id;
     end if;
 
+    if v_amount = 0 then
+        -- The amount only: nothing comes back to life, no kind changes, and
+        -- a row of the same name not linked to this account is somebody
+        -- else's, left alone (the screen reads only a linked row).
+        if v_row.user_id is null then
+            return null;
+        end if;
+        update employees
+           set salary     = case when kind = 'permanent' then 0 else salary end,
+               pay_period = case when kind = 'permanent' then null else pay_period end
+         where id = v_row.id;
+        return v_row.id;
+    end if;
+
+    if v_row.kind <> 'permanent' then
+        raise exception 'Cette personne est payée à l''heure dans « Paie et journées » : son taux se change là-bas.';
+    end if;
+
     update employees
        set user_id    = p_user_id,
            is_active  = true,
            ended_on   = null,
            end_reason = null,
-           kind       = case when v_amount > 0 then 'permanent' else kind end,
            salary     = v_amount,
-           pay_period = case when v_amount > 0 then v_period end
-     where id = v_id;
-    return v_id;
+           pay_period = v_period
+     where id = v_row.id;
+    return v_row.id;
 end;
 $$;
 
 -- ------------------------------------------------------------
 -- 3. Photos on Basic
 -- ------------------------------------------------------------
--- The articles (and services) photographed: active, with a photo.
+-- The articles (and services) photographed: active, with a picture — the
+-- paperwork filed on an article (doc_is_photo) is not one.
 create or replace function org_photo_items(p_org_id uuid)
 returns integer
 language sql
@@ -30553,7 +30731,8 @@ set search_path = public
 as $$
     select count(*)::int from products p
      where p.org_id = p_org_id and p.is_active
-       and exists (select 1 from documents d where d.product_id = p.id);
+       and exists (select 1 from documents d
+                    where d.product_id = p.id and doc_is_photo(d.kind, d.content_type));
 $$;
 
 -- How many may be: null when there is no limit (Mara Pro, a showcase).
@@ -30586,6 +30765,12 @@ as $$
     );
 $$;
 
+-- Where a picture becomes an article's: a document inserted on it, or one
+-- moved onto it, or one on it re-filed from paperwork into a photo. One at
+-- a time per business (an advisory lock), so two photos at once cannot both
+-- take the last place. Refused at a filing, the capture stays in Documents,
+-- with no article: the message says so (the app sends the bytes first and
+-- files them after, so a photo taken offline is never lost).
 create or replace function trg_photo_items()
 returns trigger
 language plpgsql
@@ -30595,19 +30780,38 @@ as $$
 declare
     v_limit int;
 begin
-    if new.product_id is null
-       or (tg_op = 'UPDATE' and old.product_id is not distinct from new.product_id)
-       or auth.uid() is null
+    if new.product_id is null or not doc_is_photo(new.kind, new.content_type) then
+        return new;  -- no article, or paperwork: 066's general cap
+    end if;
+    if tg_op = 'UPDATE' and old.product_id is not distinct from new.product_id
+       and doc_is_photo(old.kind, old.content_type) then
+        return new;  -- already this article's picture
+    end if;
+    if auth.uid() is null
        or exists (select 1 from profiles where id = auth.uid() and is_platform_admin) then
         return new;
     end if;
-    -- Another photo of an article already photographed takes no new place.
-    if exists (select 1 from documents d
-                where d.product_id = new.product_id and d.id <> new.id) then
+    v_limit := org_photo_limit(new.org_id);
+    if v_limit is null then
         return new;
     end if;
-    v_limit := org_photo_limit(new.org_id);
-    if v_limit is not null and org_photo_items(new.org_id) >= v_limit then
+    perform pg_advisory_xact_lock(hashtext('photos:' || new.org_id::text));
+    -- Another picture of an article already photographed takes no new
+    -- place; an article out of the shop is counted when it comes back
+    -- (trg_photo_revive).
+    if exists (select 1 from documents d
+                where d.product_id = new.product_id and d.id <> new.id
+                  and doc_is_photo(d.kind, d.content_type))
+       or not exists (select 1 from products p
+                       where p.id = new.product_id and p.is_active) then
+        return new;
+    end if;
+    if org_photo_items(new.org_id) >= v_limit then
+        if tg_op = 'UPDATE' then
+            raise exception 'Kaj Pro : toutes vos places photo sont prises. '
+                'La photo reste dans vos documents, sans article. Pour la mettre sur l''article : '
+                'Mara Pro, ou une place photo achetée avec des cauris.';
+        end if;
         raise exception 'Kaj Pro : toutes vos places photo sont prises. '
             'Pour photographier un article de plus : Mara Pro, ou une place photo achetée avec des cauris.';
     end if;
@@ -30617,8 +30821,357 @@ $$;
 
 drop trigger if exists photo_items_limit on documents;
 create trigger photo_items_limit
-before insert or update of product_id on documents
+before insert or update of product_id, kind, content_type on documents
 for each row execute function trg_photo_items();
+
+-- An article out of the shop (027's archive) gives its place back; brought
+-- back with its picture — archive_product(…, false), or 051's re-add by its
+-- name — it takes one again, and is refused when none is left.
+create or replace function trg_photo_revive()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_limit int;
+begin
+    if old.is_active or not new.is_active
+       or auth.uid() is null
+       or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+       or not exists (select 1 from documents d
+                       where d.product_id = new.id and doc_is_photo(d.kind, d.content_type)) then
+        return new;
+    end if;
+    v_limit := org_photo_limit(new.org_id);
+    if v_limit is null then
+        return new;
+    end if;
+    perform pg_advisory_xact_lock(hashtext('photos:' || new.org_id::text));
+    if org_photo_items(new.org_id) >= v_limit then
+        raise exception 'Kaj Pro : cet article a une photo et toutes vos places photo sont prises. '
+            'Pour le remettre : Mara Pro, une place photo achetée avec des cauris, '
+            'ou un autre article photographié retiré.';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists photo_revive_limit on products;
+create trigger photo_revive_limit
+before update of is_active on products
+for each row execute function trg_photo_revive();
+
+-- 093's photo gate, read by the uploads Worker for anon: an article's
+-- picture only — a delivery note or a receipt filed on a published article
+-- is not served to the street. The cover and the logo as 093.
+create or replace function storefront_photo_allowed(p_key text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1
+        from documents d
+        join products p on p.id = d.product_id
+        join orgs     o on o.id = p.org_id
+        where d.r2_key = p_key
+          and doc_is_photo(d.kind, d.content_type)
+          and p.is_active
+          and p.is_published
+          and o.storefront_enabled
+          and o.archived_at  is null
+          and o.suspended_at is null
+    ) or exists (
+        select 1
+        from orgs o
+        where o.storefront_style ->> 'cover_key' = p_key
+          and o.storefront_enabled
+          and o.archived_at  is null
+          and o.suspended_at is null
+          and (org_has(o.id, 'vitrine_plus')
+               or cauris_param('vitrine_free_basics', 1) = 1)
+    ) or exists (
+        select 1
+        from orgs o
+        where o.logo_key = p_key
+          and o.storefront_enabled
+          and o.archived_at  is null
+          and o.suspended_at is null
+    );
+$$;
+
+-- 098's window, its picture the article's newest photo (not the newest
+-- document: a delivery note filed on it is not its picture).
+create or replace function storefront_products(p_slug text)
+returns table (
+    id             uuid,
+    name           text,
+    sale_price     numeric,
+    in_stock       boolean,
+    photo_key      text,
+    description    text,
+    unit           text,
+    available_from date,
+    is_service     boolean,
+    price_from     boolean
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select p.id, p.name, p.sale_price,
+           (p.is_service
+            or p.quantity > 0
+            or p.available_from > (now() at time zone 'Africa/Ouagadougou')::date),
+           (select d.r2_key from documents d
+             where d.product_id = p.id and doc_is_photo(d.kind, d.content_type)
+             order by coalesce(d.captured_at, d.created_at) desc
+             limit 1),
+           nullif(btrim(p.description), ''),
+           nullif(btrim(p.unit), ''),
+           case when p.available_from > (now() at time zone 'Africa/Ouagadougou')::date
+                then p.available_from end,
+           p.is_service,
+           p.price_from
+    from products p
+    where p.org_id = storefront_open(p_slug)
+      and p.is_active
+      and p.is_published
+    order by p.is_service, p.name;
+$$;
+
+-- 098's search, the same picture.
+create or replace function search_products(
+    p_query text,
+    p_lat   double precision default null,
+    p_lng   double precision default null
+)
+returns table (
+    id          uuid,
+    name        text,
+    sale_price  numeric,
+    in_stock    boolean,
+    photo_key   text,
+    shop_name   text,
+    shop_slug   text,
+    currency    text,
+    shop_lat    double precision,
+    shop_lng    double precision,
+    distance_km double precision
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    with q as (
+        select fold_search_text(btrim(coalesce(p_query, ''))) as folded
+    ),
+    hits as (
+        select p.id, p.name, p.sale_price,
+               (p.is_service or p.quantity > 0) as in_stock,
+               (select d.r2_key from documents d
+                 where d.product_id = p.id and doc_is_photo(d.kind, d.content_type)
+                 order by coalesce(d.captured_at, d.created_at) desc
+                 limit 1) as photo_key,
+               o.name as shop_name, o.slug as shop_slug,
+               o.default_currency as currency,
+               o.lat as shop_lat, o.lng as shop_lng,
+               case
+                   when p_lat is null or p_lng is null
+                     or o.lat is null or o.lng is null then null
+                   else 6371.0 * 2 * asin(sqrt(
+                            power(sin(radians(o.lat - p_lat) / 2), 2)
+                          + cos(radians(p_lat)) * cos(radians(o.lat))
+                          * power(sin(radians(o.lng - p_lng) / 2), 2)))
+               end as distance_km,
+               position((select folded from q) in fold_search_text(p.name))
+                   as hit_at
+        from products p
+        join orgs o on o.id = p.org_id
+        where length((select folded from q)) >= 2
+          and fold_search_text(p.name) like
+              '%' || replace(replace(replace((select folded from q),
+                    '\', '\\'), '%', '\%'), '_', '\_') || '%'
+          and p.is_active
+          and p.is_published
+          and o.storefront_enabled
+          and o.archived_at  is null
+          and o.suspended_at is null
+    )
+    select h.id, h.name, h.sale_price, h.in_stock, h.photo_key,
+           h.shop_name, h.shop_slug, h.currency,
+           h.shop_lat, h.shop_lng, h.distance_km
+    from hits h
+    order by (h.hit_at = 1) desc, h.in_stock desc,
+             (h.distance_km is null), h.distance_km, h.name, h.shop_name
+    limit 50;
+$$;
+
+-- 098's « À la une », the same picture.
+create or replace function storefront_featured()
+returns table (
+    id         uuid,
+    name       text,
+    sale_price numeric,
+    in_stock   boolean,
+    photo_key  text,
+    shop_name  text,
+    shop_slug  text,
+    currency   text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select p.id, p.name, p.sale_price, (p.is_service or p.quantity > 0),
+           (select d.r2_key from documents d
+             where d.product_id = p.id and doc_is_photo(d.kind, d.content_type)
+             order by coalesce(d.captured_at, d.created_at) desc
+             limit 1),
+           o.name, o.slug, o.default_currency
+    from products p
+    join orgs o on o.id = p.org_id
+    left join lateral (
+        select min(pm.starts_at) as since from promotions pm
+         where pm.product_id = p.id and pm.status = 'approved'
+           and pm.starts_at <= now() and pm.ends_at > now()
+    ) spot on true
+    where (spot.since is not null or p.featured_until > now())
+      and p.is_active
+      and p.is_published
+      and o.storefront_enabled
+      and o.archived_at  is null
+      and o.suspended_at is null
+    order by (spot.since is null), spot.since, p.featured_until desc nulls last, p.name
+    limit 12;
+$$;
+
+-- 098's street cards, the same picture.
+create or replace function storefront_previews(p_slugs text[])
+returns table (
+    slug       text,
+    product_id uuid,
+    name       text,
+    sale_price numeric,
+    photo_key  text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select x.slug, x.id, x.name, x.sale_price, x.photo_key
+    from (
+        select o.slug, p.id, p.name, p.sale_price, ph.r2_key as photo_key,
+               row_number() over (
+                   partition by o.id
+                   order by (ph.r2_key is null),
+                            (not p.is_service and p.quantity <= 0), p.name
+               ) as n
+        from orgs o
+        join products p on p.org_id = o.id
+        left join lateral (
+            select d.r2_key from documents d
+             where d.product_id = p.id and doc_is_photo(d.kind, d.content_type)
+             order by coalesce(d.captured_at, d.created_at) desc
+             limit 1
+        ) ph on true
+        where o.slug = any (coalesce(p_slugs, '{}'))
+          and o.id = storefront_open(o.slug)
+          and p.is_active
+          and p.is_published
+    ) x
+    where x.n <= 3
+    order by x.slug, x.n;
+$$;
+
+-- 098's score and checklist: « en photo » counts pictures, not paperwork.
+create or replace function vitrine_score(p_org_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select (100 * (
+        (published >= greatest(vitrine_min(o_id), 1))::int
+      + (association or with_photo >= 3
+         or (published > 0 and with_photo >= published))::int
+      + blurb::int + phone::int + address::int + pin::int) / 6.0)::int
+    from (
+        select
+            o.id as o_id,
+            o.profile in ('church', 'association') as association,
+            (select count(*) from products p
+              where p.org_id = o.id and p.is_active and p.is_published) as published,
+            (select count(*) from products p
+              where p.org_id = o.id and p.is_active and p.is_published
+                and exists (select 1 from documents d
+                             where d.product_id = p.id
+                               and doc_is_photo(d.kind, d.content_type))) as with_photo,
+            nullif(btrim(coalesce(o.storefront_blurb, '')), '') is not null as blurb,
+            nullif(btrim(coalesce(o.phone, '')), '') is not null as phone,
+            nullif(btrim(coalesce(o.address, '')), '') is not null as address,
+            (o.lat is not null and o.lng is not null) as pin
+        from orgs o where o.id = p_org_id
+    ) x;
+$$;
+
+create or replace function vitrine_checklist(p_org_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select case when not is_org_member(p_org_id) then null else
+    jsonb_build_object(
+        'open',        o.storefront_enabled,
+        'min_items',   vitrine_min(o.id),
+        'active',      (select count(*) from products p
+                         where p.org_id = o.id and p.is_active and not p.is_ingredient),
+        'published',   (select count(*) from products p
+                         where p.org_id = o.id and p.is_active and p.is_published),
+        'services',    (select count(*) from products p
+                         where p.org_id = o.id and p.is_active and p.is_published
+                           and p.is_service),
+        'unpublished', (select count(*) from products p
+                         where p.org_id = o.id and p.is_active and not p.is_published
+                           and not p.is_ingredient and coalesce(p.sale_price, 0) > 0),
+        'with_photo',  (select count(*) from products p
+                         where p.org_id = o.id and p.is_active and p.is_published
+                           and exists (select 1 from documents d
+                                        where d.product_id = p.id
+                                          and doc_is_photo(d.kind, d.content_type))),
+        'blurb',       nullif(btrim(coalesce(o.storefront_blurb, '')), '') is not null,
+        'address',     nullif(btrim(coalesce(o.address, '')), '') is not null,
+        'phone',       nullif(btrim(coalesce(o.phone, '')), '') is not null,
+        'pin',         o.lat is not null and o.lng is not null
+    ) end
+    from orgs o where o.id = p_org_id;
+$$;
+
+-- 079's thumbnails on the Articles page: the same picture as the vitrine.
+create or replace function product_photo_keys(p_org_id uuid)
+returns table (product_id uuid, photo_key text)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select distinct on (d.product_id) d.product_id, d.r2_key
+    from documents d
+    where d.org_id = p_org_id
+      and d.product_id is not null
+      and doc_is_photo(d.kind, d.content_type)
+    order by d.product_id, coalesce(d.captured_at, d.created_at) desc;
+$$;
 
 -- ------------------------------------------------------------
 -- 4–5. Cauris: promotional points, spending, gifts
@@ -30805,6 +31358,10 @@ begin
     if v_cost is null then
         raise exception 'Les places photo ne s''achètent pas avec des cauris';
     end if;
+    -- Mara Pro and a showcase have no limit: a slot would buy nothing.
+    if org_photo_limit(p_org_id) is null then
+        raise exception 'Cette entreprise a déjà ses photos sans limite';
+    end if;
     v_after := cauris_take(p_org_id, v_cost, 'photo_slot:' || gen_random_uuid()::text,
                            'photo_slot');
     update orgs set photo_slots = photo_slots + 1 where id = p_org_id
@@ -30940,11 +31497,18 @@ begin
     end if;
     v_until := (p_until + 1)::timestamp at time zone 'Africa/Ouagadougou';
 
+    -- A tool the business bought and still has open stays its own: the gift
+    -- only lengthens it, and never relabels it « Offert par Mara » (nor takes
+    -- it off Le Chemin's « premier outil »).
     insert into cauris_unlocks (org_id, feature, until, note, gifted_by)
     values (p_org_id, p_feature, v_until, v_note, auth.uid())
     on conflict (org_id, feature) do update
         set until = greatest(cauris_unlocks.until, excluded.until),
-            note = excluded.note, gifted_by = excluded.gifted_by, updated_at = now()
+            note = case when cauris_unlocks.gifted_by is null and cauris_unlocks.until > now()
+                        then cauris_unlocks.note else excluded.note end,
+            gifted_by = case when cauris_unlocks.gifted_by is null and cauris_unlocks.until > now()
+                             then null else excluded.gifted_by end,
+            updated_at = now()
     returning until into v_until;
 
     begin
@@ -31128,8 +31692,9 @@ as $$
      limit 50;
 $$;
 
--- 097's steps, verbatim but one: « Mon premier outil avec mes cauris » is
--- a tool the business opened itself, not one Mara gave it.
+-- 097's steps, verbatim but two: « Mon premier outil avec mes cauris » is
+-- a tool the business opened itself, not one Mara gave it; and « en photo »
+-- counts pictures, not a delivery note filed on an article.
 create or replace function path_progress(p_org uuid, p_step text)
 returns integer
 language sql
@@ -31153,7 +31718,9 @@ as $$
         when 'photos' then
             (select count(*) from products p
               where p.org_id = p_org and p.is_active and p.is_published
-                and exists (select 1 from documents d where d.product_id = p.id))
+                and exists (select 1 from documents d
+                             where d.product_id = p.id
+                               and doc_is_photo(d.kind, d.content_type)))
         when 'blurb' then
             (select count(*) from orgs o
               where o.id = p_org and nullif(btrim(coalesce(o.storefront_blurb, '')), '') is not null)
@@ -31205,6 +31772,106 @@ as $$
                                     limit 1) x)
         else 0
     end)::int;
+$$;
+
+-- 097's path, its « cette semaine » as the leagues count it now: a gift
+-- or promotional points from Mara are not earned (as my_cauris, league_scores).
+create or replace function path_state(p_org uuid)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_profile text;
+    v_stage   integer;
+    v_steps   jsonb;
+    v_stages  jsonb;
+    v_next    text;
+    v_league  boolean := false;
+    v_admin   boolean;
+begin
+    if p_org is null or not is_org_member(p_org) then
+        return null;
+    end if;
+    v_admin := is_org_admin(p_org);
+    select o.profile::text into v_profile from orgs o where o.id = p_org;
+    if v_profile is null or v_profile not in ('retail', 'farm') then
+        return null;
+    end if;
+    perform path_sync(p_org);
+    perform cauris_expire(p_org);
+
+    select coalesce(jsonb_agg(jsonb_build_object(
+               'key', r.key, 'stage', r.stage, 'title', r.title, 'line', r.line,
+               'go', r.go,
+               -- A step reached stays reached: it shows its goal met, even
+               -- if the data fell back since.
+               'progress', case when r.done then r.goal else least(r.live, r.goal) end,
+               -- What the data says right now, for the gates (live).
+               'live', least(r.live, r.goal),
+               'goal', r.goal, 'done', r.done, 'reward', r.reward, 'opens', r.opens)
+               order by r.stage, r.sort), '[]'::jsonb)
+      into v_steps
+      from (select s.key, s.stage, s.sort, s.reward, s.opens,
+                   path_text(s.title, s.title_farm, v_profile) as title,
+                   path_text(s.line, s.line_farm, v_profile) as line,
+                   case when v_profile = 'farm' and s.go_farm is not null
+                        then s.go_farm else s.go end as go,
+                   path_progress(p_org, s.key) as live,
+                   path_goal(p_org, s.key) as goal,
+                   exists (select 1 from org_path_done d
+                            where d.org_id = p_org and d.step = s.key) as done
+              from path_steps s
+             where v_profile = any (s.profiles)) r;
+
+    select coalesce(min((e ->> 'stage')::int), 5) into v_stage
+      from jsonb_array_elements(v_steps) e where not (e ->> 'done')::boolean;
+    select e ->> 'key' into v_next
+      from jsonb_array_elements(v_steps) with ordinality x(e, i)
+     where not (e ->> 'done')::boolean order by i limit 1;
+
+    select jsonb_agg(jsonb_build_object(
+               'n', n.n,
+               'title', (array['Ouvrir', 'Remplir', 'Vendre', 'Grandir'])[n.n],
+               'done', not exists (select 1 from jsonb_array_elements(v_steps) e
+                                    where (e ->> 'stage')::int = n.n
+                                      and not (e ->> 'done')::boolean))
+               order by n.n)
+      into v_stages from generate_series(1, 4) n(n);
+
+    if v_stage >= 4 then
+        -- A race is businesses earning this week: one that earned once,
+        -- long ago, is on the board at 0 and does not make it one.
+        v_league := (select count(*) from league_scores(cauris_week_start(),
+                                                        now() + interval '1 second') l
+                      where l.league = league_key(p_org) and l.score > 0)
+                    >= cauris_param('path_league_min', 3);
+    end if;
+
+    return jsonb_build_object(
+        'stage', v_stage,
+        'stages', v_stages,
+        'next', v_next,
+        'steps', coalesce(v_steps, '[]'::jsonb),
+        'tools', jsonb_build_object(
+            'invoices',        not path_locked(p_org, 'invoices'),
+            'production',      not path_locked(p_org, 'production'),
+            'credits',         not path_locked(p_org, 'credits'),
+            'second_business', not path_locked(p_org, 'second_business')),
+        -- The wallet is the admins' (as my_cauris): null for the others.
+        'balance', case when v_admin then cauris_balance(p_org) end,
+        -- This week's score, as the league counts it (086): Mara's gifts
+        -- and promotional points (100) are not earned.
+        'week', case when v_admin then
+                    (select coalesce(sum(l.delta), 0)::int from cauris_ledger l
+                      where l.org_id = p_org and l.delta > 0
+                        and l.reason not in ('prize', 'expired', 'spent', 'gift', 'promo')
+                        and l.created_at >= cauris_week_start()) end,
+        'league_open', v_league
+    );
+end;
 $$;
 
 -- 082's terms, with the photographed articles a Basic business keeps.
@@ -31348,8 +32015,21 @@ begin
 
     if p_quantity is not null and p_quantity <> v_run.quantity
        and v_run.product_id is not null then
+        -- 026 set the article's cost price to this batch's unit cost (the
+        -- latest batch's, as receive_products does for a delivery). While
+        -- it still is this batch's — no later batch, no delivery since at
+        -- another cost — it follows the corrected count.
         update products
-           set quantity = quantity + (p_quantity - v_run.quantity)
+           set quantity   = quantity + (p_quantity - v_run.quantity),
+               cost_price = case
+                   when v_run.total_cost > 0
+                    and cost_price = round(v_run.unit_cost, 2)
+                    and not exists (select 1 from production_runs r
+                                     where r.product_id = v_run.product_id
+                                       and r.id <> v_run.id
+                                       and r.created_at > v_run.created_at)
+                   then round(v_run.total_cost / p_quantity, 2)
+                   else cost_price end
          where id = v_run.product_id;
     end if;
 
@@ -31428,6 +32108,18 @@ $$;
 -- Grants (063: a new function is born closed to anon and PUBLIC; Supabase
 -- hands it to authenticated, which the internal ones must not keep)
 -- ------------------------------------------------------------
+revoke execute on function doc_is_photo(text, text)                     from public;
+revoke execute on function trg_membership_roles()                       from public;
+revoke execute on function trg_photo_revive()                           from public;
+revoke execute on function path_state(uuid)                             from public;
+revoke execute on function product_photo_keys(uuid)                     from public;
+revoke execute on function vitrine_checklist(uuid)                      from public;
+revoke execute on function vitrine_score(uuid)                          from public;
+revoke execute on function storefront_photo_allowed(text)               from public;
+revoke execute on function storefront_products(text)                    from public;
+revoke execute on function search_products(text, double precision, double precision) from public;
+revoke execute on function storefront_featured()                        from public;
+revoke execute on function storefront_previews(text[])                  from public;
 revoke execute on function org_setup_done(uuid)                         from public;
 revoke execute on function org_workers(uuid)                            from public;
 revoke execute on function org_free_workers(uuid)                       from public;
@@ -31463,6 +32155,18 @@ revoke execute on function my_orgs()                                    from pub
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function doc_is_photo(text, text)                     from anon;
+        revoke execute on function trg_membership_roles()                       from anon;
+        revoke execute on function trg_photo_revive()                           from anon;
+        revoke execute on function path_state(uuid)                             from anon;
+        revoke execute on function product_photo_keys(uuid)                     from anon;
+        revoke execute on function vitrine_checklist(uuid)                      from anon;
+        -- The street (052, 059, 070, 071, 098): the signed-out vitrine reads them.
+        grant execute on function storefront_photo_allowed(text)                to anon;
+        grant execute on function storefront_products(text)                     to anon;
+        grant execute on function search_products(text, double precision, double precision) to anon;
+        grant execute on function storefront_featured()                         to anon;
+        grant execute on function storefront_previews(text[])                   to anon;
         revoke execute on function org_setup_done(uuid)                         from anon;
         revoke execute on function org_workers(uuid)                            from anon;
         revoke execute on function org_free_workers(uuid)                       from anon;
@@ -31497,6 +32201,8 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         -- The engine: read inside the triggers and the readers, as their
         -- owner. Nobody calls it from an app.
+        revoke execute on function trg_membership_roles()                       from authenticated;
+        revoke execute on function trg_photo_revive()                           from authenticated;
         revoke execute on function org_setup_done(uuid)                         from authenticated;
         revoke execute on function org_workers(uuid)                            from authenticated;
         revoke execute on function org_free_workers(uuid)                       from authenticated;
@@ -31518,6 +32224,16 @@ begin
         revoke execute on function path_progress(uuid, text)                    from authenticated;
         -- The app's doors; each checks who is asking.
         grant execute on function claim_my_invitations()                       to authenticated;
+        -- Read inside product_photo_keys (079), which runs as the caller.
+        grant execute on function doc_is_photo(text, text)                     to authenticated;
+        grant execute on function path_state(uuid)                             to authenticated;
+        grant execute on function product_photo_keys(uuid)                     to authenticated;
+        grant execute on function vitrine_checklist(uuid)                      to authenticated;
+        grant execute on function storefront_photo_allowed(text)               to authenticated;
+        grant execute on function storefront_products(text)                    to authenticated;
+        grant execute on function search_products(text, double precision, double precision) to authenticated;
+        grant execute on function storefront_featured()                        to authenticated;
+        grant execute on function storefront_previews(text[])                  to authenticated;
         grant execute on function team_overview(uuid)                          to authenticated;
         grant execute on function set_member_salary(uuid, uuid, numeric, text) to authenticated;
         grant execute on function spend_cauris(uuid, text)                     to authenticated;
