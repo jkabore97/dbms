@@ -2951,4 +2951,13 @@ const enStrings = <String, String>{
   'Étape du chemin': 'Path step',
   'Podium de la semaine': 'Week\'s podium',
   'Leçon de l\'Académie Mara': 'Mara Academy lesson',
+  'Langue du téléphone par défaut': 'Phone language by default',
+  'Voir les articles et commander :': 'See the items and order:',
+  'Partager {name}': 'Share {name}',
+  'Mettre en statut WhatsApp': 'Post as a WhatsApp status',
+  'Envoyer à un contact': 'Send to a contact',
+  'Commandez ici': 'Order here',
+  'Votre statut': 'Your status',
+  'Partager sur WhatsApp': 'Share on WhatsApp',
+  'Choisissez WhatsApp, puis « Mon statut ».': 'Choose WhatsApp, then “My status”.',
 };

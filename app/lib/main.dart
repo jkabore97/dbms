@@ -332,6 +332,13 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
         (_) => unawaited(_session.refresh(force: true)));
   }
 
+  /// The phone's language changed while Mara was open: with no choice made
+  /// in Compte, the app follows it at once.
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (_locale.chosen == null) setState(() {});
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.hidden ||

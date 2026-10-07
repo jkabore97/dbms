@@ -11,3 +11,4 @@ scratchpad/
 # Browser check (scripts/smoke): its screenshots on failure, its local install.
 smoke-*.png
 /node_modules/
+.wrangler/

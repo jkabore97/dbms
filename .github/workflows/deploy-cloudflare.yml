@@ -170,7 +170,11 @@ jobs:
           EOF
 
       - name: Deploy
-        run: npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml
+        run: |
+          npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
+            --var "UPLOADS_URL:$UPLOADS_URL"
 
       - name: Say where it went
         run: |
