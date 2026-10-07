@@ -1153,13 +1153,14 @@ begin
             insert into notifications (recipient_id, org_id, kind, message, params)
             values (new.applicant_id, new.org_id, 'application_approved',
                     'Votre demande est acceptée : ' || new.name || ' est ouverte.',
-                    jsonb_build_object('name', new.name));
+                    jsonb_build_object('to', 'applicant', 'name', new.name));
         elsif new.status = 'rejected' then
             insert into notifications (recipient_id, org_id, kind, message, params)
             values (new.applicant_id, null, 'application_refused',
                     'Votre demande pour ' || new.name || ' est refusée : '
                         || coalesce(new.decision_note, '') ,
-                    jsonb_build_object('name', new.name, 'reason', new.decision_note));
+                    jsonb_build_object('to', 'applicant', 'name', new.name,
+                                       'reason', new.decision_note));
         end if;
     exception when others then
         null;

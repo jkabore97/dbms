@@ -183,6 +183,15 @@ String notificationLine(BuildContext context, NotificationRow n) {
             : PlanTerms.labelOf(s('feature')),
         'date': date('until'),
       });
+    // A gift taken back from the command center's journal (105).
+    case 'gift_undone':
+      return s('feature').isEmpty
+          ? context.tr('Mara a repris {n} cauris offerts.', {'n': s('points')})
+          : context.tr('Mara a annulé l\'ouverture de {tool}.', {
+              'tool': s('feature') == 'pro_all'
+                  ? context.tr('Mara Pro complet')
+                  : PlanTerms.labelOf(s('feature')),
+            });
     case 'payout_changed':
       return s('what') == 'wave'
           ? context.tr('Le compte Wave de vos ventes a été changé')
@@ -198,8 +207,48 @@ String notificationLine(BuildContext context, NotificationRow n) {
         'visible' => context.tr('Mara a rendu « {tool} » visible pour votre activité.', {'tool': tool}),
         _ => context.tr('Mara a remis « {tool} » comme par défaut pour votre activité.', {'tool': tool}),
       };
+    // The applicant hears the decision on their request (107).
+    case 'application_approved':
+      return context.tr('Votre demande est acceptée : {name} est ouverte.', {'name': s('name')});
+    case 'application_refused':
+      return context.tr('Votre demande pour {name} est refusée : {reason}',
+          // A ready reason (applications_screen.dart) reads in English too.
+          {'name': s('name'), 'reason': context.tr(s('reason'))});
+    // Mara changed the business's vitrine or its identity from the command
+    // center, or took her change back (106).
+    case 'mara_edited' || 'mara_undone':
+      final undone = n.kind == 'mara_undone';
+      if (s('what') == 'vitrine') {
+        return undone
+            ? context.tr('Mara a annulé sa modification de votre vitrine')
+            : context.tr('Mara a modifié votre vitrine');
+      }
+      if (undone) {
+        return context.tr('Mara a annulé sa modification de l\'identité de votre activité');
+      }
+      return context.tr('Mara a modifié l\'identité de votre activité : {what}',
+          {'what': _identityWords(context, p['fields'])});
   }
   return n.message;
+}
+
+/// « nom, téléphone »: the identity's columns Mara changed (106), in words.
+String _identityWords(BuildContext context, Object? fields) {
+  final words = <String>[];
+  for (final f in (fields is List ? fields : const [])) {
+    final w = switch ('$f') {
+      'name' => context.tr('nom'),
+      'slug' => context.tr('adresse web'),
+      'profile' => context.tr('type d\'activité'),
+      'default_currency' => context.tr('monnaie'),
+      'phone' => context.tr('téléphone'),
+      'address' => context.tr('adresse'),
+      'verified_at' || 'verified_by' => context.tr('vérification'),
+      final other => other,
+    };
+    if (!words.contains(w)) words.add(w);
+  }
+  return words.join(', ');
 }
 
 /// « Boutiques · Ouagadougou · petites », from the league's key
@@ -284,7 +333,7 @@ String? notificationTarget(
       final tontine = p['tontine_id'] as String?;
       return tontine == null ? inside('tontines') : inside('tontines/$tontine');
     case 'unlock' || 'cauris_prize' || 'cauris_gift' || 'cauris_promo' ||
-          'feature_gift':
+          'feature_gift' || 'gift_undone':
       return inside('chemin');
     case 'cauris_board':
       return inside('classement');
@@ -292,6 +341,10 @@ String? notificationTarget(
       return inside('kaj-pro');
     case 'spot_approved' || 'spot_refused':
       return Routes.orgSettings(org, part: 'vitrine');
+    // What Mara changed, where the owner sees it (106).
+    case 'mara_edited' || 'mara_undone':
+      return Routes.orgSettings(org,
+          part: p['what'] == 'vitrine' ? 'vitrine' : 'identite');
   }
   if (n.kind.startsWith('order_') || n.kind.startsWith('delivery_')) {
     return forShop() ? inside('commandes') : Routes.myOrders;

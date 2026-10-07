@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/access/org_access.dart';
@@ -7,7 +6,6 @@ import '../../../core/auth/models.dart';
 import '../../../core/cauris/feature_states.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/nav/app_scope.dart';
-import '../../../core/nav/look_only.dart';
 import '../../../core/nav/session.dart';
 import '../../../core/notify/notifications_repository.dart';
 import '../../../core/theme/kaj_theme.dart';
@@ -15,6 +13,7 @@ import '../../../core/theme/mara_mark.dart';
 import '../../account/compte_screen.dart';
 import '../../home/business_shell.dart';
 import '../../pro/pro_strip.dart';
+import 'look_only_view.dart';
 
 /// « Voir comme le commerçant » (106): a business's home and its Compte,
 /// drawn exactly as its owner sees them — the owner's role, the plan's
@@ -32,7 +31,7 @@ class MerchantPreviewScreen extends StatefulWidget {
   final OrgSummary org;
 
   static Future<void> open(BuildContext context, OrgSummary org) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(
+      Navigator.of(context, rootNavigator: true).push(MaterialPageRoute<void>(
         builder: (_) => MerchantPreviewScreen(org: org),
       ));
 
@@ -87,7 +86,8 @@ class _MerchantPreviewScreenState extends State<MerchantPreviewScreen> {
       appBar: AppBar(
         backgroundColor: maraDeep,
         foregroundColor: maraPaper,
-        title: Text(context.tr('Voir comme le commerçant')),
+        title: Text(context.tr('Voir comme le commerçant'),
+            style: const TextStyle(color: maraPaper, fontWeight: FontWeight.w700)),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -328,10 +328,8 @@ class _PreviewBanner extends StatelessWidget {
 }
 
 /// One screen of the business on a phone's width, under the owner's
-/// scope, untouchable: taps, long presses, drags on a switch and the
-/// keyboard never reach it. A drag or a wheel scrolls it — through the
-/// screen's main list, given this frame's own controller.
-class _OwnerFrame extends StatefulWidget {
+/// scope, to look at and scroll only (see [LookOnlyView]).
+class _OwnerFrame extends StatelessWidget {
   const _OwnerFrame({
     required this.base,
     required this.session,
@@ -350,94 +348,46 @@ class _OwnerFrame extends StatefulWidget {
   final Widget child;
 
   @override
-  State<_OwnerFrame> createState() => _OwnerFrameState();
-}
-
-class _OwnerFrameState extends State<_OwnerFrame> {
-  final _scroll = ScrollController();
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _by(double dy) {
-    if (!_scroll.hasClients) return;
-    final p = _scroll.positions.first;
-    p.jumpTo((p.pixels + dy).clamp(p.minScrollExtent, p.maxScrollExtent));
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final s = widget.base;
-    return LayoutBuilder(builder: (context, box) {
-      final size = Size(widget.width, box.maxHeight);
-      final screen = MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          size: size,
-          padding: EdgeInsets.zero,
-          viewPadding: EdgeInsets.zero,
-          viewInsets: EdgeInsets.zero,
-        ),
-        child: AppScope(
-          session: widget.session,
-          localeController: s.localeController,
-          db: s.db,
-          auth: s.auth,
-          admin: s.admin,
-          reports: s.reports,
-          accounting: s.accounting,
-          console: s.console,
-          farm: s.farm,
-          invoicing: s.invoicing,
-          retail: s.retail,
-          staff: s.staff,
-          capture: s.capture,
-          onboarding: s.onboarding,
-          credit: s.credit,
-          tontine: s.tontine,
-          production: s.production,
-          // The bell reads nothing: the platform admin's own bell is not
-          // the owner's.
-          notify: NotificationsRepository(null),
-          analytics: s.analytics,
-          sync: s.sync,
-          security: s.security,
-          securityApi: s.securityApi,
-          wavePay: s.wavePay,
-          child: LookOnly(
-            child: HeroMode(
-              enabled: false,
-              child: PrimaryScrollController(
-                controller: _scroll,
-                automaticallyInheritForPlatforms: TargetPlatform.values.toSet(),
-                child: widget.child,
-              ),
-            ),
-          ),
-        ),
-      );
-      final untouchable = Listener(
-        onPointerSignal: (e) {
-          if (e is PointerScrollEvent) _by(e.scrollDelta.dy);
-        },
-        onPointerPanZoomUpdate: (e) => _by(-e.panDelta.dy),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onVerticalDragUpdate: (d) => _by(-d.delta.dy),
-          child: AbsorbPointer(child: ExcludeFocus(child: screen)),
-        ),
-      );
-      final sized = SizedBox(width: size.width, height: size.height, child: untouchable);
-      if (!widget.framed) return sized;
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: maraGrey.withValues(alpha: 0.5), width: 6),
-        ),
-        child: ClipRRect(borderRadius: BorderRadius.circular(22), child: sized),
-      );
-    });
+    final s = base;
+    final view = LookOnlyView(
+      width: width,
+      child: AppScope(
+        session: session,
+        localeController: s.localeController,
+        db: s.db,
+        auth: s.auth,
+        admin: s.admin,
+        reports: s.reports,
+        accounting: s.accounting,
+        console: s.console,
+        farm: s.farm,
+        invoicing: s.invoicing,
+        retail: s.retail,
+        staff: s.staff,
+        capture: s.capture,
+        onboarding: s.onboarding,
+        credit: s.credit,
+        tontine: s.tontine,
+        production: s.production,
+        // The bell reads nothing: the platform admin's own bell is not
+        // the owner's.
+        notify: NotificationsRepository(null),
+        analytics: s.analytics,
+        sync: s.sync,
+        security: s.security,
+        securityApi: s.securityApi,
+        wavePay: s.wavePay,
+        child: child,
+      ),
+    );
+    if (!framed) return view;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: maraGrey.withValues(alpha: 0.5), width: 6),
+      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(22), child: view),
+    );
   }
 }

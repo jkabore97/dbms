@@ -44,14 +44,10 @@ class VitrinePlusCard extends StatefulWidget {
   /// The name drawn in the preview.
   final String? shopName;
 
-  @override
-  State<VitrinePlusCard> createState() => _VitrinePlusCardState();
-}
-
-class _VitrinePlusCardState extends State<VitrinePlusCard> {
   /// The palette a shop may pick its button colour from: six that read on
   /// the street's paper, chosen once so no vitrine ends up unreadable. The
-  /// server holds the same six (vitrine_free_accents, 093).
+  /// server holds the same six (vitrine_free_accents, 093); Mara's vitrine
+  /// by default for a kind (107) offers them too.
   static const accents = <Color>[
     Color(0xFFB1541A),
     Color(0xFF2E7D5B),
@@ -60,6 +56,13 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
     Color(0xFFB8860B),
     Color(0xFF444444),
   ];
+
+  @override
+  State<VitrinePlusCard> createState() => _VitrinePlusCardState();
+}
+
+class _VitrinePlusCardState extends State<VitrinePlusCard> {
+  static const accents = VitrinePlusCard.accents;
 
   /// The times offered for opening and closing: every half hour.
   static final times = [

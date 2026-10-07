@@ -371,12 +371,6 @@ abstract class Strings {
   /// **'Choisissez une activité'**
   String get pickBusiness;
 
-  /// No description provided for @manageBusinesses.
-  ///
-  /// In fr, this message translates to:
-  /// **'Gérer les entreprises'**
-  String get manageBusinesses;
-
   /// No description provided for @newBusiness.
   ///
   /// In fr, this message translates to:

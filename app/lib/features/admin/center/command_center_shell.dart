@@ -212,8 +212,7 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     final b = _badges;
     if (b == null) return 0;
     return switch (section) {
-      'todo' => b['pro_paid'] + b['spots_paid'] + b['couriers'] + b['orders_stuck'] +
-          b['payouts_failed'],
+      'todo' => b.waiting,
       'requests' => b['applications'],
       'pro' => b['pro_paid'],
       _ => 0,
@@ -273,6 +272,7 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     final path = _path(context);
     final current = sectionFor(sections, path);
     final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Header(wide: wide, onSearch: _openSearch, onLeave: () => AdminTrail.leave(context)),
         if (current.pages.length > 1) _PageTabs(section: current, path: path),
@@ -439,6 +439,7 @@ class _PageTabs extends StatelessWidget {
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       child: SingleChildScrollView(
+        key: const Key('center-tabs'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
         child: Row(

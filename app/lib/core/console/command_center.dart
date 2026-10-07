@@ -112,6 +112,11 @@ class PlatformTodo {
   final Map<String, int> counts;
 
   int operator [](String key) => counts[key] ?? 0;
+
+  /// What waits on the platform, « À faire »'s « À traiter » in one number.
+  int get waiting =>
+      this['applications'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
+      this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'];
 }
 
 /// One row behind a count: a business, and what is about it.
@@ -130,6 +135,7 @@ class TodoRow {
     this.orderId,
     this.error,
     this.spot,
+    this.state,
     this.gift = false,
     this.at,
   });
@@ -148,6 +154,7 @@ class TodoRow {
         orderId: _text(j['order_id']),
         error: _text(j['error']),
         spot: _text(j['spot']),
+        state: _text(j['state']),
         gift: j['gift'] == true,
         at: _date(j['at']),
       );
@@ -167,6 +174,9 @@ class TodoRow {
   final String? orderId;
   final String? error;
   final String? spot;
+
+  /// A rule's switch (rules_ending): 'visible' or 'hidden'.
+  final String? state;
   final bool gift;
   final DateTime? at;
 }

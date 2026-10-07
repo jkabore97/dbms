@@ -5,10 +5,8 @@ import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/format/money.dart';
 import 'package:kaj_app/features/admin/console_today.dart';
 
-/// The console opens on today (072).
-///
-/// The audit: a table under nine unlabelled icons, and every task the
-/// platform owed hidden behind one of them.
+/// The platform's figures (072), under « À faire » in the command center
+/// (104).
 class _Admin extends AdminRepository {
   _Admin(this.today) : super(null);
 
@@ -25,16 +23,8 @@ class _Admin extends AdminRepository {
   }
 }
 
-PlatformToday _day({int applications = 0, int spots = 0}) =>
+PlatformToday _day() =>
     PlatformToday.fromJson({
-      'todo': {
-        'applications': applications,
-        'pro_requests': 0,
-        'spots': spots,
-        'spots_paid': spots,
-        'couriers': 0,
-        'orders_stuck': 0,
-      },
       'money': {'pro': 30000, 'spots': 2500, 'delivery_cut': 1200, 'shops_sold': 90000},
       'growth': {'businesses': 14, 'new_month': 3, 'windows_open': 4,
           'windows_stocked': 1, 'orders_week': 9, 'orders_last_week': 5,
@@ -44,8 +34,7 @@ PlatformToday _day({int applications = 0, int spots = 0}) =>
     });
 
 void main() {
-  Future<_Admin> pump(WidgetTester tester, PlatformToday? today,
-      {List<String>? opened}) async {
+  Future<_Admin> pump(WidgetTester tester, PlatformToday? today) async {
     tester.view.physicalSize = const Size(390, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -57,13 +46,6 @@ void main() {
           builder: (_, _) => Scaffold(
               body: SingleChildScrollView(child: ConsoleToday(admin: admin))),
         ),
-        GoRoute(
-          path: '/demandes',
-          builder: (_, _) {
-            opened?.add('/demandes');
-            return const Text('Demandes');
-          },
-        ),
       ]),
     ));
     await tester.pump();
@@ -71,23 +53,11 @@ void main() {
     return admin;
   }
 
-  testWidgets('what waits is named, counted and opens its screen',
-      (tester) async {
-    final opened = <String>[];
-    await pump(tester, _day(applications: 2, spots: 1), opened: opened);
-    expect(find.text("Demandes d'entreprise"), findsOneWidget);
-    expect(find.text('Mises en avant (1 payée)'), findsOneWidget);
-    expect(find.text('Livreurs à valider'), findsNothing,
-        reason: 'nothing waits there: not listed');
-    await tester.tap(find.text("Demandes d'entreprise"));
-    await tester.pumpAndSettle();
-    expect(opened, ['/demandes']);
-  });
-
-  testWidgets('a quiet day says so; money, growth and health are figures',
-      (tester) async {
+  // What waits is « À faire »'s own now (105): test/command_center_test.dart.
+  testWidgets('money, growth and health are figures', (tester) async {
     await pump(tester, _day());
-    expect(find.text("Rien n'attend la plateforme."), findsOneWidget);
+    expect(find.text('À traiter'), findsNothing,
+        reason: '« À faire » counts what waits, above these figures');
     expect(find.text('gagné ${moneyFormat('XOF').format(33700)}'),
         findsOneWidget);
     expect(find.text('+4 sur la semaine dernière'), findsOneWidget);
@@ -97,7 +67,7 @@ void main() {
 
   testWidgets('nothing for anyone but the platform', (tester) async {
     await pump(tester, null);
-    expect(find.text('À traiter'), findsNothing);
+    expect(find.text('Ce mois'), findsNothing);
   });
 
   testWidgets('Écrire aux boutiques sends to every business', (tester) async {

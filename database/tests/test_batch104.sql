@@ -119,6 +119,16 @@ end;
 $$;
 grant execute on function zz_b104_try(text) to authenticated;
 
+-- What the engine says, read by the suite as any role (feature_hidden is
+-- closed to the app's).
+create or replace function zz_b104_hidden(p_org uuid, p_key text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$ select feature_hidden(p_org, p_key) $$;
+grant execute on function zz_b104_hidden(uuid, text) to authenticated;
+
 \echo ''
 \echo '--- TEST 1 (P1): no rule, nothing hidden — a shop, a farm, an association, a church ---'
 begin;
@@ -191,9 +201,11 @@ begin
         raise exception 'FAIL: the farm board offers %', v;
     end if;
     select count(*) into v from jsonb_array_elements(platform_feature_board('retail', null));
+    execute 'reset role';
     if v::int <> (select count(*) from feature_catalog) then
         raise exception 'FAIL: the shop board leaves something out';
     end if;
+    execute 'set local role authenticated';
     if zz_b104_try($q$select platform_set_feature_rule('kind', 'association', null, 'production', 'hidden')$q$)
        <> 'P0001: Cette fonction n''existe pas pour ce genre d''activité.'
        or zz_b104_try($q$select platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000004', 'analytics', 'hidden')$q$)
@@ -286,23 +298,23 @@ begin
     -- Every shop loses its invoices; this one keeps them.
     v_a := platform_set_feature_rule('kind', 'retail', null, 'invoices', 'hidden', null, 'essai');
     perform platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000001', 'invoices', 'visible');
-    if not feature_hidden('10400000-0000-0000-0000-000000000002', 'invoices')
-       or not feature_hidden('10400000-0000-0000-0000-000000000006', 'invoices')
-       or feature_hidden('10400000-0000-0000-0000-000000000001', 'invoices')
-       or feature_hidden('10400000-0000-0000-0000-000000000003', 'invoices') then
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000002', 'invoices')
+       or not zz_b104_hidden('10400000-0000-0000-0000-000000000006', 'invoices')
+       or zz_b104_hidden('10400000-0000-0000-0000-000000000001', 'invoices')
+       or zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'invoices') then
         raise exception 'FAIL: the kind''s switch or the business''s override is wrong';
     end if;
     -- Every association loses its carnet: a legacy church with it.
     perform platform_set_feature_rule('kind', 'association', null, 'credits', 'hidden');
-    if not feature_hidden('10400000-0000-0000-0000-000000000005', 'credits')
-       or not feature_hidden('10400000-0000-0000-0000-000000000004', 'credits')
-       or feature_hidden('10400000-0000-0000-0000-000000000001', 'credits') then
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000005', 'credits')
+       or not zz_b104_hidden('10400000-0000-0000-0000-000000000004', 'credits')
+       or zz_b104_hidden('10400000-0000-0000-0000-000000000001', 'credits') then
         raise exception 'FAIL: a church was not counted as an association';
     end if;
     -- A business hidden while its kind shows it.
     perform platform_set_feature_rule('kind', 'farm', null, 'production', 'visible');
     perform platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000003', 'production', 'hidden');
-    if not feature_hidden('10400000-0000-0000-0000-000000000003', 'production') then
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'production') then
         raise exception 'FAIL: a business''s own switch did not win over its kind''s';
     end if;
     v := platform_feature_board(null, '10400000-0000-0000-0000-000000000002');
@@ -331,7 +343,7 @@ begin
     update feature_rules set until = now() - interval '1 minute'
      where scope = 'kind' and kind = 'retail' and feature = 'invoices';
     execute 'set local role authenticated';
-    if feature_hidden('10400000-0000-0000-0000-000000000002', 'invoices') then
+    if zz_b104_hidden('10400000-0000-0000-0000-000000000002', 'invoices') then
         raise exception 'FAIL: an expired switch still hides';
     end if;
     perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
@@ -354,9 +366,9 @@ begin
     -- Tontines hidden for every shop.
     v := platform_feature_impact('retail', 'tontines', 'hidden');
     perform platform_set_feature_rule('kind', 'retail', null, 'tontines', 'hidden');
-    if feature_hidden('10400000-0000-0000-0000-000000000001', 'tontines')   -- paid Mara Pro
-       or feature_hidden('10400000-0000-0000-0000-000000000006', 'tontines') -- bought with cauris
-       or not feature_hidden('10400000-0000-0000-0000-000000000002', 'tontines') then -- Mara's gift
+    if zz_b104_hidden('10400000-0000-0000-0000-000000000001', 'tontines')   -- paid Mara Pro
+       or zz_b104_hidden('10400000-0000-0000-0000-000000000006', 'tontines') -- bought with cauris
+       or not zz_b104_hidden('10400000-0000-0000-0000-000000000002', 'tontines') then -- Mara's gift
         raise exception 'FAIL: paid tools were hidden, or a gift counted as paid';
     end if;
     if (v->>'paid')::int < 2 or (v->>'orgs')::int < 3 then
@@ -371,7 +383,7 @@ begin
     end if;
     -- A tool no plan sells (the carnet) is hidden on Pro like anywhere.
     perform platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000001', 'credits', 'hidden');
-    if not feature_hidden('10400000-0000-0000-0000-000000000001', 'credits') then
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000001', 'credits') then
         raise exception 'FAIL: a tool Pro does not sell was not hidden on Pro';
     end if;
     -- The board says why.
@@ -390,13 +402,15 @@ rollback;
 -- half of the proof), and leave something to knock on with.
 do $$
 declare
-    v_inv uuid; v_debt uuid; v_sale uuid; v_run uuid; v_rcpt uuid; v_ton uuid;
+    v_inv uuid; v_inv2 uuid; v_debt uuid; v_sale uuid; v_run uuid; v_rcpt uuid; v_ton uuid;
     v_mem uuid;
 begin
     perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
     execute 'set local role authenticated';
     v_inv := create_invoice('10400000-0000-0000-0000-000000000001', 'Client 11',
                             '[{"description": "Savon", "quantity": 2, "unit_price": 500}]'::jsonb);
+    v_inv2 := create_invoice('10400000-0000-0000-0000-000000000001', 'Client 11 bis',
+                             '[{"description": "Farine", "quantity": 1, "unit_price": 100}]'::jsonb);
     v_debt := record_credit_sale('10400000-0000-0000-0000-000000000001', 'Awa 11', 1000, 'Riz');
     v_sale := record_sale('10400000-0000-0000-0000-000000000001',
         '[{"product_id":"10400000-0000-0000-0000-0000000000a1","name":"Savon 11","quantity":1,"unit_price":500}]'::jsonb);
@@ -415,7 +429,7 @@ begin
     select id into v_rcpt from stock_receipts where org_id = '10400000-0000-0000-0000-000000000001'
      order by received_at desc limit 1;
     create temp table b104_ids (k text primary key, id uuid);
-    insert into b104_ids values ('inv', v_inv), ('debt', v_debt), ('sale', v_sale),
+    insert into b104_ids values ('inv', v_inv), ('inv2', v_inv2), ('debt', v_debt), ('sale', v_sale),
         ('run', v_run), ('rcpt', v_rcpt), ('ton', v_ton), ('mem', v_mem);
     grant select on b104_ids to authenticated;
 end $$;
@@ -438,7 +452,7 @@ begin
         -- key, org, member, the door
         ('invoices', v_shop, 'create_invoice(' || v_shop || ', ''X'', ''[{"description": "a", "quantity": 1, "unit_price": 10}]''::jsonb)'),
         ('invoices', v_shop, 'record_invoice_payment(''' || (i->>'inv') || ''', 100)'),
-        ('invoices', v_shop, 'cancel_invoice(''' || (i->>'inv') || ''')'),
+        ('invoices', v_shop, 'cancel_invoice(''' || (i->>'inv2') || ''')'),
         ('invoices', v_shop, 'list_invoices(' || v_shop || ')'),
         ('invoices', v_shop, 'invoice_header(''' || (i->>'inv') || ''')'),
         ('invoices', v_shop, 'invoice_lines_of(''' || (i->>'inv') || ''')'),
@@ -512,6 +526,7 @@ begin
         end if;
     end loop;
     -- No door left untested.
+    execute 'reset role';
     select string_agg(key, ', ') into v_missing from feature_catalog where not (key = any (v_tested));
     if v_missing is not null then
         raise exception 'FAIL: no door tested for %', v_missing;
@@ -584,6 +599,7 @@ declare
     v_show uuid;
     v_kind uuid;
     v_none uuid;
+    v_until timestamptz;
     a record;
     v_n int;
 begin
@@ -597,10 +613,11 @@ begin
         raise exception 'FAIL: the journal line is wrong: %', row_to_json(a);
     end if;
     -- Nothing moved: nothing logged.
+    execute 'reset role';
+    select until into v_until from feature_rules where org_id = '10400000-0000-0000-0000-000000000003';
+    execute 'set local role authenticated';
     v_none := platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000003', 'credits',
-                                        'hidden', (select until from feature_rules
-                                                    where org_id = '10400000-0000-0000-0000-000000000003'),
-                                        'saison sèche');
+                                        'hidden', v_until, 'saison sèche');
     if v_none is not null then
         raise exception 'FAIL: a change that changed nothing was logged';
     end if;
@@ -629,12 +646,14 @@ begin
     end if;
     -- Newest first: undone, then the older one.
     perform platform_undo(v_show);
-    if not feature_hidden('10400000-0000-0000-0000-000000000003', 'credits') then
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'credits') then
         raise exception 'FAIL: the undo did not bring the hidden switch back';
     end if;
     perform platform_undo(v_hide);
-    if exists (select 1 from feature_rules where org_id = '10400000-0000-0000-0000-000000000003')
-       or feature_hidden('10400000-0000-0000-0000-000000000003', 'credits') then
+    if (select b->>'state' from jsonb_array_elements(
+            platform_feature_board(null, '10400000-0000-0000-0000-000000000003')) b
+         where b->>'key' = 'credits') <> 'default'
+       or zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'credits') then
         raise exception 'FAIL: the undo did not clear the switch';
     end if;
     if zz_b104_try(format('select platform_undo(%L)', v_hide)) <> 'P0001: Cette action a déjà été annulée.' then
@@ -646,7 +665,7 @@ begin
     end if;
     -- The kind's switch, undone: every farm has its invoices again.
     perform platform_undo(v_kind);
-    if feature_hidden('10400000-0000-0000-0000-000000000003', 'invoices') then
+    if zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'invoices') then
         raise exception 'FAIL: the kind''s undo did not restore';
     end if;
     raise notice 'PASS: logged with before/after, nothing logged for no change, the owner told and nobody for a kind, a stale undo refused, undone once, newest first';
@@ -687,20 +706,22 @@ rollback;
 begin;
 set local role authenticated;
 do $$
+declare v_before int;
 begin
     perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
     perform platform_set_feature_rule('kind', 'retail', null, 'analytics', 'hidden');
     perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000007', true);
+    v_before := cauris_balance('10400000-0000-0000-0000-000000000006');
     if zz_b104_try($q$select spend_cauris('10400000-0000-0000-0000-000000000006', 'analytics')$q$)
        not like 'MA002%' then
         raise exception 'FAIL: cauris were spent on a hidden tool';
     end if;
-    if cauris_balance('10400000-0000-0000-0000-000000000006') <> 5000 then
+    if cauris_balance('10400000-0000-0000-0000-000000000006') <> v_before then
         raise exception 'FAIL: the balance moved';
     end if;
     -- The whole of Pro, bought with its cauris: paid, so every Pro tool shows.
     perform spend_cauris('10400000-0000-0000-0000-000000000006', 'pro_all');
-    if feature_hidden('10400000-0000-0000-0000-000000000006', 'analytics') then
+    if zz_b104_hidden('10400000-0000-0000-0000-000000000006', 'analytics') then
         raise exception 'FAIL: Mara Pro complet bought with cauris left a Pro tool hidden';
     end if;
     raise notice 'PASS: no cauris for a hidden tool; Pro complet bought with cauris is paid';
@@ -708,6 +729,7 @@ end $$;
 rollback;
 
 drop function zz_b104_try(text);
+drop function zz_b104_hidden(uuid, text);
 drop table if exists b104_ids;
 update platform_settings set value = '0' where key = 'path_gates_open';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/console/fiche_repository.dart';
+import '../../../core/console/command_center.dart';
 import '../../../core/errors.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
@@ -150,7 +150,7 @@ class MaraAsBanner extends StatelessWidget {
 /// shows. [actionId] null (nothing moved) says so instead.
 void showUndoBar(
   BuildContext context, {
-  required FicheRepository fiche,
+  required CommandCenterRepository center,
   required String? actionId,
   required String done,
   VoidCallback? onUndone,
@@ -172,7 +172,7 @@ void showUndoBar(
       label: undoLabel,
       onPressed: () async {
         try {
-          await fiche.undo(actionId);
+          await center.undo(actionId);
           messenger.showSnackBar(SnackBar(content: Text(undone)));
           onUndone?.call();
         } catch (e) {
@@ -222,4 +222,27 @@ class FicheWidth extends StatelessWidget {
           child: child,
         ),
       );
+}
+
+/// The fiche's tabs, in their order, with their name in an address.
+enum FicheTab {
+  overview('apercu', 'Aperçu', Icons.insights_outlined),
+  identity('identite', 'Identité', Icons.badge_outlined),
+  vitrine('vitrine', 'Vitrine', Icons.storefront_outlined),
+  features('fonctions', 'Fonctions', Icons.toggle_on_outlined),
+  team('equipe', 'Équipe', Icons.groups_outlined),
+  pro('pro', 'Pro et cauris', Icons.workspace_premium_outlined),
+  journal('journal', 'Journal', Icons.history);
+
+  const FicheTab(this.key, this.label, this.icon);
+  final String key;
+  final String label;
+  final IconData icon;
+
+  static int indexOf(String? key) {
+    for (final t in values) {
+      if (t.key == key) return t.index;
+    }
+    return 0;
+  }
 }

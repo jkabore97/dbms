@@ -710,6 +710,49 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch103.sql
 
+      - name: Prove Mara's switchboard — no dead switch, nothing paid hidden, the platform's alone, logged and undone (104)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch104.sql
+
+      # P1: installing 104 and after changes nothing a business or a vitrine
+      # shows. Its own database: 103, a photograph of every member's tools,
+      # every business's states and the whole street; then 104 onwards and
+      # the same photograph again, compared answer for answer.
+      - name: Prove installing 104 and after changes nothing a store, a farm, an association or a vitrine shows (104, P1)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'drop database if exists p1_104' -c 'create database p1_104'
+          P="psql -h localhost -U postgres -d p1_104 -v ON_ERROR_STOP=1 -q"
+          $P -f database/tests/supabase_stub.sql
+          $P -f database/schema.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -le 103 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_104_before.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -ge 104 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_104_after.sql
+
+      - name: Prove the command center — À faire, one search, several businesses at once, Réglages, the platform's alone, each change journaled and undone (105)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch105.sql
+
+      - name: Prove the fiche entreprise — the platform's alone, Mara's hand on a vitrine or an identity logged, told and undone (106)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch106.sql
+
+      - name: Prove the types of business and the request page — nothing set is today, a kind's own numbers, vitrine and steps, the page's answers, the platform's alone (107)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch107.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom

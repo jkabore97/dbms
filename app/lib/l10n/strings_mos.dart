@@ -151,9 +151,6 @@ class StringsMos extends Strings {
   String get pickBusiness => 'Choisissez une activité';
 
   @override
-  String get manageBusinesses => 'Gérer les entreprises';
-
-  @override
   String get newBusiness => 'Nouvelle activité';
 
   @override

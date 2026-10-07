@@ -40,11 +40,16 @@ class TeamScreen extends StatefulWidget {
     required this.org,
     required this.admin,
     required this.onboarding,
+    this.embedded = false,
   });
 
   final OrgSummary org;
   final AdminRepository admin;
   final OnboardingRepository onboarding;
+
+  /// Drawn inside another page's tab — the command center's fiche (106) —
+  /// which has its own top bar: none here.
+  final bool embedded;
 
   @override
   State<TeamScreen> createState() => _TeamScreenState();
@@ -675,7 +680,7 @@ class _TeamScreenState extends State<TeamScreen> {
     final payrollLocked =
         session?.accessFor(widget.org.id).isProLocked('payroll') ?? false;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Équipe'))),
+      appBar: widget.embedded ? null : AppBar(title: Text(context.tr('Équipe'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(

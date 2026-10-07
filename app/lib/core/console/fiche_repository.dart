@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// The fiche entreprise's window onto the server (106, on 104's journal):
-/// one business, seen and changed by the platform. Every call here is
-/// refused by the server to anybody but a platform admin — the fiche is
-/// drawn only for one, and that is a courtesy, not the lock.
+/// The fiche entreprise's window onto the server (106, and 104's board at
+/// one business's level): one business, seen and changed by the platform.
+/// Every call here is refused by the server to anybody but a platform
+/// admin — the fiche is drawn only for one, and that is a courtesy, not
+/// the lock. The journal and its « Annuler » are the command center's
+/// (CommandCenterRepository, 105).
 class FicheRepository {
   FicheRepository(this._client);
 
@@ -79,36 +81,6 @@ class FicheRepository {
       'p_note': note,
     });
     return v as String?;
-  }
-
-  /// The journal of what Mara did to this business, newest first (104).
-  Future<List<PlatformAction>> actions(String orgId,
-      {int limit = 50, DateTime? before}) async {
-    final v = await _db.rpc('platform_actions_page', params: {
-      'p_org': orgId,
-      'p_limit': limit,
-      'p_before': before?.toUtc().toIso8601String(),
-    });
-    return [
-      for (final r in (v is List ? v : const []))
-        PlatformAction.fromJson(Map<String, dynamic>.from(r as Map)),
-    ];
-  }
-
-  /// « Annuler » (104): the line's undo, once.
-  Future<void> undo(String actionId) async {
-    await _db.rpc('platform_undo', params: {'p_action': actionId});
-  }
-
-  /// The newest line of one kind for this business — what a save that
-  /// returns no id of its own (set_org_plan, logged by 106's trigger)
-  /// wrote, for its « Annuler ».
-  Future<PlatformAction?> latest(String orgId, String kind) async {
-    final page = await actions(orgId, limit: 5);
-    for (final a in page) {
-      if (a.kind == kind) return a;
-    }
-    return null;
   }
 }
 
@@ -342,55 +314,5 @@ class FeatureBoardRow {
         note: _text(j['note']),
         paid: j['paid'] == true,
         proTool: _text(j['pro_tool']),
-      );
-}
-
-/// One line of the command center's journal (104's platform_actions_page).
-class PlatformAction {
-  const PlatformAction({
-    required this.id,
-    required this.at,
-    required this.kind,
-    required this.summary,
-    this.actorLabel = 'Mara',
-    this.orgId,
-    this.orgName,
-    this.before,
-    this.after,
-    this.undoable = false,
-    this.undoneAt,
-    this.undoneBy,
-  });
-
-  final String id;
-  final DateTime at;
-  final String kind;
-
-  /// The server's own line, in French: « Vitrine : présentation, logo ».
-  final String summary;
-  final String actorLabel;
-  final String? orgId;
-  final String? orgName;
-  final Map<String, dynamic>? before;
-  final Map<String, dynamic>? after;
-  final bool undoable;
-  final DateTime? undoneAt;
-  final String? undoneBy;
-
-  bool get undone => undoneAt != null;
-
-  factory PlatformAction.fromJson(Map<String, dynamic> j) => PlatformAction(
-        id: '${j['id']}',
-        at: _date(j['at']) ?? DateTime.now(),
-        kind: '${j['kind'] ?? ''}',
-        summary: '${j['summary'] ?? ''}',
-        actorLabel: _text(j['actor_label']) ?? 'Mara',
-        orgId: _text(j['org_id']),
-        orgName: _text(j['org_name']),
-        before: j['before'] is Map ? Map<String, dynamic>.from(j['before'] as Map) : null,
-        after: j['after'] is Map ? Map<String, dynamic>.from(j['after'] as Map) : null,
-        undoable: j['undoable'] == true,
-        undoneAt: _date(j['undone_at']),
-        undoneBy: _text(j['undone_by_label']),
       );
 }

@@ -19,6 +19,7 @@ import 'alert_tone_tile.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
+import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One screen for everything that used to be scattered across a long popup
@@ -132,7 +133,11 @@ class CompteScreen extends StatelessWidget {
             : session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).account)),
+      // « Admin » (104): the command center, for a platform admin.
+      appBar: AppBar(
+        title: Text(Strings.of(context).account),
+        actions: const [AdminPill(), SizedBox(width: 8)],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -347,7 +352,7 @@ class CompteScreen extends StatelessWidget {
                 _Tile(
                   icon: Icons.business_outlined,
                   title: Strings.of(context).businesses,
-                  onTap: () => context.push(Routes.console),
+                  onTap: () => context.push(Routes.consoleBusinesses),
                 ),
                 _Tile(
                   icon: Icons.inbox_outlined,

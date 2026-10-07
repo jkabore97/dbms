@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/auth/models.dart';
+import '../../../core/console/command_center.dart';
 import '../../../core/console/fiche_repository.dart';
 import '../../../core/errors.dart';
 import '../../../core/l10n/tr.dart';
@@ -17,6 +18,7 @@ import 'fiche_journal_tab.dart';
 import 'fiche_overview_tab.dart';
 import 'fiche_pro_tab.dart';
 import 'fiche_vitrine_tab.dart';
+import 'fiche_widgets.dart';
 import 'merchant_preview_screen.dart';
 
 /// The fiche entreprise (batch 104, 106): one business — a shop, a farm or
@@ -35,6 +37,7 @@ class BusinessFicheScreen extends StatefulWidget {
     required this.orgId,
     this.initialTab,
     this.fiche,
+    this.center,
   });
 
   final String orgId;
@@ -46,31 +49,11 @@ class BusinessFicheScreen extends StatefulWidget {
   /// The server, for a test; the app's own otherwise.
   final FicheRepository? fiche;
 
+  /// The command center's journal and its « Annuler » (105), for a test.
+  final CommandCenterRepository? center;
+
   @override
   State<BusinessFicheScreen> createState() => _BusinessFicheScreenState();
-}
-
-/// The fiche's tabs, in their order, with their name in an address.
-enum FicheTab {
-  overview('apercu', 'Aperçu', Icons.insights_outlined),
-  identity('identite', 'Identité', Icons.badge_outlined),
-  vitrine('vitrine', 'Vitrine', Icons.storefront_outlined),
-  features('fonctions', 'Fonctions', Icons.toggle_on_outlined),
-  team('equipe', 'Équipe', Icons.groups_outlined),
-  pro('pro', 'Pro et cauris', Icons.workspace_premium_outlined),
-  journal('journal', 'Journal', Icons.history);
-
-  const FicheTab(this.key, this.label, this.icon);
-  final String key;
-  final String label;
-  final IconData icon;
-
-  static int indexOf(String? key) {
-    for (final t in values) {
-      if (t.key == key) return t.index;
-    }
-    return 0;
-  }
 }
 
 class _BusinessFicheScreenState extends State<BusinessFicheScreen>
@@ -90,6 +73,9 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
 
   FicheRepository get fiche =>
       _fiche ??= widget.fiche ?? FicheRepository(AppScope.read(context)?.auth.client);
+  CommandCenterRepository? _center;
+  CommandCenterRepository get center => _center ??=
+      widget.center ?? CommandCenterRepository(AppScope.read(context)?.auth.client);
 
   @override
   void initState() {
@@ -282,6 +268,7 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
                   key: ValueKey('identity-$_version'),
                   overview: o,
                   fiche: fiche,
+                  center: center,
                   onChanged: _changed,
                 ),
                 FicheVitrineTab(
@@ -294,19 +281,21 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
                   key: ValueKey('features-$_version'),
                   overview: o,
                   fiche: fiche,
+                  center: center,
                   onChanged: _changed,
                 ),
                 _TeamTab(org: _org(o)),
                 FicheProTab(
                   key: ValueKey('pro-$_version'),
                   overview: o,
-                  fiche: fiche,
+                  org: _org(o),
+                  center: center,
                   onChanged: _changed,
                 ),
                 FicheJournalTab(
                   key: ValueKey('journal-$_version'),
                   org: _org(o),
-                  fiche: fiche,
+                  center: center,
                   onChanged: _changed,
                 ),
               ],

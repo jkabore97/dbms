@@ -13,6 +13,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
+import '../admin/admin_pill.dart';
 import '../../core/storefront/storefront_repository.dart';
 import 'directory_map.dart';
 import 'shop_skeleton.dart';
@@ -379,6 +380,8 @@ class _AccountCorner extends StatelessWidget {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // « Admin » (104): the command center, for a platform admin.
+                const AdminPill(),
                 IconButton(
                   tooltip: member ? context.tr('Ma boutique') : context.tr('Ouvrir ma boutique'),
                   icon: Icon(member
