@@ -108,7 +108,11 @@ class _StaffScreenState extends State<StaffScreen> {
           amount == null || amount == 0
               ? context.tr('Rien à payer pour l\'instant.')
               : '${_money.format(amount)}'
-                  '${person.isCasual ? ", pour les heures non réglées." : ", salaire."}',
+                  '${person.isCasual ? ", pour les heures non réglées." : switch (person.payPeriod) {
+                      'week' => ', salaire de la semaine.',
+                      'day' => ', salaire de la journée.',
+                      _ => ', salaire du mois.',
+                    }}',
         ),
         actions: [
           TextButton(
@@ -203,7 +207,12 @@ class _StaffScreenState extends State<StaffScreen> {
                   subtitle: Text([
                     person.isCasual
                         ? '${_money.format(person.hourlyRate)}/h'
-                        : '${_money.format(person.salary)}/mois',
+                        // One payment pays one period (100).
+                        : '${_money.format(person.salary)}${switch (person.payPeriod) {
+                            'week' => '/semaine',
+                            'day' => '/jour',
+                            _ => '/mois',
+                          }}',
                     if (person.roleTitle != null) person.roleTitle!,
                     if (owed != null && owed > 0)
                       '${_money.format(owed)} à payer',

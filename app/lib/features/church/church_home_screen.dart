@@ -13,6 +13,7 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
+import '../orders/home_doorbell.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/db/local_db.dart';
 import '../../core/reports/models.dart' show accountLabel;
@@ -105,7 +106,21 @@ class ChurchHomeScreen extends StatefulWidget {
   State<ChurchHomeScreen> createState() => _ChurchHomeScreenState();
 }
 
-class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
+class _ChurchHomeScreenState extends State<ChurchHomeScreen>
+    with HomeDoorbell<ChurchHomeScreen> {
+  // The doorbell (100): a new demande on the association's vitrine rings
+  // here, as an order does on a shop's home, for its administrators.
+  @override
+  OrgSummary get doorbellOrg => widget.org!;
+
+  @override
+  RetailRepository? get doorbellRetail => _showVitrine ? widget.retail : null;
+
+  @override
+  void onDoorbellCount(int pending) {
+    if (pending != _requests) setState(() => _requests = pending);
+  }
+
   NumberFormat get _currency => moneyFormat(widget.org?.currency ?? 'XOF');
 
   double _moneyIn = 0;
@@ -126,6 +141,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen> {
   void initState() {
     super.initState();
     _refresh();
+    armDoorbell();
   }
 
   Future<void> _refresh() async {

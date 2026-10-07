@@ -10,6 +10,7 @@ import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/cauris/cauris_repository.dart';
+import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
 import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
@@ -19,6 +20,7 @@ import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/nav/app_scope.dart';
 import '../cauris/path_card.dart';
 import '../home/home_nav.dart';
+import '../orders/home_doorbell.dart';
 import 'farm_sheets.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -48,6 +50,7 @@ class FarmHomeScreen extends StatefulWidget {
     this.staff,
     this.accountAction,
     this.access = OrgAccess.allEdit,
+    this.retail,
   });
 
   /// The owner's dial from 031: which tools this person is shown here.
@@ -79,11 +82,25 @@ class FarmHomeScreen extends StatefulWidget {
 
   final Widget? accountAction;
 
+  /// The vitrine's orders (083): what rings the doorbell on this home
+  /// (100). Null in a build with no server.
+  final RetailRepository? retail;
+
   @override
   State<FarmHomeScreen> createState() => _FarmHomeScreenState();
 }
 
-class _FarmHomeScreenState extends State<FarmHomeScreen> {
+class _FarmHomeScreenState extends State<FarmHomeScreen>
+    with HomeDoorbell<FarmHomeScreen> {
+  // The doorbell (100): a new order on the farm's vitrine rings here, as
+  // on a shop's home, for whoever sees the orders.
+  @override
+  OrgSummary get doorbellOrg => widget.org;
+
+  @override
+  RetailRepository? get doorbellRetail =>
+      widget.access.canSee('orders') ? widget.retail : null;
+
   NumberFormat get _currency => moneyFormat(widget.org.currency);
 
   ({int eggs, double deaths, double feedUsed}) _today =
@@ -128,6 +145,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
   void initState() {
     super.initState();
     _refresh();
+    armDoorbell();
   }
 
   Future<void> _refresh() async {

@@ -119,6 +119,17 @@ class PlanTerms {
         'photo_slot' => 'Une place photo de plus, pour toujours',
         _ => feature,
       };
+
+  /// Whether a Pro tool means anything to a business of [profile] — what
+  /// the cauris screens offer to open. The analyses are a shop's (Compte
+  /// draws them for 'retail' only); an association keeps to its own tools
+  /// (099): no analyses, and no delivery — its services are booked, not
+  /// carried.
+  static bool fits(String feature, String profile) => switch (feature) {
+        'analytics' => profile == 'retail',
+        'delivery' => profile != 'association' && profile != 'church',
+        _ => true,
+      };
 }
 
 /// An owner said "J'ai payé" (066). One row per business until the platform

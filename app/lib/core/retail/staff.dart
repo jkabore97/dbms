@@ -23,6 +23,7 @@ class Employee {
     this.roleTitle,
     this.phone,
     this.isActive = true,
+    this.payPeriod,
   });
 
   final String id;
@@ -31,7 +32,13 @@ class Employee {
   /// 'permanent' | 'casual'
   final String kind;
   final double hourlyRate;
+
+  /// A permanent's salary for one [payPeriod]: what one payment pays.
   final double salary;
+
+  /// 'month' | 'week' | 'day' (100, recorded in Équipe); null is a month,
+  /// as 012 had it.
+  final String? payPeriod;
   final String? roleTitle;
   final String? phone;
   final bool isActive;
@@ -51,6 +58,7 @@ class Employee {
       roleTitle: row['role_title'] as String?,
       phone: row['phone'] as String?,
       isActive: row['is_active'] as bool? ?? true,
+      payPeriod: row['pay_period'] as String?,
     );
   }
 }
@@ -249,15 +257,25 @@ class StaffRepository {
   Future<List<Employee>> employees(String orgId,
       {bool activeOnly = true}) async {
     final client = _requireClient();
-    var query = client
-        .from('employees')
-        .select('id, full_name, kind, hourly_rate, salary, role_title, '
-            'phone, is_active')
-        .eq('org_id', orgId);
-    if (activeOnly) query = query.eq('is_active', true);
+    Future<List> read(String columns) async {
+      var query = client.from('employees').select(columns).eq('org_id', orgId);
+      if (activeOnly) query = query.eq('is_active', true);
+      return await query.order('full_name') as List;
+    }
 
-    final rows = await query.order('full_name');
-    return (rows as List)
+    const columns = 'id, full_name, kind, hourly_rate, salary, role_title, '
+        'phone, is_active';
+    List rows;
+    try {
+      // What a salary is per (100): the payroll says « / semaine » for a
+      // week's.
+      rows = await read('$columns, pay_period');
+    } on PostgrestException catch (e) {
+      // A database before 100 has no period: every salary is a month's.
+      if (e.code != '42703') rethrow;
+      rows = await read(columns);
+    }
+    return rows
         .map((r) => Employee.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
   }

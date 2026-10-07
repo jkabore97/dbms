@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/core/access/org_access.dart';
+import 'package:kaj_app/core/access/plan_terms.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/admin/team.dart';
 import 'package:kaj_app/core/auth/models.dart';
@@ -7,8 +9,10 @@ import 'package:kaj_app/core/cauris/cauris_repository.dart';
 import 'package:kaj_app/core/cauris/feature_states.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/console/models.dart';
+import 'package:kaj_app/core/format/money.dart';
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
+import 'package:kaj_app/features/account/compte_screen.dart';
 import 'package:kaj_app/features/admin/cauris_gifts_screen.dart';
 import 'package:kaj_app/features/admin/team_screen.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
@@ -26,6 +30,14 @@ class _Admin extends AdminRepository {
   final TeamOverview? team;
   final salaries = <String, (double?, String)>{};
   final gifts = <String>[];
+  final revoked = <String>[];
+  final withdrawn = <String>[];
+
+  @override
+  Future<void> revokeMembership(String membershipId) async => revoked.add(membershipId);
+
+  @override
+  Future<void> revokeInvitation(String invitationId) async => withdrawn.add(invitationId);
 
   @override
   Future<TeamOverview?> teamOverview(String orgId) async => team;
@@ -80,6 +92,7 @@ class _Cauris extends CaurisRepository {
   @override
   Future<List<({String feature, int cost, int minDays})>> costs() async => const [
         (feature: 'analytics', cost: 400, minDays: 0),
+        (feature: 'accounting', cost: 500, minDays: 0),
         (feature: 'photo_slot', cost: 50, minDays: 0),
       ];
 }
@@ -87,10 +100,17 @@ class _Cauris extends CaurisRepository {
 TeamOverview _team({bool open = false, bool setupDone = true}) => TeamOverview(
       seats: TeamSeats(free: 1, used: open ? 0 : 1, open: open, setupDone: setupDone, cost: 400),
       members: const [
-        TeamMember(userId: 'u1', name: 'Awa Sanou', roles: ['owner'], isOwner: true),
-        TeamMember(userId: 'u2', name: 'Bintou', roles: ['employee'], salary: 45000, period: 'month'),
+        TeamMember(userId: 'u1', name: 'Awa Sanou', roles: ['owner'], isOwner: true,
+            isMe: true, membershipIds: ['m1']),
+        TeamMember(userId: 'u2', name: 'Bintou', roles: ['employee'], salary: 45000, period: 'month',
+            membershipIds: ['m2', 'm3']),
+        TeamMember(userId: 'u3', name: 'Issa', roles: ['employee'], hourly: 500,
+            membershipIds: ['m4']),
       ],
-      invitations: const [TeamInvite(id: 'i1', code: 'AB12-CD34', name: 'Coumba')],
+      invitations: const [
+        TeamInvite(id: 'i1', code: 'AB12-CD34', name: 'Coumba', blocked: true),
+        TeamInvite(id: 'i2', code: 'EF56-GH78', phone: '+22670000000'),
+      ],
     );
 
 Widget _app(Widget child) => MaterialApp(
@@ -127,38 +147,136 @@ void main() {
 
   testWidgets('Équipe: the people with their salary, the seat taken, the invitation out',
       (tester) async {
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     final admin = _Admin(_team());
     await tester.pumpWidget(_app(TeamScreen(
         org: _shop, admin: admin, onboarding: OnboardingRepository(null))));
     await tester.pumpAndSettle();
     expect(find.text('Votre personne offerte est là'), findsOneWidget);
-    expect(find.text('1 / 1 personne offerte'), findsOneWidget);
+    expect(find.text('1 / 1'), findsOneWidget);
     expect(find.byKey(const Key('team-unlock')), findsOneWidget);
     expect(find.text('Awa Sanou'), findsOneWidget);
     expect(find.textContaining('45'), findsWidgets);
     expect(find.textContaining('/ mois'), findsOneWidget);
+    // Paid by the hour in the payroll: said as such.
+    expect(find.textContaining('/ heure'), findsOneWidget);
+    // The invitations, each with where it stands.
     expect(find.text('Coumba'), findsOneWidget);
+    expect(find.textContaining('ne peut pas entrer : place prise'), findsOneWidget);
+    expect(find.textContaining('en attente'), findsOneWidget);
 
-    // A salary, per day.
+    // A salary, per day, typed as people write it.
     await tester.tap(find.byKey(const Key('team-member-u2')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('salary-amount')), '2500');
+    await tester.tap(find.byKey(const Key('team-action-salary')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('salary-amount')), '2.500');
     await tester.tap(find.text('par jour'));
     await tester.tap(find.byKey(const Key('salary-save')));
     await tester.pumpAndSettle();
     expect(admin.salaries['u2'], (2500.0, 'day'));
   });
 
-  testWidgets('a free seat says so, and before the setup it waits for it', (tester) async {
+  testWidgets('Équipe removes a person (all their grants), never the owner or oneself; withdraws an invitation',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final admin = _Admin(_team());
+    await tester.pumpWidget(_app(TeamScreen(
+        org: _shop, admin: admin, onboarding: OnboardingRepository(null))));
+    await tester.pumpAndSettle();
+    // The owner, who is also the viewer: a salary, nothing to remove.
+    await tester.tap(find.byKey(const Key('team-member-u1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('team-action-remove')), findsNothing);
+    expect(find.byKey(const Key('team-action-replace')), findsNothing);
+    await tester.tapAt(const Offset(200, 20));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('team-member-u2')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('team-action-replace')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('team-action-remove')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('team-remove-confirm')));
+    await tester.pumpAndSettle();
+    expect(admin.revoked, ['m2', 'm3']);
+
+    await tester.tap(find.byKey(const Key('team-invite-withdraw-i1')));
+    await tester.pumpAndSettle();
+    expect(admin.withdrawn, ['i1']);
+  });
+
+  test('an amount as it is written here', () {
+    expect(parseAmount('45.000'), 45000);
+    expect(parseAmount('45 000'), 45000);
+    expect(parseAmount('45\u202f000'), 45000);
+    expect(parseAmount('45,000'), 45000);
+    expect(parseAmount('1.250.000'), 1250000);
+    expect(parseAmount('2500'), 2500);
+    expect(parseAmount('2,5'), 2.5);
+    expect(parseAmount(''), isNull);
+    expect(parseAmount('beaucoup'), isNull);
+  });
+
+  testWidgets('a free seat says so once, and before the setup it waits for it', (tester) async {
     await tester.pumpWidget(_app(SeatCard(
         seats: const TeamSeats(free: 1, used: 0), onUnlock: () {})));
     expect(find.text('1 personne offerte'), findsOneWidget);
+    expect(find.text('Place libre'), findsOneWidget);
+    expect(find.textContaining('offerte'), findsOneWidget);
     expect(find.byKey(const Key('team-unlock')), findsNothing);
+    var finish = 0;
     await tester.pumpWidget(_app(SeatCard(
         seats: const TeamSeats(free: 0, used: 0, open: false, setupDone: false, cost: 400),
-        onUnlock: () {})));
+        onUnlock: () {},
+        onFinishSetup: () => finish++)));
     expect(find.text('Elle s\'ouvre une fois la mise en route terminée.'), findsOneWidget);
     expect(find.byKey(const Key('team-seats-count')), findsNothing);
+    await tester.tap(find.byKey(const Key('team-finish-setup')));
+    expect(finish, 1);
+    // Kept from before 100: said as it is, not « 2 / 1 ».
+    await tester.pumpWidget(_app(SeatCard(
+        seats: const TeamSeats(free: 1, used: 2, open: false, cost: 400), onUnlock: () {})));
+    expect(find.text('2 personnes (limite : 1)'), findsOneWidget);
+    // Opened by Mara: said so, not « avec vos cauris ».
+    await tester.pumpWidget(_app(SeatCard(
+        seats: TeamSeats(free: 1, used: 2, unlimited: true, gift: true,
+            until: DateTime(2026, 11, 30, 12)),
+        onUnlock: () {})));
+    expect(find.text('Offert par Mara jusqu\'au 30/11'), findsOneWidget);
+  });
+
+  testWidgets('Compte: before the setup, what opens the seat; the payroll for staff who are not admins',
+      (tester) async {
+    late String? before, open;
+    await tester.pumpWidget(_app(Builder(builder: (context) {
+      before = CompteScreen.teamLine(
+          context, const TeamSeats(free: 0, used: 0, open: false, setupDone: false));
+      open = CompteScreen.teamLine(context, const TeamSeats(free: 1, used: 0));
+      return const SizedBox();
+    })));
+    expect(before, 'Terminez la mise en route pour inviter une personne');
+    expect(open, '1 personne offerte');
+    expect(CompteScreen.peopleRow(OrgAccess.allEdit, admin: true), 'team');
+    expect(CompteScreen.peopleRow(const OrgAccess.forTier({'staff': 'view'}), admin: false), 'payroll');
+    expect(
+        CompteScreen.peopleRow(const OrgAccess.forTier({'staff': 'hidden'}), admin: false),
+        isNull);
+  });
+
+  test('an association is offered only its own tools; a farm no shop analyses', () {
+    expect(PlanTerms.fits('delivery', 'association'), isFalse);
+    expect(PlanTerms.fits('delivery', 'church'), isFalse);
+    expect(PlanTerms.fits('analytics', 'association'), isFalse);
+    expect(PlanTerms.fits('analytics', 'farm'), isFalse);
+    expect(PlanTerms.fits('analytics', 'retail'), isTrue);
+    expect(PlanTerms.fits('accounting', 'association'), isTrue);
+    expect(PlanTerms.fits('team_access', 'association'), isTrue);
+    expect(PlanTerms.fits('delivery', 'farm'), isTrue);
   });
 
   testWidgets('the photo counter: « 7 / 10 », full with the way to one more',
@@ -203,6 +321,36 @@ void main() {
     await tester.tap(find.byKey(const Key('gift-save')));
     await tester.pumpAndSettle();
     expect(admin.gifts, ['a1:300:gift:Bienvenue']);
+
+    // Above 500, asked once more — one zero too many is a lot of cauris.
+    await tester.tap(find.byKey(const Key('gift-cauris')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('gift-points')), '5 000');
+    await tester.tap(find.byKey(const Key('gift-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Offrir 5000 cauris ?'), findsOneWidget);
+    expect(admin.gifts, hasLength(1));
+    await tester.tap(find.byKey(const Key('gift-confirm')));
+    await tester.pumpAndSettle();
+    expect(admin.gifts.last, 'a1:5000:gift:');
+  });
+
+  testWidgets('the console offers an association only the tools it has', (tester) async {
+    final admin = _Admin(null);
+    await tester.pumpWidget(_app(CaurisGiftsScreen(
+        console: _Console(), admin: admin, cauris: _Cauris())));
+    await tester.pumpAndSettle();
+    // The association wears the picker's sign.
+    expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+    await tester.tap(find.text('Entraide'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('gift-unlock')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('gift-tool')));
+    await tester.pumpAndSettle();
+    // Analyses are a shop's: not in the list for an association; its books are.
+    expect(find.text(PlanTerms.labelOf('analytics')), findsNothing);
+    expect(find.text(PlanTerms.labelOf('accounting')), findsWidgets);
   });
 
   testWidgets('the bell says the gifts in English and opens the wallet', (tester) async {

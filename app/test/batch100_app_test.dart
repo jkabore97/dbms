@@ -150,7 +150,10 @@ void main() {
       )));
       expect(find.byKey(const Key('picker-search')), findsOneWidget);
 
-      // Associations: 'church' and 'association' together.
+      // Associations: 'church' and 'association' together. The chips are
+      // one line that scrolls sideways (100): brought into view first.
+      await tester.ensureVisible(find.byKey(const Key('picker-kind-association')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('picker-kind-association')));
       await tester.pump();
       expect(find.text('Église Grâce'), findsOneWidget);
@@ -158,6 +161,8 @@ void main() {
       expect(find.text('Boutique Sanou'), findsNothing);
 
       // Back to all, then search the owner without his accent.
+      await tester.ensureVisible(find.byKey(const Key('picker-kind-all')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('picker-kind-all')));
       await tester.enterText(find.byKey(const Key('picker-search')), 'ouedraogo');
       await tester.pump();

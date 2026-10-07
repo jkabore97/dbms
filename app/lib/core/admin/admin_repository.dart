@@ -445,56 +445,6 @@ class AdminRepository {
         .toList();
   }
 
-  /// Issues an invitation and returns it, code and all.
-  ///
-  /// The code is left to the column default — `new_invitation_code()` in 005
-  /// mints it server-side over a CSPRNG. The client never invents one, because
-  /// a client-generated code is only as unguessable as the client.
-  ///
-  /// [phone] pins the invitation to one number: only that person can claim it,
-  /// and they get it swept up automatically the next time they sign in.
-  /// Leaving it null makes a bearer code — whoever holds it, claims it — which
-  /// is the hand-it-over-in-person case the QR exists for.
-  Future<Invitation> createInvitation({
-    required String orgId,
-    required String role,
-    required String scopeKind,
-    required String scopeId,
-    String? phone,
-    String? email,
-    String visibility = 'full',
-    Duration validFor = const Duration(days: 14),
-  }) async {
-    final client = _requireClient();
-    final userId = currentUserId;
-    if (userId == null) {
-      throw StateError('Reconnectez-vous avant de créer une invitation.');
-    }
-
-    final row = await client
-        .from('pending_invitations')
-        .insert({
-          'org_id': orgId,
-          'role': role,
-          'scope_kind': scopeKind,
-          'scope_id': scopeId,
-          'visibility': visibility,
-          'phone': (phone != null && phone.isNotEmpty) ? phone : null,
-          'email': (email != null && email.isNotEmpty) ? email : null,
-          'expires_at': DateTime.now().toUtc().add(validFor).toIso8601String(),
-          // The policy in 005 requires this to be the caller; sending it
-          // explicitly keeps the failure a clear one rather than a null.
-          'created_by': userId,
-        })
-        .select(
-          'id, org_id, code, role, scope_kind, scope_id, phone, email, '
-          'expires_at, claimed_at',
-        )
-        .single();
-
-    return Invitation.fromRow(Map<String, dynamic>.from(row));
-  }
-
   /// Withdraws an unclaimed invitation. A claimed one is the record of how
   /// somebody got in, and 005 will not delete it.
   Future<void> revokeInvitation(String invitationId) async {

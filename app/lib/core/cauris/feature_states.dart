@@ -58,6 +58,7 @@ class FeatureStates {
         cost: n(m['cost']),
         until: DateTime.tryParse('${m['until'] ?? ''}'),
         waitsDays: m['waits_days'] == null ? null : n(m['waits_days']),
+        gift: m['gift'] == true,
       );
     }
     final p = j['progress'];
@@ -136,12 +137,17 @@ class TeamSeats {
     this.open = true,
     this.cost,
     this.until,
+    this.gift = false,
   });
 
   final int free;
   final int used;
   final bool unlimited;
   final bool setupDone;
+
+  /// The team was opened by Mara as a gift, not with the business's
+  /// cauris: « Offert par Mara ».
+  final bool gift;
 
   /// One more person may be added now.
   final bool open;
@@ -158,11 +164,16 @@ class TeamSeats {
         open: j['open'] != false,
         cost: j['cost'] == null ? null : _n(j['cost']),
         until: DateTime.tryParse('${j['until'] ?? ''}'),
+        gift: j['gift'] == true,
       );
 }
 
 class ToolState {
-  const ToolState({required this.cost, this.until, this.waitsDays});
+  const ToolState({required this.cost, this.until, this.waitsDays, this.gift = false});
+
+  /// Opened by Mara (100's platform_give_unlock), not with the business's
+  /// cauris: « Offert par Mara ».
+  final bool gift;
 
   /// Its price in cauris, for 30 days.
   final int cost;

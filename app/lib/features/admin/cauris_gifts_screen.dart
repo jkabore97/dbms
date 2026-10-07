@@ -10,9 +10,12 @@ import '../../core/cauris/feature_states.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
+import '../../core/format/money.dart' show parseAmount;
 import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
+import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindSingular;
 import '../cauris/cauri_icon.dart';
 
 /// Console › Mara Pro › Cauris › « Offrir » (100): for any business — a
@@ -115,6 +118,16 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
     });
   }
 
+  /// « Boutique · Awa Sanou »: the kind, and whose it is — the platform's
+  /// own list of every business (my_orgs, 100) knows each owner.
+  String _kindAndOwner(BuildContext context, OrgRow o) {
+    String? owner;
+    for (final s in AppScope.maybeOf(context)?.session.orgs ?? const []) {
+      if (s.id == o.id) owner = s.ownerName;
+    }
+    return [kindSingular(context, o.profile), ?owner].join(' · ');
+  }
+
   Future<void> _give(GiftKind kind) async {
     final org = _org;
     if (org == null) return;
@@ -125,7 +138,8 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
       builder: (_) => GiftSheet(
         org: org,
         kind: kind,
-        tools: _tools,
+        // Only the tools this kind of business has (099).
+        tools: [for (final t in _tools) if (PlanTerms.fits(t.feature, org.profile)) t],
         admin: widget.admin,
       ),
     );
@@ -169,7 +183,7 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
                 minVerticalPadding: 12,
                 leading: KindBadge(profile: o.profile),
                 title: Text(o.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                subtitle: Text(kindLabel(context, o.profile)),
+                subtitle: Text(_kindAndOwner(context, o)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _pick(o),
               ),
@@ -181,7 +195,7 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
                 leading: KindBadge(profile: org.profile),
                 title: Text(org.name,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                subtitle: Text(kindLabel(context, org.profile)),
+                subtitle: Text(_kindAndOwner(context, org)),
                 trailing: TextButton(
                   key: const Key('gift-change'),
                   onPressed: () => setState(() => _org = null),
@@ -220,34 +234,22 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
   }
 }
 
-/// A business's kind at a glance: its colour and its sign.
+/// A business's kind at a glance: the picker's colour and sign (« Changer
+/// d'activité »), so a shop, a farm and an association look the same here.
 class KindBadge extends StatelessWidget {
   const KindBadge({super.key, required this.profile});
 
   final String profile;
 
   @override
-  Widget build(BuildContext context) {
-    final (IconData icon, Color bg, Color fg) = switch (profile) {
-      'farm' => (Icons.agriculture_outlined, maraGreen, maraPaper),
-      'association' || 'church' => (Icons.volunteer_activism_outlined, maraBrown, maraPaper),
-      _ => (Icons.storefront_outlined, maraCaramel, maraDeep),
-    };
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Icon(icon, color: fg),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+            color: kindColour(profile), borderRadius: BorderRadius.circular(12)),
+        child: Icon(iconForProfile(profile), color: kindInk(profile)),
+      );
 }
-
-String kindLabel(BuildContext context, String profile) => switch (profile) {
-      'farm' => context.tr('Ferme'),
-      'association' || 'church' => context.tr('Association'),
-      'retail' => context.tr('Boutique'),
-      _ => context.tr('Entreprise'),
-    };
 
 class _WalletCard extends StatelessWidget {
   const _WalletCard({required this.wallet, required this.states});
@@ -352,6 +354,9 @@ class GiftSheet extends StatefulWidget {
   final List<({String feature, int cost, int minDays})> tools;
   final AdminRepository admin;
 
+  /// Above this many cauris, the console asks once more before giving.
+  static const confirmAbove = 500;
+
   @override
   State<GiftSheet> createState() => _GiftSheetState();
 }
@@ -384,7 +389,7 @@ class _GiftSheetState extends State<GiftSheet> {
   }
 
   Future<void> _save() async {
-    final points = int.tryParse(_points.text.trim().replaceAll(' ', ''));
+    final points = parseAmount(_points.text)?.round();
     if (widget.kind != GiftKind.unlock && (points == null || points <= 0)) {
       setState(() => _error = context.tr('Combien de cauris ?'));
       return;
@@ -392,6 +397,29 @@ class _GiftSheetState extends State<GiftSheet> {
     if (widget.kind == GiftKind.unlock && _tool == null) {
       setState(() => _error = context.tr('Quel outil ?'));
       return;
+    }
+    // A big gift is asked twice: one zero too many is a lot of cauris.
+    if (widget.kind != GiftKind.unlock && points! > GiftSheet.confirmAbove) {
+      final sure = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: Text(context.tr('Offrir {n} cauris ?', {'n': points})),
+          content: Text(context.tr('À {name}. C\'est plus de {limit} cauris.',
+              {'name': widget.org.name, 'limit': GiftSheet.confirmAbove})),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(context.tr('Retour')),
+            ),
+            FilledButton(
+              key: const Key('gift-confirm'),
+              onPressed: () => Navigator.pop(dialog, true),
+              child: Text(context.tr('Offrir')),
+            ),
+          ],
+        ),
+      );
+      if (sure != true || !mounted) return;
     }
     setState(() {
       _busy = true;

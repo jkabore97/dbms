@@ -208,35 +208,40 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
             ),
           ),
         ),
+      // One line that scrolls sideways: on a 360 dp phone the four chips
+      // would otherwise wrap onto a second row.
       if (showChips)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                key: const Key('picker-kind-all'),
-                label: Text(context.tr('Toutes')),
-                showCheckmark: false,
-                selectedColor: maraDeep.withValues(alpha: 0.16),
-                side: _chipSide(kind == null, maraDeep),
-                selected: kind == null,
-                onSelected: (_) => setState(() => _kind = null),
-              ),
-              for (final k in kinds)
+          child: SingleChildScrollView(
+            key: const Key('picker-kinds'),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              spacing: 8,
+              children: [
                 ChoiceChip(
-                  key: Key('picker-kind-$k'),
-                  avatar: Icon(iconForProfile(k),
-                      size: 18, color: kindColour(k)),
-                  label: Text('${kindPlural(context, k)} · ${counts[k]}'),
+                  key: const Key('picker-kind-all'),
+                  label: Text(context.tr('Toutes')),
                   showCheckmark: false,
-                  selectedColor: kindColour(k).withValues(alpha: 0.22),
-                  side: _chipSide(kind == k, kindColour(k)),
-                  selected: kind == k,
-                  onSelected: (on) => setState(() => _kind = on ? k : null),
+                  selectedColor: maraDeep.withValues(alpha: 0.16),
+                  side: _chipSide(kind == null, maraDeep),
+                  selected: kind == null,
+                  onSelected: (_) => setState(() => _kind = null),
                 ),
-            ],
+                for (final k in kinds)
+                  ChoiceChip(
+                    key: Key('picker-kind-$k'),
+                    avatar: Icon(iconForProfile(k),
+                        size: 18, color: kindColour(k)),
+                    label: Text('${kindPlural(context, k)} · ${counts[k]}'),
+                    showCheckmark: false,
+                    selectedColor: kindColour(k).withValues(alpha: 0.22),
+                    side: _chipSide(kind == k, kindColour(k)),
+                    selected: kind == k,
+                    onSelected: (on) => setState(() => _kind = on ? k : null),
+                  ),
+              ],
+            ),
           ),
         ),
     ];
@@ -275,7 +280,9 @@ class _OrgCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final kind = kindOfProfile(org.profile);
-    final owner = org.ownerName;
+    // Whose it is helps with somebody else's business; one's own needs no
+    // name under it.
+    final owner = org.roles.contains('owner') ? null : org.ownerName;
     return KajCard(
       key: Key('picker-org-${org.id}'),
       elevation: 0,
@@ -325,7 +332,8 @@ class _OrgCard extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               [
-                                localizedProfile(context, org.profile),
+                                // The chips' word, in the singular.
+                                kindSingular(context, org.profile),
                                 if (org.roles.isNotEmpty)
                                   labelForRole(org.roles.first),
                               ].join(' · '),
@@ -409,6 +417,16 @@ Color kindColour(String kind) => switch (kindOfProfile(kind)) {
 /// What is drawn on [kindColour]: ink on caramel, paper on the dark ones.
 Color kindInk(String kind) =>
     kindOfProfile(kind) == 'retail' ? maraBlack : maraPaper;
+
+/// A business's kind in one word, as the chips say it: Boutique, Ferme,
+/// Association (100) — on the picker's cards and in the console.
+String kindSingular(BuildContext context, String profile) =>
+    switch (kindOfProfile(profile)) {
+      'retail' => context.tr('Boutique'),
+      'farm' => context.tr('Ferme'),
+      'association' => context.tr('Association'),
+      _ => context.tr('Entreprise'),
+    };
 
 /// The chip's word: the kind, in the plural.
 String kindPlural(BuildContext context, String kind) =>

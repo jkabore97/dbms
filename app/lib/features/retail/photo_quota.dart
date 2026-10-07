@@ -20,10 +20,25 @@ PhotoQuota? photoQuotaOf(BuildContext context, OrgSummary org) {
 /// Whether a photo may be hung on this article now: always for one that
 /// already has a photo, or with room left; otherwise the slot sheet opens,
 /// and the answer is whether a slot was bought there.
+///
+/// Asked before the picture is taken, with a fresh count (another phone
+/// may have taken the last place): the picture is sent first and hung on
+/// the article after, so a refusal at the hanging would leave it in
+/// Documents with no article — which the server then says.
 Future<bool> photoAllowed(BuildContext context, OrgSummary org,
     {required bool hasPhoto}) async {
+  if (hasPhoto) return true;
+  final session = AppScope.maybeOf(context)?.session;
+  if (session != null && photoQuotaOf(context, org) != null) {
+    try {
+      await session.reloadFeatures(org.id);
+    } catch (_) {
+      // No signal: the last count stands; the server still holds the door.
+    }
+    if (!context.mounted) return false;
+  }
   final q = photoQuotaOf(context, org);
-  if (hasPhoto || q == null || !q.full) return true;
+  if (q == null || !q.full) return true;
   final bought = await showModalBottomSheet<bool>(
     context: context,
     showDragHandle: true,

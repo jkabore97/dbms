@@ -319,8 +319,13 @@ class _CheminScreenState extends State<CheminScreen> {
   List<Widget> _spending(ThemeData theme) {
     final f = _features;
     if (f == null || f.isPro || f.tools.isEmpty) return const [];
-    final tools = f.tools.entries.toList()
-      ..sort((a, b) => a.value.cost.compareTo(b.value.cost));
+    // Only the tools this kind of business has (an association: none of
+    // the shop's analyses, no delivery — 099).
+    final tools = [
+      for (final e in f.tools.entries)
+        if (PlanTerms.fits(e.key, widget.org.profile)) e,
+    ]..sort((a, b) => a.value.cost.compareTo(b.value.cost));
+    if (tools.isEmpty) return const [];
     return [
       const SizedBox(height: 22),
       _label(theme, context.tr('Dépenser mes cauris'), key: _spendKey),
@@ -336,10 +341,16 @@ class _CheminScreenState extends State<CheminScreen> {
                     ? context.tr('Mara Pro complet : tous les outils, sans limite')
                     : PlanTerms.labelOf(e.key)),
                 subtitle: e.value.until != null
-                    ? Text(context.tr('Ouvert jusqu\'au {date}', {
-                        'date': DateFormat('d MMMM', _dateLocale)
-                            .format(e.value.until!.toLocal()),
-                      }))
+                    ? Text(e.value.gift
+                        // Opened by Mara, not with the business's cauris.
+                        ? context.tr('Offert par Mara jusqu\'au {date}', {
+                            'date': DateFormat('d MMMM', _dateLocale)
+                                .format(e.value.until!.toLocal()),
+                          })
+                        : context.tr('Ouvert jusqu\'au {date}', {
+                            'date': DateFormat('d MMMM', _dateLocale)
+                                .format(e.value.until!.toLocal()),
+                          }))
                     : null,
                 trailing: e.value.until != null
                     ? const Icon(Icons.lock_open, color: maraGreen)
@@ -486,42 +497,51 @@ class _CheminScreenState extends State<CheminScreen> {
           leading: const Icon(Icons.receipt_long_outlined),
           title: Text(context.tr('Détails'),
               style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(context.tr('Comment gagner des cauris · historique')),
+          // An association earns nothing (084): no rules to earn by, only
+          // what Mara gave and what it spent.
+          subtitle: Text(widget.org.isAssociation
+              ? context.tr('Historique')
+              : context.tr('Comment gagner des cauris · historique')),
           children: [
-            KajCard(
-              margin: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  if (rewards.isNotEmpty)
-                    ListTile(
-                      key: const Key('chemin-rule-path'),
-                      dense: true,
-                      title: Text(rewards.first == rewards.last
-                          ? context.tr('Étapes du chemin : {n} cauris chacune',
-                              {'n': rewards.first})
-                          : context.tr('Étapes du chemin : {min} à {max} cauris chacune',
-                              {'min': rewards.first, 'max': rewards.last})),
-                    ),
-                  for (final (i, r) in w.rules.indexed) ...[
-                    if (i > 0 || rewards.isNotEmpty) const Divider(height: 1),
-                    ListTile(
-                      dense: true,
-                      title: Text(caurisText(context, r.label)),
-                      subtitle: r.dailyCap == null
-                          ? null
-                          : Text(context.tr('jusqu\'à {dailyCap} par jour', {'dailyCap': r.dailyCap})),
-                      trailing: Text(context.tr('+{points}', {'points': r.points}),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700)),
-                    ),
+            if (!widget.org.isAssociation) ...[
+              KajCard(
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    if (rewards.isNotEmpty)
+                      ListTile(
+                        key: const Key('chemin-rule-path'),
+                        dense: true,
+                        title: Text(rewards.first == rewards.last
+                            ? context.tr('Étapes du chemin : {n} cauris chacune',
+                                {'n': rewards.first})
+                            : context.tr('Étapes du chemin : {min} à {max} cauris chacune',
+                                {'min': rewards.first, 'max': rewards.last})),
+                      ),
+                    for (final (i, r) in w.rules.indexed) ...[
+                      if (i > 0 || rewards.isNotEmpty) const Divider(height: 1),
+                      ListTile(
+                        dense: true,
+                        title: Text(caurisText(context, r.label)),
+                        subtitle: r.dailyCap == null
+                            ? null
+                            : Text(context.tr('jusqu\'à {dailyCap} par jour', {'dailyCap': r.dailyCap})),
+                        trailing: Text(context.tr('+{points}', {'points': r.points}),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700)),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
             _label(theme, context.tr('Historique')),
             if (w.history.isEmpty)
-              Text(context.tr('Pas encore de cauris. Votre premier article en vente en rapporte.'),
+              Text(
+                  widget.org.isAssociation
+                      ? context.tr('Pas encore de cauris.')
+                      : context.tr('Pas encore de cauris. Votre premier article en vente en rapporte.'),
                   style: theme.textTheme.bodyMedium?.copyWith(color: kMist))
             else
               KajCard(

@@ -2,8 +2,6 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
-  '    {name} · {name2}':
-      '{name} · {name2}',
   ' — encore {_missing} à gagner':
       ' — {_missing} more to earn',
   '+{delta}':
@@ -12,12 +10,8 @@ const enStrings = <String, String>{
       '+{points}',
   '+{week}':
       '+{week}',
-  '1 jour':
-      '1 day',
   '1 min':
       '1 min',
-  '14 jours':
-      '14 days',
   '15 min':
       '15 min',
   '30 jours':
@@ -238,8 +232,6 @@ const enStrings = <String, String>{
       'Other colours',
   'Autre…':
       'Other…',
-  'Avec un numéro, le code ne fonctionne que pour cette personne et s\'active tout seul à sa connexion. Sans numéro, il fonctionne pour quiconque le détient — à remettre en main propre.':
-      'With a number, the code only works for that person and activates by itself when they sign in. Without a number, it works for whoever holds it — hand it over in person.',
   'Avec un numéro, le code ne marche que pour lui.':
       'With a number, the code only works for them.',
   'Balance générale':
@@ -328,8 +320,6 @@ const enStrings = <String, String>{
       'This page does not exist',
   'Cette page s\'ouvre depuis la liste.':
       'This page opens from the list.',
-  'Cette personne ne verra rien en dehors de cette portée.':
-      'This person will see nothing outside this scope.',
   'Cette position est loin de la zone franc CFA. Si le téléphone n\'était pas à la boutique, touchez la carte au bon endroit ou collez le lien Google Maps.':
       'This position is far from the CFA franc zone. If the phone was not at the shop, tap the map at the right place or paste the Google Maps link.',
   'Cette semaine : +{week}':
@@ -404,8 +394,6 @@ const enStrings = <String, String>{
       'Code copied',
   'Code copié.':
       'Code copied.',
-  'Code créé':
-      'Code created',
   'Code d\'invitation':
       'Invitation code',
   'Code de la bande':
@@ -518,8 +506,6 @@ const enStrings = <String, String>{
       'Credit',
   'Créer':
       'Create',
-  'Créer le code':
-      'Create the code',
   'Créer le groupe':
       'Create the group',
   'Créée automatiquement si elle est nouvelle.':
@@ -598,8 +584,6 @@ const enStrings = <String, String>{
       'Description',
   'Détail':
       'Detail',
-  'Détail complet':
-      'Full detail',
   'Détails':
       'Details',
   'Déverrouiller avec l\'empreinte':
@@ -802,8 +786,6 @@ const enStrings = <String, String>{
       'Pending invitations ({length})',
   'Inviter':
       'Invite',
-  'Inviter quelqu\'un':
-      'Invite someone',
   'Inviter quelqu’un':
       'Invite someone',
   'Inviter quelqu’un d’autre':
@@ -870,8 +852,8 @@ const enStrings = <String, String>{
       'Trust cannot be bought or compared: it is read in your books. Keep them every week and back every expense with its receipt: that is what a donor looks at.',
   'La console fonctionne en mode réduit : recherche et filtres sont appliqués sur cet appareil. Appliquez la migration 021 pour la recherche côté serveur.':
       'The console runs in reduced mode: search and filters are applied on this device. Apply migration 021 for server-side search.',
-  'La liste des outils Pro et les plafonds gratuits ({freeMaxStaff} comptes, {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo, {freeMaxPhotos} autres photos) se changent dans platform_settings.':
-      'The list of Pro tools and the free caps ({freeMaxStaff} accounts, {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo, {freeMaxPhotos} other photos) are changed in platform_settings.',
+  'La liste des outils Pro et les plafonds gratuits ({staff}, {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo, {freeMaxPhotos} autres photos) se changent dans platform_settings.':
+      'The list of Pro tools and the free caps ({staff}, {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo, {freeMaxPhotos} other photos) are changed in platform_settings.',
   'La livraison fait partie de Mara Pro':
       'Delivery is part of Mara Pro',
   'La part de Mara':
@@ -1234,8 +1216,6 @@ const enStrings = <String, String>{
       'Serial number (optional)',
   'Numéro de téléphone':
       'Phone number',
-  'Numéro de téléphone (optionnel)':
-      'Phone number (optional)',
   'Numéro du livreur':
       'Courier\'s number',
   'Numéro fiscal':
@@ -1418,8 +1398,6 @@ const enStrings = <String, String>{
       'Privacy policy',
   'Ponte (7 j)':
       'Laying (7 d)',
-  'Portée':
-      'Scope',
   'Poser une question sur WhatsApp':
       'Ask a question on WhatsApp',
   'Position introuvable. Vérifiez que le GPS est activé.':
@@ -1788,8 +1766,6 @@ const enStrings = <String, String>{
       'Total spent',
   'Total reçu':
       'Total received',
-  'Totaux seulement':
-      'Totals only',
   'Touchez la carte pour déplacer le repère sur la porte.':
       'Tap the map to move the pin onto the door.',
   'Touchez un article pour le voir, « + » pour l\'ajouter.':
@@ -1808,8 +1784,6 @@ const enStrings = <String, String>{
       'Everyone',
   'Tout publier ({unpublished})':
       'Publish all ({unpublished})',
-  'Toute l\'activité':
-      'All activity',
   'Toutes':
       'All',
   'Toutes les vitrines':
@@ -1850,8 +1824,6 @@ const enStrings = <String, String>{
       'A word for the shop (optional)',
   'Un nom, un prix, combien vous en avez.':
       'A name, a price, how many you have.',
-  'Un observateur lit les comptes sans jamais pouvoir les modifier.':
-      'An observer reads the books without ever being able to change them.',
   'Un propriétaire a tapé « J\'ai payé ». Vérifiez le paiement dans Wave, passez l\'entreprise en Pro depuis sa formule, puis marquez la demande traitée.':
       'An owner tapped « I\'ve paid ». Check the payment in Wave, switch the business to Pro from its plan, then mark the request handled.',
   'Un rapport est un chiffre à un instant. Mieux vaut pas de chiffre du tout que le chiffre de la semaine dernière présenté comme celui d\'aujourd\'hui.':
@@ -1872,8 +1844,6 @@ const enStrings = <String, String>{
       'YOUR BASKET',
   'Vaccin':
       'Vaccine',
-  'Valable':
-      'Valid',
   'Validation en deux étapes':
       'Two-step sign-in',
   'Valider':
@@ -3125,10 +3095,8 @@ const enStrings = <String, String>{
   'Avec Mara Pro, ajoutez autant de personnes que vous voulez.': 'With Mara Pro, add as many people as you like.',
   '1 personne offerte': '1 person free',
   'Elle s\'ouvre une fois la mise en route terminée.': 'It opens once the first setup is done.',
-  'En plus de vous, une personne est offerte par Mara.': 'Besides you, one person is free with Mara.',
   'Votre personne offerte est là': 'Your free person is in',
   'Pour ajouter quelqu\'un d\'autre : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'To add someone else: Mara Pro, or the team unlocked with cauris.',
-  '{used} / {free} personne offerte': '{used} / {free} free person',
   'Débloquer l\'équipe': 'Unlock the team',
   'Débloquer l\'équipe ({cost} cauris)': 'Unlock the team ({cost} cauris)',
   'Salaire : pas encore noté': 'Salary: not recorded yet',
@@ -3192,4 +3160,41 @@ const enStrings = <String, String>{
   'La date doit être aujourd\'hui ou plus tard': 'The date must be today or later',
   'Entreprise inconnue': 'Unknown business',
   'Les places photo ne s\'achètent pas avec des cauris': 'Photo places are not bought with cauris',
+  // Batch 100, corrections: the team in one place, the seat said once,
+  // paperwork kept off the vitrine, the farm's and association's doorbell.
+  '1 personne en plus du propriétaire': '1 person besides the owner',
+  '{n} personnes en plus du propriétaire': '{n} people besides the owner',
+  'Annuler l\'invitation': 'Withdraw the invitation',
+  'Cette personne ne pourra plus ouvrir l\'entreprise. Tout ce qu\'elle a enregistré reste.': 'This person will no longer open the business. Everything they recorded stays.',
+  'Dans Équipe : la place offerte, le code à envoyer, le salaire': 'In Team: the free place, the code to send, the salary',
+  'En plus de vous, sans rien payer.': 'Besides you, at no cost.',
+  'Nouvelle demande : {pending} à traiter sur la vitrine.': 'New request: {pending} to handle on the vitrine.',
+  'Offert par Mara jusqu\'au {date}': 'A gift from Mara until {date}',
+  'Offrir {n} cauris ?': 'Give {n} cauris?',
+  'À {name}. C\'est plus de {limit} cauris.': 'To {name}. That is more than {limit} cauris.',
+  'Pas encore de cauris.': 'No cauris yet.',
+  'Payé à l\'heure : se change dans « Paie et journées »': 'Paid by the hour: changed in « Payroll and days »',
+  'Place libre': 'Place free',
+  'Remplacer': 'Replace',
+  'Remplacer {name} ?': 'Replace {name}?',
+  'Renvoyer': 'Send again',
+  'Retirer cette personne, puis inviter qui prend sa place': 'Remove this person, then invite whoever takes their place',
+  'Retirer de l\'équipe': 'Remove from the team',
+  'Retirer {name} de l\'équipe ?': 'Remove {name} from the team?',
+  'Salaire': 'Salary',
+  'Terminer la mise en route': 'Finish the first setup',
+  'Terminez la mise en route pour inviter une personne': 'Finish the first setup to invite a person',
+  'en attente': 'waiting',
+  'ne peut pas entrer : place prise': 'cannot come in: place taken',
+  '{n} personnes offertes': '{n} people free',
+  '{rate} / heure': '{rate} / hour',
+  '{used} / {free}': '{used} / {free}',
+  '{used} personnes (limite : {free})': '{used} people (limit: {free})',
+  'Mara Pro : toutes vos places photo sont prises. La photo reste dans vos documents, sans article. Pour la mettre sur l\'article : Mara Pro, ou une place photo achetée avec des cauris.': 'Mara Pro: all your photo places are taken. The photo stays in your documents, with no item. To put it on the item: Mara Pro, or a photo place bought with cauris.',
+  'Mara Pro : cet article a une photo et toutes vos places photo sont prises. Pour le remettre : Mara Pro, une place photo achetée avec des cauris, ou un autre article photographié retiré.': 'Mara Pro: this item has a photo and all your photo places are taken. To bring it back: Mara Pro, a photo place bought with cauris, or another photographed item removed.',
+  'Seule la plateforme nomme une formatrice ou un formateur': 'Only the platform names a trainer',
+  'Le propriétaire ne se change pas ici': 'The owner is not changed here',
+  'Seule la plateforme nomme un propriétaire': 'Only the platform names an owner',
+  'Cette personne est payée à l\'heure dans « Paie et journées » : son taux se change là-bas.': 'This person is paid by the hour in « Payroll and days »: their rate is changed there.',
+  'Cette entreprise a déjà ses photos sans limite': 'This business already has photos without limit',
 };

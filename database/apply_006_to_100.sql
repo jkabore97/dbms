@@ -30014,11 +30014,18 @@ notify pgrst, 'reload schema';
 --      own row, which can already point at an account (user_id, 018). So
 --      set_member_salary(org, user, amount, period) writes the salary on
 --      that person's employees row — finding it by the account, or by the
---      name of an unlinked one, or adding it — and employees.pay_period
---      says per what. Recording a salary is free; PAYING it (shifts,
---      staff_payments) keeps 066's Pro guard. team_overview(org) is what
---      the screen reads: the seats, the people with their salary, and the
---      invitations still out. Same for all three kinds.
+--      name of an unlinked one, or adding it as a permanent's — and
+--      employees.pay_period says per what. The payroll reads the period: a
+--      permanent's salary is what one payment pays (a month's, a week's, a
+--      day's) and « Paie et journées » says « / mois », « / semaine »,
+--      « / jour ». A row's kind is never changed (somebody paid by the hour
+--      keeps their rate, changed in the payroll), and clearing a salary
+--      touches the amount only — an ended employment stays ended. Recording
+--      is free; PAYING (shifts, staff_payments) keeps 066's Pro guard.
+--      team_overview(org) is what the screen reads: the seats, the people
+--      with their pay and their grants (to remove one), and the invitations
+--      still out, each saying whether it can still come in. Same for all
+--      three kinds.
 --   2. Workers are earned. The owner plus ONE worker (any member who is
 --      not an owner) is free once the first setup is done — 091's
 --      setup_done_at; an association, a church or a generic business has
@@ -30026,29 +30033,48 @@ notify pgrst, 'reload schema';
 --      team unlocked with cauris ('team_access', 085: org_has()). 066's
 --      cap on memberships (trg_cap_free_plan) is where every path that adds
 --      a member passes — claim_invitation, claim_my_invitations, a direct
---      insert by an admin — so it is replaced: the free count is the
---      platform setting free_max_staff, moved once from 066's 3 to 1 (a
---      setting changed later by the platform is never touched again), and
---      it is 0 until the setup is done. A trainer (038), Mara's own admins,
---      an owner, and somebody already in the business (a second grant adds
---      nobody) never take the seat. Nobody already there is removed: only
---      adding is refused. An invitation is refused at its writing too when
---      the seat is already taken, so the owner hears it, not the invitee;
---      and the sign-in sweep (claim_my_invitations) now skips an invitation
---      the business has no seat for instead of failing the whole sweep.
+--      insert by an admin — so it is replaced, and it now runs on an update
+--      too (a row turned from an owner's or a trainer's into a worker's, or
+--      moved onto somebody else, is somebody new), one claim at a time per
+--      business. The free count is the platform setting free_max_staff,
+--      moved once from 066's 3 to 1 (a setting changed later by the platform
+--      is never touched again), and it is 0 until the setup is done. A
+--      trainer (038), Mara's own admins, an owner, and somebody already in
+--      the business (a second grant adds nobody) never take the seat.
+--      Nobody already there is removed: only adding is refused. An
+--      invitation is refused at its writing too when the seat is already
+--      taken (unless it is for somebody already in), so the owner hears it,
+--      not the invitee; and the sign-in sweep skips an invitation the
+--      business has no seat for instead of failing the whole sweep.
+--      The back doors (security): 004 let a business's admins write any
+--      membership, so an admin could add a trainer's grant (no seat, hidden
+--      from the team), invite or insert an owner, or move or demote the
+--      owner's row. Only the platform names a trainer or an owner now
+--      (trg_membership_roles, 004's policies narrowed, owners' invitations
+--      refused — invite_employee's included); the functions that open a
+--      business write its first owner as before.
 --   3. Photos on Basic: at most free_photo_items (10) photographed
---      articles or services — an active product with at least one photo
---      document. The 11th needs Mara Pro or a photo slot bought with
+--      articles or services — an active product with at least one
+--      picture. The 11th needs Mara Pro or a photo slot bought with
 --      cauris: cauris_costs 'photo_slot', 50, permanent (orgs.photo_slots;
---      the price the platform's, like every cost). Held where a photo
---      becomes an article's: documents insert, or update of product_id, for
---      a product that had none. Articles already photographed past the
+--      the price the platform's, like every cost; refused to Pro and a
+--      showcase, which have no limit). Held where a picture becomes an
+--      article's — a document inserted on it, moved onto it, or re-filed
+--      into a photo — and where an archived article comes back with one;
+--      one at a time per business. Articles already photographed past the
 --      limit keep their photos. Showcase vitrines (094) and Mara's admins
---      are exempt. 066's photo cap (free_max_photos, 50) now counts only
---      the documents that are not an article's photo (receipts, deliveries
---      captured): the articles have their own rule. No limit on the number
---      of articles. Same for all three kinds — an association's services
---      are photographed like a shop's articles.
+--      are exempt. No limit on the number of articles. Same for all three
+--      kinds — an association's services are photographed like a shop's.
+--      A picture is not paperwork (doc_is_photo): a delivery note filed on
+--      the first article delivered (kind 'invoice') or a receipt takes no
+--      photo place and stays under 066's general cap (free_max_photos).
+--      Security: the vitrine took an article's newest DOCUMENT as its
+--      picture, and the photo gate served any document of a published
+--      article to the street — a supplier's delivery note could be the
+--      public picture. storefront_products, search_products,
+--      storefront_featured, storefront_previews and storefront_photo_allowed
+--      now take pictures only (as do vitrine_score, vitrine_checklist,
+--      path_progress and the Articles page's product_photo_keys).
 --   4. Associations still earn nothing (084's cauris_award is untouched),
 --      but they receive what the platform gives (5) and may now SPEND it:
 --      spend_cauris no longer refuses them, and buy_photo_slot does not
@@ -30061,27 +30087,34 @@ notify pgrst, 'reload schema';
 --      removed by an 'expired' line written when the wallet is next read or
 --      moves (cauris_expire), as 084's idle expiry is. platform_give_unlock
 --      opens a Pro tool until a date, as a cauris_unlocks row noted
---      « Offert par Mara » with no cauris spent. Each is rung to the
---      business's admins with its params (099). A gift is not earned: it is
---      kept out of the week's score and the leagues (league_scores,
---      my_cauris' week, cauris_watch), and an unlock given is not the
+--      « Offert par Mara » with no cauris spent — or lengthens a tool the
+--      business bought, which stays its own. Each is rung to the business's
+--      admins with its params (099). A gift is not earned: it is kept out
+--      of the week's score and the leagues (league_scores, my_cauris' week,
+--      path_state's week, cauris_watch), and an unlock given is not the
 --      business's « premier outil » on Le Chemin (path_progress). A
 --      showcase vitrine is refused (its ledger drops every line, 094).
 --   6. my_orgs() carries owner_name — the owner's name, for the picker.
 --  10. The stock audit. Two corrections did not follow the stock:
 --      update_production_run (034) changed a batch's output count and left
 --      the shelf with the old one — « 20 » corrected to « 40 » kept 20
---      cakes in stock; now the shelf moves by the difference. And
---      update_flock_event (033) let a correction take more birds out of a
---      flock than are left (« 3 » typed as « 300 »), the very thing
---      record_flock_event (009) refuses; now it refuses it too.
+--      cakes in stock; now the shelf moves by the difference, and the
+--      article's cost price (026: the latest batch's unit cost) follows
+--      while it is still this batch's. And update_flock_event (033) let a
+--      correction take more birds out of a flock than are left (« 3 »
+--      typed as « 300 »), the very thing record_flock_event (009) refuses;
+--      now it refuses it too.
 --
 -- Functions replaced, each from its latest definition: trg_cap_free_plan
 -- (066), claim_my_invitations (017), plan_terms (082), cauris_expire
 -- (084), spend_cauris (085), feature_states (091), my_cauris (097),
--- path_progress (097), league_scores (086), cauris_watch (084), my_orgs
--- (065, dropped and recreated: its columns grow), update_production_run
--- (034), update_flock_event (033).
+-- path_progress and path_state (097), league_scores (086), cauris_watch
+-- (084), my_orgs (065, dropped and recreated: its columns grow),
+-- update_production_run (034), update_flock_event (033),
+-- storefront_photo_allowed (093), storefront_products, search_products,
+-- storefront_featured, storefront_previews, vitrine_score and
+-- vitrine_checklist (098), product_photo_keys (079); 004's insert, update
+-- and delete policies on memberships.
 --
 -- Re-runnable (the bundle runs twice): columns and tables if not exists,
 -- settings on conflict do nothing (the one move of free_max_staff guarded
@@ -30367,22 +30400,19 @@ before insert or update on memberships
 for each row execute function trg_cap_free_plan();
 
 -- Who may make an owner or a trainer. 004 lets a business's admins write
--- memberships directly, so without this an admin could insert a trainer's
--- grant (038: a trainer takes no seat and is hidden from the team) or an
--- owner's, or move the owner's own row onto themselves. The platform names
--- trainers (assign_trainer) and owners; the functions that open a business
+-- memberships directly, so an admin could insert a trainer's grant (038: a
+-- trainer takes no seat and is hidden from the team), or an owner's, or
+-- move the owner's own row onto themselves. The platform names trainers
+-- (assign_trainer) and owners. The functions that open a business
 -- (create_org, approve_org_application, 094's showcases) write its first
--- owner, and only while it has none. No transfer of ownership exists yet
--- (044 says it comes first); when it does, it is a platform admin's act or
--- a definer function of its own.
---
--- SECURITY INVOKER on purpose: current_user tells a write straight from the
--- app (authenticated) from one inside a definer function (its owner). A
--- caller reads their own profile under 004's policy.
+-- owner: an owner's grant is taken only while the business has none, and a
+-- written-straight-from-the-app one never (004's policies, below). No
+-- transfer of ownership exists yet (044 says it comes first); when it does,
+-- it is the platform's act or a definer function of its own.
 create or replace function trg_membership_roles()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = public, auth
 as $$
 begin
@@ -30392,22 +30422,22 @@ begin
     end if;
     if (tg_op = 'INSERT' and coalesce(new.is_trainer, false))
        or (tg_op = 'UPDATE' and new.is_trainer is distinct from old.is_trainer) then
-        raise exception 'Seule la plateforme nomme une formatrice ou un formateur';
+        raise exception 'Seule la plateforme nomme une formatrice ou un formateur'
+            using errcode = 'insufficient_privilege';
     end if;
-    -- 044 already refuses it in set_membership_role; a direct update too.
+    -- 044 refuses it in set_membership_role; any other write too.
     if tg_op = 'UPDATE' and old.role = 'owner'
        and (new.role is distinct from old.role
             or new.user_id is distinct from old.user_id
             or new.org_id is distinct from old.org_id) then
-        raise exception 'Le propriétaire ne se change pas ici';
+        raise exception 'Le propriétaire ne se change pas ici'
+            using errcode = 'insufficient_privilege';
     end if;
-    if new.role = 'owner' and (tg_op = 'INSERT' or old.role is distinct from 'owner') then
-        if current_user in ('authenticated', 'anon')
-           or exists (select 1 from memberships m
-                       where m.org_id = new.org_id and m.role = 'owner'
-                         and m.id <> new.id) then
-            raise exception 'Seule la plateforme nomme un propriétaire';
-        end if;
+    if new.role = 'owner' and (tg_op = 'INSERT' or old.role is distinct from 'owner')
+       and exists (select 1 from memberships m
+                    where m.org_id = new.org_id and m.role = 'owner' and m.id <> new.id) then
+        raise exception 'Seule la plateforme nomme un propriétaire'
+            using errcode = 'insufficient_privilege';
     end if;
     return new;
 end;
@@ -30417,6 +30447,43 @@ drop trigger if exists membership_roles on memberships;
 create trigger membership_roles
 before insert or update on memberships
 for each row execute function trg_membership_roles();
+
+-- 004's door for an admin's own writes, narrowed: no owner's grant and no
+-- trainer's is written, changed or (for the owner's) removed straight from
+-- the app, except by Mara's admins — the owner leaving their own business
+-- aside. The definer functions above do not pass through a policy; the
+-- trigger holds them. Everything else an admin did, they still do.
+drop policy if exists "memberships granted by org admins" on memberships;
+create policy "memberships granted by org admins"
+on memberships for insert
+with check (
+    is_org_admin(org_id)
+    and ((role <> 'owner' and not is_trainer)
+         or exists (select 1 from profiles where id = auth.uid() and is_platform_admin))
+);
+
+drop policy if exists "memberships amended by org admins" on memberships;
+create policy "memberships amended by org admins"
+on memberships for update
+using (
+    is_org_admin(org_id)
+    and ((role <> 'owner' and not is_trainer)
+         or exists (select 1 from profiles where id = auth.uid() and is_platform_admin))
+)
+with check (
+    is_org_admin(org_id)
+    and ((role <> 'owner' and not is_trainer)
+         or exists (select 1 from profiles where id = auth.uid() and is_platform_admin))
+);
+
+drop policy if exists "memberships revoked by org admins" on memberships;
+create policy "memberships revoked by org admins"
+on memberships for delete
+using (
+    is_org_admin(org_id)
+    and (role <> 'owner' or user_id = auth.uid()
+         or exists (select 1 from profiles where id = auth.uid() and is_platform_admin))
+);
 
 -- An invitation: never for an owner (the platform's to name — an invitation
 -- claimed becomes a membership through a definer function, so it is held
@@ -30436,7 +30503,8 @@ begin
         return new;
     end if;
     if new.role = 'owner' then
-        raise exception 'Seule la plateforme nomme un propriétaire';
+        raise exception 'Seule la plateforme nomme un propriétaire'
+            using errcode = 'insufficient_privilege';
     end if;
     if tg_op = 'UPDATE' then
         return new;
@@ -30503,8 +30571,9 @@ begin
             values (v_inv.org_id, v_uid, v_inv.role, v_inv.scope_kind,
                     v_inv.scope_id, v_inv.visibility)
             on conflict (user_id, scope_kind, scope_id, role) do nothing;
-        exception when raise_exception then
-            continue;  -- no seat (100): left for later, the rest go on
+        exception when raise_exception or insufficient_privilege then
+            continue;  -- no seat, or a grant only the platform makes (100):
+                       -- left for later, the rest go on
         end;
 
         update pending_invitations

@@ -24,3 +24,16 @@ NumberFormat moneyFormat(String currency) => NumberFormat.currency(
       symbol: currency == 'XOF' ? 'FCFA' : currency,
       decimalDigits: 0,
     );
+
+/// What a person typed as an amount. Thousands are written here with a
+/// space, a dot or a comma — « 45 000 », « 45.000 », « 45,000 » are all
+/// forty-five thousand — while « 2,5 » and « 2.5 » are two and a half.
+/// Null when it is not a number.
+double? parseAmount(String text) {
+  final t = text.trim().replaceAll(RegExp(r'[\s\u00A0\u202F]'), '');
+  if (t.isEmpty) return null;
+  if (RegExp(r'^\d{1,3}([.,]\d{3})+$').hasMatch(t)) {
+    return double.tryParse(t.replaceAll(RegExp(r'[.,]'), ''));
+  }
+  return double.tryParse(t.replaceAll(',', '.'));
+}

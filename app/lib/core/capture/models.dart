@@ -59,6 +59,12 @@ class CapturedDocument {
 
   bool get isPdf => contentType == 'application/pdf';
 
+  /// A picture, as against paperwork — the server's doc_is_photo (100): a
+  /// delivery note, a receipt, a logo or a PDF is never an article's photo.
+  bool get isPicture =>
+      !const {'invoice', 'receipt', 'logo'}.contains(kind ?? 'photo') &&
+      !(contentType?.toLowerCase().contains('pdf') ?? false);
+
   /// What to call it in a list when nobody has named it.
   String get title {
     final c = caption;

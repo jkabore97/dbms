@@ -19,10 +19,20 @@
 -- or the leagues; a tool given until a date opens with no cauris spent and
 -- is not « mon premier outil »; each gift rings the admins with its facts,
 -- and only the platform gives. my_orgs() names each business's owner.
--- A production corrected moves its output on the shelf; a flock corrected
--- cannot lose more birds than it has; the till, a credit sale, a return, a
--- delivery and its reversal, a service and the low-stock bell move the
--- stock as they always have.
+-- A production corrected moves its output on the shelf, and its cost price
+-- while it is still that batch's; a flock corrected cannot lose more birds
+-- than it has; the till, a credit sale, a return, a delivery and its
+-- reversal, a service and the low-stock bell move the stock as they always
+-- have.
+-- The corrections (12–17): paperwork filed on an article (a delivery note,
+-- a receipt, a PDF) is no photo — not counted, never the vitrine's picture
+-- nor served to the street, and under the general cap; an archived
+-- photographed article coming back takes a place again; Pro buys no slot;
+-- a salary is never a kind changed, a week's salary pays a week, clearing
+-- revives nobody; no trainer, no owner and no moved row by the back door,
+-- while the platform's own ways (assign_trainer, create_org, an application
+-- approved, a showcase joined) still grant; gifts are out of Le Chemin's
+-- week, a bought tool stays bought, and the team given says so.
 -- ============================================================
 \set ON_ERROR_STOP on
 -- The owner's numbers: earlier suites change them for their own fixtures.
@@ -1340,8 +1350,9 @@ select platform_give_cauris('69000000-0000-0000-0000-000000000003', 40, 'Encore'
 select platform_give_unlock('69000000-0000-0000-0000-000000000003', 'accounting', cauris_today() + 60) is not null;
 select platform_give_unlock('69000000-0000-0000-0000-000000000003', 'team_access', cauris_today() + 5) is not null;
 commit;
+-- Read as the farmer (the claim), by the database's own role: the ledger
+-- has no policy for the app, and the test sums it beside path_state.
 begin;
-set local role authenticated;
 set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000007';
 do $$
 declare

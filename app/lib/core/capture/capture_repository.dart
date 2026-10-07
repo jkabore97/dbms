@@ -390,13 +390,13 @@ class CaptureRepository {
   }
 
   /// The article's current photograph — the same one the vitrine and the
-  /// search show: the newest document linked to this product, whatever it
-  /// was filed as. Looks through the shop's recent documents; null when
-  /// none of them is the article's.
+  /// search show: the newest picture linked to this product (100: not a
+  /// delivery note or a receipt filed on it). Looks through the shop's
+  /// recent documents; null when none of them is the article's.
   Future<String?> productPhotoKey(String orgId, String productId) async {
     final docs = await documents(orgId, limit: 200);
     for (final d in docs) {
-      if (d.productId == productId) return d.key;
+      if (d.productId == productId && d.isPicture) return d.key;
     }
     return null;
   }

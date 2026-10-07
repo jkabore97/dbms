@@ -74,6 +74,7 @@ Widget homeScreenFor({
           staff: staff,
           accountAction: accountAction,
           access: access,
+          retail: retail,
         )))),
       'retail' => SetupGate(org: org, child: OfflineOffer(org: org, child: UnlockCelebration(org: org, child: StoreHomeScreen(
           invoicing: invoicing,
