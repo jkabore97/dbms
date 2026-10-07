@@ -1062,6 +1062,58 @@ class AdminRepository {
     }
   }
 
+  /// The phone and address a shopper reads on the vitrine (and the invoice
+  /// header carries): nulls with no server.
+  Future<({String? phone, String? address})> orgContact(String orgId) async {
+    final client = _client;
+    if (client == null) return (phone: null, address: null);
+    final row = await client
+        .from('orgs')
+        .select('phone, address')
+        .eq('id', orgId)
+        .maybeSingle();
+    return (
+      phone: row?['phone'] as String?,
+      address: row?['address'] as String?,
+    );
+  }
+
+  /// Sets those two lines and nothing else on the header (set_org_billing,
+  /// 020: what is not sent is kept). An empty string clears a line.
+  Future<void> setOrgContact(String orgId,
+      {required String phone, required String address}) async {
+    await _requireClient().rpc('set_org_billing', params: {
+      'p_org_id': orgId,
+      'p_phone': phone,
+      'p_address': address,
+    });
+  }
+
+  /// The path's steps (089) opened since an admin last looked (096):
+  /// 'invoices', 'production', 'credits'. Empty on a database before 096,
+  /// offline, or for a member who is not an admin.
+  Future<List<String>> unseenUnlocks(String orgId) async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client
+          .rpc('unseen_unlocks', params: {'p_org_id': orgId});
+      if (rows is! List) return const [];
+      return [for (final r in rows) r is Map ? '${r.values.first}' : '$r'];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// The celebration was shown: not again.
+  Future<void> markUnlocksSeen(String orgId) async {
+    final client = _client;
+    if (client == null) return;
+    try {
+      await client.rpc('mark_unlocks_seen', params: {'p_org_id': orgId});
+    } catch (_) {}
+  }
+
   /// The kilometres the delivery base covers (081): null is the platform's
   /// (0 to start, the plain per-km price). Read alone, like the reach.
   Future<double?> deliveryIncludedKm(String orgId) async {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Mara's seal on dark brown, as Android's adaptive icon: the launcher crops
+<!-- Mara's seal on graphite, as Android's adaptive icon: the launcher crops
      the background to its own shape and the seal stays whole. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_background" />

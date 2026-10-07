@@ -53,9 +53,14 @@ class OrgSettingsScreen extends StatefulWidget {
     this.plan = 'free',
     this.retail,
     this.capture,
+    this.initialPart,
   });
 
   final AdminRepository admin;
+
+  /// The rubrique to open at once ('articles', 'identite', 'vitrine',
+  /// 'position'): where the vitrine guide's « Faire maintenant » lands.
+  final String? initialPart;
   final String orgId;
 
   /// For the vitrine's Pro dressing (068): the articles to pin and the
@@ -115,6 +120,17 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   bool _storefrontEnabled = false;
   final _blurbController = TextEditingController();
 
+  /// The phone and address a shopper reads (and the invoice header): two
+  /// of the vitrine's six steps, set here since the first setup.
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  String _savedPhone = '';
+  String _savedAddress = '';
+
+  /// What the vitrine has and lacks (070): each rubrique's « fait » or
+  /// « à faire », and the articles count. Null with no server.
+  VitrineChecklist? _checklist;
+
   /// Where the shop is on the vitrine map (053). Text, not doubles, so the
   /// field can be typed into, pasted from a Google Maps link, or filled from
   /// the phone's own position — and cleared to lift the pin.
@@ -159,6 +175,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _open = _Part.byKey(widget.initialPart);
     _load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLockRule();
@@ -172,6 +189,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _nameController.dispose();
     _waveController.dispose();
     _blurbController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
     _latController.dispose();
     _lngController.dispose();
     _deliveryBaseController.dispose();
@@ -206,6 +225,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         reach = null;
       }
       final included = await widget.admin.deliveryIncludedKm(widget.orgId);
+      // The contact lines and the checklist are extras: failing to read
+      // them must not cost the owner the rest of the settings.
+      ({String? phone, String? address}) contact = (phone: null, address: null);
+      try {
+        contact = await widget.admin.orgContact(widget.orgId);
+      } catch (_) {}
+      VitrineChecklist? checklist;
+      try {
+        checklist = await widget.admin.vitrineChecklist(widget.orgId);
+      } catch (_) {}
       // Only the platform edits the plan, so only the platform pays for the
       // read; members show what the org list already says.
       final plan = widget.canSetPlan
@@ -226,6 +255,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _theme = org['theme'] as String?;
         _storefrontEnabled = storefront.enabled;
         _blurbController.text = storefront.blurb ?? '';
+        _savedPhone = contact.phone ?? '';
+        _savedAddress = contact.address ?? '';
+        _phoneController.text = _savedPhone;
+        _addressController.text = _savedAddress;
+        _checklist = checklist;
         _latController.text = storefront.lat?.toString() ?? '';
         _lngController.text = storefront.lng?.toString() ?? '';
         _deliveryBaseController.text = _plain(storefront.deliveryBase);
@@ -345,6 +379,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         enabled: _storefrontEnabled,
         blurb: _blurbController.text.trim(),
       );
+      final phone = _phoneController.text.trim();
+      final address = _addressController.text.trim();
+      if (phone != _savedPhone || address != _savedAddress) {
+        await widget.admin
+            .setOrgContact(widget.orgId, phone: phone, address: address);
+        _savedPhone = phone;
+        _savedAddress = address;
+      }
       await widget.admin.setStorefrontLocation(
         widget.orgId,
         lat: lat,
@@ -369,6 +411,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         if (e.code != 'PGRST202' && e.code != '42883') rethrow;
       }
       widget.onSaved?.call();
+      await _reloadChecklist();
       if (!mounted) return;
       setState(() {
         _saving = false;
@@ -381,6 +424,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _saving = false;
       });
     }
+  }
+
+  /// The checklist again, after a save or a visit to the articles: each
+  /// rubrique's state follows at once.
+  Future<void> _reloadChecklist() async {
+    try {
+      final c = await widget.admin.vitrineChecklist(widget.orgId);
+      if (mounted) setState(() => _checklist = c);
+    } catch (_) {}
   }
 
   /// Add a currency, or (with [existing]) change its rate. Each is one
@@ -663,11 +715,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// owner walks the settings in order instead of hunting the index.
   _Part? _saved;
 
-  /// The order a new business is walked through.
-  static const _flow = [_Part.identity, _Part.vitrine, _Part.position, _Part.payments];
+  /// The order a new business is walked through: the articles first —
+  /// a vitrine is its shelf — then the name, the window, the pin.
+  static const _flow = [_Part.articles, _Part.identity, _Part.vitrine, _Part.position];
 
   _Part? get _next {
-    final i = _flow.indexOf(_saved ?? _Part.identity);
+    final i = _flow.indexOf(_saved ?? _Part.articles);
     return i >= 0 && i + 1 < _flow.length ? _flow[i + 1] : null;
   }
 
@@ -1124,6 +1177,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ),
     const SizedBox(height: 24),
     ],
+    ..._ratesBlock(theme),
+  ];
+
+  /// Other currencies a sale may be paid in. In Identité, beside the
+  /// business's own currency, while Paiements is hidden (cash only, 090).
+  List<Widget> _ratesBlock(ThemeData theme) => [
     Text(context.tr('Taux de change'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
@@ -1157,6 +1216,181 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ),
   ];
 
+  /// « Vos articles »: the shelf before anything else. How many are on
+  /// sale against the minimum, then the four gestures that put one there,
+  /// each a picture and a line — where the button is, what to type — and
+  /// the button that opens the articles.
+  List<Widget> _articles(ThemeData theme) {
+    final c = _checklist;
+    final farm = _profile == 'farm';
+    final min = _minItems;
+    final published = c?.published ?? 0;
+    final muted = theme.textTheme.bodySmall
+        ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final steps = farm
+        ? <(IconData, String, String)>[
+            (Icons.add_box_outlined, 'Mettre en vente',
+                'Dans « À vendre », le bouton « Mettre en vente » : quoi, le prix, par quoi (plateau, kg…).'),
+            (Icons.numbers, 'Combien vous en avez',
+                'La quantité disponible — ou « Pas encore prêt » pour une bande à venir.'),
+            (Icons.photo_camera_outlined, 'Une photo',
+                'Sur un fond simple, à la lumière du jour : un article en photo se vend bien mieux.'),
+            (Icons.storefront_outlined, 'Sur la vitrine',
+                'Laissez « Sur la vitrine » coché : vos clients le voient et le commandent.'),
+          ]
+        : <(IconData, String, String)>[
+            (Icons.add_box_outlined, 'Une entrée de stock',
+                'Dans « Articles », le bouton « Entrée de stock » : le nom, combien vous en avez, le prix. L\'article est créé.'),
+            (Icons.playlist_add, 'Plusieurs à la fois',
+                '« Ajout multiple » : un article par ligne, par exemple « Savon 20 300 ».'),
+            (Icons.photo_camera_outlined, 'Une photo',
+                'Touchez l\'article, puis « Ajouter une photo ». Trois photos et votre vitrine fait envie.'),
+            (Icons.storefront_outlined, 'Sur la vitrine',
+                'Cochez « Afficher sur la vitrine en ligne » — ou « Tout publier » ci-dessous.'),
+          ];
+    return [
+      if (c != null) ...[
+        Row(
+          key: const Key('articles-count'),
+          children: [
+            Text('$published',
+                style: theme.textTheme.displaySmall
+                    ?.copyWith(fontWeight: FontWeight.w800)),
+            Text(' / $min',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                published >= min
+                    ? context.tr('articles en vente : la vitrine est visible du public.')
+                    : context.tr('articles en vente. Il en faut {min} pour que le public voie votre vitrine.', {'min': min}),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: (published / min).clamp(0, 1).toDouble(),
+            minHeight: 8,
+            color: published >= min ? maraGreen : maraCaramel,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          context.tr('{n} en photo sur 3 conseillées', {'n': c.withPhoto}),
+          style: muted,
+        ),
+        const SizedBox(height: 20),
+      ],
+      Text(context.tr('Ajouter un article, en quatre gestes'),
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 12),
+      for (var i = 0; i < steps.length; i++)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            key: Key('articles-step-$i'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: maraDeep,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(steps[i].$1, color: maraCaramel, size: 28),
+                  ),
+                  Positioned(
+                    left: -6,
+                    top: -6,
+                    child: CircleAvatar(
+                      radius: 11,
+                      backgroundColor: maraCaramel,
+                      child: Text('${i + 1}',
+                          style: const TextStyle(
+                              color: maraDeep,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.tr(steps[i].$2),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(context.tr(steps[i].$3), style: muted),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      const SizedBox(height: 8),
+      SizedBox(
+        height: 52,
+        child: FilledButton.icon(
+          key: const Key('articles-open'),
+          onPressed: () async {
+            await context.push(
+                Routes.inside(widget.orgId, farm ? 'a-vendre' : 'produits'));
+            if (mounted) await _reloadChecklist();
+          },
+          icon: const Icon(Icons.add),
+          label: Text(farm ? context.tr('Mettre en vente') : context.tr('Ajouter un article')),
+        ),
+      ),
+      if (c != null && c.unpublished > 0 && widget.retail != null) ...[
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          key: const Key('articles-publish-all'),
+          onPressed: _saving
+              ? null
+              : () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    final n = await widget.retail!.publishAll(widget.orgId);
+                    if (!mounted) return;
+                    messenger.showSnackBar(SnackBar(
+                        content: Text(context.tr('{n} article(s) publié(s) sur la vitrine.', {'n': n}))));
+                    await _reloadChecklist();
+                  } catch (error) {
+                    messenger.showSnackBar(
+                        SnackBar(content: Text(describeError(error))));
+                  }
+                },
+          icon: const Icon(Icons.storefront_outlined),
+          label: Text(context.tr('Tout publier ({unpublished})', {'unpublished': c.unpublished})),
+        ),
+      ],
+      const SizedBox(height: 20),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          key: const Key('settings-next-go'),
+          onPressed: () => setState(() => _open = _Part.identity),
+          icon: const Icon(Icons.arrow_forward),
+          label: Text(context.tr('Suivant : {label}', {'label': context.tr(_Part.identity.label)})),
+        ),
+      ),
+    ];
+  }
+
   List<Widget> _vitrine(ThemeData theme) => [
     Text(context.tr('Vitrine en ligne'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
@@ -1184,6 +1418,34 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           labelText: context.tr('Quelques mots sur la boutique (facultatif)'),
         ),
       ),
+      const SizedBox(height: 12),
+      // Two of the six steps: what a shopper calls, and where they come.
+      TextField(
+        key: const Key('vitrine-phone'),
+        controller: _phoneController,
+        enabled: !_saving,
+        keyboardType: TextInputType.phone,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Téléphone de la boutique'),
+          hintText: '+226 70 00 00 00',
+          prefixIcon: const Icon(Icons.call_outlined),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        key: const Key('vitrine-address'),
+        controller: _addressController,
+        enabled: !_saving,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Adresse'),
+          hintText: context.tr('Gounghin, près du marché'),
+          prefixIcon: const Icon(Icons.home_work_outlined),
+        ),
+      ),
       const SizedBox(height: 10),
       _LinkRow(url: _storefrontUrl),
       const SizedBox(height: 16),
@@ -1194,8 +1456,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         retail: widget.retail,
       ),
       const SizedBox(height: 12),
-      // Not a first step: the dressing (093) and the spots for sale (071)
-      // wait under « Vitrine avancée », folded.
+      // Not a first step: the dressing (093) waits under « Vitrine
+      // avancée », folded — its free basics and preview, and the Pro part
+      // as one locked card.
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -1204,7 +1467,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           leading: const Icon(Icons.tune),
           title: Text(context.tr('Vitrine avancée'),
               style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(context.tr('Habiller ma vitrine · Mettre en avant')),
+          subtitle: Text(context.tr('Couverture, couleur, horaires · aperçu')),
           children: [
             VitrinePlusCard(
               orgId: widget.orgId,
@@ -1215,7 +1478,20 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   ? null
                   : _nameController.text.trim(),
             ),
-            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      // The spots for sale (071), folded on their own.
+      Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const Key('vitrine-spots'),
+          tilePadding: EdgeInsets.zero,
+          leading: const Icon(Icons.campaign_outlined),
+          title: Text(context.tr('Mettre en avant'),
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(context.tr('Une place en tête de la rue')),
+          children: [
             SpotsCard(
               orgId: widget.orgId,
               admin: widget.admin,
@@ -1619,7 +1895,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   ];
 
   List<Widget> _partBody(_Part part, ThemeData theme) => switch (part) {
-    _Part.identity => [..._identity(theme), ..._saveBar(theme)],
+    _Part.articles => _articles(theme),
+    _Part.identity => [
+        ..._identity(theme),
+        if (!_waveAllowed) ...[const SizedBox(height: 24), ..._ratesBlock(theme)],
+        ..._saveBar(theme),
+      ],
     _Part.payments => [
         ..._payments(theme),
         ..._saveBar(theme),
@@ -1640,7 +1921,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// answers most questions.
   String _stateOf(_Part part) {
     final money = _currency == 'XOF' ? 'FCFA' : _currency;
+    final c = _checklist;
     switch (part) {
+      case _Part.articles:
+        if (c == null) return context.tr('Ce que vous vendez');
+        return [
+          context.tr('{n} / {min} en vente', {'n': c.published, 'min': _minItems}),
+          context.tr('{n} en photo', {'n': c.withPhoto}),
+        ].join(' · ');
       case _Part.identity:
         final name = _nameController.text.trim();
         return [if (name.isNotEmpty) name, money].join(' · ');
@@ -1655,7 +1943,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             context.tr(_rates.length > 1 ? '{n} autres monnaies' : '{n} autre monnaie', {'n': _rates.length}),
         ].join(' · ');
       case _Part.vitrine:
-        return _storefrontEnabled ? context.tr('Ouverte') : context.tr('Fermée');
+        if (!_storefrontEnabled) return context.tr('Fermée');
+        final missing = [
+          if (_blurbController.text.trim().isEmpty) context.tr('présentation'),
+          if (_phoneController.text.trim().isEmpty) context.tr('téléphone'),
+          if (_addressController.text.trim().isEmpty) context.tr('adresse'),
+        ];
+        return missing.isEmpty
+            ? context.tr('Ouverte')
+            : context.tr('Ouverte · manque : {what}', {'what': missing.join(', ')});
       case _Part.delivery:
         final base = _deliveryBaseController.text.trim();
         final perKm = _deliveryPerKmController.text.trim();
@@ -1695,11 +1991,35 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         pinLooksMisplaced(pin.$1, pin.$2, _currency);
   }
 
+  /// Items on sale before the public sees the vitrine (092), at least one.
+  int get _minItems {
+    final m = _checklist?.minItems ?? 1;
+    return m < 1 ? 1 : m;
+  }
+
+  /// Each first-steps rubrique done (true) or still to do (false); null for
+  /// what is optional and has no « done » (the team's lock, the platform).
+  bool? _doneOf(_Part part) {
+    final c = _checklist;
+    return switch (part) {
+      _Part.articles => c == null ? null : c.published >= _minItems && c.photosDone,
+      _Part.identity => _nameController.text.trim().isNotEmpty,
+      _Part.vitrine => _storefrontEnabled &&
+          _blurbController.text.trim().isNotEmpty &&
+          _phoneController.text.trim().isNotEmpty &&
+          _addressController.text.trim().isNotEmpty,
+      _Part.position => _pin != null,
+      _ => null,
+    };
+  }
+
   List<_Part> get _parts => [
+    _Part.articles,
     _Part.identity,
     _Part.vitrine,
     _Part.position,
-    _Part.payments,
+    // Cash only (090): nothing to set until Mara allows Wave.
+    if (_waveAllowed) _Part.payments,
     _Part.team,
     _Part.delivery,
     if (widget.canSetPlan || widget.canSuspend) _Part.platform,
@@ -1710,9 +2030,40 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   static const _proParts = {_Part.delivery};
 
   Widget _index(ThemeData theme, {required bool wide}) {
+    final steps = [for (final p in _flow) _doneOf(p)].whereType<bool>().toList();
+    final done = steps.where((d) => d).length;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
+        // Where the first steps stand, at a glance: « 2 sur 4 terminés ».
+        if (steps.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Column(
+              key: const Key('settings-progress'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  done == steps.length
+                      ? context.tr('Tout est prêt')
+                      : context.tr('{done} sur {total} terminés', {'done': done, 'total': steps.length}),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: done / steps.length,
+                    minHeight: 8,
+                    color: done == steps.length ? maraGreen : maraCaramel,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         _Group(
           children: [
             for (final part in _parts.where(
@@ -1720,6 +2071,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               _PartRow(
                 part: part,
                 state: _stateOf(part),
+                done: _doneOf(part),
                 warn: _warns(part),
                 selected: wide && _open == part,
                 onTap: () => setState(() {
@@ -1880,17 +2232,28 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
 /// The parts of the business settings, as the index names them.
 enum _Part {
-  identity('Identité', Icons.badge_outlined),
-  payments('Paiements', Icons.payments_outlined),
-  vitrine('Vitrine', Icons.storefront_outlined),
-  delivery('Livraison', Icons.delivery_dining_outlined),
-  position('Position', Icons.place_outlined),
-  team("Sécurité de l'équipe", Icons.shield_outlined),
-  platform('Formule et modération', Icons.admin_panel_settings_outlined);
+  articles('Vos articles', Icons.inventory_2_outlined, 'articles'),
+  identity('Identité', Icons.badge_outlined, 'identite'),
+  payments('Paiements', Icons.payments_outlined, 'paiements'),
+  vitrine('Vitrine', Icons.storefront_outlined, 'vitrine'),
+  delivery('Livraison', Icons.delivery_dining_outlined, 'livraison'),
+  position('Position', Icons.place_outlined, 'position'),
+  team("Sécurité de l'équipe", Icons.shield_outlined, 'equipe'),
+  platform('Formule et modération', Icons.admin_panel_settings_outlined, 'plateforme');
 
-  const _Part(this.label, this.icon);
+  const _Part(this.label, this.icon, this.key);
   final String label;
   final IconData icon;
+
+  /// The rubrique's name in an address (`?partie=articles`).
+  final String key;
+
+  static _Part? byKey(String? key) {
+    for (final p in values) {
+      if (p.key == key) return p;
+    }
+    return null;
+  }
 }
 
 /// A rounded card of rows with hairlines between them.
@@ -1927,6 +2290,7 @@ class _PartRow extends StatelessWidget {
     this.warn = false,
     this.selected = false,
     this.proCost,
+    this.done,
   }) : icon = null,
        label = null;
 
@@ -1938,7 +2302,8 @@ class _PartRow extends StatelessWidget {
     this.proCost,
   }) : part = null,
        warn = false,
-       selected = false;
+       selected = false,
+       done = null;
 
   final _Part? part;
   final IconData? icon;
@@ -1947,6 +2312,10 @@ class _PartRow extends StatelessWidget {
   final bool warn;
   final bool selected;
   final VoidCallback onTap;
+
+  /// A first step: done (a green tick) or still to do (« À faire »); null
+  /// for what has no « done ».
+  final bool? done;
 
   /// Set when the row is a Pro tool still locked: the badge replaces the
   /// chevron (0 = no cauris price known).
@@ -1970,7 +2339,30 @@ class _PartRow extends StatelessWidget {
       ),
       trailing: proCost != null
           ? ProCostBadge(cost: proCost == 0 ? null : proCost)
-          : const Icon(Icons.chevron_right),
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (done == true)
+                  Icon(Icons.check_circle,
+                      key: Key('part-done-${part?.key}'),
+                      color: maraGreen,
+                      semanticLabel: context.tr('Terminé'))
+                else if (done == false)
+                  Container(
+                    key: Key('part-todo-${part?.key}'),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: maraCaramel.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(context.tr('À faire'),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: maraEspresso, fontWeight: FontWeight.w800)),
+                  ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
       onTap: onTap,
     );
   }

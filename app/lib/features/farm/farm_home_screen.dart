@@ -262,8 +262,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen> {
                 children: [
                   // A new farm's path (085): its vitrine opens its tools.
                   if (AppScope.read(context)?.session.featuresFor(widget.org.id)?.progress
-                      case final p? when p.gated) ...[
-                    PathCard(org: widget.org, progress: p),
+                      case final p? when PathCard.shows(p)) ...[
+                    PathCard(org: widget.org, progress: p, onChanged: _refresh),
                     const SizedBox(height: 16),
                   ],
                   _TodayCard(

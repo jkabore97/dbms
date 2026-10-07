@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Mara's seal on dark brown while the app starts (the Flutter splash takes
+<!-- Mara's seal on graphite while the app starts (the Flutter splash takes
      over with the same seal). -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/mara_brown" />
+    <item android:drawable="@color/mara_ground" />
     <item>
         <bitmap
             android:gravity="center"

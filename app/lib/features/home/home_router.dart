@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../offline/offline_sheet.dart';
+import '../cauris/unlock_celebration.dart';
 
 import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
@@ -63,7 +64,7 @@ Widget homeScreenFor({
           onHistory: onHistory,
           access: access,
         )),
-      'farm' => SetupGate(org: org, child: OfflineOffer(org: org, child: FarmHomeScreen(
+      'farm' => SetupGate(org: org, child: OfflineOffer(org: org, child: UnlockCelebration(org: org, child: FarmHomeScreen(
           invoicing: invoicing,
           db: db,
           org: org,
@@ -72,8 +73,8 @@ Widget homeScreenFor({
           staff: staff,
           accountAction: accountAction,
           access: access,
-        ))),
-      'retail' => SetupGate(org: org, child: OfflineOffer(org: org, child: StoreHomeScreen(
+        )))),
+      'retail' => SetupGate(org: org, child: OfflineOffer(org: org, child: UnlockCelebration(org: org, child: StoreHomeScreen(
           invoicing: invoicing,
           org: org,
           retail: retail,
@@ -81,7 +82,7 @@ Widget homeScreenFor({
           capture: capture,
           accountAction: accountAction,
           access: access,
-        ))),
+        )))),
       // Anything else — a profile added server-side that this build has never
       // heard of — lands here rather than failing.
       _ => ProfilePendingScreen(org: org, accountAction: accountAction),

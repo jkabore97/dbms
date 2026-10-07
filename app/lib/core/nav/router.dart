@@ -110,7 +110,11 @@ abstract final class Routes {
   /// A business's settings. Named once here: the vitrine card on the shop
   /// home once typed it by hand as `parametres`, lost the `administration/`
   /// in front, and opened a red « Page Not Found ».
-  static String orgSettings(String id) => inside(id, 'administration/parametres');
+  /// [part] opens one rubrique straight away: 'articles', 'identite',
+  /// 'vitrine', 'position' (the vitrine guide's « Faire maintenant »).
+  static String orgSettings(String id, {String? part}) =>
+      inside(id, 'administration/parametres') +
+      (part == null ? '' : '?partie=$part');
 }
 
 /// Builds the router. Called once, from `main()`.
@@ -894,6 +898,7 @@ GoRouter buildRouter(SessionController session) {
                     // shop's articles and photographs.
                     retail: scope.retail,
                     capture: scope.capture,
+                    initialPart: state.uri.queryParameters['partie'],
                   ),
                 ),
                 routes: [
@@ -1529,7 +1534,7 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mara's seal on dark brown and a caramel hairline of progress — the same page
+    // Mara's seal on graphite and a caramel hairline of progress — the same page
     // the browser and Android show before the app, so launch reads as one
     // picture rather than three.
     return const Scaffold(

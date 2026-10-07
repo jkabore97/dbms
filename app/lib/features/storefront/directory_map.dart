@@ -253,7 +253,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
             label: context.tr('Ma position'),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: const Color(0xFF4A3122),
+                color: const Color(0xFF8B5A3C),
                 shape: BoxShape.circle,
                 border: Border.all(color: ShopStyle.paper, width: 3),
               ),
