@@ -95,7 +95,11 @@ class BusinessShell extends StatelessWidget {
       child: Column(
         children: [
           const _SuspendedBanner(),
-          Expanded(child: home),
+          // The banner took the status bar: the home under it must not pad
+          // for it again.
+          Expanded(
+            child: MediaQuery.removePadding(context: context, removeTop: true, child: home),
+          ),
         ],
       ),
     );

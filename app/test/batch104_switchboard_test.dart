@@ -473,5 +473,64 @@ void main() {
       expect(isFeatureHidden(const PostgrestException(message: 'x', code: 'P0001')), isFalse);
       expect(featureHiddenCode, 'MA002');
     });
+
+    test('an offline cold start hides what the server last said — a shop, a farm, an association',
+        () async {
+      const orgs = [_shop, _farm, _assoc];
+      await db.cacheOrgs(orgs);
+      Future<SessionController> open(FeatureStates? states) async {
+        final session = SessionController(
+          db: db,
+          auth: AuthRepository(null),
+          admin: _Admin(states),
+          accounting: AccountingRepository(null),
+        );
+        await session.resolveOrgs();
+        for (final o in orgs) {
+          await session.reloadFeatures(o.id);
+        }
+        return session;
+      }
+
+      // The device's copy is written after the answer, without waiting.
+      Future<void> kept(String orgId, String? want) async {
+        for (var i = 0; i < 50 && await db.readPref('hidden_features:$orgId') != want; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        expect(await db.readPref('hidden_features:$orgId'), want, reason: orgId);
+      }
+
+      // Online: Mara hid the credit book and the invoices.
+      final online = await open(FeatureStates.fromJson(const {
+        'hidden': ['invoices', 'credits'],
+      }));
+      for (final o in orgs) {
+        expect(online.accessFor(o.id).isHidden('credits'), isTrue, reason: o.profile);
+        await kept(o.id, 'credits,invoices');
+      }
+      online.dispose();
+
+      // The next morning, no signal: the same tools stay hidden.
+      final offline = await open(null);
+      for (final o in orgs) {
+        expect(offline.accessFor(o.id).isHidden('credits'), isTrue, reason: o.profile);
+        expect(offline.accessFor(o.id).isHidden('invoices'), isTrue, reason: o.profile);
+        expect(offline.accessFor(o.id).canSee('tontines'), isTrue, reason: o.profile);
+      }
+      offline.dispose();
+
+      // Mara put them back: the copy is cleared, and offline shows them again.
+      final back = await open(FeatureStates.fromJson(const {'hidden': <String>[]}));
+      for (final o in orgs) {
+        expect(back.accessFor(o.id).isHidden('credits'), isFalse, reason: o.profile);
+        await kept(o.id, null);
+      }
+      back.dispose();
+      final offlineAgain = await open(null);
+      for (final o in orgs) {
+        expect(offlineAgain.accessFor(o.id).platformHidden, isEmpty, reason: o.profile);
+      }
+      offlineAgain.dispose();
+    });
   });
 }
