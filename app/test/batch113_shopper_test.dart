@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -16,6 +17,7 @@ import 'package:kaj_app/core/console/command_center.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/credit/credit_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/format/money.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
 import 'package:kaj_app/core/l10n/locale_controller.dart';
@@ -101,6 +103,10 @@ class _Shopper extends ShopperRepository {
   final followedNow = <String>[];
   final letGo = <String>[];
   final news = <String, bool>{};
+  final newsCalls = <String>[];
+
+  /// The businesses' ids, as follow_vitrine answers them.
+  static const _ids = {'boutique-awa': 'o1', 'ferme-ignace': 'o2', 'entraide': 'o3'};
   final saved = <SavedAddress>[];
   final deleted = <String>[];
   final reports = <Map<String, String?>>[];
@@ -139,8 +145,9 @@ class _Shopper extends ShopperRepository {
   @override
   Future<String> follow(String slug) async {
     followedNow.add(slug);
-    followed = [...followed, FollowedVitrine(orgId: 'org-$slug', slug: slug, name: slug, profile: 'retail')];
-    return 'org-$slug';
+    final id = _ids[slug] ?? 'org-$slug';
+    followed = [...followed, FollowedVitrine(orgId: id, slug: slug, name: slug, profile: 'retail')];
+    return id;
   }
 
   @override
@@ -152,6 +159,7 @@ class _Shopper extends ShopperRepository {
   @override
   Future<void> setFollowNews(String orgId, bool on) async {
     news[orgId] = on;
+    newsCalls.add('$orgId:$on');
     followed = [
       for (final f in followed)
         f.orgId == orgId
@@ -404,7 +412,8 @@ void main() {
       routes: [GoRoute(path: Routes.shopperProfile, builder: (_, _) => ShopperProfileScreen(shopper: me))]);
 
   Future<void> tapRow(WidgetTester tester, String key) async {
-    await tester.scrollUntilVisible(find.byKey(Key(key)), 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(Key(key)));
+    await tester.pump();
     await tester.tap(find.byKey(Key(key)));
     await settle(tester);
   }
@@ -424,12 +433,12 @@ void main() {
       }
       expect(find.text('1 en cours'), findsOneWidget);
       // RULE M: no Wave drawn at all, not even greyed.
-      await tester.scrollUntilVisible(find.byKey(const Key('shopper-payment-cash')), 200,
-          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.byKey(const Key('shopper-payment-cash')));
+      await tester.pump();
       expect(find.text('Wave'), findsNothing);
       expect(find.byKey(const Key('shopper-payment')), findsNothing);
-      await tester.scrollUntilVisible(find.byKey(const Key('shopper-report')), 200,
-          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.byKey(const Key('shopper-report')));
+      await tester.pump();
       expect(find.byKey(const Key('shopper-support')), findsNothing);
       expect(find.text('Devenir livreur'), findsOneWidget);
       expect(find.text('Créer mon activité'), findsOneWidget);
@@ -441,13 +450,13 @@ void main() {
       await profilePage(tester, await shopper(tester), me);
       expect(find.byKey(const Key('shopper-verify')), findsOneWidget);
       expect(find.text('+22670113005'), findsOneWidget, reason: 'the typed number, not said proved');
-      await tester.scrollUntilVisible(find.byKey(const Key('shopper-payment')), 200,
-          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.byKey(const Key('shopper-payment')));
+      await tester.pump();
       await tester.tap(find.text('Wave'));
       await settle(tester);
       expect(me.settings.last['payment'], 'wave');
-      await tester.scrollUntilVisible(find.byKey(const Key('shopper-support')), 200,
-          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.byKey(const Key('shopper-support')));
+      await tester.pump();
       expect(find.text('Écrire à Mara sur WhatsApp'), findsOneWidget);
     });
 
@@ -456,6 +465,7 @@ void main() {
       final me = _Shopper(_profile());
       final router = await profilePage(tester, await shopper(tester), me);
       final rows = {
+        'shopper-name': Routes.myProfile,
         'shopper-orders': Routes.myOrders,
         'shopper-bookings': Routes.bookings,
         'shopper-favourites': Routes.favourites,
@@ -464,7 +474,6 @@ void main() {
         'shopper-language': Routes.language,
         'shopper-courier': Routes.becomeCourier,
         'shopper-create': Routes.createBusiness,
-        'shopper-name': Routes.myProfile,
       };
       for (final e in rows.entries) {
         await tapRow(tester, e.key);
@@ -475,8 +484,8 @@ void main() {
 
       me.me = _profile(courier: 'approved', member: true);
       await profilePage(tester, await shopper(tester), me);
-      await tester.scrollUntilVisible(find.byKey(const Key('shopper-courier')), 200,
-          scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.byKey(const Key('shopper-courier')));
+      await tester.pump();
       expect(find.text('Espace livreur'), findsOneWidget);
       expect(find.byKey(const Key('shopper-create')), findsNothing);
       await tapRow(tester, 'shopper-courier');
@@ -563,7 +572,7 @@ void main() {
           at: Routes.shopperProfile,
           locale: const Locale('en'),
           routes: [GoRoute(path: Routes.shopperProfile, builder: (_, _) => ShopperProfileScreen(shopper: me))]);
-      expect(find.text('My purchases'), findsOneWidget);
+      expect(find.text('MY PURCHASES'), findsOneWidget);
       expect(find.text('My favourite vitrines'), findsOneWidget);
     });
   });
@@ -595,14 +604,14 @@ void main() {
       await tester.tap(find.text('Suivre à nouveau'));
       await settle(tester);
       expect(me.followedNow, ['boutique-awa']);
-      expect(me.news['org-boutique-awa'], isFalse, reason: 'its news off as it was');
+      expect(me.newsCalls, ['o1:false', 'o1:false'], reason: 'followed again, its news off as it was');
     });
 
     testWidgets('the street: a heart on every card for a shopper, the followed ones filled; tapping follows', (tester) async {
       final me = _Shopper(_profile())
         ..followed = const [FollowedVitrine(orgId: 'o2', slug: 'ferme-ignace', name: 'Ferme Ignace', profile: 'farm')];
       final session = await shopper(tester);
-      await pump(tester, session, at: Routes.directory, routes: [
+      await pump(tester, session, at: Routes.directory, size: const Size(390, 2000), routes: [
         GoRoute(
           path: Routes.directory,
           builder: (_, _) => DirectoryScreen(
@@ -617,7 +626,6 @@ void main() {
       expect(find.byKey(const Key('heart-ferme-ignace')), findsOneWidget);
       expect(find.descendant(of: find.byKey(const Key('heart-ferme-ignace')), matching: find.byIcon(Icons.favorite)),
           findsOneWidget);
-      await tester.ensureVisible(find.byKey(const Key('heart-entraide')));
       await tester.tap(find.byKey(const Key('heart-entraide')));
       await settle(tester);
       expect(me.followedNow, ['entraide']);
@@ -692,27 +700,35 @@ void main() {
 
     testWidgets('the order sheet: « Livraison » picks the first saved place with its pin, a chip the other; Wave first only when preferred and taken',
         (tester) async {
-      tester.view.physicalSize = const Size(390, 1400);
+      // Wide: the test font is wider than any phone's, and the hint
+      // « épinglez votre porte pour le prix » would not fit at 390.
+      tester.view.physicalSize = const Size(700, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       final quoted = <String>[];
-      Widget sheet({List<SavedAddress> addresses = const [], String preferred = 'cash', String? wave}) => MaterialApp(
-            home: Scaffold(
+      final paid = <String>[];
+      var n = 0;
+      Widget sheetOnly({List<SavedAddress> addresses = const [], String preferred = 'cash', String? wave}) => Scaffold(
               body: OrderSheet(
+                key: ValueKey(n++),
                 items: const [PublicItem(id: 'p1', name: 'Savon', price: 500, inStock: true)],
                 basket: const {'p1': 1},
                 currency: 'XOF',
                 waveMerchant: wave,
                 addresses: addresses,
                 preferredPayment: preferred,
-                onSubmit: ({required lines, required fulfilment, note, address, phone, required payment, dropLat, dropLng}) async => null,
+                onSubmit: ({required lines, required fulfilment, note, address, phone, required payment, dropLat, dropLng}) async {
+                  paid.add(payment);
+                  return null;
+                },
                 quote: (lat, lng) async {
                   quoted.add('$lat,$lng');
                   return const DeliveryCheck(fee: 750);
                 },
               ),
-            ),
-          );
+            );
+      Widget sheet({List<SavedAddress> addresses = const [], String preferred = 'cash', String? wave}) =>
+          MaterialApp(home: sheetOnly(addresses: addresses, preferred: preferred, wave: wave));
       await tester.pumpWidget(sheet(addresses: const [_home, _work], preferred: 'wave', wave: 'M1'));
       final payment = tester.widget<SegmentedButton<String>>(find.byWidgetPredicate(
           (w) => w is SegmentedButton<String> && w.segments.any((s) => s.value == 'wave')));
@@ -721,14 +737,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Ouaga 2000, près de l\'école — Portail bleu'), findsOneWidget);
       expect(quoted, ['12.33,-1.51']);
-      expect(find.text('750 FCFA'), findsWidgets);
+      expect(find.text(moneyFormat('XOF').format(750)), findsWidgets);
       await tester.tap(find.byKey(const Key('order-address-1')));
       await tester.pumpAndSettle();
       expect(find.text('Zone du bois'), findsOneWidget);
 
       // Wave preferred but this vitrine does not take it: no payment row.
-      await tester.pumpWidget(sheet(preferred: 'wave'));
+      // Opened over a page, as the vitrine opens it: sending closes it.
+      final nav = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(MaterialApp(navigatorKey: nav, home: const Scaffold(body: Text('la vitrine'))));
+      unawaited(nav.currentState!.push(MaterialPageRoute<bool>(builder: (_) => sheetOnly(preferred: 'wave'))));
+      await tester.pumpAndSettle();
       expect(find.text('Wave'), findsNothing);
+      await tester.tap(find.text('Envoyer la commande'));
+      await tester.pumpAndSettle();
+      expect(paid, ['cash'], reason: 'never a Wave order the vitrine does not take');
       // P1: no saved place, cash — the sheet as before, no chips.
       await tester.pumpWidget(sheet());
       await tester.tap(find.text('Livraison').first);
@@ -902,7 +925,9 @@ void main() {
       final sql = File('../database/migrations/113_shopper_profile.sql').readAsStringSync();
       final said = <String>{
         for (final m in RegExp(r"raise exception '((?:[^']|'')*)'").allMatches(sql))
-          if (!m.group(1)!.contains('%')) m.group(1)!.replaceAll("''", "'"),
+          // Every one but the installer's own note (113 needs …).
+          if (!m.group(1)!.contains('%') && !m.group(1)!.startsWith('113 needs'))
+            m.group(1)!.replaceAll("''", "'"),
         for (final m in RegExp(r"(?:then|else) '((?:[^']|'')*)' end;").allMatches(sql))
           m.group(1)!.replaceAll("''", "'"),
       };

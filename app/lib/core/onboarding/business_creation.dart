@@ -15,20 +15,14 @@ import 'application_form.dart';
 /// What the server says before the first screen (my_business_start).
 class BusinessStart {
   const BusinessStart({
-    this.owns = 0,
     this.locked = false,
-    this.lockMessage,
     this.phoneRequired = false,
     this.verifiedPhone,
     this.form,
   });
 
-  /// Live businesses this person owns.
-  final int owns;
-
   /// A second business needs Mara Pro on one already owned (099).
   final bool locked;
-  final String? lockMessage;
 
   /// The platform asks for a number proved on WhatsApp first
   /// (Réglages › create_phone_verified).
@@ -41,9 +35,7 @@ class BusinessStart {
   final ApplicationForm? form;
 
   factory BusinessStart.fromJson(Map<String, dynamic> j) => BusinessStart(
-        owns: (j['owns'] as num?)?.toInt() ?? 0,
         locked: j['locked'] == true,
-        lockMessage: j['lock_message'] as String?,
         phoneRequired: j['phone_required'] == true,
         verifiedPhone: j['verified_phone'] as String?,
         form: ApplicationForm.fromJson(j['form']),

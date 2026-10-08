@@ -325,17 +325,12 @@ set search_path = public, auth
 as $$
 declare
     v_actor  uuid := auth.uid();
-    v_locked boolean;
 begin
     if v_actor is null then
         raise exception 'Connectez-vous pour créer votre activité.';
     end if;
-    v_locked := second_business_locked(v_actor);
     return jsonb_build_object(
-        'owns', (select count(*) from memberships m join orgs o on o.id = m.org_id
-                  where m.user_id = v_actor and m.role = 'owner' and o.archived_at is null),
-        'locked', v_locked,
-        'lock_message', case when v_locked then path_lock_message('second_business') end,
+        'locked', second_business_locked(v_actor),
         'phone_required', create_phone_required(),
         'verified_phone', my_verified_phone(),
         'form', application_form());
@@ -461,8 +456,9 @@ begin
     if not v_activity = any (business_activities(v_profile)) then
         raise exception 'Choisissez ce que fait votre activité dans la liste.';
     end if;
-    if char_length(coalesce(v_about, '')) > 160 then
-        raise exception 'Une phrase de 160 caractères au plus.';
+    -- The vitrine's sentence, as the setup and the settings keep it (80).
+    if char_length(coalesce(v_about, '')) > 80 then
+        raise exception 'Une phrase de 80 caractères au plus.';
     end if;
 
     if v_city is null then

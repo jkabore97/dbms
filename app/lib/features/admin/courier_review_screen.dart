@@ -169,28 +169,43 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
       bottomNavigationBar: d != null && d.status == 'pending' && !d.isApprovedCourier
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: Wrap(
-                  spacing: 10,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.end,
-                  children: [
-                    TextButton(
-                      key: const Key('review-new-photo'),
-                      onPressed: _busy ? null : _askPhoto,
-                      child: Text(context.tr('Demander une nouvelle photo')),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  heightFactor: 1,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                key: const Key('review-refuse'),
+                                onPressed: _busy ? null : _refuse,
+                                child: Text(context.tr('Refuser')),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton(
+                                key: const Key('review-approve'),
+                                onPressed: _busy ? null : () => _decide('approve'),
+                                child: Text(context.tr('Approuver')),
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          key: const Key('review-new-photo'),
+                          onPressed: _busy ? null : _askPhoto,
+                          child: Text(context.tr('Demander une nouvelle photo')),
+                        ),
+                      ],
                     ),
-                    OutlinedButton(
-                      key: const Key('review-refuse'),
-                      onPressed: _busy ? null : _refuse,
-                      child: Text(context.tr('Refuser')),
-                    ),
-                    FilledButton(
-                      key: const Key('review-approve'),
-                      onPressed: _busy ? null : () => _decide('approve'),
-                      child: Text(context.tr('Approuver')),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             )
@@ -304,10 +319,10 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (text, color) = d.isApprovedCourier
-        ? (context.tr('Approuvé : livreur Mara'), maraGreen)
-        : d.isSuspended
-            ? (context.tr('Suspendu'), maraBrown)
+    final (text, color) = d.isSuspended
+        ? (context.tr('Suspendu'), maraBrown)
+        : d.isApprovedCourier
+            ? (context.tr('Approuvé : livreur Mara'), maraGreen)
             : switch (d.status) {
                 'pending' => (context.tr('À valider'), maraCaramel),
                 'refused' => (
@@ -394,7 +409,13 @@ class _PrivatePhotoState extends State<_PrivatePhoto> {
         backgroundColor: Colors.black,
         child: Stack(
           children: [
-            Positioned.fill(child: InteractiveViewer(maxScale: 6, child: Center(child: Image.memory(bytes)))),
+            Positioned.fill(
+                child: InteractiveViewer(
+                    maxScale: 6,
+                    child: Center(
+                        child: Image.memory(bytes,
+                            errorBuilder: (_, _, _) => Text(context.tr('Aperçu impossible ici'),
+                                style: const TextStyle(color: Colors.white)))))),
             Positioned(
               top: 8,
               right: 8,
@@ -428,7 +449,12 @@ class _PrivatePhotoState extends State<_PrivatePhoto> {
               child: widget.photoKey == null
                   ? Center(child: Text(context.tr('Aucune photo'), textAlign: TextAlign.center))
                   : _bytes != null
-                      ? Image.memory(_bytes!, fit: BoxFit.cover)
+                      ? Image.memory(_bytes!,
+                          fit: BoxFit.cover,
+                          // A format this browser cannot draw (a HEIC on the
+                          // web): said, never a crash.
+                          errorBuilder: (_, _, _) => Center(
+                              child: Text(context.tr('Aperçu impossible ici'), textAlign: TextAlign.center)))
                       : _error != null
                           ? Center(
                               child: Padding(
@@ -491,6 +517,9 @@ class _RefuseSheetState extends State<_RefuseSheet> {
                     ChoiceChip(
                       key: Key('refuse-$r'),
                       label: Text(courierReasonLabel(context, r)),
+                      selectedColor: maraDeep,
+                      checkmarkColor: maraPaper,
+                      labelStyle: TextStyle(color: _reason == r ? maraPaper : null),
                       selected: _reason == r,
                       onSelected: (_) => setState(() {
                         _reason = r;
@@ -512,6 +541,9 @@ class _RefuseSheetState extends State<_RefuseSheet> {
                     FilterChip(
                       key: Key('refuse-step-$s'),
                       label: Text(courierStepLabel(context, s)),
+                      selectedColor: maraDeep,
+                      checkmarkColor: maraPaper,
+                      labelStyle: TextStyle(color: _steps.contains(s) ? maraPaper : null),
                       selected: _steps.contains(s),
                       onSelected: (on) => setState(() => on ? _steps.add(s) : _steps.remove(s)),
                     ),

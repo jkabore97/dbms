@@ -255,7 +255,7 @@ void main() {
 
       // 1. Where: « Suivant » waits for a town and a quartier.
       expect(find.text('Où livrez-vous ?'), findsOneWidget);
-      expect(find.text('Étape 1 sur 9'), findsOneWidget);
+      expect(find.text('Étape 1 sur 8'), findsOneWidget, reason: 'a moto adds its details screen once chosen');
       expect(tester.widget<FilledButton>(find.byKey(const Key('courier-next'))).onPressed, isNull);
       await tester.enterText(find.byKey(const Key('courier-city')), 'Ouagadougou');
       await tester.enterText(find.byKey(const Key('courier-zone')), 'Gounghin');
@@ -265,7 +265,8 @@ void main() {
       await tester.pump();
       expect(find.widgetWithText(InputChip, 'Pissy'), findsOneWidget);
       await _next(tester);
-      expect(server.saves.last, ('zone', {'city': 'Ouagadougou', 'zones': ['Gounghin', 'Pissy']}));
+      expect(server.saves.last.$1, 'zone');
+      expect(server.saves.last.$2, {'city': 'Ouagadougou', 'zones': ['Gounghin', 'Pissy']});
 
       // 2. When.
       expect(find.text('Quand êtes-vous disponible ?'), findsOneWidget);
@@ -289,10 +290,11 @@ void main() {
       await tester.enterText(find.byKey(const Key('courier-plate')), '11 KK 2233');
       await tester.pump();
       await _next(tester);
-      expect(server.saves.last, ('vehicle', {
+      expect(server.saves.last.$1, 'vehicle');
+      expect(server.saves.last.$2, {
         'vehicle': 'moto', 'vehicle_make': 'Yamaha', 'vehicle_model': 'Crypton',
         'vehicle_colour': 'Rouge', 'vehicle_plate': '11 KK 2233',
-      }));
+      });
 
       // 4. The selfie: the front camera, the picture sent, then « Suivant ».
       expect(find.text('Une photo de vous'), findsOneWidget);
@@ -302,7 +304,7 @@ void main() {
           matching: find.text('Prendre la photo')));
       await _settle(tester);
       expect(files.uploads.single, ('selfie', _png.length, 'image/png'));
-      expect(find.text('Envoyée ✓'), findsOneWidget);
+      expect(find.text('Envoyée'), findsOneWidget);
       await _next(tester);
 
       // 5. The ID: the kind, front and back; a moto's licence offered, optional.
@@ -316,7 +318,8 @@ void main() {
       }
       expect(files.uploads.map((u) => u.$1), ['selfie', 'id_front', 'id_back']);
       await _next(tester);
-      expect(server.saves.last, ('id', {'id_kind': 'cnib'}));
+      expect(server.saves.last.$1, 'id');
+      expect(server.saves.last.$2, {'id_kind': 'cnib'});
 
       // 6. WhatsApp — RULE M: no mobile payment, no payout number; cash said.
       expect(find.byKey(const Key('courier-payout')), findsNothing);
@@ -324,7 +327,8 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '70112002');
       await tester.pump();
       await _next(tester);
-      expect(server.saves.last, ('phone', {'phone': '+22670112002'}));
+      expect(server.saves.last.$1, 'phone');
+      expect(server.saves.last.$2, {'phone': '+22670112002'});
 
       // 7. The charter, accepted.
       expect(find.text('La charte du livreur'), findsOneWidget);
@@ -332,7 +336,8 @@ void main() {
       await tester.tap(find.byKey(const Key('courier-charter')));
       await tester.pump();
       await _next(tester);
-      expect(server.saves.last, ('charter', {'charter_version': 1}));
+      expect(server.saves.last.$1, 'charter');
+      expect(server.saves.last.$2, {'charter_version': 1});
 
       // 8. The summary, then « Envoyer ma demande ».
       expect(find.text('Tout est prêt ?'), findsOneWidget);
@@ -365,7 +370,8 @@ void main() {
       await tester.tap(find.byKey(const Key('courier-vehicle-velo')));
       await tester.pump();
       await _next(tester);
-      expect(server.saves.last, ('vehicle', {'vehicle': 'velo'}));
+      expect(server.saves.last.$1, 'vehicle');
+      expect(server.saves.last.$2, {'vehicle': 'velo'});
       expect(find.text('Une photo de vous'), findsOneWidget, reason: 'no details screen for a vélo');
       await tester.tap(find.text('Prendre la photo'));
       await _settle(tester);
@@ -532,7 +538,8 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('refuse-send')));
       await _settle(tester);
-      expect(server.decisions.single, ('refuse', 'other', ['vehicle'], 'La plaque ne correspond pas'));
+      final d = server.decisions.single;
+      expect([d.$1, d.$2, d.$3, d.$4], ['refuse', 'other', ['vehicle'], 'La plaque ne correspond pas']);
     });
 
     testWidgets('« Demander une nouvelle photo »: the selfie or the ID', (tester) async {

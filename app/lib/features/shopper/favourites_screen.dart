@@ -83,8 +83,8 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
             ? SnackBarAction(
                 label: again,
                 onPressed: () => _act(f.orgId, () async {
-                  await widget.shopper.follow(f.slug);
-                  if (!f.news) await widget.shopper.setFollowNews(f.orgId, false);
+                  final id = await widget.shopper.follow(f.slug);
+                  if (!f.news) await widget.shopper.setFollowNews(id, false);
                 }),
               )
             : null);
@@ -160,11 +160,10 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                           )
                         else ...[
                           // The switch for all of them.
-                          Container(
-                            decoration: BoxDecoration(
-                              color: ShopStyle.stone,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                          Material(
+                            color: ShopStyle.stone,
+                            borderRadius: BorderRadius.circular(14),
+                            clipBehavior: Clip.antiAlias,
                             child: SwitchListTile(
                               key: const Key('news-all'),
                               secondary: const Icon(Icons.campaign_outlined, color: ShopStyle.ink),

@@ -405,12 +405,11 @@ class _Header extends StatelessWidget {
     final name = p.name ?? context.tr('Mon profil');
     final initial = name.characters.isEmpty ? '?' : name.characters.first.toUpperCase();
     final proved = p.verifiedPhone;
-    return Container(
+    return Material(
+      color: ShopStyle.stone,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
       padding: const EdgeInsets.fromLTRB(18, 18, 12, 16),
-      decoration: BoxDecoration(
-        color: ShopStyle.stone,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -503,6 +502,7 @@ class _Header extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

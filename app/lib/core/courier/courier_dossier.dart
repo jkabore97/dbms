@@ -179,7 +179,9 @@ class CourierDossier {
   final DateTime? decidedAt;
   final CourierRules rules;
 
-  bool get isApprovedCourier => courierStatus == 'approved' || status == 'approved';
+  /// Approved and not suspended since (a suspension is the courier row's).
+  bool get isApprovedCourier =>
+      courierStatus == 'approved' || (status == 'approved' && courierStatus != 'suspended');
   bool get isSuspended => courierStatus == 'suspended';
   bool get isMotor => motorVehicles.contains(vehicle);
   bool get asksLicence => licenceVehicles.contains(vehicle);

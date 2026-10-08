@@ -722,8 +722,9 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
               key: const Key('create-address-taken'),
               style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w600)),
           if (check!.suggestion != null)
-            ActionChip(
+            OutlinedButton.icon(
               key: const Key('create-address-suggestion'),
+              icon: const Icon(Icons.check, size: 18),
               label: Text(context.tr('Prendre {slug}', {'slug': check.suggestion})),
               onPressed: () => _useSlug(check.suggestion!),
             ),
@@ -831,7 +832,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
       TextField(
         key: const Key('create-about'),
         controller: _about,
-        maxLength: 160,
+        // The vitrine's sentence: the setup and the settings keep 80.
+        maxLength: 80,
         maxLines: 2,
         textCapitalization: TextCapitalization.sentences,
         onChanged: (_) => _changed(),

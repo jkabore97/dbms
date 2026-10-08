@@ -181,7 +181,9 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
       _at = 0;
       for (var i = 0; i < _flow!.length; i++) {
         final s = _flow![i];
-        if (s == 'summary' || s == 'vehicle_details' || !d.stepDone(s)) {
+        // The details screen is done when the vehicle step is (its plate).
+        final done = s == 'vehicle_details' ? d.stepDone('vehicle') : d.stepDone(s);
+        if (s == 'summary' || !done) {
           _at = i;
           break;
         }
@@ -400,6 +402,14 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
 
   /// No flow open: what the dossier is now.
   Widget _home(BuildContext context, CourierDossier d) {
+    // Suspended first: an approved dossier does not undo a suspension.
+    if (d.isSuspended) {
+      return _Panel(
+        icon: Icons.block_outlined,
+        title: context.tr('Accès suspendu'),
+        lines: [context.tr('Votre accès livreur est suspendu. Contactez la plateforme.')],
+      );
+    }
     if (d.isApprovedCourier) {
       return _Panel(
         icon: Icons.verified_outlined,
@@ -411,13 +421,6 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
           child: Text(context.tr('Ouvrir l\'espace livreur')),
         ),
         timeline: d.timeline,
-      );
-    }
-    if (d.isSuspended) {
-      return _Panel(
-        icon: Icons.block_outlined,
-        title: context.tr('Accès suspendu'),
-        lines: [context.tr('Votre accès livreur est suspendu. Contactez la plateforme.')],
       );
     }
     switch (d.status) {
@@ -612,6 +615,9 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
                 FilterChip(
                   key: Key('courier-day-$day'),
                   label: Text(courierDayLabel(context, day)),
+                  selectedColor: ShopStyle.ink,
+                  checkmarkColor: ShopStyle.paper,
+                  labelStyle: TextStyle(color: _days.contains(day) ? ShopStyle.paper : ShopStyle.ink),
                   selected: _days.contains(day),
                   onSelected: (on) => setState(() => on ? _days.add(day) : _days.remove(day)),
                 ),
@@ -724,6 +730,9 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
                 ChoiceChip(
                   key: Key('courier-id-$k'),
                   label: Text(courierIdLabel(context, k)),
+                  selectedColor: ShopStyle.ink,
+                  checkmarkColor: ShopStyle.paper,
+                  labelStyle: TextStyle(color: _idKind == k ? ShopStyle.paper : ShopStyle.ink),
                   selected: _idKind == k,
                   onSelected: (_) => setState(() => _idKind = k),
                 ),
@@ -846,6 +855,8 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
         final open = d.openSteps.toSet();
         Widget row(String step, String value) => ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: Icon(d.stepDone(step) ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: d.stepDone(step) ? const Color(0xFF3F7A52) : ShopStyle.mist),
               title: Text(courierStepLabel(context, step),
                   style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
               subtitle: Text(value, style: const TextStyle(fontSize: 16, color: ShopStyle.ink)),
@@ -863,17 +874,17 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
           row('zone', '${d.city ?? ''} · ${d.zones.join(', ')}'),
           row('hours', courierHoursLine(context, d)),
           row('vehicle', courierVehicleLine(context, d)),
-          row('selfie', d.hasFile('selfie') ? context.tr('Envoyé ✓') : '—'),
+          row('selfie', d.hasFile('selfie') ? context.tr('Envoyé') : '—'),
           row('id', [
             courierIdLabel(context, d.idKind),
-            if (d.hasFile('id_front') && d.hasFile('id_back')) context.tr('recto et verso ✓'),
-            if (d.hasFile('licence')) context.tr('permis ✓'),
+            if (d.hasFile('id_front') && d.hasFile('id_back')) context.tr('recto et verso'),
+            if (d.hasFile('licence')) context.tr('permis'),
           ].join(' · ')),
           row('phone', [
             d.phone ?? '—',
-            if (d.phone != null && d.phone == d.verifiedPhone) context.tr('vérifié ✓'),
+            if (d.phone != null && d.phone == d.verifiedPhone) context.tr('vérifié'),
           ].join(' · ')),
-          row('charter', d.charterVersion == d.rules.charterVersion ? context.tr('Acceptée ✓') : '—'),
+          row('charter', d.charterVersion == d.rules.charterVersion ? context.tr('Acceptée') : '—'),
         ];
     }
   }
@@ -1057,7 +1068,9 @@ class _PhotoSlot extends StatelessWidget {
               height: 84,
               color: ShopStyle.stone,
               child: shot != null
-                  ? Image.memory(shot!, fit: BoxFit.cover)
+                  ? Image.memory(shot!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(icon, size: 36, color: ShopStyle.mist))
                   : Icon(icon, size: 36, color: ShopStyle.mist),
             ),
           ),
@@ -1068,13 +1081,21 @@ class _PhotoSlot extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text(
-                  sending
-                      ? context.tr('Envoi…')
-                      : sent
-                          ? context.tr('Envoyée ✓')
-                          : context.tr('Pas encore prise'),
-                  style: TextStyle(fontSize: 13, color: sent && !sending ? const Color(0xFF3F7A52) : ShopStyle.mist),
+                Row(
+                  children: [
+                    if (sent && !sending) ...[
+                      const Icon(Icons.check_circle, size: 16, color: Color(0xFF3F7A52)),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      sending
+                          ? context.tr('Envoi…')
+                          : sent
+                              ? context.tr('Envoyée')
+                              : context.tr('Pas encore prise'),
+                      style: TextStyle(fontSize: 13, color: sent && !sending ? const Color(0xFF3F7A52) : ShopStyle.mist),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Wrap(
@@ -1090,7 +1111,11 @@ class _PhotoSlot extends StatelessWidget {
                             label: Text(sent ? context.tr('Reprendre') : context.tr('Prendre la photo')),
                           ),
                     if (onGallery != null && !sending)
-                      TextButton(onPressed: onGallery, child: Text(context.tr('Galerie'))),
+                      IconButton(
+                        tooltip: context.tr('Galerie'),
+                        onPressed: onGallery,
+                        icon: const Icon(Icons.photo_library_outlined),
+                      ),
                   ],
                 ),
               ],

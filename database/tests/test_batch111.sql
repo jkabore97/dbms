@@ -436,8 +436,8 @@ begin
         raise exception 'FAIL: an association''s kind for a farm: %', r;
     end if;
     r := pg_temp.refusal('11111111-0000-0000-0000-000000000009', 'retail', 'Phrase 111', 'phrase-b111', 'autre', 'Ouaga', '+22670000000',
-                         'XOF', null, repeat('x', 161));
-    if r is distinct from 'Une phrase de 160 caractères au plus.' then
+                         'XOF', null, repeat('x', 81));
+    if r is distinct from 'Une phrase de 80 caractères au plus.' then
         raise exception 'FAIL: a sentence too long: %', r;
     end if;
     -- The town.
@@ -477,8 +477,7 @@ begin
     -- Awa owns one free shop now.
     perform pg_temp.as_user('11111111-0000-0000-0000-000000000002');
     v := my_business_start();
-    if not (v ->> 'locked')::boolean or v ->> 'lock_message' is distinct from 'Une deuxième entreprise : avec Mara Pro.'
-       or (v ->> 'owns')::int is distinct from 1 then
+    if not (v ->> 'locked')::boolean then
         raise exception 'FAIL: my_business_start does not say a second needs Pro: %', v;
     end if;
     r := pg_temp.refusal('11111111-0000-0000-0000-000000000002', 'farm', 'Ferme Awa 111', 'ferme-awa-b111', 'mixte', 'Ouaga', '+22670111102');

@@ -365,8 +365,7 @@ void main() {
   group('the platform\'s rules, said before the server says them', () {
     testWidgets('a second business without Pro: a page that says so, no questions', (tester) async {
       phone(tester);
-      await pumpFlow(tester, _Api(start_: const BusinessStart(
-          owns: 1, locked: true, lockMessage: 'Une deuxième entreprise : avec Mara Pro.')));
+      await pumpFlow(tester, _Api(start_: const BusinessStart(locked: true)));
       expect(find.byKey(const Key('create-locked')), findsOneWidget);
       expect(find.byKey(const Key('create-kind-retail')), findsNothing);
     });
