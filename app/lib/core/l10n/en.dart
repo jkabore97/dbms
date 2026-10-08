@@ -3770,4 +3770,5 @@ const enStrings = <String, String>{
   'Mara a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.': 'Mara closed your vitrine\'s orders: your customers can look but not order. Orders already received stay here.',
   'Pas de réseau — la vitrine de votre dernière visite': 'No network — the shop as you last saw it',
   'Pas de réseau — les vitrines de votre dernière visite': 'No network — the shops as you last saw them',
+  'La carte n\'a pas pu s\'ouvrir. Vérifiez le réseau.': 'The map could not open. Check the network.',
 };

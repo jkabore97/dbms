@@ -14,7 +14,7 @@ import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../admin/admin_pill.dart';
 import '../../core/storefront/storefront_repository.dart';
-import 'directory_map.dart';
+import 'directory_map.dart' deferred as street_map;
 import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
 import 'open_badge.dart';
@@ -294,8 +294,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// The map, full screen (package 3): the list stays the page, the map is
   /// a place you go and come back from.
   Future<void> _openMap() async {
+    // The map (flutter_map and its tiles' machinery) is its own download,
+    // fetched the first time somebody opens it: most visits never do, and
+    // the street's first load on a slow line no longer carries it.
+    try {
+      await street_map.loadLibrary();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text(context.tr('La carte n\'a pas pu s\'ouvrir. Vérifiez le réseau.')),
+      ));
+      return;
+    }
+    if (!mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => DirectoryMapPage(
+      builder: (_) => street_map.DirectoryMapPage(
         entries: _entries,
         previews: _previews,
         here: _here,
