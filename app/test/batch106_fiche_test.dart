@@ -170,7 +170,8 @@ void main() {
         expect(find.byKey(const Key('fiche-owner-name')), findsOneWidget);
         expect(find.text('Awa Sanou'), findsWidgets);
         expect(find.text('420'), findsOneWidget);
-        expect(find.text('Mara (gratuit)'), findsOneWidget);
+        expect(find.text('Gratuit'), findsOneWidget);
+        expect(find.text('Formule Mara'), findsOneWidget);
         expect(find.byKey(const Key('fiche-alert-paid_claim')), findsOneWidget);
         expect(find.text('Silencieuse depuis 34 jours'), findsOneWidget);
         expect(find.byKey(const Key('fiche-preview')), findsOneWidget);

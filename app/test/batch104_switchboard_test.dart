@@ -145,6 +145,8 @@ const _drawn = <String, Map<String, List<String>>>{
     'lib/features/account/compte_screen.dart': ["canSee('production')"],
     'lib/features/retail/store_home_screen.dart': ["canSee('production')"],
     'lib/features/farm/farm_home_screen.dart': ["canSee('production')"],
+    // The article's « Ingrédient de production » switch.
+    'lib/features/retail/products_screen.dart': ["isHidden('production')"],
   },
   'tontines': {
     'lib/features/account/compte_screen.dart': ["canSee('tontines')"],
