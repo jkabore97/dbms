@@ -104,7 +104,12 @@ export function payloadFor(row, env) {
   const origin = (env.APP_ORIGIN || "").replace(/\/$/, "");
   const kind = row.kind || "";
   let path = "/";
-  if (kind.startsWith("courier_") || kind === "delivery_available") path = "/livreur";
+  // A followed vitrine's news (113) opens that vitrine; a shopper's
+  // report answered, their own notifications.
+  const slug = row.params && typeof row.params.slug === "string" ? row.params.slug : "";
+  if (kind === "vitrine_news" && /^[a-z0-9-]{1,80}$/.test(slug)) path = `/s/${slug}`;
+  else if (kind === "report_handled") path = "/mon-compte/notifications";
+  else if (kind.startsWith("courier_") || kind === "delivery_available") path = "/livreur";
   else if (row.org_id && (kind.startsWith("order") || kind.startsWith("delivery"))) path = `/o/${row.org_id}/commandes`;
   else if (row.org_id) path = `/o/${row.org_id}`;
   return {

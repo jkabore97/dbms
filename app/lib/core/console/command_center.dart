@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../admin/platform_writes.dart';
+import 'created_businesses.dart';
+
+export 'created_businesses.dart';
 
 /// Mara's command center, from the server (104, 105): « À faire », the one
 /// search, several businesses at once, the journal and its « Annuler »,
@@ -26,6 +29,14 @@ class CommandCenterRepository {
   Future<PlatformTodo> todo() async {
     final v = await _requireClient().rpc('platform_todo');
     return PlatformTodo.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
+  }
+
+  /// « Activités créées » (111): the businesses people created, and the
+  /// requests of before.
+  Future<CreatedBusinesses> createdBusinesses({int limit = 200}) async {
+    final v = await _requireClient()
+        .rpc('platform_created_businesses', params: {'p_limit': limit});
+    return CreatedBusinesses.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
   }
 
   /// The rows behind one count (platform_todo_list, 105).
@@ -118,7 +129,7 @@ class PlatformTodo {
 
   /// What waits on the platform, « À faire »'s « À traiter » in one number.
   int get waiting =>
-      this['applications'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
+      this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
       this['features_lapsed'];
 }
@@ -141,6 +152,9 @@ class TodoRow {
     this.spot,
     this.state,
     this.gift = false,
+    this.owner,
+    this.city,
+    this.byPerson = false,
     this.at,
   });
 
@@ -160,6 +174,9 @@ class TodoRow {
         spot: _text(j['spot']),
         state: _text(j['state']),
         gift: j['gift'] == true,
+        owner: _text(j['owner']),
+        city: _text(j['city']),
+        byPerson: j['by_person'] == true,
         at: _date(j['at']),
       );
 
@@ -182,6 +199,12 @@ class TodoRow {
   /// A rule's switch (rules_ending): 'visible' or 'hidden'.
   final String? state;
   final bool gift;
+
+  /// A new business (new_7, 111): its owner, its town, and whether the
+  /// person created it (else Mara did, or approved a request).
+  final String? owner;
+  final String? city;
+  final bool byPerson;
   final DateTime? at;
 }
 

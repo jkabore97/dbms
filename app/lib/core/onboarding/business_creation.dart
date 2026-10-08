@@ -1,0 +1,296 @@
+import 'dart:convert';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../db/local_db.dart';
+import 'application_form.dart';
+
+/// Creating one's business, at once (111): no request, no wait. The person
+/// answers a few questions — one per screen — and create_my_business()
+/// makes the business, its owner, its starting chart, exactly as Mara's
+/// own « Nouvelle entreprise » does. The server checks every answer again;
+/// what the app checks is only so a button can say no before anything is
+/// sent.
+
+/// What the server says before the first screen (my_business_start).
+class BusinessStart {
+  const BusinessStart({
+    this.owns = 0,
+    this.locked = false,
+    this.lockMessage,
+    this.phoneRequired = false,
+    this.verifiedPhone,
+    this.form,
+  });
+
+  /// Live businesses this person owns.
+  final int owns;
+
+  /// A second business needs Mara Pro on one already owned (099).
+  final bool locked;
+  final String? lockMessage;
+
+  /// The platform asks for a number proved on WhatsApp first
+  /// (Réglages › create_phone_verified).
+  final bool phoneRequired;
+
+  /// The account's proved number (« +226… »), or null.
+  final String? verifiedPhone;
+
+  /// The creation page Mara set (107's form): welcome, kinds, questions.
+  final ApplicationForm? form;
+
+  factory BusinessStart.fromJson(Map<String, dynamic> j) => BusinessStart(
+        owns: (j['owns'] as num?)?.toInt() ?? 0,
+        locked: j['locked'] == true,
+        lockMessage: j['lock_message'] as String?,
+        phoneRequired: j['phone_required'] == true,
+        verifiedPhone: j['verified_phone'] as String?,
+        form: ApplicationForm.fromJson(j['form']),
+      );
+}
+
+/// The address as typed (business_address_check): its problem, or taken
+/// with a free one to suggest.
+class AddressCheck {
+  const AddressCheck({required this.slug, this.problem, this.taken = false, this.suggestion});
+
+  final String slug;
+  final String? problem;
+  final bool taken;
+  final String? suggestion;
+
+  bool get free => problem == null && !taken;
+
+  factory AddressCheck.fromJson(Map<String, dynamic> j) => AddressCheck(
+        slug: '${j['slug'] ?? ''}',
+        problem: j['problem'] as String?,
+        taken: j['taken'] == true,
+        suggestion: j['suggestion'] as String?,
+      );
+}
+
+/// The answers as they are given, kept on the device until the business
+/// exists (and taken up again where they were left).
+class BusinessDraft {
+  BusinessDraft({
+    this.step = 0,
+    this.profile,
+    this.name = '',
+    this.slug = '',
+    this.slugTouched = false,
+    this.activity,
+    this.about = '',
+    this.city = '',
+    this.area = '',
+    this.phoneIso = 'BF',
+    this.phone = '',
+    this.currency,
+    Map<String, Object?>? answers,
+  }) : answers = answers ?? {};
+
+  /// The screen the person was on.
+  int step;
+
+  /// 'retail' | 'farm' | 'association'.
+  String? profile;
+  String name;
+  String slug;
+
+  /// The address was changed by hand: the name no longer writes it.
+  bool slugTouched;
+
+  /// A shop's or a farm's line of trade, an association's kind (102).
+  String? activity;
+  String about;
+  String city;
+  String area;
+
+  /// The phone's country (ISO) and the number as typed under it.
+  String phoneIso;
+  String phone;
+
+  /// Chosen by hand; null follows the phone's country.
+  String? currency;
+
+  /// The creation page's questions, by id.
+  final Map<String, Object?> answers;
+
+  bool get isEmpty => profile == null && name.trim().isEmpty;
+
+  Map<String, Object?> toJson() => {
+        'step': step,
+        'profile': profile,
+        'name': name,
+        'slug': slug,
+        'slug_touched': slugTouched,
+        'activity': activity,
+        'about': about,
+        'city': city,
+        'area': area,
+        'phone_iso': phoneIso,
+        'phone': phone,
+        'currency': currency,
+        'answers': answers,
+      };
+
+  factory BusinessDraft.fromJson(Map<String, dynamic> j) => BusinessDraft(
+        step: (j['step'] as num?)?.toInt() ?? 0,
+        profile: j['profile'] as String?,
+        name: '${j['name'] ?? ''}',
+        slug: '${j['slug'] ?? ''}',
+        slugTouched: j['slug_touched'] == true,
+        activity: j['activity'] as String?,
+        about: '${j['about'] ?? ''}',
+        city: '${j['city'] ?? ''}',
+        area: '${j['area'] ?? ''}',
+        phoneIso: '${j['phone_iso'] ?? 'BF'}',
+        phone: '${j['phone'] ?? ''}',
+        currency: j['currency'] as String?,
+        answers: j['answers'] is Map
+            ? Map<String, Object?>.from(j['answers'] as Map)
+            : null,
+      );
+}
+
+/// Where the answers wait on the device, one draft per account.
+abstract class DraftStore {
+  Future<BusinessDraft?> read();
+  Future<void> write(BusinessDraft? draft);
+}
+
+class LocalDraftStore implements DraftStore {
+  LocalDraftStore(this._db, String? userId) : _key = 'create_business_draft:${userId ?? ''}';
+
+  final LocalDb _db;
+  final String _key;
+
+  @override
+  Future<BusinessDraft?> read() async {
+    try {
+      final raw = await _db.readPref(_key);
+      if (raw == null || raw.isEmpty) return null;
+      final j = jsonDecode(raw);
+      return j is Map ? BusinessDraft.fromJson(Map<String, dynamic>.from(j)) : null;
+    } catch (_) {
+      // A draft the device cannot read is no draft: the questions start again.
+      return null;
+    }
+  }
+
+  @override
+  Future<void> write(BusinessDraft? draft) async {
+    try {
+      await _db.writePref(_key, draft == null ? null : jsonEncode(draft.toJson()));
+    } catch (_) {
+      // Keeping the answers is a comfort; failing to must never stop them.
+    }
+  }
+}
+
+/// The server's side, apart so a test can stand in for it.
+abstract class BusinessCreation {
+  Future<BusinessStart> start();
+  Future<AddressCheck> checkAddress(String slug);
+
+  /// Creates the business; returns its id. [phone] is E.164.
+  Future<String> create({
+    required String profile,
+    required String name,
+    required String slug,
+    required String activity,
+    required String about,
+    required String city,
+    required String area,
+    required String phone,
+    required String currency,
+    Map<String, Object?>? answers,
+  });
+}
+
+class SupabaseBusinessCreation implements BusinessCreation {
+  SupabaseBusinessCreation(this._client);
+
+  final SupabaseClient? _client;
+
+  SupabaseClient get _c {
+    final client = _client;
+    if (client == null) {
+      throw StateError('Pas de serveur : cette version a été construite sans Supabase.');
+    }
+    return client;
+  }
+
+  @override
+  Future<BusinessStart> start() async {
+    final v = await _c.rpc('my_business_start');
+    return BusinessStart.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
+  }
+
+  @override
+  Future<AddressCheck> checkAddress(String slug) async {
+    final v = await _c.rpc('business_address_check', params: {'p_slug': slug});
+    return AddressCheck.fromJson(v is Map ? Map<String, dynamic>.from(v) : {'slug': slug});
+  }
+
+  @override
+  Future<String> create({
+    required String profile,
+    required String name,
+    required String slug,
+    required String activity,
+    required String about,
+    required String city,
+    required String area,
+    required String phone,
+    required String currency,
+    Map<String, Object?>? answers,
+  }) async {
+    final id = await _c.rpc('create_my_business', params: {
+      'p_profile': profile,
+      'p_name': name,
+      'p_slug': slug,
+      'p_activity': activity,
+      'p_about': about,
+      'p_city': city,
+      'p_area': area,
+      'p_phone': phone,
+      'p_currency': currency,
+      'p_answers': answers == null || answers.isEmpty ? null : answers,
+    });
+    return id as String;
+  }
+}
+
+/// The currency a business starts with, from its phone's country: the CFA
+/// franc of UEMOA (XOF) and of CEMAC (XAF), else the country's own when
+/// the app knows it, else XOF — the person may change it.
+String currencyOfCountry(String iso) => switch (iso.toUpperCase()) {
+      'BF' || 'ML' || 'NE' || 'CI' || 'SN' || 'TG' || 'BJ' || 'GW' => 'XOF',
+      'CM' || 'GA' || 'TD' || 'CF' || 'CG' || 'GQ' => 'XAF',
+      'GH' => 'GHS',
+      'NG' => 'NGN',
+      'GN' => 'GNF',
+      'MA' => 'MAD',
+      'GB' => 'GBP',
+      'US' => 'USD',
+      'CA' => 'CAD',
+      'CN' => 'CNY',
+      'FR' || 'BE' || 'DE' || 'ES' || 'IT' || 'PT' || 'NL' || 'LU' || 'AT' || 'IE' ||
+      'FI' || 'GR' || 'CY' => 'EUR',
+      _ => 'XOF',
+    };
+
+/// The towns offered as one tap on the « où » screen: Burkina's largest
+/// (086's league_towns, in order of size). Any other is typed.
+const businessTowns = [
+  'Ouagadougou',
+  'Bobo-Dioulasso',
+  'Koudougou',
+  'Ouahigouya',
+  'Banfora',
+  'Kaya',
+  'Tenkodogo',
+  'Fada N\'Gourma',
+  'Dédougou',
+];

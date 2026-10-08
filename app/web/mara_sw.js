@@ -101,8 +101,13 @@ async function fetchVerified(path, hash) {
   const response = await fetch(path, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`Mara: ${path} answered ${response.status}`);
   const body = await response.arrayBuffer();
-  const got = hex(await crypto.subtle.digest('SHA-256', body));
-  if (got !== hash) throw new Error(`Mara: ${path} is not this build's`);
+  // The page is known by the build it names: Cloudflare may rewrite an
+  // HTML page on its way (e-mail obfuscation, https links), never the
+  // build written into it. Every other file, byte for byte.
+  const ours = path === '/'
+    ? new TextDecoder().decode(body).includes(`var VERSION = ${JSON.stringify(BUILD.version)};`)
+    : hex(await crypto.subtle.digest('SHA-256', body)) === hash;
+  if (!ours) throw new Error(`Mara: ${path} is not this build's`);
   const headers = new Headers();
   headers.set('content-type', response.headers.get('content-type') || 'application/octet-stream');
   headers.set('x-mara-hash', hash);

@@ -25,8 +25,8 @@
 --          and it no longer takes cauris for nothing — a tool the
 --          business's kind does not have (104's catalog: the analyses of an
 --          association; 099: its delivery — the app already hides both), or
---          a tool a paid Mara Pro already opens. 104's refusal of a hidden tool is
---          kept word for word (110's switches rely on it).
+--          a tool a paid Mara Pro already opens. 104's refusal of a hidden
+--          tool is kept word for word (110's switches rely on it).
 --
 -- Nothing else a shop, a farm, an association or a vitrine shows moves.
 -- No destructive statement: each function replaced in place with its own

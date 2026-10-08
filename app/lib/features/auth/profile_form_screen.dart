@@ -288,8 +288,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   // A form this long implies a reward at the end of it. There
                   // is one more step, and saying so now is cheaper than a
                   // person wondering why nothing opened.
-                  'Ces informations ne donnent accès à aucune entreprise. '
-                  'Il faut ensuite un code, ou une demande approuvée.',
+                  context.tr('Ces informations ne donnent accès à aucune entreprise. Il faut ensuite un code, ou créer votre activité.'),
                   style: theme.textTheme.bodySmall,
                 ),
               ],

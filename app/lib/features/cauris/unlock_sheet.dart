@@ -84,13 +84,22 @@ class UnlockSheet extends StatefulWidget {
     required String feature,
   }) async {
     final scope = AppScope.read(context);
-    final states = scope?.session.featuresFor(org.id);
-    final tool = states?.toolOf(feature);
+    final router = GoRouter.of(context);
+    var states = scope?.session.featuresFor(org.id);
     // An association earns no cauris (084) but spends what Mara gives it
-    // (100): the sheet once it has some, the plans otherwise.
-    if (scope == null || states == null || tool == null ||
-        (org.isAssociation && states.balance <= 0)) {
-      await GoRouter.of(context).push(Routes.inside(org.id, 'kaj-pro'));
+    // (100): the sheet once it has some, the plans otherwise. Before
+    // sending anybody to the plans, the server is asked again (108): a
+    // gift from Mara a minute ago is in the wallet, not yet in the copy.
+    bool noDoor(FeatureStates? s) =>
+        s == null || s.toolOf(feature) == null || (org.isAssociation && s.balance <= 0);
+    if (scope != null && noDoor(states)) {
+      await scope.session.reloadFeatures(org.id);
+      states = scope.session.featuresFor(org.id);
+    }
+    if (!context.mounted) return;
+    final door = states;
+    if (scope == null || door == null || noDoor(door)) {
+      await router.push(Routes.inside(org.id, 'kaj-pro'));
       return;
     }
     await showModalBottomSheet<void>(
@@ -100,7 +109,7 @@ class UnlockSheet extends StatefulWidget {
       builder: (_) => UnlockSheet(
         org: org,
         feature: feature,
-        states: states,
+        states: door,
         admin: scope.admin,
         onUnlocked: () => scope.session.reloadFeatures(org.id),
         fresh: () async {
@@ -223,7 +232,10 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 child: Text(context.tr('Continuer')),
               ),
             ] else ...[
-              Row(
+              // Wraps rather than overflows on a narrow phone or in a long
+              // language.
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(context.tr('Débloquer 30 jours : '), style: theme.textTheme.bodyLarge),
                   CaurisAmount(tool.cost,
@@ -232,7 +244,8 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 ],
               ),
               const SizedBox(height: 6),
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(context.tr('Vous en avez '), style: theme.textTheme.bodyMedium),
                   CaurisAmount(_states.balance,
@@ -298,7 +311,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   // itself (108).
                   label: Text(
                       waits != null
-                          ? UnlockSheet.waitWords(context, waits)
+                          ? context.tr('Disponible dans {n} jours', {'n': waits})
                           : _reading
                               ? context.tr('Vos cauris…')
                               : _missing > 0

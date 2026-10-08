@@ -137,8 +137,9 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                 controller: d,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: context.tr('Jours sur Mara avant de pouvoir l\'acheter'),
-                  helperText: context.tr('0 : dès le premier jour.'),
+                  labelText: context.tr('Attente, en jours'),
+                  helperText: context.tr('Jours sur Mara avant de pouvoir l\'acheter. 0 : dès le premier jour.'),
+                  helperMaxLines: 3,
                 ),
               ),
           ],

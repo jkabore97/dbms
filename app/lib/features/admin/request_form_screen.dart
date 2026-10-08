@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/admin/admin_repository.dart';
 import '../../core/console/command_center.dart';
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
@@ -9,14 +8,17 @@ import '../../core/onboarding/application_form.dart';
 import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
-import 'create_business_screen.dart';
+import '../../core/onboarding/business_creation.dart';
+import '../setup/create_my_business_screen.dart';
 
-/// « Page de demande » in the command center (107): the page somebody
-/// fills in to ask for a business (CreateBusinessScreen as an
-/// application). Mara writes its welcome, chooses which kinds may be asked
-/// for, and adds questions — a text, a choice in a list, a number, yes or
-/// no; each with its help and « obligatoire » — in the order they are
-/// asked. The name, the address and the kind are always asked.
+/// « Parcours de création » in the command center (107, renamed in 111):
+/// the questions somebody answers to create their business at once
+/// (CreateMyBusinessScreen) — the page that once asked for one. Mara writes
+/// its welcome, chooses which kinds may be created, and adds questions — a
+/// text, a choice in a list, a number, yes or no; each with its help and
+/// « obligatoire » — each a screen of its own, in order, after the ones
+/// always asked (the kind, the name and address, what it does, the town,
+/// the phone and currency).
 ///
 /// Saved through platform_set_application_form (the platform's, checked by
 /// the server, in the journal with « Annuler »). Nothing set — or « Page
@@ -167,8 +169,8 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
   Future<void> _save({bool original = false}) async {
     final messenger = ScaffoldMessenger.of(context);
     final done = original
-        ? context.tr('Page d\'origine remise. Le journal le garde.')
-        : context.tr('Page de demande enregistrée. Le journal le garde.');
+        ? context.tr('Parcours d\'origine remis. Le journal le garde.')
+        : context.tr('Parcours de création enregistré. Le journal le garde.');
     final same = context.tr('Rien n\'a changé.');
     final undoLabel = context.tr('Annuler');
     setState(() => _busy = true);
@@ -202,8 +204,8 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(context.tr('Revenir à la page d\'origine ?')),
-        content: Text(context.tr('Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les demandes déjà reçues gardent leurs réponses.')),
+        title: Text(context.tr('Revenir au parcours d\'origine ?')),
+        content: Text(context.tr('Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les activités déjà créées gardent leurs réponses.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -211,7 +213,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(context.tr('Remettre la page d\'origine')),
+            child: Text(context.tr('Remettre le parcours d\'origine')),
           ),
         ],
       ),
@@ -228,9 +230,9 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
 
   void _remove(int i) => setState(() => _drafts.removeAt(i).dispose());
 
-  Widget _preview() => CreateBusinessScreen(
-        admin: AdminRepository(null),
-        asApplication: true,
+  /// The creation itself, drawn with what is typed: nothing read or sent.
+  Widget _preview() => CreateMyBusinessScreen(
+        api: SupabaseBusinessCreation(null),
         previewForm: _form,
       );
 
@@ -254,14 +256,14 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
         ],
         Text(
           _saved
-              ? context.tr('La page de demande est celle de Mara.')
-              : context.tr('La page de demande est celle d\'origine.'),
+              ? context.tr('Le parcours de création est celui de Mara.')
+              : context.tr('Le parcours de création est celui d\'origine.'),
           key: const Key('form-state'),
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 4),
         Text(
-          context.tr('Toujours demandés : le nom de l\'activité, son adresse (marakaj.com/s/…), son type et sa monnaie, avec une phrase pour la décrire.'),
+          context.tr('Toujours demandés, un par écran : le type, le nom et son adresse (marakaj.com/s/…), ce que fait l\'activité, la ville et le quartier, le téléphone et la monnaie. Vos questions viennent ensuite, une par écran.'),
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
@@ -274,7 +276,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
             labelText: context.tr('Mot d\'accueil'),
-            hintText: context.tr('Ex. : Bienvenue ! Mara répond sous deux jours.'),
+            hintText: context.tr('Ex. : Bienvenue ! Votre activité est prête en cinq minutes.'),
             border: const OutlineInputBorder(),
           ),
         ),
@@ -288,7 +290,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
             for (final (k, label) in [
               ('association', context.tr('Association')),
               ('farm', context.tr('Ferme')),
-              ('retail', context.tr('Commerce')),
+              ('retail', context.tr('Boutique')),
             ])
               FilterChip(
                 key: Key('form-kind-$k'),
@@ -335,7 +337,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
               onPressed: _busy || _loading || problem != null ? null : _save,
               style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
               icon: const Icon(Icons.check),
-              label: Text(context.tr('Enregistrer la page')),
+              label: Text(context.tr('Enregistrer le parcours')),
             ),
             if (!wide)
               OutlinedButton.icon(
@@ -343,13 +345,13 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
                 onPressed: _openPreview,
                 style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
                 icon: const Icon(Icons.visibility_outlined),
-                label: Text(context.tr('Aperçu de la page')),
+                label: Text(context.tr('Aperçu du parcours')),
               ),
             if (_saved)
               TextButton(
                 key: const Key('form-original'),
                 onPressed: _busy ? null : _original,
-                child: Text(context.tr('Remettre la page d\'origine')),
+                child: Text(context.tr('Remettre le parcours d\'origine')),
               ),
           ],
         ),
@@ -357,7 +359,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Page de demande'))),
+      appBar: AppBar(title: Text(context.tr('Parcours de création'))),
       body: wide
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -370,7 +372,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(context.tr('Aperçu de la page'),
+                      Text(context.tr('Aperçu du parcours'),
                           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
                       const SizedBox(height: 8),
                       Expanded(

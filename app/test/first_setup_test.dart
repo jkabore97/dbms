@@ -87,8 +87,8 @@ void main() {
     await settle(tester);
     expect(a.log.last, 'vitrine true Le riz du quartier +22670123456 Gounghin');
 
-    // The position may wait.
-    expect(find.text('Où vous trouver'), findsOneWidget);
+    // The position may wait. It is the shop's own place (108).
+    expect(find.text('La position de ma boutique'), findsOneWidget);
     expect(find.text('Sans position, pas de cauris de vitrine complète.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('setup-later')));
     await settle(tester);

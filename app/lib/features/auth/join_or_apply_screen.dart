@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import '../../core/theme/kaj_card.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
@@ -22,15 +19,10 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///   **Somebody's new employee**, holding a code their manager sent them over
 ///   WhatsApp. One field, one button.
 ///
-///   **Somebody starting a business**, who needs it to exist before anything
-///   else can happen. A form, and then a wait — because whether a new tenant
-///   appears on this platform is a decision made by a person, not a form
-///   submission.
-///
-/// The waiting state is a first-class part of this screen rather than an
-/// afterthought. An application that disappears into silence is one the
-/// applicant submits again next week, which is how a review queue fills up
-/// with the same business four times.
+///   **Somebody starting a business.** Since 111 they create it themselves,
+///   at once — « Créer mon activité » opens the questions, and the business
+///   is theirs the moment they finish. There is no request to wait on any
+///   more, so this screen no longer watches for one.
 class JoinOrApplyScreen extends StatefulWidget {
   const JoinOrApplyScreen({
     super.key,
@@ -61,71 +53,33 @@ class JoinOrApplyScreen extends StatefulWidget {
 class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
   final _code = TextEditingController();
 
-  OrgApplication? _application;
   bool _profileComplete = false;
   bool _loading = true;
   bool _busy = false;
-  bool _rechecking = false;
   String? _error;
   String? _message;
-
-  /// The waiting screen checks for itself whether the wait is over.
-  ///
-  /// The report: an applicant approved by the platform stayed on this page
-  /// until they reinstalled the app. Approval creates their business and
-  /// their membership server-side (017), so `my_orgs()` now returns it —
-  /// but the running app had fetched that list once, at launch, and never
-  /// again. Nothing told the phone the answer had changed. So while somebody
-  /// waits here, the screen quietly re-reads its own application and
-  /// re-resolves the org list; the moment the business appears the session
-  /// turns `ready` and the router carries them straight into it, this page
-  /// disposed and the timer with it. No reinstall, no button to know to tap.
-  Timer? _poll;
-  static const _pollEvery = Duration(seconds: 12);
 
   @override
   void initState() {
     super.initState();
     _code.addListener(() => setState(() {}));
     _load();
-    _poll = Timer.periodic(_pollEvery, (_) => _recheck());
   }
 
   @override
   void dispose() {
-    _poll?.cancel();
     _code.dispose();
     super.dispose();
   }
 
-  Future<void> _load({bool silent = false}) async {
-    if (!silent) setState(() => _loading = true);
+  Future<void> _load() async {
+    setState(() => _loading = true);
     final complete = await widget.onboarding.isProfileComplete();
-    final application = await widget.onboarding.myApplication();
     if (!mounted) return;
     setState(() {
       _profileComplete = complete;
-      _application = application;
       _loading = false;
     });
-  }
-
-  /// One quiet check that the wait is over: refresh the application card,
-  /// then re-resolve the org list. Skipped while the person is mid-action
-  /// (typing a code, applying) so it never fights what they are doing, and
-  /// silent on any failure — no signal is not news, the next tick tries
-  /// again. When [onRetry] finds the business, the router leaves this page.
-  Future<void> _recheck() async {
-    if (!mounted || _busy || _rechecking) return;
-    _rechecking = true;
-    try {
-      await _load(silent: true);
-      await widget.onRetry();
-    } catch (_) {
-      // Deliberately quiet: the timer will try again.
-    } finally {
-      _rechecking = false;
-    }
   }
 
   Future<void> _editProfile({String? intro}) async {
@@ -172,14 +126,6 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
         _error = describeError(error);
       });
     }
-  }
-
-  Future<void> _apply() async {
-    // Only the business is asked about (101): the person is signed in, and
-    // the server takes their name, phone and email from the profile and the
-    // account.
-    final applied = await context.push<bool>(Routes.applyForBusiness);
-    if (applied == true) await _load();
   }
 
   @override
@@ -240,14 +186,6 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                     ),
                   ],
 
-                  if (_application != null) ...[
-                    const SizedBox(height: 20),
-                    _ApplicationCard(
-                      application: _application!,
-                      onEdit: _apply,
-                    ),
-                  ],
-
                   const SizedBox(height: 28),
 
                   // Route one, and first because it is far more common: most
@@ -304,23 +242,23 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                   const Divider(),
                   const SizedBox(height: 16),
 
-                  // Route two.
-                  Text(context.tr('Vous dirigez une entreprise ?'),
+                  // Route two: one's own business, created at once (111).
+                  Text(context.tr('Vous avez une activité ?'),
                       style: theme.textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    context.tr('Décrivez-la et envoyez la demande. Un administrateur Kaj-consulting la valide, puis vous en devenez propriétaire.'),
+                    context.tr('Boutique, ferme ou association : créez-la en quelques minutes. Elle est à vous tout de suite.'),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _busy || (_application?.isPending ?? false)
-                        ? null
-                        : _apply,
-                    icon: const Icon(Icons.add_business_outlined),
-                    label: Text(_application?.isPending ?? false
-                        ? context.tr('Demande en cours')
-                        : context.tr('Demander une entreprise')),
+                  SizedBox(
+                    height: 52,
+                    child: FilledButton.icon(
+                      key: const Key('join-create'),
+                      onPressed: _busy ? null : () => context.push(Routes.createBusiness),
+                      icon: const Icon(Icons.add_business_outlined),
+                      label: Text(context.tr('Créer mon activité')),
+                    ),
                   ),
 
                   const SizedBox(height: 32),
@@ -332,109 +270,6 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                 ],
               ),
             ),
-    );
-  }
-}
-
-/// Where an application has got to.
-///
-/// Shown in full, including the reason for a refusal, because a rejection the
-/// applicant cannot read is one they respond to by applying again with the
-/// same details.
-class _ApplicationCard extends StatelessWidget {
-  const _ApplicationCard({required this.application, required this.onEdit});
-
-  final OrgApplication application;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final (colour, icon, headline) = switch (application.status) {
-      'approved' => (
-          theme.colorScheme.primaryContainer,
-          Icons.check_circle_outline,
-          '${application.name} est validée',
-        ),
-      'rejected' => (
-          theme.colorScheme.errorContainer,
-          Icons.cancel_outlined,
-          'Demande refusée',
-        ),
-      _ => (
-          theme.colorScheme.tertiaryContainer,
-          Icons.hourglass_top,
-          'Demande envoyée',
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colour,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(headline, style: theme.textTheme.titleMedium),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${application.name} · ${application.slug}'
-            '${application.createdAt == null ? '' : ' · envoyée le ${DateFormat('d MMM y', 'fr_FR').format(application.createdAt!)}'}',
-            style: theme.textTheme.bodySmall,
-          ),
-          if (application.isPending) ...[
-            const SizedBox(height: 8),
-            Text(
-              context.tr('Nous vous répondrons bientôt. Vous pouvez modifier la demande tant qu’elle est en attente.'),
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: onEdit,
-              child: Text(context.tr('Modifier la demande')),
-            ),
-          ],
-          if (application.isRejected && application.decisionNote != null) ...[
-            const SizedBox(height: 8),
-            Text(application.decisionNote!),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: onEdit,
-              child: Text(context.tr('Corriger et renvoyer')),
-            ),
-          ],
-          if (application.isApproved) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.tr('C’est validé — vous en êtes propriétaire. Ouverture de votre entreprise…'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

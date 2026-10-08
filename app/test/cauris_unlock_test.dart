@@ -83,7 +83,10 @@ void main() {
     await sheet(tester, UnlockSheet(
         org: _owner, feature: 'accounting', states: _states(balance: 900),
         admin: _Admin()));
-    expect(find.textContaining('dans 41 jours'), findsOneWidget);
+    // Said on the button and beside it, with its day (108).
+    expect(find.textContaining('dans 41 jours'), findsNWidgets(2));
+    expect(find.descendant(of: find.byKey(const Key('unlock-buy')),
+        matching: find.text('Disponible dans 41 jours')), findsOneWidget);
     expect(tester.widget<FilledButton>(find.byKey(const Key('unlock-buy'))).onPressed,
         isNull);
     await sheet(tester, UnlockSheet(

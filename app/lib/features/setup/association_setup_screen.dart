@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/admin/setup_steps.dart' show SetupKnown;
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../../core/invoicing/invoicing_repository.dart';
@@ -129,6 +130,7 @@ class AssociationSetupScreen extends StatefulWidget {
     required this.actions,
     required this.onDone,
     this.stepsOff,
+    this.known,
   });
 
   final OrgSummary org;
@@ -138,6 +140,11 @@ class AssociationSetupScreen extends StatefulWidget {
   /// The optional steps turned off for associations, read once as the
   /// setup opens (setup_steps_off, 107). Null or a failure: every step.
   final Future<Set<String>> Function()? stepsOff;
+
+  /// What the association already says — its kind, sentence, phone and
+  /// area, given when it was created (111) — read once: the steps start
+  /// from it rather than empty.
+  final Future<SetupKnown?> Function()? known;
 
   /// Every step, in order; only 'members' and 'vitrine' can be left out.
   static const steps = ['identity', 'members', 'vitrine'];
@@ -177,6 +184,20 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
       // Read while still on the first page: the steps never move under
       // somebody already past it.
       if (mounted && _at == 0 && off.isNotEmpty) setState(() => _off = off);
+    });
+    widget.known?.call().then((k) {
+      // Only into what is still empty: nothing chosen or typed is changed.
+      if (!mounted || k == null) return;
+      setState(() {
+        _kind ??= k.kind;
+        if (_about.text.isEmpty) _about.text = k.about ?? '';
+        if (_address.text.isEmpty) _address.text = k.address ?? '';
+        final phone = k.phone;
+        if (_phone.text.isEmpty && phone != null) {
+          _country = countryOfNumber(phone) ?? _country;
+          _phone.text = _country.localPart(phone);
+        }
+      });
     });
   }
 

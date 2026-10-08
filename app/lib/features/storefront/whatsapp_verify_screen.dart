@@ -22,17 +22,22 @@ class WhatsAppVerifyScreen extends StatefulWidget {
     super.key,
     required this.phone,
     this.resendAfter = const Duration(seconds: 60),
+    this.intro,
   });
 
   final WhatsAppPhone phone;
+
+  /// Why the number is asked, above the field; null: before an order. The
+  /// creation of a business asks it too (111).
+  final String? intro;
 
   /// How long before « Renvoyer le code » (Supabase's own minimum between
   /// two codes is a minute).
   final Duration resendAfter;
 
-  static Route<String> route(WhatsAppPhone phone) => MaterialPageRoute<String>(
+  static Route<String> route(WhatsAppPhone phone, {String? intro}) => MaterialPageRoute<String>(
         fullscreenDialog: true,
-        builder: (_) => WhatsAppVerifyScreen(phone: phone),
+        builder: (_) => WhatsAppVerifyScreen(phone: phone, intro: intro),
       );
 
   @override
@@ -154,7 +159,8 @@ class _WhatsAppVerifyScreenState extends State<WhatsAppVerifyScreen> {
                     const Icon(Icons.verified_user_outlined, size: 44, color: maraGreen),
                     const SizedBox(height: 12),
                     Text(
-                      context.tr('Avant votre première commande, Mara vérifie votre numéro : la boutique pourra vous joindre.'),
+                      widget.intro ??
+                          context.tr('Avant votre première commande, Mara vérifie votre numéro : la boutique pourra vous joindre.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16, color: ShopStyle.ink, height: 1.35),
                     ),

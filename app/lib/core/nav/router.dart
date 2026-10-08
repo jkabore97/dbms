@@ -20,6 +20,8 @@ import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../storefront/storefront_repository.dart';
 import '../storefront/street_cache.dart';
+import '../auth/whatsapp_phone.dart';
+import '../onboarding/business_creation.dart';
 import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
@@ -68,7 +70,9 @@ abstract final class Routes {
   static const myProfile = '/mon-profil';
   static const picker = '/entreprises';
   static const newBusiness = '/nouvelle-entreprise';
-  static const applyForBusiness = '/demander-une-entreprise';
+  /// Creating one's own business, at once (111) — from the no-business
+  /// screen, the picker, Compte and the shopper's profile.
+  static const createBusiness = '/creer-mon-activite';
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
@@ -305,7 +309,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -341,7 +345,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -370,7 +374,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -614,6 +618,11 @@ GoRouter buildRouter(SessionController session) {
                   scope.session.isPlatformAdmin && scope.auth.hasLiveSession
                       ? () => context.push(Routes.newBusiness)
                       : null,
+              // « + Nouvelle activité » (111): everybody else creates their own.
+              onCreateMine:
+                  !scope.session.isPlatformAdmin && scope.auth.hasLiveSession
+                      ? () => context.push(Routes.createBusiness)
+                      : null,
             ),
           );
         },
@@ -644,17 +653,27 @@ GoRouter buildRouter(SessionController session) {
             biz.CreateBusinessScreen(admin: AppScope.of(context).admin),
       ),
 
-      /// Asking for another business, for somebody who already has one. A
-      /// platform admin creates directly instead — they are the person who
-      /// would otherwise be approving their own request.
+      /// Creating one's own business, at once (111): no request to approve.
+      /// Created, the person is its owner; the next resolve finds it, the
+      /// device code is chosen if there is none yet (108: a business is
+      /// what it protects), then its home — which holds its first setup.
+      /// The splash carries the moment between: it is no destination, so
+      /// the code screen gives back the business, not this flow.
       GoRoute(
-        path: Routes.applyForBusiness,
+        path: Routes.createBusiness,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return biz.CreateBusinessScreen(
-            admin: scope.admin,
-            onboarding: scope.onboarding,
-            asApplication: true,
+          final session = scope.session;
+          return biz.CreateMyBusinessScreen(
+            api: SupabaseBusinessCreation(scope.auth.client),
+            drafts: LocalDraftStore(scope.db, scope.auth.client?.auth.currentUser?.id),
+            whatsApp: SupabaseWhatsAppPhone(scope.auth.client),
+            onCreated: (orgId) async {
+              session.stashReturnTo(Routes.org(orgId));
+              final resolved = session.resolveOrgs();
+              if (context.mounted) context.go(Routes.splash);
+              await resolved;
+            },
           );
         },
       ),
@@ -701,8 +720,10 @@ GoRouter buildRouter(SessionController session) {
           ),
           // The types of business and the request page (107's screens).
           _centerPage(Routes.consoleKinds, (_, _) => biz.KindModelsScreen()),
-          _centerPage(Routes.applications, (context, _) =>
-              biz.ApplicationsScreen(onboarding: AppScope.of(context).onboarding)),
+          // « Activités créées » (111): what « Demandes » was.
+          _centerPage(Routes.applications, (context, _) => biz.CreatedBusinessesScreen(
+                center: CommandCenterRepository(AppScope.of(context).auth.client),
+              )),
           _centerPage(Routes.consoleRequestForm, (_, _) => biz.RequestFormScreen()),
           _centerPage(Routes.platformAnalytics, (context, _) =>
               biz.PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics)),

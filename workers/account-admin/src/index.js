@@ -1,5 +1,6 @@
 // Cloudflare Worker: the only thing that may reset another person's password
-// or delete their account.
+// or delete their account — or, since 113, let a person delete their own
+// (« Supprimer mon compte », POST /v1/me/delete).
 //
 // Those two actions need Supabase's GoTrue Admin API, which needs the
 // service-role key — a key that can do anything to anyone and therefore must
@@ -47,6 +48,11 @@ export default {
       const del = url.pathname.match(/^\/v1\/users\/([^/]+)\/delete$/);
       if (del && request.method === "POST") {
         return withCors(await deleteUser(request, env, del[1]), cors);
+      }
+
+      // POST /v1/me/delete                 — a person deletes their own (113).
+      if (url.pathname === "/v1/me/delete" && request.method === "POST") {
+        return withCors(await deleteMe(request, env), cors);
       }
 
       if (url.pathname === "/" || url.pathname === "/v1/health") {
@@ -150,6 +156,47 @@ async function deleteUser(request, env, userId) {
 }
 
 // ------------------------------------------------------------
+// Delete one's own account (« Supprimer mon compte », 113)
+// ------------------------------------------------------------
+
+// Google Play asks that a person can delete their account from the app.
+// The same rule as above: Postgres decides, as the caller. 113's
+// delete_my_account_check() answers the caller's OWN id — read from the
+// token by Postgres, never from the request — or refuses in French (a
+// business they belong to, a courier's file, an order still open, a
+// platform account). Only that id is deleted; nothing in the request
+// names anybody.
+async function deleteMe(request, env) {
+  const token = bearer(request);
+  if (!token) return problem(401, "Sign in first.");
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) return problem(501, "Not configured.");
+
+  const answer = await rpcAsCaller(env, token, "delete_my_account_check", {});
+  if (answer.status === 401) return problem(401, "Sign in first.");
+  if (!answer.ok) {
+    // The database's own sentence, for the person to act on (409: not
+    // one of the generic words above).
+    if (answer.code === "P0001" && answer.message) return problem(409, answer.message);
+    return problem(502, "La vérification du compte a échoué.");
+  }
+  const userId = answer.value;
+  if (typeof userId !== "string" || !UUID.test(userId)) {
+    return problem(403, "Ce compte ne peut pas être supprimé.");
+  }
+  // The second lock, as for an admin's deletion: never a platform account.
+  if (await isPlatformAdmin(env, userId)) {
+    return problem(403, "Ce compte ne peut pas être supprimé.");
+  }
+
+  const res = await admin(env, "DELETE", userId, null);
+  if (!res.ok && res.status !== 404) {
+    console.error("gotrue delete self", res.status, await res.text());
+    return problem(502, "La suppression du compte a échoué.");
+  }
+  return json({ ok: true });
+}
+
+// ------------------------------------------------------------
 // The GoTrue Admin API — the only use of the service-role key
 // ------------------------------------------------------------
 
@@ -201,6 +248,34 @@ async function rpcBool(env, token, fn, params) {
   if (!res.ok) return false; // an expired or forged token lands here; not authorised
   const value = await res.json();
   return value === true;
+}
+
+// A function's answer, asked as the caller: its value, or PostgREST's
+// status and the database's code and words when it refused.
+async function rpcAsCaller(env, token, fn, params) {
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: env.SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+  let body = null;
+  try {
+    body = await res.json();
+  } catch {
+    body = null;
+  }
+  if (res.ok) return { ok: true, status: res.status, value: body };
+  return {
+    ok: false,
+    status: res.status,
+    code: body && typeof body.code === "string" ? body.code : null,
+    message: body && typeof body.message === "string" ? body.message : null,
+  };
 }
 
 // ------------------------------------------------------------

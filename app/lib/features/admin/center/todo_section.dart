@@ -78,8 +78,12 @@ class _TodoSectionState extends State<TodoSection> {
     final t = _todo ?? const PlatformTodo({});
     final spots = t['spots_paid'] + t['spots_asked'];
     final waiting = <_Count>[
-      _Count('applications', t['applications'], context.tr('Demandes d\'entreprise'),
-          Icons.assignment_ind_outlined, () => context.go(Routes.applications)),
+      // Businesses people created themselves, or Mara did (111): no
+      // request waits for approval any more — the new ones to welcome.
+      _Count('new_7', t['new_7'], context.tr('Nouvelles activités (7 j)'),
+          Icons.add_business_outlined,
+          () => _list('new_7', context.tr('Nouvelles activités (7 j)')),
+          hint: context.tr('à accueillir')),
       _Count('pro_paid', t['pro_paid'], context.tr('« J\'ai payé » Mara Pro à confirmer'),
           Icons.workspace_premium_outlined, () => context.go(Routes.consolePro)),
       _Count('spots', spots, context.tr('Mises en avant à traiter'), Icons.campaign_outlined,

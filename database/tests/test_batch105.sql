@@ -757,7 +757,9 @@ declare
         'progress_credit_orders', 'path_gates_open',
         'admin_two_step',
         -- 109: read by order_phone_required(), which place_order asks.
-        'order_phone_verified'];
+        'order_phone_verified',
+        -- 113: read by support_whatsapp(), which the shopper's page asks.
+        'support_whatsapp'];
     v_dead text;
     v_missing text;
 begin

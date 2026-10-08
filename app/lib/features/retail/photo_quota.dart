@@ -134,6 +134,25 @@ class _PhotoSlotSheetState extends State<PhotoSlotSheet> {
   bool _busy = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    _fresh();
+  }
+
+  /// The wallet as the server says it now (108): the session's copy can be
+  /// minutes behind a step just paid, and kept « Acheter » grey for
+  /// somebody who had enough.
+  Future<void> _fresh() async {
+    if (widget.balance != null) return;
+    final session = AppScope.read(context)?.session;
+    if (session == null) return;
+    try {
+      await session.reloadFeatures(widget.org.id);
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
   Future<void> _buy() async {
     final scope = AppScope.read(context);
     if (scope == null) return;

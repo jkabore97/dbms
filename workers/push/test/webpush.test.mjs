@@ -126,6 +126,16 @@ test("a tap lands where the bell points", () => {
   assert.equal(payloadFor({ kind: "low_stock", org_id: "o2", message: "m" }, env).url,
     "https://dbms.kabore-boss.workers.dev/o/o2");
   assert.equal(payloadFor({ kind: "org_application", message: "m", id: "n1" }, env).tag, "kaj-n1");
+  // 113: a followed vitrine's news opens the vitrine (its row names the
+  // business, which the follower is not of), never anything but a slug.
+  assert.equal(payloadFor({ kind: "vitrine_news", org_id: "o3", message: "m",
+    params: { slug: "boutique-awa" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/s/boutique-awa");
+  assert.equal(payloadFor({ kind: "vitrine_news", org_id: "o3", message: "m",
+    params: { slug: "../o/o3" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/o/o3");
+  assert.equal(payloadFor({ kind: "report_handled", message: "m", params: {} }, env).url,
+    "https://dbms.kabore-boss.workers.dev/mon-compte/notifications");
 });
 
 test("the bell says Mara, whatever name the database's sentence was written in", () => {

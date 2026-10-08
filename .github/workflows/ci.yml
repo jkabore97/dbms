@@ -768,6 +768,16 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch110.sql
 
+      - name: Prove a business created at once — create_org's own path and chart for each kind, every answer checked, one free business per person, the WhatsApp switch off as installed, the creation page's answers kept, the old request path still standing, À faire's new businesses, the platform's alone (111)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch111.sql
+
+      - name: Prove the shopper's page — nobody rung as installed, one bell per vitrine per day for its followers and only what the street sees, addresses and choices their own, Wave only when the platform allows it, « Recommander », reports the platform reads and closes, the help number, the data and the account deletion's question (113)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch113.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,
@@ -803,6 +813,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: node --check workers/uploads/src/index.js
       - run: node --check workers/account-admin/src/index.js
+      # « Supprimer mon compte » (113): the caller's own id, answered by
+      # Postgres as the caller, is the only one deleted; its refusal said
+      # in its words — against a fake PostgREST and GoTrue.
+      - run: node --test workers/account-admin/test/*.test.mjs
       - run: node --check workers/tenant-router/src/index.js
       - run: node --check workers/push/src/index.js
       - run: node --check workers/push/src/webpush.js

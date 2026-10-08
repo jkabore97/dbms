@@ -193,14 +193,16 @@ class CompteScreen extends StatelessWidget {
                   subtitle: _securityLine(scope),
                   onTap: () => context.push(Routes.security),
                 ),
+              // Another business of one's own, created at once (111); a
+              // second needs Mara Pro (099), said by the lock and the gate.
               if (live && !session.isPlatformAdmin)
                 _Tile(
                   key: const Key('compte-second-business'),
                   icon: Icons.business_center_outlined,
-                  title: Strings.of(context).applyForBusiness,
+                  title: context.tr('Créer une autre activité'),
                   locked: PathGate.locks(context, org, 'second_business'),
                   onTap: () => PathGate.guard(context, org, 'second_business',
-                      () => context.push(Routes.applyForBusiness)),
+                      () => context.push(Routes.createBusiness)),
                 ),
               if (session.orgs.length > 1)
                 _Tile(
@@ -356,7 +358,7 @@ class CompteScreen extends StatelessWidget {
                 ),
                 _Tile(
                   icon: Icons.inbox_outlined,
-                  title: Strings.of(context).applications,
+                  title: context.tr('Activités créées'),
                   onTap: () => AdminTrail.enter(context, to: Routes.applications),
                 ),
                 _Tile(

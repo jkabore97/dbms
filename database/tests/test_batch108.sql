@@ -21,7 +21,8 @@
 --      analyses and the delivery of an association) is refused with its
 --      reason and takes nothing; a paid Mara Pro is not charged for what
 --      it has; Mara Pro complet bought with cauris may still buy a tool;
---      a photo slot is bought wherever there is a photo limit.
+--      a photo slot is bought wherever there is a photo limit; every tool
+--      the plan locks has its price in cauris.
 --   4. 104's refusal of a hidden tool is kept (110 relies on it).
 --   P3. platform_set_cauris_cost is the platform's alone, checked on the
 --       server, journaled with its « Annuler », undone once, a stale undo
@@ -379,6 +380,20 @@ begin
 end $$;
 rollback;
 
+-- Every tool the plan locks has its price in cauris: none is Pro-only.
+do $$
+declare v_without text;
+begin
+    select string_agg(f, ', ') into v_without
+      from jsonb_array_elements_text(coalesce(plan_setting('pro_features'), '[]'::jsonb)) f
+     where not exists (select 1 from cauris_costs c where c.feature = f);
+    if v_without is not null then
+        raise exception 'FAIL: Pro tools with no cauris price: %', v_without;
+    end if;
+    raise notice 'PASS: every Pro tool (%) has its price in cauris',
+        (select string_agg(f, ', ') from jsonb_array_elements_text(plan_setting('pro_features')) f);
+end $$;
+
 -- A paid Mara Pro is not charged; Pro complet bought with cauris may buy.
 begin;
 do $$
@@ -440,7 +455,8 @@ declare r jsonb;
 begin
     r := pg_temp.spend_as('spend_cauris', '10800000-0000-0000-0000-000000000001',
                           '10810810-0000-0000-0000-000000000002', 'accounting');
-    if r ->> 'refused' not like 'Pas disponible%' or (r ->> 'spent')::int <> 0 then
+    if r ->> 'refused' <> 'Cette fonction n''est pas disponible pour votre activité.'
+       or (r ->> 'spent')::int <> 0 or (r ->> 'balance')::int <> 5000 then
         raise exception 'FAIL: cauris were taken for a hidden tool: %', r;
     end if;
     raise notice 'PASS: a hidden tool is refused, nothing taken: %', r ->> 'refused';
