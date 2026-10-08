@@ -9,6 +9,7 @@ import '../../core/theme/mara_mark.dart';
 
 import '../../core/auth/models.dart';
 import '../../l10n/strings.dart';
+import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Shown when someone belongs to more than one business — the accountant who
@@ -30,7 +31,6 @@ class OrgPickerScreen extends StatefulWidget {
     this.onRetry,
     this.onSignOut,
     this.onCreateBusiness,
-    this.onBusinesses,
     this.title,
   });
 
@@ -58,11 +58,6 @@ class OrgPickerScreen extends StatefulWidget {
   /// Null for everyone except a platform admin, whose list here is every
   /// business there is rather than the ones they were invited to.
   final VoidCallback? onCreateBusiness;
-
-  /// Also platform-admin only: the list here is already every business, so
-  /// this is the natural place to reach the one screen that can rename,
-  /// archive or delete one.
-  final VoidCallback? onBusinesses;
 
   /// Null takes the localized default. Passed only by callers that mean
   /// something narrower than "choose".
@@ -102,12 +97,9 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
             icon: const Icon(Icons.storefront_outlined),
             tooltip: context.tr('Les vitrines'),
           ),
-          if (widget.onBusinesses != null)
-            IconButton(
-              onPressed: widget.onBusinesses,
-              icon: const Icon(Icons.business_outlined),
-              tooltip: Strings.of(context).manageBusinesses,
-            ),
+          // « Admin » (104): the command center, for a platform admin —
+          // where every business is renamed, archived or deleted.
+          const AdminPill(),
           if (widget.onCreateBusiness != null)
             IconButton(
               onPressed: widget.onCreateBusiness,

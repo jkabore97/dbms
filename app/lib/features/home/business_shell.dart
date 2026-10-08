@@ -5,6 +5,7 @@ import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../l10n/strings.dart';
+import '../admin/admin_pill.dart';
 import '../notify/notifications_screen.dart';
 import 'home_router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -60,6 +61,9 @@ class BusinessShell extends StatelessWidget {
         accountAction: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // « Admin » (104): the platform's way to its command center,
+            // on every home — drawn for a platform admin only.
+            const AdminPill(),
             // « Changer d'activité » (100), just left of the bell, for
             // whoever has more than one — every home, shop, farm and
             // association alike, since they all ride this one slot.
@@ -84,12 +88,20 @@ class BusinessShell extends StatelessWidget {
     // transient condition the person can wave away; it is the state of the
     // business until the platform lifts it, and every refused save downstream
     // makes more sense with it in view.
-    if (!org.suspended) return home;
-    return Column(
-      children: [
-        const _SuspendedBanner(),
-        Expanded(child: home),
-      ],
+    // Opened from the command center: « Retour au centre admin » above it.
+    if (!org.suspended) return AdminReturnBanner(orgId: org.id, child: home);
+    return AdminReturnBanner(
+      orgId: org.id,
+      child: Column(
+        children: [
+          const _SuspendedBanner(),
+          // The banner took the status bar: the home under it must not pad
+          // for it again.
+          Expanded(
+            child: MediaQuery.removePadding(context: context, removeTop: true, child: home),
+          ),
+        ],
+      ),
     );
   }
 }

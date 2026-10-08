@@ -1,21 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/kaj_card.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
-import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
-/// The top of the console (072): today, before the table.
-///
-/// The audit: the console opened on a table of businesses under nine
-/// unlabelled icons, and what waited on the platform — an application, a
-/// "J'ai payé", a courier, a stuck order — was each behind its own icon.
-/// This answers, in order, the four questions somebody running the platform
-/// opens it with: what must I do, what came in, are we growing, what is
-/// unwell. Every count that has a screen opens it.
+/// The platform's figures (072), under « À faire » in the command center
+/// (104): what came in this month, are we growing, what is unwell — and a
+/// word to every business. What must be done is « À faire »'s own count
+/// above it (105's platform_todo), each number opening its screen.
 class ConsoleToday extends StatefulWidget {
   const ConsoleToday({super.key, required this.admin});
 
@@ -64,31 +57,10 @@ class ConsoleTodayState extends State<ConsoleToday> {
   Widget build(BuildContext context) {
     final today = _today;
     if (!_loaded || today == null) return const SizedBox.shrink();
-    final theme = Theme.of(context);
     final n = NumberFormat.decimalPattern('fr_FR');
     final money = moneyFormat('XOF');
-    final t = today.todo, m = today.money, g = today.growth, h = today.health;
+    final m = today.money, g = today.growth, h = today.health;
     int c(Map<String, num> b, String k) => today.count(b, k);
-
-    final todo = <_Todo>[
-      _Todo('Demandes d\'entreprise', c(t, 'applications'),
-          Icons.assignment_ind_outlined, Routes.applications),
-      _Todo('Mara Pro : « J\'ai payé »', c(t, 'pro_requests'),
-          Icons.workspace_premium_outlined, Routes.consolePro),
-      _Todo(
-          c(t, 'spots_paid') > 0
-              ? 'Mises en avant (${c(t, 'spots_paid')} payée'
-                  '${c(t, 'spots_paid') > 1 ? 's' : ''})'
-              : context.tr('Mises en avant'),
-          c(t, 'spots'),
-          Icons.campaign_outlined,
-          Routes.consoleFeatured),
-      _Todo('Livreurs à valider', c(t, 'couriers'),
-          Icons.sports_motorsports_outlined, Routes.consoleCouriers),
-      _Todo('Commandes bloquées', c(t, 'orders_stuck'), Icons.timer_outlined,
-          null,
-          hint: 'en attente depuis 2 h, ou en route depuis 3 h'),
-    ].where((x) => x.count > 0).toList();
 
     final week = c(g, 'orders_week'), last = c(g, 'orders_last_week');
     final trend = week == last
@@ -100,40 +72,6 @@ class ConsoleTodayState extends State<ConsoleToday> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Heading('À traiter',
-            trailing: today.waiting == 0 ? null : '${today.waiting}'),
-        if (todo.isEmpty)
-          KajCard(
-            elevation: 0,
-            color: theme.colorScheme.surfaceContainerHighest,
-            child: ListTile(
-              leading: const Icon(Icons.check_circle_outline),
-              title: Text(context.tr('Rien n\'attend la plateforme.')),
-            ),
-          )
-        else
-          for (final x in todo)
-            KajCard(
-              elevation: 0,
-              color: theme.colorScheme.secondaryContainer,
-              margin: const EdgeInsets.only(bottom: 6),
-              child: ListTile(
-                leading: Icon(x.icon),
-                title: Text(x.label),
-                subtitle: x.hint == null ? null : Text(x.hint!),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(context.tr('{count}', {'count': x.count}),
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    if (x.route != null) const Icon(Icons.chevron_right),
-                  ],
-                ),
-                onTap: x.route == null ? null : () => context.push(x.route!),
-              ),
-            ),
-        const SizedBox(height: 16),
         _Heading('Ce mois',
             trailing: 'gagné ${money.format(today.earnedMonth)}'),
         _Figures([
@@ -181,16 +119,6 @@ class ConsoleTodayState extends State<ConsoleToday> {
       ],
     );
   }
-}
-
-class _Todo {
-  const _Todo(this.label, this.count, this.icon, this.route, {this.hint});
-
-  final String label;
-  final int count;
-  final IconData icon;
-  final String? route;
-  final String? hint;
 }
 
 class _Heading extends StatelessWidget {

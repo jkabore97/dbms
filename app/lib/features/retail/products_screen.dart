@@ -716,6 +716,11 @@ class _EditProductSheetState extends State<_EditProductSheet> {
           : _plain(widget.product.lowStockAt!));
   late DateTime? _expiresOn = widget.product.expiresOn;
   late bool _isIngredient = widget.product.isIngredient;
+
+  /// Mara's switchboard hid production for this business (104).
+  bool get _productionHidden =>
+      AppScope.maybeOf(context)?.session.accessFor(widget.org.id).isHidden('production') ??
+      false;
   late bool _isPublished = widget.product.isPublished;
   late final _description =
       TextEditingController(text: widget.product.description ?? '');
@@ -990,15 +995,20 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                       '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
             ),
             const SizedBox(height: 4),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _isIngredient,
-              onChanged:
-                  _busy ? null : (v) => setState(() => _isIngredient = v),
-              title: Text(context.tr('Ingrédient de production')),
-              subtitle: Text(
-                  context.tr('Caché de la vente, proposé en premier en production.')),
-            ),
+            // Production's own option: gone with production once Mara's
+            // switchboard hid it (104) — unless the article already is an
+            // ingredient, which must stay undoable (an ingredient is kept
+            // off the till).
+            if (!_productionHidden || widget.product.isIngredient)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _isIngredient,
+                onChanged:
+                    _busy ? null : (v) => setState(() => _isIngredient = v),
+                title: Text(context.tr('Ingrédient de production')),
+                subtitle: Text(
+                    context.tr('Caché de la vente, proposé en premier en production.')),
+              ),
             // The article's picture: the newest photo hung on the article is
             // what the vitrine, the à-la-une strip and the search all show.
             // Offered only in a build that knows where to send it: a button

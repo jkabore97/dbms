@@ -3,7 +3,9 @@ import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/onboarding/application_form.dart';
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/theme/mara_mark.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Making a new business — the one screen only Kaj-consulting sees.
@@ -24,6 +26,7 @@ class CreateBusinessScreen extends StatefulWidget {
     required this.admin,
     this.onboarding,
     this.asApplication = false,
+    this.previewForm,
   });
 
   final AdminRepository admin;
@@ -39,6 +42,10 @@ class CreateBusinessScreen extends StatefulWidget {
   /// only and always has been — and so what the button says and what comes
   /// back. A creation pops the new org's id; an application pops true.
   final bool asApplication;
+
+  /// The request page as Mara is shaping it (107's RequestFormScreen): the
+  /// page drawn with this form instead of the server's, and nothing sent.
+  final ApplicationForm? previewForm;
 
   /// Lowercases, strips accents, and hyphenates — the name as typed turned
   /// into something that can live in a hostname.
@@ -119,6 +126,16 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
 
   String _profile = 'association';
 
+  /// The request page Mara set (107): a welcome, the kinds offered, extra
+  /// questions. Null — no form, no server, a database before 107 — is
+  /// today's page, field for field.
+  ApplicationForm? _form;
+
+  /// The answers to [_form]'s questions: a controller for the typed ones,
+  /// the chosen value for a choice or a yes/no. By question id.
+  final _typed = <String, TextEditingController>{};
+  final _picked = <String, Object>{};
+
   /// True once the slug has been edited by hand, after which typing the name
   /// stops overwriting it — otherwise a deliberate slug is silently undone by
   /// the next keystroke in the field above.
@@ -131,6 +148,72 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   void initState() {
     super.initState();
     _nameController.addListener(_onNameChanged);
+    if (widget.previewForm != null) {
+      _useForm(widget.previewForm);
+    } else if (widget.asApplication && widget.onboarding != null) {
+      widget.onboarding!.applicationForm().then((form) {
+        if (mounted && form != null) setState(() => _useForm(form));
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(CreateBusinessScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.previewForm != null && widget.previewForm != old.previewForm) {
+      _useForm(widget.previewForm);
+    }
+  }
+
+  void _useForm(ApplicationForm? form) {
+    _form = form;
+    for (final q in form?.questions ?? const <FormQuestion>[]) {
+      final id = _idOf(q);
+      if (q.type == QuestionType.text || q.type == QuestionType.number) {
+        _typed.putIfAbsent(id, () => TextEditingController()..addListener(_refresh));
+      }
+    }
+    // A kind the page no longer offers is not left chosen.
+    final offered = _offered;
+    if (offered.isNotEmpty && !offered.any((p) => p.value == _profile)) {
+      _profile = offered.first.value;
+    }
+  }
+
+  void _refresh() => setState(() {});
+
+  /// A question not saved yet (the preview) answers under its place.
+  String _idOf(FormQuestion q) => q.id ?? 'q${_form!.questions.indexOf(q)}';
+
+  List<({String value, String label, String detail, IconData icon})> get _offered => [
+        for (final p in _profiles)
+          if (!widget.asApplication || (_form?.offers(p.value) ?? true)) p,
+      ];
+
+  /// Each answer as the server takes it; null when not answered.
+  Object? _answerOf(FormQuestion q) {
+    final id = _idOf(q);
+    switch (q.type) {
+      case QuestionType.text:
+        final t = _typed[id]?.text.trim() ?? '';
+        return t.isEmpty ? null : t;
+      case QuestionType.number:
+        final t = (_typed[id]?.text ?? '').replaceAll(RegExp(r'[\s ]'), '').replaceAll(',', '.');
+        return t.isEmpty ? null : num.tryParse(t) ?? t;
+      case QuestionType.choice:
+      case QuestionType.yesno:
+        return _picked[id];
+    }
+  }
+
+  bool get _answered {
+    if (!widget.asApplication) return true;
+    for (final q in _form?.questions ?? const <FormQuestion>[]) {
+      final a = _answerOf(q);
+      if (q.required && a == null) return false;
+      if (q.type == QuestionType.number && a is String) return false;
+    }
+    return true;
   }
 
   @override
@@ -140,6 +223,9 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     _slugController.dispose();
     _currencyController.dispose();
     _descriptionController.dispose();
+    for (final c in _typed.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -159,7 +245,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   bool get _ready =>
       _name.isNotEmpty &&
       CreateBusinessScreen.slugProblem(_slug) == null &&
-      _currency.length == 3;
+      _currency.length == 3 &&
+      _answered;
 
   Future<void> _create() async {
     setState(() {
@@ -173,12 +260,19 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
         if (onboarding == null) {
           throw StateError('Cet écran a été ouvert sans service de demande.');
         }
+        final questions = _form?.questions ?? const <FormQuestion>[];
         await onboarding.applyForOrg(
           name: _name,
           slug: _slug,
           profile: _profile,
           currency: _currency,
           description: _descriptionController.text.trim(),
+          answers: questions.isEmpty
+              ? null
+              : {
+                  for (final q in questions)
+                    if (q.id != null) q.id!: _answerOf(q),
+                },
         );
         if (mounted) Navigator.of(context).pop(true);
       } else {
@@ -223,6 +317,25 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            if (widget.previewForm != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(context.tr('Aperçu : la page telle que la voit la personne qui demande. Rien n\'est envoyé.'),
+                    key: const Key('apply-preview'),
+                    style: theme.textTheme.labelMedium?.copyWith(color: maraBrown)),
+              ),
+            if (widget.asApplication && _form?.welcome != null)
+              Container(
+                key: const Key('apply-welcome'),
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: maraDeep,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(_form!.welcome!,
+                    style: theme.textTheme.bodyLarge?.copyWith(color: maraPaper)),
+              ),
             TextField(
               controller: _nameController,
               enabled: !_busy,
@@ -257,7 +370,7 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             // Cards rather than a radio group: four options each needing a
             // line of explanation do not fit a SegmentedButton, and this is
             // the choice that cannot be undone from a phone afterwards.
-            ..._profiles.map((p) {
+            ..._offered.map((p) {
               final selected = p.value == _profile;
               return KajCard(
                 elevation: 0,
@@ -311,6 +424,10 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                   border: const OutlineInputBorder(),
                 ),
               ),
+              for (final q in _form?.questions ?? const <FormQuestion>[]) ...[
+                const SizedBox(height: 20),
+                _question(theme, q),
+              ],
             ],
 
             if (_error != null) ...[
@@ -347,7 +464,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             SizedBox(
               height: 52,
               child: FilledButton(
-                onPressed: _ready && !_busy ? _create : null,
+                key: const Key('apply-send'),
+                onPressed: _ready && !_busy && widget.previewForm == null ? _create : null,
                 child: _busy
                     ? const SizedBox(
                         width: 22,
@@ -376,5 +494,70 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
         ),
       ),
     );
+  }
+
+  /// One of the page's own questions, as its type asks to be answered.
+  Widget _question(ThemeData theme, FormQuestion q) {
+    final id = _idOf(q);
+    final label = q.required ? '${q.label} *' : q.label;
+    switch (q.type) {
+      case QuestionType.text:
+      case QuestionType.number:
+        final number = q.type == QuestionType.number;
+        final typed = _answerOf(q);
+        return TextField(
+          key: Key('apply-q-$id'),
+          controller: _typed[id],
+          enabled: !_busy,
+          keyboardType: number
+              ? const TextInputType.numberWithOptions(decimal: true)
+              : TextInputType.text,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: label,
+            helperText: q.help,
+            errorText: number && typed is String
+                ? context.tr('En chiffres, s\'il vous plaît.')
+                : null,
+            border: const OutlineInputBorder(),
+          ),
+        );
+      case QuestionType.choice:
+      case QuestionType.yesno:
+        final options = q.type == QuestionType.yesno
+            ? [(true, context.tr('Oui')), (false, context.tr('Non'))]
+            : [for (final o in q.options) (o, o)];
+        return Column(
+          key: Key('apply-q-$id'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: theme.textTheme.titleSmall),
+            if (q.help != null)
+              Text(q.help!, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (value, text) in options)
+                  ChoiceChip(
+                    label: Text(text),
+                    selected: _picked[id] == value,
+                    selectedColor: maraCaramel,
+                    onSelected: _busy
+                        ? null
+                        : (on) => setState(() {
+                              if (on) {
+                                _picked[id] = value;
+                              } else {
+                                _picked.remove(id);
+                              }
+                            }),
+                  ),
+              ],
+            ),
+          ],
+        );
+    }
   }
 }

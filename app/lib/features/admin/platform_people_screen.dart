@@ -22,18 +22,26 @@ class PlatformPeopleScreen extends StatefulWidget {
     super.key,
     required this.console,
     required this.admin,
+    this.initialQuery,
+    this.openUserId,
   });
 
   final ConsoleRepository console;
   final AdminRepository admin;
+
+  /// What the command center's search found (104): the search to start
+  /// with, and the person to open at once when the list has them.
+  final String? initialQuery;
+  final String? openUserId;
 
   @override
   State<PlatformPeopleScreen> createState() => _PlatformPeopleScreenState();
 }
 
 class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
-  final _search = TextEditingController();
+  late final _search = TextEditingController(text: widget.initialQuery ?? '');
   Timer? _debounce;
+  late String? _toOpen = widget.openUserId;
 
   List<PlatformPerson> _people = const [];
   bool _loading = true;
@@ -64,6 +72,14 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
         _people = people;
         _loading = false;
       });
+      final open = _toOpen;
+      _toOpen = null;
+      for (final p in people) {
+        if (p.userId == open) {
+          await _openPerson(p);
+          break;
+        }
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {

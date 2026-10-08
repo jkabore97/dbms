@@ -6,12 +6,17 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/cauris/cauris_repository.dart';
+import '../../core/console/command_center.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
-import 'console_today.dart';
+import '../../core/theme/mara_mark.dart';
+import '../auth/org_picker_screen.dart' show kindPlural, kindSingular;
+import 'admin_pill.dart';
 import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
+import 'center/bulk_sheet.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -40,19 +45,37 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// **The server does the work.** Search, filter, sort and paging are all
 /// server-side; the client holds one page. See `search_orgs()` in 021.
+///
+/// The command center's « Entreprises » (104): today's figures moved to
+/// « À faire » and the row of tools to the center's rail. Several rows can
+/// be ticked and given one act at once — cauris, a tool until a date, a
+/// message, an archive (105's platform_bulk) — each business its own line
+/// in the Journal.
 class PlatformConsoleScreen extends StatefulWidget {
   const PlatformConsoleScreen({
     super.key,
     required this.console,
     required this.admin,
+    this.center,
+    this.cauris,
     this.onOpen,
+    this.initialActivity,
   });
 
   final ConsoleRepository console;
   final AdminRepository admin;
 
-  /// Opening a business as the platform admin, when the caller supports it.
+  /// The several-at-once acts (105); none offered without it.
+  final CommandCenterRepository? center;
+
+  /// The tools that can be opened, for « Ouvrir un outil ».
+  final CaurisRepository? cauris;
+
+  /// Opening a business's fiche, when the caller supports it.
   final void Function(OrgRow org)? onOpen;
+
+  /// A filter to open on: 'silent30' from « À faire », say.
+  final String? initialActivity;
 
   @override
   State<PlatformConsoleScreen> createState() => _PlatformConsoleScreenState();
@@ -71,8 +94,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
 
   String? _profile;
   String _status = 'active';
-  String? _activity;
+  late String? _activity = widget.initialActivity;
   String _sort = 'activity';
+
+  /// The ticked businesses, kept across pages and filters.
+  final Map<String, OrgRow> _selected = {};
 
   bool _loading = true;
   String? _error;
@@ -82,8 +108,6 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   /// happen on the client, which is what 021 exists to stop — so the screen
   /// says so rather than pretending.
   bool _legacy = false;
-
-  final _todayKey = GlobalKey<ConsoleTodayState>();
 
   final _number = NumberFormat.decimalPattern('fr_FR');
   final _date = DateFormat('d MMM y', 'fr_FR');
@@ -171,7 +195,10 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               : _status == 'archived'
                   ? o.isArchived
                   : !o.isArchived)
-          .where((o) => _profile == null || o.profile == _profile)
+          .where((o) =>
+              _profile == null ||
+              o.profile == _profile ||
+              (_profile == 'association' && o.profile == 'church'))
           .where((o) =>
               q.isEmpty ||
               o.name.toLowerCase().contains(q) ||
@@ -263,12 +290,40 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
     if (changed == true && mounted) await _load();
   }
 
+  void _tick(OrgRow org) => setState(() {
+        if (_selected.remove(org.id) == null) _selected[org.id] = org;
+      });
+
+  Future<void> _bulk(BulkAction action) async {
+    final center = widget.center;
+    if (center == null || _selected.isEmpty) return;
+    var tools = const <String>[];
+    if (action == BulkAction.unlock) {
+      try {
+        tools = [
+          for (final t in await (widget.cauris?.costs() ?? Future.value(const [])))
+            if (t.feature != 'photo_slot') t.feature,
+        ];
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    final result = await showBulkSheet(context,
+        action: action, orgs: _selected.values.toList(), center: center, tools: tools);
+    if (result != null && mounted) {
+      setState(_selected.clear);
+      await _load();
+    }
+  }
+
   Future<void> _rowAction(OrgRow org, String action) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       switch (action) {
         case 'edit':
           await _edit(org);
+          return;
+        case 'open':
+          AdminTrail.openBusiness(context, org.id);
           return;
         case 'archive':
           await widget.admin.archiveOrg(org.id);
@@ -293,27 +348,32 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
     final theme = Theme.of(context);
     final wide = MediaQuery.of(context).size.width >= 760;
 
+    final ticking = widget.center != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('Console')),
+        title: Text(context.tr('Entreprises')),
         actions: [
           IconButton(
-            onPressed: _loading
-                ? null
-                : () {
-                    _todayKey.currentState?.reload();
-                    _load();
-                  },
+            onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _create,
-        icon: const Icon(Icons.add_business_outlined),
-        label: Text(context.tr('Nouvelle entreprise')),
-      ),
+      floatingActionButton: _selected.isNotEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _create,
+              icon: const Icon(Icons.add_business_outlined),
+              label: Text(context.tr('Nouvelle entreprise')),
+            ),
+      bottomNavigationBar: _selected.isEmpty
+          ? null
+          : _BulkBar(
+              count: _selected.length,
+              onAct: _bulk,
+              onClear: () => setState(_selected.clear),
+            ),
       body: Column(
         children: [
           if (_loading) const LinearProgressIndicator(minHeight: 2),
@@ -321,13 +381,6 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
               children: [
-                // Today first (072), then the tools by name, then the
-                // businesses — the audit's "nine unlabelled icons" gone.
-                ConsoleToday(key: _todayKey, admin: widget.admin),
-                const _Tools(),
-                const SizedBox(height: 20),
-                Text(context.tr('Entreprises'), style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
                 _StatStrip(
                   overview: _overview,
                   number: _number,
@@ -390,7 +443,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                 else ...[
                   _resultLine(theme),
                   const SizedBox(height: 6),
-                  if (wide) _TableHeader(theme: theme),
+                  if (wide) _TableHeader(theme: theme, ticking: ticking),
                   for (final org in _rows)
                     _OrgRowTile(
                       org: org,
@@ -400,6 +453,8 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                           ? null
                           : () => widget.onOpen!(org),
                       onAction: (a) => _rowAction(org, a),
+                      selected: ticking ? _selected.containsKey(org.id) : null,
+                      onTick: ticking ? () => _tick(org) : null,
                     ),
                   if (_pageCount > 1) _pager(theme),
                 ],
@@ -441,16 +496,14 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            for (final entry in {
-              'farm': 'Fermes',
-              'retail': 'Boutiques',
-              'church': 'Associations',
-              'association': 'Associations',
-            }.entries)
+            // One « Associations »: the server's filter finds the legacy
+            // churches with them (105's search_orgs).
+            for (final kind in const ['farm', 'retail', 'association'])
               FilterChip(
-                label: Text(entry.value),
-                selected: _profile == entry.key,
-                onSelected: (_) => _applyFilter(profile: entry.key),
+                key: Key('console-kind-$kind'),
+                label: Text(kindPlural(context, kind)),
+                selected: _profile == kind,
+                onSelected: (_) => _applyFilter(profile: kind),
               ),
             const SizedBox(width: 4),
             // Sorting is a menu rather than more chips: it is one choice among
@@ -684,8 +737,11 @@ class _StatTile extends StatelessWidget {
 }
 
 class _TableHeader extends StatelessWidget {
-  const _TableHeader({required this.theme});
+  const _TableHeader({required this.theme, this.ticking = false});
   final ThemeData theme;
+
+  /// A first column for the ticks.
+  final bool ticking;
 
   @override
   Widget build(BuildContext context) {
@@ -697,6 +753,7 @@ class _TableHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Row(
         children: [
+          if (ticking) const SizedBox(width: 44),
           Expanded(flex: 5, child: Text(context.tr('ENTREPRISE'), style: style)),
           Expanded(flex: 2, child: Text(context.tr('TYPE'), style: style)),
           Expanded(
@@ -721,6 +778,8 @@ class _OrgRowTile extends StatelessWidget {
     required this.date,
     required this.onAction,
     this.onOpen,
+    this.selected,
+    this.onTick,
   });
 
   final OrgRow org;
@@ -729,12 +788,9 @@ class _OrgRowTile extends StatelessWidget {
   final void Function(String action) onAction;
   final VoidCallback? onOpen;
 
-  static const _profiles = {
-    'farm': 'Ferme',
-    'retail': 'Boutique',
-    'church': 'Association',
-    'association': 'Association',
-  };
+  /// Ticked for an act on several at once; null draws no box.
+  final bool? selected;
+  final VoidCallback? onTick;
 
   ({String label, Color colour}) _health(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -770,6 +826,8 @@ class _OrgRowTile extends StatelessWidget {
     final menu = PopupMenuButton<String>(
       onSelected: onAction,
       itemBuilder: (_) => [
+        if (!org.isArchived)
+          PopupMenuItem(value: 'open', child: Text(context.tr('Ouvrir l\'activité'))),
         PopupMenuItem(value: 'edit', child: Text(context.tr('Modifier'))),
         if (org.isArchived)
           PopupMenuItem(value: 'restore', child: Text(context.tr('Restaurer')))
@@ -818,22 +876,37 @@ class _OrgRowTile extends StatelessWidget {
       ),
     );
 
+    final tick = selected == null
+        ? null
+        : SizedBox(
+            width: 44,
+            child: Checkbox(
+              key: Key('tick-${org.id}'),
+              value: selected,
+              onChanged: (_) => onTick?.call(),
+            ),
+          );
+
     return KajCard(
       margin: const EdgeInsets.only(bottom: 4),
       elevation: 0,
-      color: theme.colorScheme.surfaceContainerLow,
+      color: selected == true
+          ? maraCaramel.withValues(alpha: 0.16)
+          : theme.colorScheme.surfaceContainerLow,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onOpen,
+        onLongPress: onTick,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+          padding: EdgeInsets.fromLTRB(tick == null ? 12 : 2, 10, 6, 10),
           child: wide
               ? Row(
                   children: [
+                    ?tick,
                     Expanded(flex: 5, child: name),
                     Expanded(
                       flex: 2,
-                      child: Text(_profiles[org.profile] ?? org.profile,
+                      child: Text(kindSingular(context, org.profile),
                           style: theme.textTheme.bodySmall),
                     ),
                     Expanded(
@@ -865,6 +938,7 @@ class _OrgRowTile extends StatelessWidget {
               // sideways on a phone is a table nobody reads.
               : Row(
                   children: [
+                    ?tick,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -875,12 +949,18 @@ class _OrgRowTile extends StatelessWidget {
                             children: [
                               pill,
                               const SizedBox(width: 8),
-                              Text(
-                                '${_profiles[org.profile] ?? org.profile} · '
-                                '${org.memberCount} membre'
-                                '${org.memberCount > 1 ? 's' : ''} · '
-                                '${_lastActivity()}',
-                                style: theme.textTheme.bodySmall,
+                              // Flexible: on a phone, with a tick in front,
+                              // the line ran off the card.
+                              Flexible(
+                                child: Text(
+                                  '${kindSingular(context, org.profile)} · '
+                                  '${org.memberCount} membre'
+                                  '${org.memberCount > 1 ? 's' : ''} · '
+                                  '${_lastActivity()}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
                               ),
                             ],
                           ),
@@ -896,54 +976,79 @@ class _OrgRowTile extends StatelessWidget {
   }
 }
 
+/// The ticked businesses' act, along the foot of the list.
+class _BulkBar extends StatelessWidget {
+  const _BulkBar({required this.count, required this.onAct, required this.onClear});
 
-/// The console's other screens, by name (072). They were nine icons in the
-/// app bar — on a phone, a row of pictures nobody could tell apart.
-class _Tools extends StatelessWidget {
-  const _Tools();
+  final int count;
+  final void Function(BulkAction action) onAct;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tools = <(IconData, String, VoidCallback)>[
-      (Icons.storefront_outlined, 'Les vitrines',
-          () => context.go(Routes.directory)),
-      (Icons.people_outline, 'Personnes',
-          () => context.push(Routes.consolePeople)),
-      (Icons.history, 'Activité', () => context.push(Routes.consoleAudit)),
-      (Icons.insights_outlined, 'Analyses',
-          () => context.push(Routes.platformAnalytics)),
-      (Icons.school_outlined, 'Formateurs',
-          () => context.push(Routes.trainers)),
-      (Icons.star_outline, 'À la une',
-          () => context.push(Routes.consoleFeatured)),
-      (Icons.storefront, 'Vitrines d\'exemple',
-          () => context.push(Routes.consoleShowcase)),
-      (Icons.sports_motorsports_outlined, 'Livreurs',
-          () => context.push(Routes.consoleCouriers)),
-      (Icons.workspace_premium_outlined, 'Mara Pro',
-          () => context.push(Routes.consolePro)),
-      (Icons.account_balance_wallet_outlined, 'Paiements Wave',
-          () => context.push(Routes.consoleWave)),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    Widget act(BulkAction a, IconData icon, String label) => FilledButton.tonalIcon(
+          key: Key('bulk-${a.name}'),
+          style: FilledButton.styleFrom(
+            backgroundColor: maraPaper,
+            foregroundColor: maraBlack,
+            minimumSize: const Size(48, 44),
+          ),
+          onPressed: () => onAct(a),
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+        );
+    // Every act in sight: they wrap, never slide off the edge — on a phone
+    // (under 480) under the count, on a computer beside it.
+    final acts = Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Text(context.tr('Outils'), style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final (icon, label, go) in tools)
-              ActionChip(
-                avatar: Icon(icon, size: 18),
-                label: Text(label),
-                onPressed: go,
-              ),
-          ],
-        ),
+        act(BulkAction.cauris, Icons.redeem_outlined, context.tr('Cauris')),
+        act(BulkAction.unlock, Icons.lock_open_outlined, context.tr('Outil')),
+        act(BulkAction.message, Icons.campaign_outlined, context.tr('Message')),
+        act(BulkAction.archive, Icons.archive_outlined, context.tr('Archiver')),
       ],
+    );
+    final head = [
+      IconButton(
+        tooltip: context.tr('Tout décocher'),
+        onPressed: onClear,
+        icon: const Icon(Icons.close, color: maraPaper),
+      ),
+      Text(
+        context.tr('{n} cochée(s)', {'n': count}),
+        style: const TextStyle(color: maraCaramel, fontWeight: FontWeight.w800),
+      ),
+    ];
+    final narrow = MediaQuery.sizeOf(context).width < 480;
+    return Material(
+      key: const Key('bulk-bar'),
+      color: maraDeep,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          child: narrow
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: head),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+                      child: acts,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    ...head,
+                    const SizedBox(width: 12),
+                    Expanded(child: acts),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

@@ -49,19 +49,11 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
   String? _error;
 
   OrgRow? _org;
-  CaurisWallet? _wallet;
-  FeatureStates? _states;
-  List<({String feature, int cost, int minDays})> _tools = const [];
 
   @override
   void initState() {
     super.initState();
     _search('');
-    widget.cauris.costs().then((c) {
-      if (mounted) {
-        setState(() => _tools = [for (final t in c) if (t.feature != 'photo_slot') t]);
-      }
-    }).catchError((Object _) {});
   }
 
   @override
@@ -97,26 +89,7 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
     }
   }
 
-  Future<void> _pick(OrgRow org) async {
-    setState(() {
-      _org = org;
-      _wallet = null;
-      _states = null;
-    });
-    await _reload();
-  }
-
-  Future<void> _reload() async {
-    final org = _org;
-    if (org == null) return;
-    final wallet = await widget.cauris.wallet(org.id).catchError((Object _) => null);
-    final states = await widget.admin.featureStates(org.id);
-    if (!mounted || _org?.id != org.id) return;
-    setState(() {
-      _wallet = wallet;
-      _states = states;
-    });
-  }
+  void _pick(OrgRow org) => setState(() => _org = org);
 
   /// « Boutique · Awa Sanou »: the kind, and whose it is — the platform's
   /// own list of every business (my_orgs, 100) knows each owner.
@@ -126,30 +99,6 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
       if (s.id == o.id) owner = s.ownerName;
     }
     return [kindSingular(context, o.profile), ?owner].join(' · ');
-  }
-
-  Future<void> _give(GiftKind kind) async {
-    final org = _org;
-    if (org == null) return;
-    final done = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => GiftSheet(
-        org: org,
-        kind: kind,
-        // Only the tools this kind of business has (099).
-        tools: [for (final t in _tools) if (PlanTerms.fits(t.feature, org.profile)) t],
-        admin: widget.admin,
-      ),
-    );
-    if (done == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr('Offert à {name}. Ses administrateurs sont prévenus.',
-            {'name': org.name})),
-      ));
-      await _reload();
-    }
   }
 
   @override
@@ -204,28 +153,11 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _WalletCard(wallet: _wallet, states: _states),
-            const SizedBox(height: 16),
-            _ActionTile(
-              key: const Key('gift-cauris'),
-              icon: Icons.redeem_outlined,
-              title: context.tr('Offrir des cauris'),
-              line: context.tr('Ils restent jusqu\'à ce qu\'ils soient dépensés.'),
-              onTap: () => _give(GiftKind.cauris),
-            ),
-            _ActionTile(
-              key: const Key('gift-promo'),
-              icon: Icons.event_outlined,
-              title: context.tr('Cauris à utiliser avant une date'),
-              line: context.tr('Dépensés en premier ; ce qui reste disparaît ce jour-là.'),
-              onTap: () => _give(GiftKind.promo),
-            ),
-            _ActionTile(
-              key: const Key('gift-unlock'),
-              icon: Icons.lock_open_outlined,
-              title: context.tr('Ouvrir un outil jusqu\'à une date'),
-              line: context.tr('Offert par Mara : aucun cauri dépensé.'),
-              onTap: () => _give(GiftKind.unlock),
+            OrgGifts(
+              key: ValueKey(org.id),
+              org: org,
+              admin: widget.admin,
+              cauris: widget.cauris,
             ),
           ],
         ],
@@ -248,6 +180,112 @@ class KindBadge extends StatelessWidget {
         decoration: BoxDecoration(
             color: kindColour(profile), borderRadius: BorderRadius.circular(12)),
         child: Icon(iconForProfile(profile), color: kindInk(profile)),
+      );
+}
+
+/// One business's wallet and the three gifts (100): cauris, cauris to
+/// spend before a day, a tool opened until a date. The console's
+/// « Offrir » and the fiche entreprise's « Pro et cauris » (106) draw this
+/// same panel; each gift goes through the command center's journal (105).
+class OrgGifts extends StatefulWidget {
+  const OrgGifts({
+    super.key,
+    required this.org,
+    required this.admin,
+    required this.cauris,
+    this.onGiven,
+  });
+
+  final OrgRow org;
+  final AdminRepository admin;
+  final CaurisRepository cauris;
+
+  /// After a gift: the caller reads the business again too.
+  final VoidCallback? onGiven;
+
+  @override
+  State<OrgGifts> createState() => _OrgGiftsState();
+}
+
+class _OrgGiftsState extends State<OrgGifts> {
+  CaurisWallet? _wallet;
+  FeatureStates? _states;
+  List<({String feature, int cost, int minDays})> _tools = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+    widget.cauris.costs().then((c) {
+      if (mounted) {
+        setState(() => _tools = [for (final t in c) if (t.feature != 'photo_slot') t]);
+      }
+    }).catchError((Object _) {});
+  }
+
+  Future<void> _reload() async {
+    final org = widget.org;
+    final wallet = await widget.cauris.wallet(org.id).catchError((Object _) => null);
+    final states = await widget.admin.featureStates(org.id);
+    if (!mounted || widget.org.id != org.id) return;
+    setState(() {
+      _wallet = wallet;
+      _states = states;
+    });
+  }
+
+  Future<void> _give(GiftKind kind) async {
+    final org = widget.org;
+    final done = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => GiftSheet(
+        org: org,
+        kind: kind,
+        // Only the tools this kind of business has (099).
+        tools: [for (final t in _tools) if (PlanTerms.fits(t.feature, org.profile)) t],
+        admin: widget.admin,
+      ),
+    );
+    if (done == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr('Offert à {name}. Ses administrateurs sont prévenus.',
+            {'name': org.name})),
+      ));
+      await _reload();
+      widget.onGiven?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _WalletCard(wallet: _wallet, states: _states),
+          const SizedBox(height: 16),
+          _ActionTile(
+            key: const Key('gift-cauris'),
+            icon: Icons.redeem_outlined,
+            title: context.tr('Offrir des cauris'),
+            line: context.tr('Ils restent jusqu\'à ce qu\'ils soient dépensés.'),
+            onTap: () => _give(GiftKind.cauris),
+          ),
+          _ActionTile(
+            key: const Key('gift-promo'),
+            icon: Icons.event_outlined,
+            title: context.tr('Cauris à utiliser avant une date'),
+            line: context.tr('Dépensés en premier ; ce qui reste disparaît ce jour-là.'),
+            onTap: () => _give(GiftKind.promo),
+          ),
+          _ActionTile(
+            key: const Key('gift-unlock'),
+            icon: Icons.lock_open_outlined,
+            title: context.tr('Ouvrir un outil jusqu\'à une date'),
+            line: context.tr('Offert par Mara : aucun cauri dépensé.'),
+            onTap: () => _give(GiftKind.unlock),
+          ),
+        ],
       );
 }
 

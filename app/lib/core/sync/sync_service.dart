@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../errors.dart';
 import '../retail/stock_rule.dart';
 
 /// Drains the outbox to the server whenever there's a connection.
@@ -125,8 +126,11 @@ class SyncService {
           // offline that the server will refuse every time. Retrying forever
           // would hide it; it is set aside for the owner to read instead
           // (RefusedNotice on the home).
+          // A tool Mara's switchboard hid here (104) — a sale on credit
+          // kept from before — is refused the same way, for good.
           if (e is PostgrestException &&
-              isStockRefusal(e.message, code: e.code)) {
+              (isStockRefusal(e.message, code: e.code) ||
+                  isFeatureHidden(e))) {
             await _db.markRefused(clientUuid, e.message);
             continue;
           }

@@ -248,7 +248,7 @@ class _CheminScreenState extends State<CheminScreen> {
                   margin: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      for (final (i, t) in pathTools.indexed) ...[
+                      for (final (i, t) in _pathTools.indexed) ...[
                         if (i > 0) const Divider(height: 1),
                         _ToolRow(org: widget.org, tool: t, path: p),
                       ],
@@ -315,15 +315,28 @@ class _CheminScreenState extends State<CheminScreen> {
     ];
   }
 
+  /// The path's tools, less those Mara's switchboard hid here (104).
+  List<PathTool> get _pathTools {
+    final access = AppScope.read(context)?.session.accessFor(widget.org.id);
+    return [
+      for (final t in pathTools)
+        if (!(access?.isHidden(t.key) ?? false)) t,
+    ];
+  }
+
   /// What the cauris buy: each Pro tool's price, or how long it stays open.
   List<Widget> _spending(ThemeData theme) {
     final f = _features;
     if (f == null || f.isPro || f.tools.isEmpty) return const [];
     // Only the tools this kind of business has (an association: none of
-    // the shop's analyses, no delivery — 099).
+    // the shop's analyses, no delivery — 099), and none Mara's switchboard
+    // hid here (104): no cauris for a door that is not drawn.
+    final access = AppScope.read(context)?.session.accessFor(widget.org.id);
     final tools = [
       for (final e in f.tools.entries)
-        if (PlanTerms.fits(e.key, widget.org.profile)) e,
+        if (PlanTerms.fits(e.key, widget.org.profile) &&
+            !(access?.isHidden(e.key) ?? false))
+          e,
     ]..sort((a, b) => a.value.cost.compareTo(b.value.cost));
     if (tools.isEmpty) return const [];
     return [

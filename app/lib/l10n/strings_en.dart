@@ -149,9 +149,6 @@ class StringsEn extends Strings {
   String get pickBusiness => 'Choose a business';
 
   @override
-  String get manageBusinesses => 'Manage businesses';
-
-  @override
   String get newBusiness => 'New business';
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/admin/setup_steps.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../../core/invoicing/invoicing_repository.dart';
@@ -10,6 +11,7 @@ import '../../core/phone/country_codes.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import '../admin/admin_pill.dart';
 import '../admin/pin_preview.dart';
 import '../common/phone_field.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -81,17 +83,29 @@ typedef _Step = ({IconData icon, String title, String line});
 /// real while its owner learns where everything is. The store opens once
 /// it has its first article; the position may wait (« Plus tard »), and
 /// earns no cauris until it is set.
+///
+/// Mara may turn the optional steps off for every shop or every farm
+/// (107): « vitrine » and « position ». The name and the first article
+/// always stay.
 class SetupScreen extends StatefulWidget {
   const SetupScreen({
     super.key,
     required this.org,
     required this.actions,
     required this.onDone,
+    this.stepsOff,
   });
 
   final OrgSummary org;
   final SetupActions actions;
   final VoidCallback onDone;
+
+  /// The optional steps turned off for this kind, read once as the setup
+  /// opens (setup_steps_off, 107). Null or a failure: every step.
+  final Future<Set<String>> Function()? stepsOff;
+
+  /// Every step, in order; only 'vitrine' and 'position' can be left out.
+  static const steps = ['identity', 'article', 'vitrine', 'position'];
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -116,30 +130,51 @@ class _SetupScreenState extends State<SetupScreen> {
   (double, double)? _pin;
   bool _done = false;
 
+  /// What Mara turned off for this kind; nothing until the server says.
+  Set<String> _off = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    widget.stepsOff?.call().then((off) {
+      // Read while still on the first page: the steps never move under
+      // somebody already past it.
+      if (mounted && _at == 0 && off.isNotEmpty) setState(() => _off = off);
+    });
+  }
+
+  /// The steps this walkthrough shows, in order.
+  List<String> get _keys => [
+        for (final k in SetupScreen.steps)
+          if (k == 'identity' || k == 'article' || !_off.contains(k)) k,
+      ];
+
   bool get _farm => widget.org.profile == 'farm';
 
-  List<_Step> get _steps => [
-        (
+  List<_Step> get _steps => [for (final k in _keys) _stepOf(k)];
+
+  _Step _stepOf(String key) => switch (key) {
+        'identity' => (
           icon: _farm ? Icons.agriculture : Icons.storefront,
           title: _farm ? context.tr('Votre ferme') : context.tr('Votre boutique'),
           line: context.tr('Son nom, tel que vos clients le connaissent.'),
         ),
-        (
+        'article' => (
           icon: Icons.inventory_2,
           title: _farm ? context.tr('Ce que vous vendez') : context.tr('Votre premier article'),
           line: context.tr('Un nom, un prix, combien vous en avez.'),
         ),
-        (
+        'vitrine' => (
           icon: Icons.storefront_outlined,
           title: context.tr('Votre vitrine'),
           line: context.tr('Votre page, à partager sur WhatsApp.'),
         ),
-        (
+        _ => (
           icon: Icons.place,
           title: context.tr('Où vous trouver'),
           line: context.tr('Vos clients vous voient sur la carte.'),
         ),
-      ];
+      };
 
   @override
   void dispose() {
@@ -278,6 +313,9 @@ class _SetupScreenState extends State<SetupScreen> {
                   Text('${_at + 1} / ${_steps.length}',
                       key: const Key('setup-count'),
                       style: theme.textTheme.labelLarge),
+                  // « Admin » (104): the platform's way to its center, here too
+                  // — drawn for a platform admin only.
+                  const AdminPill(),
                 ],
               ),
             ),
@@ -310,10 +348,13 @@ class _SetupScreenState extends State<SetupScreen> {
                   _error = null;
                 }),
                 children: [
-                  _page(0, _identity(theme)),
-                  _page(1, _articleStep(theme)),
-                  _page(2, _vitrineStep(theme)),
-                  _page(3, _positionStep(theme)),
+                  for (final (i, k) in _keys.indexed)
+                    _page(i, switch (k) {
+                      'identity' => _identity(theme),
+                      'article' => _articleStep(theme),
+                      'vitrine' => _vitrineStep(theme),
+                      _ => _positionStep(theme),
+                    }),
                 ],
               ),
             ),
@@ -452,7 +493,7 @@ class _SetupScreenState extends State<SetupScreen> {
           Text(context.tr('Plus tard : Stock › « + ».'),
               textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
-          _primary(context.tr('Continuer'), () => _go(2), key: const Key('setup-next-1')),
+          _primary(context.tr('Continuer'), () => _go(_at + 1), key: const Key('setup-next-1')),
         ],
       ];
 
@@ -715,12 +756,14 @@ class SetupGate extends StatelessWidget {
             org: org,
             actions: SupabaseAssociationSetupActions(scope.admin, scope.retail, scope.invoicing),
             onDone: () => scope.session.reloadFeatures(org.id),
+            stepsOff: () => setupStepsOff(scope.auth.client, org.id),
           );
         }
         return SetupScreen(
           org: org,
           actions: SupabaseSetupActions(scope.admin, scope.retail, scope.invoicing),
           onDone: () => scope.session.reloadFeatures(org.id),
+          stepsOff: () => setupStepsOff(scope.auth.client, org.id),
         );
       },
     );

@@ -7,6 +7,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
+import '../admin/admin_pill.dart' show AdminTrail;
 import 'notification_text.dart';
 
 /// The bell on every home screen's app bar: a badge with the unread count,
@@ -194,9 +195,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           trailing: target == null
                               ? null
                               : const Icon(Icons.chevron_right),
+                          // A ring for the platform (a request, a spot)
+                          // enters the center the way the pill does, so
+                          // back returns here.
                           onTap: target == null
                               ? null
-                              : () => context.push(target),
+                              : () => AdminTrail.inCenter(target)
+                                  ? AdminTrail.enter(context, to: target)
+                                  : context.push(target),
                           title: Text(
                             notificationLine(context, n),
                             style: n.isUnread

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/onboarding/application_form.dart';
 import '../../core/onboarding/onboarding_repository.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -21,7 +22,11 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// Rejecting requires a reason, enforced by the server and not only by this
 /// form. A refusal somebody cannot act on produces the same application again
-/// next week, with the same problem in it.
+/// next week, with the same problem in it. Ready reasons fill it in one tap.
+///
+/// Each card carries the request page's answers (107) as they were asked,
+/// and the applicant hears the decision on their bell (107's trigger):
+/// accepted with their business to open, refused with the reason.
 class ApplicationsScreen extends StatefulWidget {
   const ApplicationsScreen({super.key, required this.onboarding});
 
@@ -71,7 +76,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
         content: Text(
           'L’entreprise sera créée à l’adresse « ${application.slug} », et '
           '${application.applicant ?? 'le demandeur'} en deviendra '
-          'propriétaire.',
+          'propriétaire. ${context.tr('Le demandeur est prévenu.')}',
         ),
         actions: [
           TextButton(
@@ -98,11 +103,11 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
       context: context,
       builder: (_) => _RejectDialog(application: application),
     );
-    if (reason == null || reason.trim().isEmpty) return;
+    if (!mounted || reason == null || reason.trim().isEmpty) return;
 
     await _run(
       () => widget.onboarding.reject(application.id, reason.trim()),
-      'Demande refusée.',
+      context.tr('Demande refusée. Le demandeur est prévenu.'),
     );
   }
 
@@ -187,6 +192,10 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                         const SizedBox(height: 8),
                         Text(application.description!),
                       ],
+                      if (application.answers.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        _Answers(answers: application.answers),
+                      ],
                       if (application.createdAt != null) ...[
                         const SizedBox(height: 8),
                         Text(
@@ -243,6 +252,51 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
       };
 }
 
+/// The request page's questions on a card, each with its answer.
+class _Answers extends StatelessWidget {
+  const _Answers({required this.answers});
+
+  final List<ApplicationAnswer> answers;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String said(ApplicationAnswer a) => switch (a.value) {
+          true => context.tr('Oui'),
+          false => context.tr('Non'),
+          final num n => NumberFormat.decimalPattern('fr_FR').format(n),
+          final v => '${v ?? ''}',
+        };
+    return Container(
+      key: const Key('application-answers'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final a in answers)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(a.label,
+                      style: theme.textTheme.labelMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  Text(said(a), style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Refusing, with the reason that makes the refusal useful.
 class _RejectDialog extends StatefulWidget {
   const _RejectDialog({required this.application});
@@ -272,12 +326,32 @@ class _RejectDialogState extends State<_RejectDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(context.tr('Refuser {name}', {'name': widget.application.name})),
-      content: Column(
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.tr('Le demandeur verra ce message et pourra corriger sa demande.'),
+          ),
+          const SizedBox(height: 12),
+          // Ready reasons: one tap writes it, the field can still be edited.
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final r in [
+                context.tr('Informations manquantes'),
+                context.tr('Nom déjà utilisé'),
+                context.tr('Adresse (lien) à changer'),
+                context.tr('Activité hors du champ de Mara'),
+                context.tr('Demande en double'),
+              ])
+                ActionChip(
+                  label: Text(r),
+                  onPressed: () => _reason.text = r,
+                ),
+            ],
           ),
           const SizedBox(height: 12),
           TextField(
@@ -290,6 +364,7 @@ class _RejectDialogState extends State<_RejectDialog> {
             ),
           ),
         ],
+        ),
       ),
       actions: [
         TextButton(

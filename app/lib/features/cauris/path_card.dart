@@ -219,7 +219,13 @@ class PathCard extends StatelessWidget {
         ? 0.0
         : stageSteps.where((s) => s.done).length / stageSteps.length;
     final soft = maraPaper.withValues(alpha: 0.75);
-    final opens = step.opens == null
+    // A tool Mara's switchboard hid here (104) is not promised.
+    final opens = step.opens == null ||
+            (AppScope.maybeOf(context)
+                    ?.session
+                    .accessFor(org.id)
+                    .isHidden(step.opens!) ??
+                false)
         ? null
         : pathTools.where((t) => t.key == step.opens).firstOrNull;
     return InkWell(

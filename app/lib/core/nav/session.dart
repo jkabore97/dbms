@@ -136,10 +136,44 @@ class SessionController extends ChangeNotifier {
     // the default terms — so what screens see first is what the load will
     // confirm, and an owner's load emits nothing (see _loadAccess).
     final locked = _lockedFor(org);
+    final hidden = _hiddenFor(org);
     if (org.isAdmin) {
-      return locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
+      return locked.isEmpty && hidden.isEmpty
+          ? OrgAccess.allEdit
+          : OrgAccess.admin(proLocked: locked, hidden: hidden);
     }
-    return OrgAccess.forTier(const {}, proLocked: locked);
+    return OrgAccess.forTier(const {}, proLocked: locked, hidden: hidden);
+  }
+
+  /// What Mara's switchboard hid for this business (104), as its feature
+  /// states said — for everyone in it, Mara's own people included (they
+  /// see what the business sees). Nothing until they are read, and nothing
+  /// on a business no rule touches.
+  Set<String> _hiddenFor(OrgSummary org) =>
+      _features[org.id]?.hidden ?? _hiddenKept[org.id] ?? const <String>{};
+
+  /// The hidden set as the device last heard it, per business: an offline
+  /// cold start hides what the server last said was hidden, rather than
+  /// drawing a tool the server would refuse. Rewritten on every answer.
+  final Map<String, Set<String>> _hiddenKept = {};
+
+  static String _hiddenKey(String orgId) => 'hidden_features:$orgId';
+
+  Future<Set<String>?> _readHidden(String orgId) async {
+    try {
+      final v = await db.readPref(_hiddenKey(orgId));
+      if (v == null || v.isEmpty) return null;
+      return v.split(',').where((k) => k.isNotEmpty).toSet();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _keepHidden(String orgId, Set<String> hidden) async {
+    try {
+      await db.writePref(
+          _hiddenKey(orgId), hidden.isEmpty ? null : (hidden.toList()..sort()).join(','));
+    } catch (_) {}
   }
 
   /// Which tools the plan locks for this business: none on Pro, none for
@@ -197,22 +231,52 @@ class SessionController extends ChangeNotifier {
         _termsLoaded = true;
       }
     }
+    // What the device last heard of the platform's hidden list, read beside
+    // the server's questions and never waited for before the dial is set:
+    // kept as soon as it lands, unless the server has answered by then.
+    final kept = _features.containsKey(org.id) || _hiddenKept.containsKey(org.id)
+        ? null
+        : _readHidden(org.id).then((k) {
+            if (k != null && !_features.containsKey(org.id)) {
+              _hiddenKept.putIfAbsent(org.id, () => k);
+            }
+          });
     final s = await states;
-    if (s is FeatureStates) _features[org.id] = s;
-    final locked = _lockedFor(org);
-    final OrgAccess next;
-    if (rules == null) {
-      next = locked.isEmpty ? OrgAccess.allEdit : OrgAccess.admin(proLocked: locked);
-    } else {
-      next = OrgAccess.forTier(await rules, proLocked: locked);
+    if (s is FeatureStates) {
+      _features[org.id] = s;
+      _hiddenKept[org.id] = s.hidden;
+      unawaited(_keepHidden(org.id, s.hidden));
     }
+    final dial = rules == null ? null : await rules;
+    OrgAccess accessNow() {
+      final locked = _lockedFor(org);
+      final hidden = _hiddenFor(org);
+      if (dial == null) {
+        return locked.isEmpty && hidden.isEmpty
+            ? OrgAccess.allEdit
+            : OrgAccess.admin(proLocked: locked, hidden: hidden);
+      }
+      return OrgAccess.forTier(dial, proLocked: locked, hidden: hidden);
+    }
+
     // Emit only if this changes what screens already see — an unchanged dial
     // (an admin, an untouched business, an offline fetch that came back empty)
     // must not fire a rebuild, because _loadAccess runs during the resolve and
     // open flows where a stray notify re-runs the router's redirect.
-    final changed = accessFor(org.id) != next;
-    _access[org.id] = next;
-    if (changed) _emit();
+    void settle() {
+      final next = accessNow();
+      final changed = accessFor(org.id) != next;
+      _access[org.id] = next;
+      if (changed) _emit();
+    }
+
+    settle();
+    // No answer (offline) and the device's copy still on its way: the dial
+    // again once it lands, hiding what the server last said was hidden.
+    if (kept != null && s is! FeatureStates) {
+      await kept;
+      if (!_disposed) settle();
+    }
   }
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —

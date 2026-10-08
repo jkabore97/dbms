@@ -15,22 +15,35 @@ import 'package:flutter/foundation.dart' show setEquals;
 /// business the Pro tools answer 'view' — never 'hidden', the owner keeps
 /// seeing them with a badge — and only ever from 'edit'. Whatever the dial
 /// hid stays hidden. Same rule as `feature_access()` server-side.
+///
+/// Since 104 a third layer sits above both: Mara's switchboard. A tool the
+/// platform hid for this business ([platformHidden], read from
+/// feature_states) is 'hidden' for everyone in it — the owner too — and
+/// never badged; the server refuses it at its doors (feature_guard). Empty
+/// unless the platform wrote a rule, so the first two layers decide alone,
+/// exactly as before.
 class OrgAccess {
   const OrgAccess._(this._rules,
-      {required this.isAdmin, this.proLocked = const {}});
+      {required this.isAdmin,
+      this.proLocked = const {},
+      this.platformHidden = const {}});
 
   /// Owners and admins: every tool, always. Also the default handed to
   /// screens in tests and in builds with no server.
   static const allEdit = OrgAccess._({}, isAdmin: true);
 
-  /// An owner or admin of a business whose plan locks [proLocked].
-  const OrgAccess.admin({Set<String> proLocked = const {}})
-      : this._(const {}, isAdmin: true, proLocked: proLocked);
+  /// An owner or admin of a business whose plan locks [proLocked], and
+  /// whose platform hid [hidden].
+  const OrgAccess.admin(
+      {Set<String> proLocked = const {}, Set<String> hidden = const {}})
+      : this._(const {},
+            isAdmin: true, proLocked: proLocked, platformHidden: hidden);
 
   /// The rules of one tier, as fetched for the signed-in member.
   const OrgAccess.forTier(Map<String, String> rules,
-      {Set<String> proLocked = const {}})
-      : this._(rules, isAdmin: false, proLocked: proLocked);
+      {Set<String> proLocked = const {}, Set<String> hidden = const {}})
+      : this._(rules,
+            isAdmin: false, proLocked: proLocked, platformHidden: hidden);
 
   final Map<String, String> _rules;
   final bool isAdmin;
@@ -39,8 +52,23 @@ class OrgAccess {
   /// empty for the platform admin, the Pro list on a Free business.
   final Set<String> proLocked;
 
-  /// 'hidden' | 'view' | 'edit' for a feature key from 031 or 066.
+  /// The switchboard's keys (104) Mara hid for this business. Empty on a
+  /// business no rule touches.
+  final Set<String> platformHidden;
+
+  /// The dial's keys (031) that are a catalog tool under another name.
+  static const _catalogKeyOf = {'staff': 'payroll'};
+
+  /// Whether Mara's switchboard hid this tool for this business (104):
+  /// drawn nowhere, its address « pas disponible ». A dial key answers for
+  /// its tool ('staff' for 'payroll').
+  bool isHidden(String feature) =>
+      platformHidden.contains(feature) ||
+      platformHidden.contains(_catalogKeyOf[feature]);
+
+  /// 'hidden' | 'view' | 'edit' for a feature key from 031, 066 or 104.
   String accessTo(String feature) {
+    if (isHidden(feature)) return 'hidden';
     final own = isAdmin
         ? 'edit'
         : _rules[feature] ?? (feature == 'reports' ? 'view' : 'edit');
@@ -75,6 +103,7 @@ class OrgAccess {
       return false;
     }
     if (!setEquals(other.proLocked, proLocked)) return false;
+    if (!setEquals(other.platformHidden, platformHidden)) return false;
     for (final e in _rules.entries) {
       if (other._rules[e.key] != e.value) return false;
     }
@@ -87,6 +116,7 @@ class OrgAccess {
         Object.hashAllUnordered(
             _rules.entries.map((e) => Object.hash(e.key, e.value))),
         Object.hashAllUnordered(proLocked),
+        Object.hashAllUnordered(platformHidden),
       );
 
   /// The feature keys of 031, in the order the owner's screen shows them.

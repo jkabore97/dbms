@@ -11,6 +11,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import '../admin/admin_pill.dart';
 import '../common/phone_field.dart';
 import 'setup_screen.dart';
 
@@ -118,17 +119,28 @@ List<AssociationKind> associationKinds(BuildContext context) => [
 /// Then « C'est prêt ! »; finishing sets the setup mark, which opens the
 /// one free worker (100). No currency question: the business keeps the
 /// one it was created with (the country's).
+///
+/// Mara may turn the optional steps off for every association (107):
+/// « members » and « vitrine ». The name and the kind always stay.
 class AssociationSetupScreen extends StatefulWidget {
   const AssociationSetupScreen({
     super.key,
     required this.org,
     required this.actions,
     required this.onDone,
+    this.stepsOff,
   });
 
   final OrgSummary org;
   final AssociationSetupActions actions;
   final VoidCallback onDone;
+
+  /// The optional steps turned off for associations, read once as the
+  /// setup opens (setup_steps_off, 107). Null or a failure: every step.
+  final Future<Set<String>> Function()? stepsOff;
+
+  /// Every step, in order; only 'members' and 'vitrine' can be left out.
+  static const steps = ['identity', 'members', 'vitrine'];
 
   @override
   State<AssociationSetupScreen> createState() => _AssociationSetupScreenState();
@@ -147,7 +159,26 @@ class _MemberFields {
 }
 
 class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
-  static const _count = 3;
+  /// What Mara turned off for associations; nothing until the server says.
+  Set<String> _off = const {};
+
+  /// The steps this walkthrough shows, in order.
+  List<String> get _keys => [
+        for (final k in AssociationSetupScreen.steps)
+          if (k == 'identity' || !_off.contains(k)) k,
+      ];
+
+  int get _count => _keys.length;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.stepsOff?.call().then((off) {
+      // Read while still on the first page: the steps never move under
+      // somebody already past it.
+      if (mounted && _at == 0 && off.isNotEmpty) setState(() => _off = off);
+    });
+  }
 
   final _pages = PageController();
   int _at = 0;
@@ -305,7 +336,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
       return SetupReady(org: widget.org, onDone: widget.onDone, association: true);
     }
     final theme = Theme.of(context);
-    final steps = [
+    final all = [
       (
         icon: Icons.volunteer_activism,
         title: context.tr('Votre association'),
@@ -325,6 +356,10 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
         body: _vitrineStep(theme),
       ),
     ];
+    final steps = [
+      for (final (i, k) in AssociationSetupScreen.steps.indexed)
+        if (_keys.contains(k)) all[i],
+    ];
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -343,6 +378,9 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
                   Text('${_at + 1} / $_count',
                       key: const Key('asetup-count'),
                       style: theme.textTheme.labelLarge),
+                  // « Admin » (104): the platform's way to its center, here too
+                  // — drawn for a platform admin only.
+                  const AdminPill(),
                 ],
               ),
             ),
@@ -517,7 +555,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
         _primary(context.tr('Continuer'), _saveMembers, key: const Key('asetup-next-1')),
         TextButton(
           key: const Key('asetup-skip-1'),
-          onPressed: _busy ? null : () => _go(2),
+          onPressed: _busy ? null : () => _go(_at + 1),
           child: Text(context.tr('Passer')),
         ),
       ];

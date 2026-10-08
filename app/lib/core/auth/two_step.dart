@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../admin/platform_writes.dart';
+
 /// The platform admin's second step (migration 077): a six-digit code from
 /// an authenticator app, on top of the password.
 ///
@@ -103,10 +105,10 @@ class TwoStep {
   /// The platform's switch (078): whether a platform admin must pass the
   /// second step at all. Off by default. Switching it off again is refused
   /// by the gate below aal2, so it can only be undone by someone who has
-  /// passed — the switch is not a way round it.
+  /// passed — the switch is not a way round it. Written in the command
+  /// center's journal (105), like every platform setting.
   Future<void> setRequired(bool on) async {
-    await _client!.rpc('set_platform_setting',
-        params: {'p_key': 'admin_two_step', 'p_value': on});
+    await writePlatformSetting(_client!, 'admin_two_step', on);
   }
 
   /// Writes « Validation en deux étapes activée » into the account's history

@@ -129,7 +129,8 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final t = widget.terms;
+    // The free numbers of this business's kind (107), as the server holds it.
+    final t = widget.terms.forProfile(widget.org.profile);
     final org = widget.org;
     final wide = MediaQuery.sizeOf(context).width >= 720;
     final price = _period == 'year' ? t.priceYear : t.priceMonth;

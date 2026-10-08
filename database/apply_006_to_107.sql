@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_103.sql — applies migrations 006 through 103 in order.
+-- apply_006_to_107.sql — applies migrations 006 through 107 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -35291,6 +35291,5060 @@ begin
         grant execute on function update_org(uuid, text, text, text, text) to authenticated;
         grant execute on function set_org_billing(uuid, text, text, text, text, text, text) to authenticated;
         grant execute on function org_private_details(uuid)               to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 104_feature_switchboard.sql
+-- ============================================================
+-- ============================================================
+-- 104_feature_switchboard.sql — Mara's switchboard: what a store, a farm
+-- or an association is shown, set by the platform, kept by the server.
+--
+-- The owner: « As an admin I need to be able to edit a store or a type of
+-- business. To make features, options and setting visible or invisible for
+-- a store or type of business. » And: « The new admin setup will not
+-- modify anything to the stores and vitrine until I make the change
+-- myself? » — so every switch starts at « Par défaut », which is today.
+-- No paid feature is ever hidden.
+--
+--   1. feature_catalog: one row per tool that can be shown or hidden, with
+--      the kinds of business that have it (an association has no
+--      Production, no Analyses, no Corrections: the board does not offer
+--      them there), its group, and the Pro tool (066) it is, if any. Only
+--      what is wired end to end is in it: the app hides it where it is
+--      drawn (homes, Compte, menus, its address) and the server refuses it
+--      at its doors (section 4). See the list in section 2.
+--   2. feature_rules: a kind's rule (every shop, every farm, every
+--      association — a legacy church counts as an association) or one
+--      business's rule, 'visible' or 'hidden', until a date if said. No
+--      client writes it; members read only their own business's result,
+--      through feature_states().
+--   3. feature_hidden(org, key): the business's own rule (unexpired) over
+--      its kind's (unexpired) over the catalog's default — and never for
+--      a feature the business has PAID for: a Pro tool on a paid Mara Pro
+--      (orgs.plan, until its date), or opened with the business's own
+--      cauris (a cauris_unlocks row for it or for « pro_all » with no
+--      gifted_by). A gift from Mara is not a payment.
+--      feature_guard(org, key) refuses a hidden feature in French
+--      (errcode MA002). Mara's own people meet it too inside a business —
+--      they see what the business sees; only the command center's own
+--      functions (platform_*) pass by it.
+--   4. The doors: a trigger on each feature's tables (every writer, the
+--      app's functions and a direct write alike) and the feature's reading
+--      functions, rebuilt from their latest definitions with one guard.
+--   5. platform_actions: the command center's journal — who, when, which
+--      business, what it was and what it became, and how to undo it.
+--      platform_undo(action) runs the undo only through a whitelist
+--      (platform_undo_fns), once. platform_log_action() is what the other
+--      platform functions (105–107) write it with.
+--   6. platform_feature_board / platform_set_feature_rule /
+--      platform_feature_impact: the switchboard itself, for a kind or a
+--      business, the platform's only. A business's owner is told when
+--      Mara changes one of its switches.
+--   7. feature_states (102) gains 'hidden': the keys hidden for this
+--      business — the app's one read.
+--
+-- Shops, farms and associations alike: the catalog says per feature which
+-- kinds have it. Nothing changes for any of them until a rule is written.
+--
+-- Re-runnable (the bundle runs twice): tables and indexes if not exists,
+-- catalog rows upserted, triggers dropped and recreated, functions
+-- replaced in place.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1. Tables
+-- ------------------------------------------------------------
+create table if not exists feature_catalog (
+    key                  text primary key,
+    label                text not null,
+    grp                  text not null,
+    kinds                text[] not null,
+    pro_tool             text,
+    default_hidden_kinds text[] not null default '{}',
+    sort                 int not null default 0
+);
+alter table feature_catalog enable row level security;
+comment on table feature_catalog is
+    'What the platform can show or hide (104), per kind of business. Read through platform_feature_board().';
+
+create table if not exists feature_rules (
+    id      uuid primary key default gen_random_uuid(),
+    scope   text not null check (scope in ('kind', 'org')),
+    kind    text,
+    org_id  uuid references orgs(id) on delete cascade,
+    feature text not null references feature_catalog(key) on delete cascade,
+    state   text not null check (state in ('visible', 'hidden')),
+    until   timestamptz,
+    note    text,
+    set_by  uuid references profiles(id) on delete set null,
+    set_at  timestamptz not null default now(),
+    constraint feature_rules_scope_shape check (
+        (scope = 'kind' and kind in ('retail', 'farm', 'association') and org_id is null)
+        or (scope = 'org' and org_id is not null and kind is null))
+);
+create unique index if not exists feature_rules_one_per_kind
+    on feature_rules (kind, feature) where scope = 'kind';
+create unique index if not exists feature_rules_one_per_org
+    on feature_rules (org_id, feature) where scope = 'org';
+alter table feature_rules enable row level security;
+comment on table feature_rules is
+    'A kind''s or one business''s switch (104). Written by platform_set_feature_rule() only.';
+
+create table if not exists platform_actions (
+    id        uuid primary key default gen_random_uuid(),
+    at        timestamptz not null default now(),
+    actor     uuid references profiles(id) on delete set null,
+    org_id    uuid references orgs(id) on delete set null,
+    kind      text not null,
+    summary   text not null,
+    before    jsonb,
+    after     jsonb,
+    undo_fn   text,
+    undo_args jsonb,
+    undone_at timestamptz,
+    undone_by uuid references profiles(id) on delete set null
+);
+create index if not exists platform_actions_by_time on platform_actions (at desc);
+create index if not exists platform_actions_by_org  on platform_actions (org_id, at desc);
+alter table platform_actions enable row level security;
+comment on table platform_actions is
+    'The command center''s journal (104): every platform change, with its undo. Read through platform_actions_page().';
+
+-- The functions platform_undo() may call. Each one takes the action's
+-- undo_args (jsonb) and returns void; each migration adds its own.
+create table if not exists platform_undo_fns (
+    fn text primary key
+);
+alter table platform_undo_fns enable row level security;
+
+-- A Pro tool a rule hides but a payment keeps ('kept'), and the day the
+-- payment ended and the rule took over ('lapsed'): the owner is told once
+-- per lapse, and « À faire » lists them. Written when the business is read
+-- or spends (feature_lapse_watch) — no scheduler, like 084's idle expiry.
+-- No row: no rule hides a tool this business pays for, i.e. today.
+create table if not exists feature_pay_watch (
+    org_id  uuid not null references orgs(id) on delete cascade,
+    feature text not null references feature_catalog(key) on delete cascade,
+    state   text not null check (state in ('kept', 'lapsed')),
+    since   timestamptz not null default now(),
+    primary key (org_id, feature)
+);
+alter table feature_pay_watch enable row level security;
+comment on table feature_pay_watch is
+    'A hidden Pro tool kept by a payment, or lost when it ended (104). Written by feature_lapse_watch() only.';
+
+-- No policies: read and written through the functions below only.
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns,
+                      feature_pay_watch
+            from authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns,
+                      feature_pay_watch
+            from anon;
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 2. The catalog: only what is wired in the app and at the server
+-- ------------------------------------------------------------
+-- Keys are the app's own (031's dial and 066's Pro tools), so one key
+-- means one tool everywhere.
+insert into feature_catalog (key, label, grp, kinds, pro_tool, sort) values
+    ('invoices',    'Factures',                          'Ventes et clients', '{retail,farm,association}', null,         10),
+    ('credits',     'Carnet de crédit',                  'Ventes et clients', '{retail,farm,association}', null,         20),
+    ('corrections', 'Corrections des ventes et livraisons', 'Ventes et clients', '{retail}',               null,         30),
+    ('production',  'Production',                        'Fabrication',       '{retail,farm}',             null,         40),
+    ('tontines',    'Tontines',                          'Épargne',           '{retail,farm,association}', 'tontines',   50),
+    ('payroll',     'Paie et journées',                  'Équipe',            '{retail,farm,association}', 'payroll',    60),
+    ('analytics',   'Analyses',                          'Rapports',          '{retail,farm}',             'analytics',  70),
+    ('accounting',  'Comptabilité',                      'Rapports',          '{retail,farm,association}', 'accounting', 80)
+on conflict (key) do update
+    set label    = excluded.label,
+        grp      = excluded.grp,
+        kinds    = excluded.kinds,
+        pro_tool = excluded.pro_tool,
+        sort     = excluded.sort;
+
+-- ------------------------------------------------------------
+-- 3. Who sees what
+-- ------------------------------------------------------------
+-- The kind a business's rules are read under: a legacy church is an
+-- association.
+create or replace function org_kind(p_org uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select case when o.profile::text = 'church' then 'association' else o.profile::text end
+      from orgs o where o.id = p_org;
+$$;
+
+-- A Pro tool the business paid for: a paid Mara Pro (the plan, until its
+-- date), or the tool — or Mara Pro complet — opened with its own cauris.
+-- What Mara gave (gifted_by) is not a payment.
+create or replace function feature_paid(p_org uuid, p_key text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce((
+        select c.pro_tool is not null
+           and (exists (select 1 from orgs o
+                         where o.id = p_org and o.plan = 'pro'
+                           and (o.plan_until is null
+                                or o.plan_until >= (now() at time zone 'Africa/Ouagadougou')::date))
+                or exists (select 1 from cauris_unlocks u
+                            where u.org_id = p_org
+                              and u.feature in (c.pro_tool, 'pro_all')
+                              and u.until > now()
+                              and u.gifted_by is null))
+          from feature_catalog c where c.key = p_key), false);
+$$;
+
+-- What the rules say, payment aside: the business's rule (unexpired) over
+-- its kind's (unexpired) over the catalog.
+create or replace function feature_rule_hides(p_org uuid, p_key text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+    v_kind  text := org_kind(p_org);
+    v_state text;
+    c       feature_catalog%rowtype;
+begin
+    select * into c from feature_catalog where key = p_key;
+    -- A tool this kind does not have is not hidden — not even by a rule
+    -- left over from the business's former kind (the board shows such a
+    -- rule so it can be cleared; it never decides anything).
+    if not found or v_kind is null or not (v_kind = any (c.kinds)) then
+        return false;
+    end if;
+    select r.state into v_state from feature_rules r
+     where r.scope = 'org' and r.org_id = p_org and r.feature = p_key
+       and (r.until is null or r.until > now());
+    if v_state is null then
+        select r.state into v_state from feature_rules r
+         where r.scope = 'kind' and r.kind = v_kind and r.feature = p_key
+           and (r.until is null or r.until > now());
+    end if;
+    return coalesce(v_state, case when v_kind = any (c.default_hidden_kinds)
+                                  then 'hidden' else 'visible' end) = 'hidden';
+end;
+$$;
+
+-- The rules, and a paid feature is never hidden.
+create or replace function feature_hidden(p_org uuid, p_key text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select feature_rule_hides(p_org, p_key) and not feature_paid(p_org, p_key);
+$$;
+
+-- A Pro tool a rule hides, kept while the business pays: when the payment
+-- ends (the plan's date, the tool's cauris) the rule takes over — the
+-- admin's rule applies — and the owner is told, once per lapse:
+-- « Votre Mara Pro a pris fin : … ». Paid again, it is back ('kept'), and
+-- the next lapse is told again. Run when the business is read
+-- (feature_states) or spends (spend_cauris); with no rule for its kind or
+-- for itself and nothing remembered, it does nothing.
+create or replace function feature_lapse_watch(p_org uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    c      record;
+    v_kind text := org_kind(p_org);
+begin
+    if v_kind is null
+       or (not exists (select 1 from feature_rules r
+                        where (r.scope = 'org' and r.org_id = p_org)
+                           or (r.scope = 'kind' and r.kind = v_kind))
+           and not exists (select 1 from feature_pay_watch w where w.org_id = p_org)) then
+        return;
+    end if;
+    for c in select f.key, f.label from feature_catalog f
+              where f.pro_tool is not null order by f.sort, f.key loop
+        if not feature_rule_hides(p_org, c.key) then
+            delete from feature_pay_watch where org_id = p_org and feature = c.key;
+        elsif feature_paid(p_org, c.key) then
+            insert into feature_pay_watch (org_id, feature, state, since)
+            values (p_org, c.key, 'kept', now())
+            on conflict (org_id, feature) do update set state = 'kept', since = now()
+                where feature_pay_watch.state <> 'kept';
+        else
+            update feature_pay_watch set state = 'lapsed', since = now()
+             where org_id = p_org and feature = c.key and state = 'kept';
+            if found then
+                -- The owner, whoever is reading (notify_org_owners would
+                -- skip an owner who is the one opening the app).
+                insert into notifications (recipient_id, org_id, kind, message, params)
+                select distinct m.user_id, p_org, 'feature_lapsed',
+                       'Votre Mara Pro a pris fin : ' || c.label
+                           || ' n''est plus disponible pour votre activité.',
+                       jsonb_build_object('to', 'shop', 'feature', c.key, 'label', c.label)
+                  from memberships m
+                 where m.org_id = p_org and m.role = 'owner' and not m.is_trainer;
+            end if;
+        end if;
+    end loop;
+end;
+$$;
+
+-- The door: a hidden feature is refused, in French, with its own code.
+-- Called by INVOKER reads too, so it is the app's to execute; it answers
+-- only for a member of the business (Mara's people included), and a
+-- stranger learns nothing from it.
+create or replace function feature_guard(p_org uuid, p_key text)
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if p_org is not null and is_org_member(p_org) and feature_hidden(p_org, p_key) then
+        raise exception 'Cette fonction n''est pas disponible pour votre activité.'
+            using errcode = 'MA002';
+    end if;
+end;
+$$;
+
+-- Every key hidden for this business, in the catalog's order.
+create or replace function features_hidden_for(p_org uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce(jsonb_agg(c.key order by c.sort, c.key), '[]'::jsonb)
+      from feature_catalog c
+     where feature_hidden(p_org, c.key);
+$$;
+
+-- ------------------------------------------------------------
+-- 4. The doors
+-- ------------------------------------------------------------
+-- a) Every write: one trigger per table of each feature, as 031 and 066
+--    guard theirs — the app's functions and a direct write alike. A job
+--    with no signed-in caller passes (feature_guard answers only for a
+--    member of the business).
+create or replace function trg_feature_hidden()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org uuid;
+begin
+    if tg_nargs >= 3 then
+        -- The row names its parent (an invoice's payment names the invoice).
+        execute format('select org_id from %I where id = $1', tg_argv[1])
+           into v_org using (to_jsonb(new) ->> tg_argv[2])::uuid;
+    else
+        v_org := (to_jsonb(new) ->> 'org_id')::uuid;
+    end if;
+    perform feature_guard(v_org, tg_argv[0]);
+    return new;
+end;
+$$;
+
+drop trigger if exists feature_hidden_invoices on invoices;
+create trigger feature_hidden_invoices
+before insert or update on invoices
+for each row execute function trg_feature_hidden('invoices');
+
+drop trigger if exists feature_hidden_invoice_payments on invoice_payments;
+create trigger feature_hidden_invoice_payments
+before insert on invoice_payments
+for each row execute function trg_feature_hidden('invoices', 'invoices', 'invoice_id');
+
+drop trigger if exists feature_hidden_debts on debts;
+create trigger feature_hidden_debts
+before insert on debts
+for each row execute function trg_feature_hidden('credits');
+
+drop trigger if exists feature_hidden_debt_payments on debt_payments;
+create trigger feature_hidden_debt_payments
+before insert on debt_payments
+for each row execute function trg_feature_hidden('credits');
+
+drop trigger if exists feature_hidden_tontines on tontines;
+create trigger feature_hidden_tontines
+before insert on tontines
+for each row execute function trg_feature_hidden('tontines');
+
+drop trigger if exists feature_hidden_tontine_members on tontine_members;
+create trigger feature_hidden_tontine_members
+before insert on tontine_members
+for each row execute function trg_feature_hidden('tontines');
+
+drop trigger if exists feature_hidden_tontine_contributions on tontine_contributions;
+create trigger feature_hidden_tontine_contributions
+before insert on tontine_contributions
+for each row execute function trg_feature_hidden('tontines');
+
+drop trigger if exists feature_hidden_production_runs on production_runs;
+create trigger feature_hidden_production_runs
+before insert or update on production_runs
+for each row execute function trg_feature_hidden('production');
+
+drop trigger if exists feature_hidden_shifts on shifts;
+create trigger feature_hidden_shifts
+before insert on shifts
+for each row execute function trg_feature_hidden('payroll');
+
+drop trigger if exists feature_hidden_staff_payments on staff_payments;
+create trigger feature_hidden_staff_payments
+before insert on staff_payments
+for each row execute function trg_feature_hidden('payroll');
+
+-- b) Every read, and the writes no table trigger can tell apart (a return
+--    is a sale; a corrected delivery is a receipt): each function rebuilt
+--    from its latest definition with one line, feature_guard. Grants are
+--    kept by create or replace.
+-- list_invoices (020): the list, guarded
+create or replace function list_invoices(
+    p_org_id       uuid,
+    p_include_paid boolean default true,
+    p_limit        int     default 200
+)
+returns table (
+    invoice_id    uuid,
+    number        text,
+    customer_name text,
+    issued_on     date,
+    due_on        date,
+    total         numeric,
+    paid          numeric,
+    outstanding   numeric,
+    cancelled     boolean,
+    days_overdue  int
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard(p_org_id, 'invoices');
+    select
+        i.id, i.number, c.name, i.issued_on, i.due_on, i.total,
+        coalesce(p.paid, 0),
+        i.total - coalesce(p.paid, 0),
+        i.cancelled_at is not null,
+        case
+            when i.due_on is null or i.cancelled_at is not null then 0
+            when i.total - coalesce(p.paid, 0) <= 0 then 0
+            else greatest((current_date - i.due_on)::int, 0)
+        end
+    from invoices i
+    join customers c on c.id = i.customer_id
+    left join (
+        select invoice_id, sum(amount) as paid
+          from invoice_payments group by invoice_id
+    ) p on p.invoice_id = i.id
+    where i.org_id = p_org_id
+      and (p_include_paid or i.total - coalesce(p.paid, 0) > 0)
+    order by i.issued_on desc, i.number desc
+    limit greatest(coalesce(p_limit, 200), 1);
+$$;
+
+-- invoice_header (020): one invoice, guarded
+create or replace function invoice_header(p_invoice_id uuid)
+returns table (
+    invoice_id      uuid,
+    number          text,
+    issued_on       date,
+    due_on          date,
+    total           numeric,
+    paid            numeric,
+    outstanding     numeric,
+    cancelled_at    timestamptz,
+    customer_name   text,
+    customer_phone  text,
+    customer_address text,
+    org_name        text,
+    org_address     text,
+    org_phone       text,
+    org_email       text,
+    org_tax_id      text,
+    org_tax_label   text,
+    org_currency    text,
+    invoice_footer  text
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard((select i.org_id from invoices i where i.id = p_invoice_id), 'invoices');
+    select
+        i.id, i.number, i.issued_on, i.due_on, i.total,
+        coalesce(p.paid, 0),
+        i.total - coalesce(p.paid, 0),
+        i.cancelled_at,
+        c.name, c.phone, c.address,
+        o.name, o.address, o.phone, o.email, o.tax_id, o.tax_label,
+        o.default_currency, o.invoice_footer
+    from invoices i
+    join customers c on c.id = i.customer_id
+    join orgs o      on o.id = i.org_id
+    left join (
+        select invoice_id, sum(amount) as paid
+          from invoice_payments group by invoice_id
+    ) p on p.invoice_id = i.id
+    where i.id = p_invoice_id;
+$$;
+
+-- invoice_lines_of (020): its lines, guarded
+create or replace function invoice_lines_of(p_invoice_id uuid)
+returns table (
+    description text,
+    quantity    numeric,
+    unit_price  numeric,
+    amount      numeric
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard((select i.org_id from invoices i where i.id = p_invoice_id), 'invoices');
+    -- The join to invoices is what makes RLS apply: invoice_lines is keyed by
+    -- invoice_id and its own policy is written against the parent, so reading
+    -- through the parent is how the tenant check happens.
+    select l.description, l.quantity, l.unit_price, l.amount
+      from invoice_lines l
+      join invoices i on i.id = l.invoice_id
+     where l.invoice_id = p_invoice_id
+     order by l.id;
+$$;
+
+-- customer_debts (024): the carnet, guarded
+create or replace function customer_debts(p_org_id uuid)
+returns table (
+    customer_id   uuid,
+    customer_name text,
+    phone         text,
+    total_owed    numeric,
+    oldest_debt   timestamptz,
+    open_debts    int
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard(p_org_id, 'credits');
+    select c.id, c.name, c.phone,
+           sum(d.amount - coalesce(p.paid, 0)) as total_owed,
+           min(d.occurred_at) filter (where d.amount > coalesce(p.paid, 0)),
+           count(*) filter (where d.amount > coalesce(p.paid, 0))::int
+      from debts d
+      join customers c on c.id = d.customer_id
+      left join lateral (
+          select sum(amount) as paid from debt_payments where debt_id = d.id
+      ) p on true
+     where d.org_id = p_org_id
+     group by c.id, c.name, c.phone
+    having sum(d.amount - coalesce(p.paid, 0)) > 0
+     order by min(d.occurred_at) filter (where d.amount > coalesce(p.paid, 0));
+$$;
+
+-- debts_of_customer (024): one customer's debts, guarded
+create or replace function debts_of_customer(p_org_id uuid, p_customer_id uuid)
+returns table (
+    debt_id     uuid,
+    label       text,
+    amount      numeric,
+    paid        numeric,
+    remaining   numeric,
+    occurred_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard(p_org_id, 'credits');
+    select d.id, d.label, d.amount, coalesce(p.paid, 0),
+           d.amount - coalesce(p.paid, 0), d.occurred_at
+      from debts d
+      left join lateral (
+          select sum(amount) as paid from debt_payments where debt_id = d.id
+      ) p on true
+     where d.org_id = p_org_id and d.customer_id = p_customer_id
+     order by d.occurred_at;
+$$;
+
+-- tontine_round_status (025): a round, guarded
+create or replace function tontine_round_status(p_tontine_id uuid)
+returns table (
+    member_id     uuid,
+    member_name   text,
+    phone         text,
+    turn_position int,
+    has_paid      boolean,
+    is_taker      boolean
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard((select t.org_id from tontines t where t.id = p_tontine_id), 'tontines');
+    select m.id, m.name, m.phone, m.position,
+           exists (
+               select 1 from tontine_contributions c
+                where c.tontine_id = t.id
+                  and c.member_id = m.id
+                  and c.round = t.current_round),
+           -- The pot rotates: position N takes round N, then N + count.
+           ((t.current_round - 1) % (select count(*) from tontine_members
+                                      where tontine_id = t.id)) + 1 = m.position
+      from tontines t
+      join tontine_members m on m.tontine_id = t.id
+     where t.id = p_tontine_id
+     order by m.position;
+$$;
+
+-- advance_tontine_round (025): closing a round, guarded
+create or replace function advance_tontine_round(p_tontine_id uuid)
+returns int
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org     uuid;
+    v_round   int;
+    v_unpaid  int;
+begin
+    select org_id, current_round into v_org, v_round
+      from tontines where id = p_tontine_id and is_active;
+    if not found then
+        raise exception 'No such tontine';
+    end if;
+    if not can_write_org(v_org) then
+        raise exception 'You cannot manage this tontine';
+    end if;
+    perform feature_guard(v_org, 'tontines');
+
+    select count(*) into v_unpaid
+      from tontine_members m
+     where m.tontine_id = p_tontine_id
+       and not exists (
+           select 1 from tontine_contributions c
+            where c.tontine_id = p_tontine_id
+              and c.member_id = m.id and c.round = v_round);
+    if v_unpaid > 0 then
+        raise exception
+            'Impossible de clore le tour : % membre(s) n''ont pas encore payé',
+            v_unpaid;
+    end if;
+
+    update tontines set current_round = current_round + 1
+     where id = p_tontine_id
+    returning current_round into v_round;
+    return v_round;
+end;
+$$;
+
+-- production_history (026): the batches, guarded
+create or replace function production_history(
+    p_org_id uuid,
+    p_limit  int default 50
+)
+returns table (
+    run_id       uuid,
+    product_name text,
+    quantity     numeric,
+    total_cost   numeric,
+    unit_cost    numeric,
+    occurred_at  timestamptz,
+    inputs       jsonb
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select feature_guard(p_org_id, 'production');
+    select r.id, r.product_name, r.quantity, r.total_cost, r.unit_cost,
+           r.occurred_at,
+           coalesce((
+               select jsonb_agg(jsonb_build_object(
+                          'name', i.name, 'quantity', i.quantity)
+                      order by i.name)
+               from production_inputs i
+               where i.run_id = r.id
+           ), '[]'::jsonb)
+      from production_runs r
+     where r.org_id = p_org_id
+     order by r.occurred_at desc
+     limit p_limit;
+$$;
+
+-- unpaid_shifts (012): what is owed, guarded
+create or replace function unpaid_shifts(p_org_id uuid)
+returns table (
+    employee_id uuid,
+    full_name   text,
+    hours       numeric,
+    shifts      int,
+    owed        numeric
+)
+language sql
+stable
+security invoker
+set search_path = public, auth
+as $$
+    select feature_guard(p_org_id, 'payroll');
+    select
+        e.id, e.full_name,
+        coalesce(sum(s.hours), 0),
+        count(s.id)::int,
+        round(coalesce(sum(s.hours), 0) * e.hourly_rate, 2)
+    from employees e
+    join shifts s on s.employee_id = e.id and s.payment_id is null
+    where e.org_id = p_org_id
+    group by e.id, e.full_name, e.hourly_rate
+    having coalesce(sum(s.hours), 0) > 0
+    order by e.full_name;
+$$;
+
+-- farm_analytics (101): guarded before the Pro lock
+create or replace function farm_analytics(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns jsonb
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+declare
+    v_tz      constant text := 'Africa/Ouagadougou';
+    v_profile text;
+    v_m0      timestamptz;
+    v_m1      timestamptz;
+    v_since   timestamptz := coalesce(p_since, '-infinity'::timestamptz);
+    v_periods jsonb;
+    v_out     jsonb;
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    select profile into v_profile from orgs where id = p_org_id;
+    if v_profile in ('association', 'church') then
+        raise exception 'Les analyses ne concernent pas une association';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    v_m0 := date_trunc('month', now() at time zone v_tz) at time zone v_tz;
+    v_m1 := (date_trunc('month', now() at time zone v_tz) - interval '1 month') at time zone v_tz;
+
+    with periods(key, t0, t1) as (
+        values ('month',      v_m0,    'infinity'::timestamptz),
+               ('last_month', v_m1,    v_m0),
+               ('window',     v_since, 'infinity'::timestamptz)
+    ),
+    money as (
+        select je.created_at, a.type, a.name, jl.debit, jl.credit
+          from journal_lines jl
+          join journal_entries je on je.id = jl.journal_entry_id
+          join accounts a on a.id = jl.account_id
+         where je.org_id = p_org_id
+           and a.type in ('income', 'expense')
+    ),
+    -- A finished order, dated when it was handed over or delivered: the
+    -- sale written at that moment. Before 101 there is no such sale and
+    -- the order's last change is the best date there is.
+    done as (
+        select o.total,
+               coalesce((select s.occurred_at from sales s where s.order_id = o.id),
+                        o.updated_at) as at
+          from orders o
+         where o.org_id = p_org_id and o.status in ('picked_up', 'delivered')
+    )
+    select jsonb_object_agg(pr.key, jsonb_build_object(
+        'income', (select coalesce(sum(m.credit - m.debit), 0) from money m
+                    where m.type = 'income' and m.created_at >= pr.t0 and m.created_at < pr.t1),
+        'expenses', (select coalesce(sum(m.debit - m.credit), 0) from money m
+                      where m.type = 'expense' and m.created_at >= pr.t0 and m.created_at < pr.t1),
+        'eggs', (select coalesce(sum(ep.egg_count), 0) from egg_production ep
+                  where ep.org_id = p_org_id
+                    and ep.produced_on >= (pr.t0 at time zone v_tz)::date
+                    and ep.produced_on <  (pr.t1 at time zone v_tz)::date),
+        'deaths', (select trim_scale(coalesce(sum(fe.quantity), 0)) from flock_events fe
+                    join flocks f on f.id = fe.flock_id
+                   where f.org_id = p_org_id and fe.kind = 'mortality'
+                     and fe.occurred_at >= pr.t0 and fe.occurred_at < pr.t1),
+        'orders', (select count(*) from done d
+                    where d.at >= pr.t0 and d.at < pr.t1),
+        'orders_total', (select coalesce(sum(d.total), 0) from done d
+                          where d.at >= pr.t0 and d.at < pr.t1),
+        'production_cost', (select coalesce(sum(r.total_cost), 0) from production_runs r
+                             where r.org_id = p_org_id
+                               and r.occurred_at >= pr.t0 and r.occurred_at < pr.t1)
+    ))
+      into v_periods
+      from periods pr;
+
+    select jsonb_build_object(
+        'periods', v_periods,
+        -- What sold, best first: the sales' lines (a sale undone by a
+        -- correction is out, as in 043). A finished vitrine order is a
+        -- sale of its own since 101, so it is counted there, once.
+        'products', coalesce((
+            select jsonb_agg(jsonb_build_object('name', x.name, 'units', trim_scale(x.units),
+                                                'revenue', x.revenue)
+                             order by x.revenue desc, x.units desc, x.name)
+              from (
+                select min(s.name) as name, sum(s.quantity) as units,
+                       sum(s.amount) as revenue
+                  from (
+                    select sl.name, sl.quantity, sl.line_total as amount
+                      from sale_lines sl
+                      join sales sa on sa.id = sl.sale_id
+                     where sa.org_id = p_org_id and sa.kind = 'sale'
+                       and not exists (select 1 from sales r where r.reverses_id = sa.id)
+                       and sa.occurred_at >= v_since
+                  ) s
+                 group by lower(btrim(s.name))
+                 limit 50
+              ) x), '[]'::jsonb),
+        -- Where the money went and came from, by the books' own accounts.
+        'expenses', coalesce((
+            select jsonb_agg(jsonb_build_object('name', y.name, 'amount', y.amount)
+                             order by y.amount desc, y.name)
+              from (select a.name, sum(jl.debit - jl.credit) as amount
+                      from journal_lines jl
+                      join journal_entries je on je.id = jl.journal_entry_id
+                      join accounts a on a.id = jl.account_id
+                     where je.org_id = p_org_id and a.type = 'expense'
+                       and je.created_at >= v_since
+                     group by a.name
+                    having sum(jl.debit - jl.credit) > 0) y), '[]'::jsonb),
+        'income', coalesce((
+            select jsonb_agg(jsonb_build_object('name', y.name, 'amount', y.amount)
+                             order by y.amount desc, y.name)
+              from (select a.name, sum(jl.credit - jl.debit) as amount
+                      from journal_lines jl
+                      join journal_entries je on je.id = jl.journal_entry_id
+                      join accounts a on a.id = jl.account_id
+                     where je.org_id = p_org_id and a.type = 'income'
+                       and je.created_at >= v_since
+                     group by a.name
+                    having sum(jl.credit - jl.debit) > 0) y), '[]'::jsonb),
+        -- Each open flock: how many are left, how many died (in all and in
+        -- the window), how well it lays.
+        'flocks', coalesce((
+            select jsonb_agg(jsonb_build_object(
+                       'batch_code', fs.batch_code, 'started', fs.started,
+                       'alive', fs.alive, 'died', fs.died,
+                       'died_window', (select trim_scale(coalesce(sum(fe.quantity), 0)) from flock_events fe
+                                        where fe.flock_id = fs.flock_id and fe.kind = 'mortality'
+                                          and fe.occurred_at >= v_since),
+                       'eggs_7d', fs.eggs_7d, 'lay_rate', fs.lay_rate)
+                   order by fs.batch_code)
+              from flock_status(p_org_id) fs), '[]'::jsonb),
+        -- What was eaten or used, item by item, this month against the last.
+        'feed', coalesce((
+            select jsonb_agg(jsonb_build_object('name', z.name, 'unit', z.unit,
+                                                'month', trim_scale(z.month),
+                                                'last_month', trim_scale(z.last_month),
+                                                'window', trim_scale(z.win))
+                             order by z.win desc, z.name)
+              from (select i.name, i.unit,
+                           coalesce(sum(sm.quantity) filter (where sm.occurred_at >= v_m0), 0) as month,
+                           coalesce(sum(sm.quantity) filter (where sm.occurred_at >= v_m1
+                                                               and sm.occurred_at < v_m0), 0) as last_month,
+                           coalesce(sum(sm.quantity) filter (where sm.occurred_at >= v_since), 0) as win
+                      from stock_movements sm
+                      join items i on i.id = sm.item_id
+                     where sm.org_id = p_org_id and sm.kind = 'consumed'
+                     group by i.id, i.name, i.unit) z
+             where z.win > 0 or z.month > 0 or z.last_month > 0), '[]'::jsonb),
+        -- Money in and out by day, over the window.
+        'daily', coalesce((
+            select jsonb_agg(jsonb_build_object('day', d.day, 'income', d.income,
+                                                'expenses', d.expenses) order by d.day)
+              from (select (je.created_at at time zone v_tz)::date as day,
+                           sum(case when a.type = 'income' then jl.credit - jl.debit else 0 end) as income,
+                           sum(case when a.type = 'expense' then jl.debit - jl.credit else 0 end) as expenses
+                      from journal_lines jl
+                      join journal_entries je on je.id = jl.journal_entry_id
+                      join accounts a on a.id = jl.account_id
+                     where je.org_id = p_org_id and a.type in ('income', 'expense')
+                       and je.created_at >= v_since
+                     group by 1) d), '[]'::jsonb)
+    ) into v_out;
+
+    return v_out;
+end;
+$$;
+
+-- org_sales_headline (101): guarded before the Pro lock
+create or replace function org_sales_headline(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    sale_count      bigint,
+    revenue         numeric,
+    cost            numeric,
+    margin          numeric,
+    units           numeric,
+    avg_basket      numeric,
+    products_sold   bigint
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    with s as (
+        select sa.id, sa.total
+        from sales sa
+        where sa.org_id = p_org_id
+          and sa.kind = 'sale'
+          and not exists (select 1 from sales r where r.reverses_id = sa.id)
+          and (p_since is null or sa.occurred_at >= p_since)
+    ),
+    lines as (
+        select sl.quantity, sl.unit_cost, sl.line_total, sl.name
+        from sale_lines sl
+        join s on s.id = sl.sale_id
+    )
+    select
+        (select count(*) from s),
+        coalesce((select sum(total) from s), 0),
+        coalesce((select sum(quantity * unit_cost) from lines), 0),
+        coalesce((select sum(line_total) from lines), 0)
+            - coalesce((select sum(quantity * unit_cost) from lines), 0),
+        coalesce((select sum(quantity) from lines), 0),
+        case when (select count(*) from s) = 0 then 0
+             else round(coalesce((select sum(total) from s), 0)
+                  / (select count(*) from s), 2) end,
+        (select count(distinct lower(btrim(name))) from lines);
+end;
+$$;
+
+-- org_product_performance (101): guarded before the Pro lock
+create or replace function org_product_performance(
+    p_org_id uuid,
+    p_since  timestamptz default null,
+    p_limit  int default 100
+)
+returns table (
+    name          text,
+    units         numeric,
+    revenue       numeric,
+    margin        numeric,
+    sale_count    bigint,
+    first_sold    timestamptz,
+    last_sold     timestamptz,
+    per_day       numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    with lines as (
+        select lower(btrim(sl.name)) as key,
+               sl.name as raw_name,
+               sl.quantity, sl.unit_cost, sl.line_total, sa.occurred_at
+        from sale_lines sl
+        join sales sa on sa.id = sl.sale_id
+        where sa.org_id = p_org_id
+          and sa.kind = 'sale'
+          and not exists (select 1 from sales r where r.reverses_id = sa.id)
+          and (p_since is null or sa.occurred_at >= p_since)
+    )
+    select
+        min(raw_name),
+        sum(quantity),
+        sum(line_total),
+        sum(line_total) - sum(quantity * unit_cost),
+        count(*),
+        min(occurred_at),
+        max(occurred_at),
+        round(
+            sum(quantity)
+            / greatest(1, extract(epoch from (max(occurred_at) - min(occurred_at))) / 86400.0),
+            2
+        )
+    from lines
+    group by key
+    order by 3 desc
+    limit greatest(1, p_limit);
+end;
+$$;
+
+-- org_sales_by_hour (101): guarded before the Pro lock
+create or replace function org_sales_by_hour(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    hour        int,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        extract(hour from sa.occurred_at)::int,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
+end;
+$$;
+
+-- org_sales_by_weekday (101): guarded before the Pro lock
+create or replace function org_sales_by_weekday(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    dow         int,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        extract(dow from sa.occurred_at)::int,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
+end;
+$$;
+
+-- org_sales_daily (101): guarded before the Pro lock
+create or replace function org_sales_daily(
+    p_org_id uuid,
+    p_since  timestamptz default null
+)
+returns table (
+    day         date,
+    sale_count  bigint,
+    revenue     numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+begin
+    if not has_full_visibility(p_org_id) then
+        raise exception 'You cannot read this business''s analytics';
+    end if;
+    perform feature_guard(p_org_id, 'analytics');
+    if pro_locked(p_org_id, 'analytics') then
+        raise exception 'Kaj Pro : les analyses font partie de Kaj Pro. Ouvrez Compte › Kaj Pro, ou débloquez-les avec vos cauris.';
+    end if;
+
+    return query
+    select
+        (sa.occurred_at at time zone 'UTC')::date,
+        count(*),
+        coalesce(sum(sa.total), 0)
+    from sales sa
+    where sa.org_id = p_org_id
+      and sa.kind = 'sale'
+      and not exists (select 1 from sales r where r.reverses_id = sa.id)
+      and (p_since is null or sa.occurred_at >= p_since)
+    group by 1
+    order by 1;
+end;
+$$;
+
+-- chart_of_accounts (007): the chart, guarded
+create or replace function chart_of_accounts(p_org_id uuid)
+returns table (
+    account_id  uuid,
+    code        text,
+    name        text,
+    type        text,
+    description text,
+    is_active   boolean,
+    balance     numeric,
+    entry_count bigint
+)
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select feature_guard(p_org_id, 'accounting');
+    select
+        a.id, a.code, a.name, a.type, a.description, a.is_active,
+        coalesce(sum(
+            case when a.type in ('asset', 'expense')
+                 then jl.debit - jl.credit
+                 else jl.credit - jl.debit
+            end
+        ), 0),
+        count(jl.id)
+    from accounts a
+    left join journal_lines jl on jl.account_id = a.id
+    where a.org_id = p_org_id
+      and is_org_member(p_org_id)
+    group by a.id, a.code, a.name, a.type, a.description, a.is_active
+    order by a.code;
+$$;
+
+-- create_account (007): a new account, guarded
+create or replace function create_account(
+    p_org_id      uuid,
+    p_name        text,
+    p_type        text,
+    p_description text default null,
+    p_code        text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_name text := btrim(coalesce(p_name, ''));
+    v_id   uuid;
+begin
+    if not is_org_admin(p_org_id) then
+        raise exception 'Only an administrator may change the chart of accounts';
+    end if;
+    perform feature_guard(p_org_id, 'accounting');
+    if v_name = '' then
+        raise exception 'An account needs a name';
+    end if;
+    if account_code_band(p_type) is null then
+        raise exception 'Unknown account type: %', p_type;
+    end if;
+
+    if exists (
+        select 1 from accounts a
+        where a.org_id = p_org_id
+          and a.type = p_type
+          and lower(btrim(a.name)) = lower(v_name)
+    ) then
+        raise exception 'An account called % already exists', v_name;
+    end if;
+
+    insert into accounts (org_id, code, name, type, description, created_by)
+    values (
+        p_org_id,
+        coalesce(nullif(btrim(coalesce(p_code, '')), ''), next_account_code(p_org_id, p_type)),
+        v_name, p_type, nullif(btrim(coalesce(p_description, '')), ''), auth.uid()
+    )
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- trial_balance (069): guarded after the dial
+create or replace function trial_balance(
+    p_org_id uuid, p_from date default null, p_to date default null)
+returns table (code text, name text, type text,
+               total_debit numeric, total_credit numeric, balance numeric)
+language plpgsql stable security definer set search_path = public, auth
+as $$
+begin
+    perform require_feature(p_org_id, 'reports');
+    perform feature_guard(p_org_id, 'accounting');
+    return query select * from trial_balance_core(p_org_id, p_from, p_to);
+end;
+$$;
+
+-- income_statement (069): guarded after the dial
+create or replace function income_statement(
+    p_org_id uuid, p_from date default null, p_to date default null)
+returns table (section text, code text, name text, amount numeric)
+language plpgsql stable security definer set search_path = public, auth
+as $$
+begin
+    perform require_feature(p_org_id, 'reports');
+    perform feature_guard(p_org_id, 'accounting');
+    return query select * from income_statement_core(p_org_id, p_from, p_to);
+end;
+$$;
+
+-- balance_sheet (069): guarded after the dial
+create or replace function balance_sheet(
+    p_org_id uuid, p_as_of date default null)
+returns table (section text, code text, name text, amount numeric)
+language plpgsql stable security definer set search_path = public, auth
+as $$
+begin
+    perform require_feature(p_org_id, 'reports');
+    perform feature_guard(p_org_id, 'accounting');
+    return query select * from balance_sheet_core(p_org_id, p_as_of);
+end;
+$$;
+
+-- account_ledger (069): guarded after the dial
+create or replace function account_ledger(
+    p_org_id uuid, p_account_id uuid,
+    p_from date default null, p_to date default null, p_limit int default 200)
+returns table (entry_id uuid, occurred_at timestamptz, label text, memo text,
+               debit numeric, credit numeric, balance numeric,
+               reversed boolean, recorded_by text)
+language plpgsql stable security definer set search_path = public, auth
+as $$
+begin
+    perform require_feature(p_org_id, 'reports');
+    perform feature_guard(p_org_id, 'accounting');
+    return query select * from account_ledger_core(
+        p_org_id, p_account_id, p_from, p_to, p_limit);
+end;
+$$;
+
+-- reverse_receipt (042): a delivery undone, guarded
+create or replace function reverse_receipt(
+    p_receipt_id uuid,
+    p_reason     text default null
+)
+returns uuid  -- the reversing ledger entry, or null when the delivery booked none
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_rec   stock_receipts%rowtype;
+    v_rev   uuid;
+begin
+    if v_actor is null then
+        raise exception 'reverse_receipt() needs a signed-in caller';
+    end if;
+
+    select * into v_rec from stock_receipts where id = p_receipt_id;
+    if v_rec.id is null then
+        raise exception 'No such delivery';
+    end if;
+
+    if not is_org_admin(v_rec.org_id) then
+        raise exception 'Only an owner or admin can reverse a delivery';
+    end if;
+    perform feature_guard(v_rec.org_id, 'corrections');
+
+    if v_rec.reversed_at is not null then
+        raise exception 'That delivery has already been reversed';
+    end if;
+
+    -- Take back exactly what this delivery added. Stock may go negative, as it
+    -- may on a sale (011): a reversal that drives the count below zero is the
+    -- true statement that the goods have since moved, not a reason to refuse.
+    update products set quantity = quantity - v_rec.quantity
+     where id = v_rec.product_id;
+
+    -- Unwind the purchase in the books, if it posted one. reverse_entry swaps
+    -- the debits and credits into a new entry dated now, so the correction
+    -- lands in the current period and every report built on the ledger nets
+    -- to zero without excluding anything.
+    if v_rec.entry_id is not null then
+        v_rev := reverse_entry(v_rec.entry_id, v_actor,
+                               coalesce(p_reason, 'Correction'));
+    end if;
+
+    update stock_receipts
+       set reversed_at = now(), reversed_by = v_actor
+     where id = p_receipt_id;
+
+    return v_rev;
+end;
+$$;
+
+-- record_return (032): a sale undone, guarded
+create or replace function record_return(
+    p_sale_id     uuid,
+    p_note        text default null,
+    p_client_uuid uuid default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor    uuid := auth.uid();
+    v_org      uuid;
+    v_method   text;
+    v_total    numeric;
+    v_kind     text;
+    v_return   uuid;
+    v_existing uuid;
+    v_line     record;
+    v_entry    uuid;
+begin
+    select org_id, method, total, kind
+      into v_org, v_method, v_total, v_kind
+    from sales where id = p_sale_id;
+
+    if v_org is null then
+        raise exception 'No such sale';
+    end if;
+
+    -- SECURITY (032): a zero-total return posts no entry and so met no gate.
+    if not can_write_org(v_org) then
+        raise exception 'You cannot record a return for this business';
+    end if;
+    perform feature_guard(v_org, 'corrections');
+
+    if v_kind = 'return' then
+        raise exception 'That is already a return';
+    end if;
+    if v_method = 'credit' then
+        raise exception 'A credit sale is settled in the carnet, not by a return';
+    end if;
+    if exists (select 1 from sales where reverses_id = p_sale_id) then
+        raise exception 'That sale has already been returned';
+    end if;
+
+    if p_client_uuid is not null then
+        select id into v_existing from sales
+        where org_id = v_org and client_uuid = p_client_uuid;
+        if v_existing is not null then
+            return v_existing;
+        end if;
+    end if;
+
+    insert into sales (org_id, kind, method, note, total, reverses_id,
+                       recorded_by, client_uuid)
+    values (v_org, 'return', v_method, p_note, v_total, p_sale_id,
+            v_actor, p_client_uuid)
+    returning id into v_return;
+
+    for v_line in select * from sale_lines where sale_id = p_sale_id
+    loop
+        insert into sale_lines (sale_id, product_id, name, quantity,
+                                unit_price, unit_cost, line_total)
+        values (v_return, v_line.product_id, v_line.name, v_line.quantity,
+                v_line.unit_price, v_line.unit_cost, v_line.line_total);
+
+        update products set quantity = quantity + v_line.quantity
+        where id = v_line.product_id;
+    end loop;
+
+    if v_total > 0 then
+        v_entry := record_entry(
+            p_org_id      => v_org,
+            p_amount      => v_total,
+            p_direction   => 'out',
+            p_label       => 'Retour de vente',
+            p_recorded_by => v_actor,
+            p_category    => 'Ventes',
+            p_method      => v_method,
+            p_memo        => p_note,
+            p_details     => jsonb_build_object('reverses', p_sale_id),
+            p_client_uuid => p_client_uuid
+        );
+        update sales set entry_id = v_entry where id = v_return;
+    end if;
+
+    return v_return;
+end;
+$$;
+
+-- spend_cauris (100): no unlock sold for a hidden tool
+create or replace function spend_cauris(p_org_id uuid, p_feature text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_cost   cauris_costs%rowtype;
+    v_org    orgs%rowtype;
+    v_until  timestamptz;
+    v_days   int := cauris_param('cauris_unlock_days', 30);
+    v_after  int;
+begin
+    if not is_org_admin(p_org_id) then
+        raise exception 'Seul un administrateur dépense les cauris de l''entreprise';
+    end if;
+    -- The business moves: a payment that ended under a rule is noticed.
+    perform feature_lapse_watch(p_org_id);
+    -- No cauris for a tool the platform hid here (104).
+    perform feature_guard(p_org_id, c.key) from feature_catalog c where c.pro_tool = p_feature;
+    select * into v_cost from cauris_costs where feature = p_feature;
+    if not found or p_feature = 'photo_slot' then
+        raise exception 'Cet outil ne s''ouvre pas avec des cauris';
+    end if;
+    select * into v_org from orgs where id = p_org_id;
+    if v_cost.min_days > 0 and v_org.created_at > now() - make_interval(days => v_cost.min_days) then
+        raise exception 'Cet outil s''ouvre avec des cauris après % jours sur Mara', v_cost.min_days;
+    end if;
+
+    v_after := cauris_take(p_org_id, v_cost.cost,
+                           p_feature || ':' || gen_random_uuid()::text, p_feature);
+
+    select greatest(coalesce(u.until, now()), now()) + make_interval(days => v_days)
+      into v_until
+      from (select 1) x left join cauris_unlocks u
+        on u.org_id = p_org_id and u.feature = p_feature;
+
+    insert into cauris_unlocks (org_id, feature, until)
+    values (p_org_id, p_feature, v_until)
+    on conflict (org_id, feature) do update
+        set until = excluded.until, updated_at = now(), note = null, gifted_by = null;
+
+    return jsonb_build_object('feature', p_feature, 'until', v_until,
+                              'balance', v_after);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. The journal and its undo
+-- ------------------------------------------------------------
+-- Internal: the platform's functions write their line with it.
+create or replace function platform_log_action(
+    p_org       uuid,
+    p_kind      text,
+    p_summary   text,
+    p_before    jsonb,
+    p_after     jsonb,
+    p_undo_fn   text,
+    p_undo_args jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_id uuid;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if p_undo_fn is not null
+       and not exists (select 1 from platform_undo_fns where fn = p_undo_fn) then
+        raise exception 'Annulation inconnue : %', p_undo_fn;
+    end if;
+    -- clock_timestamp(), not now(): the lines one call writes for many
+    -- businesses (105's bulk) each have their own moment, in order.
+    insert into platform_actions (at, actor, org_id, kind, summary, before, after, undo_fn, undo_args)
+    values (clock_timestamp(), auth.uid(), p_org, coalesce(nullif(btrim(p_kind), ''), 'other'),
+            coalesce(nullif(btrim(p_summary), ''), p_kind), p_before, p_after,
+            p_undo_fn, case when p_undo_fn is null then null else p_undo_args end)
+    returning id into v_id;
+    return v_id;
+end;
+$$;
+
+-- « Annuler »: the action's undo, through the whitelist, once.
+create or replace function platform_undo(p_action uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    a platform_actions%rowtype;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    select * into a from platform_actions where id = p_action for update;
+    if not found then
+        raise exception 'Action introuvable';
+    end if;
+    if a.undone_at is not null then
+        raise exception 'Cette action a déjà été annulée.';
+    end if;
+    if a.undo_fn is null then
+        raise exception 'Cette action ne s''annule pas.';
+    end if;
+    if not exists (select 1 from platform_undo_fns where fn = a.undo_fn) then
+        raise exception 'Annulation inconnue : %', a.undo_fn;
+    end if;
+    execute format('select %I($1)', a.undo_fn) using coalesce(a.undo_args, '{}'::jsonb);
+    update platform_actions set undone_at = now(), undone_by = auth.uid() where id = p_action;
+end;
+$$;
+
+-- The journal: newest first, for one business or all of them. Paged by
+-- (at, id): the next page is p_before = the last line's at and
+-- p_before_id = its id, so lines that share a moment are never skipped.
+drop function if exists platform_actions_page(uuid, int, timestamptz);
+create or replace function platform_actions_page(
+    p_org       uuid        default null,
+    p_limit     int         default 50,
+    p_before    timestamptz default null,
+    p_before_id uuid        default null
+)
+returns table (
+    id              uuid,
+    at              timestamptz,
+    actor_id        uuid,
+    actor_label     text,
+    org_id          uuid,
+    org_name        text,
+    kind            text,
+    summary         text,
+    before          jsonb,
+    after           jsonb,
+    undoable        boolean,
+    undone_at       timestamptz,
+    undone_by_label text
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    return query
+    select a.id, a.at, a.actor,
+           coalesce(nullif(btrim(pa.full_name), ''), 'Mara'),
+           a.org_id, o.name, a.kind, a.summary, a.before, a.after,
+           a.undo_fn is not null and a.undone_at is null
+               and exists (select 1 from platform_undo_fns f where f.fn = a.undo_fn),
+           a.undone_at,
+           case when a.undone_at is not null
+                then coalesce(nullif(btrim(pu.full_name), ''), 'Mara') end
+      from platform_actions a
+      left join orgs o      on o.id  = a.org_id
+      left join profiles pa on pa.id = a.actor
+      left join profiles pu on pu.id = a.undone_by
+     where (p_org is null or a.org_id = p_org)
+       and (p_before is null
+            or a.at < p_before
+            or (a.at = p_before and p_before_id is not null and a.id < p_before_id))
+     order by a.at desc, a.id desc
+     limit greatest(1, least(coalesce(p_limit, 50), 200));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 6. The switchboard
+-- ------------------------------------------------------------
+-- One rule as the journal keeps it (null: « Par défaut »).
+create or replace function feature_rule_json(p_scope text, p_kind text, p_org uuid, p_feature text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select jsonb_build_object('state', r.state, 'until', r.until, 'note', r.note)
+      from feature_rules r
+     where r.feature = p_feature
+       and ((p_scope = 'kind' and r.scope = 'kind' and r.kind = p_kind)
+            or (p_scope = 'org' and r.scope = 'org' and r.org_id = p_org));
+$$;
+
+-- For a kind (p_kind) or one business (p_org): each feature it has, the
+-- switch at that level, what it comes to, and why. A rule left over for a
+-- tool the kind does not have (a business that changed kind) is listed too,
+-- 'leftover' true, so it can be put back « Par défaut »: it decides nothing
+-- (feature_hidden ignores it).
+create or replace function platform_feature_board(p_kind text default null, p_org uuid default null)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind text;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if p_org is not null then
+        v_kind := org_kind(p_org);
+        if v_kind is null then
+            raise exception 'Entreprise inconnue';
+        end if;
+    else
+        v_kind := case when p_kind = 'church' then 'association' else p_kind end;
+        if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+            raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+        end if;
+    end if;
+
+    return coalesce((
+        select jsonb_agg(jsonb_build_object(
+                   'key', c.key,
+                   'label', c.label,
+                   'grp', c.grp,
+                   'kinds', to_jsonb(c.kinds),
+                   'pro_tool', c.pro_tool,
+                   'state', coalesce(own.state, 'default'),
+                   'until', own.until,
+                   'note', own.note,
+                   'effective', case
+                       when not (v_kind = any (c.kinds)) then 'visible'
+                       when p_org is not null then
+                           case when feature_hidden(p_org, c.key) then 'hidden' else 'visible' end
+                       else coalesce(kr.state,
+                                     case when v_kind = any (c.default_hidden_kinds)
+                                          then 'hidden' else 'visible' end)
+                   end,
+                   'source', case
+                       when own.state is not null then case when p_org is null then 'kind' else 'org' end
+                       when p_org is not null and kr.state is not null then 'kind'
+                       else 'catalog'
+                   end,
+                   'paid', p_org is not null and feature_paid(p_org, c.key),
+                   'leftover', not (v_kind = any (c.kinds))
+               ) order by c.sort, c.key)
+          from feature_catalog c
+          left join lateral (
+              select r.state, r.until, r.note from feature_rules r
+               where r.feature = c.key and (r.until is null or r.until > now())
+                 and ((p_org is null and r.scope = 'kind' and r.kind = v_kind)
+                      or (p_org is not null and r.scope = 'org' and r.org_id = p_org))
+          ) own on true
+          left join lateral (
+              select r.state from feature_rules r
+               where r.feature = c.key and r.scope = 'kind' and r.kind = v_kind
+                 and (r.until is null or r.until > now())
+          ) kr on true
+         where v_kind = any (c.kinds) or own.state is not null), '[]'::jsonb);
+end;
+$$;
+
+-- What a kind's switch would touch: the businesses of that kind, how many
+-- keep a switch of their own, how many paid for it (they keep it).
+create or replace function platform_feature_impact(p_kind text, p_feature text, p_state text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind text := case when p_kind = 'church' then 'association' else p_kind end;
+    c      feature_catalog%rowtype;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    -- The same refusals as the switch itself: an impact line is only ever
+    -- drawn for a switch that could be saved.
+    select * into c from feature_catalog where key = p_feature;
+    if not found then
+        raise exception 'Fonction inconnue : %', coalesce(p_feature, '');
+    end if;
+    if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+    end if;
+    if p_state is null or p_state not in ('default', 'visible', 'hidden') then
+        raise exception 'Réglage inconnu : %', coalesce(p_state, '');
+    end if;
+    if not (v_kind = any (c.kinds)) then
+        raise exception 'Cette fonction n''existe pas pour ce type d''activité.';
+    end if;
+    return (
+        with o as (
+            select o.id from orgs o
+             where o.archived_at is null and org_kind(o.id) = v_kind
+        )
+        select jsonb_build_object(
+            'orgs', (select count(*) from o),
+            'overridden', (select count(*) from o
+                            where exists (select 1 from feature_rules r
+                                           where r.scope = 'org' and r.org_id = o.id
+                                             and r.feature = p_feature
+                                             and (r.until is null or r.until > now()))),
+            'paid', case when p_state = 'hidden'
+                         then (select count(*) from o where feature_paid(o.id, p_feature))
+                         else 0 end)
+    );
+end;
+$$;
+
+-- The switch itself. 'default' clears it. A business's paid feature is
+-- never hidden; at the kind's level a paying business simply keeps it.
+-- Logged with its undo; a business's owner is told.
+create or replace function platform_set_feature_rule(
+    p_scope   text,
+    p_kind    text,
+    p_org     uuid,
+    p_feature text,
+    p_state   text,
+    p_until   timestamptz default null,
+    p_note    text        default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind   text := case when p_kind = 'church' then 'association' else p_kind end;
+    v_note   text := nullif(btrim(coalesce(p_note, '')), '');
+    v_before jsonb;
+    v_after  jsonb;
+    v_name   text;
+    v_label  text;
+    c        feature_catalog%rowtype;
+    v_action uuid;
+    v_what   text;
+    v_org    uuid := case when p_scope = 'org' then p_org end;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    select * into c from feature_catalog where key = p_feature;
+    if not found then
+        raise exception 'Fonction inconnue : %', coalesce(p_feature, '');
+    end if;
+    if p_state is null or p_state not in ('default', 'visible', 'hidden') then
+        raise exception 'Réglage inconnu : %', coalesce(p_state, '');
+    end if;
+    if p_until is not null and p_until <= now() then
+        raise exception 'La date de fin doit être dans le futur';
+    end if;
+
+    if p_scope = 'kind' then
+        if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+            raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+        end if;
+    elsif p_scope = 'org' then
+        select name into v_name from orgs where id = p_org;
+        if not found then
+            raise exception 'Entreprise inconnue';
+        end if;
+        v_kind := org_kind(p_org);
+    else
+        raise exception 'Portée inconnue : %', coalesce(p_scope, '');
+    end if;
+    -- A tool the kind does not have is never switched — only a rule left
+    -- over from a former kind may be put back « Par défaut » (cleared).
+    if not (v_kind = any (c.kinds)) and p_state <> 'default' then
+        raise exception 'Cette fonction n''existe pas pour ce type d''activité.';
+    end if;
+    if p_scope = 'org' and p_state = 'hidden' and feature_paid(p_org, p_feature) then
+        raise exception 'Fonction payée par l''activité : elle ne peut pas être masquée.';
+    end if;
+
+    v_before := feature_rule_json(p_scope, v_kind, p_org, p_feature);
+    if p_state = 'default' then
+        delete from feature_rules r
+         where r.feature = p_feature
+           and ((p_scope = 'kind' and r.scope = 'kind' and r.kind = v_kind)
+                or (p_scope = 'org' and r.scope = 'org' and r.org_id = p_org));
+    elsif p_scope = 'kind' then
+        insert into feature_rules (scope, kind, feature, state, until, note, set_by)
+        values ('kind', v_kind, p_feature, p_state, p_until, v_note, auth.uid())
+        on conflict (kind, feature) where scope = 'kind' do update
+            set state = excluded.state, until = excluded.until, note = excluded.note,
+                set_by = excluded.set_by, set_at = now();
+    else
+        insert into feature_rules (scope, org_id, feature, state, until, note, set_by)
+        values ('org', p_org, p_feature, p_state, p_until, v_note, auth.uid())
+        on conflict (org_id, feature) where scope = 'org' do update
+            set state = excluded.state, until = excluded.until, note = excluded.note,
+                set_by = excluded.set_by, set_at = now();
+    end if;
+    v_after := feature_rule_json(p_scope, v_kind, p_org, p_feature);
+
+    -- Nothing moved: nothing to log, nobody to tell.
+    if v_before is not distinct from v_after then
+        return null;
+    end if;
+
+    -- A kind's switch hides a Pro tool: every business of that kind paying
+    -- for it keeps it — remembered, so its owner is told the day the
+    -- payment ends and the tool goes (feature_lapse_watch).
+    if p_scope = 'kind' and p_state = 'hidden' and c.pro_tool is not null then
+        insert into feature_pay_watch (org_id, feature, state, since)
+        select o.id, p_feature, 'kept', now()
+          from orgs o
+         where o.archived_at is null
+           and (case when o.profile::text = 'church' then 'association' else o.profile::text end) = v_kind
+           and feature_paid(o.id, p_feature)
+        on conflict (org_id, feature) do update set state = 'kept', since = now();
+    end if;
+
+    v_label := c.label;
+    v_what := case p_state
+        when 'hidden'  then 'masqué'
+        when 'visible' then 'rendu visible'
+        else 'remis par défaut' end;
+    v_action := platform_log_action(
+        v_org,
+        'feature_rule',
+        '« ' || v_label || ' » ' || v_what || ' — '
+            || case when p_scope = 'kind'
+                    then case v_kind when 'retail' then 'toutes les boutiques'
+                                     when 'farm' then 'toutes les fermes'
+                                     else 'toutes les associations' end
+                    else v_name end
+            || case when p_until is not null
+                    then ' (jusqu''au ' || to_char(p_until at time zone 'Africa/Ouagadougou', 'DD/MM/YYYY') || ')'
+                    else '' end,
+        v_before,
+        v_after,
+        'platform_restore_feature_rule',
+        jsonb_build_object('scope', p_scope, 'kind', case when p_scope = 'kind' then v_kind end,
+                           'org_id', v_org, 'feature', p_feature,
+                           'rule', v_before, 'expect', v_after));
+
+    -- A leftover cleared rings no bell: the business never had that tool.
+    if p_scope = 'org' and v_kind = any (c.kinds) then
+        perform notify_org_owners(p_org, 'feature_rule',
+            case p_state
+                when 'hidden'  then 'Mara a masqué « ' || v_label || ' » pour votre activité.'
+                when 'visible' then 'Mara a rendu « ' || v_label || ' » visible pour votre activité.'
+                else 'Mara a remis « ' || v_label || ' » comme par défaut pour votre activité.' end,
+            jsonb_build_object('feature', p_feature, 'label', v_label, 'state', p_state,
+                               'until', p_until));
+    end if;
+    return v_action;
+end;
+$$;
+
+-- The undo of a switch: the rule as it was — unless it changed since, in
+-- which case the newer action is undone first.
+create or replace function platform_restore_feature_rule(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_scope   text  := p_args->>'scope';
+    v_kind    text  := p_args->>'kind';
+    v_org     uuid  := nullif(p_args->>'org_id', '')::uuid;
+    v_feature text  := p_args->>'feature';
+    v_rule    jsonb := nullif(p_args->'rule', 'null'::jsonb);
+    v_label   text;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if feature_rule_json(v_scope, v_kind, v_org, v_feature)
+       is distinct from nullif(p_args->'expect', 'null'::jsonb) then
+        raise exception 'Ce réglage a changé depuis : annulez d''abord le changement plus récent.';
+    end if;
+    delete from feature_rules r
+     where r.feature = v_feature
+       and ((v_scope = 'kind' and r.scope = 'kind' and r.kind = v_kind)
+            or (v_scope = 'org' and r.scope = 'org' and r.org_id = v_org));
+    if v_rule is not null then
+        insert into feature_rules (scope, kind, org_id, feature, state, until, note, set_by)
+        values (v_scope, case when v_scope = 'kind' then v_kind end,
+                case when v_scope = 'org' then v_org end, v_feature,
+                v_rule->>'state', nullif(v_rule->>'until', '')::timestamptz,
+                v_rule->>'note', auth.uid());
+    end if;
+    if v_scope = 'org' then
+        select label into v_label from feature_catalog where key = v_feature;
+        perform notify_org_owners(v_org, 'feature_rule',
+            case coalesce(v_rule->>'state', 'default')
+                when 'hidden'  then 'Mara a masqué « ' || v_label || ' » pour votre activité.'
+                when 'visible' then 'Mara a rendu « ' || v_label || ' » visible pour votre activité.'
+                else 'Mara a remis « ' || v_label || ' » comme par défaut pour votre activité.' end,
+            jsonb_build_object('feature', v_feature, 'label', v_label,
+                               'state', coalesce(v_rule->>'state', 'default')));
+    end if;
+end;
+$$;
+
+insert into platform_undo_fns (fn) values ('platform_restore_feature_rule')
+on conflict (fn) do nothing;
+
+-- ------------------------------------------------------------
+-- 7. feature_states: 102's, with what the platform hid
+-- ------------------------------------------------------------
+create or replace function feature_states(p_org_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not is_org_member(p_org_id) then
+        return null;
+    end if;
+    perform cauris_expire(p_org_id);
+    -- A Pro tool a rule hides, whose payment just ended: the owner told.
+    perform feature_lapse_watch(p_org_id);
+    return jsonb_build_object(
+        'plan', org_plan(p_org_id),
+        'balance', cauris_balance(p_org_id),
+        'tools', coalesce((
+            select jsonb_agg(jsonb_build_object(
+                       'feature', c.feature,
+                       'cost', c.cost,
+                       'until', u.until,
+                       'gift', u.gifted_by is not null,
+                       'waits_days', case
+                           when c.min_days > 0
+                            and o.created_at > now() - make_interval(days => c.min_days)
+                           then c.min_days - extract(day from now() - o.created_at)::int end
+                   ) order by c.sort)
+              from cauris_costs c
+              cross join orgs o
+              left join cauris_unlocks u
+                on u.org_id = p_org_id and u.feature = c.feature and u.until > now()
+             where o.id = p_org_id and c.feature <> 'photo_slot'), '[]'::jsonb),
+        'progress', org_progress(p_org_id),
+        'wave_allowed', coalesce((select wave_allowed from orgs where id = p_org_id), false),
+        'setup_done', org_setup_done(p_org_id),
+        'first_income', (select case when o.profile::text in ('association', 'church')
+                                     then org_first_income(p_org_id) end
+                           from orgs o where o.id = p_org_id),
+        'promo', cauris_promo_left(p_org_id),
+        'photos', photo_state(p_org_id),
+        'team', team_seats(p_org_id),
+        'hidden', features_hidden_for(p_org_id)
+    );
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- Grants: born closed (063); each opened to whom it is for.
+-- ------------------------------------------------------------
+revoke execute on function org_kind(uuid)                                   from public;
+revoke execute on function feature_paid(uuid, text)                         from public;
+revoke execute on function feature_hidden(uuid, text)                       from public;
+revoke execute on function feature_rule_hides(uuid, text)                   from public;
+revoke execute on function feature_lapse_watch(uuid)                        from public;
+revoke execute on function feature_guard(uuid, text)                        from public;
+revoke execute on function features_hidden_for(uuid)                        from public;
+revoke execute on function trg_feature_hidden()                             from public;
+revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from public;
+revoke execute on function platform_undo(uuid)                              from public;
+revoke execute on function platform_actions_page(uuid, int, timestamptz, uuid)    from public;
+revoke execute on function feature_rule_json(text, text, uuid, text)        from public;
+revoke execute on function platform_feature_board(text, uuid)               from public;
+revoke execute on function platform_feature_impact(text, text, text)        from public;
+revoke execute on function platform_set_feature_rule(text, text, uuid, text, text, timestamptz, text) from public;
+revoke execute on function platform_restore_feature_rule(jsonb)             from public;
+revoke execute on function feature_states(uuid)                             from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function org_kind(uuid)                                   from anon;
+        revoke execute on function feature_paid(uuid, text)                         from anon;
+        revoke execute on function feature_hidden(uuid, text)                       from anon;
+        revoke execute on function feature_rule_hides(uuid, text)                   from anon;
+        revoke execute on function feature_lapse_watch(uuid)                        from anon;
+        revoke execute on function feature_guard(uuid, text)                        from anon;
+        revoke execute on function features_hidden_for(uuid)                        from anon;
+        revoke execute on function trg_feature_hidden()                             from anon;
+        revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from anon;
+        revoke execute on function platform_undo(uuid)                              from anon;
+        revoke execute on function platform_actions_page(uuid, int, timestamptz, uuid)    from anon;
+        revoke execute on function feature_rule_json(text, text, uuid, text)        from anon;
+        revoke execute on function platform_feature_board(text, uuid)               from anon;
+        revoke execute on function platform_feature_impact(text, text, text)        from anon;
+        revoke execute on function platform_set_feature_rule(text, text, uuid, text, text, timestamptz, text) from anon;
+        revoke execute on function platform_restore_feature_rule(jsonb)             from anon;
+        revoke execute on function feature_states(uuid)                             from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- Internal: read by the functions and triggers above, as their owner.
+        revoke execute on function org_kind(uuid)                                   from authenticated;
+        revoke execute on function feature_paid(uuid, text)                         from authenticated;
+        revoke execute on function feature_hidden(uuid, text)                       from authenticated;
+        revoke execute on function feature_rule_hides(uuid, text)                   from authenticated;
+        revoke execute on function feature_lapse_watch(uuid)                        from authenticated;
+        revoke execute on function features_hidden_for(uuid)                        from authenticated;
+        revoke execute on function trg_feature_hidden()                             from authenticated;
+        revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from authenticated;
+        revoke execute on function feature_rule_json(text, text, uuid, text)        from authenticated;
+        revoke execute on function platform_restore_feature_rule(jsonb)             from authenticated;
+        -- The doors; each checks who is asking (the platform's, or a member's).
+        grant execute on function platform_undo(uuid)                              to authenticated;
+        grant execute on function platform_actions_page(uuid, int, timestamptz, uuid)    to authenticated;
+        grant execute on function platform_feature_board(text, uuid)               to authenticated;
+        grant execute on function platform_feature_impact(text, text, text)        to authenticated;
+        grant execute on function platform_set_feature_rule(text, text, uuid, text, text, timestamptz, text) to authenticated;
+        grant execute on function feature_states(uuid)                             to authenticated;
+        -- The INVOKER reads above call it as their caller.
+        grant execute on function feature_guard(uuid, text)                        to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 105_command_center.sql
+-- ============================================================
+-- ============================================================
+-- 105_command_center.sql — Mara's command center: what waits, one search,
+-- several businesses at once, the settings, all written in the journal.
+--
+-- The owner's words: « when signed in with my admin profile, I want an
+-- admin button displayed where I can click and access the admin panel »,
+-- and « everything will be properly wired to the admin command center ».
+-- The app's side is the center itself (the « Admin » pill on every top
+-- bar, the side rail on a computer, the bottom bar on a phone). This is
+-- the server's side, standing on 104's journal (platform_actions,
+-- platform_log_action, platform_undo and its whitelist platform_undo_fns):
+--
+--   1. platform_todo(): the counts « À faire » opens on — requests
+--      waiting, « J'ai payé » to confirm (Mara Pro and the spots), couriers
+--      to check, orders stuck (as 072: waiting over 2 hours, on the road
+--      over 3), businesses silent 30 days, and what ends in the next 7 days
+--      (a Pro plan, a tool opened, promotional cauris, a spot, a rule of
+--      the switchboard), Wave payouts that failed, and the Pro tools a rule
+--      hid again when their payment ended (104's feature_pay_watch).
+--      platform_todo_list(key) gives the rows behind the counts that have
+--      no screen of their own, so every count opens something to act on.
+--      (Refused offline sales are not counted: the server never sees
+--      them — a refused sale stays on the phone that made it.)
+--   2. platform_search(q): one bar for the whole platform — businesses by
+--      name, address (slug), phone or owner; people by name, phone or
+--      e-mail; orders by their number or the customer's name or phone.
+--   3. platform_bulk(action, orgs, args): several businesses ticked at
+--      once — give cauris (or promotional cauris before a date), open a
+--      tool until a date, send a message, archive, restore. It loops the
+--      single doors that already exist (100's platform_give_cauris and
+--      platform_give_unlock, 072's send_platform_message, 014's archive_org
+--      and restore_org) — so every rule of theirs still holds — and writes
+--      one platform_action per business, with its undo where the act can
+--      be taken back. One business refused (a vitrine d'exemple gets no
+--      cauris) never stops the others: each is said with its reason. The
+--      app sends its single gifts and its single archive through here too,
+--      so they are in the journal as well.
+--   4. The undos, whitelisted in platform_undo_fns: a gift of cauris takes
+--      back the gift less what was spent since (never cauris earned after
+--      it; refused when nothing of it is left); a tool opened goes back to
+--      how it was, unless it changed since; an archive is restored, a
+--      restore archived again with its first date and hand; a setting goes
+--      back to its value, unless it changed since. A message
+--      cannot be unsent: it has no undo. The business is told on its bell
+--      when a gift is taken back.
+--   5. platform_settings_board() and platform_set_setting(key, value): the
+--      settings that already exist, read and changed from Réglages. Only a
+--      key already there (never an internal marker), only a value of its
+--      own type (a number for a number, oui/non for oui/non, a text, a list
+--      of words), a whole number from 0 to a billion — a decimal only where
+--      every reader takes one (the delivery fee and reach, the Wave
+--      commission) —, a percentage never above 100;
+--      logged with its before and after, undoable. The app's other places
+--      that change a setting (the Pro console, the Wave console, the
+--      couriers' share, the two-step switch) go through it as well.
+--   6. search_orgs (065's, the Entreprises list): one « Associations »
+--      filter, finding the legacy churches with the associations.
+--
+-- Nothing here changes what any shop, farm or association, or any vitrine,
+-- shows: no setting's value is touched, no table a business reads is
+-- written; the functions only answer the platform. Every one checks
+-- caller_is_platform_admin() on the server and refuses anyone else in
+-- French; every one is born closed (063) and granted by name below.
+-- Re-runnable: functions replaced with their own signatures, the
+-- whitelist inserted with « on conflict do nothing ».
+-- ============================================================
+
+do $$
+begin
+    if to_regclass('public.platform_actions') is null
+       or to_regclass('public.platform_undo_fns') is null
+       or to_regprocedure('public.platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb)') is null then
+        raise exception '105 needs 104 (platform_actions, platform_log_action, platform_undo_fns) applied first';
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 0. One refusal, said once
+-- ------------------------------------------------------------
+create or replace function platform_only()
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 1. À faire
+-- ------------------------------------------------------------
+create or replace function platform_todo()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_week timestamptz := now() + interval '7 days';
+    v_today date := cauris_today();
+begin
+    perform platform_only();
+    return jsonb_build_object(
+        'applications',   (select count(*) from org_applications where status = 'pending'),
+        'pro_paid',       (select count(*) from plan_requests where handled_at is null),
+        'spots_paid',     (select count(*) from promotions where status = 'paid_claimed'),
+        'spots_asked',    (select count(*) from promotions where status = 'requested'),
+        'couriers',       (select count(*) from couriers where status = 'pending'),
+        -- As 072 counted them: waiting over 2 hours, on the road over 3. A
+        -- « picked_up » order is finished (collected at the counter).
+        'orders_stuck',   (select count(*) from orders
+                            where (status = 'pending' and created_at < now() - interval '2 hours')
+                               or (status = 'in_transit' and updated_at < now() - interval '3 hours')),
+        -- The same businesses the list's « Silencieuses (30 j) » filter shows.
+        'silent_30',      (select count(*) from orgs
+                            where archived_at is null and last_activity_at is not null
+                              and last_activity_at < now() - interval '30 days'),
+        'plans_ending',   (select count(*) from orgs
+                            where archived_at is null and plan = 'pro' and plan_until is not null
+                              and plan_until between v_today and v_today + 7),
+        'unlocks_ending', (select count(*) from cauris_unlocks u join orgs o on o.id = u.org_id
+                            where o.archived_at is null and u.until > now() and u.until <= v_week),
+        'promos_ending',  (select count(*) from cauris_promos c join orgs o on o.id = c.org_id
+                            where o.archived_at is null and c.left_points > 0
+                              and c.expires_on > v_today and c.expires_on <= v_today + 7),
+        'spots_ending',   (select count(*) from promotions
+                            where status = 'approved' and ends_at > now() and ends_at <= v_week),
+        'rules_ending',   (select count(*) from feature_rules
+                            where until is not null and until > now() and until <= v_week),
+        'payouts_failed', (select count(*) from wave_payments where payout_status = 'failed'),
+        -- A Pro tool a rule hides, back to hidden when its payment ended
+        -- (104's feature_pay_watch), still hidden now.
+        'features_lapsed', (select count(*) from feature_pay_watch w join orgs o on o.id = w.org_id
+                             where w.state = 'lapsed' and o.archived_at is null
+                               and feature_hidden(w.org_id, w.feature))
+    );
+end;
+$$;
+
+-- The rows behind a count that has no screen of its own.
+create or replace function platform_todo_list(p_key text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_week timestamptz := now() + interval '7 days';
+    v_today date := cauris_today();
+    v_rows jsonb;
+begin
+    perform platform_only();
+    case p_key
+    when 'silent_30' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'at', o.last_activity_at) as r
+              from orgs o
+             where o.archived_at is null and o.last_activity_at is not null
+               and o.last_activity_at < now() - interval '30 days'
+             order by o.last_activity_at limit 200) x;
+    when 'plans_ending' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'at', o.plan_until) as r
+              from orgs o
+             where o.archived_at is null and o.plan = 'pro' and o.plan_until is not null
+               and o.plan_until between v_today and v_today + 7
+             order by o.plan_until limit 200) x;
+    when 'unlocks_ending' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'feature', u.feature, 'gift', u.gifted_by is not null,
+                                      'at', u.until) as r
+              from cauris_unlocks u join orgs o on o.id = u.org_id
+             where o.archived_at is null and u.until > now() and u.until <= v_week
+             order by u.until limit 200) x;
+    when 'promos_ending' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'points', c.left_points, 'at', c.expires_on) as r
+              from cauris_promos c join orgs o on o.id = c.org_id
+             where o.archived_at is null and c.left_points > 0
+               and c.expires_on > v_today and c.expires_on <= v_today + 7
+             order by c.expires_on limit 200) x;
+    when 'spots_ending' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'spot', p.kind, 'at', p.ends_at) as r
+              from promotions p join orgs o on o.id = p.org_id
+             where p.status = 'approved' and p.ends_at > now() and p.ends_at <= v_week
+             order by p.ends_at limit 200) x;
+    when 'rules_ending' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', f.org_id, 'org_name', o.name, 'profile', o.profile,
+                                      'kind', f.kind, 'feature', f.feature, 'state', f.state,
+                                      'at', f.until) as r
+              from feature_rules f left join orgs o on o.id = f.org_id
+             where f.until is not null and f.until > now() and f.until <= v_week
+             order by f.until limit 200) x;
+    when 'orders_stuck' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'order_id', d.id, 'customer', d.customer_name,
+                                      'status', d.status, 'amount', d.total,
+                                      'currency', d.currency,
+                                      'at', case when d.status = 'pending' then d.created_at
+                                                 else d.updated_at end) as r
+              from orders d join orgs o on o.id = d.org_id
+             where (d.status = 'pending' and d.created_at < now() - interval '2 hours')
+                or (d.status = 'in_transit' and d.updated_at < now() - interval '3 hours')
+             order by d.created_at limit 200) x;
+    when 'features_lapsed' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'feature', w.feature, 'label', c.label,
+                                      'at', w.since) as r
+              from feature_pay_watch w
+              join orgs o on o.id = w.org_id
+              join feature_catalog c on c.key = w.feature
+             where w.state = 'lapsed' and o.archived_at is null
+               and feature_hidden(w.org_id, w.feature)
+             order by w.since limit 200) x;
+    when 'payouts_failed' then
+        select jsonb_agg(r order by r->>'at' desc) into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'payment_id', w.id, 'amount', w.payout_amount,
+                                      'currency', w.currency, 'error', w.payout_error,
+                                      'at', w.paid_at) as r
+              from wave_payments w join orgs o on o.id = w.org_id
+             where w.payout_status = 'failed'
+             order by w.paid_at desc nulls last limit 200) x;
+    else
+        raise exception 'Liste inconnue : %', coalesce(p_key, '');
+    end case;
+    return coalesce(v_rows, '[]'::jsonb);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2. One search for the platform
+-- ------------------------------------------------------------
+create or replace function platform_search(p_q text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_q      text := btrim(coalesce(p_q, ''));
+    v_lit    text;
+    v_like   text;
+    v_start  text;
+    v_number text;
+    v_digits text;
+    v_orgs   jsonb;
+    v_people jsonb;
+    v_orders jsonb;
+begin
+    perform platform_only();
+    if length(v_q) < 2 then
+        return jsonb_build_object('businesses', '[]'::jsonb, 'people', '[]'::jsonb,
+                                  'orders', '[]'::jsonb);
+    end if;
+    -- What was typed, literally: a « % » or a « _ » is a character here —
+    -- in every like below (\ is like's own escape).
+    v_lit   := replace(replace(replace(left(v_q, 100), '\', '\\'), '%', '\%'), '_', '\_');
+    v_like  := '%' || v_lit || '%';
+    v_start := v_lit || '%';
+    -- An order is found by the start of its number only when what was
+    -- typed can be one (hex digits and dashes, 4 at least): no other words
+    -- scan every order's number.
+    if v_q ~ '^[0-9A-Fa-f-]{4,36}$' then
+        v_number := lower(v_q) || '%';
+    end if;
+    -- A phone is typed with spaces and without the country, kept with both.
+    v_digits := regexp_replace(v_q, '\D', '', 'g');
+    if length(v_digits) < 4 then v_digits := null; end if;
+
+    select jsonb_agg(r) into v_orgs from (
+        select jsonb_build_object(
+                   'id', o.id, 'name', o.name, 'slug', o.slug, 'profile', o.profile,
+                   'phone', o.phone, 'archived', o.archived_at is not null,
+                   'owner', p.full_name, 'owner_phone', p.phone) as r
+          from orgs o
+          left join lateral (select m.user_id from memberships m
+                              where m.org_id = o.id and m.role = 'owner'
+                              order by m.created_at limit 1) w on true
+          left join profiles p on p.id = w.user_id
+         where o.name ilike v_like or o.slug ilike v_like
+            or p.full_name ilike v_like
+            or (v_digits is not null
+                and (regexp_replace(coalesce(o.phone, ''), '\D', '', 'g') like '%' || v_digits || '%'
+                  or regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') like '%' || v_digits || '%'))
+         order by (o.name ilike v_start) desc, o.archived_at is not null, lower(o.name)
+         limit 8) x;
+
+    select jsonb_agg(r) into v_people from (
+        select jsonb_build_object(
+                   'id', p.id, 'name', p.full_name, 'phone', p.phone, 'email', u.email::text,
+                   'platform', p.is_platform_admin,
+                   'businesses', (select count(distinct m.org_id) from memberships m
+                                   where m.user_id = p.id)) as r
+          from profiles p
+          join auth.users u on u.id = p.id
+         where p.full_name ilike v_like or u.email ilike v_like
+            or (v_digits is not null
+                and regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') like '%' || v_digits || '%')
+         order by (p.full_name ilike v_start) desc, lower(coalesce(p.full_name, u.email, p.phone))
+         limit 8) x;
+
+    select jsonb_agg(r) into v_orders from (
+        select jsonb_build_object(
+                   'id', d.id, 'org_id', d.org_id, 'org_name', o.name, 'profile', o.profile,
+                   'customer', d.customer_name, 'phone', d.phone, 'status', d.status,
+                   'fulfilment', d.fulfilment, 'total', d.total, 'currency', d.currency,
+                   'at', d.created_at) as r
+          from orders d
+          join orgs o on o.id = d.org_id
+         where (v_number is not null and d.id::text like v_number)
+            or d.customer_name ilike v_like
+            or (v_digits is not null
+                and regexp_replace(coalesce(d.phone, ''), '\D', '', 'g') like '%' || v_digits || '%')
+         order by d.created_at desc
+         limit 8) x;
+
+    return jsonb_build_object('businesses', coalesce(v_orgs, '[]'::jsonb),
+                              'people', coalesce(v_people, '[]'::jsonb),
+                              'orders', coalesce(v_orders, '[]'::jsonb));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 3. Several businesses at once
+-- ------------------------------------------------------------
+create or replace function platform_bulk(p_action text, p_orgs uuid[], p_args jsonb default '{}'::jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_args    jsonb := coalesce(p_args, '{}'::jsonb);
+    v_points  int;
+    v_expires date;
+    v_feature text;
+    v_until   date;
+    v_note    text := nullif(btrim(coalesce(v_args->>'note', '')), '');
+    v_message text := nullif(btrim(coalesce(v_args->>'message', '')), '');
+    v_org     uuid;
+    v_name    text;
+    v_archived timestamptz;
+    v_by      uuid;
+    v_kind    text;
+    v_ref     uuid;
+    v_promo   uuid;
+    v_mark    bigint;
+    v_line    bigint;
+    v_before  jsonb;
+    v_after   jsonb;
+    v_res     jsonb;
+    v_open    timestamptz;
+    v_sent    int;
+    v_action  uuid;
+    v_done    int := 0;
+    v_actions jsonb := '[]'::jsonb;
+    v_failed  jsonb := '[]'::jsonb;
+    v_last    jsonb;
+begin
+    perform platform_only();
+    if p_action is null or p_action not in ('cauris', 'unlock', 'message', 'archive', 'restore') then
+        raise exception 'Action inconnue : %', coalesce(p_action, '');
+    end if;
+    if p_orgs is null or cardinality(p_orgs) = 0 then
+        raise exception 'Choisissez au moins une entreprise.';
+    end if;
+    if cardinality(p_orgs) > 500 then
+        raise exception 'Pas plus de 500 entreprises à la fois.';
+    end if;
+
+    -- What is asked is checked once, before any business: a wrong number
+    -- refuses the whole act rather than each business in turn.
+    if p_action = 'cauris' then
+        begin
+            v_points := (v_args->>'points')::int;
+            v_expires := nullif(v_args->>'expires_on', '')::date;
+        exception when others then
+            raise exception 'Le nombre de cauris doit être entre 1 et 100 000';
+        end;
+        if v_points is null or v_points <= 0 or v_points > 100000 then
+            raise exception 'Le nombre de cauris doit être entre 1 et 100 000';
+        end if;
+        if v_expires is not null and v_expires <= cauris_today() then
+            raise exception 'La date doit être après aujourd''hui';
+        end if;
+    elsif p_action = 'unlock' then
+        v_feature := nullif(btrim(coalesce(v_args->>'feature', '')), '');
+        begin
+            v_until := (v_args->>'until')::date;
+        exception when others then
+            raise exception 'La date doit être aujourd''hui ou plus tard';
+        end;
+        -- The same list 100's platform_give_unlock accepts.
+        if v_feature is null or v_feature = 'photo_slot'
+           or not (coalesce(plan_setting('pro_features'), '[]'::jsonb) ? v_feature
+                   or exists (select 1 from cauris_costs where feature = v_feature)) then
+            raise exception 'Outil inconnu : %', coalesce(v_feature, '');
+        end if;
+        if v_until is null or v_until < cauris_today() then
+            raise exception 'La date doit être aujourd''hui ou plus tard';
+        end if;
+    elsif p_action = 'message' then
+        if v_message is null then
+            raise exception 'Le message est vide';
+        end if;
+        if length(v_message) > 500 then
+            raise exception 'Un message tient en 500 caractères';
+        end if;
+    end if;
+
+    for v_org in select distinct u from unnest(p_orgs) u loop
+        select name, archived_at, archived_by, profile into v_name, v_archived, v_by, v_kind
+          from orgs where id = v_org;
+        if not found then
+            v_failed := v_failed || jsonb_build_object('org_id', v_org, 'name', null,
+                                                       'error', 'Entreprise inconnue');
+            continue;
+        end if;
+        begin
+            v_ref := gen_random_uuid();
+            if p_action = 'cauris' then
+                -- The wallet's own lock (100's), held across the gift: the
+                -- one gift line written after the mark is this gift's.
+                -- 100's platform_give_cauris returns the balance, not its
+                -- line, so the line is found by what it wrote — the ledger
+                -- row (and, for promotional cauris, the lot it names) —
+                -- never by « the newest gift ».
+                perform pg_advisory_xact_lock(hashtext('cauris:' || v_org::text));
+                select coalesce(max(id), 0) into v_mark from cauris_ledger where org_id = v_org;
+                v_before := jsonb_build_object('balance', cauris_balance(v_org));
+                v_res := platform_give_cauris(v_org, v_points, v_note, v_expires);
+                select l.id, case when l.reason = 'promo' then l.ref::uuid end
+                  into v_line, v_promo
+                  from cauris_ledger l
+                 where l.org_id = v_org and l.id > v_mark and l.delta = v_points
+                   and l.reason = case when v_expires is null then 'gift' else 'promo' end
+                 order by l.id limit 1;
+                if v_line is null then
+                    raise exception 'Le cadeau n''a pas été écrit';
+                end if;
+                v_after := jsonb_build_object('balance', v_res->'balance', 'points', v_points,
+                                              'expires_on', v_expires, 'note', v_note,
+                                              'promo_id', v_promo);
+                v_action := platform_log_action(
+                    v_org, 'cauris_gift',
+                    'Cauris offerts à ' || v_name || ' : ' || v_points
+                    || case when v_expires is null then ''
+                            else ', à utiliser avant le ' || to_char(v_expires, 'DD/MM/YYYY') end,
+                    v_before, v_after, 'platform_undo_cauris',
+                    jsonb_build_object('org_id', v_org, 'points', v_points,
+                                       'promo_id', v_promo, 'ledger_id', v_line,
+                                       'ref', v_ref));
+            elsif p_action = 'unlock' then
+                -- A tool the kind does not have is not opened (099: an
+                -- association has no analyses and no delivery).
+                if (v_feature = 'analytics' and v_kind not in ('retail', 'farm'))
+                   or (v_feature = 'delivery' and v_kind in ('association', 'church')) then
+                    raise exception 'Cet outil n''existe pas pour ce type d''activité';
+                end if;
+                select jsonb_build_object('until', u.until, 'note', u.note, 'gifted_by', u.gifted_by)
+                  into v_before
+                  from cauris_unlocks u where u.org_id = v_org and u.feature = v_feature;
+                v_open := platform_give_unlock(v_org, v_feature, v_until, v_note);
+                v_res := jsonb_build_object('until', v_open);
+                v_after := jsonb_build_object('feature', v_feature, 'until', v_open, 'note', v_note);
+                v_action := platform_log_action(
+                    v_org, 'unlock_gift',
+                    'Outil ouvert pour ' || v_name || ' : ' || cauris_feature_label(v_feature)
+                    || ' jusqu''au ' || to_char(v_until, 'DD/MM/YYYY'),
+                    jsonb_build_object('feature', v_feature, 'unlock', v_before), v_after,
+                    'platform_undo_unlock',
+                    jsonb_build_object('org_id', v_org, 'feature', v_feature,
+                                       'before', v_before, 'until', v_open));
+            elsif p_action = 'message' then
+                v_sent := send_platform_message(v_org, v_message);
+                v_res := jsonb_build_object('sent', v_sent);
+                v_action := platform_log_action(
+                    v_org, 'message',
+                    'Message à ' || v_name || ' : « ' || left(v_message, 120) || ' »',
+                    null, jsonb_build_object('message', v_message, 'sent', v_sent),
+                    null, null);
+            elsif p_action = 'archive' then
+                if v_archived is not null then
+                    raise exception 'Déjà archivée';
+                end if;
+                perform archive_org(v_org);
+                select archived_at into v_archived from orgs where id = v_org;
+                v_res := jsonb_build_object('archived_at', v_archived);
+                v_action := platform_log_action(
+                    v_org, 'archive', 'Entreprise archivée : ' || v_name,
+                    jsonb_build_object('archived_at', null),
+                    jsonb_build_object('archived_at', v_archived),
+                    'platform_undo_archive',
+                    jsonb_build_object('org_id', v_org, 'archived_at', v_archived));
+            else -- restore
+                if v_archived is null then
+                    raise exception 'Cette entreprise n''est pas archivée';
+                end if;
+                perform restore_org(v_org);
+                v_res := jsonb_build_object('archived_at', null);
+                v_action := platform_log_action(
+                    v_org, 'restore', 'Entreprise restaurée : ' || v_name,
+                    jsonb_build_object('archived_at', v_archived, 'archived_by', v_by),
+                    jsonb_build_object('archived_at', null),
+                    'platform_undo_restore',
+                    jsonb_build_object('org_id', v_org, 'archived_at', v_archived,
+                                       'archived_by', v_by));
+            end if;
+            v_done := v_done + 1;
+            v_actions := v_actions || to_jsonb(v_action);
+            v_last := v_res;
+        exception when others then
+            v_failed := v_failed || jsonb_build_object('org_id', v_org, 'name', v_name,
+                                                       'error', sqlerrm);
+        end;
+    end loop;
+
+    return jsonb_build_object('done', v_done, 'actions', v_actions, 'failed', v_failed,
+                              'result', v_last);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. The undos (called by 104's platform_undo, by name, from its list)
+-- ------------------------------------------------------------
+create or replace function platform_undo_cauris(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org     uuid := (p_args->>'org_id')::uuid;
+    v_points  int  := (p_args->>'points')::int;
+    v_promo   uuid := nullif(p_args->>'promo_id', '')::uuid;
+    v_line    bigint := nullif(p_args->>'ledger_id', '')::bigint;
+    v_ref     text := coalesce(p_args->>'ref', gen_random_uuid()::text);
+    v_balance int;
+    v_left    int;
+    v_spent   int;
+    v_take    int;
+begin
+    perform platform_only();
+    perform pg_advisory_xact_lock(hashtext('cauris:' || v_org::text));
+    perform cauris_expire(v_org);
+    v_balance := greatest(cauris_balance(v_org), 0);
+    if v_promo is not null then
+        -- Promotional cauris are a lot of their own: spending takes from it
+        -- first (100's cauris_take), so what is left of it is exactly what
+        -- may be taken back.
+        select left_points into v_left from cauris_promos where id = v_promo for update;
+        v_take := least(coalesce(v_left, 0), v_balance);
+    else
+        -- Plain cauris mix with what the business earns: never take back
+        -- more than the gift less what was spent since — cauris earned
+        -- after it are the business's own. Spent: every line out of the
+        -- wallet after the gift's own (spending, expiry), but not another
+        -- gift's undo nor a promotional lot's expiry, which are not these.
+        if v_line is null then
+            raise exception 'Ce cadeau est introuvable dans le porte-monnaie : il n''est pas repris.';
+        end if;
+        select coalesce(sum(-l.delta), 0)::int into v_spent
+          from cauris_ledger l
+         where l.org_id = v_org and l.id > v_line and l.delta < 0
+           and l.reason not in ('gift', 'promo')
+           and not (l.reason = 'expired' and l.ref like 'promo:%');
+        v_take := least(coalesce(v_points, 0) - v_spent, v_balance);
+    end if;
+    if v_take <= 0 then
+        raise exception 'Ces cauris ont déjà été dépensés : il n''y a rien à reprendre.';
+    end if;
+    if v_promo is not null then
+        update cauris_promos set left_points = 0, closed_at = coalesce(closed_at, now())
+         where id = v_promo;
+    end if;
+    -- A gift line of its own, negative: the wallet's history says « Cadeau
+    -- de Mara » with the word below, and the league never counts it.
+    insert into cauris_ledger (org_id, delta, reason, ref, note)
+    values (v_org, -v_take, case when v_promo is null then 'gift' else 'promo' end,
+            'undo:' || v_ref, 'Cadeau annulé par Mara');
+    begin
+        perform notify_org_admins(v_org, 'gift_undone',
+            'Mara a repris ' || v_take || ' cauris offerts.',
+            jsonb_build_object('to', 'shop', 'points', v_take));
+    exception when others then
+        null;  -- a bell never blocks the undo
+    end;
+end;
+$$;
+
+create or replace function platform_undo_unlock(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org     uuid := (p_args->>'org_id')::uuid;
+    v_feature text := p_args->>'feature';
+    v_before  jsonb := p_args->'before';
+    v_until   timestamptz := (p_args->>'until')::timestamptz;
+    r         cauris_unlocks%rowtype;
+begin
+    perform platform_only();
+    select * into r from cauris_unlocks where org_id = v_org and feature = v_feature for update;
+    if not found then
+        raise exception 'Cet outil n''est plus ouvert : il n''y a rien à annuler.';
+    end if;
+    if r.until is distinct from v_until then
+        raise exception 'Cet outil a changé depuis (acheté ou prolongé) : il n''est pas annulé.';
+    end if;
+    if v_before is null or jsonb_typeof(v_before) = 'null' then
+        delete from cauris_unlocks where org_id = v_org and feature = v_feature;
+    else
+        update cauris_unlocks
+           set until = (v_before->>'until')::timestamptz,
+               note = v_before->>'note',
+               gifted_by = nullif(v_before->>'gifted_by', '')::uuid,
+               updated_at = now()
+         where org_id = v_org and feature = v_feature;
+    end if;
+    begin
+        perform notify_org_admins(v_org, 'gift_undone',
+            'Mara a annulé l''ouverture de ' || cauris_feature_label(v_feature) || '.',
+            jsonb_build_object('to', 'shop', 'feature', v_feature));
+    exception when others then
+        null;
+    end;
+end;
+$$;
+
+create or replace function platform_undo_archive(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org uuid := (p_args->>'org_id')::uuid;
+begin
+    perform platform_only();
+    if not exists (select 1 from orgs where id = v_org and archived_at is not null) then
+        raise exception 'Cette entreprise n''est plus archivée.';
+    end if;
+    perform restore_org(v_org);
+end;
+$$;
+
+create or replace function platform_undo_restore(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org uuid := (p_args->>'org_id')::uuid;
+    v_at  timestamptz := nullif(p_args->>'archived_at', '')::timestamptz;
+    v_by  uuid := nullif(p_args->>'archived_by', '')::uuid;
+begin
+    perform platform_only();
+    if not exists (select 1 from orgs where id = v_org and archived_at is null) then
+        raise exception 'Cette entreprise est déjà archivée.';
+    end if;
+    perform archive_org(v_org);
+    -- Archived again as it was: its first archive's date and hand, not
+    -- the undo's (the list sorts and says « archivée le … » by them).
+    if v_at is not null then
+        update orgs set archived_at = v_at, archived_by = coalesce(v_by, archived_by)
+         where id = v_org;
+    end if;
+end;
+$$;
+
+create or replace function platform_undo_setting(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_key  text := p_args->>'key';
+    v_now  jsonb;
+begin
+    perform platform_only();
+    select value into v_now from platform_settings where key = v_key for update;
+    if not found then
+        raise exception 'Réglage inconnu : %', coalesce(v_key, '');
+    end if;
+    if v_now is distinct from p_args->'after' then
+        raise exception 'Ce réglage a changé depuis : annulez d''abord le dernier changement.';
+    end if;
+    update platform_settings set value = p_args->'before', updated_at = now()
+     where key = v_key;
+end;
+$$;
+
+insert into platform_undo_fns (fn) values
+    ('platform_undo_cauris'),
+    ('platform_undo_unlock'),
+    ('platform_undo_archive'),
+    ('platform_undo_restore'),
+    ('platform_undo_setting')
+on conflict do nothing;
+
+-- ------------------------------------------------------------
+-- 5. Réglages
+-- ------------------------------------------------------------
+-- Not a Réglages setting: the markers a migration leaves to remember it
+-- ran once, and a key with a page and a checked setter of its own — the
+-- request page (107's application_form, platform_set_application_form),
+-- which only its own setter may write, with its own undo.
+create or replace function platform_setting_internal(p_key text)
+returns boolean
+language sql
+immutable
+set search_path = public
+as $$
+    select p_key like '%\_seeded' or p_key like '%\_marked'
+        or p_key in ('application_form');
+$$;
+
+create or replace function platform_settings_board()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    perform platform_only();
+    return coalesce((
+        select jsonb_object_agg(s.key, jsonb_build_object(
+                   'value', s.value,
+                   'updated_at', s.updated_at,
+                   'changed_by', (select person_name(a.actor) from platform_actions a
+                                   where a.kind = 'setting' and a.after->>'key' = s.key
+                                   order by a.at desc limit 1)))
+          from platform_settings s
+         where not platform_setting_internal(s.key)
+           and jsonb_typeof(s.value) <> 'object'), '{}'::jsonb);
+end;
+$$;
+
+create or replace function platform_set_setting(p_key text, p_value jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_before jsonb;
+    v_type   text;
+    v_num    numeric;
+begin
+    perform platform_only();
+    select value into v_before from platform_settings where key = p_key for update;
+    if not found or platform_setting_internal(p_key) then
+        raise exception 'Réglage inconnu : %', coalesce(p_key, '');
+    end if;
+    v_type := jsonb_typeof(v_before);
+    -- A whole object is a page's, never a single setting.
+    if v_type = 'object' then
+        raise exception 'Réglage inconnu : %', p_key;
+    end if;
+    if p_value is null or jsonb_typeof(p_value) <> v_type then
+        raise exception '%', case v_type
+            when 'number'  then 'Ce réglage attend un nombre.'
+            when 'boolean' then 'Ce réglage attend oui ou non.'
+            when 'string'  then 'Ce réglage attend un texte.'
+            when 'array'   then 'Ce réglage attend une liste.'
+            else 'Ce réglage n''accepte pas cette valeur.' end;
+    end if;
+    if v_type = 'number' then
+        v_num := (p_value #>> '{}')::numeric;
+        if v_num < 0 then
+            raise exception 'Un nombre positif, s''il vous plaît.';
+        end if;
+        if v_num > 1000000000 then
+            raise exception 'Un nombre d''un milliard au plus.';
+        end if;
+        if p_key like '%\_pct' and v_num > 100 then
+            raise exception 'Un pourcentage ne dépasse pas 100.';
+        end if;
+        -- A whole number, but for the five every reader takes as numeric
+        -- (061/069/081/085's delivery fee and reach, 076's commission).
+        -- Every other number is read as an integer (plan_limit,
+        -- cauris_param, a ::int cast: « 12.5 » would break plan_terms(), the
+        -- caps and the leagues), or is a count or a price in francs read
+        -- through 071's spot_setting, where a decimal means nothing.
+        if v_num <> trunc(v_num)
+           and p_key not in ('delivery_base', 'delivery_per_km', 'delivery_max_km',
+                             'delivery_included_km', 'wave_commission_pct') then
+            raise exception 'Un nombre entier, s''il vous plaît.';
+        end if;
+        -- Two switches kept as numbers (093, 097): read as « = 1 ».
+        if p_key in ('vitrine_free_basics', 'path_gates_open') and v_num not in (0, 1) then
+            raise exception 'Ce réglage vaut 0 (non) ou 1 (oui).';
+        end if;
+        -- Written the way an integer reader reads it: « 12 », never « 12.0 ».
+        p_value := case when v_num = trunc(v_num) then to_jsonb(v_num::bigint) else to_jsonb(v_num) end;
+    elsif v_type = 'string' then
+        if length(p_value #>> '{}') > 200 then
+            raise exception 'Un texte de 200 caractères au plus.';
+        end if;
+    elsif v_type = 'array' then
+        if exists (select 1 from jsonb_array_elements(p_value) e
+                    where jsonb_typeof(e) <> 'string') then
+            raise exception 'Ce réglage attend une liste de mots.';
+        end if;
+    end if;
+    if p_value = v_before then
+        return null;  -- nothing changed, nothing to write in the journal
+    end if;
+
+    update platform_settings set value = p_value, updated_at = now() where key = p_key;
+    return platform_log_action(
+        null, 'setting',
+        'Réglage ' || p_key || ' : ' || v_before::text || ' → ' || p_value::text,
+        jsonb_build_object('key', p_key, 'value', v_before),
+        jsonb_build_object('key', p_key, 'value', p_value),
+        'platform_undo_setting',
+        jsonb_build_object('key', p_key, 'before', v_before, 'after', p_value));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 6. The Entreprises list (065's search_orgs): one « Associations »
+-- ------------------------------------------------------------
+-- The center's list filters an association by 'association', and finds
+-- the legacy churches (035) with it — they are associations everywhere
+-- else. Otherwise 065's exactly; its grant is kept by create or replace.
+create or replace function search_orgs(
+    p_query    text    default null,
+    p_profile  text    default null,   -- 'farm' | 'retail' | 'association' (or 'church') | null
+    p_status   text    default 'active', -- 'active' | 'archived' | 'all'
+    p_activity text    default null,   -- 'active7' | 'silent30' | 'never' | 'pro'
+    p_sort     text    default 'activity', -- 'activity' | 'name' | 'newest'
+    p_limit    int     default 50,
+    p_offset   int     default 0
+)
+returns table (
+    org_id           uuid,
+    name             text,
+    slug             text,
+    profile          text,
+    currency         text,
+    archived_at      timestamptz,
+    created_at       timestamptz,
+    last_activity_at timestamptz,
+    member_count     int,
+    total_count      int
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_limit  int := least(greatest(coalesce(p_limit, 50), 1), 200);
+    v_offset int := greatest(coalesce(p_offset, 0), 0);
+    v_query  text := nullif(btrim(coalesce(p_query, '')), '');
+begin
+    if not exists (
+        select 1 from profiles where id = auth.uid() and is_platform_admin
+    ) then
+        raise exception 'Only a platform admin can search every business';
+    end if;
+
+    return query
+    with filtered as (
+        select o.id, o.name, o.slug, o.profile, o.default_currency,
+               o.archived_at, o.created_at, o.last_activity_at,
+               count(*) over () as total
+        from orgs o
+        where
+            -- Status
+            (   coalesce(p_status, 'active') = 'all'
+             or (p_status = 'archived' and o.archived_at is not null)
+             or (coalesce(p_status, 'active') = 'active' and o.archived_at is null))
+            -- Profile
+        and (p_profile is null or o.profile = p_profile
+             -- One « Associations »: today's and the legacy churches (035).
+             or (p_profile in ('association', 'church') and o.profile in ('association', 'church')))
+            -- Activity
+        and (   p_activity is null
+             or (p_activity = 'active7'
+                 and o.last_activity_at > now() - interval '7 days')
+             or (p_activity = 'silent30'
+                 and o.last_activity_at is not null
+                 and o.last_activity_at < now() - interval '30 days')
+             or (p_activity = 'never' and o.last_activity_at is null)
+             or (p_activity = 'pro' and org_plan(o.id) = 'pro'))
+            -- Text: name or slug. Both lowered, so case never matters.
+        and (   v_query is null
+             or lower(o.name) like '%' || lower(v_query) || '%'
+             or lower(o.slug) like '%' || lower(v_query) || '%')
+        order by
+            case when p_sort = 'name'   then lower(o.name) end asc,
+            case when p_sort = 'newest' then o.created_at  end desc,
+            -- Default: the businesses that have done something most recently,
+            -- with the never-active ones last rather than first — a null is
+            -- not "the most recent".
+            case when coalesce(p_sort, 'activity') = 'activity'
+                 then o.last_activity_at end desc nulls last,
+            lower(o.name) asc
+        limit v_limit offset v_offset
+    )
+    -- Only the page pays for this. That is the whole point of the CTE.
+    select f.id, f.name, f.slug, f.profile, f.default_currency,
+           f.archived_at, f.created_at, f.last_activity_at,
+           (select count(*)::int from memberships m where m.org_id = f.id),
+           f.total::int
+    from filtered f;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. Doors
+-- ------------------------------------------------------------
+revoke execute on function platform_only()                         from public;
+revoke execute on function platform_todo()                         from public;
+revoke execute on function platform_todo_list(text)                from public;
+revoke execute on function platform_search(text)                   from public;
+revoke execute on function platform_bulk(text, uuid[], jsonb)      from public;
+revoke execute on function platform_undo_cauris(jsonb)             from public;
+revoke execute on function platform_undo_unlock(jsonb)             from public;
+revoke execute on function platform_undo_archive(jsonb)            from public;
+revoke execute on function platform_undo_restore(jsonb)            from public;
+revoke execute on function platform_undo_setting(jsonb)            from public;
+revoke execute on function platform_setting_internal(text)         from public;
+revoke execute on function platform_settings_board()               from public;
+revoke execute on function platform_set_setting(text, jsonb)       from public;
+revoke execute on function search_orgs(text, text, text, text, text, int, int) from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function platform_only()                     from anon;
+        revoke execute on function platform_todo()                     from anon;
+        revoke execute on function platform_todo_list(text)            from anon;
+        revoke execute on function platform_search(text)               from anon;
+        revoke execute on function platform_bulk(text, uuid[], jsonb)  from anon;
+        revoke execute on function platform_undo_cauris(jsonb)         from anon;
+        revoke execute on function platform_undo_unlock(jsonb)         from anon;
+        revoke execute on function platform_undo_archive(jsonb)        from anon;
+        revoke execute on function platform_undo_restore(jsonb)        from anon;
+        revoke execute on function platform_undo_setting(jsonb)        from anon;
+        revoke execute on function platform_setting_internal(text)     from anon;
+        revoke execute on function platform_settings_board()           from anon;
+        revoke execute on function platform_set_setting(text, jsonb)   from anon;
+        revoke execute on function search_orgs(text, text, text, text, text, int, int) from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- Internal: the refusal, the markers, and the undos, which only
+        -- platform_undo (104) calls, as its owner, from its whitelist.
+        revoke execute on function platform_only()                     from authenticated;
+        revoke execute on function platform_setting_internal(text)     from authenticated;
+        revoke execute on function platform_undo_cauris(jsonb)         from authenticated;
+        revoke execute on function platform_undo_unlock(jsonb)         from authenticated;
+        revoke execute on function platform_undo_archive(jsonb)        from authenticated;
+        revoke execute on function platform_undo_restore(jsonb)        from authenticated;
+        revoke execute on function platform_undo_setting(jsonb)        from authenticated;
+        -- The center's doors; each checks the platform on the server.
+        grant execute on function platform_todo()                      to authenticated;
+        grant execute on function platform_todo_list(text)             to authenticated;
+        grant execute on function platform_search(text)                to authenticated;
+        grant execute on function platform_bulk(text, uuid[], jsonb)   to authenticated;
+        grant execute on function platform_settings_board()            to authenticated;
+        grant execute on function platform_set_setting(text, jsonb)    to authenticated;
+        -- 065's list, for the platform only (it checks on the server).
+        grant execute on function search_orgs(text, text, text, text, text, int, int) to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 106_business_fiche.sql
+-- ============================================================
+-- ============================================================
+-- 106_business_fiche.sql — the fiche entreprise (batch 104, builder D).
+--
+-- The command center opens one business on one page: what it is (its
+-- health, its owner, its plan and cauris, what wants attention), who it is
+-- (its name, kind, address, money, contact lines, verification), its
+-- vitrine, its functions, its team, its Pro and cauris, and its journal.
+-- This migration is that page's server half. It stands on 104's contract
+-- (platform_actions, platform_log_action, platform_undo_fns, platform_undo)
+-- and redefines nothing another migration of this batch owns.
+--
+--   1. platform_org_overview(org): the Aperçu, in one call. Platform only.
+--   2. platform_update_org_identity(...): the Identité. Platform only; the
+--      kind changes only with the business's name typed back; every change
+--      logged before/after with undo, the owner told « Mara a modifié … ».
+--   3. platform_undo_org_columns(args): the one undo for 2 and 4 — puts the
+--      columns back, but only those still as Mara left them (an owner's
+--      later change is never overwritten: the undo is refused instead).
+--      Called by platform_undo only (whitelisted in platform_undo_fns).
+--   4. A trigger on orgs, not wrappers: when a platform admin who is not a
+--      member of the business changes its vitrine (open, text, dressing,
+--      colours, logo, pin, delivery), its identity (name, address, kind,
+--      money, phone, address, verification) or its plan through ANY
+--      function — the owner's own editor opened as Mara, the old console's
+--      sheet, set_org_plan, set_org_verified — the change is logged with
+--      its undo and (vitrine, identity) the owner is told. The functions
+--      that write those columns (052, 053, 061, 065, 069, 080, 081, 088,
+--      093, 103) stay as they are: none is redefined here. One editing
+--      session is one journal line: changes by the same person to the same
+--      part of the same business within 30 minutes, with nothing logged in
+--      between and nothing she set changed since by anyone (the owner
+--      included), are folded into the line already open (its « before »
+--      kept, its « after » brought forward) and the owner is told once.
+--      A kind changed through 103's update_org rings 103's own bell only.
+--      A platform function that logs its own action sets the transaction's
+--      mara.logged_write so the trigger does not log it twice (2 and 3 do).
+--
+-- Kinds: every part applies to a shop ('retail'), a farm and an association
+-- ('association', legacy 'church') alike; the verification (088) is an
+-- association's only, as it is today. A kind change seeds the new kind's
+-- chart of accounts (additive, idempotent: nothing is removed).
+--
+-- P1: nothing a business or a vitrine shows is read from anything new
+-- here; the trigger only writes the journal and the bell.
+--
+-- Re-runnable: functions replaced in place, the trigger dropped and
+-- recreated, the whitelist row inserted on conflict do nothing.
+-- ============================================================
+
+do $$
+begin
+    if to_regclass('public.platform_actions') is null
+       or to_regclass('public.platform_undo_fns') is null
+       or to_regprocedure('public.platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb)') is null then
+        raise exception '106 needs 104 (platform_actions, platform_log_action, platform_undo_fns) applied first';
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 0. What the fiche watches, and the words for it (internal)
+-- ------------------------------------------------------------
+
+-- The business's columns, by the part of the fiche they belong to.
+create or replace function mara_edit_columns(p_what text)
+returns text[]
+language sql
+immutable
+as $$
+    select case p_what
+        when 'vitrine'  then array['storefront_enabled', 'storefront_blurb', 'storefront_style',
+                                   'theme', 'logo_key', 'lat', 'lng',
+                                   'delivery_base', 'delivery_per_km', 'delivery_max_km',
+                                   'delivery_included_km']
+        when 'identity' then array['name', 'slug', 'profile', 'default_currency',
+                                   'phone', 'address', 'verified_at', 'verified_by']
+        when 'plan'     then array['plan', 'plan_until', 'plan_note']
+        else array[]::text[]
+    end;
+$$;
+
+-- The columns of [p_obj] that belong to the part, in the part's own order
+-- (a jsonb object keeps its keys by length, which is no order to read in).
+create or replace function mara_edit_keys(p_what text, p_obj jsonb)
+returns text[]
+language sql
+immutable
+as $$
+    select coalesce(array_agg(c order by n), '{}')
+      from unnest(mara_edit_columns(p_what)) with ordinality as x(c, n)
+     where coalesce(p_obj, '{}'::jsonb) ? c;
+$$;
+
+-- « nom, adresse web » — the French words for the columns changed, once each.
+create or replace function mara_edit_words(p_cols text[])
+returns text
+language sql
+immutable
+as $$
+    select string_agg(w, ', ' order by o)
+      from (
+        select distinct on (w) w, o
+          from (
+            select case c
+                when 'storefront_enabled'   then 'ouverture'
+                when 'storefront_blurb'     then 'présentation'
+                when 'storefront_style'     then 'habillage'
+                when 'theme'                then 'couleurs'
+                when 'logo_key'             then 'logo'
+                when 'lat'                  then 'position'
+                when 'lng'                  then 'position'
+                when 'delivery_base'        then 'livraison'
+                when 'delivery_per_km'      then 'livraison'
+                when 'delivery_max_km'      then 'livraison'
+                when 'delivery_included_km' then 'livraison'
+                when 'name'                 then 'nom'
+                when 'slug'                 then 'adresse web'
+                when 'profile'              then 'type d''activité'
+                when 'default_currency'     then 'monnaie'
+                when 'phone'                then 'téléphone'
+                when 'address'              then 'adresse'
+                when 'verified_at'          then 'vérification'
+                when 'verified_by'          then 'vérification'
+                when 'plan'                 then 'formule'
+                when 'plan_until'           then 'date de fin'
+                when 'plan_note'            then 'note'
+                else c
+            end as w, ordinality as o
+              from unnest(p_cols) with ordinality c
+          ) x
+         order by w, o
+      ) y;
+$$;
+
+-- The journal's line for one part: « Vitrine : présentation, logo ».
+create or replace function mara_edit_summary(p_what text, p_after jsonb)
+returns text
+language sql
+stable
+as $$
+    select case p_what
+        when 'vitrine'  then 'Vitrine : '
+        when 'identity' then 'Identité : '
+        when 'plan'     then 'Formule : '
+        else ''
+    end
+    || case
+        when p_what = 'plan' and p_after ? 'plan' and p_after ->> 'plan' = 'pro'
+            then 'Mara Pro'
+                 || case when nullif(p_after ->> 'plan_until', '') is not null
+                         then ' jusqu''au ' || to_char((p_after ->> 'plan_until')::date, 'DD/MM/YYYY')
+                         else ' sans date de fin' end
+        when p_what = 'plan' and p_after ? 'plan'
+            then 'Mara (gratuit)'
+        else coalesce(mara_edit_words(mara_edit_keys(p_what, p_after)), '')
+    end;
+$$;
+
+-- What the owner's bell says when Mara changed a part, and when she took
+-- it back. The plan rings no bell: it is the platform's, not the owner's.
+create or replace function mara_edit_message(p_what text, p_cols text[], p_undone boolean)
+returns text
+language sql
+immutable
+as $$
+    select case
+        when p_undone and p_what = 'vitrine'
+            then 'Mara a annulé sa modification de votre vitrine'
+        when p_undone
+            then 'Mara a annulé sa modification de l''identité de votre activité'
+        when p_what = 'vitrine'
+            then 'Mara a modifié votre vitrine'
+        else 'Mara a modifié l''identité de votre activité : ' || coalesce(mara_edit_words(p_cols), '')
+    end;
+$$;
+
+-- ------------------------------------------------------------
+-- 1. Aperçu
+-- ------------------------------------------------------------
+create or replace function platform_org_overview(p_org uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    o        orgs%rowtype;
+    v_owner  jsonb;
+    v_days   int;
+    v_health text;
+    v_alerts jsonb := '[]'::jsonb;
+    v_today  date := (now() at time zone 'Africa/Ouagadougou')::date;
+    v_n      int;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à l''équipe Mara';
+    end if;
+    select * into o from orgs where id = p_org;
+    if not found then
+        raise exception 'Entreprise inconnue';
+    end if;
+
+    select jsonb_build_object(
+               'user_id', m.user_id,
+               'name',    person_name(m.user_id),
+               'phone',   coalesce(nullif(btrim(p.phone), ''), u.phone),
+               'email',   u.email)
+      into v_owner
+      from memberships m
+      left join profiles p on p.id = m.user_id
+      left join auth.users u on u.id = m.user_id
+     where m.org_id = p_org and m.role = 'owner' and not m.is_trainer
+     order by m.created_at
+     limit 1;
+
+    v_days := case when o.last_activity_at is null then null
+                   else extract(day from now() - o.last_activity_at)::int end;
+    v_health := case
+        when o.archived_at is not null then 'archived'
+        when o.last_activity_at is null then 'never'
+        when v_days >= 30 then 'silent'
+        when v_days >= 7 then 'slowing'
+        else 'healthy'
+    end;
+
+    -- What wants attention, most urgent first.
+    if o.suspended_at is not null then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'suspended', 'at', o.suspended_at);
+    end if;
+    select count(*) into v_n from plan_requests r where r.org_id = p_org and r.handled_at is null;
+    if v_n > 0 then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'paid_claim', 'n', v_n);
+    end if;
+    select count(*) into v_n from promotions s
+     where s.org_id = p_org and s.status in ('requested', 'paid_claimed');
+    if v_n > 0 then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'promotion', 'n', v_n);
+    end if;
+    if o.plan = 'pro' and o.plan_until is not null
+       and o.plan_until between v_today and v_today + 7 then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'pro_ending', 'until', o.plan_until);
+    end if;
+    select count(*) into v_n from cauris_unlocks u
+     where u.org_id = p_org and u.until > now() and u.until <= now() + interval '7 days';
+    if v_n > 0 then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'unlock_ending', 'n', v_n);
+    end if;
+    select count(*) into v_n from feature_rules r
+     where r.scope = 'org' and r.org_id = p_org
+       and r.until is not null and r.until > now() and r.until <= now() + interval '7 days';
+    if v_n > 0 then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'rule_ending', 'n', v_n);
+    end if;
+    if o.archived_at is null and v_health in ('silent', 'never') then
+        v_alerts := v_alerts || jsonb_build_object('kind', v_health, 'days', v_days);
+    end if;
+    if o.archived_at is null and not org_setup_done(p_org) then
+        v_alerts := v_alerts || jsonb_build_object('kind', 'setup');
+    end if;
+
+    return jsonb_build_object(
+        'id',               o.id,
+        'name',             o.name,
+        'slug',             o.slug,
+        'profile',          o.profile,
+        'association_kind', o.association_kind,
+        'currency',         o.default_currency,
+        'phone',            o.phone,
+        'address',          o.address,
+        'city',             o.city,
+        'created_at',       o.created_at,
+        'archived_at',      o.archived_at,
+        'suspended_at',     o.suspended_at,
+        'verified_at',      o.verified_at,
+        'showcase',         o.showcase,
+        'wave_allowed',     o.wave_allowed,
+        'setup_done',       org_setup_done(p_org),
+        'health',           v_health,
+        'last_activity_at', o.last_activity_at,
+        'days_silent',      v_days,
+        'owner',            v_owner,
+        'members',          (select count(distinct m.user_id) from memberships m
+                              where m.org_id = p_org and not m.is_trainer),
+        'roles',            coalesce((select jsonb_object_agg(r.role, r.n)
+                                        from (select m.role::text as role, count(distinct m.user_id) as n
+                                                from memberships m
+                                               where m.org_id = p_org and not m.is_trainer
+                                               group by m.role) r), '{}'::jsonb),
+        'plan',             org_plan(p_org),
+        'plan_raw',         o.plan,
+        'plan_until',       o.plan_until,
+        'plan_note',        o.plan_note,
+        'cauris',           cauris_balance(p_org),
+        'promo',            cauris_promo_left(p_org),
+        'unlocks',          coalesce((select jsonb_agg(jsonb_build_object(
+                                            'feature', u.feature, 'until', u.until,
+                                            'gift', u.gifted_by is not null, 'note', u.note)
+                                          order by u.until)
+                                        from cauris_unlocks u
+                                       where u.org_id = p_org and u.until > now()), '[]'::jsonb),
+        'vitrine',          jsonb_build_object(
+                                'open', o.storefront_enabled,
+                                'published', (select count(*) from products p
+                                               where p.org_id = p_org and p.is_active and p.is_published)),
+        'rules',            (select count(*) from feature_rules r
+                              where r.scope = 'org' and r.org_id = p_org),
+        'actions',          (select count(*) from platform_actions a
+                              where a.org_id = p_org and a.undone_at is null),
+        'last_action_at',   (select max(a.at) from platform_actions a where a.org_id = p_org),
+        'alerts',           v_alerts
+    );
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2. Identité
+-- ------------------------------------------------------------
+-- Null leaves a field as it is; an empty phone or address clears it. The
+-- kind changes only with the business's present name typed back in
+-- [p_confirm]. Returns the journal line, or null when nothing changed.
+create or replace function platform_update_org_identity(
+    p_org      uuid,
+    p_name     text    default null,
+    p_profile  text    default null,
+    p_slug     text    default null,
+    p_currency text    default null,
+    p_phone    text    default null,
+    p_address  text    default null,
+    p_verified boolean default null,
+    p_confirm  text    default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    o         orgs%rowtype;
+    v_old     jsonb;
+    v_new     jsonb;
+    v_before  jsonb := '{}'::jsonb;
+    v_after   jsonb := '{}'::jsonb;
+    v_name    text := nullif(btrim(coalesce(p_name, '')), '');
+    v_profile text := nullif(btrim(coalesce(p_profile, '')), '');
+    v_slug    text := nullif(lower(btrim(coalesce(p_slug, ''))), '');
+    v_cur     text := nullif(upper(btrim(coalesce(p_currency, ''))), '');
+    v_problem text;
+    v_col     text;
+    v_cols    text[];
+    v_action  uuid;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à l''équipe Mara';
+    end if;
+    select * into o from orgs where id = p_org for update;
+    if not found then
+        raise exception 'Entreprise inconnue';
+    end if;
+    if o.archived_at is not null then
+        raise exception 'Cette activité est archivée : restaurez-la avant de la modifier';
+    end if;
+    if p_name is not null and v_name is null then
+        raise exception 'Le nom de l''activité ne peut pas être vide';
+    end if;
+    if v_slug is not null and v_slug is distinct from o.slug then
+        v_problem := org_slug_problem(v_slug);
+        if v_problem is not null then
+            raise exception '%', v_problem;
+        end if;
+        if exists (select 1 from orgs where slug = v_slug and id <> p_org) then
+            raise exception 'Cette adresse est déjà prise';
+        end if;
+    end if;
+    if v_profile is not null and v_profile is distinct from o.profile::text then
+        if v_profile not in ('retail', 'farm', 'association') then
+            raise exception 'Type d''activité inconnu : %', v_profile;
+        end if;
+        if lower(btrim(coalesce(p_confirm, ''))) <> lower(btrim(o.name)) then
+            raise exception 'Pour changer le type d''activité, tapez le nom de l''activité : %', o.name;
+        end if;
+    end if;
+    if v_cur is not null and v_cur !~ '^[A-Z]{3}$' then
+        raise exception 'Monnaie inconnue : %', p_currency;
+    end if;
+    if p_verified is not null
+       and p_verified is distinct from (o.verified_at is not null)
+       and coalesce(v_profile, o.profile::text) not in ('association', 'church') then
+        raise exception 'La vérification par Mara concerne les associations';
+    end if;
+
+    v_old := to_jsonb(o);
+    perform set_config('mara.logged_write', 'on', true);
+    update orgs set
+        name             = coalesce(v_name, name),
+        slug             = coalesce(v_slug, slug),
+        profile          = coalesce(v_profile, profile::text),
+        default_currency = coalesce(v_cur, default_currency),
+        phone            = case when p_phone is null then phone
+                                else nullif(btrim(p_phone), '') end,
+        address          = case when p_address is null then address
+                                else nullif(btrim(p_address), '') end,
+        verified_at      = case when p_verified is null then verified_at
+                                when p_verified then coalesce(verified_at, now()) end,
+        verified_by      = case when p_verified is null then verified_by
+                                when p_verified then coalesce(verified_by, auth.uid()) end
+     where id = p_org
+    returning to_jsonb(orgs) into v_new;
+    perform set_config('mara.logged_write', '', true);
+
+    foreach v_col in array mara_edit_columns('identity') loop
+        if v_old -> v_col is distinct from v_new -> v_col then
+            v_before := v_before || jsonb_build_object(v_col, v_old -> v_col);
+            v_after  := v_after  || jsonb_build_object(v_col, v_new -> v_col);
+        end if;
+    end loop;
+    if v_before = '{}'::jsonb then
+        return null;
+    end if;
+
+    -- A new kind finds its own chart of accounts (create_org's, 035);
+    -- nothing of the old one is removed.
+    if v_after ? 'profile' then
+        case v_after ->> 'profile'
+            when 'association' then perform seed_church_accounts(p_org);
+            when 'retail'      then perform seed_retail_accounts(p_org);
+            when 'farm'        then perform seed_farm_accounts(p_org);
+            else null;
+        end case;
+    end if;
+
+    v_action := platform_log_action(p_org, 'identity',
+        mara_edit_summary('identity', v_after), v_before, v_after,
+        'platform_undo_org_columns',
+        jsonb_build_object('org', p_org, 'what', 'identity',
+                           'before', v_before, 'after', v_after));
+    v_cols := mara_edit_keys('identity', v_after);
+    perform notify_org_owners(p_org, 'mara_edited',
+        mara_edit_message('identity', v_cols, false),
+        jsonb_build_object('what', 'identity', 'fields', to_jsonb(v_cols), 'action', v_action));
+    return v_action;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 3. The undo: the columns back, if nobody changed them since
+-- ------------------------------------------------------------
+-- [p_args] is what the journal line carries: {org, what, before, after}.
+-- A plan undone puts back the plan's three columns and nothing else: the
+-- « J'ai payé » requests (plan_requests) are not the plan's — set_org_plan
+-- never writes them, « Marquer traité » (handle_plan_request) is its own
+-- act, saying the platform looked at its Wave app — so a request handled
+-- stays handled, and one still open stays open in « À faire ».
+create or replace function platform_undo_org_columns(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org    uuid := nullif(p_args ->> 'org', '')::uuid;
+    v_what   text := p_args ->> 'what';
+    v_before jsonb := coalesce(p_args -> 'before', '{}'::jsonb);
+    v_after  jsonb := coalesce(p_args -> 'after', '{}'::jsonb);
+    v_now    jsonb;
+    v_col    text;
+    v_sets   text[] := '{}';
+    v_cols   text[];
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à l''équipe Mara';
+    end if;
+    if v_what not in ('vitrine', 'identity', 'plan')
+       or jsonb_typeof(v_before) <> 'object' or v_before = '{}'::jsonb then
+        raise exception 'Rien à annuler';
+    end if;
+    select to_jsonb(o) into v_now from orgs o where o.id = v_org for update;
+    if v_now is null then
+        raise exception 'Entreprise inconnue';
+    end if;
+    if exists (select 1 from jsonb_object_keys(v_before) k
+                where not k = any (mara_edit_columns(v_what))) then
+        raise exception 'Rien à annuler';
+    end if;
+    foreach v_col in array mara_edit_keys(v_what, v_before) loop
+        -- Somebody changed it after Mara: theirs wins, and the undo says so.
+        if (v_now -> v_col) is distinct from (v_after -> v_col) then
+            raise exception 'Annulation impossible : « % » a été modifié depuis',
+                mara_edit_words(array[v_col]);
+        end if;
+        v_sets := v_sets || format('%I = r.%I', v_col, v_col);
+    end loop;
+    if v_before ? 'slug' and exists (
+        select 1 from orgs where slug = v_before ->> 'slug' and id <> v_org) then
+        raise exception 'Annulation impossible : l''ancienne adresse est prise par une autre activité';
+    end if;
+
+    perform set_config('mara.logged_write', 'on', true);
+    execute format('update orgs o set %s from jsonb_populate_record(null::orgs, $1) r where o.id = $2',
+                   array_to_string(v_sets, ', '))
+      using v_before, v_org;
+    perform set_config('mara.logged_write', '', true);
+
+    if v_what in ('vitrine', 'identity') then
+        v_cols := mara_edit_keys(v_what, v_before);
+        perform notify_org_owners(v_org, 'mara_undone',
+            mara_edit_message(v_what, v_cols, true),
+            jsonb_build_object('what', v_what, 'fields', to_jsonb(v_cols)));
+    end if;
+end;
+$$;
+
+insert into platform_undo_fns (fn) values ('platform_undo_org_columns')
+on conflict do nothing;
+
+-- ------------------------------------------------------------
+-- 4. Mara's hand on a business she is not a member of: logged, told
+-- ------------------------------------------------------------
+create or replace function trg_orgs_mara_edit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_uid    uuid := auth.uid();
+    v_old    jsonb := to_jsonb(old);
+    v_new    jsonb := to_jsonb(new);
+    v_what   text;
+    v_col    text;
+    v_before jsonb;
+    v_after  jsonb;
+    v_open   platform_actions%rowtype;
+    v_action uuid;
+    v_cols   text[];
+begin
+    if v_uid is null
+       or coalesce(current_setting('mara.logged_write', true), '') = 'on'
+       or not caller_is_platform_admin()
+       or exists (select 1 from memberships m where m.org_id = new.id and m.user_id = v_uid) then
+        return null;
+    end if;
+
+    foreach v_what in array array['vitrine', 'identity', 'plan'] loop
+        v_before := '{}'::jsonb;
+        v_after  := '{}'::jsonb;
+        foreach v_col in array mara_edit_columns(v_what) loop
+            if v_old -> v_col is distinct from v_new -> v_col then
+                v_before := v_before || jsonb_build_object(v_col, v_old -> v_col);
+                v_after  := v_after  || jsonb_build_object(v_col, v_new -> v_col);
+            end if;
+        end loop;
+        continue when v_before = '{}'::jsonb;
+
+        -- The line still open: the newest of this business's journal, by the
+        -- same person, for the same part, not undone, under 30 minutes old —
+        -- and still as Mara left it: every column the line holds is still
+        -- at its « after » (nobody, the owner included, changed one since).
+        -- Otherwise a new line, so its undo gives back the owner's value
+        -- and not the one before theirs.
+        select a.* into v_open
+          from platform_actions a
+         where a.org_id = new.id
+         order by a.at desc, a.id desc
+         limit 1;
+        if v_open.id is not null
+           and v_open.kind = v_what
+           and v_open.actor = v_uid
+           and v_open.undone_at is null
+           and v_open.undo_fn = 'platform_undo_org_columns'
+           and v_open.at > now() - interval '30 minutes'
+           and not exists (select 1 from jsonb_object_keys(coalesce(v_open.after, '{}'::jsonb)) k
+                            where (v_old -> k) is distinct from (v_open.after -> k)) then
+            -- The first « before » of each column stands; the newest « after ».
+            v_before := v_before || coalesce(v_open.before, '{}'::jsonb);
+            v_after  := coalesce(v_open.after, '{}'::jsonb) || v_after;
+            update platform_actions
+               set before    = v_before,
+                   after     = v_after,
+                   summary   = mara_edit_summary(v_what, v_after),
+                   undo_args = jsonb_build_object('org', new.id, 'what', v_what,
+                                                  'before', v_before, 'after', v_after)
+             where id = v_open.id;
+            continue;
+        end if;
+
+        v_action := platform_log_action(new.id, v_what,
+            mara_edit_summary(v_what, v_after), v_before, v_after,
+            'platform_undo_org_columns',
+            jsonb_build_object('org', new.id, 'what', v_what,
+                               'before', v_before, 'after', v_after));
+        if v_what in ('vitrine', 'identity') then
+            v_cols := mara_edit_keys(v_what, v_after);
+            -- A kind changed through 103's update_org (the owner's settings
+            -- opened as Mara) has rung its own bell, « Le genre de votre
+            -- activité a été changé », in this transaction: the kind is not
+            -- said twice — only the other fields, if any.
+            if v_what = 'identity' and 'profile' = any (v_cols)
+               and exists (select 1 from notifications n
+                            where n.org_id = new.id and n.kind = 'org_kind_changed'
+                              and n.created_at = now()) then
+                v_cols := array_remove(v_cols, 'profile');
+            end if;
+            if cardinality(v_cols) > 0 then
+                perform notify_org_owners(new.id, 'mara_edited',
+                    mara_edit_message(v_what, v_cols, false),
+                    jsonb_build_object('what', v_what, 'fields', to_jsonb(v_cols),
+                                       'action', v_action));
+            end if;
+        end if;
+    end loop;
+    return null;
+end;
+$$;
+
+drop trigger if exists orgs_mara_edit on orgs;
+create trigger orgs_mara_edit
+after update on orgs
+for each row
+when (   old.storefront_enabled   is distinct from new.storefront_enabled
+      or old.storefront_blurb     is distinct from new.storefront_blurb
+      or old.storefront_style     is distinct from new.storefront_style
+      or old.theme                is distinct from new.theme
+      or old.logo_key             is distinct from new.logo_key
+      or old.lat                  is distinct from new.lat
+      or old.lng                  is distinct from new.lng
+      or old.delivery_base        is distinct from new.delivery_base
+      or old.delivery_per_km      is distinct from new.delivery_per_km
+      or old.delivery_max_km      is distinct from new.delivery_max_km
+      or old.delivery_included_km is distinct from new.delivery_included_km
+      or old.name                 is distinct from new.name
+      or old.slug                 is distinct from new.slug
+      or old.profile              is distinct from new.profile
+      or old.default_currency     is distinct from new.default_currency
+      or old.phone                is distinct from new.phone
+      or old.address              is distinct from new.address
+      or old.verified_at          is distinct from new.verified_at
+      or old.verified_by          is distinct from new.verified_by
+      or old.plan                 is distinct from new.plan
+      or old.plan_until           is distinct from new.plan_until
+      or old.plan_note            is distinct from new.plan_note)
+execute function trg_orgs_mara_edit();
+
+-- ------------------------------------------------------------
+-- Grants (063: born closed; said by name)
+-- ------------------------------------------------------------
+revoke execute on function mara_edit_columns(text)                    from public;
+revoke execute on function mara_edit_keys(text, jsonb)                from public;
+revoke execute on function mara_edit_words(text[])                    from public;
+revoke execute on function mara_edit_summary(text, jsonb)             from public;
+revoke execute on function mara_edit_message(text, text[], boolean)   from public;
+revoke execute on function platform_org_overview(uuid)                from public;
+revoke execute on function platform_update_org_identity(uuid, text, text, text, text, text, text, boolean, text) from public;
+revoke execute on function platform_undo_org_columns(jsonb)           from public;
+revoke execute on function trg_orgs_mara_edit()                       from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function mara_edit_columns(text)                    from anon;
+        revoke execute on function mara_edit_keys(text, jsonb)                from anon;
+        revoke execute on function mara_edit_words(text[])                    from anon;
+        revoke execute on function mara_edit_summary(text, jsonb)             from anon;
+        revoke execute on function mara_edit_message(text, text[], boolean)   from anon;
+        revoke execute on function platform_org_overview(uuid)                from anon;
+        revoke execute on function platform_update_org_identity(uuid, text, text, text, text, text, text, boolean, text) from anon;
+        revoke execute on function platform_undo_org_columns(jsonb)           from anon;
+        revoke execute on function trg_orgs_mara_edit()                       from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- Internal: the trigger, the undo platform_undo calls, their words.
+        revoke execute on function mara_edit_columns(text)                    from authenticated;
+        revoke execute on function mara_edit_keys(text, jsonb)                from authenticated;
+        revoke execute on function mara_edit_words(text[])                    from authenticated;
+        revoke execute on function mara_edit_summary(text, jsonb)             from authenticated;
+        revoke execute on function mara_edit_message(text, text[], boolean)   from authenticated;
+        revoke execute on function platform_undo_org_columns(jsonb)           from authenticated;
+        revoke execute on function trg_orgs_mara_edit()                       from authenticated;
+        -- The fiche's doors; each refuses anybody but the platform.
+        grant execute on function platform_org_overview(uuid)                 to authenticated;
+        grant execute on function platform_update_org_identity(uuid, text, text, text, text, text, text, boolean, text) to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 107_kinds_requests.sql
+-- ============================================================
+-- ============================================================
+-- 107_kinds_requests.sql — the types of business, and the request page
+-- (the command center's phase 3, on 104's switchboard and journal).
+--
+-- The owner: « As an admin I need to be able to edit a store or a type of
+-- business … I need to be able to edit the business request page and
+-- vitrine. » And: « The new admin setup will not modify anything to the
+-- stores and vitrine until I make the change myself? » — so nothing here
+-- changes what any shop, farm, association or vitrine shows until Mara
+-- writes a row: no kind_settings row, no vitrine default and no request
+-- form is exactly today (test_batch107 computes it before and after).
+--
+--   1. Réglages par type: kind_settings (kind, key) holds a kind's own
+--      value for the free numbers that differ by kind — free_photo_items,
+--      free_max_staff, free_max_invoices_month, vitrine_min_items (shops
+--      and farms), vitrine_min_items_association (associations).
+--      kind_setting(kind, key) reads the kind's value, else the global
+--      platform setting. Every reader of those numbers now asks for the
+--      business's kind (org_kind_limit): org_free_workers (the free seat),
+--      org_photo_limit (photographed articles), trg_cap_free_plan (the
+--      invoices a month), vitrine_min (what opens a vitrine), path_goal
+--      (Le Chemin's « articles » step), and plan_terms(), which carries a
+--      kind's own numbers under 'kinds' — only when there are any — so the
+--      paywall says the business's own figure. Delivery is left out: each
+--      shop and farm already sets its own distance (069), and an
+--      association does not deliver (099).
+--   2. Vitrine par défaut: a kind's default presentation (layout), colour
+--      (accent) and cover (none, or the first photographed article on the
+--      shelf), stored as kind_settings 'vitrine_default'. Used ONLY by a
+--      vitrine that was never dressed: orgs.storefront_style is still '{}'
+--      — the column's default, which set_storefront_style (093) leaves as
+--      soon as the owner keeps any dressing of their own (a tagline, hours,
+--      a colour, a cover, a layout, pinned articles). A vitrine whose
+--      dressing was all cleared is at '{}' too, and reads as never dressed:
+--      it shows Mara's default, which is what « par défaut » means. A
+--      vitrine d'exemple (094) never takes it. As 093's options: on a
+--      Basic vitrine only the free ones — the colour and the cover, while
+--      the basics are free —, the presentation (layout) only on a Vitrine+
+--      (Mara Pro) one; storefront() adds it after the business's own
+--      (empty) style.
+--   3. Mise en route: a kind's optional walkthrough steps turned off
+--      (kind_settings 'setup_off') — a shop's or a farm's « vitrine » and
+--      « position », an association's « members » and « vitrine » — never
+--      the required ones (the name, the first article; the association's
+--      name and kind). setup_steps_off(org) is what the setup screens read.
+--   4. The request page: platform_settings.application_form — a welcome
+--      text, which kinds can be asked for, extra questions (texte, choix,
+--      nombre, oui-non; label, help, required) in order; the name, the
+--      address and the kind always stay. No form = today's page. The
+--      answers are kept with the application (org_applications.answers, a
+--      snapshot of each question as it was asked) and shown on the
+--      Demandes cards (platform_pending_applications). apply_for_org
+--      gains its answers as an 8-argument signature; 101's seven-argument
+--      one stays (an older build sends it) and now goes through the same
+--      checks with no answers. Two signatures and not a default: a re-run
+--      of 017 or 101 (the bundle, or a suite) recreates the seven-argument
+--      one, and a default on the new one would make every call ambiguous.
+--      The applicant hears the decision: accepted (the business opens) or
+--      refused with the reason, and each decision is in the journal.
+--
+-- Every change here is the platform's (caller_is_platform_admin, checked on
+-- the server), logged in platform_actions with its undo (104).
+-- Shops, farms and associations (a legacy church reads as an association):
+-- each has its tab; the numbers each kind has are in kind_setting_catalog.
+--
+-- Functions replaced, each from its latest definition: org_free_workers,
+-- org_photo_limit, trg_cap_free_plan and plan_terms (100), vitrine_min
+-- (098), path_goal (097), storefront (093), apply_for_org (101).
+--
+-- Re-runnable (the bundle runs twice): tables and columns if not exists,
+-- triggers dropped and recreated, functions replaced in place.
+-- ============================================================
+
+do $$
+begin
+    if to_regclass('public.platform_actions') is null
+       or to_regclass('public.platform_undo_fns') is null
+       or to_regprocedure('public.platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb)') is null
+       or to_regprocedure('public.org_kind(uuid)') is null then
+        raise exception '107 needs 104 (platform_actions, platform_log_action, platform_undo_fns, org_kind) applied first';
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 1. A kind's own settings
+-- ------------------------------------------------------------
+create table if not exists kind_settings (
+    kind   text not null,
+    key    text not null,
+    value  jsonb not null,
+    set_by uuid references profiles(id) on delete set null,
+    set_at timestamptz not null default now(),
+    primary key (kind, key)
+);
+alter table kind_settings drop constraint if exists kind_settings_kind;
+alter table kind_settings add constraint kind_settings_kind
+    check (kind in ('retail', 'farm', 'association'));
+alter table kind_settings drop constraint if exists kind_settings_key;
+alter table kind_settings add constraint kind_settings_key
+    check (key in ('free_photo_items', 'free_max_staff', 'free_max_invoices_month',
+                   'vitrine_min_items', 'vitrine_min_items_association',
+                   'vitrine_default', 'setup_off'));
+alter table kind_settings enable row level security;
+comment on table kind_settings is
+    'A kind''s own value for a platform setting (107), its vitrine default and its '
+    'walkthrough steps turned off. No row: the global setting, i.e. today. '
+    'Written by platform_set_kind_setting() only.';
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on kind_settings from authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on kind_settings from anon;
+    end if;
+end $$;
+
+alter table org_applications add column if not exists answers jsonb;
+
+-- Written through its functions only: apply_for_org (the applicant, with
+-- the page's checks and answers), approve_org_application and
+-- reject_org_application (the platform) — all definer. 017 let a signed-in
+-- caller insert a pending row of their own and a platform admin update one
+-- directly; neither app writes the table itself, and a direct insert would
+-- walk past the request page's kinds and required questions. Reading stays
+-- as 017 has it (the applicant's own, the platform's all).
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke insert, update, delete, truncate on org_applications from authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke insert, update, delete, truncate on org_applications from anon;
+    end if;
+end $$;
+comment on column org_applications.answers is
+    'The request page''s extra questions as they were asked and answered (107): '
+    '[{id, label, type, value}]. Null when the page asked none.';
+
+-- The numbers a kind may have of its own: which kinds, the fallback the
+-- readers already used, and the bounds.
+create or replace function kind_setting_catalog()
+returns table (key text, label text, kinds text[], fallback int,
+               min_value int, max_value int, sort int)
+language sql
+immutable
+set search_path = public
+as $$
+    values
+        ('free_photo_items', 'Articles en photo (formule gratuite)',
+         array['retail', 'farm', 'association'], 10, 0, 1000, 10),
+        ('free_max_staff', 'Personnes offertes en plus du propriétaire',
+         array['retail', 'farm', 'association'], 1, 0, 50, 20),
+        ('free_max_invoices_month', 'Factures par mois (formule gratuite)',
+         array['retail', 'farm', 'association'], 20, 0, 10000, 30),
+        ('vitrine_min_items', 'Articles en vente pour ouvrir la vitrine',
+         array['retail', 'farm'], 8, 0, 100, 40),
+        ('vitrine_min_items_association', 'Services pour ouvrir la vitrine',
+         array['association'], 1, 1, 100, 50);
+$$;
+
+-- The walkthrough's steps per kind (setup_screen.dart and
+-- association_setup_screen.dart, in their order); the required ones can
+-- never be turned off.
+create or replace function kind_setup_steps(p_kind text)
+returns jsonb
+language sql
+immutable
+set search_path = public
+as $$
+    select case when p_kind in ('association', 'church') then
+        '[{"key": "identity", "label": "Le nom et ce qu''elle est", "required": true},
+          {"key": "members",  "label": "Les premiers membres",     "required": false},
+          {"key": "vitrine",  "label": "La vitrine",               "required": false}]'::jsonb
+    when p_kind in ('retail', 'farm') then
+        '[{"key": "identity", "label": "Le nom",                   "required": true},
+          {"key": "article",  "label": "Le premier article",       "required": true},
+          {"key": "vitrine",  "label": "La vitrine",               "required": false},
+          {"key": "position", "label": "La position sur la carte", "required": false}]'::jsonb
+    else '[]'::jsonb end;
+$$;
+
+-- The kind's value, else the platform's. Null when neither has one.
+create or replace function kind_setting(p_kind text, p_key text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce(
+        (select k.value from kind_settings k
+          where k.kind = case when p_kind = 'church' then 'association' else p_kind end
+            and k.key = p_key),
+        (select s.value from platform_settings s where s.key = p_key));
+$$;
+
+-- A number for this business: its kind's, else the platform's, else the
+-- default — with no kind row, exactly plan_limit(p_key, p_default).
+create or replace function org_kind_limit(p_org uuid, p_key text, p_default int)
+returns int
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce(nullif(kind_setting(org_kind(p_org), p_key) #>> '{}', '')::int,
+                    p_default);
+$$;
+
+-- ------------------------------------------------------------
+-- 2. The readers, by kind
+-- ------------------------------------------------------------
+-- 100's free seat, the kind's number.
+create or replace function org_free_workers(p_org_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select case when org_setup_done(p_org_id)
+                then greatest(org_kind_limit(p_org_id, 'free_max_staff', 1), 0) else 0 end;
+$$;
+
+-- 100's photographed articles, the kind's number.
+create or replace function org_photo_limit(p_org_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select case
+        when org_plan(o.id) = 'pro' or o.showcase then null
+        else greatest(org_kind_limit(o.id, 'free_photo_items', 10), 0) + o.photo_slots
+    end
+    from orgs o where o.id = p_org_id;
+$$;
+
+-- 098's minimum, the kind's number.
+create or replace function vitrine_min(p_org_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select case when o.profile in ('church', 'association')
+                then greatest(org_kind_limit(o.id, 'vitrine_min_items_association', 1), 1)
+                else org_kind_limit(o.id, 'vitrine_min_items', 8) end
+      from orgs o where o.id = p_org_id;
+$$;
+
+-- 097's goals, the articles step at the kind's minimum.
+create or replace function path_goal(p_org uuid, p_step text)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select case p_step
+        when 'contact'      then 2
+        when 'articles'     then greatest(org_kind_limit(p_org, 'vitrine_min_items', 8), 1)
+        when 'photos'       then 3
+        when 'three_orders' then greatest(cauris_param('progress_credit_orders', 3), 0)
+        when 'till_week'    then 7
+        when 'log_week'     then 7
+        else 1
+    end;
+$$;
+
+-- 100's caps, the invoices a month at the kind's number.
+create or replace function trg_cap_free_plan()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_cap   int;
+    v_count int;
+begin
+    if auth.uid() is null
+       or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+       or org_plan(new.org_id) <> 'free' then
+        return new;
+    end if;
+
+    if tg_table_name = 'memberships' then
+        -- What the row makes of its person. An owner, a trainer (only the
+        -- platform names one: trg_membership_roles) or Mara's own admin is
+        -- no worker.
+        if new.role = 'owner' or coalesce(new.is_trainer, false)
+           or exists (select 1 from profiles where id = new.user_id and is_platform_admin) then
+            return new;
+        end if;
+        -- A worker's row that stays a worker's — another role between
+        -- workers, the same person, the same business — adds nobody. A row
+        -- that stops being an owner's or a trainer's, or that changes hands
+        -- or business, is somebody new: it takes the seat like an insert.
+        if tg_op = 'UPDATE'
+           and old.user_id = new.user_id and old.org_id = new.org_id
+           and old.role <> 'owner' and not coalesce(old.is_trainer, false) then
+            return new;
+        end if;
+        -- Somebody already there by another grant — a worker, or still its
+        -- owner — adds nobody either. A trainer's grant does not count: a
+        -- trainer given a second role becomes a worker.
+        if exists (select 1 from memberships m
+                    where m.org_id = new.org_id and m.user_id = new.user_id
+                      and m.id <> new.id and not m.is_trainer) then
+            return new;
+        end if;
+        -- One at a time per business: two codes claimed at once cannot both
+        -- take the last seat.
+        perform pg_advisory_xact_lock(hashtext('team:' || new.org_id::text));
+        if team_full(new.org_id) then
+            raise exception '%', team_full_message(new.org_id);
+        end if;
+
+    elsif tg_table_name = 'invoices' then
+        v_cap := org_kind_limit(new.org_id, 'free_max_invoices_month', 20);
+        select count(*) into v_count from invoices
+         where org_id = new.org_id
+           and issued_on >= date_trunc('month', coalesce(new.issued_on, current_date))::date
+           and issued_on <  (date_trunc('month', coalesce(new.issued_on, current_date)) + interval '1 month')::date;
+        if v_count >= v_cap then
+            raise exception 'Kaj Pro : la formule gratuite permet % factures par mois. Ouvrez Compte › Kaj Pro pour continuer ce mois-ci.', v_cap;
+        end if;
+
+    elsif tg_table_name = 'documents' then
+        -- An article's picture is counted by article (trg_photo_items); the
+        -- paperwork filed on an article (a delivery note, a receipt) is
+        -- counted here, with every capture that is about no article.
+        if new.product_id is not null and doc_is_photo(new.kind, new.content_type) then
+            return new;
+        end if;
+        v_cap := plan_limit('free_max_photos', 50);
+        select count(*) into v_count from documents
+         where org_id = new.org_id
+           and (product_id is null or not doc_is_photo(kind, content_type));
+        if v_count >= v_cap then
+            raise exception 'Kaj Pro : la formule gratuite garde % photos. Ouvrez Compte › Kaj Pro pour en ajouter.', v_cap;
+        end if;
+    end if;
+
+    return new;
+end;
+$$;
+
+-- 100's terms, with each kind's own numbers under 'kinds' — the key is
+-- there only when a kind has one, so with none the terms are 100's.
+create or replace function plan_terms()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select jsonb_build_object(
+        'pro_features',            coalesce(plan_setting('pro_features'), '[]'::jsonb),
+        'free_max_staff',          plan_limit('free_max_staff', 1),
+        'free_max_invoices_month', plan_limit('free_max_invoices_month', 20),
+        'free_max_photos',         plan_limit('free_max_photos', 50),
+        'free_photo_items',        plan_limit('free_photo_items', 10),
+        'free_history_months',     plan_limit('free_history_months', 12),
+        'pro_price_month',         plan_limit('pro_price_month', 2500),
+        'pro_price_year',          plan_limit('pro_price_year', 25000),
+        'pro_currency',            coalesce(plan_setting('pro_currency') #>> '{}', 'XOF'),
+        'platform_wave',           coalesce(plan_setting('platform_wave') #>> '{}', ''),
+        'platform_wave_name',      coalesce(plan_setting('platform_wave_name') #>> '{}', ''),
+        'delivery_share_pct',      plan_limit('delivery_share_pct', 10),
+        'stripe_on',               stripe_on()
+    )
+    || coalesce((
+        select jsonb_build_object('kinds', jsonb_object_agg(k.kind, k.vals))
+          from (select s.kind, jsonb_object_agg(s.key, s.value) as vals
+                  from kind_settings s
+                 where s.key in (select c.key from kind_setting_catalog() c)
+                 group by s.kind) k
+        having count(*) > 0), '{}'::jsonb);
+$$;
+
+-- ------------------------------------------------------------
+-- 3. Vitrine par défaut
+-- ------------------------------------------------------------
+-- What Mara's default adds to this vitrine: nothing unless it was never
+-- dressed (storefront_style = '{}') and its kind has a default. The cover
+-- « first_photo » is the first photographed article on the shelf, in
+-- storefront_products' order, its newest picture — a key the photo gate
+-- (storefront_photo_allowed) already serves. What a vitrine of its plan
+-- may show, as 093 says it: the colour and the cover on any vitrine while
+-- the basics are free (vitrine_free_basics), the presentation (layout)
+-- only with Vitrine+ (Mara Pro) — a Basic vitrine is never dressed beyond
+-- what its owner could choose.
+create or replace function vitrine_default_style(p_org uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce((
+        select jsonb_strip_nulls(jsonb_build_object(
+                   'accent', d.v ->> 'accent',
+                   'layout', nullif(d.v ->> 'layout', 'grid'),
+                   'cover_key', case when d.v ->> 'cover' = 'first_photo' then (
+                       select (select doc.r2_key from documents doc
+                                where doc.product_id = p.id
+                                  and doc_is_photo(doc.kind, doc.content_type)
+                                order by coalesce(doc.captured_at, doc.created_at) desc
+                                limit 1)
+                         from products p
+                        where p.org_id = o.id and p.is_active and p.is_published
+                          and exists (select 1 from documents doc
+                                       where doc.product_id = p.id
+                                         and doc_is_photo(doc.kind, doc.content_type))
+                        order by p.is_service, p.name
+                        limit 1) end))
+               - case when org_has(o.id, 'vitrine_plus') then '{}'::text[]
+                      else array['layout'] end
+          from orgs o
+          cross join lateral (select kind_setting(o.profile::text, 'vitrine_default') as v) d
+         where o.id = p_org
+           and o.storefront_style = '{}'::jsonb
+           and not o.showcase
+           and jsonb_typeof(d.v) = 'object'
+           and (org_has(o.id, 'vitrine_plus') or cauris_param('vitrine_free_basics', 1) = 1)),
+        '{}'::jsonb);
+$$;
+
+-- 093's window, with Mara's default for a vitrine never dressed.
+create or replace function storefront(p_slug text)
+returns table (
+    org_id        uuid,
+    name          text,
+    slug          text,
+    profile       text,
+    blurb         text,
+    phone         text,
+    address       text,
+    theme         text,
+    currency      text,
+    lat           double precision,
+    lng           double precision,
+    wave_merchant text,
+    style         jsonb
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select o.id, o.name, o.slug, o.profile::text, o.storefront_blurb,
+           o.phone, o.address, o.theme, o.default_currency, o.lat, o.lng,
+           case when o.wave_allowed then o.wave_merchant end,
+           (case when org_has(o.id, 'vitrine_plus') then
+                     o.storefront_style
+                     || case when o.storefront_style ? 'schedule'
+                             then jsonb_strip_nulls(jsonb_build_object('open_now',
+                                      vitrine_open_now(o.storefront_style -> 'schedule')))
+                             else '{}'::jsonb end
+                 when cauris_param('vitrine_free_basics', 1) = 1 then
+                     o.storefront_style - 'pinned' - 'hide_out_of_stock' - 'layout'
+                 else '{}'::jsonb end)
+           || vitrine_default_style(o.id)
+           || case when o.logo_key is not null
+                   then jsonb_build_object('logo_key', o.logo_key)
+                   else '{}'::jsonb end
+           || jsonb_build_object('delivers', org_delivers(o.id))
+           || coalesce((
+                select jsonb_build_object('top_week', jsonb_build_object(
+                           'rank', r.rank, 'league', league_label(r.league)))
+                  from cauris_week_results r
+                 where r.org_id = o.id
+                   and r.week_start = (cauris_week_start() - interval '7 days')::date),
+              '{}'::jsonb)
+    from orgs o
+    where o.id = storefront_open(p_slug);
+$$;
+
+-- ------------------------------------------------------------
+-- 4. Mise en route
+-- ------------------------------------------------------------
+-- The optional steps this business's kind has turned off, for its setup
+-- screen. A required step is never in it, whatever the row says.
+create or replace function setup_steps_off(p_org uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select case when not (is_org_member(p_org) or caller_is_platform_admin()) then '[]'::jsonb
+    else coalesce((
+        select jsonb_agg(s.step order by s.step)
+          from orgs o
+          cross join lateral (select kind_setting(o.profile::text, 'setup_off') as v) k
+          cross join lateral jsonb_array_elements_text(
+              case when jsonb_typeof(k.v) = 'array' then k.v else '[]'::jsonb end) as s(step)
+         where o.id = p_org
+           and exists (select 1 from jsonb_array_elements(kind_setup_steps(o.profile::text)) e
+                        where e ->> 'key' = s.step and not (e ->> 'required')::boolean)),
+        '[]'::jsonb) end;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. The command center: a kind's models
+-- ------------------------------------------------------------
+-- How a value reads in the journal.
+create or replace function kind_setting_words(p_key text, p_value jsonb)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+    select case
+        when p_value is null then 'par défaut'
+        when p_key = 'vitrine_default' then concat_ws(', ',
+            'présentation ' || case p_value ->> 'layout'
+                when 'large' then 'grandes photos' when 'list' then 'liste'
+                when 'menu' then 'menu' else 'grille' end,
+            case when p_value ? 'accent' then 'couleur ' || (p_value ->> 'accent') end,
+            case when p_value ->> 'cover' = 'first_photo' then 'couverture : la première photo' end)
+        when p_key = 'setup_off' then 'étapes retirées : '
+            || (select string_agg(e, ', ') from jsonb_array_elements_text(p_value) e)
+        else p_value #>> '{}'
+    end;
+$$;
+
+-- Everything a kind's tab draws: its businesses (for the impact line),
+-- its numbers (the kind's own, the global), its vitrine default and its
+-- walkthrough.
+create or replace function platform_kind_models(p_kind text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind text := case when p_kind = 'church' then 'association' else p_kind end;
+    v_off  jsonb;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+    end if;
+    select value into v_off from kind_settings where kind = v_kind and key = 'setup_off';
+
+    return (
+        with o as (
+            select o.id, o.storefront_style
+              from orgs o
+             where o.archived_at is null and not o.showcase
+               and (case when o.profile::text = 'church' then 'association'
+                         else o.profile::text end) = v_kind
+        )
+        select jsonb_build_object(
+            'kind', v_kind,
+            'orgs', (select count(*) from o),
+            'free', (select count(*) from o where org_plan(o.id) = 'free'),
+            'never_dressed', (select count(*) from o where o.storefront_style = '{}'::jsonb),
+            'settings', coalesce((
+                select jsonb_agg(jsonb_build_object(
+                           'key', c.key,
+                           'label', c.label,
+                           'global', coalesce(nullif(plan_setting(c.key) #>> '{}', '')::int, c.fallback),
+                           'value', (select k.value from kind_settings k
+                                      where k.kind = v_kind and k.key = c.key),
+                           'min', c.min_value,
+                           'max', c.max_value) order by c.sort)
+                  from kind_setting_catalog() c
+                 where v_kind = any (c.kinds)), '[]'::jsonb),
+            'vitrine_default', (select k.value from kind_settings k
+                                 where k.kind = v_kind and k.key = 'vitrine_default'),
+            'setup', coalesce((
+                select jsonb_agg(e || jsonb_build_object(
+                           'on', (e ->> 'required')::boolean
+                                 or not coalesce(v_off ? (e ->> 'key'), false))
+                           order by n)
+                  from jsonb_array_elements(kind_setup_steps(v_kind)) with ordinality s(e, n)),
+                '[]'::jsonb)
+        )
+    );
+end;
+$$;
+
+-- One kind setting: a number (null: back to the global one), the vitrine
+-- default (an object; null or {} clears it) or the walkthrough steps
+-- turned off (an array; null or [] turns them all on). Logged with its
+-- undo. Returns the action's id, or null when nothing changed.
+create or replace function platform_set_kind_setting(p_kind text, p_key text, p_value jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind   text := case when p_kind = 'church' then 'association' else p_kind end;
+    v_value  jsonb := case when p_value = 'null'::jsonb then null else p_value end;
+    v_before jsonb;
+    v_label  text;
+    v_text   text;
+    v_steps  jsonb;
+    v_step   text;
+    v_out    jsonb;
+    c        record;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+    end if;
+
+    select * into c from kind_setting_catalog() k where k.key = p_key;
+    if found then
+        if not (v_kind = any (c.kinds)) then
+            raise exception 'Ce réglage n''existe pas pour ce type d''activité.';
+        end if;
+        if v_value is not null then
+            v_text := btrim(v_value #>> '{}');
+            if jsonb_typeof(v_value) not in ('number', 'string') or v_text !~ '^[0-9]{1,6}$' then
+                raise exception 'Ce réglage est un nombre entier.';
+            end if;
+            if v_text::int < c.min_value or v_text::int > c.max_value then
+                raise exception 'Ce nombre est hors des limites permises.';
+            end if;
+            v_value := to_jsonb(v_text::int);
+        end if;
+        v_label := c.label;
+
+    elsif p_key = 'vitrine_default' then
+        if v_value is not null then
+            if jsonb_typeof(v_value) <> 'object' then
+                raise exception 'La vitrine par défaut est une présentation, une couleur et une couverture.';
+            end if;
+            if exists (select 1 from jsonb_object_keys(v_value) k
+                        where k not in ('layout', 'accent', 'cover')) then
+                raise exception 'La vitrine par défaut est une présentation, une couleur et une couverture.';
+            end if;
+            v_out := '{}'::jsonb;
+            v_text := nullif(btrim(coalesce(v_value ->> 'layout', '')), '');
+            if v_text is not null and v_text not in ('grid', 'large', 'list', 'menu') then
+                raise exception 'La présentation est grille, grandes photos, liste ou menu';
+            end if;
+            if v_text is not null and v_text <> 'grid' then
+                v_out := v_out || jsonb_build_object('layout', v_text);
+            end if;
+            v_text := nullif(btrim(coalesce(v_value ->> 'accent', '')), '');
+            if v_text is not null then
+                if v_text !~ '^#[0-9A-Fa-f]{6}$' then
+                    raise exception 'La couleur doit s''écrire #RRGGBB';
+                end if;
+                v_out := v_out || jsonb_build_object('accent', upper(v_text));
+            end if;
+            v_text := nullif(btrim(coalesce(v_value ->> 'cover', '')), '');
+            if v_text is not null and v_text not in ('none', 'first_photo') then
+                raise exception 'La couverture est aucune ou la première photo de la vitrine.';
+            end if;
+            if v_text = 'first_photo' then
+                v_out := v_out || '{"cover": "first_photo"}'::jsonb;
+            end if;
+            v_value := nullif(v_out, '{}'::jsonb);
+        end if;
+        v_label := 'Vitrine par défaut';
+
+    elsif p_key = 'setup_off' then
+        if v_value is not null then
+            if jsonb_typeof(v_value) <> 'array' then
+                raise exception 'Les étapes retirées sont une liste.';
+            end if;
+            v_steps := kind_setup_steps(v_kind);
+            for v_step in select jsonb_array_elements_text(v_value) loop
+                if not exists (select 1 from jsonb_array_elements(v_steps) e where e ->> 'key' = v_step) then
+                    raise exception 'Étape inconnue : %', v_step;
+                end if;
+                if exists (select 1 from jsonb_array_elements(v_steps) e
+                            where e ->> 'key' = v_step and (e ->> 'required')::boolean) then
+                    raise exception 'Une étape obligatoire de la mise en route ne peut pas être retirée.';
+                end if;
+            end loop;
+            -- In the walkthrough's order, each once.
+            select jsonb_agg(e ->> 'key' order by n) into v_value
+              from jsonb_array_elements(v_steps) with ordinality s(e, n)
+             where v_value ? (e ->> 'key');
+        end if;
+        v_label := 'Mise en route';
+
+    else
+        raise exception 'Réglage inconnu : %', coalesce(p_key, '');
+    end if;
+
+    select k.value into v_before from kind_settings k where k.kind = v_kind and k.key = p_key;
+    if v_before is not distinct from v_value then
+        return null;
+    end if;
+    if v_value is null then
+        delete from kind_settings where kind = v_kind and key = p_key;
+    else
+        insert into kind_settings (kind, key, value, set_by)
+        values (v_kind, p_key, v_value, auth.uid())
+        on conflict (kind, key) do update
+            set value = excluded.value, set_by = excluded.set_by, set_at = now();
+    end if;
+
+    return platform_log_action(
+        null,
+        'kind_setting',
+        '« ' || v_label || ' » — '
+            || case v_kind when 'retail' then 'toutes les boutiques'
+                           when 'farm' then 'toutes les fermes'
+                           else 'toutes les associations' end
+            || ' : ' || kind_setting_words(p_key, v_value)
+            || ' (avant : ' || kind_setting_words(p_key, v_before) || ')',
+        jsonb_build_object('kind', v_kind, 'key', p_key, 'value', v_before),
+        jsonb_build_object('kind', v_kind, 'key', p_key, 'value', v_value),
+        'platform_restore_kind_setting',
+        jsonb_build_object('kind', v_kind, 'key', p_key, 'value', v_before, 'expect', v_value));
+end;
+$$;
+
+-- The undo of a kind setting: the value as it was — unless it changed
+-- since, in which case the newer action is undone first (as 104's).
+create or replace function platform_restore_kind_setting(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_kind  text  := p_args ->> 'kind';
+    v_key   text  := p_args ->> 'key';
+    v_value jsonb := nullif(p_args -> 'value', 'null'::jsonb);
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if (select k.value from kind_settings k where k.kind = v_kind and k.key = v_key)
+       is distinct from nullif(p_args -> 'expect', 'null'::jsonb) then
+        raise exception 'Ce réglage a changé depuis : annulez d''abord le changement plus récent.';
+    end if;
+    if v_value is null then
+        delete from kind_settings where kind = v_kind and key = v_key;
+    else
+        insert into kind_settings (kind, key, value, set_by)
+        values (v_kind, v_key, v_value, auth.uid())
+        on conflict (kind, key) do update
+            set value = excluded.value, set_by = excluded.set_by, set_at = now();
+    end if;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 6. The request page
+-- ------------------------------------------------------------
+-- What the page asks, for the person asking (and the platform's editor).
+-- Null: today's page.
+create or replace function application_form()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select s.value from platform_settings s
+     where s.key = 'application_form' and jsonb_typeof(s.value) = 'object';
+$$;
+
+-- Sets the page: {welcome, kinds, questions: [{id, label, help, required,
+-- type, options}]}, checked and written back in a clean shape. Null or {}
+-- returns the page to today's. Logged with its undo.
+create or replace function platform_set_application_form(p_form jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_in       jsonb := case when p_form = 'null'::jsonb or p_form = '{}'::jsonb then null else p_form end;
+    v_out      jsonb;
+    v_before   jsonb;
+    v_text     text;
+    v_kinds    jsonb;
+    v_qs       jsonb := '[]'::jsonb;
+    v_ids      text[] := '{}';
+    q          jsonb;
+    v_id       text;
+    v_label    text;
+    v_help     text;
+    v_type     text;
+    v_opts     jsonb;
+    v_opt      text;
+    v_clean    jsonb;
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+
+    if v_in is not null then
+        if jsonb_typeof(v_in) <> 'object' then
+            raise exception 'La page de demande est mal formée.';
+        end if;
+        v_out := '{}'::jsonb;
+
+        v_text := nullif(btrim(coalesce(v_in ->> 'welcome', '')), '');
+        if v_text is not null then
+            if char_length(v_text) > 600 then
+                raise exception 'Le mot d''accueil fait 600 caractères au plus.';
+            end if;
+            v_out := v_out || jsonb_build_object('welcome', v_text);
+        end if;
+
+        if v_in ? 'kinds' and v_in -> 'kinds' <> 'null'::jsonb then
+            if jsonb_typeof(v_in -> 'kinds') <> 'array'
+               or exists (select 1 from jsonb_array_elements_text(v_in -> 'kinds') k
+                           where k not in ('retail', 'farm', 'association')) then
+                raise exception 'Les types proposés sont boutique, ferme ou association.';
+            end if;
+            select jsonb_agg(k order by array_position(array['association', 'farm', 'retail'], k))
+              into v_kinds
+              from (select distinct k from jsonb_array_elements_text(v_in -> 'kinds') k) d;
+            if v_kinds is null then
+                raise exception 'Proposez au moins un type d''activité.';
+            end if;
+            -- All three is today's page: no list kept.
+            if jsonb_array_length(v_kinds) < 3 then
+                v_out := v_out || jsonb_build_object('kinds', v_kinds);
+            end if;
+        end if;
+
+        if v_in ? 'questions' and v_in -> 'questions' <> 'null'::jsonb then
+            if jsonb_typeof(v_in -> 'questions') <> 'array' then
+                raise exception 'Les questions sont une liste.';
+            end if;
+            if jsonb_array_length(v_in -> 'questions') > 12 then
+                raise exception 'Douze questions au plus.';
+            end if;
+            for q in select value from jsonb_array_elements(v_in -> 'questions') loop
+                if jsonb_typeof(q) <> 'object' then
+                    raise exception 'Une question est mal formée.';
+                end if;
+                v_label := nullif(btrim(coalesce(q ->> 'label', '')), '');
+                if v_label is null then
+                    raise exception 'Chaque question a son intitulé.';
+                end if;
+                if char_length(v_label) > 120 then
+                    raise exception 'Un intitulé fait 120 caractères au plus.';
+                end if;
+                v_help := nullif(btrim(coalesce(q ->> 'help', '')), '');
+                if v_help is not null and char_length(v_help) > 200 then
+                    raise exception 'Une aide fait 200 caractères au plus.';
+                end if;
+                v_type := coalesce(nullif(q ->> 'type', ''), 'text');
+                if v_type not in ('text', 'choice', 'number', 'yesno') then
+                    raise exception 'Une question est un texte, un choix, un nombre ou oui-non.';
+                end if;
+                v_opts := null;
+                if v_type = 'choice' then
+                    if jsonb_typeof(q -> 'options') <> 'array' then
+                        raise exception 'Une question à choix a de 2 à 12 réponses.';
+                    end if;
+                    v_opts := '[]'::jsonb;
+                    for v_opt in select btrim(o) from jsonb_array_elements_text(q -> 'options') o loop
+                        if v_opt = '' then
+                            continue;
+                        end if;
+                        if char_length(v_opt) > 60 then
+                            raise exception 'Une réponse proposée fait 60 caractères au plus.';
+                        end if;
+                        if v_opts ? v_opt then
+                            raise exception 'Une réponse proposée ne se répète pas.';
+                        end if;
+                        v_opts := v_opts || to_jsonb(v_opt);
+                    end loop;
+                    if jsonb_array_length(v_opts) < 2 or jsonb_array_length(v_opts) > 12 then
+                        raise exception 'Une question à choix a de 2 à 12 réponses.';
+                    end if;
+                end if;
+                -- A question keeps its id, so answers already given still
+                -- name it; a new one gets its own.
+                v_id := q ->> 'id';
+                if v_id is null or v_id !~ '^[a-z0-9_-]{1,40}$' or v_id = any (v_ids) then
+                    v_id := 'q' || substr(md5(random()::text || clock_timestamp()::text), 1, 8);
+                end if;
+                v_ids := v_ids || v_id;
+                v_clean := jsonb_build_object(
+                    'id', v_id, 'label', v_label, 'type', v_type,
+                    'required', coalesce(q -> 'required' = 'true'::jsonb, false));
+                if v_help is not null then
+                    v_clean := v_clean || jsonb_build_object('help', v_help);
+                end if;
+                if v_opts is not null then
+                    v_clean := v_clean || jsonb_build_object('options', v_opts);
+                end if;
+                v_qs := v_qs || jsonb_build_array(v_clean);
+            end loop;
+            if jsonb_array_length(v_qs) > 0 then
+                v_out := v_out || jsonb_build_object('questions', v_qs);
+            end if;
+        end if;
+        v_in := nullif(v_out, '{}'::jsonb);
+    end if;
+
+    select s.value into v_before from platform_settings s where s.key = 'application_form';
+    if v_before is not distinct from v_in then
+        return null;
+    end if;
+    if v_in is null then
+        delete from platform_settings where key = 'application_form';
+    else
+        insert into platform_settings (key, value) values ('application_form', v_in)
+        on conflict (key) do update set value = excluded.value;
+    end if;
+
+    return platform_log_action(
+        null,
+        'application_form',
+        case when v_in is null then 'Page de demande remise comme avant'
+             else 'Page de demande modifiée — '
+                  || coalesce(jsonb_array_length(v_in -> 'questions'), 0) || ' question(s), '
+                  || coalesce((select string_agg(case k when 'retail' then 'boutique'
+                                                         when 'farm' then 'ferme'
+                                                         else 'association' end, ', ')
+                                 from jsonb_array_elements_text(v_in -> 'kinds') k),
+                              'tous les types')
+        end,
+        jsonb_build_object('form', v_before),
+        jsonb_build_object('form', v_in),
+        'platform_restore_application_form',
+        jsonb_build_object('form', v_before, 'expect', v_in));
+end;
+$$;
+
+create or replace function platform_restore_application_form(p_args jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_form jsonb := nullif(p_args -> 'form', 'null'::jsonb);
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    if (select s.value from platform_settings s where s.key = 'application_form')
+       is distinct from nullif(p_args -> 'expect', 'null'::jsonb) then
+        raise exception 'Ce réglage a changé depuis : annulez d''abord le changement plus récent.';
+    end if;
+    if v_form is null then
+        delete from platform_settings where key = 'application_form';
+    else
+        insert into platform_settings (key, value) values ('application_form', v_form)
+        on conflict (key) do update set value = excluded.value;
+    end if;
+end;
+$$;
+
+-- 101's apply_for_org, with the page's checks and its answers: the kind
+-- must be one the page offers, each required question answered, each
+-- answer of its type. With no page set, 101's exactly (answers null).
+-- p_answers is {question id: answer}; what is kept is the snapshot.
+create or replace function apply_for_org(
+    p_name        text,
+    p_slug        text,
+    p_profile     text,
+    p_currency    text,
+    p_description text,
+    p_phone       text,
+    p_email       text,
+    p_answers     jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor   uuid := auth.uid();
+    v_name    text := nullif(btrim(coalesce(p_name, '')), '');
+    v_slug    text := nullif(lower(btrim(coalesce(p_slug, ''))), '');
+    v_profile text := coalesce(nullif(btrim(coalesce(p_profile, '')), ''), 'generic');
+    v_problem text;
+    v_id      uuid;
+    v_full    text;
+    v_phone   text;
+    v_email   text;
+    v_form    jsonb := application_form();
+    v_answers jsonb;
+    q         jsonb;
+    v_raw     jsonb;
+    v_val     jsonb;
+    v_text    text;
+begin
+    if v_actor is null then
+        raise exception 'apply_for_org() needs a signed-in caller';
+    end if;
+
+    if v_name is null then
+        raise exception 'A business needs a name';
+    end if;
+
+    v_problem := org_slug_problem(v_slug);
+    if v_problem is not null then
+        raise exception '%', v_problem;
+    end if;
+
+    if exists (select 1 from orgs where slug = v_slug) then
+        raise exception 'That address is already taken.';
+    end if;
+
+    -- The page Mara set: the kinds it offers, its questions.
+    if v_form is not null then
+        if jsonb_typeof(v_form -> 'kinds') = 'array'
+           and not ((v_form -> 'kinds') ? (case when v_profile = 'church' then 'association'
+                                               else v_profile end)) then
+            raise exception 'Ce type d''activité ne peut pas être demandé pour l''instant.';
+        end if;
+        v_answers := '[]'::jsonb;
+        for q in select value from jsonb_array_elements(
+                     case when jsonb_typeof(v_form -> 'questions') = 'array'
+                          then v_form -> 'questions' else '[]'::jsonb end) loop
+            v_raw := case when jsonb_typeof(p_answers) = 'object' then p_answers -> (q ->> 'id') end;
+            v_val := null;
+            if v_raw is not null and v_raw <> 'null'::jsonb then
+                v_text := btrim(v_raw #>> '{}');
+                if q ->> 'type' = 'yesno' then
+                    if jsonb_typeof(v_raw) = 'boolean' then
+                        v_val := v_raw;
+                    elsif lower(v_text) in ('oui', 'true') then
+                        v_val := 'true'::jsonb;
+                    elsif lower(v_text) in ('non', 'false') then
+                        v_val := 'false'::jsonb;
+                    elsif v_text <> '' then
+                        raise exception 'Répondez par oui ou par non : %', q ->> 'label';
+                    end if;
+                elsif v_text <> '' then
+                    if q ->> 'type' = 'number' then
+                        v_text := replace(replace(v_text, ' ', ''), ',', '.');
+                        if v_text !~ '^-?[0-9]{1,12}([.][0-9]{1,4})?$' then
+                            raise exception 'Répondez en chiffres : %', q ->> 'label';
+                        end if;
+                        v_val := to_jsonb(v_text::numeric);
+                    elsif q ->> 'type' = 'choice' then
+                        if not coalesce((q -> 'options') ? v_text, false) then
+                            raise exception 'Choisissez une des réponses proposées : %', q ->> 'label';
+                        end if;
+                        v_val := to_jsonb(v_text);
+                    else
+                        if char_length(v_text) > 500 then
+                            raise exception 'Une réponse fait 500 caractères au plus.';
+                        end if;
+                        v_val := to_jsonb(v_text);
+                    end if;
+                end if;
+            end if;
+            if v_val is null and coalesce(q -> 'required' = 'true'::jsonb, false) then
+                raise exception 'Réponse obligatoire : %', q ->> 'label';
+            end if;
+            if v_val is not null then
+                v_answers := v_answers || jsonb_build_array(jsonb_build_object(
+                    'id', q ->> 'id', 'label', q ->> 'label', 'type', q ->> 'type',
+                    'value', v_val));
+            end if;
+        end loop;
+        v_answers := nullif(v_answers, '[]'::jsonb);
+    end if;
+
+    -- Who this is, as the platform will see it in the queue: the profile
+    -- first, then the account, then what an older build sent.
+    select coalesce(nullif(btrim(concat_ws(' ', p.first_name, p.last_name)), ''),
+                    nullif(btrim(coalesce(p.full_name, '')), ''),
+                    nullif(btrim(coalesce(u.raw_user_meta_data ->> 'full_name', '')), '')),
+           coalesce(nullif(btrim(coalesce(p.phone, '')), ''),
+                    nullif(btrim(coalesce(u.phone, '')), '')),
+           nullif(btrim(coalesce(u.email, '')), '')
+      into v_full, v_phone, v_email
+      from auth.users u
+      left join profiles p on p.id = u.id
+     where u.id = v_actor;
+
+    insert into org_applications (
+        applicant_id, name, slug, profile, currency,
+        contact_name, contact_phone, contact_email, description, answers
+    )
+    values (
+        v_actor, v_name, v_slug,
+        v_profile,
+        coalesce(nullif(btrim(coalesce(p_currency, '')), ''), 'XOF'),
+        v_full,
+        coalesce(v_phone, nullif(btrim(coalesce(p_phone, '')), '')),
+        coalesce(v_email, nullif(btrim(coalesce(p_email, '')), '')),
+        nullif(btrim(coalesce(p_description, '')), ''),
+        v_answers
+    )
+    on conflict (applicant_id) where status = 'pending'
+    do update set
+        name          = excluded.name,
+        slug          = excluded.slug,
+        profile       = excluded.profile,
+        currency      = excluded.currency,
+        description   = excluded.description,
+        contact_name  = excluded.contact_name,
+        contact_phone = excluded.contact_phone,
+        contact_email = excluded.contact_email,
+        answers       = excluded.answers,
+        created_at    = now()
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;
+
+-- 101's signature, for an older build: the same checks, no answers — so a
+-- page with a required question is not walked past.
+create or replace function apply_for_org(
+    p_name        text,
+    p_slug        text,
+    p_profile     text default 'generic',
+    p_currency    text default 'XOF',
+    p_description text default null,
+    p_phone       text default null,
+    p_email       text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    return apply_for_org(p_name, p_slug, p_profile, p_currency, p_description,
+                         p_phone, p_email, null::jsonb);
+end;
+$$;
+
+-- The Demandes cards: 017's queue with the answers. A new function (jsonb)
+-- rather than 017's table grown, which a bundle re-run could not replace.
+create or replace function platform_pending_applications()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not caller_is_platform_admin() then
+        raise exception 'Réservé à la plateforme';
+    end if;
+    return coalesce((
+        select jsonb_agg(jsonb_build_object(
+                   'id', a.id,
+                   'applicant_id', a.applicant_id,
+                   'applicant', coalesce(a.contact_name, p.full_name),
+                   'name', a.name,
+                   'slug', a.slug,
+                   'profile', a.profile,
+                   'currency', a.currency,
+                   'contact_phone', a.contact_phone,
+                   'contact_email', a.contact_email,
+                   'description', a.description,
+                   'answers', coalesce(a.answers, '[]'::jsonb),
+                   'created_at', a.created_at) order by a.created_at)
+          from org_applications a
+          left join profiles p on p.id = a.applicant_id
+         where a.status = 'pending'), '[]'::jsonb);
+end;
+$$;
+
+-- The applicant hears the decision, and the journal keeps it. A bell or a
+-- journal line never costs the decision.
+create or replace function trg_application_decided()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    if old.status <> 'pending' or new.status = old.status then
+        return new;
+    end if;
+    begin
+        if new.status = 'approved' then
+            insert into notifications (recipient_id, org_id, kind, message, params)
+            values (new.applicant_id, new.org_id, 'application_approved',
+                    'Votre demande est acceptée : ' || new.name || ' est ouverte.',
+                    jsonb_build_object('to', 'applicant', 'name', new.name));
+        elsif new.status = 'rejected' then
+            insert into notifications (recipient_id, org_id, kind, message, params)
+            values (new.applicant_id, null, 'application_refused',
+                    'Votre demande pour ' || new.name || ' est refusée : '
+                        || coalesce(new.decision_note, '') ,
+                    jsonb_build_object('to', 'applicant', 'name', new.name,
+                                       'reason', new.decision_note));
+        end if;
+    exception when others then
+        null;
+    end;
+    begin
+        if caller_is_platform_admin() then
+            perform platform_log_action(
+                new.org_id,
+                'application',
+                case when new.status = 'approved'
+                     then 'Demande acceptée : ' || new.name || ' (' || new.slug || ')'
+                     else 'Demande refusée : ' || new.name || ' — ' || coalesce(new.decision_note, '') end,
+                jsonb_build_object('status', old.status),
+                jsonb_build_object('status', new.status, 'note', new.decision_note,
+                                   'application', new.id),
+                null, null);
+        end if;
+    exception when others then
+        null;
+    end;
+    return new;
+end;
+$$;
+
+drop trigger if exists application_decided on org_applications;
+create trigger application_decided
+after update of status on org_applications
+for each row execute function trg_application_decided();
+
+insert into platform_undo_fns (fn) values
+    ('platform_restore_kind_setting'),
+    ('platform_restore_application_form')
+on conflict (fn) do nothing;
+
+-- ------------------------------------------------------------
+-- Grants: born closed (063); each opened to whom it is for.
+-- ------------------------------------------------------------
+revoke execute on function kind_setting_catalog()                    from public;
+revoke execute on function kind_setup_steps(text)                    from public;
+revoke execute on function kind_setting(text, text)                  from public;
+revoke execute on function org_kind_limit(uuid, text, int)           from public;
+revoke execute on function vitrine_default_style(uuid)               from public;
+revoke execute on function setup_steps_off(uuid)                     from public;
+revoke execute on function kind_setting_words(text, jsonb)           from public;
+revoke execute on function platform_kind_models(text)                from public;
+revoke execute on function platform_set_kind_setting(text, text, jsonb) from public;
+revoke execute on function platform_restore_kind_setting(jsonb)      from public;
+revoke execute on function application_form()                        from public;
+revoke execute on function platform_set_application_form(jsonb)      from public;
+revoke execute on function platform_restore_application_form(jsonb)  from public;
+revoke execute on function apply_for_org(text, text, text, text, text, text, text, jsonb) from public;
+revoke execute on function apply_for_org(text, text, text, text, text, text, text) from public;
+revoke execute on function platform_pending_applications()           from public;
+revoke execute on function trg_application_decided()                 from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function kind_setting_catalog()                    from anon;
+        revoke execute on function kind_setup_steps(text)                    from anon;
+        revoke execute on function kind_setting(text, text)                  from anon;
+        revoke execute on function org_kind_limit(uuid, text, int)           from anon;
+        revoke execute on function vitrine_default_style(uuid)               from anon;
+        revoke execute on function setup_steps_off(uuid)                     from anon;
+        revoke execute on function kind_setting_words(text, jsonb)           from anon;
+        revoke execute on function platform_kind_models(text)                from anon;
+        revoke execute on function platform_set_kind_setting(text, text, jsonb) from anon;
+        revoke execute on function platform_restore_kind_setting(jsonb)      from anon;
+        revoke execute on function application_form()                        from anon;
+        revoke execute on function platform_set_application_form(jsonb)      from anon;
+        revoke execute on function platform_restore_application_form(jsonb)  from anon;
+        revoke execute on function apply_for_org(text, text, text, text, text, text, text, jsonb) from anon;
+        revoke execute on function apply_for_org(text, text, text, text, text, text, text) from anon;
+        revoke execute on function platform_pending_applications()           from anon;
+        revoke execute on function trg_application_decided()                 from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- Internal: read by the functions above, as their owner.
+        revoke execute on function kind_setting_catalog()                    from authenticated;
+        revoke execute on function kind_setup_steps(text)                    from authenticated;
+        revoke execute on function kind_setting(text, text)                  from authenticated;
+        revoke execute on function org_kind_limit(uuid, text, int)           from authenticated;
+        revoke execute on function vitrine_default_style(uuid)               from authenticated;
+        revoke execute on function kind_setting_words(text, jsonb)           from authenticated;
+        revoke execute on function platform_restore_kind_setting(jsonb)      from authenticated;
+        revoke execute on function platform_restore_application_form(jsonb)  from authenticated;
+        revoke execute on function trg_application_decided()                 from authenticated;
+        -- The doors; each checks who is asking (the platform, a member, the
+        -- signed-in applicant).
+        grant execute on function setup_steps_off(uuid)                      to authenticated;
+        grant execute on function platform_kind_models(text)                 to authenticated;
+        grant execute on function platform_set_kind_setting(text, text, jsonb) to authenticated;
+        grant execute on function application_form()                         to authenticated;
+        grant execute on function platform_set_application_form(jsonb)       to authenticated;
+        grant execute on function apply_for_org(text, text, text, text, text, text, text, jsonb) to authenticated;
+        grant execute on function apply_for_org(text, text, text, text, text, text, text) to authenticated;
+        grant execute on function platform_pending_applications()            to authenticated;
     end if;
 end $$;
 

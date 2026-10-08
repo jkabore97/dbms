@@ -19,6 +19,7 @@ import 'alert_tone_tile.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
+import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One screen for everything that used to be scattered across a long popup
@@ -45,19 +46,25 @@ class CompteScreen extends StatelessWidget {
   /// loan to a member are debts with no article — and its tontines, and
   /// never the shop's tools: no production (nothing is made from
   /// ingredients), no analyses or corrections of sales and deliveries.
+  /// A tool Mara's switchboard hid here (104) is not listed: the carnet,
+  /// the tontines and production through the dial's own keys, the rest
+  /// by name.
   static List<String> toolsFor(OrgSummary org, OrgAccess access,
           {required bool admin}) =>
       [
         // Owner-only, the same full visibility the server requires for the
         // analytics functions themselves. A shop's, and a farm's (101).
         if (org.visibility == 'full' &&
-            (org.profile == 'retail' || org.profile == 'farm'))
+            (org.profile == 'retail' || org.profile == 'farm') &&
+            !access.isHidden('analytics'))
           'analytics',
-        if (access.canSee('reports')) 'accounting',
+        if (access.canSee('reports') && !access.isHidden('accounting'))
+          'accounting',
         // Undo a sale or a purchase entered by mistake — or test data.
         // Owner/admin only, and only where there are sales and deliveries to
         // undo; the server refuses everyone else regardless.
-        if (admin && org.profile == 'retail') 'corrections',
+        if (admin && org.profile == 'retail' && !access.isHidden('corrections'))
+          'corrections',
         if (access.canSee('credits')) 'credits',
         if (access.canSee('tontines')) 'tontines',
         if (access.canSee('production') && !org.isAssociation) 'production',
@@ -66,9 +73,13 @@ class CompteScreen extends StatelessWidget {
   /// The row for the business's people (100): « Équipe » for an admin
   /// (adding people, their salary); for somebody the owner gave the staff
   /// tool (031's dial) who is not an admin, the payroll they were trusted
-  /// with; nothing for anyone else.
-  static String? peopleRow(OrgAccess access, {required bool admin}) =>
-      admin ? 'team' : (access.canSee('staff') ? 'payroll' : null);
+  /// with — unless Mara's switchboard hid the payroll (104); nothing for
+  /// anyone else.
+  static String? peopleRow(OrgAccess access, {required bool admin}) => admin
+      ? 'team'
+      : (access.canSee('staff') && !access.isHidden('payroll')
+          ? 'payroll'
+          : null);
 
   /// « 1 personne offerte », « Équipe sans limite », the seat taken — or,
   /// before the first setup, what opens it.
@@ -122,7 +133,11 @@ class CompteScreen extends StatelessWidget {
             : session.featuresFor(org.id)?.toolOf(feature)?.cost;
 
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).account)),
+      // « Admin » (104): the command center, for a platform admin.
+      appBar: AppBar(
+        title: Text(Strings.of(context).account),
+        actions: const [AdminPill(), SizedBox(width: 8)],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -337,12 +352,12 @@ class CompteScreen extends StatelessWidget {
                 _Tile(
                   icon: Icons.business_outlined,
                   title: Strings.of(context).businesses,
-                  onTap: () => context.push(Routes.console),
+                  onTap: () => AdminTrail.enter(context, to: Routes.consoleBusinesses),
                 ),
                 _Tile(
                   icon: Icons.inbox_outlined,
                   title: Strings.of(context).applications,
-                  onTap: () => context.push(Routes.applications),
+                  onTap: () => AdminTrail.enter(context, to: Routes.applications),
                 ),
                 _Tile(
                   icon: Icons.add_business_outlined,
