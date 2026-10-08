@@ -40,6 +40,7 @@ import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
 import '../../features/admin/admin_pill.dart' show AdminTrail;
 import 'app_scope.dart';
+import 'back_first.dart';
 import 'business_cover.dart';
 import 'session.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -424,6 +425,9 @@ GoRouter buildRouter(SessionController session) {
   return GoRouter(
     initialLocation: Routes.splash,
     refreshListenable: session,
+    // What is open over a page, on every navigator (114): back closes it
+    // first.
+    observers: [BackFirst.instance.watch()],
     redirect: (context, state) {
       // The business the center opened is forgotten once it is left
       // another way (104): its strip is never stale.

@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/auth/two_step.dart';
 import 'core/nav/app_scope.dart';
+import 'core/nav/back_first.dart';
 import 'core/nav/router.dart';
 import 'core/nav/session.dart';
 import 'core/nav/url_strategy.dart';
@@ -326,6 +327,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           (widget.auth.isConfigured ? TwoStep(widget.auth.client) : null),
     );
     _router = buildRouter(_session);
+    // Before the router is first drawn: the back and the browser's history
+    // are heard here first (114).
+    BackFirst.instance.attach(_router);
     // Kicks the state machine off. The router is already listening, so the
     // first phase it settles on is the first address the person sees.
     _session.addListener(_onSession);
@@ -368,6 +372,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    BackFirst.instance.detach(_router);
     _refreshTimer?.cancel();
     _updateTimer?.cancel();
     _update.dispose();
@@ -455,6 +460,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           // Which business opens is decided by the signed-in user's
           // memberships; the URL only says which of those to show.
           routerConfig: _router,
+          // Back closes what is open first, in the whole app (114).
+          scaffoldMessengerKey: BackFirst.instance.messenger,
+          onNavigationNotification: BackFirst.instance.onNavigationNotification,
         ),
       ),
     );
