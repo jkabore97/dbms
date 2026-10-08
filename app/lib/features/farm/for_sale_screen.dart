@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -280,8 +278,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   late DateTime? _availableFrom = widget.product?.availableFrom;
   late bool _published = widget.product?.isPublished ?? true;
 
-  Uint8List? _photo;
-  String? _photoType;
+  PickedPhoto? _photo;
   bool _busy = false;
   String? _error;
 
@@ -306,12 +303,10 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
     if (!await photoAllowed(context, widget.org, hasPhoto: widget.hasPhoto) || !mounted) {
       return;
     }
-    final picked = await CaptureAction.pick(context);
+    final picked =
+        await CaptureAction.pick(context, orgId: widget.org.id, photos: widget.capture);
     if (picked == null || !mounted) return;
-    setState(() {
-      _photo = picked.bytes;
-      _photoType = picked.contentType;
-    });
+    setState(() => _photo = picked);
   }
 
   Future<void> _pickDate() async {
@@ -353,16 +348,17 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         description: _description.text,
       );
       final capture = widget.capture;
-      if (_photo != null && capture != null) {
-        final doc = await capture.capture(
+      final photo = _photo;
+      if (photo != null && capture != null) {
+        final doc = await CaptureAction.hang(
+          capture,
           orgId: widget.org.id,
-          bytes: _photo!,
-          contentType: _photoType ?? 'image/jpeg',
-          kind: 'product_photo',
-          caption: name,
+          productId: id,
+          name: name,
+          photo: photo,
+          hadPhoto: widget.hasPhoto,
         );
         if (doc != null) {
-          await capture.file(documentId: doc, productId: id);
           if (mounted) await AppScope.read(context)?.session.reloadFeatures(widget.org.id);
         }
       }
@@ -419,7 +415,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                       height: 76,
                       color: theme.colorScheme.surfaceContainerHighest,
                       child: _photo != null
-                          ? Image.memory(_photo!, fit: BoxFit.cover)
+                          ? Image.memory(_photo!.bytes, fit: BoxFit.cover)
                           : const Icon(Icons.add_a_photo_outlined),
                     ),
                   ),

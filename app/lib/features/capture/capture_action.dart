@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/capture/capture_repository.dart';
+import '../../core/capture/models.dart';
 import '../../core/capture/text_reader.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'photo_library_sheet.dart';
+
+/// What [CaptureAction.pick] hands back: the picture, and — chosen in
+/// « Photos » (114) — the document it already is.
+typedef PickedPhoto = ({Uint8List bytes, String contentType, CapturedDocument? from});
 
 /// Taking the photograph.
 ///
@@ -149,9 +155,18 @@ class CaptureAction {
   /// Picks a photograph and hands back the bytes without filing anything —
   /// the notebook reader wants an image to read, not a gallery entry.
   /// Returns null on cancel, and says why on any other dead end.
-  static Future<({Uint8List bytes, String contentType})?> pick(
-      BuildContext context) async {
-    final source = await showModalBottomSheet<ImageSource>(
+  ///
+  /// For an article or a service, [photos] (with [orgId]) adds « Choisir
+  /// dans Photos » (114): one of the business's own photographs, handed
+  /// back with the document it already is ([PickedPhoto.from]) — [hang]
+  /// then gives it to the article.
+  static Future<PickedPhoto?> pick(
+    BuildContext context, {
+    String? orgId,
+    CaptureRepository? photos,
+  }) async {
+    final library = orgId != null && photos != null && photos.isConfigured;
+    final source = await showModalBottomSheet<Object>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -162,6 +177,14 @@ class CaptureAction {
               title: Text(context.tr('Prendre une photo')),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
+            if (library)
+              ListTile(
+                key: const Key('pick-from-photos'),
+                leading: const Icon(Icons.collections_outlined),
+                title: Text(context.tr('Choisir dans Photos')),
+                subtitle: Text(context.tr('Une photo déjà prise par votre activité')),
+                onTap: () => Navigator.of(sheetContext).pop(_fromPhotos),
+              ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: Text(
@@ -173,6 +196,10 @@ class CaptureAction {
       ),
     );
     if (source == null || !context.mounted) return null;
+    if (source == _fromPhotos) {
+      return _fromLibrary(context, orgId: orgId!, capture: photos!);
+    }
+    if (source is! ImageSource) return null;
 
     final messenger = ScaffoldMessenger.of(context);
     final XFile? file;
@@ -200,7 +227,71 @@ class CaptureAction {
       ));
       return null;
     }
-    return (bytes: await file.readAsBytes(), contentType: contentType);
+    return (bytes: await file.readAsBytes(), contentType: contentType, from: null);
+  }
+
+  static const _fromPhotos = 'photos';
+
+  static Future<PickedPhoto?> _fromLibrary(
+    BuildContext context, {
+    required String orgId,
+    required CaptureRepository capture,
+  }) async {
+    final doc = await showPhotoLibrary(context, orgId: orgId, capture: capture);
+    if (doc == null || !context.mounted) return null;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      // Already held: the sheet drew it from these very bytes.
+      final bytes = await capture.objectBytes(doc.key);
+      final type = doc.contentType;
+      return (
+        bytes: bytes,
+        contentType: type != null && type.startsWith('image/') ? type : 'image/jpeg',
+        from: doc,
+      );
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+      return null;
+    }
+  }
+
+  /// Gives a picked photo to an article or a service, through the one
+  /// server path (file_document; 100's photo limit holds the door there,
+  /// and its refusal is said in French by the caller).
+  ///
+  /// A photo from « Photos » that is about nothing yet goes onto an article
+  /// that has none, as it is: no second copy in Photos. Any other — one
+  /// another article wears (that one keeps it), one filed on an entry, or
+  /// one for an article that already has a newer photo (the newest is the
+  /// one shown) — is sent again as the article's own picture, as a new one
+  /// is. Returns the document now on the article, or null when a new
+  /// picture waits for signal on the phone.
+  static Future<String?> hang(
+    CaptureRepository capture, {
+    required String orgId,
+    required String productId,
+    required String name,
+    required PickedPhoto photo,
+    required bool hadPhoto,
+  }) async {
+    final from = photo.from;
+    if (from != null && from.productId == null && from.entryId == null && !hadPhoto) {
+      await capture.file(
+        documentId: from.id,
+        productId: productId,
+        caption: (from.caption?.trim().isEmpty ?? true) ? name : null,
+      );
+      return from.id;
+    }
+    final id = await capture.capture(
+      orgId: orgId,
+      bytes: photo.bytes,
+      contentType: photo.contentType,
+      kind: 'product_photo',
+      caption: name,
+    );
+    if (id != null) await capture.file(documentId: id, productId: productId);
+    return id;
   }
 
   /// What the upload Worker will accept. `XFile.mimeType` is filled in on the

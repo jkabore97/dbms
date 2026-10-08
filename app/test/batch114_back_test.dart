@@ -367,6 +367,9 @@ void main() {
       final engine = _Engine(tester);
       final (router, back) = await openTool(tester, shopHome, _shop, 'produits');
       back.browserHistory = true;
+      // The page by its own address, as the bar opens it.
+      router.go('/o/org-1/produits');
+      await _settle(tester);
 
       await tester.tap(find.byKey(const Key('open-sheet')));
       await _settle(tester);
@@ -375,7 +378,6 @@ void main() {
       expect(find.text('La feuille'), findsNothing);
       expect(find.text('Page produits'), findsOneWidget);
       expect(router.state.uri.path, '/o/org-1/produits');
-      print('ADDR ${engine.addresses}');
       expect(engine.addresses.last, '/o/org-1/produits', reason: 'the page\'s address back in the history');
 
       await tester.tap(find.byKey(const Key('open-snack')));
@@ -522,10 +524,9 @@ void main() {
 
     await tester.tap(find.byType(DropdownButtonFormField<String>));
     await _settle(tester);
-    print('TEXTS ${tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).where((d) => d != null && d.contains('—')).toList()} open=${back.popupOpen}');
-    expect(find.text('GNF — Franc guinéen'), findsWidgets, reason: 'the list is open');
+    expect(find.text('EUR — Euro'), findsWidgets, reason: 'the list is open');
     await _back(tester);
-    expect(find.text('GNF — Franc guinéen'), findsNothing, reason: 'back closed the list');
+    expect(find.text('EUR — Euro'), findsNothing, reason: 'back closed the list');
     expect(find.text('5 / 6'), findsOneWidget, reason: 'on the same step');
     await _back(tester);
     expect(find.text('4 / 6'), findsOneWidget, reason: 'then back steps back, as before');

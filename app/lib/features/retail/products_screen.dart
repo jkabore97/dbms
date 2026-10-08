@@ -779,19 +779,20 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     if (!await photoAllowed(context, widget.org, hasPhoto: _hasPhoto) || !mounted) {
       return;
     }
-    final picked = await CaptureAction.pick(context);
+    final picked = await CaptureAction.pick(context, orgId: widget.org.id, photos: capture);
     if (picked == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     final scope = AppScope.read(context);
     setState(() => _photoBusy = true);
     try {
-      final id = await capture.capture(
+      final id = await CaptureAction.hang(
+        capture,
         orgId: widget.org.id,
-        bytes: picked.bytes,
-        contentType: picked.contentType,
-        kind: 'product_photo',
-        caption: widget.product.name,
+        productId: widget.product.id,
+        name: widget.product.name,
+        photo: picked,
+        hadPhoto: _hasPhoto,
       );
       if (id == null) {
         // Queued for later: the bytes are safe, but with no server id there
@@ -803,7 +804,6 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         ));
         return;
       }
-      await capture.file(documentId: id, productId: widget.product.id);
       await scope?.session.reloadFeatures(widget.org.id);
       if (!mounted) return;
       setState(() {
