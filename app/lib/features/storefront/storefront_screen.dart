@@ -17,9 +17,12 @@ import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/retail/stock_rule.dart';
+import '../../core/shopper/shopper_repository.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/mara_mark.dart';
 import '../common/owned_controller.dart';
+import '../shopper/follow_heart.dart';
+import '../shopper/shopper_profile_screen.dart' show addressName;
 import 'lazy_photo.dart';
 import 'open_badge.dart';
 import 'order_sign_in_sheet.dart';
@@ -52,10 +55,15 @@ class StorefrontScreen extends StatefulWidget {
     required this.capture,
     required this.session,
     this.whatsApp,
+    this.shopper,
   });
 
   final String slug;
   final StorefrontRepository storefront;
+
+  /// The shopper's own (113): the ♥ on the band, and the order sheet's
+  /// saved addresses and preferred payment. Null: neither.
+  final ShopperRepository? shopper;
 
   /// The shopper's number, proved on WhatsApp before an order when the
   /// platform asks (109). Null: Supabase's, through the session's client.
@@ -150,16 +158,32 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     return _items.where((i) => foldSearchText(i.name).contains(q)).toList();
   }
 
+  /// The ♥ on the band (113), known once the shopper is signed in.
+  late final Follows _follows = Follows(widget.shopper);
+  bool? _signedIn;
+
+  void _followsFor() {
+    final phase = widget.session.phase;
+    final inside = phase == SessionPhase.noOrg ||
+        phase == SessionPhase.picking ||
+        phase == SessionPhase.ready;
+    if (inside == _signedIn) return;
+    _signedIn = inside;
+    unawaited(_follows.load());
+  }
+
   @override
   void initState() {
     super.initState();
     widget.session.addListener(_onSession);
+    _followsFor();
     _load();
   }
 
   @override
   void dispose() {
     widget.session.removeListener(_onSession);
+    _follows.dispose();
     _filter.dispose();
     super.dispose();
   }
@@ -372,6 +396,18 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// The server's answer about the shopper's number (109), once asked.
   OrderPhoneGate? _gate;
 
+  /// The shopper's saved addresses and preferred payment (113), once asked
+  /// per visit. No answer in time (or no repository): the sheet as before.
+  ShopperProfile? _mine;
+
+  Future<void> _askMine() async {
+    final shopper = widget.shopper;
+    if (shopper == null || !shopper.isConfigured) return;
+    try {
+      _mine = await shopper.profile().timeout(const Duration(seconds: 8));
+    } catch (_) {}
+  }
+
   /// F1: an order a stranger began, kept on the device while they sign in
   /// (on the web, Google comes back as a reload): `slug|when`. Back
   /// signed in within half an hour, on this vitrine with its basket, the
@@ -381,7 +417,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   bool _resuming = false;
 
   void _onSession() {
-    if (mounted) unawaited(_resumeOrder());
+    if (!mounted) return;
+    _followsFor();
+    unawaited(_resumeOrder());
   }
 
   Future<void> _resumeOrder() async {
@@ -501,7 +539,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       if (_sending) return;
       setState(() => _sending = true);
       try {
+        // The shopper's addresses and payment (113), asked beside the gate:
+        // one wait, not two.
+        final mine = _mine == null ? _askMine() : null;
         gate = await _phone.gate();
+        if (mine != null) await mine;
       } finally {
         if (mounted) setState(() => _sending = false);
       }
@@ -526,6 +568,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           waveMerchant: _shop?.waveMerchant,
           delivers: _shop?.delivers ?? false,
           provedPhone: gate != null && gate.required ? gate.phone : null,
+          addresses: _mine?.addresses ?? const [],
+          preferredPayment: _mine?.payment ?? 'cash',
           onSubmit: _send,
           quote: (lat, lng) =>
               widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
@@ -684,6 +728,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                         child: basketBar(floating: false),
                       ),
                 shop: shop,
+                heart: FollowHeart(follows: _follows, slug: shop.slug),
                 showcase: _showcase,
                 items: _visible,
                 totalCount: _items.length,
@@ -992,11 +1037,21 @@ class OrderSheet extends StatefulWidget {
     this.waveMerchant,
     this.delivers = true,
     this.provedPhone,
+    this.addresses = const [],
+    this.preferredPayment = 'cash',
   });
 
   /// The number WhatsApp proved (109), when the platform asks for one: it
   /// is the order's number, said instead of the optional field.
   final String? provedPhone;
+
+  /// The shopper's saved places (113): offered, the first one picked, once
+  /// « Livraison » is chosen. Empty: the field as before.
+  final List<SavedAddress> addresses;
+
+  /// 'wave' (113, only while the platform allows it) makes Wave the
+  /// sheet's first choice where the vitrine takes it; 'cash' otherwise.
+  final String preferredPayment;
 
   /// Whether « Livraison » is offered at all (081: Kaj Pro shops on the
   /// map). False: pickup is the only way, and no toggle is drawn.
@@ -1034,7 +1089,35 @@ class OrderSheet extends StatefulWidget {
 
 class _OrderSheetState extends State<OrderSheet> {
   String _fulfilment = 'pickup';
-  String _payment = 'cash';
+  late String _payment =
+      widget.waveMerchant != null && widget.preferredPayment == 'wave' ? 'wave' : 'cash';
+
+  /// The saved address picked (113), by its index in [OrderSheet.addresses].
+  int? _picked;
+
+  /// « Livraison » chosen: the first saved address, if the field is empty.
+  void _chooseFulfilment(String f) {
+    setState(() => _fulfilment = f);
+    if (f == 'delivery' &&
+        _picked == null &&
+        _address.text.trim().isEmpty &&
+        widget.addresses.isNotEmpty) {
+      _useAddress(0);
+    }
+  }
+
+  /// One saved address on the sheet: its words and note in the field, its
+  /// pin for the courier and the price.
+  void _useAddress(int i) {
+    final a = widget.addresses[i];
+    setState(() {
+      _picked = i;
+      _address.text = a.forOrder;
+      _dropLat = a.lat;
+      _dropLng = a.lng;
+    });
+    unawaited(_refreshQuote());
+  }
 
   /// The door's pin (058): the phone's fix or a Google Maps link. Optional;
   /// the address in words is still what the courier reads first.
@@ -1465,8 +1548,7 @@ class _OrderSheetState extends State<OrderSheet> {
                   ),
                 ],
                 selected: {_fulfilment},
-                onSelectionChanged: (s) =>
-                    setState(() => _fulfilment = s.first),
+                onSelectionChanged: (s) => _chooseFulfilment(s.first),
               ),
             if (widget.waveMerchant != null) ...[
               const SizedBox(height: 12),
@@ -1488,9 +1570,39 @@ class _OrderSheetState extends State<OrderSheet> {
               ),
             ],
             if (_fulfilment == 'delivery') ...[
+              // The shopper's saved places (113), one tap each.
+              if (widget.addresses.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  key: const Key('order-addresses'),
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (var i = 0; i < widget.addresses.length; i++)
+                      ChoiceChip(
+                        key: Key('order-address-$i'),
+                        avatar: Icon(
+                          switch (widget.addresses[i].kind) {
+                            'home' => Icons.home_outlined,
+                            'work' => Icons.work_outline,
+                            _ => Icons.place_outlined,
+                          },
+                          size: 18,
+                        ),
+                        label: Text(addressName(context, widget.addresses[i])),
+                        selected: _picked == i,
+                        onSelected: (_) => _useAddress(i),
+                      ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               TextField(
+                key: const Key('order-address'),
                 controller: _address,
+                onChanged: (_) {
+                  if (_picked != null) setState(() => _picked = null);
+                },
                 decoration: InputDecoration(
                   labelText: context.tr('Où livrer ?'),
                   hintText: context.tr('Quartier, repère, en face de…'),
@@ -1639,6 +1751,7 @@ class _Window extends StatelessWidget {
   const _Window({
     this.basketCard,
     required this.shop,
+    this.heart,
     this.showcase = false,
     required this.items,
     required this.totalCount,
@@ -1657,6 +1770,9 @@ class _Window extends StatelessWidget {
   /// The basket, in the page after the goods, before the footer.
   final Widget? basketCard;
   final PublicShop shop;
+
+  /// ♥, beside the name (113): follow this vitrine.
+  final Widget? heart;
 
   /// A vitrine d'exemple (094): « Pas à proximité » under the name.
   final bool showcase;
@@ -1826,6 +1942,7 @@ class _Window extends StatelessWidget {
                           ),
                         ),
                       ),
+                      ?heart,
                     ],
                   ),
                   // The tagline (068): one line, in the shop's colour when

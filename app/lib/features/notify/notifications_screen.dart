@@ -143,6 +143,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'pro_active' => Icons.workspace_premium_outlined,
         'new_device' => Icons.shield_outlined,
         'spot_approved' || 'spot_refused' => Icons.campaign_outlined,
+        'vitrine_news' => Icons.favorite_border,
+        'report_handled' => Icons.flag_outlined,
         final k when k.startsWith('courier_') || k.startsWith('delivery_') =>
           Icons.delivery_dining_outlined,
         final k when k.startsWith('order_') || k == 'new_order' =>

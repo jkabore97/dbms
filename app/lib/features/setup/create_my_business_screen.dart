@@ -1058,11 +1058,10 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     return [
       _title(theme, context.tr('Tout est juste ?'),
           context.tr('Touchez une ligne pour la changer.')),
-      Container(
-        decoration: BoxDecoration(
-          color: maraPaper,
-          borderRadius: BorderRadius.circular(14),
-        ),
+      Material(
+        color: maraPaper,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
             for (final (label, value, step) in rows)

@@ -6,6 +6,7 @@ import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
 import '../../core/notify/notifications_repository.dart';
+import '../courier/courier_words.dart' show courierReasonLabel;
 
 /// What a ring of the bell says, and where a tap on it goes.
 ///
@@ -79,6 +80,19 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('La livraison pour {name} a été annulée par la boutique', {'name': s('name')});
     case 'courier_approved':
       return context.tr('Vous êtes livreur Mara : les livraisons vous attendent.');
+    // The dossier (112): sent back with its reason, a new photo asked, and
+    // the platform's own bell for a dossier sent.
+    case 'courier_refused':
+      final note = s('note');
+      return context.tr('Votre demande de livreur est à corriger : {reason}.',
+              {'reason': courierReasonLabel(context, s('reason')).toLowerCase()}) +
+          (note.isEmpty ? '' : ' $note');
+    case 'courier_photo':
+      return s('reason') == 'new_selfie'
+          ? context.tr('Mara demande une nouvelle photo de votre selfie.')
+          : context.tr('Mara demande une nouvelle photo de votre pièce d\'identité.');
+    case 'courier_application':
+      return context.tr('Nouvelle demande de livreur : {name}', {'name': s('name')});
     case 'courier_suspended':
       return context.tr('Votre accès livreur est suspendu.');
     case 'courier_pending':
@@ -219,6 +233,28 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('Votre demande pour {name} est refusée : {reason}',
           // A ready reason (applications_screen.dart) reads in English too.
           {'name': s('name'), 'reason': context.tr(s('reason'))});
+    // A followed vitrine's news (113): one ring a day, said again in it.
+    case 'vitrine_news':
+      final names = [for (final x in (p['names'] is List ? p['names'] as List : const [])) '$x'];
+      final count = number('count')?.toInt() ?? names.length;
+      if (count <= 1) {
+        return yes('offer')
+            ? context.tr('Prix en baisse chez {shop} : {name} à {price}',
+                {'shop': s('shop'), 'name': names.isEmpty ? '' : names.first, 'price': money('price')})
+            : context.tr('Nouveau chez {shop} : {name}',
+                {'shop': s('shop'), 'name': names.isEmpty ? '' : names.first});
+      }
+      return context.tr('{n} nouveautés chez {shop} : {names}', {
+        'n': count,
+        'shop': s('shop'),
+        'names': names.join(', ') + (count > names.length ? '…' : ''),
+      });
+    // A report answered by Mara (113).
+    case 'report_handled':
+      final answer = s('answer');
+      return answer.isEmpty
+          ? context.tr('Mara a traité votre signalement. Merci !')
+          : context.tr('Mara a traité votre signalement : {answer}', {'answer': answer});
     // Mara changed the business's vitrine or its identity from the command
     // center, or took her change back (106).
     case 'mara_edited' || 'mara_undone':
@@ -307,6 +343,10 @@ String? notificationTarget(
       to == 'shop' || (to == null && org != null && (isAdminOf?.call(org) ?? false));
 
   switch (n.kind) {
+    case 'courier_refused' || 'courier_photo':
+      return Routes.becomeCourier;
+    case 'courier_application':
+      return Routes.consoleCouriers;
     case 'courier_approved' || 'courier_suspended' || 'courier_pending' ||
           'delivery_cancelled':
       return Routes.courier;
@@ -316,8 +356,13 @@ String? notificationTarget(
       return Routes.applications;
     case 'spot_requested' || 'spot_paid':
       return Routes.consoleFeatured;
-    case 'platform_message':
+    case 'platform_message' || 'report_handled':
       return null;
+    // A followed vitrine's news (113): the vitrine, which the follower is
+    // not of.
+    case 'vitrine_news':
+      final slug = p['slug'];
+      return slug is String && slug.isNotEmpty ? Routes.storefront(slug) : null;
   }
   if (org == null) return null;
   switch (n.kind) {

@@ -9,6 +9,7 @@ import '../../../core/l10n/tr.dart';
 import '../../../core/nav/router.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
+import '../../courier/courier_words.dart' show courierReasonLabel;
 import 'settings_section.dart';
 
 /// Journal (104, 105): every change the platform made — a setting, a gift,
@@ -148,6 +149,17 @@ class _JournalSectionState extends State<JournalSection> {
         'd1': e.after?['min_days'] ?? '',
       });
     }
+    // A courier's dossier decided (112): who, and what was said.
+    if (e.kind == 'courier') {
+      final status = '${e.after?['status'] ?? ''}';
+      return context.tr('Livreur {name} : {decision}', {
+        'name': e.after?['name'] ?? e.before?['name'] ?? '',
+        'decision': status == 'approved'
+            ? context.tr('approuvé')
+            : context.tr('à corriger ({reason})',
+                {'reason': courierReasonLabel(context, e.after?['reason'] as String?).toLowerCase()}),
+      });
+    }
     return translate(context.trLanguage, e.summary);
   }
 
@@ -165,6 +177,8 @@ class _JournalSectionState extends State<JournalSection> {
         'vitrine' => Icons.storefront_outlined,
         'plan' => Icons.workspace_premium_outlined,
         'cauris_cost' => Icons.sell_outlined,
+        'courier' => Icons.delivery_dining_outlined,
+        'report' => Icons.flag_outlined,
         _ => Icons.edit_note,
       };
 

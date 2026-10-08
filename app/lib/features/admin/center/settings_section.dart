@@ -90,6 +90,10 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('delivery_share_pct', 'delivery', SettingType.pct),
   SettingDef('own_courier_minutes', 'delivery', SettingType.count),
   SettingDef('stuck_ready_minutes', 'delivery', SettingType.count),
+  // 112: what a courier's dossier asks — the licence for a moto or a car,
+  // and a number proved on WhatsApp (off until 109's code is set up).
+  SettingDef('courier_licence_required', 'delivery', SettingType.flag),
+  SettingDef('courier_phone_verified', 'delivery', SettingType.flag),
   SettingDef('wave_checkout', 'wave', SettingType.flag),
   SettingDef('wave_card', 'wave', SettingType.flag),
   SettingDef('wave_commission_pct', 'wave', SettingType.pct),
@@ -111,6 +115,9 @@ const platformSettingDefs = <SettingDef>[
   // 109: a number proved on WhatsApp before an order — off until the
   // WhatsApp code Worker and Supabase's hook are set up.
   SettingDef('order_phone_verified', 'orders', SettingType.flag),
+  // 111: a number proved on WhatsApp before a business is created — off,
+  // as 109's, until the same Worker and hook are set up.
+  SettingDef('create_phone_verified', 'creation', SettingType.flag),
   // 113: the help number of the shopper's « Écrire à Mara sur WhatsApp »;
   // empty, the row is not drawn.
   SettingDef('support_whatsapp', 'help', SettingType.text),
@@ -125,6 +132,7 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'cauris' => context.tr('Cauris, ligues et Chemin'),
       'security' => context.tr('Sécurité de la plateforme'),
       'orders' => context.tr('Commandes de la rue'),
+      'creation' => context.tr('Création d\'activité'),
       'help' => context.tr('Aide aux clients'),
       _ => group,
     };
@@ -161,6 +169,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'delivery_share_pct' => context.tr('Part de Mara sur chaque livraison (%)'),
       'own_courier_minutes' => context.tr('Minutes réservées aux livreurs de la boutique'),
       'stuck_ready_minutes' => context.tr('Minutes avant de signaler une commande prête'),
+      'courier_licence_required' => context.tr('Permis de conduire obligatoire pour livrer à moto ou en voiture'),
+      'courier_phone_verified' => context.tr('Numéro WhatsApp vérifié pour devenir livreur'),
       'wave_checkout' => context.tr('Payer en ligne par Wave'),
       'wave_card' => context.tr('Carte bancaire sur la page Wave'),
       'wave_commission_pct' => context.tr('Commission de Mara sur une commande payée en ligne (%)'),
@@ -179,6 +189,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'path_gates_open' => context.tr('Ouvrir tous les outils du Chemin à tout le monde'),
       'admin_two_step' => context.tr('Validation en deux étapes du compte de la plateforme'),
       'order_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de commander'),
+      'create_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de créer une activité'),
       'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
       _ => key,
     };
@@ -384,7 +395,8 @@ class _SettingsSectionState extends State<SettingsSection> {
           : ((v.value is num ? v.value as num : 0) > 0);
       // What must be set up before the switch is turned (109): a code that
       // cannot leave would stop every order.
-      final before = d.key == 'order_phone_verified'
+      final before = d.key == 'order_phone_verified' || d.key == 'courier_phone_verified' ||
+              d.key == 'create_phone_verified'
           ? context.tr('À n\'activer qu\'une fois le Worker whatsapp-otp déployé, le modèle WhatsApp « authentication » approuvé et le hook « Send SMS » de Supabase branché (BUILD_PLAN.md, « Numéros vérifiés par WhatsApp »).')
           : null;
       return SwitchListTile(

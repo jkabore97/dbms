@@ -100,6 +100,8 @@ class CompteScreen extends StatelessWidget {
     final platform = session.isPlatformAdmin && live;
     final access = session.accessFor(org.id);
     final identity = session.identity;
+    // The platform's help number (113), asked before « Contacter le support ».
+    if (live) Support.warm(scope.auth.client);
 
     String inside(String rest) => Routes.inside(org.id, rest);
     final tools = toolsFor(org, access, admin: admin);
@@ -212,6 +214,33 @@ class CompteScreen extends StatelessWidget {
                 ),
             ],
           ),
+
+          // What the person buys on the street, as anyone does (113): the
+          // shopper's own pages, the same for every kind of business.
+          if (live)
+            _Group(
+              title: context.tr('Mes achats'),
+              children: [
+                _Tile(
+                  key: const Key('compte-my-orders'),
+                  icon: Icons.receipt_long_outlined,
+                  title: context.tr('Mes commandes'),
+                  onTap: () => context.push(Routes.myOrders),
+                ),
+                _Tile(
+                  key: const Key('compte-favourites'),
+                  icon: Icons.favorite_border,
+                  title: context.tr('Mes vitrines favorites'),
+                  onTap: () => context.push(Routes.favourites),
+                ),
+                _Tile(
+                  key: const Key('compte-addresses'),
+                  icon: Icons.home_work_outlined,
+                  title: context.tr('Mes adresses de livraison'),
+                  onTap: () => context.push(Routes.addresses),
+                ),
+              ],
+            ),
 
           if (live)
             _Group(

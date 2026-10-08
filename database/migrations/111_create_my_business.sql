@@ -428,7 +428,7 @@ begin
     -- The platform's switch: a number proved on WhatsApp first.
     v_proved := my_verified_phone();
     if create_phone_required() and v_proved is null then
-        raise exception 'Vérifiez d''abord votre numéro WhatsApp.';
+        raise exception 'Vérifiez d''abord votre numéro WhatsApp';
     end if;
 
     if v_profile = 'church' then

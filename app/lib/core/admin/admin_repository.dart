@@ -395,6 +395,14 @@ class AdminRepository {
     await _accountPost('/v1/users/$userId/delete', const {});
   }
 
+  /// « Supprimer mon compte » (113): the signed-in person deletes their own
+  /// account. Same Worker; the server answers whose (the caller's own,
+  /// read from the token) or why not, in French (113's
+  /// delete_my_account_check).
+  Future<void> deleteMyAccount() async {
+    await _accountPost('/v1/me/delete', const {});
+  }
+
   Future<void> _accountPost(String path, Map<String, dynamic> body) async {
     if (_accountUrl.isEmpty) {
       throw StateError(

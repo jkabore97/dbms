@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
 
 import '../../core/courier/courier_repository.dart';
+import '../../core/courier/courier_dossier.dart';
 import '../../features/orders/my_orders_screen.dart';
 import '../../features/account/legal_screens.dart';
 import '../../features/auth/join_or_apply_screen.dart';
@@ -18,6 +19,11 @@ import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
+import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
+import '../../features/shopper/addresses_screen.dart';
+import '../../features/shopper/favourites_screen.dart';
+import '../../features/shopper/shopper_profile_screen.dart';
+import '../shopper/shopper_repository.dart';
 import '../storefront/storefront_repository.dart';
 import '../storefront/street_cache.dart';
 import '../auth/whatsapp_phone.dart';
@@ -81,10 +87,24 @@ abstract final class Routes {
   static const consoleFeatured = '/console/a-la-une';
   static const consoleShowcase = '/console/vitrines-exemple';
   static const myOrders = '/mes-commandes';
+  /// The shopper's own page (113) and what it opens: the vitrines they
+  /// follow, where they are delivered, their bookings, their notifications.
+  static const shopperProfile = '/mon-compte';
+  static const favourites = '/mon-compte/vitrines';
+  static const addresses = '/mon-compte/adresses';
+  static const bookings = '/mon-compte/reservations';
+  static const myNotifications = '/mon-compte/notifications';
   static const courier = '/livreur';
   /// One running course on a map, for its courier.
   static String courierJob(String orderId) => '/livreur/course/$orderId';
+  /// Becoming a courier (112): the dossier, one question per screen, then
+  /// its review's progress — from the street's foot, the courier space and
+  /// the shopper's profile.
+  static const becomeCourier = '/devenir-livreur';
   static const consoleCouriers = '/console/livreurs';
+  /// One courier's dossier, for the platform's review (112). Not
+  /// `/console/livreurs/<id>`: the settlement lives at `…/reglement`.
+  static String consoleCourierFile(String userId) => '/console/livreurs/dossier/$userId';
   /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
   /// number and prices the paywall says (066).
   static const consolePro = '/console/kaj-pro';
@@ -158,6 +178,7 @@ bool _shopperPath(String location) =>
       Routes.myProfile,
       Routes.picker,
       Routes.myOrders,
+      Routes.shopperProfile,
       Routes.language,
       Routes.payment,
       Routes.privacy,
@@ -305,9 +326,11 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.console) ||
@@ -341,9 +364,11 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.console) ||
@@ -370,9 +395,11 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.console) ||
@@ -448,6 +475,7 @@ GoRouter buildRouter(SessionController session) {
                 keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
+            shopper: ShopperRepository(scope.auth.client),
           );
         },
       ),
@@ -458,7 +486,43 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.myOrders,
         builder: (context, state) => MyOrdersScreen(
           storefront: StorefrontRepository(AppScope.of(context).auth.client),
+          shopper: ShopperRepository(AppScope.of(context).auth.client),
         ),
+      ),
+
+      // The shopper's own page (113) and its pages. Signed-in, like their
+      // orders; built from the first download (the street's half).
+      GoRoute(
+        path: Routes.shopperProfile,
+        builder: (context, _) => ShopperProfileScreen(
+          shopper: ShopperRepository(AppScope.of(context).auth.client),
+        ),
+        routes: [
+          GoRoute(
+            path: 'vitrines',
+            builder: (context, _) => FavouritesScreen(
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+            ),
+          ),
+          GoRoute(
+            path: 'adresses',
+            builder: (context, _) => AddressesScreen(
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+            ),
+          ),
+          GoRoute(
+            path: 'reservations',
+            builder: (context, _) => MyOrdersScreen(
+              storefront: StorefrontRepository(AppScope.of(context).auth.client),
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+              bookingsOnly: true,
+            ),
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (context, _) => NotificationsScreen(notify: AppScope.of(context).notify),
+          ),
+        ],
       ),
 
       // The livreur's whole world (056): the pitch, the wait, the board and
@@ -476,6 +540,19 @@ GoRouter buildRouter(SessionController session) {
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),
+      // Becoming one (112): the dossier and its review's progress. Signed
+      // in — the redirect sends a stranger through sign-in and back here.
+      GoRoute(
+        path: Routes.becomeCourier,
+        builder: (context, state) {
+          final client = AppScope.of(context).auth.client;
+          return biz.BecomeCourierScreen(
+            dossier: CourierDossierRepository(client),
+            files: CourierFiles(client),
+            whatsApp: client == null ? null : SupabaseWhatsAppPhone(client),
+          );
+        },
+      ),
 
       // Every open vitrine: a list, a map, and "près de moi". Public for the
       // same reason as a single vitrine — the shopper has no account.
@@ -488,6 +565,7 @@ GoRouter buildRouter(SessionController session) {
                 keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
+            shopper: ShopperRepository(scope.auth.client),
           );
         },
       ),
@@ -747,9 +825,28 @@ GoRouter buildRouter(SessionController session) {
           // The platform's own vitrines d'exemple (094).
           _centerPage(Routes.consoleShowcase, (context, _) =>
               biz.ShowcaseScreen(admin: AppScope.of(context).admin)),
-          // Who may carry deliveries: also the platform's decision (056).
-          _centerPage(Routes.consoleCouriers, (context, _) =>
-              biz.CouriersScreen(admin: AppScope.of(context).admin)),
+          // Who may carry deliveries: also the platform's decision (056),
+          // their dossiers first (112).
+          _centerPage(Routes.consoleCouriers, (context, _) {
+            final scope = AppScope.of(context);
+            return biz.CouriersScreen(
+              admin: scope.admin,
+              dossier: CourierDossierRepository(scope.auth.client),
+              files: CourierFiles(scope.auth.client),
+            );
+          }),
+          // One dossier's review (112), pushed over the list, with a back.
+          GoRoute(
+            path: '${Routes.consoleCouriers}/dossier/:userId',
+            builder: (context, state) {
+              final client = AppScope.of(context).auth.client;
+              return biz.CourierReviewScreen(
+                userId: state.pathParameters['userId']!,
+                dossier: CourierDossierRepository(client),
+                files: CourierFiles(client),
+              );
+            },
+          ),
           // The platform's part of the delivery fees, per courier, per
           // month (067).
           _centerPage(Routes.consoleSettlement, (context, _) =>

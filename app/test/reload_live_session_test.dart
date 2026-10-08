@@ -133,7 +133,8 @@ void main() {
     auth.gate.complete(const [org]);
     await flush(tester);
 
-    expect(find.text('Articles'), findsOneWidget,
+    // The page's own title (its bar says « Articles » too, 108).
+    expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
         reason: 'the org list landed with the address unchanged, and the '
             'page never redrew — the spinner the owner saw on every reload');
     expect(find.byType(MaraStacked), findsNothing);

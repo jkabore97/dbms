@@ -773,6 +773,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch111.sql
 
+      - name: Prove becoming a courier — today's couriers as before, the dossier checked step by step, approve / refuse / a new photo journaled and undone, the ID photos the platform's alone through every door, gone 30 days after a refusal (112)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch112.sql
+
       - name: Prove the shopper's page — nobody rung as installed, one bell per vitrine per day for its followers and only what the street sees, addresses and choices their own, Wave only when the platform allows it, « Recommander », reports the platform reads and closes, the help number, the data and the account deletion's question (113)
         env:
           PGPASSWORD: postgres
@@ -839,7 +844,10 @@ jobs:
       # Loading on a bad line (108). The street's photos small: ?w= made
       # once with Cloudflare Images and kept, Postgres's yes still asked
       # for the photo itself, the original when Images is absent or
-      # refuses — against a fake bucket and a fake Images.
+      # refuses — against a fake bucket and a fake Images. A courier's
+      # dossier (112): its photos uploaded, read and purged only as Postgres
+      # says, as the caller; never through an org route, a thumbnail or a
+      # key that spells its way out of org/.
       - run: node --test workers/uploads/test/*.test.mjs
       # The site Worker: a build's folders kept a year, the page and the
       # workers asked about every time, a gone build's folder a 404.

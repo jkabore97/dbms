@@ -14,6 +14,8 @@ import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../admin/admin_pill.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/shopper/shopper_repository.dart';
+import '../shopper/follow_heart.dart';
 import 'directory_map.dart' deferred as street_map;
 import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
@@ -43,9 +45,13 @@ class DirectoryScreen extends StatefulWidget {
     required this.storefront,
     required this.capture,
     required this.session,
+    this.shopper,
   });
 
   final StorefrontRepository storefront;
+
+  /// The shopper's follows (113), for the ♥ on each card. Null: no hearts.
+  final ShopperRepository? shopper;
 
   /// For the featured photos, served publicly by the uploads Worker per key.
   final CaptureRepository capture;
@@ -91,14 +97,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   List<ProductHit> _hits = const [];
   bool _hunting = false;
 
+  /// The ♥ on the cards (113): known once the shopper is signed in.
+  late final Follows _follows = Follows(widget.shopper);
+  bool? _signedIn;
+
+  void _onSession() {
+    final phase = widget.session.phase;
+    final inside = phase == SessionPhase.noOrg ||
+        phase == SessionPhase.picking ||
+        phase == SessionPhase.ready;
+    if (inside == _signedIn) return;
+    _signedIn = inside;
+    unawaited(_follows.load());
+  }
+
   @override
   void initState() {
     super.initState();
     _load();
+    widget.session.addListener(_onSession);
+    _onSession();
   }
 
   @override
   void dispose() {
+    widget.session.removeListener(_onSession);
+    _follows.dispose();
     _debounce?.cancel();
     _search.dispose();
     super.dispose();
@@ -343,6 +367,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   featured: _featured,
                   spotlights: _spotlights,
                   showcases: _showcases,
+                  follows: _follows,
                   capture: widget.capture,
                   here: _here,
                   fallback: _ouaga,
@@ -445,8 +470,10 @@ class _AccountCorner extends StatelessWidget {
                     switch (choice) {
                       case 'orders':
                         context.go(Routes.myOrders);
+                      // A shopper's own page (113); a business's people
+                      // keep their Compte, and their names here.
                       case 'profile':
-                        context.go(Routes.myProfile);
+                        context.go(member ? Routes.myProfile : Routes.shopperProfile);
                       case 'out':
                         await session.signOut();
                     }
@@ -491,6 +518,7 @@ class _Street extends StatelessWidget {
     required this.featured,
     this.spotlights = const {},
     this.showcases = const {},
+    this.follows,
     required this.capture,
     required this.here,
     required this.fallback,
@@ -511,6 +539,9 @@ class _Street extends StatelessWidget {
   final List<FeaturedItem> featured;
   final Set<String> spotlights;
   final Set<String> showcases;
+
+  /// The ♥ on each card (113), once the shopper's follows are known.
+  final Follows? follows;
   final CaptureRepository capture;
   final LatLng? here;
   final LatLng fallback;
@@ -715,13 +746,15 @@ class _Street extends StatelessWidget {
                         previews: previews[entries[i].slug] ?? const [],
                         sponsored: spotlights.contains(entries[i].slug),
                         far: showcases.contains(entries[i].slug),
+                        follows: follows,
                         capture: capture,
                         onOpen: () => onOpen(entries[i]),
                       ),
                     ),
                   ),
                 ),
-              const ShopFooter(),
+              // « Devenir livreur » at the street's foot (112).
+              ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
             ],
           ),
         ),
@@ -800,7 +833,7 @@ class _SearchResults extends StatelessWidget {
               ),
             ),
           ),
-        const ShopFooter(),
+        ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
       ],
     );
   }
@@ -1013,9 +1046,13 @@ class _ShopTile extends StatelessWidget {
     this.previews = const [],
     this.sponsored = false,
     this.far = false,
+    this.follows,
   });
 
   final DirectoryEntry entry;
+
+  /// The ♥ (113), at the foot of the square, when the follows are known.
+  final Follows? follows;
 
   /// A vitrine d'exemple (094): « Pas à proximité » on the square.
   final bool far;
@@ -1041,7 +1078,8 @@ class _ShopTile extends StatelessWidget {
             ? context.tr('Position non renseignée')
             : _labelFor(entry.profile));
 
-    return Semantics(
+    final follows = this.follows;
+    final tile = Semantics(
       button: true,
       label: [
         entry.name,
@@ -1156,6 +1194,21 @@ class _ShopTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+    if (follows == null) return tile;
+    // The ♥ over the square's foot, beside the tile rather than in it: its
+    // own button for a screen reader, its own tap.
+    return LayoutBuilder(
+      builder: (context, box) => Stack(
+        children: [
+          tile,
+          Positioned(
+            right: 8,
+            top: box.maxWidth / 1.15 - 44,
+            child: FollowHeart(follows: follows, slug: entry.slug, onCard: true),
+          ),
+        ],
       ),
     );
   }

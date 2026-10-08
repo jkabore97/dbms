@@ -750,6 +750,8 @@ declare
         'spot_price_shop_7', 'spot_price_shop_30',
         'delivery_base', 'delivery_per_km', 'delivery_currency', 'delivery_max_km',
         'delivery_included_km', 'delivery_share_pct', 'own_courier_minutes', 'stuck_ready_minutes',
+        -- 112: read by courier_rules(), which the courier's dossier asks.
+        'courier_licence_required', 'courier_phone_verified',
         'wave_checkout', 'wave_card', 'wave_commission_pct',
         'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',
         'cauris_expire_days', 'cauris_unlock_days', 'cauris_prize_1', 'cauris_prize_2',
@@ -758,6 +760,8 @@ declare
         'admin_two_step',
         -- 109: read by order_phone_required(), which place_order asks.
         'order_phone_verified',
+        -- 111: read by create_phone_required(), which create_my_business asks.
+        'create_phone_verified',
         -- 113: read by support_whatsapp(), which the shopper's page asks.
         'support_whatsapp'];
     v_dead text;

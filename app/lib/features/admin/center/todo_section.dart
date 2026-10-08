@@ -12,6 +12,7 @@ import '../../../core/theme/mara_mark.dart';
 import '../../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindPlural;
 import '../console_today.dart';
 import 'center_search.dart' show orderStatusLabel;
+import 'reports_sheet.dart';
 
 /// « À faire » (105): the center's first page. What waits on the platform
 /// and what ends within seven days, as numbers to tap — each opens the
@@ -97,6 +98,14 @@ class _TodoSectionState extends State<TodoSection> {
           Icons.timer_outlined,
           () => _list('orders_stuck', context.tr('Commandes bloquées')),
           hint: context.tr('en attente depuis 2 h, ou en route depuis 3 h')),
+      // « Signaler un problème » from the shopper's page (113).
+      _Count('reports_open', t['reports_open'], context.tr('Signalements'),
+          Icons.flag_outlined,
+          () async {
+            await showReportsSheet(context, center: widget.center);
+            if (mounted) await _load();
+          },
+          hint: context.tr('des clients, à lire')),
       _Count('payouts_failed', t['payouts_failed'], context.tr('Versements Wave échoués'),
           Icons.sync_problem_outlined, () => context.go(Routes.consoleWave),
           warn: true),
@@ -385,6 +394,13 @@ class _TodoListSheetState extends State<TodoListSheet> {
           ?r.error,
         ].join(' · '),
       'silent_30' => context.tr('Rien depuis le {date}', {'date': day}),
+      'new_7' => [
+          r.byPerson
+              ? context.tr('Créée le {date} par la personne', {'date': day})
+              : context.tr('Créée le {date} par Mara', {'date': day}),
+          ?r.owner,
+          ?r.city,
+        ].join(' · '),
       'features_lapsed' => context.tr('{tool} n\'est plus visible depuis le {date}', {
           'tool': featureName(context, r.feature ?? ''),
           'date': day,

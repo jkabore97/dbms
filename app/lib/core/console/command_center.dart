@@ -2,8 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../admin/platform_writes.dart';
 import 'created_businesses.dart';
+import 'problem_reports.dart';
 
 export 'created_businesses.dart';
+export 'problem_reports.dart';
 
 /// Mara's command center, from the server (104, 105): « À faire », the one
 /// search, several businesses at once, the journal and its « Annuler »,
@@ -37,6 +39,25 @@ class CommandCenterRepository {
     final v = await _requireClient()
         .rpc('platform_created_businesses', params: {'p_limit': limit});
     return CreatedBusinesses.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
+  }
+
+  /// « Signalements » (113): the shoppers' reports, the open ones oldest
+  /// first, or the handled ones.
+  Future<List<ProblemReport>> reports({bool handled = false}) async {
+    final v = await _requireClient().rpc('platform_reports',
+        params: {'p_status': handled ? 'handled' : 'open'});
+    return [
+      for (final r in (v is List ? v : const []))
+        if (r is Map) ProblemReport.fromJson(Map<String, dynamic>.from(r)),
+    ];
+  }
+
+  /// One report closed, with an answer the person reads (113): the
+  /// journal line's id, for « Annuler ».
+  Future<String?> handleReport(String id, {String? answer}) async {
+    final v = await _requireClient().rpc('platform_handle_report',
+        params: {'p_id': id, 'p_answer': answer});
+    return v as String?;
   }
 
   /// The rows behind one count (platform_todo_list, 105).
@@ -131,7 +152,7 @@ class PlatformTodo {
   int get waiting =>
       this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
-      this['features_lapsed'];
+      this['features_lapsed'] + this['reports_open'];
 }
 
 /// One row behind a count: a business, and what is about it.
