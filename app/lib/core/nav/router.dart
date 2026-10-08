@@ -19,6 +19,7 @@ import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../storefront/storefront_repository.dart';
+import '../storefront/street_cache.dart';
 import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
@@ -437,7 +438,10 @@ GoRouter buildRouter(SessionController session) {
           final scope = AppScope.of(context);
           return StorefrontScreen(
             slug: state.pathParameters['slug'] ?? '',
-            storefront: StorefrontRepository(scope.auth.client),
+            // The street's last look on this phone (street_cache.dart):
+            // shown at once on a slow line, and all there is with none.
+            storefront: StorefrontRepository(scope.auth.client,
+                keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
           );
@@ -476,7 +480,8 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, state) {
           final scope = AppScope.of(context);
           return DirectoryScreen(
-            storefront: StorefrontRepository(scope.auth.client),
+            storefront: StorefrontRepository(scope.auth.client,
+                keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
           );

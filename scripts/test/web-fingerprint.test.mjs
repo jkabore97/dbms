@@ -17,7 +17,7 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 function fakeBuild(overrides = {}) {
   const root = mkdtempSync(join(tmpdir(), "mara-fp-"));
   const files = {
-    "index.html": '<script>_flutter.buildConfig={};</script><script>var PATHS = /*MARA_PATHS*/{}; var VERSION = /*MARA_VERSION*/"";</script>',
+    "index.html": '<head><!--MARA_PRELOAD--></head><script>_flutter.buildConfig={};</script><script>var PATHS = /*MARA_PATHS*/{}; var VERSION = /*MARA_VERSION*/"";</script>',
     "mara_sw.js": "const BUILD = /*MARA_BUILD*/null;",
     "main.dart.js": "main",
     "main.dart.js_1.part.js": "part one",
@@ -60,6 +60,10 @@ test("moves each changing file under a folder named after its content", () => {
     assert.match(paths.canvasKitBaseUrl, /^\/ck\/[0-9a-f]{12}\/$/);
     assert.match(paths.assetBase, /^\/a\/[0-9a-f]{12}\/$/);
     assert.ok(html.includes('var VERSION = "abc123";'));
+    // The fonts the engine needs first, asked for by the page at once.
+    assert.ok(html.includes(`<link rel="preload" href="${paths.assetBase}assets/FontManifest.json" as="fetch" crossorigin>`));
+    assert.ok(html.includes(`<link rel="preload" href="${paths.assetBase}assets/fonts/MaterialIcons-Regular.otf" as="fetch" crossorigin>`));
+    assert.ok(!html.includes("Roboto"), "a font the build does not have is not asked for");
 
     const at = (p) => join(root, p.slice(1));
     assert.equal(readFileSync(at(paths.entrypointBaseUrl + "main.dart.js"), "utf8"), "main");

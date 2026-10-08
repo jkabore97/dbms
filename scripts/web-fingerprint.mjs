@@ -41,6 +41,7 @@ if (!root || !version) {
 const PATHS = '/*MARA_PATHS*/{}';
 const VERSION = '/*MARA_VERSION*/""';
 const BUILD = '/*MARA_BUILD*/null';
+const PRELOAD = '<!--MARA_PRELOAD-->';
 
 // The files that keep their names, kept by the worker per build. index.html
 // is the page itself (« / »); the database engine (sqflite_sw.js and
@@ -88,6 +89,7 @@ for (const need of ['index.html', 'main.dart.js', 'canvaskit', 'assets', 'mara_s
 let html = readFileSync(index, 'utf8');
 if (!html.includes(PATHS)) fail(`index.html has no ${PATHS} — already fingerprinted, or web/index.html lost the loader`);
 if (!html.includes(VERSION)) fail(`index.html has no ${VERSION}`);
+if (!html.includes(PRELOAD)) fail(`index.html has no ${PRELOAD}`);
 if (!html.includes('_flutter.buildConfig')) fail('index.html does not carry the Flutter loader inline ({{flutter_bootstrap_js}})');
 let sw = readFileSync(worker, 'utf8');
 if (!sw.includes(BUILD)) fail(`mara_sw.js has no ${BUILD}`);
@@ -116,9 +118,18 @@ for (const stale of ['flutter_bootstrap.js', 'flutter.js', 'flutter.js.map']) rm
 
 // ---------------------------------------------------------------- index.html
 
+// The files the engine fetches before its first frame, asked for by the
+// page at once (index.html, <!--MARA_PRELOAD-->): the font list and the
+// fonts it names.
+const preload = ['assets/FontManifest.json', 'assets/fonts/fallback/Roboto-Regular.ttf', 'assets/fonts/MaterialIcons-Regular.otf']
+  .filter((f) => existsSync(at(`a/${hA}/${f}`)))
+  .map((f) => `<link rel="preload" href="${dirs.a}${f}" as="fetch" crossorigin>`)
+  .join('\n  ');
+
 html = html
   .replace(PATHS, JSON.stringify({ entrypointBaseUrl: dirs.app, canvasKitBaseUrl: dirs.ck, assetBase: dirs.a }))
-  .replace(VERSION, JSON.stringify(version));
+  .replace(VERSION, JSON.stringify(version))
+  .replace(PRELOAD, preload);
 writeFileSync(index, html);
 
 // ---------------------------------------------------------------- mara_sw.js

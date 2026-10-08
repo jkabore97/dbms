@@ -38,6 +38,18 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="manifest" href="manifest.json">
 
+  <!--
+    Asked for now, alongside the app, rather than one after the other once
+    it runs: the local database's engine (fetched by its worker as the app
+    starts) and the fonts (fetched by the engine before it can draw a
+    letter). On 3G that order left the line idle for seconds before the
+    first frame. The fonts' folder is written by the deploy
+    (scripts/web-fingerprint.mjs).
+  -->
+  <link rel="preload" href="sqflite_sw.js" as="fetch" crossorigin>
+  <link rel="preload" href="sqlite3.wasm" as="fetch" type="application/wasm" crossorigin>
+  <!--MARA_PRELOAD-->
+
   <title>Mara — Au Service du Peuple</title>
 
   <style>
