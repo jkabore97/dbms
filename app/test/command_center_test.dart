@@ -88,7 +88,8 @@ class _Center extends CommandCenterRepository {
   }
 
   @override
-  Future<List<JournalEntry>> journal({String? orgId, int limit = 50, DateTime? before}) async =>
+  Future<List<JournalEntry>> journal(
+      {String? orgId, int limit = 50, DateTime? before, String? beforeId}) async =>
       before == null ? entries : const [];
 
   @override

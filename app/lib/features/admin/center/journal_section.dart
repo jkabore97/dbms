@@ -65,11 +65,12 @@ class _JournalSectionState extends State<JournalSection> {
         orgId: widget.orgId,
         limit: _page,
         before: reset || _entries.isEmpty ? null : _entries.last.at,
+        beforeId: reset || _entries.isEmpty ? null : _entries.last.id,
       );
       if (!mounted) return;
       setState(() {
         if (reset) _entries.clear();
-        // Two lines of one act share their time: never listed twice.
+        // Never the same line twice, whatever the page boundary.
         final seen = {for (final e in _entries) e.id};
         _entries.addAll(page.where((e) => !seen.contains(e.id)));
         _more = page.length == _page;

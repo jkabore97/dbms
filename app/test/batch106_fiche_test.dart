@@ -123,7 +123,8 @@ class _Center extends CommandCenterRepository {
   bool get isConfigured => true;
 
   @override
-  Future<List<JournalEntry>> journal({String? orgId, int limit = 50, DateTime? before}) async => [
+  Future<List<JournalEntry>> journal(
+      {String? orgId, int limit = 50, DateTime? before, String? beforeId}) async => [
         JournalEntry(
           id: 'j1',
           at: DateTime(2026, 10, 7, 9, 30),

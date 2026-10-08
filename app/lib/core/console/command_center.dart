@@ -58,13 +58,16 @@ class CommandCenterRepository {
     return BulkResult.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
   }
 
-  /// The journal, newest first (platform_actions_page, 104).
+  /// The journal, newest first (platform_actions_page, 104). The next page
+  /// starts after the last line read: its time [before] and its id
+  /// [beforeId] together, since several lines can share one moment.
   Future<List<JournalEntry>> journal(
-      {String? orgId, int limit = 50, DateTime? before}) async {
+      {String? orgId, int limit = 50, DateTime? before, String? beforeId}) async {
     final v = await _requireClient().rpc('platform_actions_page', params: {
       'p_org': orgId,
       'p_limit': limit,
       'p_before': before?.toUtc().toIso8601String(),
+      'p_before_id': before == null ? null : beforeId,
     });
     return [
       for (final r in (v is List ? v : const []))
