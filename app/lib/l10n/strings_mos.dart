@@ -194,13 +194,7 @@ class StringsMos extends Strings {
   String get myProfile => 'Mes informations';
 
   @override
-  String get applications => 'Demandes';
-
-  @override
   String get businesses => 'Entreprises';
-
-  @override
-  String get applyForBusiness => 'Demander une entreprise';
 
   @override
   String get switchBusiness => 'Changer d\'activité';

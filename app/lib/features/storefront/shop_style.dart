@@ -436,9 +436,13 @@ class ShopSectionLabel extends StatelessWidget {
 /// centred band of cream, with Mara and its slogan, and under it « POWERED BY
 /// KAJ », KAJ in bold.
 class ShopFooter extends StatelessWidget {
-  const ShopFooter({super.key, this.onDirectory});
+  const ShopFooter({super.key, this.onDirectory, this.onBecomeCourier});
 
   final VoidCallback? onDirectory;
+
+  /// The street's foot only (112): « Devenir livreur ». A vitrine's foot
+  /// is the shop's, and keeps to its own way back.
+  final VoidCallback? onBecomeCourier;
 
   @override
   Widget build(BuildContext context) {
@@ -454,6 +458,19 @@ class ShopFooter extends StatelessWidget {
                 onTap: onDirectory,
                 style: const TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: ShopStyle.ink)),
+          ),
+        ],
+        if (onBecomeCourier != null) ...[
+          const SizedBox(height: 28),
+          Center(
+            child: UnderlineLink(
+                key: const Key('footer-become-courier'),
+                label: context.tr('Devenir livreur'),
+                onTap: onBecomeCourier,
+                style: const TextStyle(
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: ShopStyle.ink)),
           ),

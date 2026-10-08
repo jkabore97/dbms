@@ -565,10 +565,13 @@ do $$
 declare v_app org_applications%rowtype;
 begin
     perform apply_for_org('Atelier 35', 'atelier-35', 'retail', 'XOF', 'Couture à Gounghin');
+    -- Since 111 the request is answered at once; who asked is kept all the
+    -- same (null-safe: no row at all fails too).
     select * into v_app from org_applications
-     where applicant_id = '35353535-0000-0000-0000-000000000006' and status = 'pending';
-    if v_app.contact_name <> 'Aminata Ouédraogo' or v_app.contact_phone <> '+22635000066'
-       or v_app.contact_email <> 'asker35@example.com' then
+     where applicant_id = '35353535-0000-0000-0000-000000000006' and slug = 'atelier-35';
+    if v_app.contact_name is distinct from 'Aminata Ouédraogo'
+       or v_app.contact_phone is distinct from '+22635000066'
+       or v_app.contact_email is distinct from 'asker35@example.com' then
         raise exception 'FAIL: the person was not taken from the profile: % / % / %',
             v_app.contact_name, v_app.contact_phone, v_app.contact_email;
     end if;

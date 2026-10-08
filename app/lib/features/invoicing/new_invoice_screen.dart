@@ -8,6 +8,7 @@ import '../../core/invoicing/models.dart';
 import '../../core/phone/country_codes.dart';
 import '../accounting/report_shell.dart';
 import '../common/phone_field.dart';
+import '../home/business_frame.dart' show UnsavedInput;
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -72,7 +73,17 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
       }
       if (_lines.isEmpty) _lines.add(_LineDraft());
     }
+    _opened = _snapshot();
   }
+
+  /// Everything the page holds, as it opened (A4: the business's bar asks
+  /// before leaving an invoice typed but not saved).
+  String _opened = '';
+
+  String _snapshot() => [
+        _customer.text, _address.text, _phone.text, _memo.text, '$_dueDays', _country.iso,
+        for (final l in _lines) ...[l.description.text, l.quantity.text, l.price.text],
+      ].join('\u0001');
 
   int? _dueDays = 30;
   bool _saving = false;
@@ -154,7 +165,12 @@ class _NewInvoiceScreenState extends State<NewInvoiceScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => UnsavedInput(
+        isDirty: () => !_saving && _snapshot() != _opened,
+        child: _page(context),
+      );
+
+  Widget _page(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(

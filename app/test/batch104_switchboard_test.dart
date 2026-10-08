@@ -110,18 +110,39 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-/// The catalog keys, read from the migration that writes them — so a key
-/// added there without its wiring here fails this test.
-Set<String> _catalogKeys() {
-  final sql = File('../database/migrations/104_feature_switchboard.sql').readAsStringSync();
+/// The catalog keys, read from the migrations that write them — 104's
+/// tools and 110's vitrine — so a key added there without its wiring here
+/// fails this test.
+Set<String> _catalogKeys() => {
+      for (final file in const ['104_feature_switchboard.sql', '110_vitrine_switches.sql'])
+        ..._keysOf(file),
+    };
+
+Set<String> _keysOf(String file) {
+  final sql = File('../database/migrations/$file').readAsStringSync();
   final start = sql.indexOf('insert into feature_catalog');
   final end = sql.indexOf('on conflict (key)', start);
-  expect(start, isNot(-1), reason: 'no catalog insert in 104');
+  expect(start, isNot(-1), reason: 'no catalog insert in $file');
   return RegExp(r"^\s*\('([a-z_]+)',", multiLine: true)
       .allMatches(sql.substring(start, end))
       .map((m) => m.group(1)!)
       .toSet();
 }
+
+/// The vitrine's switches (110) with no address of their own in the router,
+/// and where each lives instead — its gate is read there (_drawn).
+const _noAddress = <String, String>{
+  // The public vitrine (/s/<slug>) reads storefront()'s orders_closed;
+  // « Commandes » stays open for the orders already received.
+  'online_orders': 'the vitrine itself',
+  // Parts and cards of Paramètres (?partie=livraison falls back to the index).
+  'delivery': 'Paramètres › Livraison',
+  'online_payment': 'Paramètres › Paiements (Mara\'s payout part)',
+  'vitrine_plus': 'Paramètres › Vitrine › Vitrine avancée',
+  'spots': 'Paramètres › Vitrine › Mettre en avant',
+  // « À vendre » stays: it is the farm's own list, sold at the farm too.
+  'for_sale': 'À vendre (the farm\'s list)',
+};
 
 /// Where each tool is drawn, and the gate there that reads the switch: the
 /// dial's own key (accessTo folds the platform's hidden into it) or
@@ -160,6 +181,34 @@ const _drawn = <String, Map<String, List<String>>>{
   },
   'accounting': {
     'lib/features/account/compte_screen.dart': ["isHidden('accounting')"],
+  },
+  // 110: the vitrine's switches.
+  'online_orders': {
+    'lib/features/storefront/storefront_screen.dart': ['style.ordersClosed'],
+    'lib/core/storefront/storefront_repository.dart': ["json['orders_closed']"],
+    'lib/features/admin/org_settings_screen.dart': ["_hidden('online_orders')"],
+    'lib/features/orders/shop_orders_screen.dart': ["isHidden('online_orders')"],
+  },
+  'services': {
+    'lib/features/retail/store_home_screen.dart': ["isHidden('services')"],
+    'lib/features/farm/farm_home_screen.dart': ["isHidden('services')"],
+    'lib/features/church/church_home_screen.dart': ["isHidden('services')"],
+    'lib/features/admin/org_settings_screen.dart': ["_hidden('services')"],
+  },
+  'delivery': {
+    'lib/features/admin/org_settings_screen.dart': ["_hidden('delivery')"],
+  },
+  'online_payment': {
+    'lib/features/admin/org_settings_screen.dart': ["_hidden('online_payment')"],
+  },
+  'vitrine_plus': {
+    'lib/features/admin/vitrine_plus_card.dart': ["isHidden('vitrine_plus')"],
+  },
+  'spots': {
+    'lib/features/admin/org_settings_screen.dart': ["_hidden('spots')"],
+  },
+  'for_sale': {
+    'lib/features/farm/for_sale_screen.dart': ["isHidden('for_sale')"],
   },
 };
 
@@ -291,9 +340,12 @@ void main() {
       expect(keys, _drawn.keys.toSet(),
           reason: 'a catalog key with no draw site here is a dead switch');
       final router = File('lib/core/nav/router.dart').readAsStringSync();
+      expect(keys.containsAll(_noAddress.keys), isTrue);
       for (final key in keys) {
-        expect(router.contains("feature: '$key',"), isTrue,
-            reason: '« $key » has no guarded address in the router');
+        if (!_noAddress.containsKey(key)) {
+          expect(router.contains("feature: '$key',"), isTrue,
+              reason: '« $key » has no guarded address in the router');
+        }
         for (final site in _drawn[key]!.entries) {
           final src = File(site.key).readAsStringSync();
           for (final gate in site.value) {

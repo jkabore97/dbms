@@ -325,15 +325,18 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(
-                          child: _VitrineTile(
-                            key: const Key('association-services'),
-                            icon: Icons.storefront_outlined,
-                            label: context.tr('Ma vitrine et mes services'),
-                            onTap: () => _open('services'),
+                        // Unless Mara's switchboard hid the services (110).
+                        if (!widget.access.isHidden('services')) ...[
+                          Expanded(
+                            child: _VitrineTile(
+                              key: const Key('association-services'),
+                              icon: Icons.storefront_outlined,
+                              label: context.tr('Ma vitrine et mes services'),
+                              onTap: () => _open('services'),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
+                          const SizedBox(width: 12),
+                        ],
                         Expanded(
                           child: _VitrineTile(
                             key: const Key('association-requests'),
@@ -477,6 +480,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
         // on this page, and one word twice on a screen reads as two places.
         label: context.tr('Accueil'),
         onTap: () {},
+        route: '',
       ),
       primary: [
         // A peer of Rapports rather than something to be found three taps
@@ -491,6 +495,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.history,
             label: s.history,
+            route: 'journal',
             onTap: widget.onHistory!,
           ),
         if (widget.reports != null &&
@@ -499,6 +504,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.assessment_outlined,
             label: s.reports,
+            route: 'rapports',
             onTap: () => context.push(Routes.inside(org.id, 'rapports')),
           ),
         if (widget.invoicing != null &&
@@ -507,6 +513,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            route: 'factures',
             onTap: () => context.push(Routes.inside(org.id, 'factures')),
           ),
       ],
@@ -518,17 +525,29 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             HomeDestination(
               icon: Icons.photo_library_outlined,
               label: s.photos,
+              route: 'photos',
               onTap: () => context.push(Routes.inside(org.id, 'photos')),
             ),
           if (widget.staff != null && org.isAdmin)
             HomeDestination(
               icon: Icons.groups_outlined,
               label: context.tr('Équipe'),
+              route: 'equipe',
               onTap: () => context.push(Routes.inside(org.id, 'equipe')),
+            ),
+          // The administration's hub (108), for whoever runs the
+          // association.
+          if (org.isAdmin)
+            HomeDestination(
+              icon: Icons.admin_panel_settings_outlined,
+              label: context.tr('Administration'),
+              route: 'administration',
+              onTap: () => _open('administration'),
             ),
           HomeDestination(
             icon: Icons.account_circle_outlined,
             label: s.account,
+            route: 'compte',
             onTap: () => context.push(Routes.inside(org.id, 'compte')),
           ),
         ],

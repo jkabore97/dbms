@@ -31,6 +31,7 @@ class OrgPickerScreen extends StatefulWidget {
     this.onRetry,
     this.onSignOut,
     this.onCreateBusiness,
+    this.onCreateMine,
     this.title,
   });
 
@@ -58,6 +59,10 @@ class OrgPickerScreen extends StatefulWidget {
   /// Null for everyone except a platform admin, whose list here is every
   /// business there is rather than the ones they were invited to.
   final VoidCallback? onCreateBusiness;
+
+  /// « + Nouvelle activité » under the list (111): a person creates their
+  /// own business. Null for a platform admin, who has [onCreateBusiness].
+  final VoidCallback? onCreateMine;
 
   /// Null takes the localized default. Passed only by callers that mean
   /// something narrower than "choose".
@@ -254,6 +259,18 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
         for (var i = 0; i < shown.length; i++) ...[
           if (i > 0) const SizedBox(height: 12),
           _OrgCard(org: shown[i], onTap: () => widget.onSelected(shown[i])),
+        ],
+        if (widget.onCreateMine != null) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 56,
+            child: OutlinedButton.icon(
+              key: const Key('picker-create'),
+              onPressed: widget.onCreateMine,
+              icon: const Icon(Icons.add),
+              label: Text(context.tr('Nouvelle activité'), style: const TextStyle(fontSize: 16)),
+            ),
+          ),
         ],
       ],
     );

@@ -126,6 +126,29 @@ test("a tap lands where the bell points", () => {
   assert.equal(payloadFor({ kind: "low_stock", org_id: "o2", message: "m" }, env).url,
     "https://dbms.kabore-boss.workers.dev/o/o2");
   assert.equal(payloadFor({ kind: "org_application", message: "m", id: "n1" }, env).tag, "kaj-n1");
+  // 113: a followed vitrine's news opens the vitrine (its row names the
+  // business, which the follower is not of), never anything but a slug.
+  assert.equal(payloadFor({ kind: "vitrine_news", org_id: "o3", message: "m",
+    params: { slug: "boutique-awa" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/s/boutique-awa");
+  assert.equal(payloadFor({ kind: "vitrine_news", org_id: "o3", message: "m",
+    params: { slug: "../o/o3" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/o/o3");
+  assert.equal(payloadFor({ kind: "report_handled", message: "m", params: {} }, env).url,
+    "https://dbms.kabore-boss.workers.dev/mon-compte/notifications");
+  // 112: the platform's bell for an application opens its couriers, not
+  // the board; the applicant's refusal or « new photo » their application.
+  assert.equal(payloadFor({ kind: "courier_application", message: "m", params: { to: "platform" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/console/livreurs");
+  assert.equal(payloadFor({ kind: "courier_refused", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/devenir-livreur");
+  assert.equal(payloadFor({ kind: "courier_photo", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/devenir-livreur");
+  assert.equal(payloadFor({ kind: "courier_suspended", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/livreur");
+  // 111: an older app's request answered at once.
+  assert.equal(payloadFor({ kind: "application_update_app", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/creer-mon-activite");
 });
 
 test("the bell says Mara, whatever name the database's sentence was written in", () => {

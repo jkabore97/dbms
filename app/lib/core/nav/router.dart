@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
 
 import '../../core/courier/courier_repository.dart';
+import '../../core/courier/courier_dossier.dart';
 import '../../features/orders/my_orders_screen.dart';
 import '../../features/account/legal_screens.dart';
 import '../../features/auth/join_or_apply_screen.dart';
@@ -18,7 +19,15 @@ import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
+import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
+import '../../features/shopper/addresses_screen.dart';
+import '../../features/shopper/favourites_screen.dart';
+import '../../features/shopper/shopper_profile_screen.dart';
+import '../shopper/shopper_repository.dart';
 import '../storefront/storefront_repository.dart';
+import '../storefront/street_cache.dart';
+import '../auth/whatsapp_phone.dart';
+import '../onboarding/business_creation.dart';
 import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
@@ -31,6 +40,7 @@ import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
 import '../../features/admin/admin_pill.dart' show AdminTrail;
 import 'app_scope.dart';
+import 'business_cover.dart';
 import 'session.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -66,7 +76,12 @@ abstract final class Routes {
   static const myProfile = '/mon-profil';
   static const picker = '/entreprises';
   static const newBusiness = '/nouvelle-entreprise';
-  static const applyForBusiness = '/demander-une-entreprise';
+  /// Creating one's own business, at once (111) — from the no-business
+  /// screen, the picker, Compte and the shopper's profile.
+  static const createBusiness = '/creer-mon-activite';
+  /// The request page of before 111 (« Demander une entreprise »): an old
+  /// link or bookmark lands on the creation that replaced it.
+  static const oldApplyForBusiness = '/demander-une-entreprise';
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
@@ -75,10 +90,24 @@ abstract final class Routes {
   static const consoleFeatured = '/console/a-la-une';
   static const consoleShowcase = '/console/vitrines-exemple';
   static const myOrders = '/mes-commandes';
+  /// The shopper's own page (113) and what it opens: the vitrines they
+  /// follow, where they are delivered, their bookings, their notifications.
+  static const shopperProfile = '/mon-compte';
+  static const favourites = '/mon-compte/vitrines';
+  static const addresses = '/mon-compte/adresses';
+  static const bookings = '/mon-compte/reservations';
+  static const myNotifications = '/mon-compte/notifications';
   static const courier = '/livreur';
   /// One running course on a map, for its courier.
   static String courierJob(String orderId) => '/livreur/course/$orderId';
+  /// Becoming a courier (112): the dossier, one question per screen, then
+  /// its review's progress — from the street's foot, the courier space and
+  /// the shopper's profile.
+  static const becomeCourier = '/devenir-livreur';
   static const consoleCouriers = '/console/livreurs';
+  /// One courier's dossier, for the platform's review (112). Not
+  /// `/console/livreurs/<id>`: the settlement lives at `…/reglement`.
+  static String consoleCourierFile(String userId) => '/console/livreurs/dossier/$userId';
   /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
   /// number and prices the paywall says (066).
   static const consolePro = '/console/kaj-pro';
@@ -152,6 +181,7 @@ bool _shopperPath(String location) =>
       Routes.myProfile,
       Routes.picker,
       Routes.myOrders,
+      Routes.shopperProfile,
       Routes.language,
       Routes.payment,
       Routes.privacy,
@@ -196,6 +226,10 @@ GoRouter buildRouter(SessionController session) {
   // immediate, so it is loaded straight away and never waited for.
   if (!kIsWeb) warmBusinessScreens();
 
+  // A sheet or a full-screen flow over a business's pages (108): its bar
+  // goes behind it.
+  final cover = BusinessCover();
+
   /// The one place that decides where a person is allowed to be.
   ///
   /// Written as "which locations does this phase permit" rather than a chain of
@@ -205,6 +239,11 @@ GoRouter buildRouter(SessionController session) {
     final here = state.matchedLocation;
 
     bool at(String path) => here == path || here.startsWith('$path/');
+
+    // The request page of before 111, from an old link: the creation that
+    // replaced it, whatever the phase (signed out, the sign-in brings the
+    // person back here, then on to it).
+    if (state.uri.path == Routes.oldApplyForBusiness) return Routes.createBusiness;
 
     // The language screen answers to no phase: the person who most needs it
     // is the one who cannot read whatever screen their phase would show. The
@@ -295,11 +334,13 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -331,11 +372,13 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -360,11 +403,13 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
             at(Routes.courier) ||
+            at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
-            at(Routes.applyForBusiness) ||
+            at(Routes.createBusiness) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -432,9 +477,13 @@ GoRouter buildRouter(SessionController session) {
           final scope = AppScope.of(context);
           return StorefrontScreen(
             slug: state.pathParameters['slug'] ?? '',
-            storefront: StorefrontRepository(scope.auth.client),
+            // The street's last look on this phone (street_cache.dart):
+            // shown at once on a slow line, and all there is with none.
+            storefront: StorefrontRepository(scope.auth.client,
+                keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
+            shopper: ShopperRepository(scope.auth.client),
           );
         },
       ),
@@ -445,7 +494,43 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.myOrders,
         builder: (context, state) => MyOrdersScreen(
           storefront: StorefrontRepository(AppScope.of(context).auth.client),
+          shopper: ShopperRepository(AppScope.of(context).auth.client),
         ),
+      ),
+
+      // The shopper's own page (113) and its pages. Signed-in, like their
+      // orders; built from the first download (the street's half).
+      GoRoute(
+        path: Routes.shopperProfile,
+        builder: (context, _) => ShopperProfileScreen(
+          shopper: ShopperRepository(AppScope.of(context).auth.client),
+        ),
+        routes: [
+          GoRoute(
+            path: 'vitrines',
+            builder: (context, _) => FavouritesScreen(
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+            ),
+          ),
+          GoRoute(
+            path: 'adresses',
+            builder: (context, _) => AddressesScreen(
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+            ),
+          ),
+          GoRoute(
+            path: 'reservations',
+            builder: (context, _) => MyOrdersScreen(
+              storefront: StorefrontRepository(AppScope.of(context).auth.client),
+              shopper: ShopperRepository(AppScope.of(context).auth.client),
+              bookingsOnly: true,
+            ),
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (context, _) => NotificationsScreen(notify: AppScope.of(context).notify),
+          ),
+        ],
       ),
 
       // The livreur's whole world (056): the pitch, the wait, the board and
@@ -463,6 +548,19 @@ GoRouter buildRouter(SessionController session) {
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),
+      // Becoming one (112): the dossier and its review's progress. Signed
+      // in — the redirect sends a stranger through sign-in and back here.
+      GoRoute(
+        path: Routes.becomeCourier,
+        builder: (context, state) {
+          final client = AppScope.of(context).auth.client;
+          return biz.BecomeCourierScreen(
+            dossier: CourierDossierRepository(client),
+            files: CourierFiles(client),
+            whatsApp: client == null ? null : SupabaseWhatsAppPhone(client),
+          );
+        },
+      ),
 
       // Every open vitrine: a list, a map, and "près de moi". Public for the
       // same reason as a single vitrine — the shopper has no account.
@@ -471,19 +569,23 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, state) {
           final scope = AppScope.of(context);
           return DirectoryScreen(
-            storefront: StorefrontRepository(scope.auth.client),
+            storefront: StorefrontRepository(scope.auth.client,
+                keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
+            shopper: ShopperRepository(scope.auth.client),
           );
         },
       ),
 
       GoRoute(
         path: Routes.signIn,
-        builder: (context, _) {
+        builder: (context, state) {
           final scope = AppScope.of(context);
           return LoginScreen(
             auth: scope.auth,
+            // « Créer un compte » from a vitrine's sign-in sheet (F1).
+            startWithSignUp: state.uri.queryParameters['compte'] == 'nouveau',
             // Lets the sign-up form save the names, date of birth, title and
             // phone it collects, the moment the account exists.
             onboarding: scope.onboarding,
@@ -602,6 +704,11 @@ GoRouter buildRouter(SessionController session) {
                   scope.session.isPlatformAdmin && scope.auth.hasLiveSession
                       ? () => context.push(Routes.newBusiness)
                       : null,
+              // « + Nouvelle activité » (111): everybody else creates their own.
+              onCreateMine:
+                  !scope.session.isPlatformAdmin && scope.auth.hasLiveSession
+                      ? () => context.push(Routes.createBusiness)
+                      : null,
             ),
           );
         },
@@ -632,17 +739,34 @@ GoRouter buildRouter(SessionController session) {
             biz.CreateBusinessScreen(admin: AppScope.of(context).admin),
       ),
 
-      /// Asking for another business, for somebody who already has one. A
-      /// platform admin creates directly instead — they are the person who
-      /// would otherwise be approving their own request.
+      /// Creating one's own business, at once (111): no request to approve.
+      /// Created, the person is its owner; the next resolve finds it, the
+      /// device code is chosen if there is none yet (108: a business is
+      /// what it protects), then its home — which holds its first setup.
+      /// The splash carries the moment between: it is no destination, so
+      /// the code screen gives back the business, not this flow.
       GoRoute(
-        path: Routes.applyForBusiness,
+        path: Routes.oldApplyForBusiness,
+        redirect: (_, _) => Routes.createBusiness,
+      ),
+      GoRoute(
+        path: Routes.createBusiness,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return biz.CreateBusinessScreen(
-            admin: scope.admin,
-            onboarding: scope.onboarding,
-            asApplication: true,
+          final session = scope.session;
+          return biz.CreateMyBusinessScreen(
+            api: SupabaseBusinessCreation(scope.auth.client),
+            drafts: LocalDraftStore(scope.db, scope.auth.client?.auth.currentUser?.id),
+            whatsApp: SupabaseWhatsAppPhone(scope.auth.client),
+            // On a bad line the list may not have it yet: the session
+            // adds it from what the creation knows until the server's row
+            // comes (adoptCreatedOrg), so the person lands in it either way.
+            onCreated: (created) async {
+              session.stashReturnTo(Routes.org(created.id));
+              final seen = session.adoptCreatedOrg(created);
+              if (context.mounted) context.go(Routes.splash);
+              return seen;
+            },
           );
         },
       ),
@@ -689,8 +813,10 @@ GoRouter buildRouter(SessionController session) {
           ),
           // The types of business and the request page (107's screens).
           _centerPage(Routes.consoleKinds, (_, _) => biz.KindModelsScreen()),
-          _centerPage(Routes.applications, (context, _) =>
-              biz.ApplicationsScreen(onboarding: AppScope.of(context).onboarding)),
+          // « Activités créées » (111): what « Demandes » was.
+          _centerPage(Routes.applications, (context, _) => biz.CreatedBusinessesScreen(
+                center: CommandCenterRepository(AppScope.of(context).auth.client),
+              )),
           _centerPage(Routes.consoleRequestForm, (_, _) => biz.RequestFormScreen()),
           _centerPage(Routes.platformAnalytics, (context, _) =>
               biz.PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics)),
@@ -714,9 +840,28 @@ GoRouter buildRouter(SessionController session) {
           // The platform's own vitrines d'exemple (094).
           _centerPage(Routes.consoleShowcase, (context, _) =>
               biz.ShowcaseScreen(admin: AppScope.of(context).admin)),
-          // Who may carry deliveries: also the platform's decision (056).
-          _centerPage(Routes.consoleCouriers, (context, _) =>
-              biz.CouriersScreen(admin: AppScope.of(context).admin)),
+          // Who may carry deliveries: also the platform's decision (056),
+          // their dossiers first (112).
+          _centerPage(Routes.consoleCouriers, (context, _) {
+            final scope = AppScope.of(context);
+            return biz.CouriersScreen(
+              admin: scope.admin,
+              dossier: CourierDossierRepository(scope.auth.client),
+              files: CourierFiles(scope.auth.client),
+            );
+          }),
+          // One dossier's review (112), pushed over the list, with a back.
+          GoRoute(
+            path: '${Routes.consoleCouriers}/dossier/:userId',
+            builder: (context, state) {
+              final client = AppScope.of(context).auth.client;
+              return biz.CourierReviewScreen(
+                userId: state.pathParameters['userId']!,
+                dossier: CourierDossierRepository(client),
+                files: CourierFiles(client),
+              );
+            },
+          ),
           // The platform's part of the delivery fees, per courier, per
           // month (067).
           _centerPage(Routes.consoleSettlement, (context, _) =>
@@ -746,8 +891,17 @@ GoRouter buildRouter(SessionController session) {
       ),
 
       // ----------------------------------------------------------------
-      // Inside a business
+      // Inside a business: one frame around every page (108) — the bar
+      // at the foot, or the rail on a wide screen, stays on the home and
+      // on every tool, the place on screen selected. The home is the
+      // first page under it and every tool a page under the home, so back
+      // from a tool returns to the home, never out of the app.
       // ----------------------------------------------------------------
+      ShellRoute(
+        observers: [cover],
+        builder: (context, state, child) =>
+            _businessFrame(context, state, child, cover),
+        routes: [
       GoRoute(
         path: '/o/:orgId',
         builder: (context, state) => _withOrg(
@@ -1259,6 +1413,8 @@ GoRouter buildRouter(SessionController session) {
                 retail: scope.retail,
                 capture: scope.capture,
               ),
+              // « Services et réservations » on Mara's switchboard (110).
+              feature: 'services',
             ),
           ),
           GoRoute(
@@ -1424,7 +1580,30 @@ GoRouter buildRouter(SessionController session) {
           ),
         ],
       ),
+        ],
+      ),
     ],
+  );
+}
+
+/// The business's frame (108) around the page on screen: its bar or rail,
+/// the place selected. Follows the session, as a page does, so the bar
+/// arrives with the business on a cold load.
+Widget _businessFrame(
+  BuildContext context,
+  GoRouterState state,
+  Widget child,
+  BusinessCover cover,
+) {
+  final session = AppScope.of(context).session;
+  return _Live(
+    session: session,
+    builder: () => biz.BusinessFrame(
+      org: session.orgById(state.pathParameters['orgId']),
+      location: state.uri.path,
+      cover: cover,
+      child: child,
+    ),
   );
 }
 
@@ -1488,7 +1667,8 @@ Widget _withOrg(
   // (the report: "every reload, the loading icon never stops"). With the
   // session as a listenable the gate below redraws itself the moment the
   // phase moves, whatever the router does.
-  return _Live(
+  // Above the business's bar, or beside its rail (108).
+  return biz.BusinessPage(child: _Live(
     session: scope.session,
     builder: () {
       final org = scope.session.orgById(state.pathParameters['orgId']);
@@ -1500,8 +1680,8 @@ Widget _withOrg(
         return const _MissingContext(backTo: Routes.picker);
       }
       // The business's colours, on every page inside it — not just the home
-      // screen. Each `/o/<id>/...` route is a page of its own (they replace
-      // the shell rather than nest under it), so the palette has to be
+      // screen. Each `/o/<id>/...` route is a page of its own (the frame
+      // around them draws only the bar), so the palette has to be
       // applied here, at the one place they all pass through, or a
       // business's settings, product list and reports all open in the app's
       // default teal instead of the colour it chose. `homeScreenFor` wraps
@@ -1525,7 +1705,7 @@ Widget _withOrg(
                 : biz.ProStrip(org: org, child: build(scope, org)),
       );
     },
-  );
+  ));
 }
 
 /// Who may open the administration's pages and Équipe: the business's

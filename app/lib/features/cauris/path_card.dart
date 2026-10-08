@@ -9,6 +9,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import 'cauri_icon.dart';
+import 'unlock_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A tool on Le Chemin (097): its picture and its name.
@@ -46,9 +47,19 @@ IconData pathStepIcon(String key) => switch (key) {
 /// one with a number in it, `articles`, is said here from its goal.
 String pathStepTitle(BuildContext context, PathStep s, {bool farm = false}) {
   if (s.key == 'articles') {
+    // One is said as one: « 1 article en vente », never « 1 articles ».
+    if (s.goal == 1) {
+      return farm ? context.tr('1 produit en vente') : context.tr('1 article en vente');
+    }
     return farm
         ? context.tr('{n} produits en vente', {'n': s.goal})
         : context.tr('{n} articles en vente', {'n': s.goal});
+  }
+  // The business's own place (108), whatever an older server still says.
+  if (s.key == 'pin') {
+    return farm
+        ? context.tr('La position de ma ferme')
+        : context.tr('La position de ma boutique');
   }
   return translate(context.trLanguage, s.title);
 }
@@ -474,8 +485,23 @@ class PathGate {
                 Navigator.of(sheet).pop();
                 view();
               },
+        // The cauris way in (108): Mara Pro complet opens every tool on
+        // the path at once (089) — for an admin, when the business has a
+        // price for it and is not on Pro already.
+        proAllCost: _proAllCost(context, org, feature),
+        onProAll: () {
+          Navigator.of(sheet).pop();
+          UnlockSheet.open(context, org: org, feature: 'pro_all');
+        },
       ),
     );
+  }
+
+  static int? _proAllCost(BuildContext context, OrgSummary org, String feature) {
+    if (feature == 'second_business' || !org.isAdmin) return null;
+    final states = AppScope.read(context)?.session.featuresFor(org.id);
+    if (states == null || states.isPro) return null;
+    return states.toolOf('pro_all')?.cost;
   }
 }
 
@@ -489,6 +515,8 @@ class PathGateSheet extends StatefulWidget {
     required this.load,
     required this.onPath,
     this.onView,
+    this.proAllCost,
+    this.onProAll,
   });
 
   final OrgSummary org;
@@ -498,6 +526,11 @@ class PathGateSheet extends StatefulWidget {
 
   /// « Voir (lecture seule) »; null hides it.
   final VoidCallback? onView;
+
+  /// Mara Pro complet's price in cauris, which opens this tool too (108);
+  /// null hides the way.
+  final int? proAllCost;
+  final VoidCallback? onProAll;
 
   @override
   State<PathGateSheet> createState() => _PathGateSheetState();
@@ -646,6 +679,19 @@ class _PathGateSheetState extends State<PathGateSheet> {
                     : context.tr('Mon chemin')),
               ),
             ),
+            if (widget.proAllCost != null && widget.onProAll != null) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const Key('path-pro-all'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                onPressed: widget.onProAll,
+                icon: const CauriIcon(size: 18),
+                label: Text(
+                    context.tr('Ou tout ouvrir maintenant : Mara Pro complet, {cost} cauris',
+                        {'cost': widget.proAllCost}),
+                    textAlign: TextAlign.center),
+              ),
+            ],
             if (widget.onView != null) ...[
               const SizedBox(height: 8),
               OutlinedButton.icon(

@@ -12,6 +12,7 @@ import 'package:kaj_app/core/auth/pin_codec.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/nav/router.dart' show Routes;
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
@@ -184,13 +185,12 @@ void main() {
 
   testWidgets('a signed-in person with no business is a shopper at home '
       'on the street', (tester) async {
-    // Unlocked, but member of nothing: their home is the welcome page, with
-    // the account corner offering the way to become a seller.
+    // Member of nothing: their home is the welcome page, with the account
+    // corner offering the way to become a seller. The device code protects
+    // businesses (108): a code set on this phone before is not asked.
     await seedDevice(tester);
     await pumpApp(tester);
-    expect(find.text('Entrez votre code'), findsOneWidget);
-
-    await enterPin(tester, '1379');
+    expect(find.text('Entrez votre code'), findsNothing);
 
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text('Se connecter'), findsNothing);
@@ -210,7 +210,10 @@ void main() {
 
   testWidgets('a known device with a stale token asks for the code',
       (tester) async {
-    await seedDevice(tester);
+    // A phone that holds a business (108: the code is for those).
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+    ]);
     await pumpApp(tester);
 
     expect(find.text('Entrez votre code'), findsOneWidget);
@@ -311,9 +314,8 @@ void main() {
     await seedDevice(tester);
     await pumpApp(tester);
 
-    await enterPin(tester, '1379');
-
-    // Home is the street now; the waiting room is one tap behind the
+    // No code asked of somebody with no business (108). Home is the
+    // street now; the waiting room is one tap behind the
     // boutique button, for the employee holding an invitation code.
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
     await tester.tap(find.byTooltip('Ouvrir ma boutique'));
@@ -352,11 +354,29 @@ void main() {
     }
   });
 
+  testWidgets('the request page of before 111 opens the creation that replaced it',
+      (tester) async {
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+    ]);
+    await pumpApp(tester);
+    await enterPin(tester, '1379');
+    final router =
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig as GoRouter;
+    router.go('/demander-une-entreprise');
+    await flush(tester);
+    expect(router.state.uri.path, Routes.createBusiness);
+  });
+
   testWidgets('an identity with no code cannot be trusted offline',
       (tester) async {
-    // Signed in once, never chose a code, token now stale. Nothing on the
-    // device can prove who this is, so it has to be a real sign-in.
-    await seedDevice(tester, pin: null);
+    // Signed in once to a business, never chose a code, token now stale.
+    // Nothing on the device can prove who this is, so it has to be a real
+    // sign-in.
+    await seedDevice(tester, pin: null, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+    ]);
     await pumpApp(tester);
 
     // Signed out, so: the street, with "Se connecter" — and never the code
@@ -469,7 +489,8 @@ void main() {
       expect(find.text('Entrez votre code'), findsOneWidget);
       await enterPin(tester, '1379');
 
-      expect(find.text('Articles'), findsOneWidget,
+      // The page's own title (its bar says « Articles » too, 108).
+      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
           reason: 'a real reload lost the page in the address bar');
     });
 
@@ -504,9 +525,9 @@ void main() {
     });
 
     testWidgets("the livreur's page survives a reload", (tester) async {
+      // A courier's phone holds no business: no code (108).
       await seedDevice(tester);
       await coldBootAt(tester, '/livreur');
-      await enterPin(tester, '1379');
 
       expect(find.text('Espace livreur'), findsOneWidget);
     });
@@ -547,7 +568,7 @@ void main() {
       await enterPin(tester, '1379');
 
       // The page that was reloaded — not the home the redirect used to pick.
-      expect(find.text('Articles'), findsOneWidget,
+      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
           reason: 'unlocking forgot the page the refresh was headed to');
       expect(find.text('Recette'), findsNothing);
     });
@@ -564,7 +585,7 @@ void main() {
 
       expect(find.text('Choisissez une activité'), findsNothing,
           reason: 'the reload named a business; the picker is a detour');
-      expect(find.text('Articles'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget);
     });
 
     testWidgets('reloading a business home lands in it, not the dead-end',
@@ -800,7 +821,7 @@ void main() {
       await flush(tester);
 
       // We are on Articles, a pushed route built by _withOrg — not the home.
-      expect(find.text('Articles'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget);
 
       final context = tester.element(find.byType(Scaffold).last);
       // The hand-painted parts (hero gradients, tinted chips) read this.

@@ -158,6 +158,12 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         false;
   }
 
+  /// Vitrine Plus hidden by Mara's switchboard for this business (110): the
+  /// basics only — no Pro part drawn, locked or open, and none saved.
+  bool get _plusHidden =>
+      AppScope.maybeOf(context)?.session.accessFor(widget.orgId).isHidden('vitrine_plus') ??
+      false;
+
   StorefrontStyle _style({required bool plus}) {
     final schedule = _schedule;
     return StorefrontStyle(
@@ -182,7 +188,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
     try {
       await widget.admin.setStorefrontStyle(
         widget.orgId,
-        _style(plus: !_locked),
+        _style(plus: !_locked && !_plusHidden),
       );
       if (!mounted) return;
       setState(() {
@@ -219,6 +225,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final locked = _locked;
+    final plusHidden = _plusHidden;
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -245,12 +252,13 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
           VitrinePreview(
             key: const Key('vitrine-preview'),
             name: widget.shopName ?? context.tr('Ma boutique'),
-            style: _style(plus: !locked).copyWith(
+            style: _style(plus: !locked && !plusHidden).copyWith(
               // The preview shows the Pro layout being tried, even locked:
-              // seeing it is how a shop decides it wants it.
-              layout: _layout,
+              // seeing it is how a shop decides it wants it. Hidden by Mara
+              // (110), there is nothing to try.
+              layout: plusHidden ? VitrineLayout.grid : _layout,
             ),
-            openNow: _schedule == null || locked
+            openNow: _schedule == null || locked || plusHidden
                 ? null
                 : _openAt(DateTime.now()),
             items: _products,
@@ -393,7 +401,9 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
           // Locked: one card that says so plainly — what Pro adds, in three
           // lines, and the layouts to try in the preview above. Not the
           // greyed form: a shop read it as settings it had and could not use.
-          if (locked)
+          if (plusHidden)
+            const SizedBox.shrink(key: Key('vitrine-plus-hidden'))
+          else if (locked)
             _ProLocked(
               layout: _layout,
               onLayout: _saving ? null : (l) => setState(() => _layout = l),

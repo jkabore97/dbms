@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,7 +14,10 @@ import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../admin/admin_pill.dart';
 import '../../core/storefront/storefront_repository.dart';
-import 'directory_map.dart';
+import '../../core/shopper/shopper_repository.dart';
+import '../shopper/follow_heart.dart';
+import 'directory_map.dart' deferred as street_map;
+import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
 import 'open_badge.dart';
 import 'shop_style.dart';
@@ -43,9 +45,13 @@ class DirectoryScreen extends StatefulWidget {
     required this.storefront,
     required this.capture,
     required this.session,
+    this.shopper,
   });
 
   final StorefrontRepository storefront;
+
+  /// The shopper's follows (113), for the ♥ on each card. Null: no hearts.
+  final ShopperRepository? shopper;
 
   /// For the featured photos, served publicly by the uploads Worker per key.
   final CaptureRepository capture;
@@ -91,14 +97,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   List<ProductHit> _hits = const [];
   bool _hunting = false;
 
+  /// The ♥ on the cards (113): known once the shopper is signed in.
+  late final Follows _follows = Follows(widget.shopper);
+  bool? _signedIn;
+
+  void _onSession() {
+    final phase = widget.session.phase;
+    final inside = phase == SessionPhase.noOrg ||
+        phase == SessionPhase.picking ||
+        phase == SessionPhase.ready;
+    if (inside == _signedIn) return;
+    _signedIn = inside;
+    unawaited(_follows.load());
+  }
+
   @override
   void initState() {
     super.initState();
     _load();
+    widget.session.addListener(_onSession);
+    _onSession();
   }
 
   @override
   void dispose() {
+    widget.session.removeListener(_onSession);
+    _follows.dispose();
     _debounce?.cancel();
     _search.dispose();
     super.dispose();
@@ -162,6 +186,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
       return;
     }
+    // The street as this phone last saw it, at once (street_cache.dart):
+    // on a slow line the shops show while the fresh list comes.
+    final kept = _entries.isEmpty ? await widget.storefront.keptStreet() : null;
+    if (kept != null && mounted && _entries.isEmpty) {
+      setState(() {
+        _entries = kept.entries;
+        _previews = kept.previews;
+        _loading = false;
+      });
+    }
     try {
       final here = _here;
       // The paid spots are a strip, not the page: if they fail to load the
@@ -194,17 +228,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
+      // No network: the last look, said as such.
+      if (widget.storefront.keptAt != null) _sayKept();
       // The strip is what a spot buys: count it as seen, in one call.
       unawaited(widget.storefront
           .recordSeen([for (final f in _featured) f.id]));
       unawaited(_loadPreviews());
     } catch (_) {
       if (!mounted) return;
+      if (_entries.isNotEmpty) {
+        // The last look is on screen: it stays, said as such.
+        _sayKept();
+        return;
+      }
       setState(() {
         _error = context.tr('L\'annuaire n\'a pas pu être chargé. Vérifiez le réseau.');
         _loading = false;
       });
     }
+  }
+
+  void _sayKept() {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(context.tr('Pas de réseau — les vitrines de votre dernière visite')),
+      ));
   }
 
   Future<void> _loadPreviews() async {
@@ -269,8 +318,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// The map, full screen (package 3): the list stays the page, the map is
   /// a place you go and come back from.
   Future<void> _openMap() async {
+    // The map (flutter_map and its tiles' machinery) is its own download,
+    // fetched the first time somebody opens it: most visits never do, and
+    // the street's first load on a slow line no longer carries it.
+    try {
+      await street_map.loadLibrary();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text(context.tr('La carte n\'a pas pu s\'ouvrir. Vérifiez le réseau.')),
+      ));
+      return;
+    }
+    if (!mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => DirectoryMapPage(
+      builder: (_) => street_map.DirectoryMapPage(
         entries: _entries,
         previews: _previews,
         here: _here,
@@ -305,6 +367,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   featured: _featured,
                   spotlights: _spotlights,
                   showcases: _showcases,
+                  follows: _follows,
                   capture: widget.capture,
                   here: _here,
                   fallback: _ouaga,
@@ -407,8 +470,10 @@ class _AccountCorner extends StatelessWidget {
                     switch (choice) {
                       case 'orders':
                         context.go(Routes.myOrders);
+                      // A shopper's own page (113); a business's people
+                      // keep their Compte, and their names here.
                       case 'profile':
-                        context.go(Routes.myProfile);
+                        context.go(member ? Routes.myProfile : Routes.shopperProfile);
                       case 'out':
                         await session.signOut();
                     }
@@ -453,6 +518,7 @@ class _Street extends StatelessWidget {
     required this.featured,
     this.spotlights = const {},
     this.showcases = const {},
+    this.follows,
     required this.capture,
     required this.here,
     required this.fallback,
@@ -473,6 +539,9 @@ class _Street extends StatelessWidget {
   final List<FeaturedItem> featured;
   final Set<String> spotlights;
   final Set<String> showcases;
+
+  /// The ♥ on each card (113), once the shopper's follows are known.
+  final Follows? follows;
   final CaptureRepository capture;
   final LatLng? here;
   final LatLng fallback;
@@ -677,13 +746,15 @@ class _Street extends StatelessWidget {
                         previews: previews[entries[i].slug] ?? const [],
                         sponsored: spotlights.contains(entries[i].slug),
                         far: showcases.contains(entries[i].slug),
+                        follows: follows,
                         capture: capture,
                         onOpen: () => onOpen(entries[i]),
                       ),
                     ),
                   ),
                 ),
-              const ShopFooter(),
+              // « Devenir livreur » at the street's foot (112).
+              ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
             ],
           ),
         ),
@@ -762,7 +833,7 @@ class _SearchResults extends StatelessWidget {
               ),
             ),
           ),
-        const ShopFooter(),
+        ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
       ],
     );
   }
@@ -940,30 +1011,26 @@ class _Photo extends StatefulWidget {
 }
 
 class _PhotoState extends State<_Photo> {
-  late final Future<Uint8List>? _bytes = widget.photoKey == null
-      ? null
-      : widget.capture.publicObjectBytes(widget.photoKey!);
-
   @override
   Widget build(BuildContext context) {
     const placeholder = Center(
       child: Icon(Icons.image_outlined, size: 30, color: ShopStyle.line),
     );
-    final future = _bytes;
-    if (future == null) return placeholder;
-    return FutureBuilder<Uint8List>(
-      future: future,
-      builder: (context, snapshot) {
-        final bytes = snapshot.data;
-        if (bytes == null) return placeholder;
+    final key = widget.photoKey;
+    if (key == null) return placeholder;
+    // Asked for once near the screen, at the size it is drawn (lazy_photo).
+    return LazyPhoto(
+      load: (width) => widget.capture.publicObjectBytes(key, width: width),
+      placeholder: placeholder,
+      builder: (context, bytes, width) => ClipRect(
         // The picture leans in under the pointer; its frame holds still.
-        return ClipRect(
-          child: ZoomOnHover(
-            child: Image.memory(bytes,
-                fit: BoxFit.cover, semanticLabel: "Photo de l'article"),
-          ),
-        );
-      },
+        child: ZoomOnHover(
+          child: Image.memory(bytes,
+              fit: BoxFit.cover,
+              cacheWidth: width,
+              semanticLabel: "Photo de l'article"),
+        ),
+      ),
     );
   }
 }
@@ -979,9 +1046,13 @@ class _ShopTile extends StatelessWidget {
     this.previews = const [],
     this.sponsored = false,
     this.far = false,
+    this.follows,
   });
 
   final DirectoryEntry entry;
+
+  /// The ♥ (113), at the foot of the square, when the follows are known.
+  final Follows? follows;
 
   /// A vitrine d'exemple (094): « Pas à proximité » on the square.
   final bool far;
@@ -1007,7 +1078,8 @@ class _ShopTile extends StatelessWidget {
             ? context.tr('Position non renseignée')
             : _labelFor(entry.profile));
 
-    return Semantics(
+    final follows = this.follows;
+    final tile = Semantics(
       button: true,
       label: [
         entry.name,
@@ -1122,6 +1194,21 @@ class _ShopTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+    if (follows == null) return tile;
+    // The ♥ over the square's foot, beside the tile rather than in it: its
+    // own button for a screen reader, its own tap.
+    return LayoutBuilder(
+      builder: (context, box) => Stack(
+        children: [
+          tile,
+          Positioned(
+            right: 8,
+            top: box.maxWidth / 1.15 - 44,
+            child: FollowHeart(follows: follows, slug: entry.slug, onCard: true),
+          ),
+        ],
       ),
     );
   }

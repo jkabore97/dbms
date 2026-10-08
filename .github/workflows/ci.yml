@@ -753,6 +753,60 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch107.sql
 
+      - name: Prove the owner's fixes — every purchase of before the same, the wait said with its day, every tool a kind has opened by enough cauris and nothing taken for what it has not, Le Chemin's « La position de ma boutique », the price and the wait the platform's alone, journaled (108)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch108.sql
+
+      - name: Prove a number proved on WhatsApp before an order — off as installed and ordering as 101 made it, on refused without a proved number, the platform's switch, journaled (109)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch109.sql
+
+      - name: Prove the vitrine's switches — each kind its own, every vitrine door closed when hidden and open again, nothing paid hidden, the platform's alone (110)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch110.sql
+
+      - name: Prove a business created at once — create_org's own path and chart for each kind, every answer checked, one free business per person, the WhatsApp switch off as installed, the creation page's answers kept, the old request path still standing, À faire's new businesses, the platform's alone (111)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch111.sql
+
+      - name: Prove becoming a courier — today's couriers as before, the dossier checked step by step, approve / refuse / a new photo journaled and undone, the ID photos the platform's alone through every door, gone 30 days after a refusal (112)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch112.sql
+
+      - name: Prove the shopper's page — nobody rung as installed, one bell per vitrine per day for its followers and only what the street sees, addresses and choices their own, Wave only when the platform allows it, « Recommander », reports the platform reads and closes, the help number, the data and the account deletion's question (113)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch113.sql
+
+      # P1 for 110: installing it changes nothing any vitrine shows or does.
+      # Its own database: 109, a photograph of the whole street, what each
+      # owner reads and every vitrine door (orders, bookings, delivery, Wave,
+      # spots, dressing), each done and rolled back; then 110 onwards and the
+      # same photograph again, compared answer for answer.
+      - name: Prove installing 110 and after changes nothing a vitrine shows or does, for any kind (110, P1)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'drop database if exists p1_110' -c 'create database p1_110'
+          P="psql -h localhost -U postgres -d p1_110 -v ON_ERROR_STOP=1 -q"
+          $P -f database/tests/supabase_stub.sql
+          $P -f database/schema.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -le 109 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_110_before.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -ge 110 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_110_after.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
@@ -764,6 +818,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: node --check workers/uploads/src/index.js
       - run: node --check workers/account-admin/src/index.js
+      # « Supprimer mon compte » (113): the caller's own id, answered by
+      # Postgres as the caller, is the only one deleted; its refusal said
+      # in its words — against a fake PostgREST and GoTrue.
+      - run: node --test workers/account-admin/test/*.test.mjs
       - run: node --check workers/tenant-router/src/index.js
       - run: node --check workers/push/src/index.js
       - run: node --check workers/push/src/webpush.js
@@ -778,6 +836,29 @@ jobs:
       - run: node --check workers/pay/src/wave.js
       - run: node --check workers/pay/src/stripe.js
       - run: node --test workers/pay/test/*.test.mjs
+      # The WhatsApp code Worker (109): the hook's signature, the template
+      # sent to the new number, Meta's refusals in words, the code never
+      # logged — against a fake Meta, no network.
+      - run: node --check workers/whatsapp-otp/src/index.js
+      - run: node --test workers/whatsapp-otp/test/*.test.mjs
+      # Loading on a bad line (108). The street's photos small: ?w= made
+      # once with Cloudflare Images and kept, Postgres's yes still asked
+      # for the photo itself, the original when Images is absent or
+      # refuses — against a fake bucket and a fake Images. A courier's
+      # dossier (112): its photos uploaded, read and purged only as Postgres
+      # says, as the caller; never through an org route, a thumbnail or a
+      # key that spells its way out of org/.
+      - run: node --test workers/uploads/test/*.test.mjs
+      # The site Worker: a build's folders kept a year, the page and the
+      # workers asked about every time, a gone build's folder a 404.
+      - run: node --check workers/kaj-app/src/index.js
+      - run: node --test workers/kaj-app/test/*.test.mjs
+      # The deploy's fingerprinting: folders named after their content, the
+      # loader's paths and the service worker's build written in, and a
+      # build of the wrong shape refused untouched.
+      - run: node --check scripts/web-fingerprint.mjs
+      - run: node --check app/web/mara_sw.js
+      - run: node --test scripts/test/*.test.mjs
 
   flutter-analyze:
     runs-on: ubuntu-latest

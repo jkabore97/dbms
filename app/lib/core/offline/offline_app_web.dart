@@ -4,8 +4,11 @@ import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
-/// The web: the app's files are kept by web/offline_sw.js, a network-first
-/// worker that answers from its copy only when the network does not.
+/// The web: the app's files are kept by web/mara_sw.js, the service worker
+/// every visitor gets (index.html registers it once the app shows). It
+/// keeps what a visit used, cache-first; « Télécharger pour hors ligne »
+/// asks it to keep the rest — the business half, every asset — and every
+/// later build keeps it too.
 class OfflineApp {
   const OfflineApp._();
 
@@ -20,102 +23,92 @@ class OfflineApp {
     }
   }
 
-  /// Whether this browser already keeps the copy.
+  /// The worker in charge of this page, or null (none yet, or not ours).
+  static Future<web.ServiceWorker?> _worker() async {
+    final reg =
+        await web.window.navigator.serviceWorker.getRegistration('/').toDart;
+    final active = reg?.active;
+    if (active == null || !active.scriptURL.endsWith('/mara_sw.js')) {
+      return null;
+    }
+    return active;
+  }
+
+  /// Asks the worker one thing and waits for its answer, which comes back
+  /// on a port of its own; [onMessage] returns true when it is the last.
+  static Future<bool> _ask(
+    web.ServiceWorker worker,
+    String type,
+    bool Function(JSObject data) onMessage, {
+    Duration timeout = const Duration(seconds: 10),
+  }) {
+    final done = Completer<bool>();
+    final channel = web.MessageChannel();
+    channel.port1.onmessage = ((web.MessageEvent event) {
+      final data = event.data as JSObject?;
+      if (data == null || done.isCompleted) return;
+      if (onMessage(data)) done.complete(true);
+    }).toJS;
+    worker.postMessage(JSObject()..['type'] = type.toJS, [channel.port2].toJS);
+    return done.future.timeout(timeout, onTimeout: () => false);
+  }
+
+  /// Whether this browser keeps the whole app for use without a network.
   static Future<bool> get kept async {
     if (!_supported) return false;
     try {
-      final reg = await web.window.navigator.serviceWorker
-          .getRegistration('/')
-          .toDart;
-      final script = reg?.active?.scriptURL ?? '';
-      if (!script.endsWith('offline_sw.js')) return false;
-      return (await web.window.caches.has('mara-offline-v1').toDart).toDart;
+      final worker = await _worker();
+      if (worker == null) return false;
+      var offline = false;
+      await _ask(worker, 'status', (data) {
+        offline = (data['offline'] as JSBoolean?)?.toDart ?? false;
+        return true;
+      });
+      return offline;
     } catch (_) {
       return false;
     }
   }
 
-  /// « Télécharger pour hors ligne »: registers the worker and has it fetch
-  /// and keep every file this page has loaded, plus the ones it will need
-  /// (the business half, the engine for either renderer, the database).
+  /// « Télécharger pour hors ligne »: the worker fetches and keeps every
+  /// file of this build a business needs (both halves of the app, every
+  /// asset, this browser's engine), and says how far it got.
   static Future<bool> keep({void Function(int done, int total)? progress}) async {
     if (!_supported) return false;
     try {
+      // On the very first visit the worker may still be settling in.
       final container = web.window.navigator.serviceWorker;
-      await container.register('offline_sw.js'.toJS).toDart;
-      final reg = await container.ready.toDart;
-      final worker = reg.active;
+      var worker = await _worker();
+      if (worker == null) {
+        await container.ready.toDart.timeout(const Duration(seconds: 20));
+        worker = await _worker();
+      }
       if (worker == null) return false;
-
-      final origin = web.window.location.origin;
-      final urls = <String>{'$origin/'};
-      final entries = web.window.performance.getEntriesByType('resource').toDart;
-      for (final e in entries) {
-        final name = e.name;
-        if (name.startsWith(origin) && !name.contains('/version.json')) {
-          urls.add(name.split('#').first);
-        }
-      }
-      for (final path in const [
-        'index.html',
-        'flutter_bootstrap.js',
-        'flutter.js',
-        'main.dart.js',
-        'main.dart.js_1.part.js',
-        'manifest.json',
-        'favicon.png',
-        'sqflite_sw.js',
-        'sqlite3.wasm',
-        'push_sw.js',
-        'canvaskit/canvaskit.js',
-        'canvaskit/canvaskit.wasm',
-        'canvaskit/chromium/canvaskit.js',
-        'canvaskit/chromium/canvaskit.wasm',
-        'assets/FontManifest.json',
-        'assets/AssetManifest.bin.json',
-        'assets/fonts/MaterialIcons-Regular.otf',
-      ]) {
-        urls.add('$origin/$path');
-      }
-
-      final done = Completer<bool>();
-      final channel = web.MessageChannel();
-      channel.port1.onmessage = ((web.MessageEvent event) {
-        final data = event.data as JSObject?;
-        if (data == null) return;
+      return await _ask(worker, 'precache', (data) {
         final type = (data['type'] as JSString?)?.toDart;
         final count = (data['done'] as JSNumber?)?.toDartInt ?? 0;
         if (type == 'progress') {
-          final total = (data['total'] as JSNumber?)?.toDartInt ?? urls.length;
+          final total = (data['total'] as JSNumber?)?.toDartInt ?? count;
           progress?.call(count, total);
-        } else if (type == 'done' && !done.isCompleted) {
-          // A file missing from this build (the other renderer's engine,
-          // say) is not a failure; the shell and the code are what count.
-          done.complete(true);
+          return false;
         }
-      }).toJS;
-      final message = JSObject()
-        ..['type'] = 'precache'.toJS
-        ..['urls'] = [for (final u in urls) u.toJS].toJS;
-      worker.postMessage(message, [channel.port2].toJS);
-      return await done.future.timeout(const Duration(minutes: 5),
-          onTimeout: () => false);
+        // A file missing from this build (another renderer's engine, say)
+        // is not a failure; the shell and the code are what count.
+        return type == 'done';
+      }, timeout: const Duration(minutes: 10));
     } catch (_) {
       return false;
     }
   }
 
-  /// Takes the copy back off this browser (Compte › Hors ligne).
+  /// Takes the copy back off this browser (Compte › Hors ligne): the
+  /// worker drops everything it kept and steps down; the next visit keeps
+  /// only what it uses, like any visitor's.
   static Future<void> forget() async {
     if (!_supported) return;
     try {
-      final reg = await web.window.navigator.serviceWorker
-          .getRegistration('/')
-          .toDart;
-      await web.window.caches.delete('mara-offline-v1').toDart;
-      if ((reg?.active?.scriptURL ?? '').endsWith('offline_sw.js')) {
-        await reg!.unregister().toDart;
-      }
+      final worker = await _worker();
+      if (worker != null) await _ask(worker, 'forget', (_) => true);
     } catch (_) {}
   }
 }

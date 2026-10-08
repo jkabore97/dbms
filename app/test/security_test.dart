@@ -127,6 +127,10 @@ void main() {
           phone: '+22670000000',
           pinSalt: salt,
           pinHash: PinCodec.hash('2580', salt)));
+      // A phone that holds a business: the code protects it (108).
+      await db.cacheOrgs(const [
+        OrgSummary(id: 'o1', name: 'Boutique', profile: 'retail', roles: ['owner']),
+      ]);
       final session = SessionController(
         db: db,
         auth: AuthRepository(null),

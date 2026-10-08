@@ -22,8 +22,18 @@
 // and on the way out (a documents row for that key came back under the
 // caller's own token, which it only does if the select policy allowed it).
 //
+// A courier's dossier (112) is the one other tenant, and the most private
+// one: a selfie and an identity document. Its photos live under courier/,
+// which the org routes never serve (they start from `org/`), and only the
+// three courier routes below touch — the applicant's own upload, a read
+// that Postgres allows to a platform admin alone, and the purge of what
+// Postgres says must be gone (30 days after a refusal). The purge is the
+// only delete this Worker makes, and only of keys Postgres named.
+//
 // Bindings, see wrangler.toml:
 //   UPLOADS                     R2 bucket kaj-app-uploads
+//   IMAGES                      Cloudflare Images, for the vitrine's
+//                               thumbnails (optional: without it, originals)
 //   SUPABASE_URL                the project URL — public, it is in the app
 //   SUPABASE_PUBLISHABLE_KEY    the anon key — public, it is in the app too
 //   ALLOWED_ORIGINS             comma-separated, the sites that may call this
@@ -66,6 +76,23 @@ export default {
     const url = new URL(request.url);
 
     try {
+      // POST /v1/courier/uploads?part=<selfie|id_front|id_back|licence> —
+      // a courier applicant's own photo (112).
+      if (url.pathname === "/v1/courier/uploads" && request.method === "POST") {
+        return withCors(await putCourier(request, env, url), cors);
+      }
+
+      // GET /v1/courier/objects/<key> — a dossier photo, for the platform.
+      const courierObject = url.pathname.match(/^\/v1\/courier\/objects\/(.+)$/);
+      if (courierObject && (request.method === "GET" || request.method === "HEAD")) {
+        return withCors(await getCourier(request, env, decodeURIComponent(courierObject[1])), cors);
+      }
+
+      // POST /v1/courier/purge — delete the dossier photos that are due.
+      if (url.pathname === "/v1/courier/purge" && request.method === "POST") {
+        return withCors(await purgeCourier(request, env), cors);
+      }
+
       // POST /v1/orgs/<org_id>/uploads — the camera button.
       const upload = url.pathname.match(/^\/v1\/orgs\/([^/]+)\/uploads$/);
       if (upload && request.method === "POST") {
@@ -75,7 +102,8 @@ export default {
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
       // the shop chose to show this article to the street. Postgres still
       // decides, per key, that the picture is of a published article on an
-      // open vitrine (052) — the Worker only ever performs.
+      // open vitrine (052) — the Worker only ever performs. `?w=` asks for
+      // it smaller (see thumbnail below).
       const pub = url.pathname.match(/^\/v1\/public\/objects\/(.+)$/);
       if (pub && (request.method === "GET" || request.method === "HEAD")) {
         return withCors(await getPublic(request, env, decodeURIComponent(pub[1])), cors);
@@ -172,7 +200,8 @@ async function put(request, env, orgId) {
 
   // The app records this key with record_document(). Until it does, the
   // object is unreferenced — a lifecycle rule on the bucket is the right
-  // place to sweep those, not this Worker, which must not be able to delete.
+  // place to sweep those, not this Worker, which deletes nothing of org/
+  // (its one delete is a courier dossier's, below, of keys Postgres names).
   return json({ key, bytes: body.byteLength, contentType }, 201);
 }
 
@@ -311,7 +340,9 @@ async function get(request, env, key) {
     return problem(401, "Sign in first.");
   }
 
-  if (!key.startsWith("org/")) {
+  // org/ only: never thumb/, never a courier's dossier (courier/), and no
+  // key that spells a way out of its prefix.
+  if (!key.startsWith("org/") || !safeKey(key)) {
     return problem(404, "No such object.");
   }
 
@@ -352,7 +383,8 @@ async function get(request, env, key) {
 // ------------------------------------------------------------
 
 async function getPublic(request, env, key) {
-  if (!key.startsWith("org/")) {
+  // The street's photos are org/ ones: a courier's dossier is never here.
+  if (!key.startsWith("org/") || !safeKey(key)) {
     return problem(404, "No such object.");
   }
 
@@ -364,7 +396,11 @@ async function getPublic(request, env, key) {
     return problem(404, "No such object.");
   }
 
-  const object = await env.UPLOADS.get(key);
+  // The small copy, when one was asked for and can be had; the photograph
+  // itself otherwise — never an error because the small one could not be
+  // made.
+  const width = thumbWidth(new URL(request.url).searchParams.get("w"));
+  const object = (width && (await thumbnail(env, key, width))) || (await env.UPLOADS.get(key));
   if (!object) {
     return problem(404, "No such object.");
   }
@@ -384,6 +420,61 @@ async function getPublic(request, env, key) {
   return new Response(object.body, { status: 200, headers });
 }
 
+// ------------------------------------------------------------
+// Thumbnails, for the street
+//
+// A phone photographs an article at 2000 px (capture_action.dart), about
+// half a megabyte; a vitrine shows it in a square a fifth of a phone wide.
+// Twelve articles were six megabytes before the shopper saw a price on a
+// market's connection. `?w=200|400|800` answers a WebP that wide (never
+// wider than the original), about twenty kilobytes at 400.
+//
+// Made once per photo and width with Cloudflare Images (the IMAGES
+// binding, wrangler.toml) and kept in the bucket under thumb/w<width>/<key>,
+// so every later shopper is served the kept copy and the month's
+// transformations stay a handful. thumb/ is not org/: no route serves it
+// directly — only this one, after Postgres has said yes for the photo
+// itself, exactly as for the original. With no binding (an account
+// without Images) or any failure, the original is served as before.
+// ------------------------------------------------------------
+
+const THUMB_WIDTHS = [200, 400, 800];
+
+function thumbWidth(raw) {
+  const asked = Number(raw);
+  if (!Number.isFinite(asked) || asked <= 0) return 0;
+  // The smallest allowed width that covers the one asked for.
+  return THUMB_WIDTHS.find((w) => w >= asked) || 0;
+}
+
+async function thumbnail(env, key, width) {
+  const thumbKey = `thumb/w${width}/${key}`;
+  try {
+    const kept = await env.UPLOADS.get(thumbKey);
+    if (kept) return kept;
+    if (!env.IMAGES) return null;
+    const original = await env.UPLOADS.get(key);
+    if (!original) return null;
+    const type = (original.httpMetadata && original.httpMetadata.contentType) || "";
+    if (!type.startsWith("image/")) return null;
+    const made = await env.IMAGES.input(original.body)
+      .transform({ width, fit: "scale-down" })
+      .output({ format: "image/webp", quality: 75 });
+    const bytes = await made.response().arrayBuffer();
+    if (!bytes.byteLength) return null;
+    await env.UPLOADS.put(thumbKey, bytes, {
+      httpMetadata: { contentType: "image/webp" },
+      customMetadata: { source: key },
+    });
+    return await env.UPLOADS.get(thumbKey);
+  } catch (err) {
+    // The month's free transformations used up, a format Images cannot
+    // read (HEIC from some phones): the original, as before.
+    console.error("thumbnail", width, err && err.message ? err.message : err);
+    return null;
+  }
+}
+
 /// An RPC as the anonymous role: the publishable key is both the project and
 /// the bearer, which is precisely what an unsigned-in browser would send.
 async function rpcAnon(env, fn, params) {
@@ -400,6 +491,179 @@ async function rpcAnon(env, fn, params) {
   if (!response.ok) return false;
   const value = await response.json();
   return value === true;
+}
+
+// ------------------------------------------------------------
+// A courier's dossier (112)
+//
+// The selfie and the identity document of somebody asking to carry. Every
+// question is Postgres's, asked as the caller: which key a new photo goes
+// to (courier_upload_slot — only for a step that is the caller's to fill),
+// that it landed (courier_upload_done), who may see one
+// (courier_photo_allowed — a platform admin, a current photo, nobody
+// else, the person in it included), and which must be deleted
+// (courier_files_due — 30 days after a refusal, a replaced photo…). The
+// Worker never builds a courier key itself and never serves one from the
+// org routes; what Postgres hands back is checked against the shape of a
+// courier key before the bucket is touched.
+// ------------------------------------------------------------
+
+const COURIER_PARTS = new Set(["selfie", "id_front", "id_back", "licence"]);
+
+const COURIER_KEY = /^courier\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|heic|heif)$/;
+
+async function putCourier(request, env, url) {
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  const part = url.searchParams.get("part") || "";
+  if (!COURIER_PARTS.has(part)) {
+    return problem(400, "Unknown photo.");
+  }
+  const contentType = (request.headers.get("Content-Type") || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+  // A photograph, nothing else: no PDF in a dossier.
+  if (!ALLOWED_TYPES.has(contentType) || !contentType.startsWith("image/")) {
+    return refusal(415, "Photos uniquement.");
+  }
+  const declared = Number(request.headers.get("Content-Length") || 0);
+  if (declared > MAX_BYTES) {
+    return problem(413, "That file is too large.");
+  }
+
+  const slot = await rpcAs(env, token, "courier_upload_slot", {
+    p_part: part,
+    p_ext: EXTENSIONS[contentType],
+  });
+  if (!slot.ok) {
+    return refused(slot);
+  }
+  if (typeof slot.value !== "string" || !COURIER_KEY.test(slot.value)) {
+    return problem(500, "Unexpected key.");
+  }
+
+  const body = await request.arrayBuffer();
+  if (body.byteLength === 0) {
+    return problem(400, "There was nothing in the upload.");
+  }
+  if (body.byteLength > MAX_BYTES) {
+    return problem(413, "That file is too large.");
+  }
+
+  await env.UPLOADS.put(slot.value, body, {
+    httpMetadata: { contentType },
+    customMetadata: { courierPart: part },
+  });
+  const done = await rpcAs(env, token, "courier_upload_done", { p_key: slot.value });
+  if (!done.ok) {
+    // Never left behind unreferenced: this is the key just written.
+    await env.UPLOADS.delete(slot.value);
+    return refused(done);
+  }
+  // No key in the answer: the applicant has no use for one.
+  return json({ part, bytes: body.byteLength }, 201);
+}
+
+async function getCourier(request, env, key) {
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  if (!COURIER_KEY.test(key)) {
+    return problem(404, "No such object.");
+  }
+  const allowed = await rpcAs(env, token, "courier_photo_allowed", { p_key: key });
+  if (!allowed.ok || allowed.value !== true) {
+    // 404, never 403: a 403 would confirm which dossiers exist.
+    return problem(404, "No such object.");
+  }
+  const object = await env.UPLOADS.get(key);
+  if (!object) {
+    return problem(404, "No such object.");
+  }
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  // An identity document: kept by no cache at all, not even the browser's.
+  headers.set("Cache-Control", "private, no-store");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
+  headers.set("Referrer-Policy", "no-referrer");
+  if (request.method === "HEAD") {
+    return new Response(null, { status: 200, headers });
+  }
+  return new Response(object.body, { status: 200, headers });
+}
+
+async function purgeCourier(request, env) {
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  const due = await rpcAs(env, token, "courier_files_due", {});
+  if (!due.ok) {
+    return refused(due);
+  }
+  const keys = (Array.isArray(due.value) ? due.value : []).filter(
+    (k) => typeof k === "string" && COURIER_KEY.test(k),
+  );
+  if (keys.length === 0) {
+    return json({ deleted: 0 });
+  }
+  await env.UPLOADS.delete(keys);
+  const purged = await rpcAs(env, token, "courier_files_purged", { p_keys: keys });
+  if (!purged.ok) {
+    return refused(purged);
+  }
+  return json({ deleted: keys.length });
+}
+
+// A key that stays inside its prefix: no empty, "." or ".." segment, no
+// backslash. R2 keys are flat strings, but nothing here should depend on
+// that to keep one tenant out of another.
+function safeKey(key) {
+  if (key.includes("\\")) return false;
+  return key.split("/").every((s) => s !== "" && s !== "." && s !== "..");
+}
+
+/// An RPC as the caller: the answer, or why not (Postgres's own words).
+async function rpcAs(env, token, fn, params) {
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: env.SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(params),
+  });
+  let value = null;
+  try {
+    value = await response.json();
+  } catch {
+    value = null;
+  }
+  if (!response.ok) {
+    const message = value && typeof value.message === "string" ? value.message : null;
+    return { ok: false, status: response.status, message };
+  }
+  return { ok: true, status: response.status, value };
+}
+
+// Postgres said no: an expired token is « sign in »; anything else is its
+// sentence (written in French for the person, in 112).
+function refused(result) {
+  if (result.status === 401) {
+    return problem(401, "Sign in first.");
+  }
+  return refusal(403, result.message || "Refusé.");
+}
+
+function refusal(status, message) {
+  return json({ error: message, detail: message, status }, status);
 }
 
 // ------------------------------------------------------------

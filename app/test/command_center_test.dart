@@ -39,7 +39,9 @@ class _Center extends CommandCenterRepository {
   _Center() : super(null);
 
   PlatformTodo todoAnswer = const PlatformTodo({
-    'applications': 2,
+    // An older app's request count, still sent (111): not drawn.
+    'applications': 3,
+    'new_7': 2,
     'pro_paid': 1,
     'spots_paid': 0,
     'spots_asked': 0,
@@ -292,7 +294,7 @@ void main() {
           'people', 'settings', 'journal']) {
         expect(find.byKey(Key('center-section-$key')), findsOneWidget, reason: key);
       }
-      // The badge says what waits: two requests.
+      // The badge says what is new: two businesses created this week (111).
       expect(find.descendant(of: find.byKey(const Key('center-section-requests')),
           matching: find.text('2')), findsOneWidget);
       await tester.tap(find.byKey(const Key('center-section-settings')));
@@ -372,12 +374,16 @@ void main() {
 
     testWidgets('counts open what acts on them; nothing waiting is not a button', (tester) async {
       final opened = <String>[];
-      await pump(tester, opened);
-      expect(find.descendant(of: find.byKey(const Key('todo-applications')), matching: find.text('2')),
+      final center = await pump(tester, opened);
+      // People create their business at once (111): no request waits, the
+      // new businesses of the week are counted and listed instead.
+      expect(find.byKey(const Key('todo-applications')), findsNothing);
+      expect(find.descendant(of: find.byKey(const Key('todo-new_7')), matching: find.text('2')),
           findsOneWidget);
-      await tester.tap(find.byKey(const Key('todo-applications')));
+      expect(center.todoAnswer.waiting, 2 + 1 + 4, reason: 'new_7, pro_paid, silent_30');
+      await tester.tap(find.byKey(const Key('todo-new_7')));
       await tester.pumpAndSettle();
-      expect(opened.last, Routes.applications);
+      expect(center.calls, contains('list:new_7'));
     });
 
     testWidgets('silent businesses open the list filtered', (tester) async {

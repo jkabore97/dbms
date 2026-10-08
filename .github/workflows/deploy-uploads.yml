@@ -76,11 +76,21 @@ jobs:
       # the project can move without editing a checked-in file.
       - name: Deploy
         run: |
-          npx --yes wrangler@4 deploy \
-            --config workers/uploads/wrangler.toml \
-            --var "SUPABASE_URL:$SUPABASE_URL" \
-            --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
-            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+          deploy() {
+            npx --yes wrangler@4 deploy \
+              --config "$1" \
+              --var "SUPABASE_URL:$SUPABASE_URL" \
+              --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
+              --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+          }
+          # The Images binding makes the vitrine's thumbnails. An account or
+          # token that refuses it must not keep the photos from deploying:
+          # without it the Worker serves the originals, as before.
+          if ! deploy workers/uploads/wrangler.toml; then
+            echo "::warning::Deploy with the Images binding failed; deploying without it (vitrine photos stay full size)."
+            sed '/^\[images\]/,/^binding/d' workers/uploads/wrangler.toml > workers/uploads/wrangler.noimages.toml
+            deploy workers/uploads/wrangler.noimages.toml
+          fi
 
       - name: Say where it went
         run: |

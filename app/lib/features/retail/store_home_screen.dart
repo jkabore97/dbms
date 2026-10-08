@@ -742,12 +742,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         selectedIcon: Icons.payments,
         label: s.sale,
         onTap: () {},
+        route: '',
       ),
       primary: [
         if (widget.retail != null && widget.access.canSee('products'))
           HomeDestination(
             icon: Icons.sell_outlined,
             label: s.productsLabel,
+            route: 'produits',
             onTap: () => _openThenReload('produits'),
           ),
         // Orders sent from the vitrine (055), with how many are waiting.
@@ -756,12 +758,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
             icon: Icons.inbox_outlined,
             label: context.tr('Commandes'),
             badge: _pendingOrders,
+            route: 'commandes',
             onTap: () => _openThenReload('commandes'),
           ),
         if (widget.invoicing != null && widget.access.canSee('invoices'))
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            route: 'factures',
             onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => context.push(Routes.inside(widget.org.id, 'factures'))),
           ),
@@ -771,19 +775,25 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.route_outlined,
             label: context.tr('Mon chemin'),
+            route: 'chemin',
             onTap: _openChemin,
           ),
-        // What the shop does rather than sells (098), on the vitrine.
-        if (widget.retail != null && widget.access.canSee('products'))
+        // What the shop does rather than sells (098), on the vitrine —
+        // unless Mara's switchboard hid the services (110).
+        if (widget.retail != null &&
+            widget.access.canSee('products') &&
+            !widget.access.isHidden('services'))
           HomeDestination(
             icon: Icons.event_available_outlined,
             label: context.tr('Mes services'),
+            route: 'services',
             onTap: () => _openThenReload('services'),
           ),
         if (widget.access.canSee('production'))
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
+            route: 'production',
             onTap: () => PathGate.open(context, widget.org, 'production',
                 () => _openThenReload('production')),
           ),
@@ -791,6 +801,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.photo_library_outlined,
             label: s.photos,
+            route: 'photos',
             onTap: _openGallery,
           ),
         // The business's people (100), as on the farm's and the
@@ -799,7 +810,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.groups_outlined,
             label: context.tr('Équipe'),
+            route: 'equipe',
             onTap: () => context.push(Routes.inside(widget.org.id, 'equipe')),
+          ),
+        // The administration's hub (108), for whoever runs the business.
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.admin_panel_settings_outlined,
+            label: context.tr('Administration'),
+            route: 'administration',
+            onTap: () => _openThenReload('administration'),
           ),
         // The doors out to the public side, said in words: going to the
         // street is a choice, never something to fall into backwards.
@@ -817,6 +837,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         HomeDestination(
           icon: Icons.account_circle_outlined,
           label: s.account,
+          route: 'compte',
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
         ),
       ],

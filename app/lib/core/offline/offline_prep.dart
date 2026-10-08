@@ -12,10 +12,12 @@ import 'offline_app.dart';
 ///
 ///   * Asked once per business, per device, of the business's admins only,
 ///     the first time its home opens (after the first setup). A shopper never
-///     reaches a business home and is never asked; nothing is kept for them.
+///     reaches a business home and is never asked. (On the web every visitor
+///     keeps the part of the app their visits used — web/mara_sw.js, so the
+///     street opens at once on a slow line; that is not this.)
 ///   * « Télécharger pour hors ligne » then prepares, in steps the screen
-///     shows: the app itself on the web (a network-first copy kept by
-///     web/offline_sw.js — on Android the app is already on the phone), the
+///     shows: the whole app on the web (both halves and every asset, kept by
+///     web/mara_sw.js — on Android the app is already on the phone), the
 ///     chart of accounts the entry sheets offer offline, and for a farm its
 ///     stock and flocks.
 ///   * Compte › Préférences › Hors ligne prepares again, or forgets the copy.

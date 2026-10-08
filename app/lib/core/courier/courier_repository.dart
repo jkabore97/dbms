@@ -1,7 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// The livreur's side of orders (056): registering, the board of ready
-/// deliveries, and walking a taken one to the door. Every rule lives
+/// The livreur's side of orders (056): the board of ready deliveries, and
+/// walking a taken one to the door. Becoming one is a dossier (112,
+/// courier_dossier.dart). Every rule lives
 /// server-side — who is approved, whose job it is, which step comes next —
 /// so this class only carries the calls.
 class CourierRepository {
@@ -22,11 +23,6 @@ class CourierRepository {
   /// 'pending', 'approved', 'suspended' — or null for "never registered".
   Future<String?> status() async =>
       await _requireClient().rpc('courier_status') as String?;
-
-  Future<void> register({String? phone}) async {
-    await _requireClient()
-        .rpc('register_courier', params: {'p_phone': phone});
-  }
 
   /// Ready deliveries nobody carries yet, oldest first.
   Future<List<DeliveryJob>> available() async {

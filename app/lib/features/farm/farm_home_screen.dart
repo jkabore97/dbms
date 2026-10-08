@@ -479,22 +479,26 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         // on this page, and one word twice on a screen reads as two places.
         label: context.tr('Accueil'),
         onTap: () {},
+        route: '',
       ),
       primary: [
         HomeDestination(
           icon: Icons.inventory_2_outlined,
           label: s.stock,
+          route: 'stock',
           onTap: () => _push(Routes.inside(id, 'stock')),
         ),
         HomeDestination(
           icon: Icons.pets_outlined,
           label: s.flocks,
+          route: 'bandes',
           onTap: () => _push(Routes.inside(id, 'bandes')),
         ),
         if (widget.invoicing != null && widget.access.canSee('invoices'))
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            route: 'factures',
             onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => _push(Routes.inside(id, 'factures'))),
           ),
@@ -504,29 +508,36 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         HomeDestination(
           icon: Icons.storefront_outlined,
           label: context.tr('À vendre'),
+          route: 'a-vendre',
           onTap: () => _push(Routes.inside(id, 'a-vendre')),
         ),
-        // What the farm does for others (098): ploughing, a stud, a visit.
-        HomeDestination(
-          icon: Icons.event_available_outlined,
-          label: context.tr('Mes services'),
-          onTap: () => _push(Routes.inside(id, 'services')),
-        ),
+        // What the farm does for others (098): ploughing, a stud, a visit —
+        // unless Mara's switchboard hid the services (110).
+        if (!widget.access.isHidden('services'))
+          HomeDestination(
+            icon: Icons.event_available_outlined,
+            label: context.tr('Mes services'),
+            route: 'services',
+            onTap: () => _push(Routes.inside(id, 'services')),
+          ),
         HomeDestination(
           icon: Icons.shopping_bag_outlined,
           label: context.tr('Commandes'),
+          route: 'commandes',
           onTap: () => _push(Routes.inside(id, 'commandes')),
         ),
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.route_outlined,
             label: context.tr('Mon chemin'),
+            route: 'chemin',
             onTap: () => _push(Routes.inside(id, 'chemin')),
           ),
         if (widget.access.canSee('credits'))
           HomeDestination(
             icon: Icons.handshake_outlined,
             label: s.creditBook,
+            route: 'credits',
             onTap: () => PathGate.open(context, widget.org, 'credits',
                 () => context.push(Routes.inside(id, 'credits'))),
           ),
@@ -534,6 +545,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           HomeDestination(
             icon: Icons.precision_manufacturing_outlined,
             label: s.production,
+            route: 'production',
             onTap: () => PathGate.open(context, widget.org, 'production',
                 () => context.push(Routes.inside(id, 'production'))),
           ),
@@ -543,17 +555,28 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           HomeDestination(
             icon: Icons.photo_library_outlined,
             label: s.photos,
+            route: 'photos',
             onTap: () => context.push(Routes.inside(id, 'photos')),
           ),
         if (widget.staff != null && widget.org.isAdmin)
           HomeDestination(
             icon: Icons.groups_outlined,
             label: context.tr('Équipe'),
+            route: 'equipe',
             onTap: () => context.push(Routes.inside(id, 'equipe')),
+          ),
+        // The administration's hub (108), for whoever runs the farm.
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.admin_panel_settings_outlined,
+            label: context.tr('Administration'),
+            route: 'administration',
+            onTap: () => _push(Routes.inside(id, 'administration')),
           ),
         HomeDestination(
           icon: Icons.account_circle_outlined,
           label: s.account,
+          route: 'compte',
           onTap: () => context.push(Routes.inside(id, 'compte')),
         ),
       ],

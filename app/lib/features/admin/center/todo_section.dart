@@ -12,6 +12,7 @@ import '../../../core/theme/mara_mark.dart';
 import '../../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindPlural;
 import '../console_today.dart';
 import 'center_search.dart' show orderStatusLabel;
+import 'reports_sheet.dart';
 
 /// « À faire » (105): the center's first page. What waits on the platform
 /// and what ends within seven days, as numbers to tap — each opens the
@@ -78,8 +79,12 @@ class _TodoSectionState extends State<TodoSection> {
     final t = _todo ?? const PlatformTodo({});
     final spots = t['spots_paid'] + t['spots_asked'];
     final waiting = <_Count>[
-      _Count('applications', t['applications'], context.tr('Demandes d\'entreprise'),
-          Icons.assignment_ind_outlined, () => context.go(Routes.applications)),
+      // Businesses people created themselves, or Mara did (111): no
+      // request waits for approval any more — the new ones to welcome.
+      _Count('new_7', t['new_7'], context.tr('Nouvelles activités (7 j)'),
+          Icons.add_business_outlined,
+          () => _list('new_7', context.tr('Nouvelles activités (7 j)')),
+          hint: context.tr('à accueillir')),
       _Count('pro_paid', t['pro_paid'], context.tr('« J\'ai payé » Mara Pro à confirmer'),
           Icons.workspace_premium_outlined, () => context.go(Routes.consolePro)),
       _Count('spots', spots, context.tr('Mises en avant à traiter'), Icons.campaign_outlined,
@@ -93,6 +98,14 @@ class _TodoSectionState extends State<TodoSection> {
           Icons.timer_outlined,
           () => _list('orders_stuck', context.tr('Commandes bloquées')),
           hint: context.tr('en attente depuis 2 h, ou en route depuis 3 h')),
+      // « Signaler un problème » from the shopper's page (113).
+      _Count('reports_open', t['reports_open'], context.tr('Signalements'),
+          Icons.flag_outlined,
+          () async {
+            await showReportsSheet(context, center: widget.center);
+            if (mounted) await _load();
+          },
+          hint: context.tr('des clients, à lire')),
       _Count('payouts_failed', t['payouts_failed'], context.tr('Versements Wave échoués'),
           Icons.sync_problem_outlined, () => context.go(Routes.consoleWave),
           warn: true),
@@ -381,6 +394,13 @@ class _TodoListSheetState extends State<TodoListSheet> {
           ?r.error,
         ].join(' · '),
       'silent_30' => context.tr('Rien depuis le {date}', {'date': day}),
+      'new_7' => [
+          r.byPerson
+              ? context.tr('Créée le {date} par la personne', {'date': day})
+              : context.tr('Créée le {date} par Mara', {'date': day}),
+          ?r.owner,
+          ?r.city,
+        ].join(' · '),
       'features_lapsed' => context.tr('{tool} n\'est plus visible depuis le {date}', {
           'tool': featureName(context, r.feature ?? ''),
           'date': day,

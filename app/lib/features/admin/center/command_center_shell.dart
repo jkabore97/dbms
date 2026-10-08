@@ -70,13 +70,15 @@ List<CenterSection> centerSections(BuildContext context) => [
         icon: Icons.category_outlined,
         pages: [CenterPage(context.tr('Types d\'activité'), Routes.consoleKinds)],
       ),
+      // People create their business at once (111): what was « Demandes »
+      // is the businesses created, and the page that shapes the creation.
       CenterSection(
         key: 'requests',
-        label: context.tr('Demandes'),
-        icon: Icons.inbox_outlined,
+        label: context.tr('Activités créées'),
+        icon: Icons.add_business_outlined,
         pages: [
-          CenterPage(context.tr('Demandes'), Routes.applications),
-          CenterPage(context.tr('Page de demande'), Routes.consoleRequestForm),
+          CenterPage(context.tr('Activités créées'), Routes.applications),
+          CenterPage(context.tr('Parcours de création'), Routes.consoleRequestForm),
         ],
       ),
       CenterSection(
@@ -214,7 +216,8 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     if (b == null) return 0;
     return switch (section) {
       'todo' => b.waiting,
-      'requests' => b['applications'],
+      // The businesses created this week (111): no request waits now.
+      'requests' => b['new_7'],
       'pro' => b['pro_paid'],
       _ => 0,
     };

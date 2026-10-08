@@ -1,24 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../errors.dart';
 import 'application_form.dart';
 
-/// Getting into the app: saying who you are, and then either joining a
-/// business or asking for one.
-///
-/// The two routes are deliberately different shapes, and the difference is
-/// the point.
+/// Getting into the app: saying who you are, and then joining a business —
+/// or, since 111, creating one's own (business_creation.dart).
 ///
 /// **An employee joins something that already exists.** They fill in the
 /// form, then enter the code their manager sent them. The code is what grants
 /// access — nothing about completing the form does — so somebody who fills in
 /// every field and has no code belongs to no business and can see nothing.
 ///
-/// **A manager asks for a business to exist.** They describe the business —
-/// only the business: the signed-in account says who they are (101) — and
-/// wait for somebody at Kaj-consulting to look at
-/// it. `create_org()` has been platform-admin-only since 010 and stays that
-/// way: whether a new tenant appears is a decision, not a form submission.
+/// **Somebody starting a business creates it** (create_my_business, 111):
+/// no request, no wait. The creation page Mara shapes — its welcome, its
+/// kinds, its questions — is 107's application form, read and written here.
+/// The request path of before (apply_for_org, the approval) stays on the
+/// server for an older app; nothing here calls it.
 class OnboardingRepository {
   OnboardingRepository(this._client);
 
@@ -85,48 +81,13 @@ class OnboardingRepository {
   }
 
   // ----------------------------------------------------------------
-  // Asking for a business
+  // The creation page (107's form, which shapes 111's creation)
   // ----------------------------------------------------------------
 
-  /// Asks for a business. Only the business: who is asking is the signed-in
-  /// account, and 101's apply_for_org() takes their name, phone and email
-  /// from the profile and the account.
-  ///
-  /// [answers] are the request page's extra questions (107), by question
-  /// id. Only sent when the page asked some: 107's answers signature names
-  /// all eight arguments; without answers this is 101's call, which a
-  /// database before 107 still takes.
-  Future<String> applyForOrg({
-    required String name,
-    required String slug,
-    required String profile,
-    String currency = 'XOF',
-    String? description,
-    Map<String, Object?>? answers,
-  }) async {
-    final client = _requireClient();
-    final hasDescription = description != null && description.isNotEmpty;
-    final id = await client.rpc('apply_for_org', params: {
-      'p_name': name,
-      'p_slug': slug,
-      'p_profile': profile,
-      'p_currency': currency,
-      if (answers != null && answers.isNotEmpty) ...{
-        'p_description': hasDescription ? description : null,
-        'p_phone': null,
-        'p_email': null,
-        'p_answers': answers,
-      } else if (hasDescription)
-        'p_description': description,
-    });
-    return id as String;
-  }
-
-  /// The request page Mara set (107), or null for today's page — also on a
-  /// database before 107 or with no signal: the page then asks what it
-  /// always asked, and the server, which holds the same page, decides.
-  /// [strict] is the editor's: a failure is said rather than read as « no
-  /// page », so a save cannot write over a page it never read.
+  /// The creation page Mara set (107), or null for the page of origin —
+  /// also on a database before 107 or with no signal. [strict] is the
+  /// editor's: a failure is said rather than read as « no page », so a save
+  /// cannot write over a page it never read.
   Future<ApplicationForm?> applicationForm({bool strict = false}) async {
     final client = _client;
     if (client == null) return null;
@@ -138,7 +99,7 @@ class OnboardingRepository {
     }
   }
 
-  /// Sets the request page (the platform's; 107 checks it and keeps it in
+  /// Sets the creation page (the platform's; 107 checks it and keeps it in
   /// a clean shape). Null or an empty form returns it to today's. Returns
   /// the journal line for « Annuler », or null when nothing changed.
   Future<String?> setApplicationForm(ApplicationForm? form) async {
@@ -147,67 +108,6 @@ class OnboardingRepository {
       'p_form': form == null || form.isEmpty ? null : form.toJson(),
     });
     return id as String?;
-  }
-
-  /// The applicant's own application, or null if they never made one.
-  Future<OrgApplication?> myApplication() async {
-    final client = _client;
-    if (client == null) return null;
-    try {
-      final rows = await client.rpc('my_org_application') as List<dynamic>;
-      if (rows.isEmpty) return null;
-      return OrgApplication.fromRow(
-          Map<String, dynamic>.from(rows.first as Map));
-    } catch (_) {
-      // A database without 017 yet. Treated as "never applied", which is what
-      // it looks like from here.
-      return null;
-    }
-  }
-
-  // ----------------------------------------------------------------
-  // The platform's queue
-  // ----------------------------------------------------------------
-
-  /// Refused server-side for anyone who is not a platform admin — it raises
-  /// rather than returning an empty list, so somebody not entitled gets an
-  /// error instead of the false impression of an empty queue.
-  ///
-  /// With the request page's answers (107's platform_pending_applications);
-  /// a database before 107 answers through 017's queue, with none.
-  Future<List<OrgApplication>> pendingApplications() async {
-    final client = _requireClient();
-    List<dynamic> rows;
-    try {
-      rows = await client.rpc('platform_pending_applications') as List<dynamic>;
-    } catch (error) {
-      if (!isSchemaOutOfDate(error)) rethrow;
-      rows = await client.rpc('pending_org_applications') as List<dynamic>;
-    }
-    return rows
-        .map((r) => OrgApplication.fromRow(Map<String, dynamic>.from(r as Map)))
-        .toList();
-  }
-
-  /// Creates the business and makes the applicant its owner, in one
-  /// transaction. Returns the new org's id.
-  Future<String> approve(String applicationId, {String? note}) async {
-    final client = _requireClient();
-    final id = await client.rpc('approve_org_application', params: {
-      'p_application_id': applicationId,
-      if (note != null && note.isNotEmpty) 'p_note': note,
-    });
-    return id as String;
-  }
-
-  /// The reason is required by the server, not just by this form: a rejection
-  /// somebody cannot act on produces the same application again next week.
-  Future<void> reject(String applicationId, String reason) async {
-    final client = _requireClient();
-    await client.rpc('reject_org_application', params: {
-      'p_application_id': applicationId,
-      'p_note': reason,
-    });
   }
 
   // ----------------------------------------------------------------
@@ -260,89 +160,6 @@ class OnboardingRepository {
       );
     }
     return client;
-  }
-}
-
-/// Somebody asking for a business to exist.
-class OrgApplication {
-  const OrgApplication({
-    required this.id,
-    required this.name,
-    required this.slug,
-    required this.profile,
-    this.status = 'pending',
-    this.applicant,
-    this.applicantId,
-    this.currency = 'XOF',
-    this.contactPhone,
-    this.contactEmail,
-    this.description,
-    this.decisionNote,
-    this.createdAt,
-    this.reviewedAt,
-    this.orgId,
-    this.answers = const [],
-  });
-
-  final String id;
-  final String name;
-  final String slug;
-  final String profile;
-  final String status;
-
-  /// Filled on the platform's queue; null on the applicant's own view, where
-  /// they already know who they are.
-  final String? applicant;
-  final String? applicantId;
-
-  final String currency;
-  final String? contactPhone;
-  final String? contactEmail;
-  final String? description;
-
-  /// Why it was refused. Required of the reviewer, so it is never null on a
-  /// rejected application.
-  final String? decisionNote;
-
-  final DateTime? createdAt;
-  final DateTime? reviewedAt;
-  final String? orgId;
-
-  /// The request page's questions as they were asked, and the answers
-  /// (107). Empty when the page asked none.
-  final List<ApplicationAnswer> answers;
-
-  bool get isPending => status == 'pending';
-  bool get isApproved => status == 'approved';
-  bool get isRejected => status == 'rejected';
-
-  factory OrgApplication.fromRow(Map<String, dynamic> row) {
-    DateTime? when(Object? v) =>
-        v == null ? null : DateTime.tryParse('$v')?.toLocal();
-
-    return OrgApplication(
-      id: row['id'] as String,
-      name: (row['name'] as String?) ?? '',
-      slug: (row['slug'] as String?) ?? '',
-      profile: (row['profile'] as String?) ?? 'generic',
-      status: (row['status'] as String?) ?? 'pending',
-      applicant: row['applicant'] as String?,
-      applicantId: row['applicant_id'] as String?,
-      currency: (row['currency'] as String?) ?? 'XOF',
-      contactPhone: row['contact_phone'] as String?,
-      contactEmail: row['contact_email'] as String?,
-      description: row['description'] as String?,
-      decisionNote: row['decision_note'] as String?,
-      createdAt: when(row['created_at']),
-      reviewedAt: when(row['reviewed_at']),
-      orgId: row['org_id'] as String?,
-      answers: row['answers'] is List
-          ? [
-              for (final a in row['answers'] as List)
-                if (a is Map) ApplicationAnswer.fromJson(Map<String, dynamic>.from(a)),
-            ]
-          : const [],
-    );
   }
 }
 

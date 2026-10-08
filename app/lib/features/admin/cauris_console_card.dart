@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/access/plan_terms.dart';
 import '../../core/cauris/cauris_repository.dart';
+import '../../core/console/command_center.dart';
 import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../cauris/cauri_icon.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -106,16 +108,41 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
     }
   }
 
-  Future<void> _editCost(String feature, int cost) async {
+  /// A tool's price, and the days a new business waits before cauris
+  /// open it (108) — accounting and tontines wait so their books mean
+  /// something; a photo slot never waits.
+  Future<void> _editCost(String feature, int cost, int minDays) async {
     final c = TextEditingController(text: '$cost');
+    final d = TextEditingController(text: '$minDays');
+    final messenger = ScaffoldMessenger.of(context);
+    final saved = context.tr('Prix enregistré.');
+    final undoLabel = context.tr('Annuler');
+    final client = AppScope.read(context)?.auth.client;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.tr('Prix en cauris')),
-        content: TextField(
-          key: const Key('cost-value'),
-          controller: c,
-          keyboardType: TextInputType.number,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const Key('cost-value'),
+              controller: c,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: context.tr('Cauris, pour 30 jours')),
+            ),
+            if (feature != 'photo_slot')
+              TextField(
+                key: const Key('cost-wait'),
+                controller: d,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: context.tr('Attente, en jours'),
+                  helperText: context.tr('Jours sur Mara avant de pouvoir l\'acheter. 0 : dès le premier jour.'),
+                  helperMaxLines: 3,
+                ),
+              ),
+          ],
         ),
         actions: [
           TextButton(
@@ -128,15 +155,30 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
       ),
     );
     final v = int.tryParse(c.text.trim());
-    if (ok != true || v == null) return;
+    final wait = feature == 'photo_slot' ? 0 : int.tryParse(d.text.trim());
+    if (ok != true || v == null || wait == null) return;
     try {
-      await widget.cauris.setCost(feature, v);
+      final id = await widget.cauris.setCost(feature, v, minDays: wait);
       await _load();
+      // Journaled (108): « Annuler » takes it back, as in the Journal.
+      messenger.showSnackBar(SnackBar(
+        content: Text(saved),
+        action: id == null || client == null
+            ? null
+            : SnackBarAction(
+                label: undoLabel,
+                onPressed: () async {
+                  try {
+                    await CommandCenterRepository(client).undo(id);
+                    await _load();
+                  } catch (e) {
+                    messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+                  }
+                },
+              ),
+      ));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeError(e))));
-      }
+      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
     }
   }
 
@@ -202,7 +244,7 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                     : null,
                 trailing: CaurisAmount(c.cost,
                     style: const TextStyle(fontWeight: FontWeight.w700)),
-                onTap: () => _editCost(c.feature, c.cost),
+                onTap: () => _editCost(c.feature, c.cost, c.minDays),
               ),
           ],
           const SizedBox(height: 12),

@@ -225,20 +225,6 @@ class _CourierScreenState extends State<CourierScreen>
         "L'échec n'a pas pu être enregistré.");
   }
 
-  Future<void> _register() async {
-    setState(() => _busy = true);
-    try {
-      await widget.courier.register();
-      await _load();
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.tr('L\'inscription n\'a pas pu partir. Vérifiez le réseau.'))));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   Future<void> _act(Future<void> Function() call, String failed) async {
     setState(() => _busy = true);
     try {
@@ -337,10 +323,15 @@ class _CourierScreenState extends State<CourierScreen>
                       onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : switch (_status) {
-                  null => _Pitch(busy: _busy, onRegister: _register),
-                  'pending' => const ShopNotice(
+                  // Becoming one is a dossier now (112), on its own page.
+                  null => _Pitch(onStart: () => context.go(Routes.becomeCourier)),
+                  'pending' => ShopNotice(
                       text: 'Votre inscription est à l\'étude. La plateforme '
                           'vous préviendra dès qu\'elle est validée.',
+                      action: OutlinedButton(
+                        onPressed: () => context.go(Routes.becomeCourier),
+                        child: Text(context.tr('Voir ma demande')),
+                      ),
                     ),
                   'suspended' => const ShopNotice(
                       text: 'Votre accès livreur est suspendu. '
@@ -536,10 +527,9 @@ class _EarningsStrip extends StatelessWidget {
 
 /// What being a livreur is, for somebody who is not one yet.
 class _Pitch extends StatelessWidget {
-  const _Pitch({required this.busy, required this.onRegister});
+  const _Pitch({required this.onStart});
 
-  final bool busy;
-  final VoidCallback onRegister;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
@@ -570,14 +560,9 @@ class _Pitch extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
                 FilledButton(
-                  onPressed: busy ? null : onRegister,
-                  child: busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: ShopStyle.paper))
-                      : Text(context.tr('M\'inscrire comme livreur')),
+                  key: const Key('courier-become'),
+                  onPressed: onStart,
+                  child: Text(context.tr('Devenir livreur')),
                 ),
               ],
             ),

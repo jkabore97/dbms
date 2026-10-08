@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/access/plan_terms.dart';
 import '../../../core/console/command_center.dart';
 import '../../../core/errors.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/nav/router.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
+import '../../courier/courier_words.dart' show courierReasonLabel;
 import 'settings_section.dart';
 
 /// Journal (104, 105): every change the platform made — a setting, a gift,
@@ -136,6 +138,28 @@ class _JournalSectionState extends State<JournalSection> {
         });
       }
     }
+    // A tool's price and wait in cauris (108), said in the reader's words.
+    if (e.kind == 'cauris_cost') {
+      final f = '${e.after?['feature'] ?? e.before?['feature'] ?? ''}';
+      return context.tr('Cauris, {tool} : {c0} → {c1} cauris, attente {d0} → {d1} jours', {
+        'tool': f == 'pro_all' ? context.tr('Mara Pro complet') : PlanTerms.labelOf(f),
+        'c0': e.before?['cost'] ?? '',
+        'c1': e.after?['cost'] ?? '',
+        'd0': e.before?['min_days'] ?? '',
+        'd1': e.after?['min_days'] ?? '',
+      });
+    }
+    // A courier's dossier decided (112): who, and what was said.
+    if (e.kind == 'courier') {
+      final status = '${e.after?['status'] ?? ''}';
+      return context.tr('Livreur {name} : {decision}', {
+        'name': e.after?['name'] ?? e.before?['name'] ?? '',
+        'decision': status == 'approved'
+            ? context.tr('approuvé')
+            : context.tr('à corriger ({reason})',
+                {'reason': courierReasonLabel(context, e.after?['reason'] as String?).toLowerCase()}),
+      });
+    }
     return translate(context.trLanguage, e.summary);
   }
 
@@ -152,6 +176,9 @@ class _JournalSectionState extends State<JournalSection> {
         'identity' => Icons.badge_outlined,
         'vitrine' => Icons.storefront_outlined,
         'plan' => Icons.workspace_premium_outlined,
+        'cauris_cost' => Icons.sell_outlined,
+        'courier' => Icons.delivery_dining_outlined,
+        'report' => Icons.flag_outlined,
         _ => Icons.edit_note,
       };
 

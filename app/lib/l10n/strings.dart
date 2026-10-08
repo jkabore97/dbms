@@ -455,23 +455,11 @@ abstract class Strings {
   /// **'Mes informations'**
   String get myProfile;
 
-  /// No description provided for @applications.
-  ///
-  /// In fr, this message translates to:
-  /// **'Demandes'**
-  String get applications;
-
   /// No description provided for @businesses.
   ///
   /// In fr, this message translates to:
   /// **'Entreprises'**
   String get businesses;
-
-  /// No description provided for @applyForBusiness.
-  ///
-  /// In fr, this message translates to:
-  /// **'Demander une entreprise'**
-  String get applyForBusiness;
 
   /// No description provided for @switchBusiness.
   ///

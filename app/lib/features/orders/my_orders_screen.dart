@@ -7,9 +7,12 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/format/money.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/orders/orders.dart';
+import '../../core/shopper/shopper_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../shopper/reorder.dart';
 import '../storefront/shop_skeleton.dart';
 import '../pay/wave_buttons.dart';
 import 'order_tracking_panel.dart';
@@ -19,9 +22,20 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// A customer's orders: what they asked for, where each one stands, and
 /// the one thing they can still do about a pending one — withdraw it.
 class MyOrdersScreen extends StatefulWidget {
-  const MyOrdersScreen({super.key, required this.storefront});
+  const MyOrdersScreen({
+    super.key,
+    required this.storefront,
+    this.shopper,
+    this.bookingsOnly = false,
+  });
 
   final StorefrontRepository storefront;
+
+  /// « Recommander » (113) on a finished order. Null: not offered.
+  final ShopperRepository? shopper;
+
+  /// « Mes réservations » (113): the bookings of services only (098).
+  final bool bookingsOnly;
 
   @override
   State<MyOrdersScreen> createState() => _MyOrdersScreenState();
@@ -160,18 +174,38 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     }
   }
 
+  /// « Recommander » (113): the vitrine's basket filled again with what it
+  /// still has of this order, and the vitrine opened on it.
+  Future<void> _again(CustomerOrder order) async {
+    final shopper = widget.shopper;
+    final db = AppScope.maybeOf(context)?.db;
+    if (shopper == null || db == null) return;
+    setState(() => _busyId = order.id);
+    try {
+      await reorderInto(context, shopper: shopper, db: db, orderId: order.id);
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final open = _orders.where((o) => o.isOpen).toList();
-    final past = _orders.where((o) => !o.isOpen).toList();
+    final mine = widget.bookingsOnly
+        ? _orders.where((o) => o.isBooking).toList()
+        : _orders;
+    final open = mine.where((o) => o.isOpen).toList();
+    final past = mine.where((o) => !o.isOpen).toList();
+    final again = widget.shopper != null && widget.shopper!.isConfigured;
 
     return ShopPage(
-      title: context.tr('Mes commandes'),
+      title: widget.bookingsOnly ? context.tr('Mes réservations') : context.tr('Mes commandes'),
       announcements: ShopPage.street,
       leading: IconButton(
-        tooltip: context.tr('Les vitrines'),
+        tooltip: widget.bookingsOnly ? context.tr('Retour') : context.tr('Les vitrines'),
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => context.go(Routes.directory),
+        onPressed: () => widget.bookingsOnly && context.canPop()
+            ? context.pop()
+            : context.go(Routes.directory),
       ),
       body: _loading
           ? ShopSkeleton.list()
@@ -181,9 +215,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   action: OutlinedButton(
                       onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
-              : _orders.isEmpty
+              : mine.isEmpty
                   ? ShopNotice(
-                      text: "Vous n'avez pas encore commandé.",
+                      text: widget.bookingsOnly
+                          ? context.tr('Vous n\'avez pas encore réservé de service.')
+                          : "Vous n'avez pas encore commandé.",
                       action: FilledButton(
                         onPressed: () => context.go(Routes.directory),
                         child: Text(context.tr('Voir les vitrines')),
@@ -241,7 +277,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                 for (final (i, o) in past.indexed)
                                   ScrollReveal(
                                     delay: KajMotion.stagger(i),
-                                    child: _OrderCard(order: o, busy: false),
+                                    child: _OrderCard(
+                                      order: o,
+                                      busy: _busyId == o.id,
+                                      onAgain: again ? () => _again(o) : null,
+                                    ),
                                   ),
                               ],
                               const ShopFooter(),
@@ -262,7 +302,11 @@ class _OrderCard extends StatelessWidget {
     this.onPay,
     this.tracking,
     this.wave,
+    this.onAgain,
   });
+
+  /// « Recommander » / « Réserver à nouveau » (113), on a finished order.
+  final VoidCallback? onAgain;
 
   /// « Payer avec Wave / par carte » through Kaj (076). When it is not
   /// offered it draws the shop's own link instead ([onPay]).
@@ -392,6 +436,20 @@ class _OrderCard extends StatelessWidget {
                       label: Text(
                           'Payer avec Wave · ${moneyFormat(order.currency).format(order.total)}'),
                     ),
+            ),
+          ],
+          if (onAgain != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: Key('again-${order.id}'),
+              onPressed: busy ? null : onAgain,
+              icon: busy
+                  ? const SizedBox(
+                      width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.replay, size: 18),
+              label: Text(order.isBooking
+                  ? context.tr('Réserver à nouveau')
+                  : context.tr('Recommander')),
             ),
           ],
           if (onCancel != null) ...[

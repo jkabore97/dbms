@@ -18,6 +18,14 @@
 //     with no JavaScript — what Google's verification of the sign-in screen
 //     reads.
 //
+//  4. How long a phone may keep each file (cacheFor, below). Set here, not
+//     only in _headers: with run_worker_first, Cloudflare applies _headers
+//     to nothing this Worker returns. The deploy moves every file that
+//     changes between builds into a folder named after its content
+//     (scripts/web-fingerprint.mjs): those are kept a year and never asked
+//     about again. The page itself, the service workers and version.json
+//     say which build is current, so they are asked about every time.
+//
 // SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and UPLOADS_URL come from the deploy
 // (deploy-cloudflare.yml, from the repository's secrets and variables),
 // never from this file. The publishable key is the one the web app already
@@ -44,14 +52,55 @@ export default {
     const shop = url.pathname.match(/^\/s\/([a-z0-9-]+)\/?$/);
     if (shop && request.method === "GET") {
       try {
-        return await vitrinePage(request, env, shop[1]);
+        return cacheFor(url.pathname, await vitrinePage(request, env, shop[1]));
       } catch (_) {
         // Mara's own preview rather than no page.
       }
     }
-    return env.ASSETS.fetch(request);
+    return cacheFor(url.pathname, await env.ASSETS.fetch(request));
   },
 };
+
+// /app/<hash>/, /ck/<hash>/, /a/<hash>/ — written by the deploy.
+const FINGERPRINTED = /^\/(app|ck|a)\/[0-9a-f]{12}\//;
+// The files that say which build is current.
+const ALWAYS_ASK = new Set([
+  "/mara_sw.js",
+  "/push_sw.js",
+  "/push_handlers.js",
+  "/flutter_service_worker.js",
+  "/version.json",
+]);
+
+function cacheFor(path, response) {
+  const type = response.headers.get("Content-Type") || "";
+  if (FINGERPRINTED.test(path)) {
+    // A folder of a build that is no longer deployed: the assets binding
+    // would answer the app's page (single-page-application), and a tab of
+    // the previous build would run HTML as its business half. Say « not
+    // found » instead; the tab's update banner already offers the new one.
+    if (type.startsWith("text/html")) {
+      return new Response("Introuvable.", {
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+      });
+    }
+    if (response.status === 200 || response.status === 304) {
+      return withCacheControl(response, "public, max-age=31536000, immutable");
+    }
+    return response;
+  }
+  if (ALWAYS_ASK.has(path) || type.startsWith("text/html")) {
+    return withCacheControl(response, "no-cache");
+  }
+  return response;
+}
+
+function withCacheControl(response, value) {
+  const out = new Response(response.body, response);
+  out.headers.set("Cache-Control", value);
+  return out;
+}
 
 async function vitrinePage(request, env, slug) {
   const page = await env.ASSETS.fetch(new Request(new URL("/", request.url), request));
@@ -125,8 +174,10 @@ async function vitrinePage(request, env, slug) {
     .transform(page);
 
   const headers = new Headers(rewritten.headers);
-  // A shop edits its name or its photo: the preview follows within minutes.
-  headers.set("Cache-Control", "public, max-age=300");
+  // Asked about every time, like every page of the app: it names the
+  // build's folders, and a copy kept past a deploy would point at folders
+  // that are gone. A shop's new name or photo shows at once, too.
+  headers.set("Cache-Control", "no-cache");
   return new Response(rewritten.body, { status: 200, headers });
 }
 

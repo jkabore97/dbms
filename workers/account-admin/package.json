@@ -1,0 +1,9 @@
+{
+  "name": "kaj-account",
+  "private": true,
+  "type": "module",
+  "description": "Admin password resets and account deletions, and a person deleting their own account: the one holder of the service-role key.",
+  "scripts": {
+    "test": "node --test test"
+  }
+}

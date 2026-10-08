@@ -113,6 +113,8 @@ class _CheminScreenState extends State<CheminScreen> {
       AppScope.read(context)?.session.featuresFor(widget.org.id);
 
   Future<void> _load() async {
+    // Read before the first await: a context is not for after a gap.
+    final session = AppScope.read(context)?.session;
     setState(() {
       _loading = true;
       _error = null;
@@ -121,6 +123,9 @@ class _CheminScreenState extends State<CheminScreen> {
       await widget.cauris.milestones(widget.org.id);
       final path = await widget.cauris.pathState(widget.org.id);
       final w = await widget.cauris.wallet(widget.org.id);
+      // What the cauris buy, from the same moment as the wallet above
+      // (108): the session's copy could be minutes behind it.
+      await session?.reloadFeatures(widget.org.id);
       if (!mounted) return;
       setState(() {
         _path = path;
@@ -364,7 +369,13 @@ class _CheminScreenState extends State<CheminScreen> {
                             'date': DateFormat('d MMMM', _dateLocale)
                                 .format(e.value.until!.toLocal()),
                           }))
-                    : null,
+                    // The wait of a new business, with its day (108).
+                    : e.value.waitsDays != null
+                        ? Text(
+                            '${UnlockSheet.waitWords(context, e.value.waitsDays!)}. '
+                            '${UnlockSheet.waitDay(context, e.value.waitsDays!)}',
+                            key: Key('chemin-wait-${e.key}'))
+                        : null,
                 trailing: e.value.until != null
                     ? const Icon(Icons.lock_open, color: maraGreen)
                     : CaurisAmount(e.value.cost,

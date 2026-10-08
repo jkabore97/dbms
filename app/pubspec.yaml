@@ -139,11 +139,14 @@ flutter:
   generate: true
   # KAJ Consulting's logo (kaj-consulting.com), under « POWERED BY » at
   # the foot of every street page.
+  # Mara's marks are lossless WebP: the same pixels as the brand kit's PNGs
+  # at under half the bytes — the street's header and the splash are among
+  # the first files a phone on 3G downloads.
   assets:
-    - assets/brand/mara_seal.png
-    - assets/brand/mara_horizontal.png
-    - assets/brand/mara_horizontal_dark.png
-    - assets/brand/mara_stacked.png
+    - assets/brand/mara_seal.webp
+    - assets/brand/mara_horizontal.webp
+    - assets/brand/mara_horizontal_dark.webp
+    - assets/brand/mara_stacked.webp
     # The four alert tones (Compte › Préférences › Sons des notifications),
     # synthesised by scripts/make-tones.py. WAV, so Android keeps them
     # uncompressed in the APK and MainActivity can open them as files.

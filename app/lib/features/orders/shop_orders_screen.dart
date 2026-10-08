@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/format/money.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/notify/alert_tone.dart';
 import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
@@ -238,6 +239,16 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   Widget build(BuildContext context) {
     final open = _orders.where((o) => o.isOpen).toList();
     final past = _orders.where((o) => !o.isOpen).toList();
+    // « Commandes en ligne » hidden by Mara's switchboard (110): the vitrine
+    // takes none; those already here are answered as before.
+    final closed = AppScope.maybeOf(context)
+            ?.session
+            .accessFor(widget.org.id)
+            .isHidden('online_orders') ??
+        false;
+    final cash = _cash.isEmpty
+        ? null
+        : _CashBanner(cash: _cash, onTap: _showCash);
 
     return Scaffold(
         appBar: AppBar(
@@ -293,9 +304,23 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       onSetPaid: _setPaid,
                       clocks: _clocks,
                       onDeliverSelf: _deliverSelf,
-                      header: _cash.isEmpty
-                          ? null
-                          : _CashBanner(cash: _cash, onTap: _showCash),
+                      header: closed
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                KajCard(
+                                  key: const Key('orders-closed-note'),
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  child: ListTile(
+                                    leading: const Icon(Icons.storefront_outlined),
+                                    title: Text(context.tr('Commandes fermées pour le moment')),
+                                    subtitle: Text(context.tr('Mara a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.')),
+                                  ),
+                                ),
+                                ?cash,
+                              ],
+                            )
+                          : cash,
                       // 101: the order books its own sale when it is done.
                       note: context.tr('La vente est enregistrée quand la commande est remise ou livrée — ne la passez pas à la caisse'),
                     ),

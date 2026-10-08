@@ -94,6 +94,7 @@ class SetupScreen extends StatefulWidget {
     required this.actions,
     required this.onDone,
     this.stepsOff,
+    this.known,
   });
 
   final OrgSummary org;
@@ -103,6 +104,11 @@ class SetupScreen extends StatefulWidget {
   /// The optional steps turned off for this kind, read once as the setup
   /// opens (setup_steps_off, 107). Null or a failure: every step.
   final Future<Set<String>> Function()? stepsOff;
+
+  /// What the business already says — its phone, area and sentence, given
+  /// when it was created (111) — read once: the vitrine step starts from it
+  /// rather than empty (an empty line would clear it on saving).
+  final Future<SetupKnown?> Function()? known;
 
   /// Every step, in order; only 'vitrine' and 'position' can be left out.
   static const steps = ['identity', 'article', 'vitrine', 'position'];
@@ -141,6 +147,19 @@ class _SetupScreenState extends State<SetupScreen> {
       // somebody already past it.
       if (mounted && _at == 0 && off.isNotEmpty) setState(() => _off = off);
     });
+    widget.known?.call().then((k) {
+      // Only into what is still empty: nothing typed is written over.
+      if (!mounted || k == null) return;
+      setState(() {
+        if (_blurb.text.isEmpty) _blurb.text = k.about ?? '';
+        if (_address.text.isEmpty) _address.text = k.address ?? '';
+        final phone = k.phone;
+        if (_phone.text.isEmpty && phone != null) {
+          _country = countryOfNumber(phone) ?? _country;
+          _phone.text = _country.localPart(phone);
+        }
+      });
+    });
   }
 
   /// The steps this walkthrough shows, in order.
@@ -169,9 +188,12 @@ class _SetupScreenState extends State<SetupScreen> {
           title: context.tr('Votre vitrine'),
           line: context.tr('Votre page, à partager sur WhatsApp.'),
         ),
+        // The business's own place, said as the owner says it (108).
         _ => (
           icon: Icons.place,
-          title: context.tr('Où vous trouver'),
+          title: _farm
+              ? context.tr('La position de ma ferme')
+              : context.tr('La position de ma boutique'),
           line: context.tr('Vos clients vous voient sur la carte.'),
         ),
       };
@@ -757,6 +779,7 @@ class SetupGate extends StatelessWidget {
             actions: SupabaseAssociationSetupActions(scope.admin, scope.retail, scope.invoicing),
             onDone: () => scope.session.reloadFeatures(org.id),
             stepsOff: () => setupStepsOff(scope.auth.client, org.id),
+            known: () => setupKnown(scope.auth.client, org.id),
           );
         }
         return SetupScreen(
@@ -764,6 +787,7 @@ class SetupGate extends StatelessWidget {
           actions: SupabaseSetupActions(scope.admin, scope.retail, scope.invoicing),
           onDone: () => scope.session.reloadFeatures(org.id),
           stepsOff: () => setupStepsOff(scope.auth.client, org.id),
+          known: () => setupKnown(scope.auth.client, org.id),
         );
       },
     );

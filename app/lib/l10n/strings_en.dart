@@ -192,13 +192,7 @@ class StringsEn extends Strings {
   String get myProfile => 'My details';
 
   @override
-  String get applications => 'Requests';
-
-  @override
   String get businesses => 'Businesses';
-
-  @override
-  String get applyForBusiness => 'Request a business';
 
   @override
   String get switchBusiness => 'Switch business';

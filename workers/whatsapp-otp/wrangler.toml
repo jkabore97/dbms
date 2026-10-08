@@ -1,0 +1,25 @@
+# Carries the code that proves a shopper's number to WhatsApp (109). See
+# src/index.js for its two doors and why it never sees anything but the
+# code it carries.
+#
+# Deployed by workflows/deploy-whatsapp-otp.yml, which sets the secrets
+# with `wrangler secret put` from the repository's secrets — none of them
+# is ever written here:
+#
+#   secrets   WHATSAPP_TOKEN   WHATSAPP_PHONE_ID   WHATSAPP_TEMPLATE
+#             SEND_SMS_HOOK_SECRET
+#   vars      WHATSAPP_LANGUAGE   GRAPH_API_VERSION   (below)
+
+name = "kaj-whatsapp-otp"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# kaj-whatsapp-otp.<subdomain>.workers.dev: what Supabase's Send SMS hook
+# posts to (<origin>/v1/send-sms). Nothing in the app calls it.
+workers_dev = true
+
+[vars]
+# The approved template's language, as Meta lists it.
+WHATSAPP_LANGUAGE = "fr"
+# The Graph API version the messages endpoint is called at.
+GRAPH_API_VERSION = "v23.0"

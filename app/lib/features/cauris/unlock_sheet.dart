@@ -62,6 +62,7 @@ class UnlockSheet extends StatefulWidget {
     required this.states,
     required this.admin,
     this.onUnlocked,
+    this.fresh,
   });
 
   final OrgSummary org;
@@ -69,6 +70,11 @@ class UnlockSheet extends StatefulWidget {
   final FeatureStates states;
   final AdminRepository admin;
   final Future<void> Function()? onUnlocked;
+
+  /// The wallet as the server says it now (108): the session's copy can be
+  /// minutes old — a step just paid on Mon chemin, a gift from Mara — and a
+  /// stale balance said « il en manque » to somebody who had enough.
+  final Future<FeatureStates?> Function()? fresh;
 
   /// Opens the sheet when the business's cauris prices are known; the
   /// comparison page otherwise (offline, or a database before 085).
@@ -78,13 +84,22 @@ class UnlockSheet extends StatefulWidget {
     required String feature,
   }) async {
     final scope = AppScope.read(context);
-    final states = scope?.session.featuresFor(org.id);
-    final tool = states?.toolOf(feature);
+    final router = GoRouter.of(context);
+    var states = scope?.session.featuresFor(org.id);
     // An association earns no cauris (084) but spends what Mara gives it
-    // (100): the sheet once it has some, the plans otherwise.
-    if (scope == null || states == null || tool == null ||
-        (org.isAssociation && states.balance <= 0)) {
-      await GoRouter.of(context).push(Routes.inside(org.id, 'kaj-pro'));
+    // (100): the sheet once it has some, the plans otherwise. Before
+    // sending anybody to the plans, the server is asked again (108): a
+    // gift from Mara a minute ago is in the wallet, not yet in the copy.
+    bool noDoor(FeatureStates? s) =>
+        s == null || s.toolOf(feature) == null || (org.isAssociation && s.balance <= 0);
+    if (scope != null && noDoor(states)) {
+      await scope.session.reloadFeatures(org.id);
+      states = scope.session.featuresFor(org.id);
+    }
+    if (!context.mounted) return;
+    final door = states;
+    if (scope == null || door == null || noDoor(door)) {
+      await router.push(Routes.inside(org.id, 'kaj-pro'));
       return;
     }
     await showModalBottomSheet<void>(
@@ -94,12 +109,27 @@ class UnlockSheet extends StatefulWidget {
       builder: (_) => UnlockSheet(
         org: org,
         feature: feature,
-        states: states,
+        states: door,
         admin: scope.admin,
         onUnlocked: () => scope.session.reloadFeatures(org.id),
+        fresh: () async {
+          await scope.session.reloadFeatures(org.id);
+          return scope.session.featuresFor(org.id);
+        },
       ),
     );
   }
+
+  /// « Disponible avec vos cauris dans 23 jours », and the day: the wait a
+  /// new business has before cauris open a tool (085), never a silent grey
+  /// button (108).
+  static String waitWords(BuildContext context, int days) =>
+      context.tr('Disponible avec vos cauris dans {n} jours', {'n': days});
+
+  static String waitDay(BuildContext context, int days) => context.tr('Le {date}.', {
+        'date': DateFormat('d MMMM y', context.trLanguage == 'en' ? 'en' : 'fr_FR')
+            .format(DateTime.now().add(Duration(days: days))),
+      });
 
   @override
   State<UnlockSheet> createState() => _UnlockSheetState();
@@ -110,8 +140,35 @@ class _UnlockSheetState extends State<UnlockSheet> {
   String? _error;
   DateTime? _until;
 
-  ToolState get _tool => widget.states.toolOf(widget.feature)!;
-  int get _missing => (_tool.cost - widget.states.balance).clamp(0, 1 << 30);
+  late FeatureStates _states = widget.states;
+
+  /// Asking the server for the wallet as it is now.
+  late bool _reading = widget.fresh != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+  }
+
+  Future<void> _read() async {
+    final fresh = widget.fresh;
+    if (fresh == null) return;
+    FeatureStates? s;
+    try {
+      s = await fresh();
+    } catch (_) {
+      // No signal: the copy in hand stands; the server still decides.
+    }
+    if (!mounted) return;
+    setState(() {
+      if (s?.toolOf(widget.feature) != null) _states = s!;
+      _reading = false;
+    });
+  }
+
+  ToolState get _tool => _states.toolOf(widget.feature)!;
+  int get _missing => (_tool.cost - _states.balance).clamp(0, 1 << 30);
 
   Future<void> _unlock() async {
     setState(() {
@@ -136,7 +193,8 @@ class _UnlockSheetState extends State<UnlockSheet> {
     final label = widget.feature == 'pro_all'
         ? context.tr('Mara Pro complet : tous les outils, sans limite')
         : PlanTerms.labelOf(widget.feature);
-    final canBuy = widget.org.isAdmin && _missing == 0 && tool.waitsDays == null;
+    final waits = tool.waitsDays;
+    final canBuy = widget.org.isAdmin && !_reading && _missing == 0 && waits == null;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -174,7 +232,10 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 child: Text(context.tr('Continuer')),
               ),
             ] else ...[
-              Row(
+              // Wraps rather than overflows on a narrow phone or in a long
+              // language.
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(context.tr('Débloquer 30 jours : '), style: theme.textTheme.bodyLarge),
                   CaurisAmount(tool.cost,
@@ -183,10 +244,11 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 ],
               ),
               const SizedBox(height: 6),
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(context.tr('Vous en avez '), style: theme.textTheme.bodyMedium),
-                  CaurisAmount(widget.states.balance,
+                  CaurisAmount(_states.balance,
                       style: theme.textTheme.bodyMedium),
                   if (_missing > 0)
                     Text(
@@ -198,11 +260,30 @@ class _UnlockSheetState extends State<UnlockSheet> {
                             ?.copyWith(fontWeight: FontWeight.w700)),
                 ],
               ),
-              if (tool.waitsDays != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  context.tr('Cet outil s\'ouvre avec des cauris dans {waitsDays} jours : il faut un peu d\'activité pour qu\'il serve.', {'waitsDays': tool.waitsDays}),
-                  style: theme.textTheme.bodySmall,
+              // The wait, unmistakable (108): its days and its day, on the
+              // page and on the button.
+              if (waits != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  key: const Key('unlock-wait'),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: maraCaramel.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.hourglass_bottom, color: maraBrown),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '${UnlockSheet.waitWords(context, waits)}. ${UnlockSheet.waitDay(context, waits)} '
+                          '${context.tr('Il faut un peu d\'activité pour que cet outil serve.')}',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
               if (!widget.org.isAdmin) ...[
@@ -226,7 +307,17 @@ class _UnlockSheetState extends State<UnlockSheet> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const CauriIcon(size: 18),
-                  label: Text(context.tr('Débloquer avec mes cauris'),
+                  // Every reason it cannot be bought now, on the button
+                  // itself (108).
+                  label: Text(
+                      waits != null
+                          ? context.tr('Disponible dans {n} jours', {'n': waits})
+                          : _reading
+                              ? context.tr('Vos cauris…')
+                              : _missing > 0
+                                  ? context.tr('Il vous manque {n} cauris', {'n': _missing})
+                                  : context.tr('Débloquer avec mes cauris'),
+                      textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16)),
                 ),
               ),

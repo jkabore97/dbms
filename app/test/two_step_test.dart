@@ -28,7 +28,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 ///
 /// The server's gate is proved in database/tests/test_two_step.sql. What is
 /// proved here is the app's half: a resolve stops at the code screen before
-/// asking the server anything the gate would refuse, the screen enrols and
+/// using anything the gate would refuse (the list is asked alongside since
+/// A2 — a refused answer, never cached nor opened), the screen enrols and
 /// verifies, a wrong code says so, and passing lands where the person was
 /// going — and nobody else is ever stopped.
 class _Server extends AuthRepository {
@@ -153,7 +154,7 @@ void main() {
 
   group('the session', () {
     test(
-      'an admin below aal2 stops at the code screen, asking nothing else',
+      'an admin below aal2 stops at the code screen, opening nothing',
       () async {
         final server = _Server();
         final step = _Step();
@@ -162,16 +163,16 @@ void main() {
 
         expect(session.phase, SessionPhase.twoStep);
         expect(session.twoStepEnrolled, isFalse);
-        expect(
-          server.asked,
-          0,
-          reason: 'the gate would refuse my_orgs; it is not asked',
-        );
+        // Since A2 the list is asked at the same time as the second step (a
+        // stalled network costs one timeout, not two); below aal2 the gate
+        // refuses it, and whatever came back is neither kept nor opened.
+        expect(session.orgs, isEmpty, reason: 'nothing of a business before the second step');
+        expect(await db.cachedOrgs(), isEmpty);
 
         step.passed = true;
         await session.twoStepPassed();
         expect(session.phase, SessionPhase.ready);
-        expect(server.asked, 1);
+        expect(session.orgs, hasLength(1));
       },
     );
 

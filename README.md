@@ -432,8 +432,10 @@ The bell used to ring only inside the app. With this set up, an order, a
 delivery taken or a job on the board reaches a **closed** app on the web
 (Chrome and Firefox on Android and desktop; Safari from iOS 16.4 when the
 site is added to the home screen). The pieces: migration 060 (the address
-book), `workers/push` (the sender), `web/push_sw.js` (the receiver), and a
-database webhook that wakes the Worker on every bell row.
+book), `workers/push` (the sender), `web/push_handlers.js` (the receiver,
+carried by `web/mara_sw.js` — or by the bare `web/push_sw.js` where no
+worker holds the site yet), and a database webhook that wakes the Worker on
+every bell row.
 
 One-time setup:
 
@@ -629,8 +631,15 @@ Worker's name is `dbms` deliberately, matching the hostname already in use; a
 different name would publish to a URL nobody is looking at and leave that one
 serving whatever it served before.
 
-After a deploy, hard-reload. A Flutter web build registers a service worker
-that will otherwise serve you the previous bundle from cache.
+After a deploy there is nothing to clear by hand. The deploy gives every
+file that changes between builds a folder named after its content
+(`scripts/web-fingerprint.mjs`: `/app/<hash>/`, `/ck/<hash>/`, `/a/<hash>/`,
+kept a year by the site Worker) and writes the build into `web/mara_sw.js`,
+the service worker every visitor gets. A phone that already keeps Mara opens
+the build it has at once — on a slow line or with none — prepares the new
+one in the background, and switches at its next start, or straight away
+from « Recharger » on the update banner. A first visit always gets the
+build just deployed.
 
 ### Testing it in a browser
 
@@ -755,9 +764,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `107` up to date, paste
-`database/apply_006_to_107.sql` into the Supabase SQL editor and run it once.
-It is `006` through `107` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `113` up to date, paste
+`database/apply_006_to_113.sql` into the Supabase SQL editor and run it once.
+It is `006` through `113` concatenated inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -767,7 +776,7 @@ answering from a stale cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 019
+scripts/build-migration-bundle.sh 006 113
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

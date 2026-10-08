@@ -100,6 +100,8 @@ class CompteScreen extends StatelessWidget {
     final platform = session.isPlatformAdmin && live;
     final access = session.accessFor(org.id);
     final identity = session.identity;
+    // The platform's help number (113), asked before « Contacter le support ».
+    if (live) Support.warm(scope.auth.client);
 
     String inside(String rest) => Routes.inside(org.id, rest);
     final tools = toolsFor(org, access, admin: admin);
@@ -193,14 +195,16 @@ class CompteScreen extends StatelessWidget {
                   subtitle: _securityLine(scope),
                   onTap: () => context.push(Routes.security),
                 ),
+              // Another business of one's own, created at once (111); a
+              // second needs Mara Pro (099), said by the lock and the gate.
               if (live && !session.isPlatformAdmin)
                 _Tile(
                   key: const Key('compte-second-business'),
                   icon: Icons.business_center_outlined,
-                  title: Strings.of(context).applyForBusiness,
+                  title: context.tr('Créer une autre activité'),
                   locked: PathGate.locks(context, org, 'second_business'),
                   onTap: () => PathGate.guard(context, org, 'second_business',
-                      () => context.push(Routes.applyForBusiness)),
+                      () => context.push(Routes.createBusiness)),
                 ),
               if (session.orgs.length > 1)
                 _Tile(
@@ -210,6 +214,33 @@ class CompteScreen extends StatelessWidget {
                 ),
             ],
           ),
+
+          // What the person buys on the street, as anyone does (113): the
+          // shopper's own pages, the same for every kind of business.
+          if (live)
+            _Group(
+              title: context.tr('Mes achats'),
+              children: [
+                _Tile(
+                  key: const Key('compte-my-orders'),
+                  icon: Icons.receipt_long_outlined,
+                  title: context.tr('Mes commandes'),
+                  onTap: () => context.push(Routes.myOrders),
+                ),
+                _Tile(
+                  key: const Key('compte-favourites'),
+                  icon: Icons.favorite_border,
+                  title: context.tr('Mes vitrines favorites'),
+                  onTap: () => context.push(Routes.favourites),
+                ),
+                _Tile(
+                  key: const Key('compte-addresses'),
+                  icon: Icons.home_work_outlined,
+                  title: context.tr('Mes adresses de livraison'),
+                  onTap: () => context.push(Routes.addresses),
+                ),
+              ],
+            ),
 
           if (live)
             _Group(
@@ -356,7 +387,7 @@ class CompteScreen extends StatelessWidget {
                 ),
                 _Tile(
                   icon: Icons.inbox_outlined,
-                  title: Strings.of(context).applications,
+                  title: context.tr('Activités créées'),
                   onTap: () => AdminTrail.enter(context, to: Routes.applications),
                 ),
                 _Tile(

@@ -7,51 +7,34 @@ import 'package:kaj_app/core/console/fiche_repository.dart';
 import 'package:kaj_app/core/console/kind_models_repository.dart';
 import 'package:kaj_app/core/onboarding/application_form.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
-import 'package:kaj_app/features/admin/applications_screen.dart';
 import 'package:kaj_app/features/admin/create_business_screen.dart';
 import 'package:kaj_app/features/admin/kind_models_screen.dart';
 import 'package:kaj_app/features/admin/request_form_screen.dart';
 import 'package:kaj_app/features/setup/association_setup_screen.dart';
 import 'package:kaj_app/features/setup/setup_screen.dart';
 
-/// 107 in the app: the request page built from Mara's form (none = today's
-/// page, field for field), the answers sent and shown on the Demandes
-/// cards, the walkthrough's optional steps by kind (none off = today's),
-/// a kind's own free numbers on the paywall, and the types-of-business
-/// board saying its impact before it saves.
+/// 107 in the app: Mara's form — since 111 it shapes the creation of a
+/// business (its welcome, kinds and questions in CreateMyBusinessScreen:
+/// test/batch111_create_test.dart proves them there, with the answers and
+/// « Activités créées »); the editor saving and previewing it; the
+/// walkthrough's optional steps by kind (none off = today's), a kind's own
+/// free numbers on the paywall, and the types-of-business board saying its
+/// impact before it saves.
 
 class _Onboarding extends OnboardingRepository {
-  _Onboarding({this.form, this.pending = const []}) : super(null);
+  _Onboarding() : super(null);
 
-  ApplicationForm? form;
-  final List<OrgApplication> pending;
-  Map<String, Object?>? sent;
   Object? savedForm = 'never';
 
+  /// No page set yet: the page of origin.
   @override
-  Future<ApplicationForm?> applicationForm({bool strict = false}) async => form;
-
-  @override
-  Future<String> applyForOrg({
-    required String name,
-    required String slug,
-    required String profile,
-    String currency = 'XOF',
-    String? description,
-    Map<String, Object?>? answers,
-  }) async {
-    sent = {'name': name, 'slug': slug, 'profile': profile, 'answers': answers};
-    return 'a1';
-  }
+  Future<ApplicationForm?> applicationForm({bool strict = false}) async => null;
 
   @override
   Future<String?> setApplicationForm(ApplicationForm? form) async {
     savedForm = form?.toJson();
     return 'act-1';
   }
-
-  @override
-  Future<List<OrgApplication>> pendingApplications() async => pending;
 }
 
 class _SetupActions implements SetupActions {
@@ -133,18 +116,6 @@ class _Kinds extends KindModelsRepository {
   }
 }
 
-const _form = ApplicationForm(
-  welcome: 'Bienvenue chez Mara.',
-  kinds: ['farm', 'retail'],
-  questions: [
-    FormQuestion(id: 'ville', label: 'Votre ville', required: true),
-    FormQuestion(id: 'q2', label: 'Vous vendez', type: QuestionType.choice,
-        options: ['Alimentation', 'Habits']),
-    FormQuestion(id: 'q3', label: 'Depuis combien d\'années ?', type: QuestionType.number),
-    FormQuestion(id: 'q4', label: 'Avez-vous un local ?', type: QuestionType.yesno, required: true),
-  ],
-);
-
 void main() {
   Future<void> settle(WidgetTester tester) async {
     for (var i = 0; i < 10; i++) {
@@ -158,47 +129,16 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
-  VoidCallback? send(WidgetTester tester) =>
-      tester.widget<FilledButton>(find.byKey(const Key('apply-send'))).onPressed;
-
-  group('P1 — the request page with no form is today\'s page', () {
-    testWidgets('three kinds, the same four fields, no welcome, no question, no answers sent',
-        (tester) async {
+  group('P1 — with no form, today\'s pages', () {
+    testWidgets('the platform admin\'s own « Nouvelle entreprise » stays as it was', (tester) async {
       tall(tester);
-      final onboarding = _Onboarding();
       await tester.pumpWidget(MaterialApp(
-          home: CreateBusinessScreen(
-              admin: AdminRepository(null), onboarding: onboarding, asApplication: true)));
+          home: CreateBusinessScreen(admin: AdminRepository(null))));
       await settle(tester);
       expect(find.text('Association'), findsOneWidget);
-      expect(find.text('Ferme'), findsOneWidget);
-      expect(find.text('Commerce'), findsOneWidget);
-      // Name, address, currency, description: today's four.
-      expect(find.byType(TextField), findsNWidgets(4));
-      expect(find.byKey(const Key('apply-welcome')), findsNothing);
-      expect(find.byType(ChoiceChip), findsNothing);
-      await tester.enterText(find.byType(TextField).first, 'Ferme Coumba');
-      await settle(tester);
-      expect(send(tester), isNotNull);
-      await tester.tap(find.byKey(const Key('apply-send')));
-      await settle(tester);
-      expect(onboarding.sent, {
-        'name': 'Ferme Coumba',
-        'slug': 'ferme-coumba',
-        'profile': 'association',
-        'answers': null,
-      });
-    });
-
-    testWidgets('a platform admin\'s creation page never reads a form', (tester) async {
-      tall(tester);
-      final onboarding = _Onboarding(form: _form);
-      await tester.pumpWidget(MaterialApp(
-          home: CreateBusinessScreen(admin: AdminRepository(null), onboarding: onboarding)));
-      await settle(tester);
-      expect(find.text('Association'), findsOneWidget);
-      expect(find.byKey(const Key('apply-welcome')), findsNothing);
+      // Name, address, currency; the platform's create_org behind its button.
       expect(find.byType(TextField), findsNWidgets(3));
+      expect(find.text('Créer l\'activité'), findsOneWidget);
     });
 
     testWidgets('the walkthroughs keep every step when nothing is turned off', (tester) async {
@@ -228,44 +168,14 @@ void main() {
     });
   });
 
-  group('the request page Mara set', () {
-    testWidgets('its welcome, its kinds, its questions; send waits for the required answers',
-        (tester) async {
-      tall(tester);
-      final onboarding = _Onboarding(form: _form);
-      await tester.pumpWidget(MaterialApp(
-          home: CreateBusinessScreen(
-              admin: AdminRepository(null), onboarding: onboarding, asApplication: true)));
-      await settle(tester);
-      expect(find.text('Bienvenue chez Mara.'), findsOneWidget);
-      expect(find.text('Association'), findsNothing);
-      expect(find.text('Ferme'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).first, 'Ferme Coumba');
-      await settle(tester);
-      expect(send(tester), isNull, reason: 'two required questions unanswered');
-      await tester.enterText(find.byKey(const Key('apply-q-ville')), 'Bobo');
-      await tester.enterText(find.byKey(const Key('apply-q-q3')), 'trois');
-      await settle(tester);
-      expect(find.text('En chiffres, s\'il vous plaît.'), findsOneWidget);
-      await tester.enterText(find.byKey(const Key('apply-q-q3')), '3,5');
-      await tester.tap(find.text('Habits'));
-      await tester.tap(find.text('Non'));
-      await settle(tester);
-      expect(send(tester), isNotNull);
-      await tester.tap(find.byKey(const Key('apply-send')));
-      await settle(tester);
-      expect(onboarding.sent!['profile'], 'farm', reason: 'the association is not offered');
-      expect(onboarding.sent!['answers'],
-          {'ville': 'Bobo', 'q2': 'Habits', 'q3': 3.5, 'q4': false});
-    });
-
+  group('the creation page Mara sets (107\'s editor, renamed in 111)', () {
     testWidgets('the editor saves what is typed, and previews it', (tester) async {
       tall(tester);
       final onboarding = _Onboarding();
       await tester.pumpWidget(MaterialApp(
           home: RequestFormScreen(onboarding: onboarding, undo: (_) async {})));
       await settle(tester);
-      expect(find.text('La page de demande est celle d\'origine.'), findsOneWidget);
+      expect(find.text('Le parcours de création est celui d\'origine.'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('form-welcome')), 'Bonjour');
       await tester.tap(find.byKey(const Key('form-kind-association')));
       await tester.tap(find.byKey(const Key('form-add')));
@@ -273,9 +183,13 @@ void main() {
       await tester.enterText(find.byKey(const Key('form-q-0-label')), 'Votre ville');
       await tester.tap(find.byKey(const Key('form-q-0-required')));
       await settle(tester);
-      // The preview beside it is the page itself.
-      expect(find.byKey(const Key('apply-preview')), findsOneWidget);
-      expect(find.text('Votre ville *'), findsOneWidget);
+      // The preview beside it is the creation itself, drawn with what is
+      // typed: the welcome on its first screen, the association no longer
+      // offered, the question a screen of its own (6 + 1).
+      expect(find.byKey(const Key('create-welcome')), findsOneWidget);
+      expect(find.byKey(const Key('create-kind-association')), findsNothing);
+      expect(find.byKey(const Key('create-kind-farm')), findsOneWidget);
+      expect(find.text('1 / 7'), findsOneWidget);
       await tester.tap(find.byKey(const Key('form-save')));
       await settle(tester);
       expect(onboarding.savedForm, {
@@ -302,37 +216,6 @@ void main() {
       await settle(tester);
       expect(find.text('Une question à choix a de 2 à 12 réponses.'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.byKey(const Key('form-save'))).onPressed, isNull);
-    });
-
-    testWidgets('the Demandes card shows the answers and fills a ready reason', (tester) async {
-      tall(tester);
-      final app = OrgApplication.fromRow(const {
-        'id': 'a1',
-        'name': 'Ferme Coumba',
-        'slug': 'ferme-coumba',
-        'profile': 'farm',
-        'applicant': 'Coumba',
-        'answers': [
-          {'id': 'ville', 'label': 'Votre ville', 'type': 'text', 'value': 'Bobo'},
-          {'id': 'q4', 'label': 'Avez-vous un local ?', 'type': 'yesno', 'value': false},
-          {'id': 'q3', 'label': 'Depuis combien d\'années ?', 'type': 'number', 'value': 3.5},
-        ],
-      });
-      await tester.pumpWidget(MaterialApp(
-          home: ApplicationsScreen(onboarding: _Onboarding(pending: [app]))));
-      await settle(tester);
-      expect(find.byKey(const Key('application-answers')), findsOneWidget);
-      expect(find.text('Bobo'), findsOneWidget);
-      expect(find.text('Non'), findsOneWidget);
-      expect(find.text('3,5'), findsOneWidget);
-      await tester.tap(find.text('Refuser'));
-      await settle(tester);
-      await tester.tap(find.text('Informations manquantes'));
-      await settle(tester);
-      expect(
-          tester.widget<TextField>(find.descendant(
-              of: find.byType(AlertDialog), matching: find.byType(TextField))).controller!.text,
-          'Informations manquantes');
     });
   });
 
