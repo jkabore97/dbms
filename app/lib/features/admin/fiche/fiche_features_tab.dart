@@ -90,12 +90,40 @@ class _FicheFeaturesTabState extends State<FicheFeaturesTab> {
     }
   }
 
+  /// A rule left from the business's former kind: cleared, with « Annuler ».
+  Future<void> _clear(FeatureBoardRow row) async {
+    setState(() => _busy = row.key);
+    try {
+      final id = await widget.fiche.setFeature(widget.overview.id, row.key, 'default');
+      if (!mounted) return;
+      showUndoBar(
+        context,
+        center: widget.center,
+        actionId: id,
+        done: context.tr('« {label} » : réglage retiré.', {'label': context.tr(row.label)}),
+        onUndone: widget.onChanged,
+      );
+      widget.onChanged();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeError(e))));
+        setState(() => _busy = null);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = _rows;
     final groups = <String, List<FeatureBoardRow>>{};
+    final leftovers = <FeatureBoardRow>[];
     for (final r in rows ?? const <FeatureBoardRow>[]) {
-      (groups[r.group] ??= []).add(r);
+      if (r.leftover) {
+        leftovers.add(r);
+      } else {
+        (groups[r.group] ??= []).add(r);
+      }
     }
     return ListView(
       key: const Key('fiche-features'),
@@ -134,6 +162,32 @@ class _FicheFeaturesTabState extends State<FicheFeaturesTab> {
                           row: r,
                           busy: _busy == r.key,
                           onSet: (s) => _set(r, s),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+              // Left from the kind it was: decides nothing, cleared here.
+              if (leftovers.isNotEmpty) ...[
+                FicheHeading(context.tr('Laissé par son ancien type d\'activité')),
+                KajCard(
+                  margin: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (final (i, r) in leftovers.indexed) ...[
+                        if (i > 0) const Divider(height: 1),
+                        ListTile(
+                          key: Key('feature-leftover-${r.key}'),
+                          minVerticalPadding: 12,
+                          title: Text(context.tr(r.label),
+                              style: const TextStyle(fontWeight: FontWeight.w700)),
+                          subtitle: Text(context.tr('Ce type d\'activité n\'a pas cette fonction : ce réglage ne change rien.')),
+                          trailing: TextButton(
+                            onPressed: _busy == r.key ? null : () => _clear(r),
+                            child: Text(context.tr('Retirer')),
+                          ),
                         ),
                       ],
                     ],

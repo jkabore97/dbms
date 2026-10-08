@@ -23,6 +23,9 @@ import 'package:kaj_app/features/admin/center/todo_section.dart';
 import 'package:kaj_app/features/admin/platform_console_screen.dart';
 import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/core/notify/notifications_repository.dart';
+import 'package:kaj_app/features/admin/center/center_search.dart' show orderStatusLabel;
+import 'package:kaj_app/features/notify/notification_text.dart';
 import 'package:kaj_app/l10n/strings.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -117,6 +120,9 @@ class _Admin extends AdminRepository {
 class _Console extends ConsoleRepository {
   _Console() : super(null);
 
+  /// The kind each search asked for.
+  final profiles = <String?>[];
+
   @override
   bool get isConfigured => true;
 
@@ -132,8 +138,9 @@ class _Console extends ConsoleRepository {
     String sort = 'activity',
     int limit = 50,
     int offset = 0,
-  }) async =>
-      const OrgPage(rows: [
+  }) async {
+    profiles.add(profile);
+    return const OrgPage(rows: [
         OrgRow(id: 'r1', name: 'Boutique Awa', slug: 'boutique-awa', profile: 'retail',
             currency: 'XOF', memberCount: 2),
         OrgRow(id: 'f1', name: 'Ferme du Nord', slug: 'ferme-du-nord', profile: 'farm',
@@ -141,6 +148,7 @@ class _Console extends ConsoleRepository {
         OrgRow(id: 'a1', name: 'Entraide', slug: 'entraide', profile: 'association',
             currency: 'XOF', memberCount: 1),
       ], total: 3);
+  }
 }
 
 /// The center's shell around [page] at [at], every section a stub page
@@ -203,10 +211,21 @@ void main() {
         GoRoute(path: Routes.console, builder: (_, _) => const Text('le centre')),
       ]);
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      expect(find.text('Admin'), findsOneWidget);
+      // A phone: the shield alone, so a farm's or an association's bar
+      // (pending chip, switch, bell) never overflows — still « Centre admin ».
+      expect(find.text('Admin'), findsNothing);
+      expect(find.byTooltip('Centre admin'), findsOneWidget);
       await tester.tap(find.byKey(const Key('admin-pill')));
       await tester.pumpAndSettle();
       expect(find.text('le centre'), findsOneWidget);
+    });
+
+    testWidgets('says « Admin » where there is room', (tester) async {
+      await _size(tester, 1280);
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(appBar: AppBar(actions: const [AdminPill(platformAdmin: true)])),
+      ));
+      expect(find.text('Admin'), findsOneWidget);
     });
 
     testWidgets('is never drawn for anybody else — P1: the homes, the picker, Compte and the street look as before',
@@ -587,6 +606,222 @@ void main() {
       final appKeys = [for (final d in platformSettingDefs) d.key];
       expect(appKeys, serverKeys);
       expect(appKeys.toSet(), hasLength(appKeys.length), reason: 'each key once');
+    });
+  });
+
+  group('the corrections', () {
+    testWidgets('Compte enters the center at its page; « Quitter » returns; « La rue » forgets the way back',
+        (tester) async {
+      Widget page(String name, List<(String, void Function(BuildContext))> buttons) => Builder(
+            builder: (context) => Scaffold(
+              body: Column(children: [
+                Text(name),
+                for (final (label, act) in buttons)
+                  TextButton(onPressed: () => act(context), child: Text(label)),
+              ]),
+            ),
+          );
+      final router = GoRouter(initialLocation: '/o/o1/compte', routes: [
+        GoRoute(
+            path: '/o/:id/compte',
+            builder: (_, _) => page('compte', [
+                  ('entreprises', (c) => AdminTrail.enter(c, to: Routes.consoleBusinesses)),
+                ])),
+        GoRoute(
+            path: Routes.consoleBusinesses,
+            builder: (_, _) => page('liste', [
+                  ('quitter', AdminTrail.leave),
+                  ('la rue', (c) => AdminTrail.goOut(c, Routes.directory)),
+                ])),
+        GoRoute(
+            path: Routes.directory,
+            builder: (_, _) => page('rue', [('quitter', AdminTrail.leave)])),
+      ]);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.tap(find.text('entreprises'));
+      await tester.pumpAndSettle();
+      expect(find.text('liste'), findsOneWidget);
+      await tester.tap(find.text('quitter'));
+      await tester.pumpAndSettle();
+      expect(find.text('compte'), findsOneWidget, reason: 'back where the admin came from');
+      await tester.tap(find.text('entreprises'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('la rue'));
+      await tester.pumpAndSettle();
+      expect(find.text('rue'), findsOneWidget);
+      // Nothing stale: « Quitter » no longer goes back to Compte.
+      await tester.tap(find.text('quitter'));
+      await tester.pumpAndSettle();
+      expect(find.text('rue'), findsOneWidget);
+      expect(find.text('compte'), findsNothing);
+    });
+
+    test('a bell for the platform enters the center; one for the business does not', () {
+      NotificationRow row(String kind, {String? org}) => NotificationRow(
+          id: 'n', kind: kind, message: '', createdAt: DateTime.utc(2026, 10, 8), orgId: org);
+      expect(AdminTrail.inCenter(notificationTarget(row('org_application'))!), isTrue);
+      expect(AdminTrail.inCenter(notificationTarget(row('spot_paid'))!), isTrue);
+      expect(AdminTrail.inCenter(notificationTarget(row('member_joined', org: 'o1'))!), isFalse);
+    });
+
+    test('the business the center opened is forgotten once it is left another way', () {
+      void opened() => AdminTrail.opened.value = (orgId: 'o1', from: Routes.consoleBusinesses);
+      opened();
+      for (final inside in ['/o/o1', '/o/o1/commandes', '/s/boutique-awa', Routes.language]) {
+        AdminTrail.sawLocation(inside);
+        expect(AdminTrail.opened.value, isNotNull, reason: inside);
+      }
+      for (final away in ['/o/o2', Routes.picker, Routes.directory, Routes.consoleBusinesses,
+          Routes.signIn]) {
+        opened();
+        AdminTrail.sawLocation(away);
+        expect(AdminTrail.opened.value, isNull, reason: away);
+      }
+    });
+
+    testWidgets('the strip takes the status bar off its home; on a phone it keeps the way back only',
+        (tester) async {
+      Future<double> top(double width) async {
+        await _size(tester, width);
+        AdminTrail.opened.value = (orgId: 'o1', from: Routes.console);
+        late double padding;
+        await tester.pumpWidget(MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              // A phone's status bar.
+              data: MediaQuery.of(context).copyWith(padding: const EdgeInsets.only(top: 24)),
+              child: AdminReturnBanner(
+                orgId: 'o1',
+                child: Builder(builder: (context) {
+                  padding = MediaQuery.paddingOf(context).top;
+                  return const Scaffold(body: Text('accueil'));
+                }),
+              ),
+            ),
+          ),
+        ));
+        return padding;
+      }
+
+      expect(await top(360), 0, reason: 'no second status bar under the strip');
+      expect(find.text('Ouverte depuis le centre admin'), findsNothing);
+      expect(find.text('Retour au centre admin'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(await top(1280), 0);
+      expect(find.text('Ouverte depuis le centre admin'), findsOneWidget);
+      AdminTrail.opened.value = null;
+    });
+
+    for (final width in [360.0, 390.0]) {
+      testWidgets('the bulk bar at $width: every act on the screen', (tester) async {
+        await _size(tester, width);
+        await tester.pumpWidget(MaterialApp(
+          home: PlatformConsoleScreen(console: _Console(), admin: _Admin(), center: _Center()),
+        ));
+        await tester.pumpAndSettle();
+        // A narrow phone: the list's first rows sit under its figures.
+        await tester.scrollUntilVisible(find.byKey(const Key('tick-f1')), 200,
+            scrollable: find
+                .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
+                .first);
+        // Up from under the « Nouvelle entreprise » button.
+        await tester.ensureVisible(find.byKey(const Key('tick-f1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('tick-f1')));
+        await tester.pumpAndSettle();
+        for (final a in ['cauris', 'unlock', 'message', 'archive']) {
+          final r = tester.getRect(find.byKey(Key('bulk-$a')));
+          expect(r.left, greaterThanOrEqualTo(0), reason: a);
+          expect(r.right, lessThanOrEqualTo(width), reason: '$a is off the edge at $width');
+          expect(r.bottom, lessThanOrEqualTo(900), reason: a);
+        }
+        final scrolls = tester.widgetList<SingleChildScrollView>(find.descendant(
+            of: find.byKey(const Key('bulk-bar')), matching: find.byType(SingleChildScrollView)));
+        expect(scrolls.where((w) => w.scrollDirection == Axis.horizontal), isEmpty,
+            reason: 'nothing slides off the bar');
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('Entreprises: one « Associations », which asks for the associations', (tester) async {
+      await _size(tester, 1280);
+      final console = _Console();
+      await tester.pumpWidget(MaterialApp(
+        home: PlatformConsoleScreen(console: console, admin: _Admin(), center: _Center()),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('console-kind-association')), findsOneWidget);
+      expect(find.widgetWithText(FilterChip, 'Associations'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('console-kind-association')));
+      await tester.pumpAndSettle();
+      expect(console.profiles.last, 'association');
+    });
+
+    testWidgets('Réglages: a whole number where the server reads one, a decimal where it reads numeric',
+        (tester) async {
+      await _size(tester, 1280);
+      final center = _Center()
+        ..values = {
+          'free_max_staff': const SettingValue(value: 1),
+          'delivery_share_pct': const SettingValue(value: 10),
+          'delivery_per_km': const SettingValue(value: 150),
+        };
+      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpAndSettle();
+      Future<void> type(String key, String text) async {
+        await tester.ensureVisible(find.byKey(Key('setting-$key')));
+        await tester.tap(find.byKey(Key('setting-$key')));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byKey(const Key('setting-field')), text);
+        await tester.tap(find.byKey(const Key('setting-save')));
+        await tester.pumpAndSettle();
+      }
+
+      await type('free_max_staff', '12,5');
+      expect(find.text('Un nombre entier, zéro ou plus.'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('setting-field')), '2000000000');
+      await tester.tap(find.byKey(const Key('setting-save')));
+      await tester.pumpAndSettle();
+      expect(find.text('Un nombre d\'un milliard au plus.'), findsOneWidget);
+      await tester.tap(find.text('Annuler').last);
+      await tester.pumpAndSettle();
+      await type('delivery_share_pct', '12,5');
+      expect(find.text('Un pourcentage entier, de 0 à 100.'), findsOneWidget);
+      await tester.tap(find.text('Annuler').last);
+      await tester.pumpAndSettle();
+      await type('delivery_per_km', '152,5');
+      expect(center.calls, ['set:delivery_per_km=152.5']);
+    });
+
+    testWidgets('À faire: the tools hidden after a payment ended, each opening its switches',
+        (tester) async {
+      await _size(tester, 1280);
+      final center = _Center()
+        ..todoAnswer = const PlatformTodo({'features_lapsed': 1});
+      await tester.pumpWidget(MaterialApp.router(
+          routerConfig: _router(center,
+              at: Routes.console, page: TodoSection(center: center, admin: _Admin()))));
+      await tester.pumpAndSettle();
+      expect(center.todoAnswer.waiting, 1);
+      expect(find.text('Fonctions masquées après la fin d\'un paiement'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('todo-features_lapsed')));
+      await tester.pumpAndSettle();
+      expect(center.calls, contains('list:features_lapsed'));
+      expect(find.text('Analyses n\'est plus visible depuis le 10/10'), findsOneWidget);
+      await tester.tap(find.text('Ferme du Nord'));
+      await tester.pumpAndSettle();
+      expect(find.text('page ${Routes.consoleOrg('f1')}'), findsOneWidget);
+    });
+
+    testWidgets('an order collected at the counter is « Récupérée », one on the road « En route »',
+        (tester) async {
+      late BuildContext c;
+      await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
+        c = context;
+        return const SizedBox();
+      })));
+      expect(orderStatusLabel(c, 'picked_up'), 'Récupérée');
+      expect(orderStatusLabel(c, 'in_transit'), 'En route');
     });
   });
 

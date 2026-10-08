@@ -119,7 +119,8 @@ class PlatformTodo {
   /// What waits on the platform, « À faire »'s « À traiter » in one number.
   int get waiting =>
       this['applications'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
-      this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'];
+      this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
+      this['features_lapsed'];
 }
 
 /// One row behind a count: a business, and what is about it.

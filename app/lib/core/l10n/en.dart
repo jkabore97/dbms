@@ -1594,8 +1594,6 @@ const enStrings = <String, String>{
       'Nothing recorded today.\nPress the button to start.',
   'Rien enregistré cette semaine.':
       'Nothing recorded this week.',
-  'Rien n\'attend la plateforme.':
-      'Nothing is waiting for the platform.',
   'Rien n’est enregistré tant que vous n’avez pas appuyé sur le bouton. Corrigez ce qui est faux, décochez ce qui n’en est pas.':
       'Nothing is saved until you press the button. Fix what is wrong, untick what is not one.',
   'Rien pour l\'instant.':
@@ -1970,8 +1968,6 @@ const enStrings = <String, String>{
       '{_entityWord}s and departments',
   '{assignments}':
       '{assignments}',
-  '{count}':
-      '{count}',
   '{count} dans le panier':
       '{count} in the basket',
   '{customerName} en sera informé.':
@@ -3360,7 +3356,7 @@ const enStrings = <String, String>{
   'Réglages par type': 'Settings by type',
   'Les nombres de la formule gratuite pour ce type. « Par défaut » : ceux de la plateforme.': 'The free plan’s numbers for this type. “Default”: the platform’s.',
   'Vitrine par défaut': 'Default vitrine',
-  'Pour les {n} vitrines jamais habillées (sur {orgs}), gratuites comme Pro. Une vitrine que son commerçant habille garde la sienne.': 'For the {n} vitrines never dressed (of {orgs}), free and Pro alike. A vitrine its owner dresses keeps its own.',
+  'Pour les {n} vitrines jamais habillées (sur {orgs}). La couleur et la couverture sur toutes ; la présentation sur les vitrines Pro seulement, comme pour leur propriétaire. Une vitrine habillée garde la sienne.': 'For the {n} vitrines never dressed (of {orgs}). The colour and the cover on all of them; the layout on Pro vitrines only, as for their owner. A dressed vitrine keeps its own.',
   'Les étapes facultatives de la première mise en route. Les étapes obligatoires restent.': 'The optional steps of the first setup. The required steps stay.',
   'ferme': 'farm',
   'association': 'association',
@@ -3637,7 +3633,6 @@ const enStrings = <String, String>{
   'Ville': 'City',
   'Autorisés': 'Allowed',
   'Espèces seulement': 'Cash only',
-  'ouvert jusqu\'au {date}': 'open until {date}',
   'Vitrine d\'exemple': 'Example vitrine',
   'Fiche': 'Card',
   '« {label} » : {state}. Le propriétaire est prévenu.': '« {label} »: {state}. The owner is told.',
@@ -3708,4 +3703,18 @@ const enStrings = <String, String>{
   'Annulation impossible : l\'ancienne adresse est prise par une autre activité': 'Cannot undo: the old address is taken by another business',
   'Silencieuses depuis 30 jours': 'Silent for 30 days',
   'Cet outil n\'existe pas pour ce type d\'activité': 'This tool does not exist for this type of business',
+  'Un nombre d\'un milliard au plus.': 'A number of one billion at most.',
+  'Un pourcentage entier, de 0 à 100.': 'A whole percentage, from 0 to 100.',
+  'Un nombre entier, s\'il vous plaît.': 'A whole number, please.',
+  'Ce réglage vaut 0 (non) ou 1 (oui).': 'This setting is 0 (no) or 1 (yes).',
+  'Ce cadeau est introuvable dans le porte-monnaie : il n\'est pas repris.': 'This gift cannot be found in the wallet: it is not taken back.',
+  'Le cadeau n\'a pas été écrit': 'The gift was not recorded',
+  'Fonctions masquées après la fin d\'un paiement': 'Features hidden after a payment ended',
+  '{tool} n\'est plus visible depuis le {date}': '{tool} has not been visible since {date}',
+  'Votre Mara Pro a pris fin : {tool} n\'est plus disponible pour votre activité.': 'Your Mara Pro has ended: {tool} is no longer available for your business.',
+  'Voir comme le responsable': 'See as the person in charge',
+  '« {label} » : réglage retiré.': '“{label}”: setting removed.',
+  'Laissé par son ancien type d\'activité': 'Left from its former type of business',
+  'Ce type d\'activité n\'a pas cette fonction : ce réglage ne change rien.': 'This type of business does not have this feature: this setting changes nothing.',
+  'Vitrines Pro seulement': 'Pro vitrines only',
 };

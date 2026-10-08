@@ -279,6 +279,7 @@ class FeatureBoardRow {
     this.note,
     this.paid = false,
     this.proTool,
+    this.leftover = false,
   });
 
   final String key;
@@ -301,6 +302,10 @@ class FeatureBoardRow {
   final bool paid;
   final String? proTool;
 
+  /// A business's rule for a tool its kind no longer has (it changed
+  /// kind): it decides nothing, and may only be cleared (104).
+  final bool leftover;
+
   bool get hidden => effective == 'hidden';
 
   factory FeatureBoardRow.fromJson(Map<String, dynamic> j) => FeatureBoardRow(
@@ -314,5 +319,6 @@ class FeatureBoardRow {
         note: _text(j['note']),
         paid: j['paid'] == true,
         proTool: _text(j['pro_tool']),
+        leftover: j['leftover'] == true,
       );
 }

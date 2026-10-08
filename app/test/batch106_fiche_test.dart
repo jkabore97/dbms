@@ -391,5 +391,71 @@ void main() {
       expect(notificationTarget(row('mara_undone', {'what': 'identity'})),
           Routes.orgSettings('o1', part: 'identite'));
     });
+
+    testWidgets('says a Pro tool went when the payment ended, and opens Mara Pro', (tester) async {
+      final n = row('feature_lapsed', {'feature': 'analytics', 'label': 'Analyses'});
+      expect(await line(tester, n),
+          'Your Mara Pro has ended: Analytics is no longer available for your business.');
+      expect(notificationTarget(n), Routes.inside('o1', 'kaj-pro'));
+    });
   });
+
+  group('the corrections', () {
+    testWidgets('« Voir comme … » is the top bar\'s alone; an association\'s says « responsable »',
+        (tester) async {
+      await _open(tester, _Fiche('retail'), _Center());
+      expect(find.byKey(const Key('fiche-preview')), findsOneWidget);
+      expect(find.byKey(const Key('fiche-overview-preview')), findsNothing);
+      expect(find.text('Voir comme le commerçant'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await _open(tester, _Fiche('association'), _Center());
+      expect(find.text('Voir comme le responsable'), findsOneWidget);
+      expect(find.text('Voir comme le commerçant'), findsNothing);
+    });
+
+    testWidgets('the tab reads « Overview » in English', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final fiche = _Fiche('farm');
+      await tester.pumpWidget(MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+        home: BusinessFicheScreen(orgId: fiche.o.id, fiche: fiche, center: _Center()),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Overview'), findsOneWidget);
+      expect(find.text('Preview'), findsNothing);
+    });
+
+    testWidgets('a rule left from a former kind is shown apart and only cleared', (tester) async {
+      final fiche = _Leftover('association');
+      await _open(tester, fiche, _Center(), tab: 'fonctions');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(const Key('feature-leftover-production')), findsOneWidget);
+      expect(find.byKey(const Key('feature-production')), findsNothing,
+          reason: 'no switch for a tool the kind does not have');
+      await tester.ensureVisible(find.text('Retirer'));
+      await tester.tap(find.text('Retirer'));
+      await tester.pumpAndSettle();
+      expect(fiche.calls.last, {'feature': 'production', 'state': 'default', 'note': null});
+    });
+  });
+}
+
+/// A former farm, now an association, with its Production rule left over.
+class _Leftover extends _Fiche {
+  _Leftover(super.profile);
+
+  @override
+  Future<List<FeatureBoardRow>> board(String orgId) async => [
+        ...await super.board(orgId),
+        FeatureBoardRow.fromJson(const {
+          'key': 'production', 'label': 'Production', 'grp': 'Fabrication',
+          'state': 'hidden', 'effective': 'visible', 'source': 'org', 'paid': false,
+          'leftover': true,
+        }),
+      ];
 }

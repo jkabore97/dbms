@@ -207,25 +207,31 @@ class AdminReturnBanner extends StatelessWidget {
                     children: [
                       const Icon(Icons.shield_outlined, size: 18, color: maraCaramel),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: narrow
-                            ? const SizedBox.shrink()
-                            : Text(
-                                context.tr('Ouverte depuis le centre admin'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: maraPaper, fontSize: 13),
-                              ),
-                      ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: maraCaramel,
-                          minimumSize: const Size(48, 40),
+                      if (narrow)
+                        const Spacer()
+                      else
+                        Expanded(
+                          child: Text(
+                            context.tr('Ouverte depuis le centre admin'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: maraPaper, fontSize: 13),
+                          ),
                         ),
-                        onPressed: () => AdminTrail.backToCenter(context),
-                        icon: const Icon(Icons.arrow_back, size: 18),
-                        label: Text(context.tr('Retour au centre admin'),
-                            style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Flexible(
+                        flex: narrow ? 8 : 1,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                            foregroundColor: maraCaramel,
+                            minimumSize: const Size(48, 40),
+                          ),
+                          onPressed: () => AdminTrail.backToCenter(context),
+                          icon: const Icon(Icons.arrow_back, size: 18),
+                          label: Text(context.tr('Retour au centre admin'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w700)),
+                        ),
                       ),
                     ],
                   ),

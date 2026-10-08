@@ -336,7 +336,7 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
         key: const Key('kinds-vitrine'),
         icon: Icons.storefront_outlined,
         title: context.tr('Vitrine par défaut'),
-        line: context.tr('Pour les {n} vitrines jamais habillées (sur {orgs}), gratuites comme Pro. Une vitrine que son commerçant habille garde la sienne.',
+        line: context.tr('Pour les {n} vitrines jamais habillées (sur {orgs}). La couleur et la couverture sur toutes ; la présentation sur les vitrines Pro seulement, comme pour leur propriétaire. Une vitrine habillée garde la sienne.',
             {'n': m.neverDressed, 'orgs': m.orgs}),
         children: _vitrine(theme),
       ),
@@ -471,7 +471,9 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
     }
     final out = <Widget>[];
     String? group;
-    for (final row in _board) {
+    // A kind's board offers its own tools only (a rule « left over » is a
+    // business's, from a kind it had before: cleared on its fiche).
+    for (final row in _board.where((r) => !r.leftover)) {
       if (row.group != group) {
         group = row.group;
         out.add(Padding(
@@ -569,6 +571,8 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.tr('Présentation'), style: label),
+                Text(context.tr('Vitrines Pro seulement'),
+                    style: theme.textTheme.bodySmall?.copyWith(color: maraBrown)),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,

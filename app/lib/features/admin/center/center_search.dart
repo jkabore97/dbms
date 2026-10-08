@@ -298,7 +298,10 @@ String orderStatusLabel(BuildContext context, String status) => switch (status) 
       'pending' => context.tr('En attente'),
       'accepted' => context.tr('Acceptée'),
       'ready' => context.tr('Prête'),
-      'picked_up' => context.tr('En route'),
+      // Carried by a courier (056); « picked_up » is collected at the
+      // counter — finished, for a pickup.
+      'in_transit' => context.tr('En route'),
+      'picked_up' => context.tr('Récupérée'),
       'delivered' => context.tr('Livrée'),
       'refused' => context.tr('Refusée'),
       'cancelled' => context.tr('Annulée'),

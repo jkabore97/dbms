@@ -207,6 +207,11 @@ String notificationLine(BuildContext context, NotificationRow n) {
         'visible' => context.tr('Mara a rendu « {tool} » visible pour votre activité.', {'tool': tool}),
         _ => context.tr('Mara a remis « {tool} » comme par défaut pour votre activité.', {'tool': tool}),
       };
+    // A Pro tool a rule hides came back to hidden when the business's
+    // payment ended (104): the admin's rule applies; renewing brings it back.
+    case 'feature_lapsed':
+      return context.tr('Votre Mara Pro a pris fin : {tool} n\'est plus disponible pour votre activité.',
+          {'tool': context.tr(s('label'))});
     // The applicant hears the decision on their request (107).
     case 'application_approved':
       return context.tr('Votre demande est acceptée : {name} est ouverte.', {'name': s('name')});
@@ -337,7 +342,7 @@ String? notificationTarget(
       return inside('chemin');
     case 'cauris_board':
       return inside('classement');
-    case 'pro_active':
+    case 'pro_active' || 'feature_lapsed':
       return inside('kaj-pro');
     case 'spot_approved' || 'spot_refused':
       return Routes.orgSettings(org, part: 'vitrine');

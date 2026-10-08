@@ -26,6 +26,8 @@ import 'package:kaj_app/core/reports/reports_repository.dart';
 import 'package:kaj_app/core/retail/models.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/account/compte_screen.dart';
+import 'package:kaj_app/features/admin/admin_pill.dart';
+import 'package:kaj_app/features/home/business_shell.dart' show SwitchActivityButton;
 import 'package:kaj_app/features/church/church_home_screen.dart';
 import 'package:kaj_app/features/farm/farm_home_screen.dart';
 import 'package:kaj_app/features/retail/store_home_screen.dart';
@@ -270,6 +272,40 @@ void main() {
         expect(await _places(tester), before);
         expect(before, isNotEmpty);
       }
+    });
+
+    testWidgets('a platform admin\'s bar fits at 360 with writes waiting — a shop, a farm, an association',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      // Two sales waiting for the network: the pending chip is on the bar.
+      for (final id in ['w-1', 'w-2']) {
+        await db.queueSale(orgId: 'any', clientUuid: id, params: const {});
+      }
+      // What business_shell.dart puts in the slot for a platform admin with
+      // two activities: the pill, « Changer d'activité », the bell, Compte.
+      final slot = Row(mainAxisSize: MainAxisSize.min, children: [
+        const AdminPill(platformAdmin: true),
+        const SwitchActivityButton(activities: 2),
+        IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+        IconButton(icon: const Icon(Icons.account_circle_outlined), onPressed: () {}),
+      ]);
+      for (final home in [
+        StoreHomeScreen(org: _shop, retail: _Shop(client), invoicing: InvoicingRepository(client),
+            accountAction: slot),
+        FarmHomeScreen(db: db, org: _farm, invoicing: InvoicingRepository(client), accountAction: slot),
+        ChurchHomeScreen(db: db, orgId: _assoc.id, orgName: _assoc.name, org: _assoc,
+            reports: ReportsRepository(client), invoicing: InvoicingRepository(client),
+            onHistory: () {}, accountAction: slot),
+      ]) {
+        await tester.pumpWidget(_app(home));
+        await _settle(tester);
+        expect(find.byKey(const Key('admin-pill')), findsOneWidget);
+        expect(find.text('Admin'), findsNothing, reason: 'the shield alone on a phone');
+        expect(tester.takeException(), isNull, reason: '${home.runtimeType} overflows at 360');
+      }
+      expect(find.textContaining('2'), findsWidgets, reason: 'the pending chip is drawn');
     });
 
     test('Compte lists the same tools for every kind', () {

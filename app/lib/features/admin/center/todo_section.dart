@@ -96,6 +96,13 @@ class _TodoSectionState extends State<TodoSection> {
       _Count('payouts_failed', t['payouts_failed'], context.tr('Versements Wave échoués'),
           Icons.sync_problem_outlined, () => context.go(Routes.consoleWave),
           warn: true),
+      // A Pro tool a rule hides, back to hidden when its payment ended (104):
+      // its owner was told; Mara may want to call.
+      _Count('features_lapsed', t['features_lapsed'],
+          context.tr('Fonctions masquées après la fin d\'un paiement'),
+          Icons.visibility_off_outlined,
+          () => _list('features_lapsed',
+              context.tr('Fonctions masquées après la fin d\'un paiement'))),
       _Count('silent_30', t['silent_30'], context.tr('Silencieuses depuis 30 jours'),
           Icons.bedtime_outlined,
           () => context.go('${Routes.consoleBusinesses}?activite=silent30'),
@@ -374,6 +381,10 @@ class _TodoListSheetState extends State<TodoListSheet> {
           ?r.error,
         ].join(' · '),
       'silent_30' => context.tr('Rien depuis le {date}', {'date': day}),
+      'features_lapsed' => context.tr('{tool} n\'est plus visible depuis le {date}', {
+          'tool': featureName(context, r.feature ?? ''),
+          'date': day,
+        }),
       _ => day,
     };
   }
@@ -383,6 +394,9 @@ class _TodoListSheetState extends State<TodoListSheet> {
     final org = r.orgId;
     if (org == null) {
       widget.outer.go(Routes.consoleKinds);
+    } else if (widget.listKey == 'features_lapsed') {
+      // Straight to the business's switches.
+      widget.outer.push('${Routes.consoleOrg(org)}?onglet=fonctions');
     } else {
       widget.outer.push(Routes.consoleOrg(org));
     }
