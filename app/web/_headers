@@ -1,13 +1,30 @@
-# The entry points must never be served stale: index.html names the current
-# bundle, and flutter_service_worker.js is the self-destruct that evicts the
-# old offline cache from phones that still carry it. Everything else keeps
-# the platform's etag revalidation, which is what makes updates instant
-# without refetching unchanged megabytes.
+# How long a phone may keep each file. The site Worker sets the same on
+# every response it returns (workers/kaj-app/src/index.js, cacheFor) — with
+# run_worker_first that is the copy Cloudflare goes by; this one is for the
+# assets served without it.
+#
+# The deploy moves every file that changes between builds into a folder
+# named after its content (scripts/web-fingerprint.mjs): kept a year, never
+# asked about again. The page, the service workers and version.json say
+# which build is current: asked about every time. Everything else keeps the
+# platform's etag revalidation.
+/app/*
+  Cache-Control: public, max-age=31536000, immutable
+/ck/*
+  Cache-Control: public, max-age=31536000, immutable
+/a/*
+  Cache-Control: public, max-age=31536000, immutable
 /
   Cache-Control: no-cache
 /index.html
   Cache-Control: no-cache
+/mara_sw.js
+  Cache-Control: no-cache
+/push_sw.js
+  Cache-Control: no-cache
+/push_handlers.js
+  Cache-Control: no-cache
 /flutter_service_worker.js
   Cache-Control: no-cache
-/flutter_bootstrap.js
+/version.json
   Cache-Control: no-cache

@@ -245,20 +245,22 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
   Future<void> _cancel() async {
     final doc = _doc;
     if (doc == null) return;
+    // Closed with its own context: the page's is the business's navigator
+    // (108), under the dialog.
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialog) => AlertDialog(
         title: Text(context.tr('Annuler la facture {number} ?', {'number': doc.number})),
         content: Text(
           context.tr('L\'écriture comptable sera contre-passée, pas effacée : la facture reste dans l’historique et la créance disparaît du bilan.'),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialog, false),
             child: Text(context.tr('Non')),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialog, true),
             child: Text(context.tr('Annuler la facture')),
           ),
         ],

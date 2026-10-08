@@ -1,0 +1,9 @@
+{
+  "name": "kaj-uploads",
+  "private": true,
+  "type": "module",
+  "description": "The photo bucket's only door: uploads, authorised reads, the street's public photos and their thumbnails.",
+  "scripts": {
+    "test": "node --test test"
+  }
+}

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show Color;
 
@@ -5,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../orders/orders.dart';
 import '../site/site.dart';
+import 'street_cache.dart';
 
 /// The shop window, read by anyone (052).
 ///
@@ -13,9 +15,86 @@ import '../site/site.dart';
 /// and return only what a shop window shows — name, price, in stock or not, a
 /// photo. Nothing behind the counter ever comes through this door.
 class StorefrontRepository {
-  StorefrontRepository(this._client);
+  StorefrontRepository(this._client, {this.keep});
 
   final SupabaseClient? _client;
+
+  /// The street's last look on this device (street_cache.dart): written on
+  /// every answer, read when there is none. Null keeps nothing.
+  final StreetCache? keep;
+
+  /// When the last answer had to come from [keep] — the network failed —
+  /// the time it was kept; null when it was fresh.
+  DateTime? keptAt;
+
+  /// [fetch]'s rows, kept under [key]; with no answer from the network,
+  /// the rows kept last time (and [keptAt] says when), else the failure.
+  Future<List<dynamic>> _rows(String key, Future<List<dynamic>> Function() fetch) async {
+    try {
+      final rows = await fetch();
+      keptAt = null;
+      final keep = this.keep;
+      if (keep != null) unawaited(keep.put(key, rows));
+      return rows;
+    } catch (_) {
+      final kept = await keep?.get(key);
+      if (kept == null) rethrow;
+      keptAt = kept.at ?? DateTime.now();
+      return kept.list;
+    }
+  }
+
+  /// A vitrine as this phone last saw it, at once, before the network
+  /// answers: the shop, its shelf, whether it is a vitrine d'exemple, and
+  /// when. Null when it was never opened here (or nothing is kept).
+  Future<KeptVitrine?> keptVitrine(String slug) async {
+    final keep = this.keep;
+    if (keep == null) return null;
+    final shop = await keep.get('storefront:$slug');
+    final items = await keep.get('items:$slug');
+    if (shop == null || items == null || shop.list.isEmpty) return null;
+    final showcases = await keep.get('showcases');
+    try {
+      return KeptVitrine(
+        shop: PublicShop.fromRow(Map<String, dynamic>.from(shop.list.first as Map)),
+        items: [
+          for (final r in items.list)
+            PublicItem.fromRow(Map<String, dynamic>.from(r as Map)),
+        ],
+        showcase: showcases?.list.map((s) => '$s').contains(slug) ?? false,
+        at: shop.at,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The street as this phone last saw it: every open vitrine and the
+  /// three articles on each card. Null when nothing is kept.
+  Future<KeptStreet?> keptStreet() async {
+    final keep = this.keep;
+    if (keep == null) return null;
+    final entries = await keep.get('directory');
+    if (entries == null || entries.list.isEmpty) return null;
+    final previews = await keep.get('previews');
+    try {
+      final byShop = <String, List<ShopPreview>>{};
+      for (final r in previews?.list ?? const []) {
+        final p = ShopPreview.fromRow(Map<String, dynamic>.from(r as Map));
+        byShop.putIfAbsent(p.slug, () => []).add(p);
+      }
+      return KeptStreet(
+        entries: [
+          for (final r in entries.list)
+            DirectoryEntry.fromRow(Map<String, dynamic>.from(r as Map)),
+        ],
+        previews: byShop,
+        at: entries.at,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// A build with no backend cannot show a vitrine; the screen says so
   /// rather than spinning forever.
@@ -33,8 +112,8 @@ class StorefrontRepository {
   /// slug nobody owns, a vitrine the shop closed, or a business the platform
   /// has suspended or archived. All three read the same to the street.
   Future<PublicShop?> shop(String slug) async {
-    final rows = await _requireClient()
-        .rpc('storefront', params: {'p_slug': slug}) as List<dynamic>;
+    final rows = await _rows('storefront:$slug', () async => await _requireClient()
+        .rpc('storefront', params: {'p_slug': slug}) as List<dynamic>);
     if (rows.isEmpty) return null;
     return PublicShop.fromRow(Map<String, dynamic>.from(rows.first as Map));
   }
@@ -43,23 +122,33 @@ class StorefrontRepository {
   /// a basket may hold (101's storefront_stock). A database before 101 has
   /// no such count: the basket is then uncapped, and the server decides.
   Future<List<PublicItem>> items(String slug) async {
-    final client = _requireClient();
-    final rows = await client
-        .rpc('storefront_products', params: {'p_slug': slug}) as List<dynamic>;
-    final left = <String, Object?>{};
-    try {
-      final stock = await client
-          .rpc('storefront_stock', params: {'p_slug': slug}) as List<dynamic>;
-      for (final r in stock) {
+    final rows = await _rows('items:$slug', () async {
+      final client = _requireClient();
+      // Both at once: on 3G each question is a round trip of half a second
+      // or more, and the shelf waited for the two one after the other.
+      final products = client
+          .rpc('storefront_products', params: {'p_slug': slug})
+          .then((v) => v as List<dynamic>);
+      final stock = client
+          .rpc('storefront_stock', params: {'p_slug': slug})
+          .then((v) => v as List<dynamic>, onError: (Object _) => const <dynamic>[]);
+      final shelf = await products;
+      final left = <String, Object?>{};
+      for (final r in await stock) {
         final m = r as Map;
         left['${m['id']}'] = m['stock_left'];
       }
-    } catch (_) {}
-    return rows.map((r) {
-      final row = Map<String, dynamic>.from(r as Map);
-      if (left.containsKey('${row['id']}')) row['stock_left'] = left['${row['id']}'];
-      return PublicItem.fromRow(row);
-    }).toList();
+      return [
+        for (final r in shelf)
+          {
+            ...Map<String, dynamic>.from(r as Map),
+            if (left.containsKey('${r['id']}')) 'stock_left': left['${r['id']}'],
+          },
+      ];
+    });
+    return rows
+        .map((r) => PublicItem.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
   }
 
   // ----------------------------------------------------------------
@@ -221,9 +310,8 @@ class StorefrontRepository {
   Future<Map<String, List<ShopPreview>>> previews(List<String> slugs) async {
     if (slugs.isEmpty) return const {};
     try {
-      final rows = await _requireClient().rpc('storefront_previews', params: {
-        'p_slugs': slugs,
-      }) as List<dynamic>;
+      final rows = await _rows('previews', () async => await _requireClient()
+          .rpc('storefront_previews', params: {'p_slugs': slugs}) as List<dynamic>);
       final out = <String, List<ShopPreview>>{};
       for (final r in rows) {
         final p = ShopPreview.fromRow(Map<String, dynamic>.from(r as Map));
@@ -289,10 +377,11 @@ class StorefrontRepository {
   /// Without one, all by name and no distance.
   Future<List<DirectoryEntry>> directory({double? lat, double? lng}) async {
     final here = lat != null && lng != null;
-    final rows = await _requireClient().rpc('storefront_directory', params: {
-      if (here) 'p_lat': lat,
-      if (here) 'p_lng': lng,
-    }) as List<dynamic>;
+    final rows = await _rows('directory', () async => await _requireClient()
+        .rpc('storefront_directory', params: {
+          if (here) 'p_lat': lat,
+          if (here) 'p_lng': lng,
+        }) as List<dynamic>);
     return rows
         .map((r) =>
             DirectoryEntry.fromRow(Map<String, dynamic>.from(r as Map)))
@@ -310,10 +399,14 @@ class StorefrontRepository {
     return _showcases ??= () async {
       try {
         final rows = await client.rpc('showcase_slugs') as List<dynamic>;
-        return {for (final r in rows) r is Map ? '${r.values.first}' : '$r'};
+        final slugs = {for (final r in rows) r is Map ? '${r.values.first}' : '$r'};
+        final keep = this.keep;
+        if (keep != null) unawaited(keep.put('showcases', slugs.toList()));
+        return slugs;
       } catch (_) {
         _showcases = null;
-        return <String>{};
+        final kept = await keep?.get('showcases');
+        return {for (final s in kept?.list ?? const []) '$s'};
       }
     }();
   }
@@ -339,6 +432,7 @@ class StorefrontStyle {
     this.layout = VitrineLayout.grid,
     this.schedule,
     this.openNow,
+    this.ordersClosed = false,
   });
 
   static const none = StorefrontStyle();
@@ -353,6 +447,11 @@ class StorefrontStyle {
   /// « Ouvert maintenant » / « Fermé », said by the server from [schedule]
   /// in Ouagadougou's time (093, Pro). Null: no banner.
   final bool? openNow;
+
+  /// « Commandes en ligne » hidden by Mara's switchboard (110): the vitrine
+  /// is a showcase — its shelf, no basket. Said by storefront() only then;
+  /// like the logo, no dressing.
+  final bool ordersClosed;
 
   /// One line under the name, 80 characters at most.
   final String? tagline;
@@ -423,6 +522,7 @@ class StorefrontStyle {
       layout: VitrineLayout.parse(s('layout')),
       schedule: VitrineSchedule.fromJson(json['schedule']),
       openNow: json['open_now'] is bool ? json['open_now'] as bool : null,
+      ordersClosed: json['orders_closed'] == true,
     );
   }
 
@@ -445,6 +545,7 @@ class StorefrontStyle {
         layout: layout ?? this.layout,
         schedule: schedule,
         openNow: openNow,
+        ordersClosed: ordersClosed,
       );
 
   Map<String, Object?> toJson() => {
@@ -1005,4 +1106,28 @@ String? distanceLabel(double? km) {
     return (lat: lat, lng: lng);
   }
   return null;
+}
+
+/// A vitrine as this phone last saw it (StorefrontRepository.keptVitrine).
+class KeptVitrine {
+  const KeptVitrine({
+    required this.shop,
+    required this.items,
+    required this.showcase,
+    this.at,
+  });
+
+  final PublicShop shop;
+  final List<PublicItem> items;
+  final bool showcase;
+  final DateTime? at;
+}
+
+/// The street as this phone last saw it (StorefrontRepository.keptStreet).
+class KeptStreet {
+  const KeptStreet({required this.entries, required this.previews, this.at});
+
+  final List<DirectoryEntry> entries;
+  final Map<String, List<ShopPreview>> previews;
+  final DateTime? at;
 }

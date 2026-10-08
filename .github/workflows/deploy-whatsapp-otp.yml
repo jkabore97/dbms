@@ -1,0 +1,97 @@
+name: Deploy the WhatsApp code Worker
+
+# Publishes workers/whatsapp-otp — the Worker Supabase's « Send SMS » auth
+# hook posts to, which sends the code that proves a shopper's number with
+# the WhatsApp Cloud API (migration 109). BUILD_PLAN.md, « Numéros vérifiés
+# par WhatsApp (109) », lists the one-time setup: Meta, the template, the
+# token, the hook, these secrets.
+#
+# Dormant until the owner has made all four repository secrets
+# (WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, WHATSAPP_TEMPLATE,
+# SEND_SMS_HOOK_SECRET): without them the job runs the Worker's tests, says
+# so and succeeds, and nothing is deployed. Kept apart from « Deploy to
+# Cloudflare » like the other Workers holding a secret: a mistake here must
+# not stop the app itself going out.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/whatsapp-otp/**'
+      - '.github/workflows/deploy-whatsapp-otp.yml'
+
+concurrency:
+  group: cloudflare-whatsapp-otp
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      # Secrets: set by the owner in GitHub, handed to Cloudflare's secret
+      # store below, never printed and never in the repository.
+      WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+      WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+      WHATSAPP_TEMPLATE: ${{ secrets.WHATSAPP_TEMPLATE }}
+      SEND_SMS_HOOK_SECRET: ${{ secrets.SEND_SMS_HOOK_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The Worker's own tests
+        run: node --test workers/whatsapp-otp/test/*.test.mjs
+
+      - name: Say so when WhatsApp is not set up yet
+        id: ready
+        run: |
+          missing=""
+          [ -n "$WHATSAPP_TOKEN" ] || missing="$missing WHATSAPP_TOKEN"
+          [ -n "$WHATSAPP_PHONE_ID" ] || missing="$missing WHATSAPP_PHONE_ID"
+          [ -n "$WHATSAPP_TEMPLATE" ] || missing="$missing WHATSAPP_TEMPLATE"
+          [ -n "$SEND_SMS_HOOK_SECRET" ] || missing="$missing SEND_SMS_HOOK_SECRET"
+          if [ -n "$missing" ]; then
+            echo "::notice::Not set yet:$missing — the WhatsApp code Worker was not deployed. BUILD_PLAN.md, « Numéros vérifiés par WhatsApp (109) »."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check the Cloudflare token is one Cloudflare accepts
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || { echo "CLOUDFLARE_API_TOKEN is empty." >&2; exit 1; }
+          body=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify) || true
+          case "$body" in
+            *'"success":true'*) echo "Token accepted by Cloudflare." ;;
+            *) echo "Cloudflare rejected CLOUDFLARE_API_TOKEN." >&2; echo "$body" >&2; exit 1 ;;
+          esac
+
+      - name: Deploy
+        if: steps.ready.outputs.go == 'true'
+        run: npx --yes wrangler@4 deploy --config workers/whatsapp-otp/wrangler.toml
+
+      # Secrets through wrangler's store — never as --var, which would print
+      # them in the deploy log.
+      - name: Install the secrets
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          printf '%s' "$WHATSAPP_TOKEN"       | npx --yes wrangler@4 secret put WHATSAPP_TOKEN       --config workers/whatsapp-otp/wrangler.toml
+          printf '%s' "$WHATSAPP_PHONE_ID"    | npx --yes wrangler@4 secret put WHATSAPP_PHONE_ID    --config workers/whatsapp-otp/wrangler.toml
+          printf '%s' "$WHATSAPP_TEMPLATE"    | npx --yes wrangler@4 secret put WHATSAPP_TEMPLATE    --config workers/whatsapp-otp/wrangler.toml
+          printf '%s' "$SEND_SMS_HOOK_SECRET" | npx --yes wrangler@4 secret put SEND_SMS_HOOK_SECRET --config workers/whatsapp-otp/wrangler.toml
+
+      - name: Say what is left to do
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          {
+            echo "### WhatsApp code Worker deployed"
+            echo
+            echo "1. Open \`<kaj-whatsapp-otp origin>/v1/health\`: it must say \`{\"ready\":true}\`."
+            echo "2. In Supabase: Authentication → Auth Hooks → Send SMS hook → HTTPS, URL \`<kaj-whatsapp-otp origin>/v1/send-sms\`, the same secret as SEND_SMS_HOOK_SECRET."
+            echo "3. Command center → Réglages → « Numéro WhatsApp vérifié avant de commander » → Oui; order from a vitrine with an account that has no proved number: the code must arrive on WhatsApp."
+            echo "4. If it does not arrive, put the switch back to Non (« Annuler » in the Journal) — ordering is then as before."
+          } >> "$GITHUB_STEP_SUMMARY"

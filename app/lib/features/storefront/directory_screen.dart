@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,6 +15,7 @@ import '../../core/nav/session.dart';
 import '../admin/admin_pill.dart';
 import '../../core/storefront/storefront_repository.dart';
 import 'directory_map.dart';
+import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
 import 'open_badge.dart';
 import 'shop_style.dart';
@@ -162,6 +162,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
       return;
     }
+    // The street as this phone last saw it, at once (street_cache.dart):
+    // on a slow line the shops show while the fresh list comes.
+    final kept = _entries.isEmpty ? await widget.storefront.keptStreet() : null;
+    if (kept != null && mounted && _entries.isEmpty) {
+      setState(() {
+        _entries = kept.entries;
+        _previews = kept.previews;
+        _loading = false;
+      });
+    }
     try {
       final here = _here;
       // The paid spots are a strip, not the page: if they fail to load the
@@ -194,17 +204,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
+      // No network: the last look, said as such.
+      if (widget.storefront.keptAt != null) _sayKept();
       // The strip is what a spot buys: count it as seen, in one call.
       unawaited(widget.storefront
           .recordSeen([for (final f in _featured) f.id]));
       unawaited(_loadPreviews());
     } catch (_) {
       if (!mounted) return;
+      if (_entries.isNotEmpty) {
+        // The last look is on screen: it stays, said as such.
+        _sayKept();
+        return;
+      }
       setState(() {
         _error = context.tr('L\'annuaire n\'a pas pu être chargé. Vérifiez le réseau.');
         _loading = false;
       });
     }
+  }
+
+  void _sayKept() {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(context.tr('Pas de réseau — les vitrines de votre dernière visite')),
+      ));
   }
 
   Future<void> _loadPreviews() async {
@@ -940,30 +965,26 @@ class _Photo extends StatefulWidget {
 }
 
 class _PhotoState extends State<_Photo> {
-  late final Future<Uint8List>? _bytes = widget.photoKey == null
-      ? null
-      : widget.capture.publicObjectBytes(widget.photoKey!);
-
   @override
   Widget build(BuildContext context) {
     const placeholder = Center(
       child: Icon(Icons.image_outlined, size: 30, color: ShopStyle.line),
     );
-    final future = _bytes;
-    if (future == null) return placeholder;
-    return FutureBuilder<Uint8List>(
-      future: future,
-      builder: (context, snapshot) {
-        final bytes = snapshot.data;
-        if (bytes == null) return placeholder;
+    final key = widget.photoKey;
+    if (key == null) return placeholder;
+    // Asked for once near the screen, at the size it is drawn (lazy_photo).
+    return LazyPhoto(
+      load: (width) => widget.capture.publicObjectBytes(key, width: width),
+      placeholder: placeholder,
+      builder: (context, bytes, width) => ClipRect(
         // The picture leans in under the pointer; its frame holds still.
-        return ClipRect(
-          child: ZoomOnHover(
-            child: Image.memory(bytes,
-                fit: BoxFit.cover, semanticLabel: "Photo de l'article"),
-          ),
-        );
-      },
+        child: ZoomOnHover(
+          child: Image.memory(bytes,
+              fit: BoxFit.cover,
+              cacheWidth: width,
+              semanticLabel: "Photo de l'article"),
+        ),
+      ),
     );
   }
 }

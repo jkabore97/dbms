@@ -753,6 +753,40 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch107.sql
 
+      - name: Prove a number proved on WhatsApp before an order — off as installed and ordering as 101 made it, on refused without a proved number, the platform's switch, journaled (109)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch109.sql
+
+      - name: Prove the vitrine's switches — each kind its own, every vitrine door closed when hidden and open again, nothing paid hidden, the platform's alone (110)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch110.sql
+
+      # P1 for 110: installing it changes nothing any vitrine shows or does.
+      # Its own database: 109, a photograph of the whole street, what each
+      # owner reads and every vitrine door (orders, bookings, delivery, Wave,
+      # spots, dressing), each done and rolled back; then 110 onwards and the
+      # same photograph again, compared answer for answer.
+      - name: Prove installing 110 and after changes nothing a vitrine shows or does, for any kind (110, P1)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c 'drop database if exists p1_110' -c 'create database p1_110'
+          P="psql -h localhost -U postgres -d p1_110 -v ON_ERROR_STOP=1 -q"
+          $P -f database/tests/supabase_stub.sql
+          $P -f database/schema.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -le 109 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_110_before.sql
+          for m in database/migrations/*.sql; do
+            n=$(basename "$m"); n=$((10#${n%%_*}))
+            if [ "$n" -ge 110 ]; then $P -f "$m"; fi
+          done
+          $P -f database/tests/p1_110_after.sql
+
   # The upload Worker has no test runner in this repository, so this is the
   # cheapest thing that would have caught the failure it can actually have:
   # a syntax error published straight to production, where the first symptom
@@ -778,6 +812,11 @@ jobs:
       - run: node --check workers/pay/src/wave.js
       - run: node --check workers/pay/src/stripe.js
       - run: node --test workers/pay/test/*.test.mjs
+      # The WhatsApp code Worker (109): the hook's signature, the template
+      # sent to the new number, Meta's refusals in words, the code never
+      # logged — against a fake Meta, no network.
+      - run: node --check workers/whatsapp-otp/src/index.js
+      - run: node --test workers/whatsapp-otp/test/*.test.mjs
 
   flutter-analyze:
     runs-on: ubuntu-latest

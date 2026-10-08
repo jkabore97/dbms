@@ -50,6 +50,13 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
 
   bool get _canWrite => !widget.org.isObserverOnly;
 
+  /// « À vendre sur la vitrine » hidden by Mara's switchboard (110): the list
+  /// stays — the farm still sells at the farm — but nothing here reaches the
+  /// vitrine, and it says so.
+  bool get _offVitrine =>
+      AppScope.maybeOf(context)?.session.accessFor(widget.org.id).isHidden('for_sale') ??
+      false;
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +137,16 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
           children: [
+            if (_offVitrine)
+              KajCard(
+                key: const Key('for-sale-off-vitrine'),
+                child: ListTile(
+                  leading: const Icon(Icons.visibility_off_outlined),
+                  title: Text(context.tr('Pas sur la vitrine pour le moment')),
+                  subtitle: Text(context.tr('Mara a retiré vos produits de la vitrine. Gardez-les ici : vous les vendez toujours à la ferme.')),
+                ),
+              )
+            else
             Text(
               context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent, viennent le chercher à la ferme ou se le font livrer.'),
               style: theme.textTheme.bodyMedium
@@ -187,7 +204,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                     title: Text(p.name,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(_line(p, money)),
-                    trailing: Icon(
+                    trailing: _offVitrine
+                        ? null
+                        : Icon(
                       p.isPublished
                           ? Icons.storefront
                           : Icons.visibility_off_outlined,
@@ -511,6 +530,13 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                 border: const OutlineInputBorder(),
               ),
             ),
+            // Not offered while Mara keeps the farm's products off its
+            // vitrine (110); the choice already made is kept.
+            if (!(AppScope.maybeOf(context)
+                    ?.session
+                    .accessFor(widget.org.id)
+                    .isHidden('for_sale') ??
+                false))
             SwitchListTile(
               key: const Key('for-sale-published'),
               contentPadding: EdgeInsets.zero,

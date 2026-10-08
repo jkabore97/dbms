@@ -53,7 +53,12 @@ class LoginScreen extends StatefulWidget {
     this.onboarding,
     this.onGoogle,
     this.initialError,
+    this.startWithSignUp = false,
   });
+
+  /// Opens on « Créer un compte » — a vitrine's sign-in sheet sends a new
+  /// shopper here that way (F1).
+  final bool startWithSignUp;
 
   /// Leaves for Google (SessionController.signInWithGoogle). The session
   /// comes back on its own — on the web as a reload, on Android as the
@@ -118,7 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  _Intent _intent = _Intent.signIn;
+  late _Intent _intent =
+      widget.startWithSignUp ? _Intent.signUp : _Intent.signIn;
 
   /// Set when an email sign-up succeeded but the project requires the address
   /// to be confirmed. The account exists and nobody is signed in, which is

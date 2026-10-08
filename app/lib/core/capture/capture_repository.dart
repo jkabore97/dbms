@@ -329,7 +329,12 @@ class CaptureRepository {
   /// this article to the street. The Worker still asks Postgres, per key,
   /// that the picture is of a published article on an open vitrine (052) —
   /// a key that is not gets a 404, exactly like one that does not exist.
-  Future<Uint8List> publicObjectBytes(String key) async {
+  ///
+  /// [width] is how many device pixels wide the picture is drawn: the
+  /// Worker then answers a small copy (`?w=`, see [thumbWidth]) — about
+  /// twenty kilobytes for a vitrine tile instead of the half-megabyte
+  /// photograph. The original, once held, serves every size.
+  Future<Uint8List> publicObjectBytes(String key, {int? width}) async {
     if (isShowcaseKey(key)) {
       return _remembered(key) ?? await _showcaseBytes(key);
     }
@@ -337,16 +342,28 @@ class CaptureRepository {
       throw const CaptureException(
           'Les photos ne sont pas disponibles sur cette installation.');
     }
-    final held = _remembered(key);
+    final w = width == null ? null : thumbWidth(width);
+    final held = _remembered(key) ?? (w == null ? null : _remembered('$key@$w'));
     if (held != null) return held;
     final response = await _http.get(
-      Uri.parse('$_uploads/v1/public/objects/${Uri.encodeComponent(key)}'),
+      Uri.parse('$_uploads/v1/public/objects/${Uri.encodeComponent(key)}'
+          '${w == null ? '' : '?w=$w'}'),
     );
     if (response.statusCode != 200) {
       throw CaptureException(_messageFrom(response));
     }
-    _remember(key, response.bodyBytes);
+    _remember(w == null ? key : '$key@$w', response.bodyBytes);
     return response.bodyBytes;
+  }
+
+  /// The small copies the uploads Worker makes (workers/uploads,
+  /// « Thumbnails, for the street »): the smallest that covers [pixels],
+  /// or null — the original — past the largest.
+  static int? thumbWidth(int pixels) {
+    for (final w in const [200, 400, 800]) {
+      if (pixels <= w) return w;
+    }
+    return null;
   }
 
   /// A photo of a vitrine d'exemple (094): shipped with the web app under

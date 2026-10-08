@@ -76,9 +76,17 @@ flutter pub get
 # Ouagadougou opening a fresh link cannot depend on a Google CDN being fast,
 # or reachable at all — when that fetch stalls, the page never paints. See the
 # same flag and reasoning in deploy-cloudflare.yml.
-flutter build web --release --no-web-resources-cdn \
+build_sha="local-$(git -C "$repo_root" rev-parse --short HEAD 2>/dev/null || echo unknown)-$(date +%s)"
+flutter build web --release --pwa-strategy none --no-web-resources-cdn \
+  --dart-define=BUILD_SHA="$build_sha" \
   --dart-define=SUPABASE_URL="$supabase_url" \
   --dart-define=SUPABASE_PUBLISHABLE_KEY="$supabase_key"
+# The self-destruct for phones that still carry Flutter's old offline
+# worker, as the deploy does (the build plants an empty file there).
+cp web/flutter_service_worker.js build/web/flutter_service_worker.js
+# The same folders-named-after-their-content and service worker as the
+# deploy (deploy-cloudflare.yml); see scripts/web-fingerprint.mjs.
+node "$repo_root/scripts/web-fingerprint.mjs" build/web "$build_sha"
 
 echo
 echo "Built app/build/web."

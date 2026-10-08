@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,7 +9,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/auth/whatsapp_phone.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
@@ -19,10 +20,13 @@ import '../../core/retail/stock_rule.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/mara_mark.dart';
 import '../common/owned_controller.dart';
+import 'lazy_photo.dart';
 import 'open_badge.dart';
+import 'order_sign_in_sheet.dart';
 import 'shop_skeleton.dart';
 import 'share_vitrine.dart';
 import 'shop_style.dart';
+import 'whatsapp_verify_screen.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A shop's window, for the street.
@@ -47,10 +51,15 @@ class StorefrontScreen extends StatefulWidget {
     required this.storefront,
     required this.capture,
     required this.session,
+    this.whatsApp,
   });
 
   final String slug;
   final StorefrontRepository storefront;
+
+  /// The shopper's number, proved on WhatsApp before an order when the
+  /// platform asks (109). Null: Supabase's, through the session's client.
+  final WhatsAppPhone? whatsApp;
 
   /// For the photos, served publicly by the uploads Worker per key.
   final CaptureRepository capture;
@@ -100,6 +109,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// never stored, they are read fresh from the shelf.
   Future<void> _restoreBasket(List<PublicItem> items) async {
     if (_basket.isNotEmpty) return;
+    // « Commandes fermées » (110): a showcase keeps no basket.
+    if (_shop?.style.ordersClosed ?? false) return;
     final raw = await widget.session.db.readPref(_basketKey);
     if (raw == null || !mounted) return;
     try {
@@ -142,11 +153,13 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   @override
   void initState() {
     super.initState();
+    widget.session.addListener(_onSession);
     _load();
   }
 
   @override
   void dispose() {
+    widget.session.removeListener(_onSession);
     _filter.dispose();
     super.dispose();
   }
@@ -163,39 +176,55 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       });
       return;
     }
+    // The shop as this phone last saw it, at once (street_cache.dart): on
+    // a slow line the shelf shows while the fresh answer comes.
+    final kept = _shop == null ? await widget.storefront.keptVitrine(widget.slug) : null;
+    if (kept != null && mounted && _shop == null) {
+      setState(() {
+        _shop = kept.shop;
+        _showcase = kept.showcase;
+        _items = _shelfOf(kept.shop, kept.items, kept.showcase);
+        _loading = false;
+      });
+    }
     try {
-      final shop = await widget.storefront.shop(widget.slug);
+      // The three questions at once: on 3G each is a round trip of half a
+      // second and more, and the shelf used to wait for them in turn.
+      final asked = widget.storefront.shop(widget.slug);
+      final showcases = widget.storefront.showcaseSlugs();
+      final shelfAsked = widget.storefront.items(widget.slug)
+        // Its failure is heard below, or not at all when the shop failed
+        // first — never as an error nobody caught.
+        ..ignore();
+      final shop = await asked;
       // A vitrine d'exemple (094): browsed, never ordered from.
-      final showcase =
-          shop != null &&
-          (await widget.storefront.showcaseSlugs()).contains(shop.slug);
-      final items = shop == null
-          ? const <PublicItem>[]
-          // A Pro shop's shelf order (068): pinned first, out-of-stock
-          // left off when it asked. The street reads it, the shop set it.
-          : shop.style.arrange(await widget.storefront.items(widget.slug));
-      // A vitrine d'exemple shows its photographed articles first (095).
-      final shelf = showcase
-          ? [
-              ...items.where((i) => i.photoKey != null),
-              ...items.where((i) => i.photoKey == null),
-            ]
-          : items;
+      final showcase = shop != null && (await showcases).contains(shop.slug);
+      final items = shop == null ? const <PublicItem>[] : await shelfAsked;
+      final keptAt = widget.storefront.keptAt;
       if (!mounted) return;
       setState(() {
         _shop = shop;
         _showcase = showcase;
-        _items = shelf;
+        _items = shop == null ? const [] : _shelfOf(shop, items, showcase);
         _loading = false;
       });
+      // No network: the last look, said as such.
+      if (keptAt != null) _sayKept();
       // The street's counter (071): a window opened. Never in the way.
       if (shop != null) {
         unawaited(widget.storefront.recordVisit(widget.slug, 'opened'));
         unawaited(_countVisitor());
       }
       await _restoreBasket(items);
+      unawaited(_resumeOrder());
     } catch (error) {
       if (!mounted) return;
+      if (_shop != null) {
+        // The last look is on screen: it stays, said as such.
+        _sayKept();
+        await _restoreBasket(_items);
+        return;
+      }
       setState(() {
         _error = context.tr(
           'La vitrine n\'a pas pu être chargée. Vérifiez le réseau.',
@@ -203,6 +232,28 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// The shelf in the order the street shows it.
+  static List<PublicItem> _shelfOf(PublicShop shop, List<PublicItem> items, bool showcase) {
+    // A Pro shop's shelf order (068): pinned first, out-of-stock left off
+    // when it asked. The street reads it, the shop set it.
+    final arranged = shop.style.arrange(items);
+    // A vitrine d'exemple shows its photographed articles first (095).
+    return showcase
+        ? [
+            ...arranged.where((i) => i.photoKey != null),
+            ...arranged.where((i) => i.photoKey == null),
+          ]
+        : arranged;
+  }
+
+  void _sayKept() {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(context.tr('Pas de réseau — la vitrine de votre dernière visite')),
+      ));
   }
 
   Future<void> _open(String url) async {
@@ -230,6 +281,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   }
 
   void _add(PublicItem item) {
+    if (_shop?.style.ordersClosed ?? false) return;
     // No more than is left on the shelf (101): the stepper stops there. The
     // window says how many only when few are left (« Plus que 3 »); with
     // more, the count stays the shop's and the stepper just stops.
@@ -314,13 +366,112 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     ),
   );
 
+  late final WhatsAppPhone _phone =
+      widget.whatsApp ?? SupabaseWhatsAppPhone(widget.session.auth.client);
+
+  /// The server's answer about the shopper's number (109), once asked.
+  OrderPhoneGate? _gate;
+
+  /// F1: an order a stranger began, kept on the device while they sign in
+  /// (on the web, Google comes back as a reload): `slug|when`. Back
+  /// signed in within half an hour, on this vitrine with its basket, the
+  /// order opens again by itself.
+  static const _resumeKey = 'street_order_after_sign_in';
+  static const _resumeFresh = Duration(minutes: 30);
+  bool _resuming = false;
+
+  void _onSession() {
+    if (mounted) unawaited(_resumeOrder());
+  }
+
+  Future<void> _resumeOrder() async {
+    if (_resuming || _loading || _shop == null || _basket.isEmpty || _showcase) {
+      return;
+    }
+    final phase = widget.session.phase;
+    if (phase == SessionPhase.signedOut ||
+        phase == SessionPhase.booting ||
+        phase == SessionPhase.resolving) {
+      return;
+    }
+    _resuming = true;
+    try {
+      final db = widget.session.db;
+      String? raw;
+      try {
+        raw = await db.readPref(_resumeKey);
+      } catch (_) {}
+      if (raw == null || !mounted) return;
+      final cut = raw.indexOf('|');
+      final slug = cut < 0 ? raw : raw.substring(0, cut);
+      final at = cut < 0 ? null : DateTime.tryParse(raw.substring(cut + 1));
+      if (slug != widget.slug) return;
+      if (at == null || DateTime.now().difference(at) > _resumeFresh) {
+        await db.writePref(_resumeKey, null);
+        return;
+      }
+      // Something opened over the vitrine (an article, a sheet): not now.
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      final inside = phase == SessionPhase.noOrg ||
+          phase == SessionPhase.picking ||
+          phase == SessionPhase.ready;
+      if (inside) {
+        await db.writePref(_resumeKey, null);
+        // The vitrine left itself as the way back from sign-in. Back here
+        // without the router taking it (Google on a phone returns to this
+        // very page), it must not send the shopper here again later.
+        final stashed = widget.session.takeReturnTo();
+        if (stashed != null && stashed != Routes.storefront(widget.slug)) {
+          widget.session.stashReturnTo(stashed);
+        }
+      }
+      if (!mounted) return;
+      // Inside: the order sheet. At a gate still (the code to choose or to
+      // type): the gate, then back here.
+      await _order();
+    } finally {
+      _resuming = false;
+    }
+  }
+
+  /// « Commander » signed out (F1): Google first, the two other doors at
+  /// the bottom. The basket is already on the device; the way back is this
+  /// vitrine, and the order opens again once they are in (_resumeOrder).
+  Future<void> _askSignIn() async {
+    final choice = await showOrderSignInSheet(
+      context,
+      booking: _booking,
+      googleAvailable: widget.session.auth.googleAvailable,
+    );
+    if (choice == null || !mounted) return;
+    try {
+      await widget.session.db.writePref(
+        _resumeKey,
+        '${widget.slug}|${DateTime.now().toIso8601String()}',
+      );
+    } catch (_) {}
+    if (!mounted) return;
+    widget.session.stashReturnTo(Routes.storefront(widget.slug));
+    switch (choice) {
+      case OrderSignIn.google:
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          await widget.session.signInWithGoogle();
+        } catch (error) {
+          messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+        }
+      case OrderSignIn.otherWay:
+        context.go(Routes.signIn);
+      case OrderSignIn.newAccount:
+        context.go('${Routes.signIn}?compte=nouveau');
+    }
+  }
+
   Future<void> _order() async {
     if (_showcase) return _farAway();
     switch (widget.session.phase) {
       case SessionPhase.signedOut:
-        widget.session.stashReturnTo(Routes.storefront(widget.slug));
-        context.go(Routes.signIn);
-        return;
+        return _askSignIn();
       case SessionPhase.locked:
       case SessionPhase.choosingPin:
         widget.session.stashReturnTo(Routes.storefront(widget.slug));
@@ -339,6 +490,31 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         break;
     }
 
+    // 109: a number proved on WhatsApp first, when the platform asks for
+    // one (Réglages › « Numéro WhatsApp vérifié avant de commander », off
+    // as installed). No answer — no signal, a database before 109 — asks
+    // nothing here; the server still decides at the order.
+    // Asked once per visit (one round trip on a slow network), the
+    // button turning while it is; a refusal at the order asks again.
+    var gate = _gate;
+    if (gate == null) {
+      if (_sending) return;
+      setState(() => _sending = true);
+      try {
+        gate = await _phone.gate();
+      } finally {
+        if (mounted) setState(() => _sending = false);
+      }
+      if (!mounted) return;
+      _gate = gate;
+    }
+    if (gate != null && gate.mustVerify) {
+      final proved = await Navigator.of(context).push(WhatsAppVerifyScreen.route(_phone));
+      if (proved == null || !mounted) return;
+      gate = _gate = OrderPhoneGate(required: true, verified: true, phone: proved);
+    }
+    if (!mounted) return;
+
     final sent = await showShopSheet<bool>(
       context: context,
       builder: (sheet) => Theme(
@@ -349,6 +525,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           currency: _shop?.currency ?? 'XOF',
           waveMerchant: _shop?.waveMerchant,
           delivers: _shop?.delivers ?? false,
+          provedPhone: gate != null && gate.required ? gate.phone : null,
           onSubmit: _send,
           quote: (lat, lng) =>
               widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
@@ -402,6 +579,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // A refusal the shop's rules made (069: beyond its reach) is said in
       // the server's words; only a failure to reach the server is "network".
       if (!mounted) return null;
+      // 109's refusal: the switch was turned on since the answer was read.
+      if (e.message == 'Vérifiez d\'abord votre numéro WhatsApp') _gate = null;
       // Said in the reader's language when the app has the sentence (098's
       // « Un service se réserve sur rendez-vous… », say).
       // A stock refusal (101) carries its own code, MA001.
@@ -443,6 +622,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     return ShopPage(
       title: shop?.name ?? context.tr('Vitrine'),
       announcements: switch (shop?.profile) {
+        // « Commandes en ligne » hidden by Mara (110): a showcase, said first.
+        _ when shop?.style.ordersClosed ?? false => [
+          context.tr('Commandes fermées pour le moment'),
+          context.tr('Regardez la vitrine, appelez ou écrivez sur WhatsApp'),
+        ],
         'farm' => ShopPage.farm,
         // An association's window (098): its services, booked.
         'association' || 'church' => [
@@ -490,7 +674,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 );
                 return false;
               },
-              child: _Window(
+              child: _OrdersClosed(
+                closed: shop.style.ordersClosed,
+                child: _Window(
                 basketCard: _basket.isEmpty
                     ? null
                     : KeyedSubtree(
@@ -512,6 +698,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 onRemove: _remove,
                 onDetails: _details,
               ),
+              ),
             ),
     );
   }
@@ -532,7 +719,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       builder: (sheet) => Theme(
         data: ShopStyle.theme(sheet, accent: shop.style.accent),
         child: StatefulBuilder(
-          builder: (sheet, setSheet) => ArticleSheet(
+          builder: (sheet, setSheet) => _OrdersClosed(
+            closed: shop.style.ordersClosed,
+            child: ArticleSheet(
             item: item,
             shopName: shop.name,
             currency: shop.currency,
@@ -548,6 +737,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               setSheet(() {});
             },
             onOpen: _open,
+          ),
           ),
         ),
       ),
@@ -801,7 +991,12 @@ class OrderSheet extends StatefulWidget {
     required this.quote,
     this.waveMerchant,
     this.delivers = true,
+    this.provedPhone,
   });
+
+  /// The number WhatsApp proved (109), when the platform asks for one: it
+  /// is the order's number, said instead of the optional field.
+  final String? provedPhone;
 
   /// Whether « Livraison » is offered at all (081: Kaj Pro shops on the
   /// map). False: pickup is the only way, and no toggle is drawn.
@@ -1043,7 +1238,9 @@ class _OrderSheetState extends State<OrderSheet> {
       fulfilment: _fulfilment,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
       address: _address.text.trim().isEmpty ? null : _address.text.trim(),
-      phone: _phone.text.trim().isEmpty ? null : _phone.text.trim(),
+      phone: widget.provedPhone != null || _phone.text.trim().isEmpty
+          ? null
+          : _phone.text.trim(),
       payment: _payment,
       dropLat: _fulfilment == 'delivery' ? _dropLat : null,
       dropLng: _fulfilment == 'delivery' ? _dropLng : null,
@@ -1360,14 +1557,31 @@ class _OrderSheetState extends State<OrderSheet> {
             // A booking asks first for the day and the hour (098).
             if (booking) ...[const SizedBox(height: 12), note],
             const SizedBox(height: 12),
-            TextField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: context.tr('Votre numéro (facultatif)'),
-                hintText: '+226 70 00 00 00',
+            if (widget.provedPhone != null)
+              Row(
+                key: const Key('order-proved-phone'),
+                children: [
+                  const Icon(Icons.verified_outlined, size: 20, color: maraGreen),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.tr('Votre numéro WhatsApp vérifié : {phone}', {
+                        'phone': widget.provedPhone,
+                      }),
+                      style: const TextStyle(fontSize: 14, color: ShopStyle.ink),
+                    ),
+                  ),
+                ],
+              )
+            else
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: context.tr('Votre numéro (facultatif)'),
+                  hintText: '+226 70 00 00 00',
+                ),
               ),
-            ),
             if (!booking) ...[const SizedBox(height: 12), note],
             if (_error != null) ...[
               const SizedBox(height: 10),
@@ -1762,6 +1976,12 @@ class _Window extends StatelessWidget {
                     const SizedBox(height: 10),
                     const FarBadge(key: Key('shop-far'), large: true),
                   ],
+                  // « Commandes en ligne » hidden by Mara (110): a showcase —
+                  // look, call, write; no basket.
+                  if (style.ordersClosed) ...[
+                    const SizedBox(height: 10),
+                    const _ClosedBadge(key: Key('orders-closed')),
+                  ],
                   // « Ouvert maintenant » / « Fermé » (093, Pro): the server
                   // reads the schedule against Ouagadougou's clock.
                   if (style.openNow != null) ...[
@@ -1851,7 +2071,9 @@ class _Window extends StatelessWidget {
                 if (goodsTotal > 0) ...[
                   const SizedBox(height: 6),
                   Text(
-                    context.tr(
+                    style.ordersClosed
+                        ? context.tr('Touchez un article pour le voir.')
+                        : context.tr(
                       'Touchez un article pour le voir, « + » pour l\'ajouter.',
                     ),
                     style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
@@ -1900,7 +2122,9 @@ class _Window extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  context.tr(
+                  style.ordersClosed
+                      ? context.tr('Touchez un service pour le voir.')
+                      : context.tr(
                     'Touchez un service pour le voir, « Réserver » pour le choisir.',
                   ),
                   style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
@@ -2074,7 +2298,9 @@ class _ItemRow extends StatelessWidget {
         color: ShopStyle.ink,
       ),
     );
-    final action = !item.inStock
+    final action = _OrdersClosed.of(context) && item.inStock
+        ? const SizedBox.shrink()
+        : !item.inStock
         ? Text(
             context.tr('Épuisé'),
             style: const TextStyle(
@@ -2341,7 +2567,7 @@ class _ItemTile extends StatelessWidget {
                                 ),
                         ),
                       ),
-                      if (item.inStock)
+                      if (item.inStock && !_OrdersClosed.of(context))
                         Positioned(
                           right: 8,
                           bottom: 8,
@@ -2549,6 +2775,52 @@ class NoPhotoPanel extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Whether the vitrine below takes no order (110's « Commandes en ligne »
+/// hidden): its rows, tiles and article sheet draw no « + », « Réserver »
+/// or stepper.
+class _OrdersClosed extends InheritedWidget {
+  const _OrdersClosed({required this.closed, required super.child});
+
+  final bool closed;
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_OrdersClosed>()?.closed ?? false;
+
+  @override
+  bool updateShouldNotify(_OrdersClosed old) => old.closed != closed;
+}
+
+/// « Commandes fermées pour le moment », under the vitrine's name.
+class _ClosedBadge extends StatelessWidget {
+  const _ClosedBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: maraDeep,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.storefront_outlined, size: 18, color: maraCaramel),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            context.tr('Commandes fermées pour le moment'),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: maraPaper,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// The round « + » on an article's square: one in the basket, nothing opened.
@@ -2785,7 +3057,7 @@ class ArticleSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 20),
-            if (item.inStock)
+            if (item.inStock && !_OrdersClosed.of(context))
               count == 0
                   ? SizedBox(
                       width: double.infinity,
@@ -2902,25 +3174,24 @@ class _Photo extends StatefulWidget {
 }
 
 class _PhotoState extends State<_Photo> {
-  late final Future<Uint8List>? _bytes = widget.photoKey == null
-      ? null
-      : widget.capture.publicObjectBytes(widget.photoKey!);
-
   @override
   Widget build(BuildContext context) {
     const placeholder = Center(
       child: Icon(Icons.image_outlined, size: 34, color: ShopStyle.line),
     );
-    final future = _bytes;
-    if (future == null) return placeholder;
-    return FutureBuilder<Uint8List>(
-      future: future,
-      builder: (context, snapshot) {
-        final bytes = snapshot.data;
-        if (bytes == null) return placeholder;
+    final key = widget.photoKey;
+    if (key == null) return placeholder;
+    // Asked for once near the screen, at the size it is drawn (lazy_photo):
+    // a tile gets the Worker's small copy, not the 2000 px photograph.
+    return LazyPhoto(
+      load: (width) => widget.capture.publicObjectBytes(key, width: width),
+      placeholder: placeholder,
+      builder: (context, bytes, width) {
         final image = Image.memory(
           bytes,
           fit: widget.fit,
+          // Decoded at the size it is drawn: a phone holds forty of these.
+          cacheWidth: widget.fit == BoxFit.cover ? width : null,
           semanticLabel: widget.label,
         );
         // A product photograph leans in under the pointer; a logo, shown

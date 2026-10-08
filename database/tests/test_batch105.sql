@@ -755,7 +755,9 @@ declare
         'cauris_expire_days', 'cauris_unlock_days', 'cauris_prize_1', 'cauris_prize_2',
         'cauris_prize_3', 'league_small_max', 'league_medium_max', 'path_league_min',
         'progress_credit_orders', 'path_gates_open',
-        'admin_two_step'];
+        'admin_two_step',
+        -- 109: read by order_phone_required(), which place_order asks.
+        'order_phone_verified'];
     v_dead text;
     v_missing text;
 begin

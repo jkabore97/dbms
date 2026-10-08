@@ -31,6 +31,7 @@ import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
 import '../../features/admin/admin_pill.dart' show AdminTrail;
 import 'app_scope.dart';
+import 'business_cover.dart';
 import 'session.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -195,6 +196,10 @@ GoRouter buildRouter(SessionController session) {
   // On a phone the business half is part of the app already: loading it is
   // immediate, so it is loaded straight away and never waited for.
   if (!kIsWeb) warmBusinessScreens();
+
+  // A sheet or a full-screen flow over a business's pages (108): its bar
+  // goes behind it.
+  final cover = BusinessCover();
 
   /// The one place that decides where a person is allowed to be.
   ///
@@ -480,10 +485,12 @@ GoRouter buildRouter(SessionController session) {
 
       GoRoute(
         path: Routes.signIn,
-        builder: (context, _) {
+        builder: (context, state) {
           final scope = AppScope.of(context);
           return LoginScreen(
             auth: scope.auth,
+            // « Créer un compte » from a vitrine's sign-in sheet (F1).
+            startWithSignUp: state.uri.queryParameters['compte'] == 'nouveau',
             // Lets the sign-up form save the names, date of birth, title and
             // phone it collects, the moment the account exists.
             onboarding: scope.onboarding,
@@ -746,8 +753,17 @@ GoRouter buildRouter(SessionController session) {
       ),
 
       // ----------------------------------------------------------------
-      // Inside a business
+      // Inside a business: one frame around every page (108) — the bar
+      // at the foot, or the rail on a wide screen, stays on the home and
+      // on every tool, the place on screen selected. The home is the
+      // first page under it and every tool a page under the home, so back
+      // from a tool returns to the home, never out of the app.
       // ----------------------------------------------------------------
+      ShellRoute(
+        observers: [cover],
+        builder: (context, state, child) =>
+            _businessFrame(context, state, child, cover),
+        routes: [
       GoRoute(
         path: '/o/:orgId',
         builder: (context, state) => _withOrg(
@@ -1259,6 +1275,8 @@ GoRouter buildRouter(SessionController session) {
                 retail: scope.retail,
                 capture: scope.capture,
               ),
+              // « Services et réservations » on Mara's switchboard (110).
+              feature: 'services',
             ),
           ),
           GoRoute(
@@ -1424,7 +1442,30 @@ GoRouter buildRouter(SessionController session) {
           ),
         ],
       ),
+        ],
+      ),
     ],
+  );
+}
+
+/// The business's frame (108) around the page on screen: its bar or rail,
+/// the place selected. Follows the session, as a page does, so the bar
+/// arrives with the business on a cold load.
+Widget _businessFrame(
+  BuildContext context,
+  GoRouterState state,
+  Widget child,
+  BusinessCover cover,
+) {
+  final session = AppScope.of(context).session;
+  return _Live(
+    session: session,
+    builder: () => biz.BusinessFrame(
+      org: session.orgById(state.pathParameters['orgId']),
+      location: state.uri.path,
+      cover: cover,
+      child: child,
+    ),
   );
 }
 
@@ -1488,7 +1529,8 @@ Widget _withOrg(
   // (the report: "every reload, the loading icon never stops"). With the
   // session as a listenable the gate below redraws itself the moment the
   // phase moves, whatever the router does.
-  return _Live(
+  // Above the business's bar, or beside its rail (108).
+  return biz.BusinessPage(child: _Live(
     session: scope.session,
     builder: () {
       final org = scope.session.orgById(state.pathParameters['orgId']);
@@ -1500,8 +1542,8 @@ Widget _withOrg(
         return const _MissingContext(backTo: Routes.picker);
       }
       // The business's colours, on every page inside it — not just the home
-      // screen. Each `/o/<id>/...` route is a page of its own (they replace
-      // the shell rather than nest under it), so the palette has to be
+      // screen. Each `/o/<id>/...` route is a page of its own (the frame
+      // around them draws only the bar), so the palette has to be
       // applied here, at the one place they all pass through, or a
       // business's settings, product list and reports all open in the app's
       // default teal instead of the colour it chose. `homeScreenFor` wraps
@@ -1525,7 +1567,7 @@ Widget _withOrg(
                 : biz.ProStrip(org: org, child: build(scope, org)),
       );
     },
-  );
+  ));
 }
 
 /// Who may open the administration's pages and Équipe: the business's

@@ -185,24 +185,28 @@ set local "request.jwt.claim.sub" = '10404040-0000-0000-0000-000000000001';
 do $$
 declare v text;
 begin
+    -- 104's own tools; the vitrine's group (110) is proven by test_batch110.
     select string_agg(b->>'key', ',' order by b->>'key') into v
-      from jsonb_array_elements(platform_feature_board('association', null)) b;
+      from jsonb_array_elements(platform_feature_board('association', null)) b
+     where b->>'grp' <> 'Vitrine';
     if v <> 'accounting,credits,invoices,payroll,tontines' then
         raise exception 'FAIL: the association board offers %', v;
     end if;
     select string_agg(b->>'key', ',' order by b->>'key') into v
-      from jsonb_array_elements(platform_feature_board(null, '10400000-0000-0000-0000-000000000005')) b;
+      from jsonb_array_elements(platform_feature_board(null, '10400000-0000-0000-0000-000000000005')) b
+     where b->>'grp' <> 'Vitrine';
     if v <> 'accounting,credits,invoices,payroll,tontines' then
         raise exception 'FAIL: a legacy church is not an association: %', v;
     end if;
     select string_agg(b->>'key', ',' order by b->>'key') into v
-      from jsonb_array_elements(platform_feature_board('farm', null)) b;
+      from jsonb_array_elements(platform_feature_board('farm', null)) b
+     where b->>'grp' <> 'Vitrine';
     if v <> 'accounting,analytics,credits,invoices,payroll,production,tontines' then
         raise exception 'FAIL: the farm board offers %', v;
     end if;
     select count(*) into v from jsonb_array_elements(platform_feature_board('retail', null));
     execute 'reset role';
-    if v::int <> (select count(*) from feature_catalog) then
+    if v::int <> (select count(*) from feature_catalog where 'retail' = any (kinds)) then
         raise exception 'FAIL: the shop board leaves something out';
     end if;
     execute 'set local role authenticated';
@@ -525,9 +529,10 @@ begin
             raise exception 'FAIL: a direct write passed a hidden tontine: % → %', v_got, zz_b104_try(v_got);
         end if;
     end loop;
-    -- No door left untested.
+    -- No door left untested (the vitrine's, 110, are knocked on in test_batch110).
     execute 'reset role';
-    select string_agg(key, ', ') into v_missing from feature_catalog where not (key = any (v_tested));
+    select string_agg(key, ', ') into v_missing from feature_catalog
+     where not (key = any (v_tested)) and grp <> 'Vitrine';
     if v_missing is not null then
         raise exception 'FAIL: no door tested for %', v_missing;
     end if;
@@ -541,10 +546,13 @@ declare v_missing text;
 begin
     -- And structurally: each catalog key is named by a trigger or by a
     -- function that calls feature_guard — a key with neither is a dead
-    -- switch, refused here before it ships.
+    -- switch, refused here before it ships. The vitrine's keys (110) are
+    -- held to the same by test_batch110, once 110 is put back over what
+    -- the suites before it re-applied.
     select string_agg(c.key, ', ') into v_missing
       from feature_catalog c
-     where not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where c.grp <> 'Vitrine'
+       and not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                         where n.nspname = 'public'
                           and p.prosrc like '%feature_guard(%''' || c.key || '''%')
        and not exists (select 1 from pg_trigger t

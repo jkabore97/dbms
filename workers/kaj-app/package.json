@@ -1,0 +1,9 @@
+{
+  "name": "kaj-app-site",
+  "private": true,
+  "type": "module",
+  "description": "The site in front of the Flutter web build: one address, vitrine previews, legal pages, how long each file is kept.",
+  "scripts": {
+    "test": "node --test test"
+  }
+}

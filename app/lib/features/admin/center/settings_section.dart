@@ -108,6 +108,9 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('path_gates_open', 'cauris', SettingType.flag01),
   // Shown, and changed where it always was: Compte › Sécurité (078).
   SettingDef('admin_two_step', 'security', SettingType.flag),
+  // 109: a number proved on WhatsApp before an order — off until the
+  // WhatsApp code Worker and Supabase's hook are set up.
+  SettingDef('order_phone_verified', 'orders', SettingType.flag),
 ];
 
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
@@ -118,6 +121,7 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'wave' => context.tr('Paiements Wave'),
       'cauris' => context.tr('Cauris, ligues et Chemin'),
       'security' => context.tr('Sécurité de la plateforme'),
+      'orders' => context.tr('Commandes de la rue'),
       _ => group,
     };
 
@@ -170,6 +174,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'progress_credit_orders' => context.tr('Commandes terminées pour ouvrir le carnet de crédit'),
       'path_gates_open' => context.tr('Ouvrir tous les outils du Chemin à tout le monde'),
       'admin_two_step' => context.tr('Validation en deux étapes du compte de la plateforme'),
+      'order_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de commander'),
       _ => key,
     };
 
@@ -372,10 +377,17 @@ class _SettingsSectionState extends State<SettingsSection> {
       final on = d.type == SettingType.flag
           ? v.value == true
           : ((v.value is num ? v.value as num : 0) > 0);
+      // What must be set up before the switch is turned (109): a code that
+      // cannot leave would stop every order.
+      final before = d.key == 'order_phone_verified'
+          ? context.tr('À n\'activer qu\'une fois le Worker whatsapp-otp déployé, le modèle WhatsApp « authentication » approuvé et le hook « Send SMS » de Supabase branché (BUILD_PLAN.md, « Numéros vérifiés par WhatsApp »).')
+          : null;
       return SwitchListTile(
         key: Key('setting-${d.key}'),
         title: Text(settingLabel(context, d.key)),
-        subtitle: who == null ? null : Text(who),
+        subtitle: before == null && who == null
+            ? null
+            : Text([?before, ?who].join('\n')),
         value: on,
         onChanged: busy
             ? null

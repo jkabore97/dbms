@@ -1,0 +1,9 @@
+{
+  "name": "kaj-whatsapp-otp",
+  "private": true,
+  "type": "module",
+  "description": "Carries Supabase's phone-change code to a shopper on WhatsApp: the Send SMS auth hook -> the WhatsApp Cloud API (migration 109).",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

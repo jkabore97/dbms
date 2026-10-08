@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// One place a business's home screen leads to.
 class HomeDestination {
@@ -10,6 +11,7 @@ class HomeDestination {
     required this.onTap,
     this.selectedIcon,
     this.badge = 0,
+    this.route,
   });
 
   final IconData icon;
@@ -23,6 +25,85 @@ class HomeDestination {
 
   /// A count worth seeing before opening (orders waiting); 0 shows nothing.
   final int badge;
+
+  /// The page this place is, under the business: `produits`, `factures`,
+  /// '' for the home itself (108). The bar stays on every page of the
+  /// business and shows this place selected there and on every page under
+  /// it. Null for a door out (the street, the vitrine).
+  final String? route;
+}
+
+/// The bar's keeper (108): the frame around every page of a business holds
+/// the places its home screen lays out, so the bar — and the rail on a wide
+/// screen — stays on every tool page, not only on the home.
+///
+/// The home publishes its [HomeNav] here on each build instead of drawing
+/// it; the frame draws it. A home with no frame above it (a test, a build
+/// that shows a home alone) draws its own bar, as before.
+class BusinessNav extends ChangeNotifier {
+  HomeNav? _nav;
+  BuildContext? _owner;
+  String _drawn = '';
+  bool _disposed = false;
+
+  /// The places, while the home that published them is still on screen.
+  /// Their actions are the home's own.
+  HomeNav? get nav => (_owner?.mounted ?? false) ? _nav : null;
+
+  void publish(BuildContext owner, HomeNav nav) {
+    _owner = owner;
+    _nav = nav;
+    final drawn = nav.signature;
+    if (drawn == _drawn) return;
+    _drawn = drawn;
+    // Asked from the home's build: the frame redraws on the next frame.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!_disposed) notifyListeners();
+    });
+    SchedulerBinding.instance.ensureVisualUpdate();
+  }
+
+  /// Forgets the places (the frame now holds another business).
+  void publishNothing() {
+    _nav = null;
+    _owner = null;
+    _drawn = '';
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+}
+
+/// Where the frame's [BusinessNav] is found, and how much of the screen its
+/// bar (bottom) or rail (left) takes — every page of the business stands
+/// inside that (BusinessPage).
+class BusinessNavHost extends InheritedWidget {
+  const BusinessNavHost({
+    super.key,
+    required this.nav,
+    required this.insets,
+    required super.child,
+  });
+
+  final BusinessNav nav;
+  final EdgeInsets insets;
+
+  /// The keeper, without listening: a home publishing to it must not be
+  /// rebuilt by what it published.
+  static BusinessNav? navOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<BusinessNavHost>()?.nav;
+
+  /// The room the bar or the rail takes; zero outside a business frame.
+  static EdgeInsets insetsOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<BusinessNavHost>()?.insets ??
+      EdgeInsets.zero;
+
+  @override
+  bool updateShouldNotify(BusinessNavHost oldWidget) =>
+      insets != oldWidget.insets || nav != oldWidget.nav;
 }
 
 /// The labelled bar at the foot of every business home screen — the shop,
@@ -39,10 +120,11 @@ class HomeDestination {
 /// passed in, and the bar closes up around it. The top bar keeps the name of
 /// the business, the bell and the account.
 ///
-/// The bar launches: a tool opens as its own page, with its own address and
-/// a way back, as it did from the icon row — so the home screen is the one
-/// place that is ever "selected". On a wide screen the same places stand in
-/// a labelled rail down the left side instead.
+/// Inside a business the bar stays (108): the frame around every page of the
+/// business draws it (BusinessFrame), the place of the page on screen shown
+/// selected, and a tap switches tool. A tool still opens as its own page,
+/// with its own address, and back from it returns to the home. On a wide
+/// screen the same places stand in a labelled rail down the left side.
 class HomeNav {
   const HomeNav({
     required this.home,
@@ -91,12 +173,20 @@ class HomeNav {
     ];
   }
 
+  /// What the bar shows, as one string: the frame redraws when it changes.
+  String get signature => [
+        for (final p in [home, ...primary, ...more])
+          '${p.label}|${p.route}|${p.badge}|${p.icon.codePoint}',
+      ].join(';');
+
   bool _wide(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= wideFrom;
 
   /// The bar for the Scaffold's foot, or null on a wide screen (the rail
-  /// carries it) or when there is nowhere to go but here.
+  /// carries it) or when there is nowhere to go but here — or inside a
+  /// business frame, which draws it on every page (108).
   Widget? bar(BuildContext context) {
+    if (BusinessNavHost.navOf(context) != null) return null;
     if (_wide(context)) return null;
     final places = slots(context);
     if (places.length < 2) return null;
@@ -108,8 +198,8 @@ class HomeNav {
       destinations: [
         for (final p in places)
           NavigationDestination(
-            icon: _icon(p, p.icon),
-            selectedIcon: _icon(p, p.selectedIcon ?? p.icon),
+            icon: placeIcon(p, p.icon),
+            selectedIcon: placeIcon(p, p.selectedIcon ?? p.icon),
             label: p.label,
           ),
       ],
@@ -117,7 +207,14 @@ class HomeNav {
   }
 
   /// The home screen's Scaffold, with the rail at its left on a wide screen.
+  /// Inside a business frame the places go to the frame instead, which
+  /// draws them around this page and every other page of the business.
   Widget frame(BuildContext context, Widget scaffold) {
+    final host = BusinessNavHost.navOf(context);
+    if (host != null) {
+      host.publish(context, this);
+      return scaffold;
+    }
     if (!_wide(context)) return scaffold;
     final places = slots(context);
     if (places.length < 2) return scaffold;
@@ -137,8 +234,8 @@ class HomeNav {
               destinations: [
                 for (final p in places)
                   NavigationRailDestination(
-                    icon: _icon(p, p.icon),
-                    selectedIcon: _icon(p, p.selectedIcon ?? p.icon),
+                    icon: placeIcon(p, p.icon),
+                    selectedIcon: placeIcon(p, p.selectedIcon ?? p.icon),
                     label: Text(p.label),
                   ),
               ],
@@ -151,18 +248,21 @@ class HomeNav {
     );
   }
 
-  static Widget _icon(HomeDestination p, IconData icon) => Badge(
+  static Widget placeIcon(HomeDestination p, IconData icon) => Badge(
         isLabelVisible: p.badge > 0,
         label: Text('${p.badge}'),
         child: Icon(icon),
       );
 
   /// Plus: every remaining tool as a line with its name, never a grid of
-  /// pictures — the point of the change.
+  /// pictures — the point of the change. [onPick] is the frame's way into a
+  /// place (108); [here] marks the line of the page on screen.
   static Future<void> showMore(
     BuildContext context,
-    List<HomeDestination> items,
-  ) {
+    List<HomeDestination> items, {
+    void Function(HomeDestination item)? onPick,
+    HomeDestination? here,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -173,12 +273,13 @@ class HomeNav {
           children: [
             for (final item in items)
               ListTile(
-                leading: _icon(item, item.icon),
+                leading: placeIcon(item, item.icon),
                 title: Text(item.label),
+                selected: identical(item, here),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(sheet).pop();
-                  item.onTap();
+                  (onPick ?? (i) => i.onTap())(item);
                 },
               ),
           ],

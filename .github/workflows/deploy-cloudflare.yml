@@ -168,6 +168,13 @@ jobs:
             "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
+          # Every file that changes between builds moves into a folder named
+          # after its content (/app/<hash>/, /ck/<hash>/, /a/<hash>/), the
+          # folders are written into index.html, and this build into the
+          # service worker (web/mara_sw.js) that keeps the app on phones for
+          # slow and absent connections. Fails — and stops the deploy — if
+          # the build is not the shape it expects.
+          node ../scripts/web-fingerprint.mjs build/web "$GITHUB_SHA"
 
       - name: Deploy
         run: |
@@ -182,8 +189,9 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "https://marakaj.com/ (also https://dbms.kabore-boss.workers.dev/)" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Hard-reload it: a Flutter web build registers a service worker" >> "$GITHUB_STEP_SUMMARY"
-          echo "that serves the previous bundle from cache." >> "$GITHUB_STEP_SUMMARY"
+          echo "A new visitor gets this build at once. A phone that already keeps" >> "$GITHUB_STEP_SUMMARY"
+          echo "Mara (web/mara_sw.js) prepares it in the background and switches at" >> "$GITHUB_STEP_SUMMARY"
+          echo "its next start, or straight away from « Recharger » on the banner." >> "$GITHUB_STEP_SUMMARY"
           # The optional addresses are compiled in; an empty one silently
           # removes a feature from the build (the camera, the admin account
           # actions, crash reports, push). Say which, here, where the person

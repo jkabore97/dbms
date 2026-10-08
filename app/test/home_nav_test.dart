@@ -139,6 +139,8 @@ void main() {
         'Production',
         // Its people (101), as on the farm's and the association's homes.
         'Équipe',
+        // The administration's hub, for whoever runs it (108).
+        'Administration',
         'Voir ma vitrine',
         'Voir le marché',
         'Compte'

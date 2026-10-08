@@ -447,13 +447,20 @@ class SessionController extends ChangeNotifier {
   static const _googleKey = 'google_pending';
   static const _googleFresh = Duration(minutes: 15);
 
-  /// The sign-in screen's Google button.
+  /// The page a gate interrupted ([stashReturnTo]) — a vitrine with its
+  /// basket, say (F1) — kept on the device while Google has the person:
+  /// on the web Google comes back as a reload, which wipes memory.
+  static const _googleReturnKey = 'google_return_to';
+
+  /// The sign-in screen's Google button, and the vitrine's.
   Future<void> signInWithGoogle() async {
     await db.writePref(_googleKey, DateTime.now().toIso8601String());
+    await db.writePref(_googleReturnKey, _returnTo);
     try {
       await auth.signInWithGoogle();
     } catch (_) {
       await db.writePref(_googleKey, null);
+      await db.writePref(_googleReturnKey, null);
       rethrow;
     }
   }
@@ -488,8 +495,18 @@ class SessionController extends ChangeNotifier {
     // Not back yet (the browser is still open), or came back with nothing.
     if (user == null || !auth.hasLiveSession) return false;
     await db.writePref(_googleKey, null);
+    String? back;
+    try {
+      back = await db.readPref(_googleReturnKey);
+      await db.writePref(_googleReturnKey, null);
+    } catch (_) {}
     if (_phase != SessionPhase.booting && _phase != SessionPhase.signedOut) {
       return false;
+    }
+    // Memory wins (a phone never reloaded); the device's copy is for the
+    // web's reload.
+    if (back != null && back.startsWith('/') && _returnTo == null) {
+      stashReturnTo(back);
     }
     try {
       await handleSignedIn(user);

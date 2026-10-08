@@ -61,6 +61,7 @@ export '../../features/farm/flocks_screen.dart';
 export '../../features/farm/livestock_screen.dart';
 export '../../features/farm/stock_screen.dart';
 export '../../features/home/business_shell.dart';
+export '../../features/home/business_frame.dart';
 export '../../features/invoicing/billing_details_screen.dart';
 export '../../features/invoicing/invoice_document_screen.dart';
 export '../../features/invoicing/invoices_screen.dart';

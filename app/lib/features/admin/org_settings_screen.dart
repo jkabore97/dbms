@@ -388,6 +388,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         lat: lat,
         lng: lng,
       );
+      // « Livraison » hidden (110): its numbers are not sent — the server
+      // keeps them as they are.
+      if (!_hidden('delivery')) {
       await widget.admin.setDeliveryRates(
         widget.orgId,
         base: deliveryBase,
@@ -405,6 +408,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       } on PostgrestException catch (e) {
         // A database before 069 has no reach to set; the rest is saved.
         if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      }
       }
       widget.onSaved?.call();
       await _reloadChecklist();
@@ -543,20 +547,22 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   Future<void> _toggleSuspend() async {
     final freezing = !_suspended;
     if (freezing) {
+      // Closed with its own context: the page's is the business's
+      // navigator (108), under the dialog.
       final ok = await showDialog<bool>(
         context: context,
-        builder: (_) => AlertDialog(
+        builder: (dialog) => AlertDialog(
           title: Text(context.tr('Suspendre cette entreprise ?')),
           content: Text(
             context.tr('Ses membres pourront encore tout consulter, mais ne pourront plus rien enregistrer — ni vente, ni dépense, ni stock — jusqu\'à la réactivation. Les données ne sont pas supprimées.'),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(dialog).pop(false),
               child: Text(context.tr('Annuler')),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.of(dialog).pop(true),
               child: Text(context.tr('Suspendre')),
             ),
           ],
@@ -906,6 +912,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   /// A Pro tool this business has neither on its plan nor unlocked with
   /// cauris (085): drawn locked, under the Pro seal, never as a form.
+  /// A vitrine feature Mara's switchboard hid for this business (110): its
+  /// part, card or field is not drawn here.
+  bool _hidden(String feature) =>
+      AppScope.maybeOf(context)?.session.accessFor(widget.orgId).isHidden(feature) ??
+      false;
+
   bool _toolLocked(String feature) {
     if (widget.plan == 'pro') return false;
     final f = AppScope.maybeOf(context)?.session.featuresFor(widget.orgId);
@@ -1388,6 +1400,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           ),
         ),
       const SizedBox(height: 8),
+      if (association && _hidden('services'))
+        _SwitchedOff(
+          text: context.tr('Les services ne sont pas proposés sur votre vitrine pour le moment.'),
+        )
+      else
       SizedBox(
         height: 52,
         child: FilledButton.icon(
@@ -1442,6 +1459,14 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   }
 
   List<Widget> _vitrine(ThemeData theme) => [
+    // « Commandes en ligne » hidden by Mara (110): said where the vitrine is set.
+    if (_hidden('online_orders')) ...[
+      _SwitchedOff(
+        key: const Key('vitrine-orders-closed'),
+        text: context.tr('Commandes fermées par Mara pour le moment : vos clients voient votre vitrine sans pouvoir commander. Les commandes déjà reçues restent dans Commandes.'),
+      ),
+      const SizedBox(height: 16),
+    ],
     Text(context.tr('Vitrine en ligne'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
@@ -1533,6 +1558,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       // The spots for sale (071), folded on their own. An association
       // buys the whole-vitrine spot only — an article in « À la une »
       // needs stock — and sees here the spots it already asked or paid.
+      // Not drawn when Mara's switchboard hid « Mettre en avant » (110).
+      if (!_hidden('spots'))
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -1956,7 +1983,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     _Part.payments => [
         ..._payments(theme),
         ..._saveBar(theme),
-        if (_waveAllowed) ..._waveReceive(theme),
+        // Mara's online payment (076), unless the switchboard hid it (110).
+        if (_waveAllowed && !_hidden('online_payment')) ..._waveReceive(theme),
       ],
     _Part.vitrine => [..._vitrine(theme), ..._saveBar(theme)],
     _Part.delivery => _toolLocked('delivery')
@@ -2092,7 +2120,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     if (_waveAllowed) _Part.payments,
     _Part.team,
     // An association's services are booked, not carried (098).
-    if (!_association) _Part.delivery,
+    // « Livraison » hidden by Mara's switchboard (110): no part at all.
+    if (!_association && !_hidden('delivery')) _Part.delivery,
     if (widget.canSetPlan || widget.canSuspend) _Part.platform,
   ];
 
@@ -2239,7 +2268,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final wide = MediaQuery.sizeOf(context).width >= 840;
-    final open = _open;
+    // A part the switchboard hid (110), asked by its address: the index.
+    final open = _open == _Part.delivery && _hidden('delivery') ? null : _open;
 
     if (_loading) {
       return Scaffold(
@@ -2456,6 +2486,33 @@ class _ClosedNote extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// What Mara's switchboard turned off here (110), said once, plainly.
+class _SwitchedOff extends StatelessWidget {
+  const _SwitchedOff({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.visibility_off_outlined, color: maraBrown),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
 }
 
 /// The current palette, shown as itself rather than named.

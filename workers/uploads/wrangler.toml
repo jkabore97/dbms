@@ -19,6 +19,14 @@ workers_dev = true
 binding = "UPLOADS"
 bucket_name = "kaj-app-uploads"
 
+# Cloudflare Images, for the vitrine's thumbnails (src/index.js,
+# « Thumbnails, for the street »). Included in every plan's free 5,000
+# transformations a month, and each photo is transformed once per width —
+# the result is kept in the bucket. An account where this binding is
+# refused deploys without it (deploy-uploads.yml) and serves originals.
+[images]
+binding = "IMAGES"
+
 [vars]
 # Public values, both of them: SUPABASE_URL and the anon key are compiled into
 # the Flutter web bundle and readable by anyone who opens it. They are here so

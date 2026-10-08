@@ -36,11 +36,12 @@ class PushPlatform {
       if (key == null || key.isEmpty) return null;
 
       final container = web.window.navigator.serviceWorker;
-      // The offline copy's worker (offline_sw.js) carries the push handlers
-      // too; registering push_sw.js over it would throw the copy away.
+      // The worker every visitor already has (mara_sw.js, which keeps the
+      // app for slow connections) carries the push handlers too;
+      // registering push_sw.js over it would throw that copy away. The
+      // bare one is only for a page no worker holds yet.
       final current = await container.getRegistration('/').toDart;
-      final script = current?.active?.scriptURL ?? '';
-      if (!script.endsWith('offline_sw.js')) {
+      if (current == null) {
         await container.register('push_sw.js'.toJS).toDart;
       }
       final registration = await container.ready.toDart;

@@ -24,6 +24,8 @@
 //
 // Bindings, see wrangler.toml:
 //   UPLOADS                     R2 bucket kaj-app-uploads
+//   IMAGES                      Cloudflare Images, for the vitrine's
+//                               thumbnails (optional: without it, originals)
 //   SUPABASE_URL                the project URL — public, it is in the app
 //   SUPABASE_PUBLISHABLE_KEY    the anon key — public, it is in the app too
 //   ALLOWED_ORIGINS             comma-separated, the sites that may call this
@@ -75,7 +77,8 @@ export default {
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
       // the shop chose to show this article to the street. Postgres still
       // decides, per key, that the picture is of a published article on an
-      // open vitrine (052) — the Worker only ever performs.
+      // open vitrine (052) — the Worker only ever performs. `?w=` asks for
+      // it smaller (see thumbnail below).
       const pub = url.pathname.match(/^\/v1\/public\/objects\/(.+)$/);
       if (pub && (request.method === "GET" || request.method === "HEAD")) {
         return withCors(await getPublic(request, env, decodeURIComponent(pub[1])), cors);
@@ -364,7 +367,11 @@ async function getPublic(request, env, key) {
     return problem(404, "No such object.");
   }
 
-  const object = await env.UPLOADS.get(key);
+  // The small copy, when one was asked for and can be had; the photograph
+  // itself otherwise — never an error because the small one could not be
+  // made.
+  const width = thumbWidth(new URL(request.url).searchParams.get("w"));
+  const object = (width && (await thumbnail(env, key, width))) || (await env.UPLOADS.get(key));
   if (!object) {
     return problem(404, "No such object.");
   }
@@ -382,6 +389,61 @@ async function getPublic(request, env, key) {
     return new Response(null, { status: 200, headers });
   }
   return new Response(object.body, { status: 200, headers });
+}
+
+// ------------------------------------------------------------
+// Thumbnails, for the street
+//
+// A phone photographs an article at 2000 px (capture_action.dart), about
+// half a megabyte; a vitrine shows it in a square a fifth of a phone wide.
+// Twelve articles were six megabytes before the shopper saw a price on a
+// market's connection. `?w=200|400|800` answers a WebP that wide (never
+// wider than the original), about twenty kilobytes at 400.
+//
+// Made once per photo and width with Cloudflare Images (the IMAGES
+// binding, wrangler.toml) and kept in the bucket under thumb/w<width>/<key>,
+// so every later shopper is served the kept copy and the month's
+// transformations stay a handful. thumb/ is not org/: no route serves it
+// directly — only this one, after Postgres has said yes for the photo
+// itself, exactly as for the original. With no binding (an account
+// without Images) or any failure, the original is served as before.
+// ------------------------------------------------------------
+
+const THUMB_WIDTHS = [200, 400, 800];
+
+function thumbWidth(raw) {
+  const asked = Number(raw);
+  if (!Number.isFinite(asked) || asked <= 0) return 0;
+  // The smallest allowed width that covers the one asked for.
+  return THUMB_WIDTHS.find((w) => w >= asked) || 0;
+}
+
+async function thumbnail(env, key, width) {
+  const thumbKey = `thumb/w${width}/${key}`;
+  try {
+    const kept = await env.UPLOADS.get(thumbKey);
+    if (kept) return kept;
+    if (!env.IMAGES) return null;
+    const original = await env.UPLOADS.get(key);
+    if (!original) return null;
+    const type = (original.httpMetadata && original.httpMetadata.contentType) || "";
+    if (!type.startsWith("image/")) return null;
+    const made = await env.IMAGES.input(original.body)
+      .transform({ width, fit: "scale-down" })
+      .output({ format: "image/webp", quality: 75 });
+    const bytes = await made.response().arrayBuffer();
+    if (!bytes.byteLength) return null;
+    await env.UPLOADS.put(thumbKey, bytes, {
+      httpMetadata: { contentType: "image/webp" },
+      customMetadata: { source: key },
+    });
+    return await env.UPLOADS.get(thumbKey);
+  } catch (err) {
+    // The month's free transformations used up, a format Images cannot
+    // read (HEIC from some phones): the original, as before.
+    console.error("thumbnail", width, err && err.message ? err.message : err);
+    return null;
+  }
 }
 
 /// An RPC as the anonymous role: the publishable key is both the project and
