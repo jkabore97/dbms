@@ -23,6 +23,8 @@ class AdminPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // « Voir comme le commerçant » (106) is the owner's view: no pill.
+    if (LookOnly.of(context)) return const SizedBox.shrink();
     final given = platformAdmin;
     if (given != null) return given ? const _Pill() : const SizedBox.shrink();
     final session = AppScope.maybeOf(context)?.session;
