@@ -7,12 +7,15 @@ import 'package:kaj_app/core/admin/setup_steps.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/auth/whatsapp_phone.dart';
 import 'package:kaj_app/core/console/command_center.dart';
+import 'package:kaj_app/core/nav/router.dart';
+import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/core/onboarding/application_form.dart';
 import 'package:kaj_app/core/onboarding/business_creation.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/features/admin/created_businesses_screen.dart';
 import 'package:kaj_app/features/auth/join_or_apply_screen.dart';
 import 'package:kaj_app/features/auth/org_picker_screen.dart';
+import 'package:kaj_app/features/notify/notification_text.dart';
 import 'package:kaj_app/features/setup/association_setup_screen.dart';
 import 'package:kaj_app/features/setup/create_my_business_screen.dart';
 import 'package:kaj_app/features/setup/setup_screen.dart';
@@ -26,10 +29,12 @@ import 'package:kaj_app/l10n/strings.dart';
 /// créées »; and the setup starting from what the creation wrote.
 
 class _Api implements BusinessCreation {
-  _Api({this.start_ = const BusinessStart(), this.taken = const {}});
+  _Api({this.start_ = const BusinessStart(), this.taken = const {}, this.reserved = const {}});
 
   BusinessStart start_;
   Set<String> taken;
+  /// Addresses the server says are Mara's (111's business_address_reserved).
+  Set<String> reserved;
   final checked = <String>[];
   Map<String, Object?>? sent;
   Object? fail;
@@ -40,6 +45,9 @@ class _Api implements BusinessCreation {
   @override
   Future<AddressCheck> checkAddress(String slug) async {
     checked.add(slug);
+    if (reserved.contains(slug)) {
+      return AddressCheck(slug: slug, problem: 'Cette adresse est réservée à Mara : choisissez-en une autre.');
+    }
     return taken.contains(slug)
         ? AddressCheck(slug: slug, taken: true, suggestion: '$slug-2')
         : AddressCheck(slug: slug);
@@ -280,6 +288,43 @@ void main() {
       await settle(tester);
       expect(find.text('Au moins 3 caractères.'), findsOneWidget);
       expect(next(tester), isNull);
+    });
+
+    testWidgets('an address reserved for Mara is said in its words; Suivant stays off', (tester) async {
+      phone(tester);
+      final api = _Api(reserved: {'support'});
+      await pumpFlow(tester, api);
+      await tester.tap(find.byKey(const Key('create-kind-retail')));
+      await settle(tester);
+      await tapNext(tester);
+      await tester.enterText(find.byKey(const Key('create-name')), 'Support');
+      await settle(tester);
+      expect(api.checked, contains('support'));
+      expect(find.text('Cette adresse est réservée à Mara : choisissez-en une autre.'), findsOneWidget);
+      expect(next(tester), isNull);
+      await tester.enterText(find.byKey(const Key('create-name')), 'Support Awa');
+      await settle(tester);
+      expect(find.byKey(const Key('create-address-free')), findsOneWidget);
+      expect(next(tester), isNotNull);
+    });
+
+    testWidgets('an older app\'s request answered at once: the bell reads in English and opens the creation', (tester) async {
+      late BuildContext ctx;
+      await tester.pumpWidget(MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+        home: Builder(builder: (c) {
+          ctx = c;
+          return const SizedBox();
+        }),
+      ));
+      final row = NotificationRow(
+        id: 'n', kind: 'application_update_app',
+        message: 'Mettez à jour Mara : vous créez maintenant votre activité vous-même',
+        createdAt: DateTime(2026, 10, 8), params: const {'to': 'applicant', 'name': 'Chez Awa'});
+      expect(notificationLine(ctx, row), 'Update Mara: you now create your business yourself');
+      expect(notificationTarget(row), Routes.createBusiness);
     });
 
     testWidgets('each kind its own lines of trade — a farm\'s, an association\'s (102)', (tester) async {

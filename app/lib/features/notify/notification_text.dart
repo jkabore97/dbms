@@ -233,6 +233,10 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('Votre demande pour {name} est refusée : {reason}',
           // A ready reason (applications_screen.dart) reads in English too.
           {'name': s('name'), 'reason': context.tr(s('reason'))});
+    // An older app's request, answered at once since 111: the person now
+    // creates their business themselves.
+    case 'application_update_app':
+      return context.tr('Mettez à jour Mara : vous créez maintenant votre activité vous-même');
     // A followed vitrine's news (113): one ring a day, said again in it.
     case 'vitrine_news':
       final names = [for (final x in (p['names'] is List ? p['names'] as List : const [])) '$x'];
@@ -354,6 +358,8 @@ String? notificationTarget(
       return Routes.security;
     case 'org_application':
       return Routes.applications;
+    case 'application_update_app':
+      return Routes.createBusiness;
     case 'spot_requested' || 'spot_paid':
       return Routes.consoleFeatured;
     case 'platform_message' || 'report_handled':

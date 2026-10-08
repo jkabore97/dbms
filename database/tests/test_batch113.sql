@@ -219,7 +219,8 @@ insert into vitrine_follows (user_id, org_id, news) values
     (:awa,     :assoc, true),
     (:ali,     :shop,  false),   -- this vitrine's news off
     (:livreur, :shop,  true),    -- all news off, below
-    (:clerk,   :shop,  true);    -- of the business itself
+    (:clerk,   :shop,  true),    -- of the business itself
+    (:lea,     :shop,  true);    -- told once, then all news off
 insert into shopper_settings (user_id, vitrine_news) values (:livreur, false);
 do $$
 declare
@@ -243,6 +244,13 @@ begin
                                      '11311311-0000-0000-0000-000000000002')) then
         raise exception 'FAIL: a switched-off follower or the business''s own people were told';
     end if;
+    -- Léa was told too, then switches all her news off: her row of the
+    -- day is not rewritten any more.
+    if (select message from pg_temp.news113('11311311-0000-0000-0000-000000000009', v_shop))
+       is distinct from 'Nouveau chez Boutique 113 : Huile 113' then
+        raise exception 'FAIL: Léa was not told the first novelty';
+    end if;
+    insert into shopper_settings (user_id, vitrine_news) values ('11311311-0000-0000-0000-000000000009', false);
     -- Read; then more the same day: the same row, unread again.
     update notifications set read_at = now() where recipient_id = v_awa and kind = 'vitrine_news';
     insert into products (org_id, name, sale_price, quantity) values (v_shop, 'Sucre 113', 700, 3);
@@ -267,6 +275,12 @@ begin
     update products set quantity = 4 where id = '113aaaaa-0000-0000-0000-000000000002';
     if (select (params ->> 'count')::int from pg_temp.news113(v_awa, v_shop)) is distinct from 4 then
         raise exception 'FAIL: something unseen or dearer was said';
+    end if;
+    if (select count(*) from pg_temp.news113('11311311-0000-0000-0000-000000000009', v_shop)) is distinct from 1
+       or (select message from pg_temp.news113('11311311-0000-0000-0000-000000000009', v_shop))
+          is distinct from 'Nouveau chez Boutique 113 : Huile 113' then
+        raise exception 'FAIL: a follower who switched all news off was still told: %',
+            (select jsonb_agg(x) from pg_temp.news113('11311311-0000-0000-0000-000000000009', v_shop) x);
     end if;
     -- The next day: an offer is a new row of its own.
     update vitrine_follows set told_on = told_on - 1 where user_id = v_awa and org_id = v_shop;
@@ -332,6 +346,53 @@ begin
         raise exception 'FAIL: the bell stopped the owner''s write';
     end if;
     raise notice 'PASS: a bell that cannot be written leaves the article saved';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 3b: the news at scale — 2,000 followers, 30 new articles in a day: one row each, 20 said, well under 8 s ---'
+begin;
+insert into auth.users (id, email, raw_user_meta_data)
+select ('11399999-0000-0000-0000-' || lpad(g::text, 12, '0'))::uuid,
+       'fan' || g || '.b113@example.com', jsonb_build_object('full_name', 'Fan ' || g)
+  from generate_series(1, 2000) g;
+insert into vitrine_follows (user_id, org_id)
+select ('11399999-0000-0000-0000-' || lpad(g::text, 12, '0'))::uuid, :shop
+  from generate_series(1, 2000) g;
+do $$
+declare
+    v_shop constant uuid := '11300000-0000-0000-0000-000000000001';
+    t0     timestamptz := clock_timestamp();
+    v_ms   numeric;
+    v_bad  int;
+begin
+    for i in 1..30 loop
+        insert into products (org_id, name, sale_price, quantity)
+        values (v_shop, 'Article ' || i || ' 113', 100 + i, 3);
+    end loop;
+    v_ms := round(extract(epoch from clock_timestamp() - t0) * 1000);
+    -- One row each, saying 20 (the cap), the first three named.
+    select count(*) into v_bad
+      from vitrine_follows f
+     where f.org_id = v_shop and f.user_id::text like '11399999-%'
+       and (select count(*) from notifications n
+             where n.recipient_id = f.user_id and n.org_id = v_shop and n.kind = 'vitrine_news') <> 1;
+    if v_bad <> 0 then
+        raise exception 'FAIL: % followers without exactly one row of the day', v_bad;
+    end if;
+    select count(*) into v_bad
+      from notifications n
+     where n.org_id = v_shop and n.kind = 'vitrine_news' and n.recipient_id::text like '11399999-%'
+       and (n.message is distinct from '20 nouveautés chez Boutique 113 : Article 1 113, Article 2 113, Article 3 113…'
+            or (n.params ->> 'count')::int is distinct from 20
+            or jsonb_array_length(n.params -> 'ids') is distinct from 20);
+    if v_bad <> 0 then
+        raise exception 'FAIL: % rows do not say the 20 of the day', v_bad;
+    end if;
+    if v_ms >= 8000 then
+        raise exception 'FAIL: 30 articles for 2,000 followers took % ms', v_ms;
+    end if;
+    raise notice 'PASS: 2,000 followers × 30 new articles: one row each, « 20 nouveautés … » (no rewrite past 20), in % ms (limit 8,000)', v_ms;
 end $$;
 rollback;
 
@@ -483,6 +544,7 @@ do $$
 declare
     v_order uuid;
     v_book  uuid;
+    v_farm  uuid;
     v jsonb;
 begin
     perform pg_temp.as113('11311311-0000-0000-0000-000000000005');
@@ -506,6 +568,22 @@ begin
        or (v ->> 'missing')::int is distinct from 0 then
         raise exception 'FAIL: the association''s booking again: %', v;
     end if;
+    -- A farm's eggs sold by weight: half a kilo left is half a kilo to put
+    -- back (at most what is left, never cut to a whole one); none left,
+    -- missing.
+    v_farm := place_order('ferme-113', '[{"product_id":"113aaaaa-0000-0000-0000-000000000004","quantity":2}]');
+    update orders set status = 'picked_up' where id = v_farm;
+    update products set quantity = 0.5 where id = '113aaaaa-0000-0000-0000-000000000004';
+    v := my_order_basket(v_farm);
+    if v -> 'lines' is distinct from '[{"product_id": "113aaaaa-0000-0000-0000-000000000004", "quantity": 0.5}]'::jsonb
+       or (v ->> 'missing')::int is distinct from 0 then
+        raise exception 'FAIL: the farm''s half kilo left: %', v;
+    end if;
+    update products set quantity = 0 where id = '113aaaaa-0000-0000-0000-000000000004';
+    v := my_order_basket(v_farm);
+    if jsonb_array_length(v -> 'lines') is distinct from 0 or (v ->> 'missing')::int is distinct from 1 then
+        raise exception 'FAIL: the farm''s eggs, none left: %', v;
+    end if;
     -- « Commandes en ligne » hidden (110): nothing to put back.
     insert into feature_rules (scope, org_id, feature, state)
     values ('org', '11300000-0000-0000-0000-000000000001', 'online_orders', 'hidden');
@@ -517,7 +595,7 @@ begin
     if pg_temp.refused113(format('select my_order_basket(%L)', v_order)) is distinct from 'Commande introuvable.' then
         raise exception 'FAIL: Ali read Awa''s order';
     end if;
-    raise notice 'PASS: the shop''s order again — the Savon at the one left, the Riz off the vitrine counted missing; the association''s booking again; nothing from a vitrine that takes no orders; nobody else''s order';
+    raise notice 'PASS: the shop''s order again — the Savon at the one left, the Riz off the vitrine counted missing; the association''s booking again; the farm''s half kilo left put back as 0.5, none left missing; nothing from a vitrine that takes no orders; nobody else''s order';
 end $$;
 rollback;
 
@@ -729,15 +807,66 @@ begin
         raise exception 'FAIL: a stranger was answered';
     end if;
 end $$;
--- What the Worker then does with the answer: GoTrue deletes auth.users.
+-- A former employee: no longer a member, but an article she put on the
+-- shelf still names her (products.created_by, « no action »). GoTrue's
+-- delete would fail on it, so the check says so first, in words.
 do $$
-declare v_awa constant uuid := '11311311-0000-0000-0000-000000000005';
+declare v_lea constant uuid := '11311311-0000-0000-0000-000000000009';
+begin
+    update products set created_by = v_lea where id = '113aaaaa-0000-0000-0000-000000000002';
+    perform pg_temp.as113(v_lea);
+    if pg_temp.refused113('select delete_my_account_check()')
+       is distinct from 'Votre nom reste sur ce que vous avez inscrit pour une activité sur Mara (ventes, stock, factures…) : écrivez à Mara pour fermer votre compte.' then
+        raise exception 'FAIL: a former employee''s work did not hold the account';
+    end if;
+    perform pg_temp.as113(null);
+    begin
+        delete from auth.users where id = v_lea;
+        raise exception 'FAIL: the deletion went through past a « no action » key — the check guards nothing';
+    exception when foreign_key_violation then
+        null;
+    end;
+    update products set created_by = null where id = '113aaaaa-0000-0000-0000-000000000002';
+    perform pg_temp.as113(v_lea);
+    if delete_my_account_check() is distinct from v_lea then
+        raise exception 'FAIL: once nothing names her, Léa may still not go';
+    end if;
+    raise notice 'PASS: a former employee''s article holds her account, said in words (the delete itself would fail on that key); let go, she may go';
+end $$;
+-- What the Worker then does with the answer: GoTrue deletes auth.users.
+-- Awa's orders stay the shop's — one cancelled, one handed over with its
+-- sale, its events and its stock move — under « Client supprimé ».
+do $$
+declare
+    v_awa   constant uuid := '11311311-0000-0000-0000-000000000005';
+    v_done  uuid;
+    v_sale  uuid;
 begin
     perform pg_temp.as113(v_awa);
     perform follow_vitrine('boutique-113');
     perform save_my_address(null, 'home', null, 'Ouaga 2000', null, null, null);
     perform set_my_shopper_settings('{"city": "Ouagadougou"}');
     perform report_problem('app', 'Je pars, merci pour tout.');
+    v_done := place_order('boutique-113', '[{"product_id":"113aaaaa-0000-0000-0000-000000000001","quantity":2}]');
+    perform pg_temp.as113(null);
+    update orders set address = 'Ouaga 2000, portail bleu', drop_lat = 12.33, drop_lng = -1.52
+     where id = v_done;
+    update orders set status = 'accepted' where id = v_done;
+    update orders set status = 'picked_up' where id = v_done;
+    select id into v_sale from sales where order_id = v_done;
+    if v_sale is null then
+        raise exception 'FAIL: the handed-over order made no sale (setup)';
+    end if;
+end $$;
+do $$
+declare
+    v_awa constant uuid := '11311311-0000-0000-0000-000000000005';
+    v_n   int;
+begin
+    perform pg_temp.as113(v_awa);
+    if delete_my_account_check() is distinct from v_awa then
+        raise exception 'FAIL: a shopper with only finished orders may not go';
+    end if;
     perform pg_temp.as113(null);
     delete from auth.users where id = v_awa;
     if exists (select 1 from profiles where id = v_awa)
@@ -748,7 +877,25 @@ begin
        or exists (select 1 from problem_reports where reporter_id = v_awa) then
         raise exception 'FAIL: the deletion left the person''s rows';
     end if;
-    raise notice 'PASS: a shopper may go (her own id answered), not with an order open; not an employee, an owner, a courier, a platform account, a stranger; the deletion takes her profile, orders, follows, addresses, settings and reports';
+    -- Both orders kept, the person gone from them.
+    select count(*) into v_n from orders
+     where org_id = '11300000-0000-0000-0000-000000000001' and customer_id is null
+       and customer_name = 'Client supprimé' and phone is null and address is null
+       and drop_lat is null and drop_lng is null;
+    if v_n <> 2 or exists (select 1 from orders where org_id = '11300000-0000-0000-0000-000000000001'
+                                                  and customer_name like 'Awa%') then
+        raise exception 'FAIL: the orders were not kept anonymised (% of 2)', v_n;
+    end if;
+    if not exists (select 1 from orders o
+                    join sales s on s.order_id = o.id
+                    join order_lines l on l.order_id = o.id
+                    join order_stock_moves m on m.order_id = o.id and m.direction = 'out'
+                   where o.customer_name = 'Client supprimé' and o.status = 'picked_up')
+       or (select count(*) from order_events e join orders o on o.id = e.order_id
+            where o.customer_name = 'Client supprimé') < 4 then
+        raise exception 'FAIL: the handed-over order lost its sale, lines, stock move or events';
+    end if;
+    raise notice 'PASS: a shopper may go (her own id answered), not with an order open; not an employee, an owner, a courier, a platform account, a stranger; the deletion takes her profile, follows, addresses, settings and reports, and leaves her two orders (one handed over, with its sale, lines, stock move and events) to the shop as « Client supprimé », no phone, address or pin';
 end $$;
 rollback;
 
@@ -764,7 +911,7 @@ declare
         'my_data_export()', 'delete_my_account_check()',
         'platform_reports(text)', 'platform_handle_report(uuid, text)'];
     v_inside text[] := array['trg_support_whatsapp()', 'trg_vitrine_news()', 'my_addresses()',
-                             'platform_undo_report(jsonb)'];
+                             'platform_undo_report(jsonb)', 'trg_profile_gone_orders()'];
     f text;
 begin
     foreach f in array v_doors || v_inside loop

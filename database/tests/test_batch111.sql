@@ -71,6 +71,12 @@ grant usage on schema public to anon, authenticated;
 -- its own doors.
 \i database/migrations/111_create_my_business.sql
 
+-- The switch as installed, read before this suite sets it for itself
+-- (TEST P1 checks this copy — the line below would hide an installer
+-- that turned it on).
+create temp table b111_installed as
+    select value from platform_settings where key = 'create_phone_verified';
+
 update platform_settings set value = '8' where key = 'vitrine_min_items';
 update platform_settings set value = 'false' where key = 'create_phone_verified';
 delete from platform_settings where key = 'application_form';
@@ -150,8 +156,10 @@ $$;
 \echo '--- TEST P1: installed, the switch is off and create_org makes what 035 made (the farm its own chart) ---'
 do $$
 begin
-    if (select value from platform_settings where key = 'create_phone_verified') is distinct from 'false'::jsonb then
-        raise exception 'FAIL: create_phone_verified is not off as installed';
+    if (select count(*) from b111_installed) <> 1
+       or (select value from b111_installed) is distinct from 'false'::jsonb then
+        raise exception 'FAIL: create_phone_verified is not off as installed: %',
+            (select jsonb_agg(value) from b111_installed);
     end if;
     if create_phone_required() then
         raise exception 'FAIL: a proved number is asked as installed';
@@ -504,6 +512,105 @@ begin
 end $$;
 
 \echo ''
+\echo '--- TEST 4b: no address reserved for Mara (created, checked, renamed); three creations a day ---'
+begin;
+insert into auth.users (id, phone, raw_user_meta_data) values
+    ('11111111-0000-0000-0000-000000000041', '+22611110041', '{"full_name": "Usurpatrice111"}'),
+    ('11111111-0000-0000-0000-000000000042', '+22611110042', '{"full_name": "Pressée111"}');
+insert into orgs (id, name, slug, profile, default_currency, plan, plan_until) values
+    ('11100000-0000-0000-0000-000000000042', 'Pro Pressée B111', 'pro-pressee-b111', 'retail', 'XOF', 'pro', '2099-01-01');
+insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
+    ('11100000-0000-0000-0000-000000000042', '11111111-0000-0000-0000-000000000042', 'owner', 'org',
+     '11100000-0000-0000-0000-000000000042', 'full');
+-- What any call refuses, in its words (null when it went through, and
+-- then undone).
+create function pg_temp.refusal_sql(p_sql text) returns text
+language plpgsql as $$
+declare msg text;
+begin
+    begin
+        execute p_sql;
+        raise exception 'went through';
+    exception when others then
+        msg := sqlerrm;
+    end;
+    return nullif(msg, 'went through');
+end;
+$$;
+do $$
+declare
+    v_reserved constant text := 'Cette adresse est réservée à Mara : choisissez-en une autre.';
+    v_cap      constant text := 'Vous avez déjà créé 3 activités en 24 heures : c''est le maximum, réessayez demain.';
+    v_slug text;
+    v      jsonb;
+    r      text;
+    v_org  uuid;
+begin
+    -- Mara's names, its help, payment and infrastructure names, the app's
+    -- and the Workers' first paths — hyphens and trailing digits read
+    -- through: refused at creation, said by the address check, no
+    -- suggestion offered.
+    foreach v_slug in array array['mara', 'marakaj', 'mara-kaj', 'support', 'support2', 'admin',
+                                  'aide', 'help', 'wave', 'api', 'www', 'console', 'connexion',
+                                  'compte', 'mon-compte', 'vitrines', 'livreur', 'courier', 'pro',
+                                  'kaj', 'kaj-pro', 'creer-mon-activite', 'devenir-livreur',
+                                  'confidentialite', 'uploads', 'whatsapp-otp'] loop
+        r := pg_temp.refusal('11111111-0000-0000-0000-000000000041', 'retail', 'Usurpée 111', v_slug,
+                             'autre', 'Ouaga', '+22670110041');
+        if r is distinct from v_reserved then
+            raise exception 'FAIL: « % » was not refused as Mara''s: %', v_slug, r;
+        end if;
+        perform pg_temp.as_user('11111111-0000-0000-0000-000000000041');
+        v := business_address_check(v_slug);
+        if v ->> 'problem' is distinct from v_reserved or (v ->> 'taken')::boolean
+           or v ->> 'suggestion' is not null then
+            raise exception 'FAIL: the address check of « % » reads %', v_slug, v;
+        end if;
+    end loop;
+    -- A real business called Mara keeps its name; a free address is free.
+    v := business_address_check('mara-couture-b111');
+    if v ->> 'problem' is not null or (v ->> 'taken')::boolean then
+        raise exception 'FAIL: « mara-couture-b111 » is not free: %', v;
+    end if;
+    v_org := create_my_business('retail', 'Mara Couture 111', 'mara-couture-b111', 'vetements', null,
+                                'Ouaga', null, '+22670110041', 'XOF', null);
+    -- Renamed later by its owner: the same list; another free one passes.
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000041');
+    r := pg_temp.refusal_sql('select update_org(''' || v_org || ''', null, ''support'')');
+    if r is distinct from v_reserved then
+        raise exception 'FAIL: the owner renamed the address to « support »: %', r;
+    end if;
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000041');
+    perform update_org(v_org, null, 'atelier-mara-b111');
+    if (select slug from orgs where id = v_org) is distinct from 'atelier-mara-b111' then
+        raise exception 'FAIL: a free address could not be taken by a rename';
+    end if;
+
+    -- Three creations in 24 hours at most, even on Pro; the journal
+    -- counts them (an older one no longer does).
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000042');
+    perform create_my_business('retail', 'Pressée Un', 'pressee-un-b111', 'autre', null, 'Ouaga', null, '+22670110042', 'XOF', null);
+    perform create_my_business('farm', 'Pressée Deux', 'pressee-deux-b111', 'mixte', null, 'Ouaga', null, '+22670110042', 'XOF', null);
+    perform create_my_business('retail', 'Pressée Trois', 'pressee-trois-b111', 'autre', null, 'Ouaga', null, '+22670110042', 'XOF', null);
+    r := pg_temp.refusal('11111111-0000-0000-0000-000000000042', 'retail', 'Pressée Quatre', 'pressee-quatre-b111',
+                         'autre', 'Ouaga', '+22670110042');
+    if r is distinct from v_cap then
+        raise exception 'FAIL: a fourth creation in a day: %', r;
+    end if;
+    update platform_actions set at = now() - interval '25 hours'
+     where actor = '11111111-0000-0000-0000-000000000042' and kind = 'business_created'
+       and summary like '%Pressée Un%';
+    r := pg_temp.refusal('11111111-0000-0000-0000-000000000042', 'retail', 'Pressée Quatre', 'pressee-quatre-b111',
+                         'autre', 'Ouaga', '+22670110042');
+    if r is not null then
+        raise exception 'FAIL: a creation 25 hours after the first was refused: %', r;
+    end if;
+    perform pg_temp.as_user(null);
+    raise notice 'PASS: % addresses of Mara refused at creation and said by the check (no suggestion), « mara-couture » free; a rename to « support » refused, to a free one done; a fourth creation in 24 hours refused in words, one a day later made', 26;
+end $$;
+rollback;
+
+\echo ''
 \echo '--- TEST 5: the platform''s switch — a number proved on WhatsApp first ---'
 do $$
 declare
@@ -640,19 +747,60 @@ begin
 end $$;
 
 \echo ''
-\echo '--- TEST 7: the old path for an older app; a waiting request closed by a direct creation ---'
+\echo '--- TEST 7: an older app''s request answered at once; a request from before closed by a direct creation, or approved ---'
 do $$
 declare
-    v_app uuid;
+    v_app  uuid;
+    v_app8 uuid;
     v_app2 uuid;
-    v_org uuid;
+    v_org  uuid;
     v_org2 uuid;
     a org_applications%rowtype;
+    v_note constant text := 'Mettez à jour Mara : vous créez maintenant votre activité vous-même';
+    v_waiting int;
 begin
-    -- An older app asks (101's seven arguments), as before.
+    -- What À faire counts before (other suites' requests from before 111).
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000001');
+    v_waiting := (platform_todo() ->> 'applications')::int;
+    -- An older app asks (101's seven arguments, and 107's eight): answered
+    -- at once — closed with what to do, the person rung, Mara not, and
+    -- nothing more waits in À faire.
     perform pg_temp.as_user('11111111-0000-0000-0000-000000000010');
     v_app := apply_for_org('Ancienne 111', 'ancienne-b111', 'retail', 'XOF', 'Une demande d''avant', null, null);
-    -- The new app creates directly: the waiting request is closed with it.
+    v_app8 := apply_for_org('Ancienne Huit 111', 'ancienne-huit-b111', 'farm', 'XOF', null, null, null,
+                            '{"ville": "Bobo"}'::jsonb);
+    select * into a from org_applications where id = v_app;
+    if a.status is distinct from 'rejected' or a.decision_note is distinct from v_note
+       or a.contact_name is distinct from 'Ancienne Appli111'
+       or (select status from org_applications where id = v_app8) is distinct from 'rejected' then
+        raise exception 'FAIL: an older app''s request was not answered at once: %', to_jsonb(a);
+    end if;
+    if (select count(*) from notifications
+         where recipient_id = '11111111-0000-0000-0000-000000000010'
+           and kind = 'application_update_app' and message = v_note
+           and params = jsonb_build_object('to', 'applicant', 'name', 'Ancienne 111')) <> 1 then
+        raise exception 'FAIL: the person is not rung « Mettez à jour Mara » with its params';
+    end if;
+    if exists (select 1 from notifications
+                where kind = 'org_application' and message like '%Ancienne%') then
+        raise exception 'FAIL: Mara was rung for a request nobody has to decide';
+    end if;
+    if exists (select 1 from org_applications where applicant_id = '11111111-0000-0000-0000-000000000010'
+                  and status = 'pending') then
+        raise exception 'FAIL: an older app''s request waits';
+    end if;
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000001');
+    if (platform_todo() ->> 'applications')::int is distinct from v_waiting then
+        raise exception 'FAIL: À faire shows % waiting, % before the older app asked',
+            platform_todo() ->> 'applications', v_waiting;
+    end if;
+
+    -- A request written before 111, still waiting: the person's direct
+    -- creation closes it with the business it became.
+    insert into org_applications (applicant_id, name, slug, profile)
+    values ('11111111-0000-0000-0000-000000000010', 'Avant 111', 'avant-b111', 'retail')
+    returning id into v_app;
+    perform pg_temp.as_user('11111111-0000-0000-0000-000000000010');
     v_org := create_my_business('retail', 'Directe 111', 'directe-b111', 'telephonie', null,
                                 'Ouagadougou', null, '+22611110010', 'XOF', null);
     select * into a from org_applications where id = v_app;
@@ -665,17 +813,18 @@ begin
                       and kind = 'application_approved' and org_id = v_org) then
         raise exception 'FAIL: the person is not told their request became their business';
     end if;
-    -- Another older app's request, approved by Mara: still works.
-    perform pg_temp.as_user('11111111-0000-0000-0000-000000000011');
-    v_app2 := apply_for_org('Validée 111', 'validee-b111', 'farm', 'XOF', 'Des poules', null, null);
+    -- Another request from before, approved by Mara: still works.
+    insert into org_applications (applicant_id, name, slug, profile, description)
+    values ('11111111-0000-0000-0000-000000000011', 'Validée 111', 'validee-b111', 'farm', 'Des poules')
+    returning id into v_app2;
     perform pg_temp.as_user('11111111-0000-0000-0000-000000000001');
     v_org2 := approve_org_application(v_app2, null);
     if not exists (select 1 from memberships where org_id = v_org2
                       and user_id = '11111111-0000-0000-0000-000000000011' and role = 'owner') then
-        raise exception 'FAIL: approving an older app''s request no longer works';
+        raise exception 'FAIL: approving a request from before 111 no longer works';
     end if;
     perform pg_temp.as_user(null);
-    raise notice 'PASS: apply_for_org and approve_org_application still work for an older app; a request still waiting is closed « approved » with the business the person created directly (the person told), so it can never become a second';
+    raise notice 'PASS: an older app''s request (seven or eight arguments) is answered at once « Mettez à jour Mara » — closed, the person rung with its params, Mara not, nothing more waiting in À faire; a request from before 111 is closed « approved » by the direct creation (the person told), or approved by Mara as before';
 end $$;
 
 \echo ''
@@ -787,8 +936,8 @@ declare
     e jsonb;
 begin
     -- A request refused before 111: still readable with its reason.
-    perform pg_temp.as_user('11111111-0000-0000-0000-000000000009');
-    perform apply_for_org('Refusée 111', 'refusee-b111', 'retail', 'XOF', null, null, null);
+    insert into org_applications (applicant_id, name, slug, profile)
+    values ('11111111-0000-0000-0000-000000000009', 'Refusée 111', 'refusee-b111', 'retail');
     perform pg_temp.as_user('11111111-0000-0000-0000-000000000001');
     perform reject_org_application((select id from org_applications where slug = 'refusee-b111'),
                                    'Informations manquantes');
@@ -852,7 +1001,9 @@ begin
     foreach f in array array['my_business_start()', 'business_address_check(text)',
                              'create_my_business(text, text, text, text, text, text, text, text, text, jsonb)',
                              'platform_created_businesses(integer)', 'platform_todo()',
-                             'platform_todo_list(text)', 'create_org(text, text, text, text)'] loop
+                             'platform_todo_list(text)', 'create_org(text, text, text, text)',
+                             'update_org(uuid, text, text, text, text)',
+                             'apply_for_org(text, text, text, text, text, text, text, jsonb)'] loop
         if not has_function_privilege('authenticated', f, 'execute') then
             raise exception 'FAIL: % is not a signed-in door', f;
         end if;
@@ -862,7 +1013,7 @@ begin
     end loop;
     foreach f in array array['org_create_core(uuid, text, text, text, text)',
                              'business_answers(jsonb, jsonb)', 'create_phone_required()',
-                             'business_activities(text)'] loop
+                             'business_activities(text)', 'business_address_reserved(text)'] loop
         if has_function_privilege('authenticated', f, 'execute')
            or has_function_privilege('anon', f, 'execute') then
             raise exception 'FAIL: the internal % is callable by the app', f;
@@ -882,7 +1033,7 @@ begin
         if sqlerrm <> 'Only a platform admin can create a new business' then raise; end if;
     end;
     perform pg_temp.as_user(null);
-    raise notice 'PASS: the doors are the signed-in person''s or the platform''s (each checks), none the street''s; org_create_core, business_answers and the two helpers nobody''s; business_creations read through its function only; create_org still the platform''s';
+    raise notice 'PASS: the doors are the signed-in person''s or the platform''s (each checks), none the street''s; org_create_core, business_answers, the reserved list and the two helpers nobody''s; business_creations read through its function only; create_org still the platform''s';
 end $$;
 
 -- Leave the platform as the next suite expects it.

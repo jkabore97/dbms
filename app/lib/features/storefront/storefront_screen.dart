@@ -1550,6 +1550,16 @@ class _OrderSheetState extends State<OrderSheet> {
                 selected: {_fulfilment},
                 onSelectionChanged: (s) => _chooseFulfilment(s.first),
               ),
+            // RULE M, as the coordinator settled it (113): the order sheet
+            // follows the vitrine's own Wave — the storefront hands a Wave
+            // link only where the platform ticked « Wave autorisé » for that
+            // business (090's wave_allowed) and 110's « Paiement en ligne »
+            // is not hidden: that IS Mara allowing mobile payment for that
+            // vitrine. The platform-wide switch (076's wave_checkout, «
+            // Payer en ligne par Wave ») governs the shopper profile's
+            // « Paiement préféré » and the courier's payout number instead.
+            // The profile's Wave preference only picks the first choice
+            // here; it never draws Wave where the vitrine does not take it.
             if (widget.waveMerchant != null) ...[
               const SizedBox(height: 12),
               SegmentedButton<String>(

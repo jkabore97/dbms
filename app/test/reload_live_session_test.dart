@@ -123,11 +123,12 @@ void main() {
       (tester) async {
     final auth = await reloadAt(tester, '/o/org-1/produits');
 
-    // Mid-resolve: the address is right, the list is not here yet, so the
-    // page holds the door with the splash (Mara's seal over a progress
-    // line).
-    expect(find.byType(MaraStacked), findsOneWidget);
-    expect(find.text('Articles'), findsNothing);
+    // The server has not answered (my_orgs hangs), yet the page is there:
+    // a cold start with the list on the device settles on it at once and
+    // asks behind the screen (A2) — no splash held for the timeouts.
+    expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
+        reason: 'the device knows the business: no splash on a hanging network');
+    expect(find.byType(MaraStacked), findsNothing);
 
     // my_orgs answers.
     auth.gate.complete(const [org]);
@@ -142,7 +143,9 @@ void main() {
 
   testWidgets('the same reload on the business home', (tester) async {
     final auth = await reloadAt(tester, '/o/org-1');
-    expect(find.byType(MaraStacked), findsOneWidget);
+    // The list on the device: the home at once, the server still silent.
+    expect(find.text('Boutique Sanou'), findsWidgets);
+    expect(find.byType(MaraStacked), findsNothing);
 
     auth.gate.complete(const [org]);
     await flush(tester);

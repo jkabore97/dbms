@@ -1317,11 +1317,10 @@ select assign_trainer('69000000-0000-0000-0000-000000000003', '69696969-0000-000
 select create_org('Mara 69', 'mara-69', 'retail') is not null;
 select showcase_join('69000000-0000-0000-0000-000000000005');
 commit;
-begin;
-set local role authenticated;
-set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000004';
-select apply_for_org('Coumba 69', 'coumba-69', 'farm') is not null;
-commit;
+-- A request an older app wrote before 111 (since, they are answered at
+-- once: test_batch111), approved by the platform.
+insert into org_applications (applicant_id, name, slug, profile)
+values ('69696969-0000-0000-0000-000000000004', 'Coumba 69', 'coumba-69', 'farm');
 begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '69696969-0000-0000-0000-000000000006';

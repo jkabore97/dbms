@@ -279,7 +279,7 @@ class OwnerViewSession extends SessionController {
   @override
   Future<void> refresh({bool force = false}) async {}
   @override
-  Future<void> resolveOrgs() async {}
+  Future<void> resolveOrgs({bool coldStart = false}) async {}
   @override
   Future<void> signOut() async {}
   @override

@@ -4241,4 +4241,9 @@ const enStrings = <String, String>{
   'permis': 'licence',
   'vérifié': 'verified',
   'Aperçu impossible ici': 'No preview here',
+  'Votre nom reste sur ce que vous avez inscrit pour une activité sur Mara (ventes, stock, factures…) : écrivez à Mara pour fermer votre compte.': 'Your name stays on what you recorded for a business on Mara (sales, stock, invoices…): write to Mara to close your account.',
+  'La suppression n\'a pas pu se faire — écrivez à Mara.': 'The deletion could not be done — write to Mara.',
+  'Mettez à jour Mara : vous créez maintenant votre activité vous-même': 'Update Mara: you now create your business yourself',
+  'Cette adresse est réservée à Mara : choisissez-en une autre.': 'This address is reserved for Mara: choose another one.',
+  'Vous avez déjà créé 3 activités en 24 heures : c\'est le maximum, réessayez demain.': 'You have already created 3 businesses in 24 hours: that is the maximum, try again tomorrow.',
 };

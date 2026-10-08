@@ -123,8 +123,15 @@ test("an answer that is not an id deletes nothing; GoTrue's failure is said", as
   const gone = supabase({ check: { ok: true, value: ME }, gotrue: 404 });
   assert.equal((await deleteMe(gone)).status, 200);
 
+  // GoTrue's 500 (Postgres refused the delete on a key nobody checked):
+  // said as a 409 the person can act on, never « réessayez ».
   const broken = supabase({ check: { ok: true, value: ME }, gotrue: 500 });
   const out = await deleteMe(broken);
-  assert.equal(out.status, 502);
-  assert.equal(out.body.error, "L'opération a échoué. Réessayez.");
+  assert.equal(out.status, 409);
+  assert.equal(out.body.error, "La suppression n'a pas pu se faire — écrivez à Mara.");
+
+  const refused = supabase({ check: { ok: true, value: ME }, gotrue: 403 });
+  const other = await deleteMe(refused);
+  assert.equal(other.status, 502);
+  assert.equal(other.body.error, "L'opération a échoué. Réessayez.");
 });

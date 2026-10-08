@@ -21,7 +21,8 @@
 --      (Africa/Ouagadougou's day): the first novelty of the day writes the
 --      row (so 060's webhook pushes it once), the next ones of the same
 --      day rewrite that row « 3 nouveautés chez … : A, B, C… » (an update,
---      so no second push). No scheduler: the coalescing is written when
+--      so no second push) — for all the followers in one statement, and
+--      no more after the twentieth of the day. No scheduler: the coalescing is written when
 --      the owner adds the article (trg_vitrine_news), and it never blocks
 --      the owner's write (a failure leaves the bell silent, as 030 does).
 --      Only what the street can see is said: the vitrine open to the
@@ -57,9 +58,19 @@
 --      caller, whether the account may go, and deletes exactly the id it
 --      answers. Refused, in French: a platform account, anybody who
 --      belongs to a business (their Compte is the business's), a courier
---      (their file stays with Mara), and an order still open. Deleting the
---      account removes, by the existing cascades, the profile, its orders
---      and its bell; this file's rows go with it.
+--      (their file stays with Mara), an order still open, and anybody
+--      whose name another table still holds without letting go (a former
+--      employee's sales, stock moves, invoices… — every « no action »
+--      foreign key to profiles, read from the catalogue: the deletion
+--      would fail on it). Deleting the account removes, by the existing
+--      cascades, the profile, its bell and this file's rows. The person's
+--      ORDERS stay with the shops — the shop's history, its order events,
+--      stock moves and the sale of a handed-over order are the shop's
+--      books — but without the person: orders.customer_id lets go (« on
+--      delete set null », 055's « cascade » would take the sale's order
+--      from under it and fail), and profile_gone_orders writes « Client
+--      supprimé » over the name and empties the phone, the address and
+--      the pin first.
 --
 -- Shops (retail), farms and associations (and the legacy church): all
 -- three are followed, notified and reported alike — the trigger reads the
@@ -415,10 +426,6 @@ declare
     v_offer boolean;
     v_org   orgs%rowtype;
     v_line  text;
-    r       record;
-    v_names jsonb;
-    v_ids   jsonb;
-    v_n     int;
     v_rows  uuid[];
     v_users uuid[];
 begin
@@ -450,33 +457,37 @@ begin
                         to_char(new.sale_price, 'FM999G999G999'), coalesce(v_org.default_currency, 'XOF'))
             else format('Nouveau chez %s : %s', v_org.name, new.name) end;
 
-        -- Told already today: the day's row says one more.
-        for r in
-            select n.id, n.params
-              from vitrine_follows f
-              join notifications n on n.id = f.told_id
-             where f.org_id = new.org_id and f.news and f.told_on = v_day
-               and coalesce((select s.vitrine_news from shopper_settings s
-                              where s.user_id = f.user_id), true)
-        loop
-            v_ids := coalesce(r.params -> 'ids', '[]'::jsonb);
-            continue when v_ids ? new.id::text;
-            v_ids   := v_ids || to_jsonb(new.id::text);
-            v_n     := coalesce((r.params ->> 'count')::int, 1) + 1;
-            v_names := coalesce(r.params -> 'names', '[]'::jsonb);
-            if jsonb_array_length(v_names) < 3 and not v_names ? new.name then
-                v_names := v_names || to_jsonb(new.name);
-            end if;
-            update notifications
-               set message = format('%s nouveautés chez %s : %s%s', v_n, v_org.name,
-                                    (select string_agg(e, ', ') from jsonb_array_elements_text(v_names) e),
-                                    case when v_n > jsonb_array_length(v_names) then '…' else '' end),
-                   params  = jsonb_build_object('to', 'customer', 'shop', v_org.name,
-                                                'slug', v_org.slug, 'count', v_n,
-                                                'names', v_names, 'ids', v_ids),
-                   read_at = null
-             where id = r.id;
-        end loop;
+        -- Told already today: the day's row says one more — every such
+        -- follower in ONE statement (a vitrine with thousands of followers
+        -- must not cost the owner a write per follower). After 20
+        -- novelties the row is left as it is (« 20 nouveautés chez … :
+        -- A, B, C… »): the vitrine shows the rest, and the owner's next
+        -- articles of the day cost no rewrite at all.
+        update notifications n
+           set message = format('%s nouveautés chez %s : %s%s', x.n, v_org.name,
+                                (select string_agg(e, ', ') from jsonb_array_elements_text(x.names) e),
+                                case when x.n > jsonb_array_length(x.names) then '…' else '' end),
+               params  = jsonb_build_object('to', 'customer', 'shop', v_org.name,
+                                            'slug', v_org.slug, 'count', x.n,
+                                            'names', x.names, 'ids', x.ids || to_jsonb(new.id::text)),
+               read_at = null
+          from vitrine_follows f
+          cross join lateral (
+              select coalesce((nn.params ->> 'count')::int, 1) + 1 as n,
+                     coalesce(nn.params -> 'ids', '[]'::jsonb) as ids,
+                     case when jsonb_array_length(coalesce(nn.params -> 'names', '[]'::jsonb)) < 3
+                               and not coalesce(nn.params -> 'names', '[]'::jsonb) ? new.name
+                          then coalesce(nn.params -> 'names', '[]'::jsonb) || to_jsonb(new.name)
+                          else coalesce(nn.params -> 'names', '[]'::jsonb) end as names
+                from notifications nn where nn.id = f.told_id
+          ) x
+         where f.org_id = new.org_id and f.news and f.told_on = v_day
+           and n.id = f.told_id
+           and not exists (select 1 from shopper_settings s
+                            where s.user_id = f.user_id and not s.vitrine_news)
+           -- At most 20; the same article twice the same day is said once.
+           and coalesce((n.params ->> 'count')::int, 1) < 20
+           and not coalesce(n.params -> 'ids', '[]'::jsonb) ? new.id::text;
 
         -- Not told today: one row each (060's webhook pushes it once). The
         -- day is claimed first, row by row, so two writes at once never
@@ -486,8 +497,8 @@ begin
                set told_on = v_day, told_id = null
              where f.org_id = new.org_id and f.news
                and f.told_on is distinct from v_day
-               and coalesce((select s.vitrine_news from shopper_settings s
-                              where s.user_id = f.user_id), true)
+               and not exists (select 1 from shopper_settings s
+                                where s.user_id = f.user_id and not s.vitrine_news)
                and not exists (select 1 from memberships m
                                 where m.org_id = f.org_id and m.user_id = f.user_id)
             returning f.user_id
@@ -650,14 +661,17 @@ begin
                case when p.is_service
                       or p.available_from > (now() at time zone 'Africa/Ouagadougou')::date
                     then sum(l.quantity)
-                    else least(sum(l.quantity), floor(p.quantity)) end as quantity
+                    -- What is left, as it is (0.5 kg is half a kilo to sell,
+                    -- not nothing): 101's storefront_stock caps the basket
+                    -- the same way, and place_order takes up to it.
+                    else least(sum(l.quantity), p.quantity) end as quantity
           from order_lines l
           join products p on p.id = l.product_id
          where l.order_id = p_order_id
            and p.org_id = v_open
            and p.is_active and p.is_published
            and vitrine_shows(p.org_id, p.is_service)
-           and (p.is_service or p.quantity >= 1
+           and (p.is_service or p.quantity > 0
                 or p.available_from > (now() at time zone 'Africa/Ouagadougou')::date)
          group by p.id, p.name, p.is_service, p.available_from, p.quantity
       ) x
@@ -884,11 +898,59 @@ begin
 end;
 $$;
 
+-- The orders stay with the shop, without the person (see the header):
+-- the column lets go of a deleted profile instead of taking the order
+-- with it. Re-runnable: the constraint is dropped and made again.
+alter table orders alter column customer_id drop not null;
+alter table orders drop constraint if exists orders_customer_id_fkey;
+alter table orders add constraint orders_customer_id_fkey
+    foreign key (customer_id) references profiles(id) on delete set null;
+
+-- Before the profile goes (GoTrue's delete of auth.users cascades here,
+-- whoever asked it — the person or an admin): the name, the phone, the
+-- address and the pin of that person's orders are gone too. The order
+-- itself, its lines, events, stock moves and sale stay the shop's.
+create or replace function trg_profile_gone_orders()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    update orders
+       set customer_name = 'Client supprimé', phone = null, address = null,
+           drop_lat = null, drop_lng = null
+     where customer_id = old.id;
+    return old;
+end;
+$$;
+
+drop trigger if exists profile_gone_orders on profiles;
+create trigger profile_gone_orders
+before delete on profiles
+for each row execute function trg_profile_gone_orders();
+
 -- « Supprimer mon compte »: asked by the account Worker as the caller
 -- (workers/account-admin, POST /v1/me/delete). Answers the caller's own
 -- id when the account may go; refuses in French otherwise. It deletes
 -- nothing itself: the Worker deletes exactly the id answered, with the
 -- service-role key, and the cascades take the rest.
+--
+-- The last refusal reads the catalogue: every foreign key to profiles
+-- that neither cascades nor lets go (« no action » / « restrict ») would
+-- make GoTrue's delete fail, so a row there holds the account. As
+-- installed (113) they are: accounts, crop_cycles, customers,
+-- debt_payments, debts, egg_production, employees, flock_events, flocks,
+-- harvests, herd_events, herds, invoice_payments, invoices, items,
+-- journal_entries, plots, products, stock_movements, tontine_contributions,
+-- tontines .created_by; documents.uploaded_by; employees.user_id;
+-- orders.courier_id (said above, as a courier's); org_currency_rates and
+-- org_feature_rules .updated_by; pending_invitations .created_by and
+-- .claimed_by; plan_requests .user_id and .handled_by; production_runs,
+-- sales and shifts .recorded_by; promotions .decided_by and
+-- .requested_by; staff_payments.paid_by; stock_receipts .received_by and
+-- .reversed_by — a former employee's work, mostly. A key added later is
+-- read the same way, with no change here.
 create or replace function delete_my_account_check()
 returns uuid
 language plpgsql
@@ -897,7 +959,9 @@ security definer
 set search_path = public, auth
 as $$
 declare
-    v_me uuid := auth.uid();
+    v_me   uuid := auth.uid();
+    v_held boolean;
+    r      record;
 begin
     if v_me is null then
         raise exception 'Connectez-vous d''abord';
@@ -916,6 +980,22 @@ begin
                  and status in ('pending', 'accepted', 'ready', 'in_transit')) then
         raise exception 'Une commande est en cours : attendez qu''elle soit terminée, ou annulez-la, puis supprimez votre compte.';
     end if;
+    for r in
+        select c.conrelid::regclass as tbl, a.attname as col
+          from pg_constraint c
+          join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+         where c.contype = 'f'
+           and c.confrelid = 'public.profiles'::regclass
+           and c.confdeltype in ('a', 'r')
+           and cardinality(c.conkey) = 1
+         order by 1, 2
+    loop
+        execute format('select exists (select 1 from %s where %I = $1)', r.tbl, r.col)
+           into v_held using v_me;
+        if v_held then
+            raise exception 'Votre nom reste sur ce que vous avez inscrit pour une activité sur Mara (ventes, stock, factures…) : écrivez à Mara pour fermer votre compte.';
+        end if;
+    end loop;
     return v_me;
 end;
 $$;
@@ -942,6 +1022,7 @@ revoke execute on function platform_handle_report(uuid, text) from public;
 revoke execute on function platform_undo_report(jsonb)     from public;
 revoke execute on function my_data_export()                from public;
 revoke execute on function delete_my_account_check()       from public;
+revoke execute on function trg_profile_gone_orders()       from public;
 
 do $$
 begin
@@ -965,12 +1046,14 @@ begin
         revoke execute on function platform_undo_report(jsonb)     from anon;
         revoke execute on function my_data_export()                from anon;
         revoke execute on function delete_my_account_check()       from anon;
+        revoke execute on function trg_profile_gone_orders()       from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         -- Internal: the triggers, and what the doors below read as their
         -- owner (the undo, through 104's platform_undo).
         revoke execute on function trg_support_whatsapp()          from authenticated;
         revoke execute on function trg_vitrine_news()              from authenticated;
+        revoke execute on function trg_profile_gone_orders()       from authenticated;
         revoke execute on function my_addresses()                  from authenticated;
         revoke execute on function platform_undo_report(jsonb)     from authenticated;
         -- The doors: a signed-in person and their own rows — the help

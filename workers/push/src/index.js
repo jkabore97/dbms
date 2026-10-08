@@ -109,6 +109,14 @@ export function payloadFor(row, env) {
   const slug = row.params && typeof row.params.slug === "string" ? row.params.slug : "";
   if (kind === "vitrine_news" && /^[a-z0-9-]{1,80}$/.test(slug)) path = `/s/${slug}`;
   else if (kind === "report_handled") path = "/mon-compte/notifications";
+  // 112: the platform's bell for a courier's application opens the
+  // console's couriers; the applicant's refusal or « new photo » their
+  // own application — as the app's notificationTarget does. Only an
+  // approved courier's bells open the board.
+  else if (kind === "courier_application") path = "/console/livreurs";
+  else if (kind === "courier_refused" || kind === "courier_photo") path = "/devenir-livreur";
+  // 111: an older app's request answered at once opens the creation.
+  else if (kind === "application_update_app") path = "/creer-mon-activite";
   else if (kind.startsWith("courier_") || kind === "delivery_available") path = "/livreur";
   else if (row.org_id && (kind.startsWith("order") || kind.startsWith("delivery"))) path = `/o/${row.org_id}/commandes`;
   else if (row.org_id) path = `/o/${row.org_id}`;

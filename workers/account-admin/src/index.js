@@ -164,8 +164,9 @@ async function deleteUser(request, env, userId) {
 // delete_my_account_check() answers the caller's OWN id — read from the
 // token by Postgres, never from the request — or refuses in French (a
 // business they belong to, a courier's file, an order still open, a
-// platform account). Only that id is deleted; nothing in the request
-// names anybody.
+// platform account, a former employee's work that still names them).
+// Only that id is deleted; nothing in the request names anybody. Their
+// finished orders stay with the shops, under « Client supprimé » (113).
 async function deleteMe(request, env) {
   const token = bearer(request);
   if (!token) return problem(401, "Sign in first.");
@@ -191,6 +192,13 @@ async function deleteMe(request, env) {
   const res = await admin(env, "DELETE", userId, null);
   if (!res.ok && res.status !== 404) {
     console.error("gotrue delete self", res.status, await res.text());
+    // A 500 from GoTrue is Postgres refusing the delete — a row somewhere
+    // still names the person that delete_my_account_check did not know
+    // of. Nothing was deleted; the person can only ask Mara (409: said in
+    // these words, not the generic « réessayez », which would fail again).
+    if (res.status >= 500) {
+      return problem(409, "La suppression n'a pas pu se faire — écrivez à Mara.");
+    }
     return problem(502, "La suppression du compte a échoué.");
   }
   return json({ ok: true });

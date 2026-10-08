@@ -386,13 +386,14 @@ class SessionController extends ChangeNotifier {
       // The code is asked by the resolve, and only of somebody who belongs
       // to a business (108).
       if (auth.hasLiveSession) {
-        await resolveOrgs();
+        await resolveOrgs(coldStart: true);
         return;
       }
 
       // The device code protects businesses (108): a phone that holds no
       // business — a shopper's, a courier's — is never locked by it, even
-      // with a code set before; the code stays on the device, unused.
+      // with a code set before; the code stays on the device, unused. A
+      // platform admin's phone is held like a business's (the console).
       if (!await _holdsBusiness()) {
         await resolveOrgs();
         return;
@@ -565,10 +566,43 @@ class SessionController extends ChangeNotifier {
   }
 
   /// Whether this device holds a business of the person's: the list it
-  /// last cached. A shopper's or a courier's phone holds none.
+  /// last cached. A shopper's or a courier's phone holds none. A platform
+  /// admin's always does: the console is the platform's books, behind the
+  /// same code as a business (and its two-step before it).
   Future<bool> _holdsBusiness() async =>
       (await _cachedOrgsSafe().timeout(resolveTimeout, onTimeout: () => const <OrgSummary>[]))
-          .isNotEmpty;
+          .isNotEmpty ||
+      await _adminOnDevice();
+
+  /// That this person is a platform admin, kept on the device — their id
+  /// under this key, written when the server says so, gone at sign-out —
+  /// for one use only: a cold start with a stale token (no server to ask)
+  /// still locks the phone, and the lock delay still applies. It draws
+  /// nothing: [isPlatformAdmin] stays the server's answer.
+  static const _adminDeviceKey = 'platform_admin_device';
+
+  /// The platform admin's lock applies on this device (server or device).
+  bool _adminDevice = false;
+
+  Future<bool> _adminOnDevice() async {
+    final me = _identity?.userId;
+    if (me == null) return false;
+    try {
+      return await db.readPref(_adminDeviceKey).timeout(resolveTimeout) == me;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Only a yes is written: a no may be a stalled network (isPlatformAdmin
+  /// defaults closed), and the flag only ever adds a lock.
+  Future<void> _rememberAdmin(bool platformAdmin) async {
+    final me = _identity?.userId;
+    if (!platformAdmin || me == null) return;
+    try {
+      await db.writePref(_adminDeviceKey, me);
+    } catch (_) {}
+  }
 
   Future<void> setPin(String pin) async {
     final identity = _identity;
@@ -624,8 +658,9 @@ class SessionController extends ChangeNotifier {
   bool lockNow() {
     final identity = _identity;
     if (identity == null || !identity.hasPin) return false;
-    // Nothing of a business on screen or on the device: no lock (108).
-    if (_orgs.isEmpty) return false;
+    // Nothing of a business on screen or on the device: no lock (108) —
+    // unless this is a platform admin's phone (the console).
+    if (_orgs.isEmpty && !_isPlatformAdmin && !_adminDevice) return false;
     if (_phase != SessionPhase.ready &&
         _phase != SessionPhase.picking &&
         _phase != SessionPhase.noOrg) {
@@ -640,12 +675,14 @@ class SessionController extends ChangeNotifier {
     await auth.signOut();
     await db.clearIdentity();
     await db.writePref(_lastOrgKey, null);
+    await db.writePref(_adminDeviceKey, null);
     _identity = null;
     _orgs = const [];
     _access.clear();
     _lastOrgId = null;
     _notice = null;
     _isPlatformAdmin = false;
+    _adminDevice = false;
     _twoStepEnrolled = false;
     _phase = SessionPhase.signedOut;
     _emit();
@@ -655,7 +692,12 @@ class SessionController extends ChangeNotifier {
   // Which businesses?
   // ----------------------------------------------------------------
 
-  Future<void> resolveOrgs() async {
+  /// [coldStart]: the app was just opened (boot), with a live token. A
+  /// phone that already knows this person's businesses opens them at once
+  /// and asks the server behind the screen (A2): on a stalled market
+  /// connection the questions below could otherwise hold the splash for
+  /// two timeouts in a row.
+  Future<void> resolveOrgs({bool coldStart = false}) async {
     _phase = SessionPhase.resolving;
     _emit();
 
@@ -665,25 +707,38 @@ class SessionController extends ChangeNotifier {
     String? notice;
 
     if (auth.hasLiveSession) {
-      // Three questions that do not depend on each other, asked at once:
-      // on a market connection every round trip is a third of a second or
-      // more, and asked one after the other they kept the spinner up for
-      // all three before the business list could even be requested.
-      //
-      // Each is bounded by a timeout. On a market connection a request can
-      // stall — the socket stays open and the reply never comes, so the
-      // future neither completes nor throws. A timed-out call is treated as
-      // a dead connection: fall back to what the device already knows, show
-      // the notice, and let the next resolve retry.
+      // Cold start with the businesses on the device: settle on them now —
+      // the code rules apply as always — then ask in the background: the
+      // second step first (a platform admin below aal2 is refused by the
+      // server anyway; asked, the page is stashed and the code screen
+      // shown), then a forced refresh for the list, the plan and the role.
+      if (coldStart) {
+        final cached = await _cachedOrgsSafe();
+        if (cached.isNotEmpty) {
+          await _settle(cached, fromCache: true, platformAdmin: false, notice: null);
+          unawaited(_askAfterColdStart());
+          return;
+        }
+      }
+
+      // The questions do not depend on each other, so they are asked at
+      // once — the business list included (A2): on a market connection
+      // every round trip is a third of a second or more, and a stalled one
+      // (the socket stays open and the reply never comes) costs a whole
+      // timeout, so one after the other they could hold the spinner for
+      // two. Each is bounded; a timed-out call is a dead connection: fall
+      // back to what the device knows, show the notice, the next resolve
+      // retries.
       //
       // * Two-step (077): a platform admin below aal2 is refused by the
       //   server on every call but this one, so the resolve stops at the
       //   code screen when it says so. A stall or an error falls through.
       // * Platform admin: never throws, defaults closed on a stall, and is
       //   needed precisely when the org list comes back empty.
-      // * Invitations addressed to this phone or email become memberships
-      //   before the org list is asked — otherwise an invited user lands on
-      //   the waiting screen with an invitation unclaimed. Best-effort.
+      // * Invitations addressed to this phone or email become memberships;
+      //   when one did, the list is asked again after it — otherwise an
+      //   invited user would land on the waiting screen with an invitation
+      //   just claimed. Best-effort.
       final step = twoStep;
       final askedTwoStep = step?.status().timeout(resolveTimeout);
       final askedAdmin = admin
@@ -693,7 +748,13 @@ class SessionController extends ChangeNotifier {
       final claimed = admin
           .claimMyInvitations()
           .timeout(resolveTimeout)
-          .then((_) => null, onError: (Object _) => null);
+          .then((n) => n, onError: (Object _) => 0);
+      // Never throws: the list, or what went wrong.
+      Future<Object> askOrgs() => auth
+          .fetchOrgs()
+          .timeout(resolveTimeout)
+          .then<Object>((list) => list, onError: (Object e) => e);
+      final askedOrgs = askOrgs();
       if (askedTwoStep != null) {
         try {
           final status = await askedTwoStep;
@@ -706,31 +767,45 @@ class SessionController extends ChangeNotifier {
         } catch (_) {}
       }
       platformAdmin = await askedAdmin;
-      await claimed;
+      await _rememberAdmin(platformAdmin);
+      var got = await askedOrgs;
+      if (await claimed > 0) got = await askOrgs();
 
-      try {
-        orgs = await auth.fetchOrgs().timeout(resolveTimeout);
-        await db.cacheOrgs(orgs);
-
-        final identity = _identity;
-        if (identity != null) {
-          final updated = identity.copyWith(orgsRefreshedAt: DateTime.now());
-          await db.saveIdentity(updated);
-          _identity = updated;
-        }
-      } catch (error) {
+      if (got is List<OrgSummary>) {
+        orgs = got;
+        try {
+          await db.cacheOrgs(orgs);
+          final identity = _identity;
+          if (identity != null) {
+            final updated = identity.copyWith(orgsRefreshedAt: DateTime.now());
+            await db.saveIdentity(updated);
+            _identity = updated;
+          }
+        } catch (_) {}
+      } else {
         // The connection died, or stalled past the timeout, between signing in
         // and asking. Fall back to what this device already knows rather than
         // stranding the user on a spinner.
         orgs = await _cachedOrgsSafe();
         fromCache = true;
-        notice = AuthRepository.describeError(error);
+        notice = AuthRepository.describeError(got);
       }
     } else {
       orgs = await _cachedOrgsSafe();
       fromCache = true;
     }
 
+    await _settle(orgs, fromCache: fromCache, platformAdmin: platformAdmin, notice: notice);
+  }
+
+  /// Where a resolve lands, once it knows the list: the phase, the code
+  /// (108's rules), the business it opens.
+  Future<void> _settle(
+    List<OrgSummary> orgs, {
+    required bool fromCache,
+    required bool platformAdmin,
+    required String? notice,
+  }) async {
     // A failure here must never escape: resolveOrgs is kicked off unawaited by
     // boot(), so anything it throws is unhandled and freezes the app on the
     // spinner with the phase stuck at `resolving`. Sync is best-effort anyway.
@@ -743,6 +818,7 @@ class SessionController extends ChangeNotifier {
     _access.clear();
     _orgsFromCache = fromCache;
     _isPlatformAdmin = platformAdmin;
+    _adminDevice = platformAdmin || await _adminOnDevice();
     _notice = notice;
 
     // What this device last had open, surviving the reload that wipes the
@@ -772,9 +848,11 @@ class SessionController extends ChangeNotifier {
     // The device code protects businesses (108): chosen once this person
     // belongs to one — at the first sign-in of an owner, a member or a
     // trainer, or the day a shopper creates or joins their first business
-    // — and before any of its books open. setPin() resolves again.
+    // — and before any of its books open. A platform admin chooses one
+    // too, business or not: the console is behind it (after the second
+    // step, which the resolve asks first). setPin() resolves again.
     final me = _identity;
-    if (orgs.isNotEmpty && me != null && !me.hasPin) {
+    if ((orgs.isNotEmpty || _adminDevice) && me != null && !me.hasPin) {
       _phase = SessionPhase.choosingPin;
       _emit();
       return;
@@ -791,6 +869,50 @@ class SessionController extends ChangeNotifier {
       // Load it here, or an employee sees every tool the owner hid.
       unawaited(_loadAccess(resolved));
     }
+  }
+
+  /// A business the person has just created (111), asked on a line that
+  /// may be bad: the resolve that follows can time out, or answer from
+  /// before. If its list does not have the business, it is added from what
+  /// the creation knows — on screen and on the device — and the session
+  /// settles on it (the code is chosen then, 108); the server's own row
+  /// replaces it at the next resolve or refresh that gets through.
+  /// Answers whether the session has it now.
+  Future<bool> adoptCreatedOrg(OrgSummary created) async {
+    await resolveOrgs();
+    if (orgById(created.id) != null) return true;
+    if (_identity == null) return false;
+    final merged = [..._orgs.where((o) => o.id != created.id), created];
+    try {
+      await db.cacheOrgs(merged);
+    } catch (_) {}
+    // Stopped at the second step: the list on the device has it for the
+    // resolve that follows the code.
+    if (_phase == SessionPhase.twoStep) return true;
+    await _settle(merged, fromCache: true, platformAdmin: _isPlatformAdmin, notice: _notice);
+    return orgById(created.id) != null;
+  }
+
+  /// Behind a cold start settled on the device's list (A2): the second
+  /// step, then the server's list. Asked to give the second step, the page
+  /// on screen is stashed by the router and the code screen shown; passed,
+  /// the resolve goes on as always.
+  Future<void> _askAfterColdStart() async {
+    final step = twoStep;
+    if (step != null) {
+      try {
+        final status = await step.status().timeout(resolveTimeout);
+        if (status.mustAsk &&
+            !_disposed &&
+            (_settled || _phase == SessionPhase.choosingPin)) {
+          _twoStepEnrolled = status.enrolled;
+          _phase = SessionPhase.twoStep;
+          _emit();
+          return;
+        }
+      } catch (_) {}
+    }
+    if (!_disposed) await refresh(force: true);
   }
 
   // ----------------------------------------------------------------
@@ -835,6 +957,8 @@ class SessionController extends ChangeNotifier {
       try {
         platformAdmin = await admin.isPlatformAdmin().timeout(resolveTimeout);
       } catch (_) {}
+      await _rememberAdmin(platformAdmin);
+      if (platformAdmin) _adminDevice = true;
       try {
         await admin.claimMyInvitations().timeout(resolveTimeout);
       } catch (_) {}

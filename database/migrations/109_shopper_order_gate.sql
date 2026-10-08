@@ -323,3 +323,5 @@ begin
         grant execute on function place_order(text, jsonb, text, text, text, text, text, double precision, double precision) to authenticated;
     end if;
 end $$;
+
+notify pgrst, 'reload schema';

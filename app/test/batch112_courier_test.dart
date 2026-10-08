@@ -643,7 +643,11 @@ void main() {
       final js = File('../workers/kaj-app/src/legal.js').readAsStringSync();
       expect(js.contains('"# Devenir livreur"'), isTrue);
       expect(js.contains("seule l'équipe Mara qui examine les demandes peut les voir"), isTrue);
-      expect(js.contains('effacées 30 jours après le refus'), isTrue);
+      // What happens, exactly: never shown again after 30 days, the bytes
+      // deleted the next time the list is opened (no scheduler).
+      expect(js.contains('elles ne sont plus jamais montrées après 30 jours'), isTrue);
+      expect(js.contains('effacées la fois suivante où la liste des livreurs est ouverte'), isTrue);
+      expect(js.contains('effacées 30 jours après le refus'), isFalse);
     });
   });
 }

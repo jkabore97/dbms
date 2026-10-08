@@ -171,7 +171,12 @@ export function refusalFor(status, metaCode) {
 // (« v1,<base64> », several separated by spaces — Supabase writes « , »
 // between them); the HMAC-SHA256 of « id.timestamp.body » with the secret
 // that follows « v1,whsec_ », base64-decoded. Older than five minutes is
-// refused, so a captured delivery cannot be replayed.
+// refused, so a captured delivery cannot be replayed later than that.
+// Within those five minutes no replay cache (no webhook-id remembered) is
+// needed: the signed body names the number and the code, so a replay can
+// only send the same code to the same number again — nothing a captured
+// delivery could change, nothing it could learn. Meta's own limits (the
+// 429 above) bound how often that can be done.
 // ----------------------------------------------------------------
 
 export async function verifyHook(headers, rawBody, secret, nowSeconds = Math.floor(Date.now() / 1000)) {

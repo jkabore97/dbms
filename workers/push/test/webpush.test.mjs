@@ -136,6 +136,19 @@ test("a tap lands where the bell points", () => {
     "https://dbms.kabore-boss.workers.dev/o/o3");
   assert.equal(payloadFor({ kind: "report_handled", message: "m", params: {} }, env).url,
     "https://dbms.kabore-boss.workers.dev/mon-compte/notifications");
+  // 112: the platform's bell for an application opens its couriers, not
+  // the board; the applicant's refusal or « new photo » their application.
+  assert.equal(payloadFor({ kind: "courier_application", message: "m", params: { to: "platform" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/console/livreurs");
+  assert.equal(payloadFor({ kind: "courier_refused", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/devenir-livreur");
+  assert.equal(payloadFor({ kind: "courier_photo", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/devenir-livreur");
+  assert.equal(payloadFor({ kind: "courier_suspended", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/livreur");
+  // 111: an older app's request answered at once.
+  assert.equal(payloadFor({ kind: "application_update_app", message: "m" }, env).url,
+    "https://dbms.kabore-boss.workers.dev/creer-mon-activite");
 });
 
 test("the bell says Mara, whatever name the database's sentence was written in", () => {

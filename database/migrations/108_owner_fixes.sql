@@ -251,3 +251,5 @@ begin
         grant  execute on function spend_cauris(uuid, text)                 to authenticated;
     end if;
 end $$;
+
+notify pgrst, 'reload schema';

@@ -38,6 +38,13 @@
 --          « Vérifiez d'abord votre numéro WhatsApp » before anything is
 --          written. Listed in Réglages, changed through 105's
 --          platform_set_setting (oui/non, journaled, undone);
+--        * three creations a day at most, per person (the journal counts
+--          them), and no address reserved for Mara (business_address_
+--          reserved: Mara's names and help words, the payment and
+--          infrastructure names, the app's and the Workers' first paths) —
+--          asked at creation, in the address check, and when a business's
+--          admin renames its address (103's update_org, rebuilt here with
+--          that one check; the platform is not asked);
 --        * a new vitrine reaches the street only once it meets its minimum
 --          — 092's and 107's rule, unchanged: storefront_open and the
 --          directory still ask vitrine_min.
@@ -55,12 +62,18 @@
 --      gives a farm the farm chart, whoever makes it. No existing business
 --      is touched.
 --   5. The approval path, for people, ends. Nothing in the new app files a
---      request or approves one; apply_for_org, approve_org_application and
---      reject_org_application stay, untouched, for an older app until the
---      new one is live. A person who still had a request waiting and now
+--      request or approves one. An older app's request (apply_for_org,
+--      both forms) is answered at once: written closed, its note « Mettez
+--      à jour Mara : vous créez maintenant votre activité vous-même » (the
+--      older app shows it under the request), the person rung with it
+--      ('application_update_app', its facts in params), Mara rung with
+--      nothing (030's trigger now rings for a waiting request only) — À
+--      faire has none waiting. approve_org_application and
+--      reject_org_application stay, untouched, for a request written
+--      before 111. A person who still had a request waiting and now
 --      creates directly has that request closed as « approved » with the
---      business it became, so an older app can never approve it into a
---      second business. The command center's « Demandes » becomes
+--      business it became, so it can never be approved into a second
+--      business. The command center's « Demandes » becomes
 --      « Activités créées »: platform_created_businesses() lists the
 --      businesses people created (with their answers), and keeps the
 --      requests of before readable (approved or refused, with the reason).
@@ -78,7 +91,9 @@
 -- P1: nothing an existing store, farm, association or vitrine shows
 -- changes — no existing row is written (one setting row is added, off);
 -- create_org makes what it made for a shop and an association, and the
--- farm chart for a farm (4); the other functions are new.
+-- farm chart for a farm (4); update_org changes nothing a business has
+-- (only a rename to a reserved address is refused); an older app's
+-- request is answered at once (5); the other functions are new.
 --
 -- Born closed (063): the internals are revoked from every app role; the
 -- doors are the signed-in person's (each checks auth.uid()) or the
@@ -337,10 +352,63 @@ begin
 end;
 $$;
 
--- The address as typed: its problem (org_slug_problem's words), or taken
--- — with the first free one after it, « -2 » to « -20 ». Signed-in only:
--- the street already shows every open vitrine's address; this says no
--- more than that one is in use.
+-- Addresses nobody creates for themselves: with no approval any more, a
+-- person could otherwise open « marakaj.com/s/support » or the
+-- « admin.marakaj.com » sub-domain (014: an address is a sub-domain too)
+-- and speak as Mara. Reserved: Mara's own names and help words, the
+-- payment and infrastructure names (Wave, api, www, cdn…, the Workers:
+-- account, pay, push, uploads, whatsapp-otp, tenant-router), and every
+-- first path of the app's router and of the kaj-app Worker (/connexion,
+-- /console, /vitrines, /s/, /o/, /livreur, /mon-compte, /confidentialite…).
+-- Read without its hyphens and without trailing digits too (« mara-kaj »,
+-- « support2 »). Mara's own « Nouvelle entreprise » (create_org) and the
+-- fiche (106) do not ask it: the platform may name a business so.
+create or replace function business_address_reserved(p_slug text)
+returns boolean
+language sql
+immutable
+set search_path = public
+as $$
+    with s as (
+        select replace(lower(btrim(coalesce(p_slug, ''))), '-', '') as v
+    ), r as (
+        select replace(x, '-', '') as w from unnest(array[
+            -- Mara, its names, its help
+            'mara', 'marakaj', 'kaj', 'kaj-pro', 'mara-pro', 'pro', 'officiel', 'official',
+            'admin', 'admins', 'administrateur', 'administration', 'administrator', 'root',
+            'superadmin', 'moderateur', 'moderation', 'plateforme', 'platform', 'staff',
+            'support', 'aide', 'help', 'faq', 'contact', 'assistance', 'service-client',
+            'securite', 'security', 'equipe-mara',
+            -- payments
+            'wave', 'orange-money', 'moov-money', 'paiement', 'payment', 'payments', 'pay',
+            'billing', 'facturation', 'stripe',
+            -- infrastructure and the Workers
+            'api', 'www', 'app', 'apps', 'web', 'mail', 'email', 'smtp', 'imap', 'ftp',
+            'cdn', 'static', 'assets', 'canvaskit', 'icons', 'uploads', 'upload', 'push',
+            'account', 'accounts', 'auth', 'login', 'logout', 'signin', 'signup', 'register',
+            'dbms', 'tenant', 'tenant-router', 'whatsapp', 'whatsapp-otp', 'sms', 'otp',
+            'v1', 'rpc', 'health', 'notify', 'status', 'index', 'manifest', 'version',
+            'favicon', 'robots', 'sitemap', 'null', 'undefined', 'test',
+            -- the app's first paths, and the kaj-app Worker's
+            's', 'o', 'vitrines', 'vitrine', 'connexion', 'deconnexion', 'inscription',
+            'demarrage', 'code', 'deux-etapes', 'rejoindre', 'mon-profil', 'mon-compte',
+            'compte', 'comptes', 'mes-commandes', 'entreprises', 'nouvelle-entreprise',
+            'creer-mon-activite', 'demander-une-entreprise', 'console', 'dashboard',
+            'demandes', 'livreur', 'livreurs', 'courier', 'couriers', 'devenir-livreur',
+            'langue', 'conditions', 'confidentialite', 'chargement-impossible',
+            'privacy', 'terms', 'legal']) x
+    )
+    select exists (
+        select 1 from s, r
+         where r.w = s.v
+            or (r.w = regexp_replace(s.v, '[0-9]+$', '')
+                and char_length(regexp_replace(s.v, '[0-9]+$', '')) >= 3));
+$$;
+
+-- The address as typed: its problem (org_slug_problem's words, or Mara's
+-- own), or taken — with the first free one after it, « -2 » to « -20 ».
+-- Signed-in only: the street already shows every open vitrine's address;
+-- this says no more than that one is in use.
 create or replace function business_address_check(p_slug text)
 returns jsonb
 language plpgsql
@@ -359,6 +427,9 @@ begin
         raise exception 'Connectez-vous pour créer votre activité.';
     end if;
     v_problem := org_slug_problem(v_slug);
+    if v_problem is null and business_address_reserved(v_slug) then
+        v_problem := 'Cette adresse est réservée à Mara : choisissez-en une autre.';
+    end if;
     if v_problem is null then
         v_taken := exists (select 1 from orgs where slug = v_slug);
         if v_taken then
@@ -449,6 +520,9 @@ begin
     if v_problem is not null then
         raise exception '%', v_problem;
     end if;
+    if business_address_reserved(v_slug) then
+        raise exception 'Cette adresse est réservée à Mara : choisissez-en une autre.';
+    end if;
 
     if v_activity is null then
         raise exception 'Dites ce que fait votre activité.';
@@ -490,6 +564,15 @@ begin
     -- One person, one creation at a time: two taps cannot both pass the
     -- rule below.
     perform pg_advisory_xact_lock(hashtext('create_my_business:' || v_actor::text));
+
+    -- Three a day at most, whatever the plan: a loop of creations is not a
+    -- person starting a business. Counted in the journal, which keeps the
+    -- line even when the business is deleted afterwards.
+    if (select count(*) from platform_actions
+         where actor = v_actor and kind = 'business_created'
+           and at > now() - interval '24 hours') >= 3 then
+        raise exception 'Vous avez déjà créé 3 activités en 24 heures : c''est le maximum, réessayez demain.';
+    end if;
 
     -- One free business per person; a second needs Mara Pro (099).
     if second_business_locked(v_actor) then
@@ -562,6 +645,193 @@ begin
                                'answers', coalesce(v_answers, '[]'::jsonb)));
 
     return v_org;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 6b. The other doors: renaming an address, and an older app's request
+-- ------------------------------------------------------------
+-- 103's update_org, unchanged but for one check: a business's admin who
+-- moves its address to one reserved for Mara is refused as at creation
+-- (else « Créer mon activité », then « Paramètres › adresse » would open
+-- « support » anyway). A platform admin is not asked; an address that is
+-- already the business's is not either.
+create or replace function update_org(
+    p_org_id   uuid,
+    p_name     text default null,
+    p_slug     text default null,
+    p_profile  text default null,
+    p_currency text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor   uuid := auth.uid();
+    v_name    text := nullif(btrim(coalesce(p_name, '')), '');
+    v_slug    text := nullif(lower(btrim(coalesce(p_slug, ''))), '');
+    v_profile text := nullif(btrim(coalesce(p_profile, '')), '');
+    v_problem text;
+    v_old     text;
+begin
+    if v_actor is null then
+        raise exception 'update_org() needs a signed-in caller';
+    end if;
+
+    if not is_org_admin(p_org_id) then
+        raise exception 'You cannot change this business';
+    end if;
+
+    select profile::text into v_old from orgs where id = p_org_id;
+    if not found then
+        raise exception 'No such business';
+    end if;
+
+    if exists (select 1 from orgs where id = p_org_id and archived_at is not null) then
+        raise exception 'This business is archived. Restore it before changing it.';
+    end if;
+
+    if v_slug is not null then
+        v_problem := org_slug_problem(v_slug);
+        if v_problem is not null then
+            raise exception '%', v_problem;
+        end if;
+        if exists (select 1 from orgs where slug = v_slug and id <> p_org_id) then
+            raise exception 'That address is already taken.';
+        end if;
+        if business_address_reserved(v_slug)
+           and not caller_is_platform_admin()
+           and not exists (select 1 from orgs where id = p_org_id and slug = v_slug) then
+            raise exception 'Cette adresse est réservée à Mara : choisissez-en une autre.';
+        end if;
+    end if;
+
+    if v_profile is not null
+       and v_profile not in ('church', 'association', 'farm', 'retail', 'generic') then
+        raise exception 'Unknown profile: %', v_profile;
+    end if;
+    if v_profile is not null and v_profile is distinct from v_old then
+        if not is_org_owner(p_org_id) then
+            raise exception 'Seul le propriétaire change le genre d''activité';
+        end if;
+        perform notify_org_owners(p_org_id, 'org_kind_changed',
+            'Le genre de votre activité a été changé',
+            jsonb_build_object('profile', v_profile));
+    end if;
+
+    update orgs set
+        name             = coalesce(v_name, name),
+        slug             = coalesce(v_slug, slug),
+        profile          = coalesce(v_profile, profile),
+        default_currency = coalesce(nullif(btrim(coalesce(p_currency, '')), ''),
+                                    default_currency)
+    where id = p_org_id;
+
+    return p_org_id;
+end;
+$$;
+
+-- An older app (an APK from before 111) still sends a request through
+-- 107's apply_for_org (its seven-argument form calls this one). Nobody
+-- approves requests any more, so it is answered at once: written closed
+-- (« rejected », the older app's own word for an answered request, with
+-- the note it shows under it), the person rung with what to do, and
+-- nothing waits in À faire. 099's lock on a second business still says
+-- its words first (its trigger on org_applications). The new app never
+-- calls this.
+create or replace function apply_for_org(
+    p_name        text,
+    p_slug        text,
+    p_profile     text,
+    p_currency    text,
+    p_description text,
+    p_phone       text,
+    p_email       text,
+    p_answers     jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor uuid := auth.uid();
+    v_name  text := coalesce(nullif(btrim(coalesce(p_name, '')), ''), '—');
+    v_note  constant text := 'Mettez à jour Mara : vous créez maintenant votre activité vous-même';
+    v_id    uuid;
+    v_full  text;
+    v_phone text;
+    v_email text;
+begin
+    if v_actor is null then
+        raise exception 'apply_for_org() needs a signed-in caller';
+    end if;
+
+    -- Who asked, as Mara reads it in « Activités créées » (107's way).
+    select coalesce(nullif(btrim(concat_ws(' ', p.first_name, p.last_name)), ''),
+                    nullif(btrim(coalesce(p.full_name, '')), ''),
+                    nullif(btrim(coalesce(u.raw_user_meta_data ->> 'full_name', '')), '')),
+           coalesce(nullif(btrim(coalesce(p.phone, '')), ''),
+                    nullif(btrim(coalesce(u.phone, '')), '')),
+           nullif(btrim(coalesce(u.email, '')), '')
+      into v_full, v_phone, v_email
+      from auth.users u
+      left join profiles p on p.id = u.id
+     where u.id = v_actor;
+
+    insert into org_applications (
+        applicant_id, name, slug, profile, currency,
+        contact_name, contact_phone, contact_email, description,
+        status, decision_note, reviewed_at
+    )
+    values (
+        v_actor, v_name, coalesce(nullif(lower(btrim(coalesce(p_slug, ''))), ''), '—'),
+        coalesce(nullif(btrim(coalesce(p_profile, '')), ''), 'generic'),
+        coalesce(nullif(btrim(coalesce(p_currency, '')), ''), 'XOF'),
+        v_full,
+        coalesce(v_phone, nullif(btrim(coalesce(p_phone, '')), '')),
+        coalesce(v_email, nullif(btrim(coalesce(p_email, '')), '')),
+        nullif(btrim(coalesce(p_description, '')), ''),
+        'rejected', v_note, now()
+    )
+    returning id into v_id;
+
+    -- The bell (099: its facts in params): an older app shows the French
+    -- message as written; the new one says it in the reader's language.
+    begin
+        insert into notifications (recipient_id, org_id, kind, message, params)
+        values (v_actor, null, 'application_update_app', v_note,
+                jsonb_build_object('to', 'applicant', 'name', v_name));
+    exception when others then
+        null;
+    end;
+    return v_id;
+end;
+$$;
+
+-- 030's ring to the platform on a new request — now only for one that
+-- waits (an older app's request answered at once above rings nobody at
+-- Mara: there is nothing for them to do).
+create or replace function trg_notify_org_application()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if new.status <> 'pending' then
+        return new;
+    end if;
+    insert into notifications (recipient_id, org_id, kind, message)
+    select p.id, null, 'org_application',
+           format('Nouvelle demande d''entreprise : %s', new.name)
+      from profiles p
+     where p.is_platform_admin;
+    return new;
+exception when others then
+    return new;
 end;
 $$;
 
@@ -826,6 +1096,7 @@ revoke execute on function org_create_core(uuid, text, text, text, text) from pu
 revoke execute on function create_org(text, text, text, text)          from public;
 revoke execute on function business_answers(jsonb, jsonb)              from public;
 revoke execute on function my_business_start()                         from public;
+revoke execute on function business_address_reserved(text)             from public;
 revoke execute on function business_address_check(text)                from public;
 revoke execute on function create_my_business(text, text, text, text, text, text, text, text, text, jsonb) from public;
 revoke execute on function platform_created_businesses(int)            from public;
@@ -841,6 +1112,7 @@ begin
         revoke execute on function create_org(text, text, text, text)          from anon;
         revoke execute on function business_answers(jsonb, jsonb)              from anon;
         revoke execute on function my_business_start()                         from anon;
+        revoke execute on function business_address_reserved(text)             from anon;
         revoke execute on function business_address_check(text)                from anon;
         revoke execute on function create_my_business(text, text, text, text, text, text, text, text, text, jsonb) from anon;
         revoke execute on function platform_created_businesses(int)            from anon;
@@ -853,6 +1125,7 @@ begin
         revoke execute on function business_activities(text)                   from authenticated;
         revoke execute on function org_create_core(uuid, text, text, text, text) from authenticated;
         revoke execute on function business_answers(jsonb, jsonb)              from authenticated;
+        revoke execute on function business_address_reserved(text)             from authenticated;
         -- The doors; each checks who is asking (a signed-in person, a
         -- platform admin).
         grant execute on function create_org(text, text, text, text)           to authenticated;

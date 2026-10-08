@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/auth/whatsapp_phone.dart';
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
@@ -33,10 +34,11 @@ import 'association_setup_screen.dart' show associationKinds;
 ///  6. Mara's own questions, if the creation page has some, one a screen;
 ///  7. everything on one page → « Créer mon activité ».
 ///
-/// The answers are kept on the device until the business exists, and the
-/// flow opens again where it was left. Created, the person is its owner;
-/// [onCreated] takes them into its first setup (and the device code, once:
-/// session.dart asks it of whoever has a business).
+/// The answers are kept on the device until the business exists and the
+/// app has seen it, and the flow opens again where it was left. Created,
+/// the person is its owner; [onCreated] takes them into its first setup
+/// (and the device code, once: session.dart asks it of whoever has a
+/// business).
 ///
 /// With [previewForm] this is the creation page as Mara shapes it in the
 /// command center: drawn with her form, nothing read, nothing sent.
@@ -58,8 +60,11 @@ class CreateMyBusinessScreen extends StatefulWidget {
   /// Proving a number on WhatsApp (109), when the platform asks for it.
   final WhatsAppPhone? whatsApp;
 
-  /// The business exists: open it. Its id.
-  final Future<void> Function(String orgId)? onCreated;
+  /// The business exists: open it — what the creation knows of it (its
+  /// id, name, kind, address, currency; the person its owner). Answers
+  /// whether the app now has it (on a bad line the server's list may not
+  /// yet): only then are the answers on the device let go.
+  final Future<bool> Function(OrgSummary created)? onCreated;
 
   final ApplicationForm? previewForm;
 
@@ -434,8 +439,19 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
             : {for (final q in _questions) if (q.id != null) q.id!: _answerOf(q)},
       );
       _saveSoon?.cancel();
-      await widget.drafts?.write(null);
-      await widget.onCreated?.call(id);
+      final drafts = widget.drafts;
+      final seen = await widget.onCreated?.call(OrgSummary(
+            id: id,
+            name: _name.text.trim(),
+            profile: profile,
+            slug: _slug.text.trim(),
+            currency: _currency,
+            roles: const ['owner'],
+          )) ??
+          true;
+      // Kept until the app has the business: a line that drops between the
+      // creation and the list must not lose what was typed.
+      if (seen) await drafts?.write(null);
     } catch (e) {
       if (mounted) setState(() => _error = describeError(e));
     } finally {

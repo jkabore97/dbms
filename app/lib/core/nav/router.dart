@@ -746,11 +746,14 @@ GoRouter buildRouter(SessionController session) {
             api: SupabaseBusinessCreation(scope.auth.client),
             drafts: LocalDraftStore(scope.db, scope.auth.client?.auth.currentUser?.id),
             whatsApp: SupabaseWhatsAppPhone(scope.auth.client),
-            onCreated: (orgId) async {
-              session.stashReturnTo(Routes.org(orgId));
-              final resolved = session.resolveOrgs();
+            // On a bad line the list may not have it yet: the session
+            // adds it from what the creation knows until the server's row
+            // comes (adoptCreatedOrg), so the person lands in it either way.
+            onCreated: (created) async {
+              session.stashReturnTo(Routes.org(created.id));
+              final seen = session.adoptCreatedOrg(created);
               if (context.mounted) context.go(Routes.splash);
-              await resolved;
+              return seen;
             },
           );
         },

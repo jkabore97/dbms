@@ -538,6 +538,12 @@ void main() {
       expect(find.text('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
           findsOneWidget);
       expect(admin.deleted, 0);
+      // The Worker's 409 when GoTrue could not delete (a key nobody checked).
+      admin.refuse = StateError('La suppression n\'a pas pu se faire — écrivez à Mara.');
+      await tester.tap(confirm);
+      await settle(tester);
+      expect(find.text('La suppression n\'a pas pu se faire — écrivez à Mara.'), findsOneWidget);
+      expect(admin.deleted, 0);
       admin.refuse = null;
       await tester.tap(confirm);
       await settle(tester);

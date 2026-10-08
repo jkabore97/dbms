@@ -81,17 +81,24 @@ class PrivacyScreen extends StatelessWidget {
             'photos sont gardées à part, en privé : seule l\'équipe Mara qui '
             'examine les demandes peut les voir, jamais les boutiques, les '
             'clients ni la rue. Si votre demande est refusée et que vous ne la '
-            'renvoyez pas, elles sont effacées 30 jours après le refus. Une '
-            'photo remplacée par une nouvelle, ou une demande commencée puis '
-            'laissée 30 jours sans suite, est effacée aussi. Si vous êtes '
-            'accepté, elles sont gardées tant que vous êtes livreur, et '
-            'effacées avec votre compte.',
+            'renvoyez pas, elles ne sont plus jamais montrées après 30 jours, '
+            'et sont effacées la fois suivante où la liste des livreurs est '
+            'ouverte (par l\'équipe Mara, ou par vous sur « Devenir livreur »). '
+            'Il en va de même, sans attendre, d\'une photo remplacée par une '
+            'nouvelle et, après 30 jours sans suite, d\'une demande commencée '
+            'puis laissée. Si vous êtes accepté, elles sont gardées tant que '
+            'vous êtes livreur ; votre compte supprimé, elles ne sont plus '
+            'montrées et sont effacées de la même façon.',
         '# Vos droits',
-        'Vous pouvez demander la correction ou la suppression de vos données en '
-            'contactant le support. Vous pouvez aussi télécharger vos données et '
-            'supprimer votre compte vous-même, depuis Mon profil › Mes données '
-            '(les commandes, les adresses et les favoris partent avec lui). La '
-            'suppression d\'une activité efface ses données de façon définitive.',
+        'Vous pouvez demander la correction ou la suppression de vos '
+            'données en contactant le support. Vous pouvez aussi télécharger '
+            'vos données et supprimer votre compte vous-même, depuis Mon profil '
+            '› Mes données : vos adresses, vos favoris et vos signalements '
+            'partent avec lui ; vos commandes restent chez les boutiques, au '
+            'nom de « Client supprimé », sans votre numéro ni votre adresse '
+            '(une vente déjà inscrite dans leurs comptes y reste telle quelle). '
+            'La suppression d\'une activité efface ses données de façon '
+            'définitive.',
         '# Contact',
         'Pour toute question sur vos données, contactez le support depuis '
             'l\'écran Compte › Aide.',

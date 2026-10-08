@@ -148,7 +148,7 @@ end $$;
 rollback;
 
 \echo ''
-\echo '--- TEST 4: a manager asks for a business and is not given one ---'
+\echo '--- TEST 4: a manager asks for a business and is not given one (since 111: answered at once) ---'
 begin;
 set local "request.jwt.claim.sub" = '83838383-0000-0000-0000-000000000002';
 set local role authenticated;
@@ -176,9 +176,19 @@ begin
         raise exception 'FAIL: the applicant already opens % businesses', v_orgs;
     end if;
 
+    -- Since 111 nobody approves requests: an older app's is answered at
+    -- once, closed with what to do, the person rung with it, Mara with
+    -- nothing, and nothing waits.
     select status into v_status from my_org_application();
-    if v_status <> 'pending' then
-        raise exception 'FAIL: the application is already %', v_status;
+    if v_status is distinct from 'rejected'
+       or (select decision_note from my_org_application())
+          is distinct from 'Mettez à jour Mara : vous créez maintenant votre activité vous-même' then
+        raise exception 'FAIL: the application is %, not answered at once', v_status;
+    end if;
+    if not exists (select 1 from notifications
+                    where recipient_id = '83838383-0000-0000-0000-000000000002'
+                      and kind = 'application_update_app' and params ->> 'to' = 'applicant') then
+        raise exception 'FAIL: the applicant is not told to update Mara';
     end if;
 
     -- And create_org() is still refused directly, which is the door the
@@ -192,12 +202,18 @@ begin
             raise notice 'PASS: refused — %', sqlerrm;
     end;
 
-    raise notice 'PASS: asked for a business, given nothing yet';
+    raise notice 'PASS: asked for a business, given nothing — answered at once « Mettez à jour Mara »';
 end $$;
+-- A request an older app wrote before 111, still waiting: what the
+-- approval tests below decide.
+reset role;
+insert into org_applications (applicant_id, name, slug, profile, currency, description, contact_phone)
+values ('83838383-0000-0000-0000-000000000002', 'Ferme du Plateau', 'ferme-du-plateau', 'farm',
+        'XOF', 'Volailles et maraîchage', '+22670445566');
 commit;
 
 \echo ''
-\echo '--- TEST 5: applying twice while waiting is still one application ---'
+\echo '--- TEST 5: applying again while a request waits: answered, the waiting one still one ---'
 begin;
 set local "request.jwt.claim.sub" = '83838383-0000-0000-0000-000000000002';
 set local role authenticated;
@@ -216,13 +232,20 @@ begin
         raise exception 'FAIL: % applications waiting, expected 1', v_count;
     end if;
 
-    -- The second one corrected the first rather than queueing behind it.
+    -- The new one is answered at once (the person reads it last); the
+    -- one written before 111 waits as it was.
     select name into v_name from my_org_application();
-    if v_name <> 'Ferme du Plateau (corrigé)' then
-        raise exception 'FAIL: the correction did not take (%)', v_name;
+    if v_name <> 'Ferme du Plateau (corrigé)'
+       or (select status from my_org_application()) is distinct from 'rejected' then
+        raise exception 'FAIL: the second request was not answered (%)', v_name;
+    end if;
+    if (select name from org_applications
+         where applicant_id = '83838383-0000-0000-0000-000000000002' and status = 'pending')
+       is distinct from 'Ferme du Plateau' then
+        raise exception 'FAIL: the waiting request was changed';
     end if;
 
-    raise notice 'PASS: one person waiting, one thing to review';
+    raise notice 'PASS: one person waiting, one thing to review; the new ask answered at once';
 end $$;
 rollback;
 
@@ -351,11 +374,9 @@ rollback;
 
 \echo ''
 \echo '--- TEST 9: a rejection has to say why ---'
-begin;
-set local "request.jwt.claim.sub" = '83838383-0000-0000-0000-000000000004';
-set local role authenticated;
-select apply_for_org('Essai vide', 'essai-vide-83');
-commit;
+-- A request written before 111 (an older app's are answered at once).
+insert into org_applications (applicant_id, name, slug)
+values ('83838383-0000-0000-0000-000000000004', 'Essai vide', 'essai-vide-83');
 
 begin;
 set local "request.jwt.claim.sub" = '83838383-0000-0000-0000-000000000001';
