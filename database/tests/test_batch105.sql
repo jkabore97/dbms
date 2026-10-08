@@ -438,8 +438,16 @@ begin
     end if;
     delete from cauris_unlocks where org_id = '10500000-0000-0000-0000-000000000001' and feature = 'analytics';
 
-    -- An unknown tool refuses the whole act.
+    -- An association has no analyses (099): refused for it alone.
     execute 'set local role authenticated';
+    v := platform_bulk('unlock', array['10500000-0000-0000-0000-000000000003']::uuid[],
+                       jsonb_build_object('feature', 'analytics', 'until', cauris_today() + 5));
+    if (v->>'done')::int <> 0
+       or v->'failed'->0->>'error' <> 'Cet outil n''existe pas pour ce genre d''activité' then
+        raise exception 'FAIL: an association was opened analyses: %', v;
+    end if;
+
+    -- An unknown tool refuses the whole act.
     begin
         perform platform_bulk('unlock', array['10500000-0000-0000-0000-000000000002']::uuid[],
                               jsonb_build_object('feature', 'photo_slot', 'until', cauris_today() + 3));
@@ -502,7 +510,7 @@ begin
        or (select archived_at from orgs where id = '10500000-0000-0000-0000-000000000005') is null then
         raise exception 'FAIL: archive and restore were not undone';
     end if;
-    raise notice 'PASS: a tool opened for a shop and a farm, undone back to the shop''s own purchase; a message to each kind, never undone; an archive undone, a restore undone';
+    raise notice 'PASS: a tool opened for a shop and a farm, undone back to the shop''s own purchase, never a tool an association does not have; a message to each kind, never undone; an archive undone, a restore undone';
 end $$;
 
 \echo ''

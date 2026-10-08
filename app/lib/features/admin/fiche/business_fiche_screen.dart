@@ -10,6 +10,7 @@ import '../../../core/l10n/tr.dart';
 import '../../../core/nav/app_scope.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../../auth/org_picker_screen.dart' show kindSingular;
+import '../admin_pill.dart' show AdminTrail;
 import '../cauris_gifts_screen.dart' show KindBadge;
 import '../team_screen.dart';
 import 'fiche_features_tab.dart';
@@ -263,6 +264,9 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
                   overview: o,
                   onTab: (t) => _tabs.animateTo(t.index),
                   onPreview: () => MerchantPreviewScreen.open(context, _org(o)),
+                  onOpenBusiness: AppScope.maybeOf(context) == null
+                      ? null
+                      : () => AdminTrail.openBusiness(context, o.id),
                 ),
                 FicheIdentityTab(
                   key: ValueKey('identity-$_version'),

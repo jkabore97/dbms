@@ -3706,4 +3706,5 @@ const enStrings = <String, String>{
   'Rien à annuler': 'Nothing to undo',
   'Annulation impossible : l\'ancienne adresse est prise par une autre activité': 'Cannot undo: the old address is taken by another business',
   'Silencieuses depuis 30 jours': 'Silent for 30 days',
+  'Cet outil n\'existe pas pour ce genre d\'activité': 'This tool does not exist for this type of business',
 };

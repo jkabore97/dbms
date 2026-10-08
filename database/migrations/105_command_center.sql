@@ -322,6 +322,7 @@ declare
     v_name    text;
     v_archived timestamptz;
     v_by      uuid;
+    v_kind    text;
     v_ref     uuid;
     v_promo   uuid;
     v_before  jsonb;
@@ -387,7 +388,7 @@ begin
     end if;
 
     for v_org in select distinct u from unnest(p_orgs) u loop
-        select name, archived_at, archived_by into v_name, v_archived, v_by
+        select name, archived_at, archived_by, profile into v_name, v_archived, v_by, v_kind
           from orgs where id = v_org;
         if not found then
             v_failed := v_failed || jsonb_build_object('org_id', v_org, 'name', null,
@@ -417,6 +418,12 @@ begin
                     jsonb_build_object('org_id', v_org, 'points', v_points,
                                        'promo_id', v_promo, 'ref', v_ref));
             elsif p_action = 'unlock' then
+                -- A tool the kind does not have is not opened (099: an
+                -- association has no analyses and no delivery).
+                if (v_feature = 'analytics' and v_kind not in ('retail', 'farm'))
+                   or (v_feature = 'delivery' and v_kind in ('association', 'church')) then
+                    raise exception 'Cet outil n''existe pas pour ce genre d''activité';
+                end if;
                 select jsonb_build_object('until', u.until, 'note', u.note, 'gifted_by', u.gifted_by)
                   into v_before
                   from cauris_unlocks u where u.org_id = v_org and u.feature = v_feature;

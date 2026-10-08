@@ -1425,8 +1425,10 @@ begin
        and not exists (select 1 from platform_undo_fns where fn = p_undo_fn) then
         raise exception 'Annulation inconnue : %', p_undo_fn;
     end if;
-    insert into platform_actions (actor, org_id, kind, summary, before, after, undo_fn, undo_args)
-    values (auth.uid(), p_org, coalesce(nullif(btrim(p_kind), ''), 'other'),
+    -- clock_timestamp(), not now(): the lines one call writes for many
+    -- businesses (105's bulk) each have their own moment, in order.
+    insert into platform_actions (at, actor, org_id, kind, summary, before, after, undo_fn, undo_args)
+    values (clock_timestamp(), auth.uid(), p_org, coalesce(nullif(btrim(p_kind), ''), 'other'),
             coalesce(nullif(btrim(p_summary), ''), p_kind), p_before, p_after,
             p_undo_fn, case when p_undo_fn is null then null else p_undo_args end)
     returning id into v_id;
@@ -1465,11 +1467,15 @@ begin
 end;
 $$;
 
--- The journal: newest first, for one business or all of them.
+-- The journal: newest first, for one business or all of them. Paged by
+-- (at, id): the next page is p_before = the last line's at and
+-- p_before_id = its id, so lines that share a moment are never skipped.
+drop function if exists platform_actions_page(uuid, int, timestamptz);
 create or replace function platform_actions_page(
-    p_org    uuid        default null,
-    p_limit  int         default 50,
-    p_before timestamptz default null
+    p_org       uuid        default null,
+    p_limit     int         default 50,
+    p_before    timestamptz default null,
+    p_before_id uuid        default null
 )
 returns table (
     id              uuid,
@@ -1509,8 +1515,10 @@ begin
       left join profiles pa on pa.id = a.actor
       left join profiles pu on pu.id = a.undone_by
      where (p_org is null or a.org_id = p_org)
-       and (p_before is null or a.at < p_before)
-     order by a.at desc, a.id
+       and (p_before is null
+            or a.at < p_before
+            or (a.at = p_before and p_before_id is not null and a.id < p_before_id))
+     order by a.at desc, a.id desc
      limit greatest(1, least(coalesce(p_limit, 50), 200));
 end;
 $$;
@@ -1871,7 +1879,7 @@ revoke execute on function features_hidden_for(uuid)                        from
 revoke execute on function trg_feature_hidden()                             from public;
 revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from public;
 revoke execute on function platform_undo(uuid)                              from public;
-revoke execute on function platform_actions_page(uuid, int, timestamptz)    from public;
+revoke execute on function platform_actions_page(uuid, int, timestamptz, uuid)    from public;
 revoke execute on function feature_rule_json(text, text, uuid, text)        from public;
 revoke execute on function platform_feature_board(text, uuid)               from public;
 revoke execute on function platform_feature_impact(text, text, text)        from public;
@@ -1890,7 +1898,7 @@ begin
         revoke execute on function trg_feature_hidden()                             from anon;
         revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from anon;
         revoke execute on function platform_undo(uuid)                              from anon;
-        revoke execute on function platform_actions_page(uuid, int, timestamptz)    from anon;
+        revoke execute on function platform_actions_page(uuid, int, timestamptz, uuid)    from anon;
         revoke execute on function feature_rule_json(text, text, uuid, text)        from anon;
         revoke execute on function platform_feature_board(text, uuid)               from anon;
         revoke execute on function platform_feature_impact(text, text, text)        from anon;
@@ -1910,7 +1918,7 @@ begin
         revoke execute on function platform_restore_feature_rule(jsonb)             from authenticated;
         -- The doors; each checks who is asking (the platform's, or a member's).
         grant execute on function platform_undo(uuid)                              to authenticated;
-        grant execute on function platform_actions_page(uuid, int, timestamptz)    to authenticated;
+        grant execute on function platform_actions_page(uuid, int, timestamptz, uuid)    to authenticated;
         grant execute on function platform_feature_board(text, uuid)               to authenticated;
         grant execute on function platform_feature_impact(text, text, text)        to authenticated;
         grant execute on function platform_set_feature_rule(text, text, uuid, text, text, timestamptz, text) to authenticated;

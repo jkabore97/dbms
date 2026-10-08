@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/tr.dart';
+import '../../core/nav/look_only.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
@@ -145,7 +146,9 @@ class AdminReturnBanner extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: AdminTrail.opened,
       builder: (context, opened, _) {
-        if (opened?.orgId != orgId) return child;
+        // Not inside « Voir comme le commerçant » (106): that is the
+        // owner's view, and the owner has no center to go back to.
+        if (opened?.orgId != orgId || LookOnly.of(context)) return child;
         return Column(
           children: [
             Material(

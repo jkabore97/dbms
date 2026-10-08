@@ -21,11 +21,16 @@ class FicheOverviewTab extends StatelessWidget {
     required this.overview,
     required this.onTab,
     required this.onPreview,
+    this.onOpenBusiness,
   });
 
   final OrgOverview overview;
   final void Function(FicheTab tab) onTab;
   final VoidCallback onPreview;
+
+  /// Into the business itself, as Mara (its home then offers « Retour au
+  /// centre admin »). Null where there is no app around (a test).
+  final VoidCallback? onOpenBusiness;
 
   @override
   Widget build(BuildContext context) {
@@ -119,15 +124,26 @@ class FicheOverviewTab extends StatelessWidget {
             children: [
               figures,
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  key: const Key('fiche-overview-preview'),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-                  onPressed: onPreview,
-                  icon: const Icon(Icons.visibility_outlined),
-                  label: Text(context.tr('Voir comme le commerçant')),
-                ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  OutlinedButton.icon(
+                    key: const Key('fiche-overview-preview'),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                    onPressed: onPreview,
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: Text(context.tr('Voir comme le commerçant')),
+                  ),
+                  if (onOpenBusiness != null)
+                    OutlinedButton.icon(
+                      key: const Key('fiche-open-business'),
+                      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                      onPressed: onOpenBusiness,
+                      icon: const Icon(Icons.open_in_new),
+                      label: Text(context.tr('Ouvrir l\'activité')),
+                    ),
+                ],
               ),
               if (wide)
                 Row(

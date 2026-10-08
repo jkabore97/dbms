@@ -728,6 +728,57 @@ begin
 end $$;
 rollback;
 
+\echo ''
+\echo '--- TEST 10: the journal pages by (at, id): lines of one moment are never skipped ---'
+begin;
+do $$
+declare
+    v_logged uuid[] := '{}';
+    v_seen   uuid[];
+    v_page   record;
+    v_at     timestamptz;
+    v_id     uuid;
+    v_n      int;
+    i        int;
+    v_round  int;
+begin
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    -- Five lines in one transaction, as a bulk call writes them.
+    for i in 1..5 loop
+        v_logged := v_logged || platform_log_action('10400000-0000-0000-0000-000000000004',
+            'bulk_test', 'ligne ' || i, null, null, null, null);
+    end loop;
+    if (select count(distinct at) from platform_actions where id = any (v_logged)) <> 5 then
+        raise exception 'FAIL: the lines of one transaction share a moment';
+    end if;
+    for v_round in 1..2 loop
+        -- The second round: every line forced to the same moment.
+        if v_round = 2 then
+            update platform_actions set at = '2026-01-01 12:00:00+00' where id = any (v_logged);
+        end if;
+        execute 'set local role authenticated';
+        v_seen := '{}'; v_at := null; v_id := null;
+        loop
+            v_n := 0;
+            for v_page in select * from platform_actions_page(
+                    '10400000-0000-0000-0000-000000000004', 2, v_at, v_id) loop
+                v_seen := v_seen || v_page.id;
+                v_at := v_page.at; v_id := v_page.id;
+                v_n := v_n + 1;
+            end loop;
+            exit when v_n < 2;
+        end loop;
+        execute 'reset role';
+        if array_length(v_seen, 1) <> 5
+           or (select count(distinct x) from unnest(v_seen) x) <> 5
+           or not (v_seen @> v_logged and v_logged @> v_seen) then
+            raise exception 'FAIL: round %: paged % lines for 5: %', v_round, array_length(v_seen, 1), v_seen;
+        end if;
+    end loop;
+    raise notice 'PASS: five lines of one transaction, paged two by two, come back exactly once — even sharing one moment';
+end $$;
+rollback;
+
 drop function zz_b104_try(text);
 drop function zz_b104_hidden(uuid, text);
 drop table if exists b104_ids;

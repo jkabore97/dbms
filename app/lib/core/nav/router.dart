@@ -1594,7 +1594,8 @@ class FeatureUnavailableScreen extends StatelessWidget {
       key: const Key('feature-unavailable'),
       appBar: AppBar(),
       body: Center(
-        child: Padding(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 480),
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
