@@ -15,6 +15,7 @@ import '../../core/retail/retail_repository.dart';
 import '../capture/capture_action.dart';
 import '../retail/product_photo.dart';
 import '../common/owned_controller.dart';
+import '../home/business_frame.dart' show UnsavedInput;
 import 'pin_preview.dart';
 import 'spots_card.dart';
 import 'vitrine_plus_card.dart';
@@ -199,6 +200,33 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   static String _plain(double? v) =>
       v == null ? '' : (v == v.roundToDouble() ? v.round().toString() : '$v');
 
+  /// What each field said when it was last read or saved, to tell an edit
+  /// not saved yet (A4: the bar asks before leaving it).
+  final Map<TextEditingController, String> _baseline = {};
+  String? _baselineChoices;
+
+  List<TextEditingController> get _savedTogether => [
+        _nameController, _waveController, _planNoteController, _blurbController,
+        _phoneController, _addressController, _latController, _lngController,
+        _deliveryBaseController, _deliveryPerKmController, _deliveryReachController,
+        _deliveryIncludedController,
+      ];
+
+  String get _choices => '$_currency|$_deliveryMinimum';
+
+  void _markSaved(Iterable<TextEditingController> fields, {bool choices = false}) {
+    for (final c in fields) {
+      _baseline[c] = c.text;
+    }
+    if (choices) _baselineChoices = _choices;
+  }
+
+  bool _unsavedEdits() =>
+      !_loading &&
+      !_saving &&
+      (_baseline.entries.any((e) => e.key.text != e.value) ||
+          (_baselineChoices != null && _baselineChoices != _choices));
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -262,6 +290,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _deliveryIncludedController.text =
             (included ?? 0) > 0 ? _plain(included) : '';
         _loading = false;
+        _markSaved(_savedTogether, choices: true);
       });
     } catch (error) {
       if (!mounted) return;
@@ -416,6 +445,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       setState(() {
         _saving = false;
         _saved = _open;
+        _markSaved(_savedTogether, choices: true);
       });
     } catch (error) {
       if (!mounted) return;
@@ -516,6 +546,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       setState(() {
         if (_planRaw == 'free') _planUntil = null;
         _savingPlan = false;
+        _markSaved([_planNoteController]);
         _planMessage = _planRaw == 'pro'
             ? context.tr('Entreprise passée sur Mara Pro.')
             : context.tr('Entreprise repassée sur Mara (gratuit).');
@@ -765,6 +796,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     setState(() {
       _payoutController.text = w.number ?? '';
       _merchantRefController.text = w.merchantRef ?? '';
+      _markSaved([_payoutController, _merchantRefController]);
     });
   }
 
@@ -2275,8 +2307,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     children: _partBody(part, theme),
   );
 
+  // A rubrique's edits not saved yet: the business's bar asks before
+  // leaving them (A4).
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      UnsavedInput(isDirty: _unsavedEdits, child: _build(context));
+
+  Widget _build(BuildContext context) {
     final theme = Theme.of(context);
     final wide = MediaQuery.sizeOf(context).width >= 840;
     // A part the switchboard hid (110), asked by its address: the index.

@@ -47,6 +47,10 @@ IconData pathStepIcon(String key) => switch (key) {
 /// one with a number in it, `articles`, is said here from its goal.
 String pathStepTitle(BuildContext context, PathStep s, {bool farm = false}) {
   if (s.key == 'articles') {
+    // One is said as one: « 1 article en vente », never « 1 articles ».
+    if (s.goal == 1) {
+      return farm ? context.tr('1 produit en vente') : context.tr('1 article en vente');
+    }
     return farm
         ? context.tr('{n} produits en vente', {'n': s.goal})
         : context.tr('{n} articles en vente', {'n': s.goal});

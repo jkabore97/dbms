@@ -79,6 +79,9 @@ abstract final class Routes {
   /// Creating one's own business, at once (111) — from the no-business
   /// screen, the picker, Compte and the shopper's profile.
   static const createBusiness = '/creer-mon-activite';
+  /// The request page of before 111 (« Demander une entreprise »): an old
+  /// link or bookmark lands on the creation that replaced it.
+  static const oldApplyForBusiness = '/demander-une-entreprise';
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
@@ -236,6 +239,11 @@ GoRouter buildRouter(SessionController session) {
     final here = state.matchedLocation;
 
     bool at(String path) => here == path || here.startsWith('$path/');
+
+    // The request page of before 111, from an old link: the creation that
+    // replaced it, whatever the phase (signed out, the sign-in brings the
+    // person back here, then on to it).
+    if (state.uri.path == Routes.oldApplyForBusiness) return Routes.createBusiness;
 
     // The language screen answers to no phase: the person who most needs it
     // is the one who cannot read whatever screen their phase would show. The
@@ -737,6 +745,10 @@ GoRouter buildRouter(SessionController session) {
       /// what it protects), then its home — which holds its first setup.
       /// The splash carries the moment between: it is no destination, so
       /// the code screen gives back the business, not this flow.
+      GoRoute(
+        path: Routes.oldApplyForBusiness,
+        redirect: (_, _) => Routes.createBusiness,
+      ),
       GoRoute(
         path: Routes.createBusiness,
         builder: (context, _) {

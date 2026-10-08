@@ -74,6 +74,9 @@ Widget _tool(String name) => Builder(
       ),
     );
 
+/// Whether the page « saisie » holds input not saved (A4).
+bool _dirty = false;
+
 GoRouter _router(Widget Function() home, OrgSummary org, {String? at}) {
   final cover = BusinessCover();
   return GoRouter(
@@ -101,6 +104,13 @@ GoRouter _router(Widget Function() home, OrgSummary org, {String? at}) {
                       GoRoute(path: ':id', builder: (_, s) => BusinessPage(child: _tool('$r ${s.pathParameters['id']}'))),
                     ],
                   ),
+                // A page with input (a new invoice, a rubrique of the
+                // settings): unsaved while [_dirty].
+                GoRoute(
+                  path: 'saisie',
+                  builder: (_, _) =>
+                      BusinessPage(child: UnsavedInput(isDirty: () => _dirty, child: _tool('saisie'))),
+                ),
               ],
             ),
           ],
@@ -231,11 +241,17 @@ void main() {
       expect(find.text('Page factures F-12'), findsOneWidget);
       expect(_selected(tester), 'Factures');
 
-      // Factures again, from an invoice: the list of them.
+      // Factures again, from an invoice: the place already selected —
+      // nothing (A4), the invoice stays.
       await tester.tap(find.text('Factures'));
       await _settle(tester);
-      expect(router.state.uri.path, '/o/org-1/factures');
+      expect(router.state.uri.path, '/o/org-1/factures/F-12');
+      expect(find.text('Page factures F-12'), findsOneWidget);
 
+      // Back walks the link's own stack: the list of invoices, then home.
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+      expect(router.state.uri.path, '/o/org-1/factures');
       await tester.binding.handlePopRoute();
       await _settle(tester);
       expect(router.state.uri.path, '/o/org-1');
@@ -261,6 +277,76 @@ void main() {
       expect(find.text('Page produits'), findsOneWidget);
     });
 
+    testWidgets('input not saved: the bar asks « Quitter sans enregistrer ? » — Rester stays, Quitter goes',
+        (tester) async {
+      await _size(tester, 390, 1400);
+      _dirty = true;
+      addTearDown(() => _dirty = false);
+      final router = _router(shopHome, _shop, at: '/o/org-1/saisie');
+      await tester.pumpWidget(_app(router));
+      await _settle(tester);
+      expect(find.text('Page saisie'), findsOneWidget);
+
+      await tester.tap(find.text('Articles'));
+      await _settle(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('unsaved-stay')));
+      await _settle(tester);
+      expect(router.state.uri.path, '/o/org-1/saisie');
+      expect(find.text('Page saisie'), findsOneWidget);
+
+      // From Plus too.
+      await tester.tap(find.text('Plus'));
+      await _settle(tester);
+      await tester.tap(find.widgetWithText(ListTile, 'Administration'));
+      await _settle(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('unsaved-stay')));
+      await _settle(tester);
+      expect(router.state.uri.path, '/o/org-1/saisie');
+
+      await tester.tap(find.text('Articles'));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('unsaved-leave')));
+      await _settle(tester);
+      expect(find.text('Page produits'), findsOneWidget);
+
+      // Nothing typed: no question.
+      _dirty = false;
+      router.go('/o/org-1/saisie');
+      await _settle(tester);
+      await tester.tap(find.text('Commandes'));
+      await _settle(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+      expect(find.text('Page commandes'), findsOneWidget);
+    });
+
+    testWidgets('a page that is no place selects none; Plus opens in the business\'s colours',
+        (tester) async {
+      await _size(tester, 390, 1400);
+      final router = _router(shopHome, _shop, at: '/o/org-1/notifications');
+      await tester.pumpWidget(_app(router));
+      await _settle(tester);
+      expect(find.text('Page notifications'), findsOneWidget);
+      final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      expect(bar.indicatorColor, Colors.transparent, reason: 'no place shown selected');
+      final first = tester.widgetList<NavigationDestination>(find.byType(NavigationDestination)).first;
+      expect((first.selectedIcon as dynamic).toString(), (first.icon as dynamic).toString());
+      // A place's page: its indicator back.
+      router.go('/o/org-1/produits');
+      await _settle(tester);
+      expect(tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor, isNull);
+      expect(_selected(tester), 'Articles');
+
+      await tester.tap(find.text('Plus'));
+      await _settle(tester);
+      final business = Theme.of(tester.element(find.byType(NavigationBar))).colorScheme.primary;
+      final sheet = Theme.of(tester.element(find.byType(BottomSheet))).colorScheme.primary;
+      final app = Theme.of(tester.element(find.byType(Navigator).first)).colorScheme.primary;
+      expect(sheet, business);
+      expect(business, isNot(app), reason: 'the business has colours of its own');
+    });
+
     testWidgets('on a computer the rail stands at the left of every page', (tester) async {
       await _size(tester, 1280, 800);
       await tester.pumpWidget(_app(_router(shopHome, _shop, at: '/o/org-1/commandes')));
@@ -268,6 +354,12 @@ void main() {
       expect(find.byType(NavigationBar), findsNothing);
       final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
       expect(rail.selectedIndex, 2);
+      // A page that is no place: the rail selects none.
+      GoRouter.of(tester.element(find.text('Page commandes'))).go('/o/org-1/notifications');
+      await _settle(tester);
+      expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex, isNull);
+      GoRouter.of(tester.element(find.text('Page notifications'))).go('/o/org-1/commandes');
+      await _settle(tester);
       expect(find.text('Page commandes'), findsOneWidget);
       // The page beside the rail, not under it.
       expect(tester.getRect(find.byType(Scaffold).last).left,

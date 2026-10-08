@@ -755,7 +755,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
                 onGallery: () => _take(part, gallery: true),
               ),
             ),
-          hint(context.tr('Ces photos restent privées : seule l\'équipe Mara les voit, et elles sont effacées 30 jours après un refus.')),
+          hint(context.tr('Ces photos restent privées : seule l\'équipe Mara les voit. Après un refus, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.')),
         ];
       case 'phone':
         final proved = d.verifiedPhone;

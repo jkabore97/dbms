@@ -8,6 +8,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/capture/invoice_reading.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/errors.dart';
+import '../home/business_frame.dart' show UnsavedInput;
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The screen M5's demo is actually about: *she photographs a delivery invoice
@@ -184,8 +185,13 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
     }
   }
 
+  // The photo's articles are not in the stock until « Enregistrer »:
+  // leaving by the business's bar asks first (A4).
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      UnsavedInput(isDirty: () => !_saving, child: _page(context));
+
+  Widget _page(BuildContext context) {
     final theme = Theme.of(context);
     final unsure = _rows.where((r) => !r.line.checked).length;
 

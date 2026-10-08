@@ -528,6 +528,9 @@ void main() {
       final me = _Shopper(_profile());
       await profilePage(tester, session, me);
       await tapRow(tester, 'shopper-delete');
+      // What goes, and what stays with the shops (113: « Client supprimé »).
+      expect(find.text('Votre compte, vos adresses et vos favoris seront effacés pour toujours. '
+          'Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.'), findsOneWidget);
       final confirm = find.byKey(const Key('delete-confirm'));
       expect(tester.widget<FilledButton>(confirm).onPressed, isNull, reason: 'nothing before the word');
       await tester.enterText(find.byKey(const Key('delete-word')), 'supprimer');
@@ -788,7 +791,7 @@ void main() {
       await settle(tester);
       expect(me.reordered, ['done-1']);
       expect(find.text('page /s/boutique-awa'), findsOneWidget);
-      expect(find.text('Votre panier est prêt. 1 article(s) de la commande ne sont plus disponibles.'), findsOneWidget);
+      expect(find.text('Votre panier est prêt. 1 article de la commande n\'est plus disponible.'), findsOneWidget);
       final kept = await tester.runAsync(() => db.readPref('street_basket_boutique-awa'));
       expect(jsonDecode(kept!), {'p9': 1.0, 'p1': 2.0});
     });

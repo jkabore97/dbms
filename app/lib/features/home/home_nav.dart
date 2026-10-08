@@ -70,6 +70,16 @@ class BusinessNav extends ChangeNotifier {
     _drawn = '';
   }
 
+  /// The pages holding input not saved yet ([UnsavedInput]), each asked
+  /// at the moment of a tap on the bar or the rail.
+  final Set<bool Function()> _unsaved = {};
+
+  void holdUnsaved(bool Function() dirty) => _unsaved.add(dirty);
+  void releaseUnsaved(bool Function() dirty) => _unsaved.remove(dirty);
+
+  /// Whether leaving now would lose what somebody typed.
+  bool get hasUnsaved => _unsaved.any((dirty) => dirty());
+
   @override
   void dispose() {
     _disposed = true;

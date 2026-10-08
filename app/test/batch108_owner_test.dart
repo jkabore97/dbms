@@ -3,14 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/core/capture/invoice_reading.dart' as reading;
 import 'package:kaj_app/core/cauris/cauris_repository.dart';
 import 'package:kaj_app/core/cauris/feature_states.dart';
+import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
+import 'package:kaj_app/core/invoicing/models.dart';
 import 'package:kaj_app/core/rates/currency_rates.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/admin/cauris_console_card.dart';
 import 'package:kaj_app/features/admin/org_settings_screen.dart';
+import 'package:kaj_app/features/capture/confirm_products_screen.dart';
 import 'package:kaj_app/features/cauris/path_card.dart';
 import 'package:kaj_app/features/cauris/unlock_sheet.dart';
+import 'package:kaj_app/features/home/home_nav.dart';
+import 'package:kaj_app/features/invoicing/new_invoice_screen.dart';
 import 'package:kaj_app/features/retail/sale_sheet.dart';
 import 'package:kaj_app/l10n/strings.dart';
 
@@ -154,6 +160,19 @@ void main() {
       expect(farm, 'La position de ma ferme');
     });
 
+    testWidgets('Le Chemin\'s article goal: one is « 1 article en vente », never « 1 articles »', (tester) async {
+      late String one, farmOne, three;
+      await tester.pumpWidget(_app(Builder(builder: (context) {
+        one = pathStepTitle(context, const PathStep(key: 'articles', stage: 1, title: 'x', goal: 1));
+        farmOne = pathStepTitle(context, const PathStep(key: 'articles', stage: 1, title: 'x', goal: 1), farm: true);
+        three = pathStepTitle(context, const PathStep(key: 'articles', stage: 1, title: 'x', goal: 3));
+        return const SizedBox();
+      })));
+      expect(one, '1 article en vente');
+      expect(farmOne, '1 produit en vente');
+      expect(three, '3 articles en vente');
+    });
+
     for (final (profile, words) in [
       ('retail', 'La position de ma boutique'),
       ('farm', 'La position de ma ferme'),
@@ -257,6 +276,73 @@ void main() {
           org: _shop, feature: 'invoices', load: none, onPath: () {})));
       await tester.pump();
       expect(find.byKey(const Key('path-pro-all')), findsNothing);
+    });
+  });
+
+  // A4: the pages that hold input tell the business's bar, which asks
+  // « Quitter sans enregistrer ? » before leaving them (batch108_frame_test
+  // proves the asking).
+  group('A4 — input not saved, told to the bar', () {
+    Widget framed(BusinessNav nav, Widget page) => _app(
+        BusinessNavHost(nav: nav, insets: EdgeInsets.zero, child: page));
+
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('the settings of a $profile: a rubrique edited is unsaved, saved is not', (tester) async {
+        await _tall(tester);
+        final nav = BusinessNav();
+        addTearDown(nav.dispose);
+        await tester.pumpWidget(framed(nav, OrgSettingsScreen(admin: _Settings(profile), orgId: 'o1')));
+        await tester.pump();
+        await tester.pump();
+        expect(nav.hasUnsaved, isFalse, reason: 'as read: nothing to lose');
+        await tester.tap(find.text('Identité'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField).first, 'Ici et là');
+        await tester.pump();
+        expect(nav.hasUnsaved, isTrue);
+        await tester.enterText(find.byType(TextField).first, 'Ici');
+        await tester.pump();
+        expect(nav.hasUnsaved, isFalse, reason: 'back as it was');
+      });
+    }
+
+    testWidgets('a new invoice once typed, its correction once changed', (tester) async {
+      await _tall(tester);
+      final nav = BusinessNav();
+      addTearDown(nav.dispose);
+      await tester.pumpWidget(framed(nav, NewInvoiceScreen(org: _shop, invoicing: InvoicingRepository(null))));
+      await tester.pump();
+      expect(nav.hasUnsaved, isFalse);
+      await tester.enterText(find.byType(TextField).first, 'Hôtel Liberté');
+      await tester.pump();
+      expect(nav.hasUnsaved, isTrue);
+
+      final doc = InvoiceDocument(
+        id: 'inv-1', number: '2026-0007', issuedOn: DateTime(2026, 8, 1), total: 15000, paid: 0,
+        outstanding: 15000, customerName: 'Hôtel Liberté', orgName: 'Boutique', currency: 'XOF',
+        lines: const [InvoiceLine(description: 'Savon', quantity: 20, unitPrice: 750)]);
+      final fix = BusinessNav();
+      addTearDown(fix.dispose);
+      await tester.pumpWidget(framed(fix, NewInvoiceScreen(
+          key: const Key('fix'), org: _shop, invoicing: InvoicingRepository(null), revisionOf: doc)));
+      await tester.pump();
+      expect(fix.hasUnsaved, isFalse, reason: 'opened with the document: nothing changed yet');
+      await tester.enterText(find.byType(TextField).first, 'Hôtel Indépendance');
+      await tester.pump();
+      expect(fix.hasUnsaved, isTrue);
+    });
+
+    testWidgets('a photo\'s articles to confirm: unsaved until « Enregistrer »', (tester) async {
+      await _tall(tester);
+      final nav = BusinessNav();
+      addTearDown(nav.dispose);
+      await tester.pumpWidget(framed(nav, ConfirmProductsScreen(
+          org: _shop, retail: _Till(),
+          lines: const [reading.InvoiceLine(name: 'Riz 25 kg', quantity: 2, unitCost: 15000)])));
+      await tester.pump();
+      expect(nav.hasUnsaved, isTrue);
+      await tester.pumpWidget(_app(const SizedBox()));
+      expect(nav.hasUnsaved, isFalse, reason: 'gone: nothing holds the bar');
     });
   });
 }

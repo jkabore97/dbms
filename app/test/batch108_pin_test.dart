@@ -264,6 +264,43 @@ void main() {
       session.dispose();
     });
   });
+
+  // A3 (111): « Créer mon activité » on a bad line — created on the server,
+  // then the list times out. The business is added from the creation, and
+  // the person lands in it (the code first).
+  test('a business created on a bad line: added from the creation when the list times out', () async {
+    final server = _Server();
+    final session = on(server, timeout: const Duration(milliseconds: 100));
+    await session.handleSignedIn(_person);
+    expect(session.phase, SessionPhase.noOrg);
+    server.hang = Completer<List<OrgSummary>>();
+    const created = OrgSummary(
+        id: 'new-1', name: 'Chez Awa', profile: 'retail', slug: 'chez-awa', roles: ['owner']);
+    expect(await session.adoptCreatedOrg(created), isTrue);
+    expect(session.orgById('new-1')?.name, 'Chez Awa');
+    expect(session.phase, SessionPhase.choosingPin, reason: 'a business now: the code, once');
+    expect((await db.cachedOrgs()).map((o) => o.id), ['new-1']);
+    // The code chosen, the list still hanging: the device's list opens it.
+    await session.setPin('7391');
+    expect(session.phase, SessionPhase.ready);
+    expect(session.lastOrgId, 'new-1');
+    // A line that holds: the server's own row replaces it.
+    server.hang = null;
+    server.orgs = const [OrgSummary(id: 'new-1', name: 'Chez Awa', profile: 'retail', roles: ['owner'], plan: 'free')];
+    await session.refresh(force: true);
+    expect(session.orgsFromCache, isFalse);
+    session.dispose();
+  });
+
+  test('the list already has it: nothing is added', () async {
+    final server = _Server()..orgs = const [_shop];
+    final session = on(server);
+    await session.handleSignedIn(_person);
+    expect(await session.adoptCreatedOrg(_shop), isTrue);
+    expect(session.orgs, hasLength(1));
+    expect(session.orgsFromCache, isFalse);
+    session.dispose();
+  });
 }
 
 /// The second step (077): required for this account until [passed].

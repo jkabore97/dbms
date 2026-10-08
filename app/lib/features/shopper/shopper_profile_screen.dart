@@ -759,7 +759,7 @@ class _DeleteDialogState extends State<_DeleteDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr('Votre compte, vos commandes, vos adresses et vos favoris seront effacés pour toujours. Les boutiques ne verront plus vos commandes.')),
+            Text(context.tr('Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.')),
             const SizedBox(height: 14),
             Text(context.tr('Pour confirmer, tapez {word} :', {'word': word}),
                 style: const TextStyle(fontWeight: FontWeight.w600)),

@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/courier/courier_dossier.dart';
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/nav/router.dart' show Routes;
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../courier/courier_words.dart';
@@ -157,6 +159,16 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        // Opened from a link (a bell, a bookmark), nothing is under it: the
+        // arrow goes to the couriers. Pushed from the list, the usual back.
+        leading: GoRouter.maybeOf(context)?.canPop() ?? true
+            ? null
+            : IconButton(
+                key: const Key('review-back'),
+                tooltip: context.tr('Livreurs'),
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go(Routes.consoleCouriers),
+              ),
         title: Text(d?.name ?? context.tr('Dossier livreur')),
         actions: [
           IconButton(
@@ -301,7 +313,7 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          context.tr('Ces photos sont privées : seule la plateforme les voit. Après un refus, elles sont effacées au bout de 30 jours si le livreur ne renvoie pas sa demande.'),
+                          context.tr('Ces photos sont privées : seule la plateforme les voit. Après un refus que le livreur ne renvoie pas, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.'),
                           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ],

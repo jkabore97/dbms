@@ -106,9 +106,12 @@ class _CreatedBusinessesScreenState extends State<CreatedBusinessesScreen> {
                   color: maraCaramel.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(context.tr(
-                    '{n} demande(s) envoyée(s) depuis une ancienne version de l\'application attendent : la personne peut maintenant créer son activité elle-même, dans la nouvelle version.',
-                    {'n': list!.oldRequests})),
+                child: Text(list!.oldRequests == 1
+                    ? context.tr(
+                        '1 demande envoyée depuis une ancienne version de l\'application attend : la personne peut maintenant créer son activité elle-même, dans la nouvelle version.')
+                    : context.tr(
+                        '{n} demandes envoyées depuis une ancienne version de l\'application attendent : la personne peut maintenant créer son activité elle-même, dans la nouvelle version.',
+                        {'n': list.oldRequests})),
               ),
             for (final b in list?.items ?? const <CreatedBusiness>[]) _card(theme, b),
             if (!_loading && _error == null && (list?.items.isEmpty ?? true))
@@ -127,6 +130,14 @@ class _CreatedBusinessesScreenState extends State<CreatedBusinessesScreen> {
         ),
       ),
     );
+  }
+
+  /// The business's phone, unless it is the person's (digits compared).
+  static String? _ownPhone(CreatedBusiness b) {
+    String digits(String? v) => (v ?? '').replaceAll(RegExp(r'\D'), '');
+    final phone = b.phone;
+    if (phone == null || digits(phone).isEmpty) return null;
+    return digits(phone) == digits(b.personPhone) ? null : phone;
   }
 
   Widget _card(ThemeData theme, CreatedBusiness b) {
@@ -195,8 +206,10 @@ class _CreatedBusinessesScreenState extends State<CreatedBusinessesScreen> {
               if (b.person != null || b.personPhone != null || b.personEmail != null)
                 Text([?b.person, ?b.personPhone, ?b.personEmail].join(' · '),
                     style: theme.textTheme.bodyMedium),
-              if (b.city != null || b.area != null || b.phone != null)
-                Text([?b.area, ?b.city, ?b.phone].join(' · '), style: theme.textTheme.bodyMedium),
+              // The business's phone once: not again when it is the
+              // person's own number, said on the line above.
+              if (b.city != null || b.area != null || _ownPhone(b) != null)
+                Text([?b.area, ?b.city, ?_ownPhone(b)].join(' · '), style: theme.textTheme.bodyMedium),
               if (b.about != null) ...[
                 const SizedBox(height: 6),
                 Text(b.about!, style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),

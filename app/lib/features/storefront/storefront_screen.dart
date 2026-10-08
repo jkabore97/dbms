@@ -178,6 +178,29 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     widget.session.addListener(_onSession);
     _followsFor();
     _load();
+    unawaited(_forgetAbandonedSignIn());
+  }
+
+  /// Back on this vitrine still signed out — « Se connecter autrement » or
+  /// « Créer un compte », then back without signing in: the way back and
+  /// the order to resume are forgotten, so a sign-in later (from anywhere,
+  /// within the half hour) brings no surprise order sheet. A Google sign-in
+  /// in flight is never signed out here: on a phone the vitrine stays open
+  /// under the browser (no new visit), on the web the reload boots first.
+  Future<void> _forgetAbandonedSignIn() async {
+    if (widget.session.phase != SessionPhase.signedOut) return;
+    final db = widget.session.db;
+    try {
+      final raw = await db.readPref(_resumeKey);
+      if (raw != null && (raw == widget.slug || raw.startsWith('${widget.slug}|'))) {
+        await db.writePref(_resumeKey, null);
+      }
+    } catch (_) {}
+    if (widget.session.phase != SessionPhase.signedOut) return;
+    final stashed = widget.session.takeReturnTo();
+    if (stashed != null && stashed != Routes.storefront(widget.slug)) {
+      widget.session.stashReturnTo(stashed);
+    }
   }
 
   @override

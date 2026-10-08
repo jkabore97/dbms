@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/nav/business_cover.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/kaj_theme.dart';
@@ -21,7 +22,13 @@ import 'home_nav.dart';
 ///     the home, Articles on the articles and under them, Plus for a page
 ///     reached from Plus;
 ///   * a tap switches tool: the home stays underneath, so back from any
-///     tool returns to the home and never out of the app;
+///     tool returns to the home and never out of the app. A page with
+///     input not saved yet ([UnsavedInput]: a new invoice or its
+///     correction, the settings' rubriques, a photo's articles to confirm)
+///     first asks « Quitter sans enregistrer ? »; the place already
+///     selected does nothing, even from deeper in it;
+///   * a page that is none of the places (nor one under Plus) selects
+///     none of them;
 ///   * a sheet, a dialog or a full-screen flow covers the bar as it always
 ///     did: the pages stand above the bar ([BusinessPage]) in a navigator
 ///     that spans the whole screen, and while something that is not a page
@@ -102,22 +109,26 @@ class _BusinessFrameState extends State<BusinessFrame> {
   /// from the home, the way the home opens it — so the home is always the
   /// page underneath, its gates (Le Chemin's locks) are asked, and it reads
   /// itself again when the tool is closed.
-  void _open(HomeDestination p) {
+  ///
+  /// [themed] is a context under the business's colours (the dialog asked).
+  Future<void> _open(HomeDestination p, BuildContext themed) async {
     final org = widget.org;
     final r = p.route;
+    final rest = _rest;
+    // The place already selected — its own page, or deeper in it (an
+    // invoice, under Factures): nothing. A door (no route) still opens.
+    if (org != null && r != null) {
+      final inIt = r.isEmpty ? rest.isEmpty : rest == r || rest.startsWith('$r/');
+      if (inIt) return;
+    }
+    if (_nav.hasUnsaved && !await _leaveUnsaved(themed)) return;
+    if (!mounted) return;
     if (org == null || r == null) {
       p.onTap();
       return;
     }
-    final rest = _rest;
     if (r.isEmpty) {
-      if (rest.isNotEmpty) context.go(Routes.org(org.id));
-      return;
-    }
-    if (rest == r) return;
-    // Deeper in the tool already (an invoice, under Factures): its own page.
-    if (rest.startsWith('$r/')) {
-      context.go(Routes.inside(org.id, r));
+      context.go(Routes.org(org.id));
       return;
     }
     if (rest.isEmpty) {
@@ -128,6 +139,31 @@ class _BusinessFrameState extends State<BusinessFrame> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) p.onTap();
     });
+  }
+
+  /// « Quitter sans enregistrer ? » — true to leave.
+  Future<bool> _leaveUnsaved(BuildContext themed) async {
+    final leave = await showDialog<bool>(
+      context: themed,
+      builder: (dialog) => AlertDialog(
+        key: const Key('unsaved-dialog'),
+        title: Text(dialog.tr('Quitter sans enregistrer ?')),
+        content: Text(dialog.tr('Ce que vous avez saisi ici sera perdu.')),
+        actions: [
+          TextButton(
+            key: const Key('unsaved-stay'),
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(dialog.tr('Rester')),
+          ),
+          FilledButton(
+            key: const Key('unsaved-leave'),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(dialog.tr('Quitter')),
+          ),
+        ],
+      ),
+    );
+    return leave == true;
   }
 
   @override
@@ -160,35 +196,51 @@ class _BusinessFrameState extends State<BusinessFrame> {
 
     final more = nav?.overflow ?? const <HomeDestination>[];
     final here = _here([...places, ...more]);
-    // Not one of the bar's own: a page reached from Plus is Plus's.
+    // Not one of the bar's own: a page reached from Plus is Plus's; a page
+    // that is no place at all is nobody's (nothing selected).
     var selected = places.indexWhere((p) => identical(p, here));
-    if (selected < 0 && more.isNotEmpty) selected = places.length - 1;
+    if (selected < 0 && here != null && more.any((m) => identical(m, here))) {
+      selected = places.length - 1;
+    }
 
-    void tap(int i) {
+    // [themed]: a context under the business's colours — the Plus sheet
+    // and the dialog are the business's, as its pages are.
+    void tap(BuildContext themed, int i) {
       final p = places[i];
       if (i == places.length - 1 && more.isNotEmpty) {
-        HomeNav.showMore(context, more, onPick: _open, here: here);
+        HomeNav.showMore(themed, more, onPick: (item) => _open(item, themed), here: here);
         return;
       }
-      _open(p);
+      _open(p, themed);
     }
 
     Widget bar = const SizedBox.shrink();
     if (drawn && !wide) {
+      // NavigationBar always selects one: with no place here, the first
+      // is drawn as unselected (no indicator, its plain icon and label).
+      final none = selected < 0;
+      final labels = NavigationBarTheme.of(context).labelTextStyle;
       bar = SizedBox(
         key: const Key('business-bar'),
         height: barHeight,
-        child: NavigationBar(
-          selectedIndex: selected < 0 ? 0 : selected,
-          onDestinationSelected: tap,
-          destinations: [
-            for (final p in places)
-              NavigationDestination(
-                icon: HomeNav.placeIcon(p, p.icon),
-                selectedIcon: HomeNav.placeIcon(p, p.selectedIcon ?? p.icon),
-                label: p.label,
-              ),
-          ],
+        child: Builder(
+          builder: (themed) => NavigationBar(
+            selectedIndex: none ? 0 : selected,
+            indicatorColor: none ? Colors.transparent : null,
+            labelTextStyle: none && labels != null
+                ? WidgetStatePropertyAll(labels.resolve(const <WidgetState>{}))
+                : null,
+            onDestinationSelected: (i) => tap(themed, i),
+            destinations: [
+              for (final p in places)
+                NavigationDestination(
+                  icon: HomeNav.placeIcon(p, p.icon),
+                  selectedIcon: HomeNav.placeIcon(
+                      p, none ? p.icon : (p.selectedIcon ?? p.icon)),
+                  label: p.label,
+                ),
+            ],
+          ),
         ),
       );
     } else if (drawn) {
@@ -200,20 +252,22 @@ class _BusinessFrameState extends State<BusinessFrame> {
             right: false,
             child: SizedBox(
               width: _railWidth,
-              child: NavigationRail(
-                minWidth: _railWidth,
-                selectedIndex: selected < 0 ? null : selected,
-                labelType: NavigationRailLabelType.all,
-                onDestinationSelected: tap,
-                destinations: [
-                  for (final p in places)
-                    NavigationRailDestination(
-                      icon: HomeNav.placeIcon(p, p.icon),
-                      selectedIcon:
-                          HomeNav.placeIcon(p, p.selectedIcon ?? p.icon),
-                      label: Text(p.label, textAlign: TextAlign.center),
-                    ),
-                ],
+              child: Builder(
+                builder: (themed) => NavigationRail(
+                  minWidth: _railWidth,
+                  selectedIndex: selected < 0 ? null : selected,
+                  labelType: NavigationRailLabelType.all,
+                  onDestinationSelected: (i) => tap(themed, i),
+                  destinations: [
+                    for (final p in places)
+                      NavigationRailDestination(
+                        icon: HomeNav.placeIcon(p, p.icon),
+                        selectedIcon:
+                            HomeNav.placeIcon(p, p.selectedIcon ?? p.icon),
+                        label: Text(p.label, textAlign: TextAlign.center),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -288,4 +342,43 @@ class BusinessPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Input on a page of a business not saved yet (108, A4): while [isDirty]
+/// says so — asked at the moment of the tap — a tap on the business's bar
+/// or rail first asks « Quitter sans enregistrer ? ». Outside a business
+/// frame it is nothing.
+class UnsavedInput extends StatefulWidget {
+  const UnsavedInput({super.key, required this.isDirty, required this.child});
+
+  final bool Function() isDirty;
+  final Widget child;
+
+  @override
+  State<UnsavedInput> createState() => _UnsavedInputState();
+}
+
+class _UnsavedInputState extends State<UnsavedInput> {
+  BusinessNav? _nav;
+
+  bool _dirty() => mounted && widget.isDirty();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nav = BusinessNavHost.navOf(context);
+    if (!identical(nav, _nav)) {
+      _nav?.releaseUnsaved(_dirty);
+      _nav = nav?..holdUnsaved(_dirty);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nav?.releaseUnsaved(_dirty);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

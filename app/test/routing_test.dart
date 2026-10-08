@@ -12,6 +12,7 @@ import 'package:kaj_app/core/auth/pin_codec.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/nav/router.dart' show Routes;
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/farm/farm_repository.dart';
 import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
@@ -351,6 +352,21 @@ void main() {
       router.go('/vitrines');
       await flush(tester);
     }
+  });
+
+  testWidgets('the request page of before 111 opens the creation that replaced it',
+      (tester) async {
+    await seedDevice(tester, orgs: const [
+      OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
+      OrgSummary(id: 'org-2', name: 'Ferme Ignace', profile: 'farm'),
+    ]);
+    await pumpApp(tester);
+    await enterPin(tester, '1379');
+    final router =
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig as GoRouter;
+    router.go('/demander-une-entreprise');
+    await flush(tester);
+    expect(router.state.uri.path, Routes.createBusiness);
   });
 
   testWidgets('an identity with no code cannot be trusted offline',

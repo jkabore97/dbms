@@ -316,6 +316,31 @@ void main() {
       expect(session.takeReturnTo(), Routes.storefront(_slug));
     });
 
+    testWidgets('« Se connecter autrement », then back without signing in: nothing waits to surprise later',
+        (tester) async {
+      final server = _Server();
+      final session = await stranger(tester, server);
+      final router = await openVitrine(tester, session);
+      await tapOrder(tester);
+      await tester.tap(find.byKey(const Key('order-sign-in-other')));
+      await settle(tester);
+      expect(find.text('connexion '), findsOneWidget);
+      // Back to the vitrine, still signed out.
+      router.go(Routes.storefront(_slug));
+      await settle(tester);
+      expect(await tester.runAsync(() => db.readPref(_resumeKey)), isNull, reason: 'the order to resume forgotten');
+      expect(session.takeReturnTo(), isNull, reason: 'the way back forgotten');
+      expect(await tester.runAsync(() => db.readPref('street_basket_$_slug')), isNotNull,
+          reason: 'the basket stays');
+      // Signed in later, from wherever: no order sheet by itself.
+      server
+        ..live = true
+        ..user = _awa;
+      await tester.runAsync(session.resolveOrgs);
+      await settle(tester);
+      expect(find.text('Votre commande'), findsNothing);
+    });
+
     testWidgets('closing the sheet leaves nothing behind', (tester) async {
       final session = await stranger(tester, _Server());
       await openVitrine(tester, session);
@@ -426,8 +451,16 @@ void main() {
       await page(true);
       expect(find.text('Prénom'), findsOneWidget, reason: 'the sign-up form');
       expect(find.text('Créer mon compte'), findsOneWidget);
+      // From a vitrine: a shopper's line, not « rejoindrez une activité ».
+      expect(find.text('Créez votre compte pour commander.'), findsOneWidget);
+      expect(find.textContaining('rejoindrez une activité'), findsNothing);
       await page(false);
       expect(find.text('Prénom'), findsNothing);
+      // Opened plainly and switched to « Créer un compte »: the joining line.
+      await tester.tap(find.text('Créer un compte').first);
+      await tester.pump();
+      expect(find.textContaining('rejoindrez une activité'), findsOneWidget);
+      expect(find.text('Créez votre compte pour commander.'), findsNothing);
     });
 
     test('the router: the street and every vitrine open signed out; « Mes commandes » asks to sign in', () {

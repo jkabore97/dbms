@@ -176,7 +176,7 @@ void main() {
   }
 
   Future<String?> pumpFlow(WidgetTester tester, _Api api,
-      {_Drafts? drafts, ApplicationForm? preview}) async {
+      {_Drafts? drafts, ApplicationForm? preview, bool seen = true, List<OrgSummary>? handed}) async {
     String? created;
     await tester.pumpWidget(MaterialApp(
       home: CreateMyBusinessScreen(
@@ -185,7 +185,11 @@ void main() {
         drafts: drafts,
         whatsApp: _WhatsApp(),
         previewForm: preview,
-        onCreated: (id) async => created = id,
+        onCreated: (org) async {
+          created = org.id;
+          handed?.add(org);
+          return seen;
+        },
       ),
     ));
     await settle(tester);
@@ -200,7 +204,10 @@ void main() {
       String? created;
       await tester.pumpWidget(MaterialApp(
         home: CreateMyBusinessScreen(
-            api: api, drafts: drafts, onCreated: (id) async => created = id),
+            api: api, drafts: drafts, onCreated: (org) async {
+              created = org.id;
+              return true;
+            }),
       ));
       await settle(tester);
 
@@ -388,6 +395,33 @@ void main() {
       await settle(tester);
       expect(find.text('Ferme Wend'), findsOneWidget);
       expect(find.byKey(const Key('create-resumed')), findsNothing, reason: 'said once');
+    });
+
+    testWidgets('created on a bad line: the answers stay until the app has the business', (tester) async {
+      phone(tester);
+      BusinessDraft summary() => BusinessDraft(
+          step: 5, profile: 'retail', name: 'Chez Awa', slug: 'chez-awa', activity: 'alimentation',
+          city: 'Ouagadougou', area: 'Dapoya', phoneIso: 'BF', phone: '70112233');
+      final handed = <OrgSummary>[];
+      // The app could not see it yet: everything typed is still there.
+      final kept = _Drafts(summary());
+      await pumpFlow(tester, _Api(), drafts: kept, seen: false, handed: handed);
+      expect(find.text('Tout est juste ?'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('create-submit')));
+      await settle(tester);
+      expect(kept.kept?.name, 'Chez Awa', reason: 'not seen yet: kept on the device');
+      // What the session is handed to add it: the business, its owner.
+      expect(handed.single.id, 'org-new');
+      expect(handed.single.name, 'Chez Awa');
+      expect(handed.single.profile, 'retail');
+      expect(handed.single.slug, 'chez-awa');
+      expect(handed.single.roles, ['owner']);
+      // Seen: the answers leave the device.
+      final gone = _Drafts(summary());
+      await pumpFlow(tester, _Api(), drafts: gone);
+      await tester.tap(find.byKey(const Key('create-submit')));
+      await settle(tester);
+      expect(gone.kept, isNull);
     });
 
     test('a draft survives its round trip', () {
@@ -587,7 +621,7 @@ void main() {
           {
             'how': 'created', 'org_id': 'o1', 'name': 'Chez Awa', 'slug': 'chez-awa',
             'profile': 'retail', 'activity': 'alimentation', 'city': 'Ouagadougou', 'area': 'Dapoya',
-            'person': 'Awa Ouédraogo', 'person_phone': '+22670112233',
+            'person': 'Awa Ouédraogo', 'person_phone': '+22670112233', 'phone': '+226 70 11 22 33',
             'answers': [
               {'id': 'q3', 'label': 'Depuis combien d\'années ?', 'type': 'number', 'value': 3.5},
               {'id': 'q4', 'label': 'Avez-vous un local ?', 'type': 'yesno', 'value': false},
@@ -604,11 +638,26 @@ void main() {
       await settle(tester);
       expect(find.text('Activités créées'), findsOneWidget);
       expect(find.byKey(const Key('created-old-requests')), findsOneWidget);
+      // One is said as one, no « (s) ».
+      expect(find.textContaining('1 demande envoyée depuis une ancienne version de l\'application attend :'),
+          findsOneWidget);
+      // The business's phone is the person's: said once.
+      expect(find.textContaining('+22670112233'), findsOneWidget);
+      expect(find.textContaining('70 11 22 33'), findsNothing);
+      expect(find.text('Dapoya · Ouagadougou'), findsOneWidget);
       expect(find.textContaining('Alimentation'), findsOneWidget);
       expect(find.textContaining('Créée par la personne'), findsOneWidget);
       expect(find.text('3,5'), findsOneWidget);
       expect(find.text('Non'), findsOneWidget);
       expect(find.textContaining('Demande refusée : Informations manquantes'), findsOneWidget);
+
+      await tester.pumpWidget(MaterialApp(
+          home: CreatedBusinessesScreen(
+              key: const Key('three'),
+              center: _Center(CreatedBusinesses.fromJson(const {'old_requests': 3, 'items': []})))));
+      await settle(tester);
+      expect(find.textContaining('3 demandes envoyées depuis une ancienne version de l\'application attendent :'),
+          findsOneWidget);
     });
   });
 

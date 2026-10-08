@@ -56,10 +56,12 @@ Future<void> reorderInto(
   merged.addAll(basket.lines);
   await db.writePref(key, jsonEncode(merged));
   if (!context.mounted) return;
-  final note = basket.missing > 0
-      ? context.tr('Votre panier est prêt. {n} article(s) de la commande ne sont plus disponibles.',
-          {'n': basket.missing})
-      : context.tr('Votre panier est prêt : vérifiez-le, puis commandez.');
+  final note = basket.missing == 1
+      ? context.tr('Votre panier est prêt. 1 article de la commande n\'est plus disponible.')
+      : basket.missing > 1
+          ? context.tr('Votre panier est prêt. {n} articles de la commande ne sont plus disponibles.',
+              {'n': basket.missing})
+          : context.tr('Votre panier est prêt : vérifiez-le, puis commandez.');
   context.go(Routes.storefront(basket.slug));
   say(note);
 }

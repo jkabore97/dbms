@@ -512,6 +512,47 @@ void main() {
       expect(server.undone, ['action-1']);
     });
 
+    testWidgets('opened from a link, the arrow goes to the couriers; pushed from the list, the usual back',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final server = _Server(start: {'status': 'pending'});
+      await tester.pumpWidget(_app(CourierReviewScreen(userId: 'u-awa', dossier: server, files: _Files(server)),
+          more: [
+            GoRoute(path: Routes.consoleCouriers, builder: (_, _) => const Scaffold(body: Text('LES LIVREURS'))),
+          ]));
+      await _settle(tester);
+      expect(find.byKey(const Key('review-back')), findsOneWidget);
+      // What happens to the photos, exactly (no scheduler).
+      expect(find.textContaining('ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante'),
+          findsOneWidget);
+      await tester.tap(find.byKey(const Key('review-back')));
+      await _settle(tester);
+      expect(find.text('LES LIVREURS'), findsOneWidget);
+
+      final pushed = GoRouter(initialLocation: '/liste', routes: [
+        GoRoute(
+            path: '/liste',
+            builder: (context, _) => Scaffold(
+                body: TextButton(onPressed: () => context.push('/dossier'), child: const Text('OUVRIR')))),
+        GoRoute(
+            path: '/dossier',
+            builder: (_, _) => CourierReviewScreen(userId: 'u-awa', dossier: server, files: _Files(server))),
+      ]);
+      await tester.pumpWidget(MaterialApp.router(
+        locale: const Locale('fr'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+        routerConfig: pushed,
+      ));
+      await _settle(tester);
+      await tester.tap(find.text('OUVRIR'));
+      await _settle(tester);
+      expect(find.byKey(const Key('review-back')), findsNothing);
+      expect(find.byType(BackButton), findsOneWidget);
+    });
+
     testWidgets('« Refuser »: a ready reason presets the step to redo; « autre » needs a word', (tester) async {
       tester.view.physicalSize = const Size(390, 1600);
       tester.view.devicePixelRatio = 1;
