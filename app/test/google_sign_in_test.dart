@@ -45,10 +45,16 @@ class _Server extends AuthRepository {
   @override
   Future<void> signInWithGoogle() async => launches++;
 
+  /// What my_orgs() answers: Awa's shop (the device code is for somebody
+  /// with a business, 108).
+  List<OrgSummary> orgs = const [
+    OrgSummary(id: 'shop-1', name: 'Boutique Awa', profile: 'retail', roles: ['owner']),
+  ];
+
   @override
   Future<List<OrgSummary>> fetchOrgs() async {
     fetched++;
-    return const [];
+    return orgs;
   }
 }
 
@@ -159,6 +165,19 @@ void main() {
 
       // Taken once.
       expect(await session.adoptGoogleSession(), isFalse);
+    });
+
+    test('back from Google with no business (a shopper): no code to choose (108)', () async {
+      final server = _Server()..orgs = const [];
+      final session = sessionOn(server);
+      await session.signInWithGoogle();
+      server
+        ..live = true
+        ..user = _awa;
+      expect(await session.adoptGoogleSession(), isTrue);
+      expect(session.phase, SessionPhase.noOrg,
+          reason: 'the code protects businesses: a shopper goes to the street');
+      expect(session.identity?.hasPin, isFalse);
     });
 
     test('the web reload: boot takes it before anything else', () async {

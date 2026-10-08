@@ -40,7 +40,12 @@ class SaleSheet extends StatefulWidget {
     this.allowWave = false,
     this.initialMethod = 'cash',
     this.orgName = '',
+    this.farm = false,
   });
+
+  /// A farm's sale (its carnet de crédit): its things are « produits »,
+  /// not « articles » (108).
+  final bool farm;
 
   /// The shop's name, printed on the Wave receipt. Empty is fine — the receipt
   /// falls back to a generic heading.
@@ -504,6 +509,17 @@ class _SaleSheetState extends State<SaleSheet> {
                     tooltip: context.tr('Scanner un code-barres'),
                   ),
               ],
+            ),
+            // What to do here, in one line under the title (the owner's
+            // words, 108).
+            const SizedBox(height: 4),
+            Text(
+              widget.farm
+                  ? context.tr('Choisissez les produits demandés par le client ici')
+                  : context.tr('Choisissez les articles demandés par le client ici'),
+              key: const Key('sale-helper'),
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             if (_sellable.isNotEmpty) ...[

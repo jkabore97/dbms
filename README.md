@@ -432,8 +432,10 @@ The bell used to ring only inside the app. With this set up, an order, a
 delivery taken or a job on the board reaches a **closed** app on the web
 (Chrome and Firefox on Android and desktop; Safari from iOS 16.4 when the
 site is added to the home screen). The pieces: migration 060 (the address
-book), `workers/push` (the sender), `web/push_sw.js` (the receiver), and a
-database webhook that wakes the Worker on every bell row.
+book), `workers/push` (the sender), `web/push_handlers.js` (the receiver,
+carried by `web/mara_sw.js` — or by the bare `web/push_sw.js` where no
+worker holds the site yet), and a database webhook that wakes the Worker on
+every bell row.
 
 One-time setup:
 
@@ -629,8 +631,15 @@ Worker's name is `dbms` deliberately, matching the hostname already in use; a
 different name would publish to a URL nobody is looking at and leave that one
 serving whatever it served before.
 
-After a deploy, hard-reload. A Flutter web build registers a service worker
-that will otherwise serve you the previous bundle from cache.
+After a deploy there is nothing to clear by hand. The deploy gives every
+file that changes between builds a folder named after its content
+(`scripts/web-fingerprint.mjs`: `/app/<hash>/`, `/ck/<hash>/`, `/a/<hash>/`,
+kept a year by the site Worker) and writes the build into `web/mara_sw.js`,
+the service worker every visitor gets. A phone that already keeps Mara opens
+the build it has at once — on a slow line or with none — prepares the new
+one in the background, and switches at its next start, or straight away
+from « Recharger » on the update banner. A first visit always gets the
+build just deployed.
 
 ### Testing it in a browser
 

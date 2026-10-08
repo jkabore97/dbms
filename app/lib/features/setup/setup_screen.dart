@@ -169,9 +169,12 @@ class _SetupScreenState extends State<SetupScreen> {
           title: context.tr('Votre vitrine'),
           line: context.tr('Votre page, à partager sur WhatsApp.'),
         ),
+        // The business's own place, said as the owner says it (108).
         _ => (
           icon: Icons.place,
-          title: context.tr('Où vous trouver'),
+          title: _farm
+              ? context.tr('La position de ma ferme')
+              : context.tr('La position de ma boutique'),
           line: context.tr('Vos clients vous voient sur la carte.'),
         ),
       };

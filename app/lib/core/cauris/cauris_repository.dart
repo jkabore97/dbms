@@ -142,9 +142,21 @@ class CaurisRepository {
     }
   }
 
-  Future<void> setCost(String feature, int cost) async {
-    await _client!.rpc('set_cauris_cost',
-        params: {'p_feature': feature, 'p_cost': cost});
+  /// A tool's price and the days a new business waits before cauris open
+  /// it (108's platform_set_cauris_cost): the journal line's id, for
+  /// « Annuler », or null when nothing changed. On a database before 108
+  /// the price alone is set (085), the wait as it was.
+  Future<String?> setCost(String feature, int cost, {required int minDays}) async {
+    final client = _client!;
+    try {
+      final v = await client.rpc('platform_set_cauris_cost',
+          params: {'p_feature': feature, 'p_cost': cost, 'p_min_days': minDays});
+      return v == null ? null : '$v';
+    } on PostgrestException catch (e) {
+      if (!_missing(e)) rethrow;
+      await client.rpc('set_cauris_cost', params: {'p_feature': feature, 'p_cost': cost});
+      return null;
+    }
   }
 
   /// The week's top earners, with how much of their orders came from one

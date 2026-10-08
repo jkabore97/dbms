@@ -1679,7 +1679,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   ];
 
   List<Widget> _position(ThemeData theme) => [
-    Text(context.tr('Position sur la carte'), style: theme.textTheme.titleSmall),
+    Text(context.tr(_positionLabel), style: theme.textTheme.titleSmall),
     const SizedBox(height: 4),
     Text(
       context.tr('Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.'),
@@ -2089,8 +2089,19 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   bool get _association => _profile == 'association' || _profile == 'church';
 
   /// An association offers services, not articles (098): « Vos services ».
-  String _labelOf(_Part part) =>
-      part == _Part.articles && _association ? 'Vos services' : part.label;
+  /// The position is the business's own place, said as the owner says it
+  /// (108): « La position de ma boutique », de ma ferme, de mon association.
+  String _labelOf(_Part part) => part == _Part.articles && _association
+      ? 'Vos services'
+      : part == _Part.position
+          ? _positionLabel
+          : part.label;
+
+  String get _positionLabel => _association
+      ? 'La position de mon association'
+      : _profile == 'farm'
+          ? 'La position de ma ferme'
+          : 'La position de ma boutique';
 
   /// Each first-steps rubrique done (true) or still to do (false); null for
   /// what is optional and has no « done » (the team's lock, the platform).

@@ -183,6 +183,8 @@
       // Loading stopped: say why in a word and offer the one thing to do.
       function fail() {
         if (painted) return;
+        // Nothing is moving any more: the line says so too.
+        splash.querySelector('.line').style.visibility = 'hidden';
         slow.className = 'slow';
         document.getElementById('mara-fail-text').textContent =
           navigator.onLine === false ? say.offline : say.fail;
@@ -193,14 +195,19 @@
         var t = e && e.target;
         if (t && t.tagName === 'SCRIPT') fail();
       }, true);
-      // …the network going away mid-load…
+      // …no network while the files must come from it (a phone that keeps
+      // Mara opens from its copy: no network is no matter there)…
+      function cut() {
+        return navigator.onLine === false && !(sw && sw.controller);
+      }
       window.addEventListener('offline', function () {
-        setTimeout(function () { if (navigator.onLine === false) fail(); }, 3000);
+        setTimeout(function () { if (cut()) fail(); }, 3000);
       });
       // …or nothing at all arriving for a minute and a half.
       var seen = -1, quietSince = Date.now();
       var watch = setInterval(function () {
         if (painted) { clearInterval(watch); return; }
+        if (cut()) fail();
         var n = performance.getEntriesByType('resource').length;
         if (n !== seen) { seen = n; quietSince = Date.now(); }
         else if (Date.now() - quietSince > 90000) fail();
@@ -209,8 +216,9 @@
       // Still here after eight seconds: say it is the connection, not Mara
       // — a still page for that long reads as « broken » and gets closed.
       setTimeout(function () {
+        if (painted || !failBox.hidden) return;
         slow.textContent = say.slow;
-        if (!painted && failBox.hidden) slow.className = 'slow on';
+        slow.className = 'slow on';
       }, 8000);
 
       // The engine says when it has painted; the graphite page steps aside.
@@ -277,6 +285,7 @@
         slow.textContent = say.update;
         slow.className = 'slow on';
         failBox.hidden = true;
+        splash.querySelector('.line').style.visibility = 'visible';
         splash.hidden = false;
         splash.style.opacity = '1';
         var gone = false;

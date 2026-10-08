@@ -310,8 +310,6 @@ const enStrings = <String, String>{
       'These screens need the network. A report is a figure at a moment: better to show nothing than last week\'s.',
   'Cet appareil':
       'This device',
-  'Cet outil s\'ouvre avec des cauris dans {waitsDays} jours : il faut un peu d\'activité pour qu\'il serve.':
-      'This tool opens with cauris in {waitsDays} days: it needs a little activity to be useful.',
   'Cette entreprise est suspendue. La consultation reste possible, mais aucune nouvelle opération ne peut être enregistrée.':
       'This business is suspended. You can still look, but no new operation can be recorded.',
   'Cette page n\'existe pas':
@@ -1256,8 +1254,6 @@ const enStrings = <String, String>{
       'Open or set up the vitrine',
   'Où livrer ?':
       'Where to deliver?',
-  'Où vous trouver':
-      'Where to find you',
   'PAYÉE':
       'PAID',
   'PLATEFORME':
@@ -1396,8 +1392,6 @@ const enStrings = <String, String>{
       'Ask a question on WhatsApp',
   'Position introuvable. Vérifiez que le GPS est activé.':
       'Position not found. Check that GPS is on.',
-  'Position sur la carte':
-      'Position on the map',
   'Position épinglée pour le livreur':
       'Position pinned for the courier',
   'Poulailler 2':
@@ -3771,4 +3765,25 @@ const enStrings = <String, String>{
   'Pas de réseau — la vitrine de votre dernière visite': 'No network — the shop as you last saw it',
   'Pas de réseau — les vitrines de votre dernière visite': 'No network — the shops as you last saw them',
   'La carte n\'a pas pu s\'ouvrir. Vérifiez le réseau.': 'The map could not open. Check the network.',
+  'Choisissez les articles demandés par le client ici': 'Pick the items the customer asks for here',
+  'Choisissez les produits demandés par le client ici': 'Pick the products the customer asks for here',
+  'La position de ma boutique': 'My shop\'s location',
+  'La position de ma ferme': 'My farm\'s location',
+  'La position de mon association': 'My association\'s location',
+  'Disponible avec vos cauris dans {n} jours': 'Available with your cauris in {n} days',
+  'Le {date}.': 'On {date}.',
+  'Il faut un peu d\'activité pour que cet outil serve.': 'This tool needs a little activity before it is useful.',
+  'Vos cauris…': 'Your cauris…',
+  'Il vous manque {n} cauris': 'You need {n} more cauris',
+  'Ou tout ouvrir maintenant : Mara Pro complet, {cost} cauris': 'Or open everything now: Mara Pro complete, {cost} cauris',
+  'Prix enregistré.': 'Price saved.',
+  'Cauris, pour 30 jours': 'Cauris, for 30 days',
+  'Jours sur Mara avant de pouvoir l\'acheter': 'Days on Mara before it can be bought',
+  '0 : dès le premier jour.': '0: from the first day.',
+  'Cauris, {tool} : {c0} → {c1} cauris, attente {d0} → {d1} jours': 'Cauris, {tool}: {c0} → {c1} cauris, wait {d0} → {d1} days',
+  'Cet outil n\'existe pas pour votre activité : vos cauris restent à vous.': 'This tool does not exist for your business: your cauris stay yours.',
+  'Votre entreprise est sur Mara Pro : cet outil est déjà ouvert, vos cauris restent à vous.': 'Your business is on Mara Pro: this tool is already open, your cauris stay yours.',
+  'Une place photo s\'achète sans attente.': 'A photo slot is bought with no wait.',
+  'Une attente de 0 à 3650 jours, s\'il vous plaît.': 'A wait of 0 to 3650 days, please.',
+  'Ce prix a changé depuis : annulez d\'abord le dernier changement.': 'This price has changed since: undo the latest change first.',
 };

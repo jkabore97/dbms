@@ -106,6 +106,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
         currency: widget.org.currency,
         products: products,
         initialMethod: 'credit',
+        farm: widget.org.profile == 'farm',
       ),
     );
     if (done == true && mounted) await _load();

@@ -753,6 +753,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch107.sql
 
+      - name: Prove the owner's fixes — every purchase of before the same, the wait said with its day, every tool a kind has opened by enough cauris and nothing taken for what it has not, Le Chemin's « La position de ma boutique », the price and the wait the platform's alone, journaled (108)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch108.sql
+
       - name: Prove a number proved on WhatsApp before an order — off as installed and ordering as 101 made it, on refused without a proved number, the platform's switch, journaled (109)
         env:
           PGPASSWORD: postgres
@@ -817,6 +822,21 @@ jobs:
       # logged — against a fake Meta, no network.
       - run: node --check workers/whatsapp-otp/src/index.js
       - run: node --test workers/whatsapp-otp/test/*.test.mjs
+      # Loading on a bad line (108). The street's photos small: ?w= made
+      # once with Cloudflare Images and kept, Postgres's yes still asked
+      # for the photo itself, the original when Images is absent or
+      # refuses — against a fake bucket and a fake Images.
+      - run: node --test workers/uploads/test/*.test.mjs
+      # The site Worker: a build's folders kept a year, the page and the
+      # workers asked about every time, a gone build's folder a 404.
+      - run: node --check workers/kaj-app/src/index.js
+      - run: node --test workers/kaj-app/test/*.test.mjs
+      # The deploy's fingerprinting: folders named after their content, the
+      # loader's paths and the service worker's build written in, and a
+      # build of the wrong shape refused untouched.
+      - run: node --check scripts/web-fingerprint.mjs
+      - run: node --check app/web/mara_sw.js
+      - run: node --test scripts/test/*.test.mjs
 
   flutter-analyze:
     runs-on: ubuntu-latest

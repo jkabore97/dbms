@@ -30,7 +30,7 @@ class MaraMark extends StatelessWidget {
 
   final double size;
 
-  static const asset = 'assets/brand/mara_seal.png';
+  static const asset = 'assets/brand/mara_seal.webp';
 
   @override
   Widget build(BuildContext context) => Image.asset(
@@ -51,8 +51,8 @@ class MaraWordmark extends StatelessWidget {
   final double height;
   final bool onDark;
 
-  static const asset = 'assets/brand/mara_horizontal.png';
-  static const assetDark = 'assets/brand/mara_horizontal_dark.png';
+  static const asset = 'assets/brand/mara_horizontal.webp';
+  static const assetDark = 'assets/brand/mara_horizontal_dark.webp';
 
   @override
   Widget build(BuildContext context) => Image.asset(
@@ -71,7 +71,7 @@ class MaraStacked extends StatelessWidget {
 
   final double height;
 
-  static const asset = 'assets/brand/mara_stacked.png';
+  static const asset = 'assets/brand/mara_stacked.webp';
 
   @override
   Widget build(BuildContext context) => Image.asset(

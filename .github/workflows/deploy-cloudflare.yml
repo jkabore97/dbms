@@ -29,6 +29,7 @@ on:
     paths:
       - 'app/**'
       - 'workers/kaj-app/**'
+      - 'scripts/web-fingerprint.mjs'
       - '.github/workflows/deploy-cloudflare.yml'
 
 concurrency:

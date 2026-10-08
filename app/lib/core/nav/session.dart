@@ -383,16 +383,20 @@ class SessionController extends ChangeNotifier {
 
       // A live token means the server has vouched for this person within the
       // hour. Anything else and the device has to vouch for them itself.
+      // The code is asked by the resolve, and only of somebody who belongs
+      // to a business (108).
       if (auth.hasLiveSession) {
-        if (!identity.hasPin) {
-          _phase = SessionPhase.choosingPin;
-          _emit();
-        } else {
-          await resolveOrgs();
-        }
+        await resolveOrgs();
         return;
       }
 
+      // The device code protects businesses (108): a phone that holds no
+      // business — a shopper's, a courier's — is never locked by it, even
+      // with a code set before; the code stays on the device, unused.
+      if (!await _holdsBusiness()) {
+        await resolveOrgs();
+        return;
+      }
       if (identity.hasPin) {
         _phase = SessionPhase.locked;
       } else {
@@ -555,13 +559,16 @@ class SessionController extends ChangeNotifier {
     await db.saveIdentity(identity);
     _identity = identity;
 
-    if (!identity.hasPin) {
-      _phase = SessionPhase.choosingPin;
-      _emit();
-    } else {
-      await resolveOrgs();
-    }
+    // The code, if any, is asked by the resolve: only of somebody who
+    // belongs to a business (108).
+    await resolveOrgs();
   }
+
+  /// Whether this device holds a business of the person's: the list it
+  /// last cached. A shopper's or a courier's phone holds none.
+  Future<bool> _holdsBusiness() async =>
+      (await _cachedOrgsSafe().timeout(resolveTimeout, onTimeout: () => const <OrgSummary>[]))
+          .isNotEmpty;
 
   Future<void> setPin(String pin) async {
     final identity = _identity;
@@ -617,6 +624,8 @@ class SessionController extends ChangeNotifier {
   bool lockNow() {
     final identity = _identity;
     if (identity == null || !identity.hasPin) return false;
+    // Nothing of a business on screen or on the device: no lock (108).
+    if (_orgs.isEmpty) return false;
     if (_phase != SessionPhase.ready &&
         _phase != SessionPhase.picking &&
         _phase != SessionPhase.noOrg) {
@@ -758,6 +767,17 @@ class SessionController extends ChangeNotifier {
       // rather than being sent back to the picker to choose it again.
       if (orgById(_lastOrgId) == null) _lastOrgId = null;
       _phase = _lastOrgId == null ? SessionPhase.picking : SessionPhase.ready;
+    }
+
+    // The device code protects businesses (108): chosen once this person
+    // belongs to one — at the first sign-in of an owner, a member or a
+    // trainer, or the day a shopper creates or joins their first business
+    // — and before any of its books open. setPin() resolves again.
+    final me = _identity;
+    if (orgs.isNotEmpty && me != null && !me.hasPin) {
+      _phase = SessionPhase.choosingPin;
+      _emit();
+      return;
     }
 
     _emit();
