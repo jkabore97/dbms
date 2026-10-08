@@ -22,6 +22,7 @@ import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
 import 'package:kaj_app/core/production/production_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
+import 'package:kaj_app/core/retail/models.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/retail/staff.dart';
 import 'package:kaj_app/core/tontine/tontine_repository.dart';
@@ -35,8 +36,29 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Batch 104's corrections that need the app's own scope around a screen:
 /// the « Admin » pill on the first setup of a shop, a farm and an
-/// association (a platform admin only), and a frozen business's banner
-/// that does not pad its home for the status bar a second time.
+/// association (a platform admin only), a business's real bar on a phone
+/// with the pill and writes waiting, and a frozen business's banner that
+/// does not pad its home for the status bar a second time.
+
+/// A shop with nothing in it yet.
+class _Shop extends RetailRepository {
+  _Shop() : super(null);
+
+  @override
+  Future<StoreDay> day(String orgId, {DateTime? on}) async => const StoreDay();
+
+  @override
+  Future<List<ExpiringProduct>> expiring(String orgId, {int within = 14}) async => const [];
+
+  @override
+  Future<List<Product>> products(String orgId, {bool activeOnly = true}) async => const [];
+
+  @override
+  Future<double> lossesAvoided(String orgId, {int within = 14}) async => 0;
+
+  @override
+  Future<int> pendingOrders(String orgId) async => 0;
+}
 
 class _Server extends AuthRepository {
   _Server(this.orgs) : super(null);
@@ -127,7 +149,7 @@ void main() {
         console: ConsoleRepository(null),
         farm: FarmRepository(null),
         invoicing: InvoicingRepository(null),
-        retail: RetailRepository(null),
+        retail: _Shop(),
         staff: StaffRepository(null),
         capture: CaptureRepository(null, db: db),
         onboarding: OnboardingRepository(null),
@@ -194,6 +216,66 @@ void main() {
       await settle(tester);
       expect(find.text('Mise en route'), findsOneWidget, reason: org.profile);
       expect(find.byKey(const Key('admin-pill')), findsNothing, reason: org.profile);
+    }
+  });
+
+  /// Two sales waiting for the network: the farm's and the association's
+  /// bars carry the pending chip.
+  Future<void> twoWaiting(WidgetTester tester) => tester.runAsync(() async {
+        for (final id in ['w-1', 'w-2']) {
+          await db.queueSale(orgId: 'any', clientUuid: id, params: const {});
+        }
+      });
+
+  final pendingChip = find.widgetWithIcon(Chip, Icons.cloud_upload_outlined);
+
+  testWidgets('a platform admin\'s bar fits at 360 with writes waiting — a shop, a farm, an association',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await twoWaiting(tester);
+    // Three activities: « Changer d'activité » is on the bar too.
+    final session = await signedIn(tester, platform: true);
+    for (final org in [_shop, _farm, _assoc]) {
+      await tester.pumpWidget(app(session, BusinessShell(org: org)));
+      await settle(tester);
+      final pill = find.byKey(const Key('admin-pill'));
+      expect(pill, findsOneWidget, reason: org.profile);
+      expect(find.text('Admin'), findsNothing, reason: 'the shield alone on a phone');
+      expect(find.byKey(const Key('switch-activity')), findsOneWidget, reason: org.profile);
+      expect(tester.getRect(pill).right, lessThanOrEqualTo(360), reason: org.profile);
+      if (org.profile != 'retail') {
+        expect(pendingChip, findsOneWidget, reason: '${org.profile}: the pending chip is drawn');
+        // The number alone beside the pill; its words still to a long press.
+        expect(find.descendant(of: pendingChip, matching: find.text('2')), findsOneWidget,
+            reason: org.profile);
+        expect(find.byTooltip('2 en attente'), findsOneWidget, reason: org.profile);
+        expect(tester.getRect(pendingChip).left, greaterThanOrEqualTo(0), reason: org.profile);
+        expect(tester.getRect(pendingChip).right, lessThanOrEqualTo(tester.getRect(pill).left),
+            reason: '${org.profile}: the chip before the pill, both on the bar');
+      }
+      // The business's name keeps its place on the bar.
+      expect(find.descendant(of: find.byType(AppBar), matching: find.text(org.name)), findsOneWidget,
+          reason: org.profile);
+      expect(tester.takeException(), isNull, reason: '${org.profile} overflows at 360');
+    }
+  });
+
+  testWidgets('nobody else\'s bar changes — P1: the pending chip still says « 2 en attente »',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await twoWaiting(tester);
+    final session = await signedIn(tester, platform: false);
+    for (final org in [_farm, _assoc]) {
+      await tester.pumpWidget(app(session, BusinessShell(org: org)));
+      await settle(tester);
+      expect(find.byKey(const Key('admin-pill')), findsNothing, reason: org.profile);
+      expect(find.descendant(of: pendingChip, matching: find.text('2 en attente')), findsOneWidget,
+          reason: org.profile);
+      expect(tester.takeException(), isNull, reason: org.profile);
     }
   });
 

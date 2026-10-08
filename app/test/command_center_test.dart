@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -822,6 +823,29 @@ void main() {
       })));
       expect(orderStatusLabel(c, 'picked_up'), 'Récupérée');
       expect(orderStatusLabel(c, 'in_transit'), 'En route');
+    });
+
+    testWidgets('the search says its keys as the keyboard does: « ⌘ K » on a Mac, « Ctrl K » elsewhere',
+        (tester) async {
+      await _size(tester, 1280);
+      try {
+        for (final (platform, keys, other) in [
+          (TargetPlatform.macOS, '⌘ K', 'Ctrl K'),
+          (TargetPlatform.windows, 'Ctrl K', '⌘ K'),
+          (TargetPlatform.linux, 'Ctrl K', '⌘ K'),
+        ]) {
+          debugDefaultTargetPlatformOverride = platform;
+          await tester.pumpWidget(MaterialApp.router(
+              routerConfig: _router(_Center(), at: Routes.consoleSettings)));
+          await tester.pumpAndSettle();
+          final search = find.byKey(const Key('center-search'));
+          expect(find.descendant(of: search, matching: find.text(keys)), findsOneWidget,
+              reason: '$platform');
+          expect(find.text(other), findsNothing, reason: '$platform');
+        }
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     });
   });
 

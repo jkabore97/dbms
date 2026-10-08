@@ -21,6 +21,18 @@ class AdminPill extends StatelessWidget {
   /// Whether to draw it; null reads the session (tests say it outright).
   final bool? platformAdmin;
 
+  /// Below this width the pill is the shield alone.
+  static const narrowWidth = 400.0;
+
+  /// Whether a business's bar here carries the pill on a phone's width: a
+  /// home then says its own extras briefly (the pending writes' number
+  /// alone), so the bar never overflows and keeps the business's name.
+  /// Never for anybody but a platform admin — every other bar is as before.
+  static bool crowds(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < narrowWidth &&
+      !LookOnly.of(context) &&
+      (AppScope.maybeOf(context)?.session.isPlatformAdmin ?? false);
+
   @override
   Widget build(BuildContext context) {
     // « Voir comme le commerçant » (106) is the owner's view: no pill.
@@ -46,7 +58,7 @@ class _Pill extends StatelessWidget {
     // chip, the switch button and the bell) has no room for the word: the
     // shield alone, still graphite and caramel, still « Centre admin » to
     // a screen reader.
-    final narrow = MediaQuery.sizeOf(context).width < 400;
+    final narrow = MediaQuery.sizeOf(context).width < AdminPill.narrowWidth;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Tooltip(
@@ -193,7 +205,7 @@ class AdminReturnBanner extends StatelessWidget {
         // owner's view, and the owner has no center to go back to.
         if (opened?.orgId != orgId || LookOnly.of(context)) return child;
         // A phone keeps the way back and drops the words before it.
-        final narrow = MediaQuery.sizeOf(context).width < 400;
+        final narrow = MediaQuery.sizeOf(context).width < AdminPill.narrowWidth;
         return Column(
           children: [
             Material(

@@ -231,33 +231,52 @@ class SessionController extends ChangeNotifier {
         _termsLoaded = true;
       }
     }
+    // What the device last heard of the platform's hidden list, read beside
+    // the server's questions and never waited for before the dial is set:
+    // kept as soon as it lands, unless the server has answered by then.
+    final kept = _features.containsKey(org.id) || _hiddenKept.containsKey(org.id)
+        ? null
+        : _readHidden(org.id).then((k) {
+            if (k != null && !_features.containsKey(org.id)) {
+              _hiddenKept.putIfAbsent(org.id, () => k);
+            }
+          });
     final s = await states;
     if (s is FeatureStates) {
       _features[org.id] = s;
       _hiddenKept[org.id] = s.hidden;
       unawaited(_keepHidden(org.id, s.hidden));
-    } else if (!_features.containsKey(org.id) && !_hiddenKept.containsKey(org.id)) {
-      // No answer (offline): what the device last heard.
-      final kept = await _readHidden(org.id);
-      if (kept != null) _hiddenKept[org.id] = kept;
     }
-    final locked = _lockedFor(org);
-    final hidden = _hiddenFor(org);
-    final OrgAccess next;
-    if (rules == null) {
-      next = locked.isEmpty && hidden.isEmpty
-          ? OrgAccess.allEdit
-          : OrgAccess.admin(proLocked: locked, hidden: hidden);
-    } else {
-      next = OrgAccess.forTier(await rules, proLocked: locked, hidden: hidden);
+    final dial = rules == null ? null : await rules;
+    OrgAccess accessNow() {
+      final locked = _lockedFor(org);
+      final hidden = _hiddenFor(org);
+      if (dial == null) {
+        return locked.isEmpty && hidden.isEmpty
+            ? OrgAccess.allEdit
+            : OrgAccess.admin(proLocked: locked, hidden: hidden);
+      }
+      return OrgAccess.forTier(dial, proLocked: locked, hidden: hidden);
     }
+
     // Emit only if this changes what screens already see — an unchanged dial
     // (an admin, an untouched business, an offline fetch that came back empty)
     // must not fire a rebuild, because _loadAccess runs during the resolve and
     // open flows where a stray notify re-runs the router's redirect.
-    final changed = accessFor(org.id) != next;
-    _access[org.id] = next;
-    if (changed) _emit();
+    void settle() {
+      final next = accessNow();
+      final changed = accessFor(org.id) != next;
+      _access[org.id] = next;
+      if (changed) _emit();
+    }
+
+    settle();
+    // No answer (offline) and the device's copy still on its way: the dial
+    // again once it lands, hiding what the server last said was hidden.
+    if (kept != null && s is! FeatureStates) {
+      await kept;
+      if (!_disposed) settle();
+    }
   }
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —

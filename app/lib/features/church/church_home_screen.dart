@@ -20,6 +20,7 @@ import '../../core/reports/models.dart' show accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
+import '../admin/admin_pill.dart' show AdminPill;
 import '../home/home_nav.dart';
 import 'close_day_sheet.dart';
 import 'record_entry_sheet.dart';
@@ -285,10 +286,17 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Center(
-                child: Chip(
-                  avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
-                  label: Text(Strings.of(context).pendingCount(_pending)),
-                  visualDensity: VisualDensity.compact,
+                child: Tooltip(
+                  message: Strings.of(context).pendingCount(_pending),
+                  child: Chip(
+                    avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
+                    // Beside Mara's « Admin » on a phone (104): the number
+                    // alone, so the bar keeps the association's name.
+                    label: Text(AdminPill.crowds(context)
+                        ? '$_pending'
+                        : Strings.of(context).pendingCount(_pending)),
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ),
             ),

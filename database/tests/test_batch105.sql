@@ -818,6 +818,46 @@ begin
 end $$;
 commit;
 
+\echo ''
+\echo '--- TEST 9: the Entreprises list''s one « Associations » finds the legacy churches with them; still the platform''s alone ---'
+begin;
+insert into orgs (id, name, slug, profile, default_currency, last_activity_at)
+values ('10500000-0000-0000-0000-000000000009', 'Église Cent-Cinq', 'eglise-105', 'church', 'XOF', now());
+do $$
+declare
+    v_assoc text[];
+    v_church text[];
+    v_shops text[];
+begin
+    perform set_config('request.jwt.claim.sub', '10510510-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    select array_agg(slug order by slug) into v_assoc
+      from search_orgs(p_query => 'Cent-Cinq', p_profile => 'association', p_status => 'all');
+    -- The legacy filter word still answers the same.
+    select array_agg(slug order by slug) into v_church
+      from search_orgs(p_query => 'Cent-Cinq', p_profile => 'church', p_status => 'all');
+    select array_agg(slug order by slug) into v_shops
+      from search_orgs(p_query => 'Cent-Cinq', p_profile => 'retail', p_status => 'all');
+    if v_assoc is distinct from array['eglise-105', 'entraide-105']
+       or v_church is distinct from v_assoc then
+        raise exception 'FAIL: « Associations » lists % (church filter: %)', v_assoc, v_church;
+    end if;
+    if v_shops && array['eglise-105', 'entraide-105'] or not ('boutique-105' = any (v_shops)) then
+        raise exception 'FAIL: the shops'' filter lists %', v_shops;
+    end if;
+    -- An association's owner is not the platform.
+    perform set_config('request.jwt.claim.sub', '10510510-0000-0000-0000-000000000004', true);
+    begin
+        perform search_orgs(p_profile => 'association');
+        raise exception 'FAIL: an owner listed every business';
+    exception when raise_exception then
+        if sqlerrm <> 'Only a platform admin can search every business' then raise; end if;
+    end;
+    execute 'reset role';
+    raise notice 'PASS: « Associations » lists an association and a legacy church (the church word too), never a shop; a shop''s filter none of them; an owner refused';
+end $$;
+rollback;
+
 -- What the suite archived, gave and wrote stays its own: the shared
 -- numbers are as they were (TEST 6 undid its changes), the switch off.
 update platform_settings set value = 'false' where key = 'admin_two_step';
