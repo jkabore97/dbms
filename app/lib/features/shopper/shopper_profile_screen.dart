@@ -526,22 +526,20 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
             child: ShopSectionLabel(title),
           ),
-          Container(
+          Material(
+            color: ShopStyle.paper,
             clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              border: Border.all(color: ShopStyle.line),
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: ShopStyle.line),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Material(
-              color: ShopStyle.paper,
-              child: Column(
-                children: [
-                  for (var i = 0; i < children.length; i++) ...[
-                    if (i > 0) const Divider(height: 1, indent: 56),
-                    children[i],
-                  ],
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, indent: 56),
+                  children[i],
                 ],
-              ),
+              ],
             ),
           ),
         ],
