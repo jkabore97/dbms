@@ -6,7 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
+import 'package:kaj_app/core/auth/auth_repository.dart';
+import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/nav/session.dart';
 import 'package:kaj_app/core/console/command_center.dart';
 import 'package:kaj_app/core/console/console_repository.dart';
 import 'package:kaj_app/core/console/models.dart';
@@ -20,6 +24,7 @@ import 'package:kaj_app/features/admin/platform_console_screen.dart';
 import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/l10n/strings.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Mara's command center (104, 105), in the app: the « Admin » pill only
 /// for a platform admin, the rail on a computer and the bar on a phone, «
@@ -583,6 +588,31 @@ void main() {
       expect(appKeys, serverKeys);
       expect(appKeys.toSet(), hasLength(appKeys.length), reason: 'each key once');
     });
+  });
+
+  test('the center\'s addresses are pages of the real router, inside its shell', () async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    final db = await LocalDb.open(path: inMemoryDatabasePath);
+    addTearDown(db.close);
+    final router = buildRouter(SessionController(
+      db: db,
+      auth: AuthRepository(null),
+      admin: AdminRepository(null),
+      accounting: AccountingRepository(null),
+    ));
+    for (final path in [
+      Routes.console, Routes.consoleBusinesses, Routes.consoleOrg('o1'), Routes.consoleKinds,
+      Routes.applications, Routes.consoleRequestForm, Routes.consoleSettings,
+      Routes.consoleJournal, Routes.consolePro, Routes.consoleCaurisGifts, Routes.consoleWave,
+      Routes.consoleSettlement, Routes.consolePeople, Routes.trainers, Routes.consoleAudit,
+      Routes.consoleFeatured, Routes.consoleShowcase, Routes.consoleCouriers,
+      Routes.platformAnalytics,
+    ]) {
+      final match = router.configuration.findMatch(Uri.parse(path));
+      expect(match.isEmpty, isFalse, reason: path);
+      expect(match.matches.first.route, isA<ShellRoute>(), reason: '$path is in the shell');
+    }
   });
 
   test('every key has a French name of its own', () {
