@@ -592,7 +592,9 @@ begin
                         and undo_fn = 'platform_undo_report')
        or not exists (select 1 from notifications where recipient_id = '11311311-0000-0000-0000-000000000005'
                         and kind = 'report_handled'
-                        and message = 'Mara a traité votre signalement : Remboursé par la ferme.') then
+                        and message = 'Mara a traité votre signalement : Remboursé par la ferme.'
+                        and params ->> 'to' = 'customer'
+                        and params ->> 'answer' = 'Remboursé par la ferme.') then
         raise exception 'FAIL: closing a report';
     end if;
     if pg_temp.refused113(format('select platform_handle_report(%L)', v_report)) is distinct from 'Ce signalement est déjà traité.' then

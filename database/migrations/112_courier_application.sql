@@ -633,7 +633,8 @@ begin
         insert into notifications (recipient_id, org_id, kind, message, params)
         select id, null::uuid, 'courier_application',
                'Nouvelle demande de livreur : ' || v_name,
-               jsonb_build_object('name', v_name)
+               -- 099's rule: every bell says whom it is for, with its facts.
+               jsonb_build_object('to', 'platform', 'name', v_name)
           from profiles where is_platform_admin;
     exception when others then
         null;

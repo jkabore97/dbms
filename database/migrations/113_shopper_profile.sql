@@ -792,7 +792,8 @@ begin
         values (v_r.reporter_id, null, 'report_handled',
                 case when v_answer is null then 'Mara a traité votre signalement. Merci !'
                      else 'Mara a traité votre signalement : ' || v_answer end,
-                jsonb_build_object('answer', v_answer));
+                -- The facts (099): the app says it in the reader's language.
+                jsonb_build_object('to', 'customer', 'answer', v_answer));
     exception when others then
         null;
     end;

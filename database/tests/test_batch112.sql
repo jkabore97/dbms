@@ -405,7 +405,7 @@ begin
     if not exists (select 1 from notifications
                     where recipient_id = '11211211-0000-0000-0000-000000000001'
                       and kind = 'courier_application' and message = 'Nouvelle demande de livreur : Ali Cycliste'
-                      and params = '{"name": "Ali Cycliste"}') then
+                      and params = '{"to": "platform", "name": "Ali Cycliste"}') then
         raise exception 'FAIL: the platform was not rung';
     end if;
     -- While examined, nothing changes.
