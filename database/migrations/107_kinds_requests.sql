@@ -33,9 +33,11 @@
 --      a colour, a cover, a layout, pinned articles). A vitrine whose
 --      dressing was all cleared is at '{}' too, and reads as never dressed:
 --      it shows Mara's default, which is what « par défaut » means. A
---      vitrine d'exemple (094) never takes it. The default is Mara's
---      presentation, so it shows for Basic and Pro vitrines alike;
---      storefront() adds it after the business's own (empty) style.
+--      vitrine d'exemple (094) never takes it. As 093's options: on a
+--      Basic vitrine only the free ones — the colour and the cover, while
+--      the basics are free —, the presentation (layout) only on a Vitrine+
+--      (Mara Pro) one; storefront() adds it after the business's own
+--      (empty) style.
 --   3. Mise en route: a kind's optional walkthrough steps turned off
 --      (kind_settings 'setup_off') — a shop's or a farm's « vitrine » and
 --      « position », an association's « members » and « vitrine » — never
@@ -68,6 +70,16 @@
 -- Re-runnable (the bundle runs twice): tables and columns if not exists,
 -- triggers dropped and recreated, functions replaced in place.
 -- ============================================================
+
+do $$
+begin
+    if to_regclass('public.platform_actions') is null
+       or to_regclass('public.platform_undo_fns') is null
+       or to_regprocedure('public.platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb)') is null
+       or to_regprocedure('public.org_kind(uuid)') is null then
+        raise exception '107 needs 104 (platform_actions, platform_log_action, platform_undo_fns, org_kind) applied first';
+    end if;
+end $$;
 
 -- ------------------------------------------------------------
 -- 1. A kind's own settings
@@ -105,6 +117,23 @@ begin
 end $$;
 
 alter table org_applications add column if not exists answers jsonb;
+
+-- Written through its functions only: apply_for_org (the applicant, with
+-- the page's checks and answers), approve_org_application and
+-- reject_org_application (the platform) — all definer. 017 let a signed-in
+-- caller insert a pending row of their own and a platform admin update one
+-- directly; neither app writes the table itself, and a direct insert would
+-- walk past the request page's kinds and required questions. Reading stays
+-- as 017 has it (the applicant's own, the platform's all).
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke insert, update, delete, truncate on org_applications from authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke insert, update, delete, truncate on org_applications from anon;
+    end if;
+end $$;
 comment on column org_applications.answers is
     'The request page''s extra questions as they were asked and answered (107): '
     '[{id, label, type, value}]. Null when the page asked none.';
@@ -362,7 +391,11 @@ $$;
 -- dressed (storefront_style = '{}') and its kind has a default. The cover
 -- « first_photo » is the first photographed article on the shelf, in
 -- storefront_products' order, its newest picture — a key the photo gate
--- (storefront_photo_allowed) already serves.
+-- (storefront_photo_allowed) already serves. What a vitrine of its plan
+-- may show, as 093 says it: the colour and the cover on any vitrine while
+-- the basics are free (vitrine_free_basics), the presentation (layout)
+-- only with Vitrine+ (Mara Pro) — a Basic vitrine is never dressed beyond
+-- what its owner could choose.
 create or replace function vitrine_default_style(p_org uuid)
 returns jsonb
 language sql
@@ -387,12 +420,16 @@ as $$
                                          and doc_is_photo(doc.kind, doc.content_type))
                         order by p.is_service, p.name
                         limit 1) end))
+               - case when org_has(o.id, 'vitrine_plus') then '{}'::text[]
+                      else array['layout'] end
           from orgs o
           cross join lateral (select kind_setting(o.profile::text, 'vitrine_default') as v) d
          where o.id = p_org
            and o.storefront_style = '{}'::jsonb
            and not o.showcase
-           and jsonb_typeof(d.v) = 'object'), '{}'::jsonb);
+           and jsonb_typeof(d.v) = 'object'
+           and (org_has(o.id, 'vitrine_plus') or cauris_param('vitrine_free_basics', 1) = 1)),
+        '{}'::jsonb);
 $$;
 
 -- 093's window, with Mara's default for a vitrine never dressed.
@@ -512,7 +549,7 @@ begin
         raise exception 'Réservé à la plateforme';
     end if;
     if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
-        raise exception 'Genre d''activité inconnu : %', coalesce(p_kind, '');
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
     end if;
     select value into v_off from kind_settings where kind = v_kind and key = 'setup_off';
 
@@ -579,13 +616,13 @@ begin
         raise exception 'Réservé à la plateforme';
     end if;
     if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
-        raise exception 'Genre d''activité inconnu : %', coalesce(p_kind, '');
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
     end if;
 
     select * into c from kind_setting_catalog() k where k.key = p_key;
     if found then
         if not (v_kind = any (c.kinds)) then
-            raise exception 'Ce réglage n''existe pas pour ce genre d''activité.';
+            raise exception 'Ce réglage n''existe pas pour ce type d''activité.';
         end if;
         if v_value is not null then
             v_text := btrim(v_value #>> '{}');
@@ -784,13 +821,13 @@ begin
             if jsonb_typeof(v_in -> 'kinds') <> 'array'
                or exists (select 1 from jsonb_array_elements_text(v_in -> 'kinds') k
                            where k not in ('retail', 'farm', 'association')) then
-                raise exception 'Les genres proposés sont boutique, ferme ou association.';
+                raise exception 'Les types proposés sont boutique, ferme ou association.';
             end if;
             select jsonb_agg(k order by array_position(array['association', 'farm', 'retail'], k))
               into v_kinds
               from (select distinct k from jsonb_array_elements_text(v_in -> 'kinds') k) d;
             if v_kinds is null then
-                raise exception 'Proposez au moins un genre d''activité.';
+                raise exception 'Proposez au moins un type d''activité.';
             end if;
             -- All three is today's page: no list kept.
             if jsonb_array_length(v_kinds) < 3 then
@@ -892,7 +929,7 @@ begin
                                                          when 'farm' then 'ferme'
                                                          else 'association' end, ', ')
                                  from jsonb_array_elements_text(v_in -> 'kinds') k),
-                              'tous les genres')
+                              'tous les types')
         end,
         jsonb_build_object('form', v_before),
         jsonb_build_object('form', v_in),
@@ -984,7 +1021,7 @@ begin
         if jsonb_typeof(v_form -> 'kinds') = 'array'
            and not ((v_form -> 'kinds') ? (case when v_profile = 'church' then 'association'
                                                else v_profile end)) then
-            raise exception 'Ce genre d''activité ne peut pas être demandé pour l''instant.';
+            raise exception 'Ce type d''activité ne peut pas être demandé pour l''instant.';
         end if;
         v_answers := '[]'::jsonb;
         for q in select value from jsonb_array_elements(

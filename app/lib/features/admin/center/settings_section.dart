@@ -13,13 +13,13 @@ import 'todo_section.dart' show featureName;
 
 /// How a setting is typed in.
 enum SettingType {
-  /// An amount of money (a whole number).
+  /// An amount of money (a whole number, but see [decimalSettings]).
   money,
 
   /// A whole number of things, days or minutes.
   count,
 
-  /// A distance in km (decimals allowed).
+  /// A distance in km.
   km,
 
   /// A percentage, 0 to 100.
@@ -172,6 +172,21 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'admin_two_step' => context.tr('Validation en deux étapes du compte de la plateforme'),
       _ => key,
     };
+
+/// The only numbers that take a decimal: every reader of these takes it
+/// as numeric (the delivery fee and reach, the Wave commission). Every
+/// other number is read as an integer by the server, which refuses
+/// « 12.5 » there (105's platform_set_setting) — said here first.
+const decimalSettings = {
+  'delivery_base',
+  'delivery_per_km',
+  'delivery_max_km',
+  'delivery_included_km',
+  'wave_commission_pct',
+};
+
+/// The largest number any setting takes (105's platform_set_setting).
+const settingMax = 1000000000;
 
 /// The value as a person reads it.
 String settingValueText(BuildContext context, SettingDef def, Object? v) {
@@ -429,26 +444,27 @@ class _EditDialogState extends State<_EditDialog> {
     final raw = _text.text.trim();
     Object? value;
     String? problem;
+    final decimals = decimalSettings.contains(def.key);
     switch (def.type) {
       case SettingType.money:
       case SettingType.count:
-        final n = parseAmount(raw);
-        if (n == null || n < 0 || n != n.roundToDouble()) {
-          problem = context.tr('Un nombre entier, zéro ou plus.');
-        } else {
-          value = n.round();
-        }
       case SettingType.km:
         final n = parseAmount(raw);
-        if (n == null || n < 0) {
-          problem = context.tr('Un nombre, zéro ou plus.');
+        if (n == null || n < 0 || (!decimals && n != n.roundToDouble())) {
+          problem = decimals
+              ? context.tr('Un nombre, zéro ou plus.')
+              : context.tr('Un nombre entier, zéro ou plus.');
+        } else if (n > settingMax) {
+          problem = context.tr('Un nombre d\'un milliard au plus.');
         } else {
           value = n == n.roundToDouble() ? n.round() : n;
         }
       case SettingType.pct:
         final n = parseAmount(raw);
-        if (n == null || n < 0 || n > 100) {
-          problem = context.tr('Un pourcentage de 0 à 100.');
+        if (n == null || n < 0 || n > 100 || (!decimals && n != n.roundToDouble())) {
+          problem = decimals
+              ? context.tr('Un pourcentage de 0 à 100.')
+              : context.tr('Un pourcentage entier, de 0 à 100.');
         } else {
           value = n == n.roundToDouble() ? n.round() : n;
         }
@@ -506,7 +522,8 @@ class _EditDialogState extends State<_EditDialog> {
                 controller: _text,
                 autofocus: true,
                 keyboardType: numeric
-                    ? const TextInputType.numberWithOptions(decimal: true)
+                    ? TextInputType.numberWithOptions(
+                        decimal: decimalSettings.contains(def.key))
                     : TextInputType.text,
                 onSubmitted: (_) => _ok(),
                 decoration: InputDecoration(

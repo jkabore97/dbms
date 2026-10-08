@@ -154,6 +154,7 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
     final theme = Theme.of(context);
     final o = _overview;
     final wide = MediaQuery.sizeOf(context).width >= 760;
+    final seeAs = o == null ? '' : previewTitle(context, o.profile);
     return Scaffold(
       key: const Key('business-fiche'),
       appBar: AppBar(
@@ -198,12 +199,12 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
                           backgroundColor: maraCaramel, foregroundColor: maraBlack),
                       onPressed: () => MerchantPreviewScreen.open(context, _org(o)),
                       icon: const Icon(Icons.visibility_outlined),
-                      label: Text(context.tr('Voir comme le commerçant')),
+                      label: Text(seeAs),
                     ),
                   )
                 : IconButton(
                     key: const Key('fiche-preview'),
-                    tooltip: context.tr('Voir comme le commerçant'),
+                    tooltip: seeAs,
                     onPressed: () => MerchantPreviewScreen.open(context, _org(o)),
                     icon: const Icon(Icons.visibility_outlined),
                   ),
@@ -263,7 +264,6 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
                 FicheOverviewTab(
                   overview: o,
                   onTab: (t) => _tabs.animateTo(t.index),
-                  onPreview: () => MerchantPreviewScreen.open(context, _org(o)),
                   onOpenBusiness: AppScope.maybeOf(context) == null
                       ? null
                       : () => AdminTrail.openBusiness(context, o.id),

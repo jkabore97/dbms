@@ -177,6 +177,13 @@ begin
     insert into orders (org_id, customer_id, customer_name, status, fulfilment, total, currency, created_at, updated_at)
         values ('10500000-0000-0000-0000-000000000001', '10510510-0000-0000-0000-000000000005',
                 'Cliente Cent-Cinq', 'pending', 'pickup', 1500, 'XOF', now() - interval '3 hours', now() - interval '3 hours');
+    -- On the road for 4 hours: stuck, as 072 counted it. Collected at the
+    -- counter 4 hours ago (« picked_up »): finished, never stuck.
+    insert into orders (org_id, customer_id, customer_name, status, fulfilment, total, currency, created_at, updated_at)
+        values ('10500000-0000-0000-0000-000000000001', '10510510-0000-0000-0000-000000000005',
+                'Route Cent-Cinq', 'in_transit', 'delivery', 2500, 'XOF', now() - interval '5 hours', now() - interval '4 hours'),
+               ('10500000-0000-0000-0000-000000000001', '10510510-0000-0000-0000-000000000005',
+                'Retirée Cent-Cinq', 'picked_up', 'pickup', 900, 'XOF', now() - interval '5 hours', now() - interval '4 hours');
     insert into cauris_unlocks (org_id, feature, until, gifted_by)
         values ('10500000-0000-0000-0000-000000000002', 'analytics', now() + interval '3 days',
                 '10510510-0000-0000-0000-000000000001');
@@ -190,13 +197,21 @@ begin
         values ('pro', '10500000-0000-0000-0000-000000000001', 2500, 'succeeded', 'failed', 'Numéro refusé', now());
 
     v1 := platform_todo();
-    for k in select unnest(array['applications', 'pro_paid', 'spots_paid', 'couriers', 'orders_stuck',
+    for k in select unnest(array['applications', 'pro_paid', 'spots_paid', 'couriers',
                                  'plans_ending', 'unlocks_ending', 'promos_ending', 'spots_ending',
                                  'rules_ending', 'payouts_failed']) loop
         if (v1->>k)::int - (v0->>k)::int <> 1 then
             raise exception 'FAIL: À faire % went from % to %', k, v0->>k, v1->>k;
         end if;
     end loop;
+    if (v1->>'orders_stuck')::int - (v0->>'orders_stuck')::int <> 2 then
+        raise exception 'FAIL: stuck orders went from % to % (a pending one and one on the road, not one collected)',
+            v0->>'orders_stuck', v1->>'orders_stuck';
+    end if;
+    if not platform_todo_list('orders_stuck') @> '[{"customer": "Route Cent-Cinq", "status": "in_transit"}]'
+       or platform_todo_list('orders_stuck') @> '[{"customer": "Retirée Cent-Cinq"}]' then
+        raise exception 'FAIL: the stuck list is not the waiting and the on-the-road orders';
+    end if;
 
     -- « Silencieuses (30 j) » is the console list's own filter, to the unit.
     select total_count into v_total from search_orgs(p_status => 'active', p_activity => 'silent30', p_limit => 1);
@@ -227,7 +242,7 @@ begin
     delete from feature_rules where org_id = '10500000-0000-0000-0000-000000000003';
     delete from cauris_unlocks where org_id = '10500000-0000-0000-0000-000000000002';
     delete from cauris_promos where org_id = '10500000-0000-0000-0000-000000000003';
-    raise notice 'PASS: À faire counts a request, a « J''ai payé » (Pro and spot), a courier, a stuck order, and what ends in 7 days (a plan, a tool, promo cauris, a spot, a rule), a failed payout; silent = the list''s filter; each list has its rows';
+    raise notice 'PASS: À faire counts a request, a « J''ai payé » (Pro and spot), a courier, stuck orders (waiting 2 h, on the road 3 h — never one collected), and what ends in 7 days (a plan, a tool, promo cauris, a spot, a rule), a failed payout; silent = the list''s filter; each list has its rows';
 end $$;
 
 \echo ''
@@ -274,7 +289,16 @@ begin
     if platform_search('C') <> '{"businesses": [], "people": [], "orders": []}' then
         raise exception 'FAIL: one letter searched';
     end if;
-    raise notice 'PASS: a shop, a farm, an association by name and address; by the owner''s phone typed with spaces; a person by phone and e-mail; an order by its number and its customer; « %% » is literal';
+    -- « _ » is a character too, in every match: « e_1 » is not « e-1 »
+    -- (boutique-105), and no word scans the orders' numbers.
+    if (platform_search('e_1')->'businesses') @> '[{"slug": "boutique-105"}]'
+       or (platform_search('n_e C')->'orders') @> '[{"customer": "Cliente Cent-Cinq"}]' then
+        raise exception 'FAIL: a « _ » matched any character';
+    end if;
+    if (platform_search(left(v_order::text, 3))->'orders') @> jsonb_build_array(jsonb_build_object('id', v_order)) then
+        raise exception 'FAIL: three characters scanned the orders'' numbers';
+    end if;
+    raise notice 'PASS: a shop, a farm, an association by name and address; by the owner''s phone typed with spaces; a person by phone and e-mail; an order by the start of its number (4 characters at least) and its customer; « %% » and « _ » are literal';
 end $$;
 
 \echo ''
@@ -359,6 +383,44 @@ begin
         raise exception 'FAIL: a refused undo was marked done';
     end if;
 
+    -- Given 400, spent 400, then 400 earned by the business itself: the
+    -- gift is gone — its undo is refused and the earned cauris stay.
+    execute 'set local role authenticated';
+    v := platform_bulk('cauris', array['10500000-0000-0000-0000-000000000002']::uuid[], '{"points": 400}');
+    execute 'reset role';
+    v_action := (v->'actions'->>0)::uuid;
+    if (select undo_args->>'ledger_id' from platform_actions where id = v_action) is null then
+        raise exception 'FAIL: the gift''s own ledger line is not in its journal line';
+    end if;
+    perform cauris_take('10500000-0000-0000-0000-000000000002', 400, 'b105-spend-400', 'Test');
+    insert into cauris_ledger (org_id, delta, reason, ref, note)
+        values ('10500000-0000-0000-0000-000000000002', 400, 'order_done', 'b105-earn-400', 'Commande');
+    v_bal_farm := cauris_balance('10500000-0000-0000-0000-000000000002');
+    execute 'set local role authenticated';
+    begin
+        perform platform_undo(v_action);
+        raise exception 'FAIL: cauris earned after a spent gift were taken back';
+    exception when others then
+        if sqlerrm <> 'Ces cauris ont déjà été dépensés : il n''y a rien à reprendre.' then raise; end if;
+    end;
+    execute 'reset role';
+    if cauris_balance('10500000-0000-0000-0000-000000000002') <> v_bal_farm then
+        raise exception 'FAIL: the earned cauris moved';
+    end if;
+    -- Given 400, 100 of it spent: the undo takes back 300, no more.
+    execute 'set local role authenticated';
+    v := platform_bulk('cauris', array['10500000-0000-0000-0000-000000000002']::uuid[], '{"points": 400}');
+    execute 'reset role';
+    v_action := (v->'actions'->>0)::uuid;
+    perform cauris_take('10500000-0000-0000-0000-000000000002', 100, 'b105-spend-100', 'Test');
+    execute 'set local role authenticated';
+    perform platform_undo(v_action);
+    execute 'reset role';
+    if cauris_balance('10500000-0000-0000-0000-000000000002') <> v_bal_farm then
+        raise exception 'FAIL: the undo did not take back the 300 left of the gift (balance %, expected %)',
+            cauris_balance('10500000-0000-0000-0000-000000000002'), v_bal_farm;
+    end if;
+
     -- Promotional cauris before a date: undone, the lot is closed.
     execute 'set local role authenticated';
     v := platform_bulk('cauris', array['10500000-0000-0000-0000-000000000001']::uuid[],
@@ -392,7 +454,7 @@ begin
         if sqlerrm <> 'Choisissez au moins une entreprise.' then raise; end if;
     end;
     execute 'reset role';
-    raise notice 'PASS: cauris to a shop, a farm, an association — the vitrine d''exemple refused alone with its reason; one journal line each; undone (bell), never twice; refused once spent; a promo lot closed by its undo';
+    raise notice 'PASS: cauris to a shop, a farm, an association — the vitrine d''exemple refused alone with its reason; one journal line each, naming the gift''s own ledger line; undone (bell), never twice; refused once spent, even with cauris earned since (untouched); the gift less what was spent taken back; a promo lot (found by what the gift wrote) closed by its undo';
 end $$;
 
 \echo ''
@@ -402,6 +464,8 @@ declare
     v jsonb;
     v_action uuid;
     v_until timestamptz;
+    v_archived timestamptz;
+    v_archiver uuid;
 begin
     perform set_config('request.jwt.claim.sub', '10510510-0000-0000-0000-000000000001', true);
     -- The shop bought Analyses with its own cauris, open 2 more days.
@@ -443,7 +507,7 @@ begin
     v := platform_bulk('unlock', array['10500000-0000-0000-0000-000000000003']::uuid[],
                        jsonb_build_object('feature', 'analytics', 'until', cauris_today() + 5));
     if (v->>'done')::int <> 0
-       or v->'failed'->0->>'error' <> 'Cet outil n''existe pas pour ce genre d''activité' then
+       or v->'failed'->0->>'error' <> 'Cet outil n''existe pas pour ce type d''activité' then
         raise exception 'FAIL: an association was opened analyses: %', v;
     end if;
 
@@ -501,6 +565,12 @@ begin
     execute 'reset role';
     select id into v_action from platform_actions where kind = 'archive'
        and org_id = '10500000-0000-0000-0000-000000000002' order by at desc limit 1;
+    -- The quiet one archived a week ago by somebody else: its restore
+    -- undone puts back that date and that hand, not the undo's.
+    update orgs set archived_at = now() - interval '7 days', archived_by = '10510510-0000-0000-0000-000000000002'
+     where id = '10500000-0000-0000-0000-000000000005';
+    select archived_at, archived_by into v_archived, v_archiver from orgs
+     where id = '10500000-0000-0000-0000-000000000005';
     execute 'set local role authenticated';
     perform platform_undo(v_action);
     v := platform_bulk('restore', array['10500000-0000-0000-0000-000000000005']::uuid[], null);
@@ -510,7 +580,11 @@ begin
        or (select archived_at from orgs where id = '10500000-0000-0000-0000-000000000005') is null then
         raise exception 'FAIL: archive and restore were not undone';
     end if;
-    raise notice 'PASS: a tool opened for a shop and a farm, undone back to the shop''s own purchase, never a tool an association does not have; a message to each kind, never undone; an archive undone, a restore undone';
+    if (select (archived_at, archived_by) from orgs where id = '10500000-0000-0000-0000-000000000005')
+       is distinct from (v_archived, v_archiver) then
+        raise exception 'FAIL: the restore''s undo re-dated the archive';
+    end if;
+    raise notice 'PASS: a tool opened for a shop and a farm, undone back to the shop''s own purchase, never a tool an association does not have; a message to each kind, never undone; an archive undone, a restore undone with its first archive''s date and hand';
 end $$;
 
 \echo ''
@@ -590,6 +664,45 @@ begin
           raise exception 'FAIL: a new key written';
     exception when others then if sqlerrm <> 'Réglage inconnu : nouveau_reglage' then raise; end if; end;
 
+    -- A whole number where a reader reads an integer (plan_limit,
+    -- cauris_param): « 12.5 » would break plan_terms(), the caps, the
+    -- leagues. A decimal only for the delivery fee and reach and the Wave
+    -- commission, read as numeric. Never above a billion; a 0/1 switch is 0
+    -- or 1; « 2.0 » is written « 2 », as an integer reader reads it.
+    begin perform platform_set_setting('free_max_staff', '12.5');
+          raise exception 'FAIL: 12.5 people';
+    exception when others then if sqlerrm <> 'Un nombre entier, s''il vous plaît.' then raise; end if; end;
+    begin perform platform_set_setting('delivery_share_pct', '12.5');
+          raise exception 'FAIL: 12.5 %% for a share read as an integer';
+    exception when others then if sqlerrm <> 'Un nombre entier, s''il vous plaît.' then raise; end if; end;
+    begin perform platform_set_setting('spot_price_shop_7', '2500.5');
+          raise exception 'FAIL: half a franc';
+    exception when others then if sqlerrm <> 'Un nombre entier, s''il vous plaît.' then raise; end if; end;
+    begin perform platform_set_setting('vitrine_free_basics', '2');
+          raise exception 'FAIL: a 0/1 switch at 2';
+    exception when others then if sqlerrm <> 'Ce réglage vaut 0 (non) ou 1 (oui).' then raise; end if; end;
+    begin perform platform_set_setting('pro_price_year', '2000000000');
+          raise exception 'FAIL: two billion';
+    exception when others then if sqlerrm <> 'Un nombre d''un milliard au plus.' then raise; end if; end;
+    if (plan_terms()->>'free_max_staff') is null then
+        raise exception 'FAIL: plan_terms() broke';
+    end if;
+    a2 := platform_set_setting('delivery_per_km', '152.5');
+    if (select value from platform_settings where key = 'delivery_per_km') <> '152.5'::jsonb then
+        raise exception 'FAIL: a decimal refused for the fee per km';
+    end if;
+    perform platform_undo(a2);
+    a2 := platform_set_setting('free_max_staff', '2.0');
+    if (select value::text from platform_settings where key = 'free_max_staff') <> '2'
+       or (plan_terms()->>'free_max_staff')::int <> 2 then
+        raise exception 'FAIL: « 2.0 » not written as the integer 2: %',
+            (select value::text from platform_settings where key = 'free_max_staff');
+    end if;
+    perform platform_undo(a2);
+    if (plan_terms()->>'free_max_staff') is null then
+        raise exception 'FAIL: plan_terms() broke after the numbers';
+    end if;
+
     -- Changed again since: the first change is not undone over the second.
     a2 := platform_set_setting('pro_price_month', to_jsonb((v_before #>> '{}')::numeric + 900));
     begin
@@ -618,7 +731,7 @@ begin
     if two_step_on() then
         raise exception 'FAIL: the two-step switch did not come back off';
     end if;
-    raise notice 'PASS: the board hides the markers and the request page (107''s own) and names who changed what; a change of its own type is journaled with its before, undone, not over a later one; a word, a negative, 150 %%, a number for a switch, a marker, a new key refused; the two-step switch on and back off';
+    raise notice 'PASS: the board hides the markers and the request page (107''s own) and names who changed what; a change of its own type is journaled with its before, undone, not over a later one; a word, a negative, 150 %%, a number for a switch, a marker, a new key refused; 12.5 on an integer setting (people, a share, a price in francs), 2 on a 0/1 switch, two billion refused in French — plan_terms() still answers; a decimal for the fee per km, « 2.0 » written 2; the two-step switch on and back off';
 end $$;
 
 \echo ''

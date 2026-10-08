@@ -28,8 +28,10 @@
 --      093, 103) stay as they are: none is redefined here. One editing
 --      session is one journal line: changes by the same person to the same
 --      part of the same business within 30 minutes, with nothing logged in
---      between, are folded into the line already open (its « before » kept,
---      its « after » brought forward) and the owner is told once.
+--      between and nothing she set changed since by anyone (the owner
+--      included), are folded into the line already open (its « before »
+--      kept, its « after » brought forward) and the owner is told once.
+--      A kind changed through 103's update_org rings 103's own bell only.
 --      A platform function that logs its own action sets the transaction's
 --      mara.logged_write so the trigger does not log it twice (2 and 3 do).
 --
@@ -44,6 +46,15 @@
 -- Re-runnable: functions replaced in place, the trigger dropped and
 -- recreated, the whitelist row inserted on conflict do nothing.
 -- ============================================================
+
+do $$
+begin
+    if to_regclass('public.platform_actions') is null
+       or to_regclass('public.platform_undo_fns') is null
+       or to_regprocedure('public.platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb)') is null then
+        raise exception '106 needs 104 (platform_actions, platform_log_action, platform_undo_fns) applied first';
+    end if;
+end $$;
 
 -- ------------------------------------------------------------
 -- 0. What the fiche watches, and the words for it (internal)
@@ -434,6 +445,11 @@ $$;
 -- 3. The undo: the columns back, if nobody changed them since
 -- ------------------------------------------------------------
 -- [p_args] is what the journal line carries: {org, what, before, after}.
+-- A plan undone puts back the plan's three columns and nothing else: the
+-- « J'ai payé » requests (plan_requests) are not the plan's — set_org_plan
+-- never writes them, « Marquer traité » (handle_plan_request) is its own
+-- act, saying the platform looked at its Wave app — so a request handled
+-- stays handled, and one still open stays open in « À faire ».
 create or replace function platform_undo_org_columns(p_args jsonb)
 returns void
 language plpgsql
@@ -536,7 +552,11 @@ begin
         continue when v_before = '{}'::jsonb;
 
         -- The line still open: the newest of this business's journal, by the
-        -- same person, for the same part, not undone, under 30 minutes old.
+        -- same person, for the same part, not undone, under 30 minutes old —
+        -- and still as Mara left it: every column the line holds is still
+        -- at its « after » (nobody, the owner included, changed one since).
+        -- Otherwise a new line, so its undo gives back the owner's value
+        -- and not the one before theirs.
         select a.* into v_open
           from platform_actions a
          where a.org_id = new.id
@@ -547,7 +567,9 @@ begin
            and v_open.actor = v_uid
            and v_open.undone_at is null
            and v_open.undo_fn = 'platform_undo_org_columns'
-           and v_open.at > now() - interval '30 minutes' then
+           and v_open.at > now() - interval '30 minutes'
+           and not exists (select 1 from jsonb_object_keys(coalesce(v_open.after, '{}'::jsonb)) k
+                            where (v_old -> k) is distinct from (v_open.after -> k)) then
             -- The first « before » of each column stands; the newest « after ».
             v_before := v_before || coalesce(v_open.before, '{}'::jsonb);
             v_after  := coalesce(v_open.after, '{}'::jsonb) || v_after;
@@ -568,10 +590,22 @@ begin
                                'before', v_before, 'after', v_after));
         if v_what in ('vitrine', 'identity') then
             v_cols := mara_edit_keys(v_what, v_after);
-            perform notify_org_owners(new.id, 'mara_edited',
-                mara_edit_message(v_what, v_cols, false),
-                jsonb_build_object('what', v_what, 'fields', to_jsonb(v_cols),
-                                   'action', v_action));
+            -- A kind changed through 103's update_org (the owner's settings
+            -- opened as Mara) has rung its own bell, « Le genre de votre
+            -- activité a été changé », in this transaction: the kind is not
+            -- said twice — only the other fields, if any.
+            if v_what = 'identity' and 'profile' = any (v_cols)
+               and exists (select 1 from notifications n
+                            where n.org_id = new.id and n.kind = 'org_kind_changed'
+                              and n.created_at = now()) then
+                v_cols := array_remove(v_cols, 'profile');
+            end if;
+            if cardinality(v_cols) > 0 then
+                perform notify_org_owners(new.id, 'mara_edited',
+                    mara_edit_message(v_what, v_cols, false),
+                    jsonb_build_object('what', v_what, 'fields', to_jsonb(v_cols),
+                                       'action', v_action));
+            end if;
         end if;
     end loop;
     return null;

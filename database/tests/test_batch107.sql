@@ -692,7 +692,7 @@ begin
         perform platform_set_kind_setting('association', 'vitrine_min_items', '3');
         raise exception 'FAIL: an association took a shop''s minimum';
     exception when raise_exception then
-        if sqlerrm <> 'Ce réglage n''existe pas pour ce genre d''activité.' then raise; end if;
+        if sqlerrm <> 'Ce réglage n''existe pas pour ce type d''activité.' then raise; end if;
     end;
     begin
         perform platform_set_kind_setting('retail', 'free_photo_items', '5000');
@@ -722,7 +722,7 @@ begin
         perform platform_set_kind_setting('generic', 'free_photo_items', '3');
         raise exception 'FAIL: an unknown kind taken';
     exception when raise_exception then
-        if sqlerrm not like 'Genre d''activité inconnu%' then raise; end if;
+        if sqlerrm not like 'Type d''activité inconnu%' then raise; end if;
     end;
     -- The same value again changes nothing and writes nothing.
     if platform_set_kind_setting('retail', 'free_photo_items', '12') is not null then
@@ -915,9 +915,12 @@ declare
     v_cover text := 'org/10700000-0000-0000-0000-000000000001/Boutique_107_article_2.jpg';
     v_before jsonb := (select snap from p1_after);
 begin
+    -- A Basic vitrine: the free options only (093) — the colour and the
+    -- cover; the presentation is Vitrine+'s.
     s := (select style from storefront('boutique-107'));
-    if s ->> 'accent' <> '#2E7D5B' or s ->> 'layout' <> 'list' or s ->> 'cover_key' <> v_cover then
-        raise exception 'FAIL: the never-dressed shop shows %', s;
+    if s ->> 'accent' is distinct from '#2E7D5B' or s ? 'layout'
+       or s ->> 'cover_key' is distinct from v_cover then
+        raise exception 'FAIL: the never-dressed Basic shop shows %', s;
     end if;
     if not storefront_photo_allowed(v_cover) then
         raise exception 'FAIL: the street may not load the default cover';
@@ -929,11 +932,19 @@ begin
        or (select to_jsonb(x) from storefront('entraide-107') x) is distinct from v_before -> 'orgs' -> 'entraide-107' -> 'storefront' then
         raise exception 'FAIL: a dressed vitrine, a vitrine d''exemple, a farm or an association moved';
     end if;
-    -- A Pro shop never dressed takes it too: it is Mara's, for every plan.
-    if (select style ->> 'layout' from storefront('pro-107')) <> 'list' then
-        raise exception 'FAIL: the never-dressed Pro shop did not take the default';
+    -- A Pro shop never dressed takes all of it, the presentation too.
+    s := (select style from storefront('pro-107'));
+    if s ->> 'layout' is distinct from 'list' or s ->> 'accent' is distinct from '#2E7D5B' then
+        raise exception 'FAIL: the never-dressed Pro shop did not take the whole default: %', s;
     end if;
-    raise notice 'PASS: a shop never dressed (Basic or Pro) shows Mara''s list, green and its first photo as the cover, served by the photo gate; a dressed shop, a vitrine d''exemple, the farm and the association as before';
+    -- The basics not free (093's switch at 0): a Basic vitrine shows none.
+    update platform_settings set value = '0' where key = 'vitrine_free_basics';
+    s := (select style from storefront('boutique-107'));
+    update platform_settings set value = '1' where key = 'vitrine_free_basics';
+    if s ? 'accent' or s ? 'layout' or s ? 'cover_key' then
+        raise exception 'FAIL: with the basics not free, a Basic vitrine took the default: %', s;
+    end if;
+    raise notice 'PASS: a shop never dressed shows Mara''s green and its first photo as the cover (served by the photo gate) on Basic, and the list too on Pro — nothing on Basic when the basics are not free; a dressed shop, a vitrine d''exemple, the farm and the association as before';
 end $$;
 -- The owner's first dressing takes over.
 begin;
@@ -1060,8 +1071,8 @@ begin
         begin
             perform platform_set_application_form(f::jsonb);
         exception when raise_exception then
-            ok := sqlerrm in ('Les genres proposés sont boutique, ferme ou association.',
-                              'Proposez au moins un genre d''activité.',
+            ok := sqlerrm in ('Les types proposés sont boutique, ferme ou association.',
+                              'Proposez au moins un type d''activité.',
                               'Chaque question a son intitulé.',
                               'Une question est un texte, un choix, un nombre ou oui-non.',
                               'Une question à choix a de 2 à 12 réponses.',
@@ -1117,13 +1128,13 @@ begin
         perform apply_for_org('Entraide 107 bis', 'entraide-107-bis', 'association', 'XOF', null, null, null, ans);
         raise exception 'FAIL: an association was asked for on a page that offers none';
     exception when raise_exception then
-        if sqlerrm <> 'Ce genre d''activité ne peut pas être demandé pour l''instant.' then raise; end if;
+        if sqlerrm <> 'Ce type d''activité ne peut pas être demandé pour l''instant.' then raise; end if;
     end;
     begin
         perform apply_for_org('Église 107 bis', 'eglise-107-bis', 'church', 'XOF', null, null, null, ans);
         raise exception 'FAIL: a church was asked for on a page that offers no association';
     exception when raise_exception then
-        if sqlerrm <> 'Ce genre d''activité ne peut pas être demandé pour l''instant.' then raise; end if;
+        if sqlerrm <> 'Ce type d''activité ne peut pas être demandé pour l''instant.' then raise; end if;
     end;
     begin
         perform apply_for_org('Atelier 107', 'atelier-107', 'retail', 'XOF', null, null, null, ans - 'ville');
@@ -1264,6 +1275,43 @@ begin
 end $$;
 commit;
 select set_config('request.jwt.claim.sub', '', false);
+
+\echo ''
+\echo '--- TEST 8: a request is written through its functions only — a direct insert or decision refused ---'
+do $$
+declare v_app uuid;
+begin
+    perform set_config('request.jwt.claim.sub', '10710710-0000-0000-0000-000000000009', true);
+    execute 'set local role authenticated';
+    -- Past the page's kinds and its required questions: refused at the door.
+    begin
+        insert into org_applications (applicant_id, name, slug, profile)
+        values ('10710710-0000-0000-0000-000000000009', 'Direct 107', 'direct-107', 'retail');
+        raise exception 'FAIL: a request was written past apply_for_org';
+    exception when insufficient_privilege then null;
+    end;
+    execute 'reset role';
+    -- Nor decided by a platform admin straight on the table.
+    select id into v_app from org_applications limit 1;
+    perform set_config('request.jwt.claim.sub', '10710710-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    begin
+        update org_applications set status = 'approved' where id = v_app;
+        raise exception 'FAIL: a request was decided past approve_org_application';
+    exception when insufficient_privilege then null;
+    end;
+    begin
+        delete from org_applications where id = v_app;
+        raise exception 'FAIL: a request was deleted';
+    exception when insufficient_privilege then null;
+    end;
+    execute 'reset role';
+    perform set_config('request.jwt.claim.sub', '', true);
+    if exists (select 1 from org_applications where slug = 'direct-107') then
+        raise exception 'FAIL: the direct request is there';
+    end if;
+    raise notice 'PASS: a signed-in caller cannot write a request directly, nor a platform admin decide or delete one: apply_for_org, approve_org_application and reject_org_application only';
+end $$;
 
 -- Leave the platform's numbers as the next suite expects them.
 update platform_settings set value = '0' where key = 'path_gates_open';

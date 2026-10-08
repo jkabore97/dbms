@@ -11,6 +11,7 @@ import '../../core/phone/country_codes.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import '../admin/admin_pill.dart';
 import '../admin/pin_preview.dart';
 import '../common/phone_field.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -312,6 +313,9 @@ class _SetupScreenState extends State<SetupScreen> {
                   Text('${_at + 1} / ${_steps.length}',
                       key: const Key('setup-count'),
                       style: theme.textTheme.labelLarge),
+                  // « Admin » (104): the platform's way to its center, here too
+                  // — drawn for a platform admin only.
+                  const AdminPill(),
                 ],
               ),
             ),

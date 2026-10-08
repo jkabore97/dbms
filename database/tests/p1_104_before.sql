@@ -51,6 +51,15 @@ insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility
     ('11040000-0000-0000-0000-0000000000a5', '11040000-0000-0000-0000-000000000006', 'owner',    'org', '11040000-0000-0000-0000-0000000000a5', 'full'),
     ('11040000-0000-0000-0000-0000000000a6', '11040000-0000-0000-0000-000000000007', 'owner',    'org', '11040000-0000-0000-0000-0000000000a6', 'full');
 
+-- Two vitrines dressed by their owners (093): the Basic one with the free
+-- options and a presentation it may not show (stripped on Basic), the Pro
+-- one with Vitrine+'s own. A kind's « vitrine par défaut » (107) must never
+-- touch a vitrine its owner dressed.
+update orgs set storefront_style = '{"accent": "#2E7D5B", "tagline": "Ouvert le dimanche", "layout": "list"}'
+ where id = '11040000-0000-0000-0000-0000000000a1';
+update orgs set storefront_style = '{"accent": "#7A4E2D", "tagline": "Pagnes et retouches", "layout": "large", "hide_out_of_stock": true}'
+ where id = '11040000-0000-0000-0000-0000000000a2';
+
 -- The owner's dial narrowed the employee (031): it must stay narrowed.
 insert into org_feature_rules (org_id, tier, feature, access) values
     ('11040000-0000-0000-0000-0000000000a1', 'employee', 'credits', 'hidden'),
@@ -123,6 +132,8 @@ begin
             || jsonb_build_object('access ' || m.user_id || ' ' || m.org_id, v)
             || jsonb_build_object('states ' || m.user_id || ' ' || m.org_id,
                                   feature_states(m.org_id) - 'hidden')
+            -- The paywall's numbers, as each member's app reads them.
+            || jsonb_build_object('terms ' || m.user_id || ' ' || m.org_id, plan_terms())
             -- A member sees their own vitrine even below the minimum.
             || jsonb_build_object('own vitrine ' || m.user_id || ' ' || m.org_id,
                                   to_jsonb(storefront_open(m.slug)));
@@ -177,6 +188,14 @@ begin
        or (select jsonb_array_length(v) from p1_snap where phase = 'before' and what = 'storefront_products entraide-p1') <> 1
        or (select jsonb_array_length(v) from p1_snap where phase = 'before' and what = 'directory') < 4 then
         raise exception 'FAIL: the vitrines meant to be open are not — the photograph would prove nothing';
+    end if;
+    if (select v->0->'style'->>'accent' from p1_snap where phase = 'before' and what = 'storefront boutique-p1')
+           is distinct from '#2E7D5B'
+       or (select v->0->'style'->>'layout' from p1_snap where phase = 'before' and what = 'storefront pro-p1')
+           is distinct from 'large'
+       or (select v->0->'style' ? 'layout' from p1_snap where phase = 'before' and what = 'storefront boutique-p1')
+       or not exists (select 1 from p1_snap where phase = 'before' and what like 'terms %') then
+        raise exception 'FAIL: the dressed vitrines or the terms are not in the photograph';
     end if;
     raise notice 'P1 before: % answers photographed at 103', n;
 end $$;

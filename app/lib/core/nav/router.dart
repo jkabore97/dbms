@@ -29,6 +29,7 @@ import '../capture/invoice_reading.dart';
 import '../capture/models.dart';
 import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
+import '../../features/admin/admin_pill.dart' show AdminTrail;
 import 'app_scope.dart';
 import 'session.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -379,6 +380,9 @@ GoRouter buildRouter(SessionController session) {
     initialLocation: Routes.splash,
     refreshListenable: session,
     redirect: (context, state) {
+      // The business the center opened is forgotten once it is left
+      // another way (104): its strip is never stale.
+      AdminTrail.sawLocation(state.uri.path);
       final to = redirect(context, state);
       // Somewhere inside a business: its screens arrive first (business_
       // screens.dart is deferred). A redirect elsewhere comes back through

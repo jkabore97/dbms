@@ -153,7 +153,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
 
   /// What the page cannot be saved with, said before the server says it.
   String? get _problem {
-    if (_kinds.isEmpty) return context.tr('Proposez au moins un genre d\'activité.');
+    if (_kinds.isEmpty) return context.tr('Proposez au moins un type d\'activité.');
     for (final q in _form.questions) {
       if (q.label.isEmpty) return context.tr('Chaque question a son intitulé.');
       if (q.type == QuestionType.choice && (q.options.length < 2 || q.options.length > 12)) {
@@ -203,7 +203,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('Revenir à la page d\'origine ?')),
-        content: Text(context.tr('Le mot d\'accueil et les questions sont retirés ; les trois genres sont proposés. Les demandes déjà reçues gardent leurs réponses.')),
+        content: Text(context.tr('Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les demandes déjà reçues gardent leurs réponses.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -211,7 +211,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(context.tr('Page d\'origine')),
+            child: Text(context.tr('Remettre la page d\'origine')),
           ),
         ],
       ),
@@ -261,7 +261,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          context.tr('Toujours demandés : le nom de l\'activité, son adresse (marakaj.com/s/…), son genre et sa monnaie, avec une phrase pour la décrire.'),
+          context.tr('Toujours demandés : le nom de l\'activité, son adresse (marakaj.com/s/…), son type et sa monnaie, avec une phrase pour la décrire.'),
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
@@ -279,7 +279,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Text(context.tr('Genres proposés'), style: theme.textTheme.titleSmall),
+        Text(context.tr('Types proposés'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 6),
         Wrap(
           spacing: 8,
@@ -343,13 +343,13 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
                 onPressed: _openPreview,
                 style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
                 icon: const Icon(Icons.visibility_outlined),
-                label: Text(context.tr('Aperçu')),
+                label: Text(context.tr('Aperçu de la page')),
               ),
             if (_saved)
               TextButton(
                 key: const Key('form-original'),
                 onPressed: _busy ? null : _original,
-                child: Text(context.tr('Page d\'origine')),
+                child: Text(context.tr('Remettre la page d\'origine')),
               ),
           ],
         ),
@@ -370,7 +370,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(context.tr('Aperçu'),
+                      Text(context.tr('Aperçu de la page'),
                           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
                       const SizedBox(height: 8),
                       Expanded(

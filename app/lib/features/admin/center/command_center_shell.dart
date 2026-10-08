@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -390,7 +391,11 @@ class _Header extends StatelessWidget {
                                     border: Border.all(color: maraPaper.withValues(alpha: 0.4)),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: Text(context.tr('Ctrl K'),
+                                  // The keys as this keyboard says them.
+                                  child: Text(
+                                      defaultTargetPlatform == TargetPlatform.macOS
+                                          ? '⌘ K'
+                                          : context.tr('Ctrl K'),
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(color: maraPaper.withValues(alpha: 0.8))),
                                 ),
@@ -466,7 +471,9 @@ class _PageTabs extends StatelessWidget {
                     color: identical(p, on) ? maraCaramel : theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
-                  onSelected: (_) => context.go(p.route),
+                  // « La rue » leaves the center: nothing kept to return to.
+                  onSelected: (_) =>
+                      p.leaves ? AdminTrail.goOut(context, p.route) : context.go(p.route),
                 ),
               ),
           ],

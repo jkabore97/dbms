@@ -453,6 +453,75 @@ do $$ begin
 end $$;
 
 \echo ''
+\echo '--- TEST 5b: an editing session the owner broke into is two lines; a kind changed through update_org rings one bell ---'
+-- Mara A→B (the association's open line), the owner B→C, Mara C→D.
+set role authenticated;
+select set_config('request.jwt.claim.sub', :mara, false);
+select set_storefront(:assoc, true, 'Texte B');
+select set_config('request.jwt.claim.sub', :o_assoc, false);
+select set_storefront(:assoc, true, 'Texte C');
+select set_config('request.jwt.claim.sub', :mara, false);
+select set_storefront(:assoc, true, 'Texte D');
+reset role;
+do $$
+declare a platform_actions%rowtype;
+begin
+    if (select count(*) from platform_actions
+         where org_id = '10600000-0000-0000-0000-000000000003' and kind = 'vitrine' and undone_at is null) <> 2 then
+        raise exception 'FAIL: Mara''s edit after the owner''s was folded into the line before it';
+    end if;
+    select * into a from platform_actions
+     where org_id = '10600000-0000-0000-0000-000000000003' and kind = 'vitrine'
+     order by at desc, id desc limit 1;
+    if a.before <> '{"storefront_blurb": "Texte C"}'::jsonb or a.after <> '{"storefront_blurb": "Texte D"}'::jsonb then
+        raise exception 'FAIL: the new line reads % → %', a.before, a.after;
+    end if;
+    perform set_config('fiche.action', a.id::text, false);
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub', :mara, false);
+select platform_undo(current_setting('fiche.action')::uuid);
+reset role;
+do $$ begin
+    if (select storefront_blurb from orgs where id = '10600000-0000-0000-0000-000000000003') <> 'Texte C' then
+        raise exception 'FAIL: the undo did not give back the owner''s text: %',
+            (select storefront_blurb from orgs where id = '10600000-0000-0000-0000-000000000003');
+    end if;
+    raise notice 'PASS: Mara A→B, the owner B→C, Mara C→D: two lines; the last undone gives the owner''s C';
+end $$;
+-- The kind, through 103's update_org (the owner's settings opened as Mara).
+select set_config('fiche.bells', count(*)::text, false) from notifications
+ where recipient_id = :o_farm and kind in ('org_kind_changed', 'mara_edited');
+set role authenticated;
+select set_config('request.jwt.claim.sub', :mara, false);
+select update_org(:farm, p_profile => 'retail');
+reset role;
+do $$ begin
+    if (select count(*) from notifications
+         where recipient_id = '10606060-0000-0000-0000-000000000002'
+           and kind in ('org_kind_changed', 'mara_edited')) <> current_setting('fiche.bells')::int + 1
+       or not exists (select 1 from notifications
+                       where recipient_id = '10606060-0000-0000-0000-000000000002'
+                         and kind = 'org_kind_changed' and params->>'profile' = 'retail') then
+        raise exception 'FAIL: a kind changed through update_org rang % bells',
+            (select count(*) from notifications
+              where recipient_id = '10606060-0000-0000-0000-000000000002'
+                and kind in ('org_kind_changed', 'mara_edited')) - current_setting('fiche.bells')::int;
+    end if;
+    if not exists (select 1 from platform_actions
+                    where org_id = '10600000-0000-0000-0000-000000000002' and kind = 'identity'
+                      and undone_at is null and after = '{"profile": "retail"}'::jsonb) then
+        raise exception 'FAIL: the kind change is not in the journal';
+    end if;
+    raise notice 'PASS: Mara changing a kind through update_org: one bell (103''s), the journal line still written';
+end $$;
+select id as farm_kind from platform_actions where org_id = :farm and kind = 'identity' and undone_at is null \gset
+set role authenticated;
+select set_config('request.jwt.claim.sub', :mara, false);
+select platform_undo(:'farm_kind');
+reset role;
+
+\echo ''
 \echo '--- TEST 6: P3 — the undo and the trigger are nobody''s to call; nobody writes the journal ---'
 do $$ begin
     if has_function_privilege('authenticated', 'platform_undo_org_columns(jsonb)', 'EXECUTE')

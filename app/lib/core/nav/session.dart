@@ -150,7 +150,31 @@ class SessionController extends ChangeNotifier {
   /// see what the business sees). Nothing until they are read, and nothing
   /// on a business no rule touches.
   Set<String> _hiddenFor(OrgSummary org) =>
-      _features[org.id]?.hidden ?? const <String>{};
+      _features[org.id]?.hidden ?? _hiddenKept[org.id] ?? const <String>{};
+
+  /// The hidden set as the device last heard it, per business: an offline
+  /// cold start hides what the server last said was hidden, rather than
+  /// drawing a tool the server would refuse. Rewritten on every answer.
+  final Map<String, Set<String>> _hiddenKept = {};
+
+  static String _hiddenKey(String orgId) => 'hidden_features:$orgId';
+
+  Future<Set<String>?> _readHidden(String orgId) async {
+    try {
+      final v = await db.readPref(_hiddenKey(orgId));
+      if (v == null || v.isEmpty) return null;
+      return v.split(',').where((k) => k.isNotEmpty).toSet();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _keepHidden(String orgId, Set<String> hidden) async {
+    try {
+      await db.writePref(
+          _hiddenKey(orgId), hidden.isEmpty ? null : (hidden.toList()..sort()).join(','));
+    } catch (_) {}
+  }
 
   /// Which tools the plan locks for this business: none on Pro, none for
   /// the platform admin, the Pro list otherwise. The server decides the
@@ -208,7 +232,15 @@ class SessionController extends ChangeNotifier {
       }
     }
     final s = await states;
-    if (s is FeatureStates) _features[org.id] = s;
+    if (s is FeatureStates) {
+      _features[org.id] = s;
+      _hiddenKept[org.id] = s.hidden;
+      unawaited(_keepHidden(org.id, s.hidden));
+    } else if (!_features.containsKey(org.id) && !_hiddenKept.containsKey(org.id)) {
+      // No answer (offline): what the device last heard.
+      final kept = await _readHidden(org.id);
+      if (kept != null) _hiddenKept[org.id] = kept;
+    }
     final locked = _lockedFor(org);
     final hidden = _hiddenFor(org);
     final OrgAccess next;

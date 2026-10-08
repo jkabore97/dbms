@@ -15,6 +15,13 @@ import '../../home/business_shell.dart';
 import '../../pro/pro_strip.dart';
 import 'look_only_view.dart';
 
+/// « Voir comme le commerçant » — for an association, its « responsable »:
+/// the name of the owner's view, in the fiche's button and on the view.
+String previewTitle(BuildContext context, String profile) =>
+    profile == 'association' || profile == 'church'
+        ? context.tr('Voir comme le responsable')
+        : context.tr('Voir comme le commerçant');
+
 /// « Voir comme le commerçant » (106): a business's home and its Compte,
 /// drawn exactly as its owner sees them — the owner's role, the plan's
 /// locks, what Mara's switchboard hides — on a phone's width, beside the
@@ -86,7 +93,7 @@ class _MerchantPreviewScreenState extends State<MerchantPreviewScreen> {
       appBar: AppBar(
         backgroundColor: maraDeep,
         foregroundColor: maraPaper,
-        title: Text(context.tr('Voir comme le commerçant'),
+        title: Text(previewTitle(context, widget.org.profile),
             style: const TextStyle(color: maraPaper, fontWeight: FontWeight.w700)),
       ),
       body: Column(

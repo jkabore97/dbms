@@ -329,7 +329,7 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
         key: const Key('kinds-settings'),
         icon: Icons.pin_outlined,
         title: context.tr('Réglages par type'),
-        line: context.tr('Les nombres de la formule gratuite pour ce genre. « Par défaut » : ceux de la plateforme.'),
+        line: context.tr('Les nombres de la formule gratuite pour ce type. « Par défaut » : ceux de la plateforme.'),
         children: [for (final r in m.settings) _settingRow(theme, r)],
       ),
       _section(
@@ -467,7 +467,7 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
 
   List<Widget> _functions(ThemeData theme) {
     if (_board.isEmpty) {
-      return [Text(context.tr('Aucune fonction à régler pour ce genre.'))];
+      return [Text(context.tr('Aucune fonction à régler pour ce type.'))];
     }
     final out = <Widget>[];
     String? group;
@@ -536,7 +536,7 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
       minVerticalPadding: 10,
       title: Text(_settingLabel(r)),
       subtitle: Text(own
-          ? context.tr('Propre à ce genre — par défaut : {global}', {'global': r.global})
+          ? context.tr('Propre à ce type — par défaut : {global}', {'global': r.global})
           : context.tr('Par défaut')),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

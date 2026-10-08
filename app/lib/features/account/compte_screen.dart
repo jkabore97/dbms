@@ -352,12 +352,12 @@ class CompteScreen extends StatelessWidget {
                 _Tile(
                   icon: Icons.business_outlined,
                   title: Strings.of(context).businesses,
-                  onTap: () => context.push(Routes.consoleBusinesses),
+                  onTap: () => AdminTrail.enter(context, to: Routes.consoleBusinesses),
                 ),
                 _Tile(
                   icon: Icons.inbox_outlined,
                   title: Strings.of(context).applications,
-                  onTap: () => context.push(Routes.applications),
+                  onTap: () => AdminTrail.enter(context, to: Routes.applications),
                 ),
                 _Tile(
                   icon: Icons.add_business_outlined,

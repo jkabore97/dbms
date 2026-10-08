@@ -42,6 +42,10 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A phone's app bar (a farm's or an association's, with the pending
+    // chip, the switch button and the bell) has no room for the word: the
+    // shield alone, still graphite and caramel, still « Centre admin » to
+    // a screen reader.
     final narrow = MediaQuery.sizeOf(context).width < 400;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -58,23 +62,26 @@ class _Pill extends StatelessWidget {
             child: InkWell(
               onTap: () => AdminTrail.enter(context),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 36, minWidth: 48),
+                constraints: BoxConstraints(minHeight: 36, minWidth: narrow ? 40 : 48),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: narrow ? 10 : 12),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.shield_outlined, size: 18, color: maraCaramel),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.tr('Admin'),
-                        style: const TextStyle(
-                          color: maraCaramel,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          letterSpacing: 0.3,
+                      if (!narrow) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          context.tr('Admin'),
+                          style: const TextStyle(
+                            color: maraCaramel,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            letterSpacing: 0.3,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -105,11 +112,24 @@ abstract final class AdminTrail {
     }
   }
 
-  /// The pill: into the center, remembering where from.
-  static void enter(BuildContext context) {
+  /// The center's own addresses: the console's, and the requests' pages.
+  static bool inCenter(String location) =>
+      location.startsWith(Routes.console) || location.startsWith(Routes.applications);
+
+  /// Into the center — the pill, Compte's « Plateforme » rows, a bell —
+  /// at [to], remembering where from, so « Quitter » (and back) return
+  /// there.
+  static void enter(BuildContext context, {String to = Routes.console}) {
     final here = _here(context);
-    if (here != null && !here.startsWith(Routes.console)) _returnTo = here;
-    context.push(Routes.console);
+    if (here != null && !inCenter(here)) _returnTo = here;
+    context.push(to);
+  }
+
+  /// A page outside the center opened from it (« La rue »): the center is
+  /// left for it, so nothing stale is kept to « Quitter » back to.
+  static void goOut(BuildContext context, String route) {
+    _returnTo = null;
+    context.go(route);
   }
 
   /// « Quitter le centre »: back to the page the pill was tapped on, or the
@@ -133,6 +153,27 @@ abstract final class AdminTrail {
     opened.value = null;
     context.go(from);
   }
+
+  /// Every new address (the router's redirect): the business the center
+  /// opened is forgotten once the admin leaves it another way — another
+  /// business, the picker, the street, the center itself, signed out — so
+  /// its strip never shows again later, stale. A page pushed from inside
+  /// it (its vitrine, Compte's language) keeps it.
+  static void sawLocation(String location) {
+    final o = opened.value;
+    if (o == null) return;
+    final home = Routes.org(o.orgId);
+    if (location == home || location.startsWith('$home/')) return;
+    if (location.startsWith('/o/') ||
+        inCenter(location) ||
+        location == Routes.picker ||
+        location == Routes.directory ||
+        location == Routes.signIn ||
+        location == Routes.splash ||
+        location == '/') {
+      opened.value = null;
+    }
+  }
 }
 
 /// The strip across a business's home when the center opened it: whose it
@@ -151,6 +192,8 @@ class AdminReturnBanner extends StatelessWidget {
         // Not inside « Voir comme le commerçant » (106): that is the
         // owner's view, and the owner has no center to go back to.
         if (opened?.orgId != orgId || LookOnly.of(context)) return child;
+        // A phone keeps the way back and drops the words before it.
+        final narrow = MediaQuery.sizeOf(context).width < 400;
         return Column(
           children: [
             Material(
@@ -165,12 +208,14 @@ class AdminReturnBanner extends StatelessWidget {
                       const Icon(Icons.shield_outlined, size: 18, color: maraCaramel),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          context.tr('Ouverte depuis le centre admin'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: maraPaper, fontSize: 13),
-                        ),
+                        child: narrow
+                            ? const SizedBox.shrink()
+                            : Text(
+                                context.tr('Ouverte depuis le centre admin'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: maraPaper, fontSize: 13),
+                              ),
                       ),
                       TextButton.icon(
                         style: TextButton.styleFrom(
@@ -187,7 +232,15 @@ class AdminReturnBanner extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(child: child),
+            // The strip took the status bar: the home under it must not
+            // pad for it again.
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: child,
+              ),
+            ),
           ],
         );
       },

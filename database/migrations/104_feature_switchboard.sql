@@ -120,15 +120,33 @@ create table if not exists platform_undo_fns (
 );
 alter table platform_undo_fns enable row level security;
 
+-- A Pro tool a rule hides but a payment keeps ('kept'), and the day the
+-- payment ended and the rule took over ('lapsed'): the owner is told once
+-- per lapse, and « À faire » lists them. Written when the business is read
+-- or spends (feature_lapse_watch) — no scheduler, like 084's idle expiry.
+-- No row: no rule hides a tool this business pays for, i.e. today.
+create table if not exists feature_pay_watch (
+    org_id  uuid not null references orgs(id) on delete cascade,
+    feature text not null references feature_catalog(key) on delete cascade,
+    state   text not null check (state in ('kept', 'lapsed')),
+    since   timestamptz not null default now(),
+    primary key (org_id, feature)
+);
+alter table feature_pay_watch enable row level security;
+comment on table feature_pay_watch is
+    'A hidden Pro tool kept by a payment, or lost when it ended (104). Written by feature_lapse_watch() only.';
+
 -- No policies: read and written through the functions below only.
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
-        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns
+        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns,
+                      feature_pay_watch
             from authenticated;
     end if;
     if exists (select 1 from pg_roles where rolname = 'anon') then
-        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns
+        revoke all on feature_catalog, feature_rules, platform_actions, platform_undo_fns,
+                      feature_pay_watch
             from anon;
     end if;
 end $$;
@@ -194,9 +212,9 @@ as $$
           from feature_catalog c where c.key = p_key), false);
 $$;
 
--- The business's rule (unexpired) over its kind's (unexpired) over the
--- catalog; a paid feature is never hidden.
-create or replace function feature_hidden(p_org uuid, p_key text)
+-- What the rules say, payment aside: the business's rule (unexpired) over
+-- its kind's (unexpired) over the catalog.
+create or replace function feature_rule_hides(p_org uuid, p_key text)
 returns boolean
 language plpgsql
 stable
@@ -209,7 +227,10 @@ declare
     c       feature_catalog%rowtype;
 begin
     select * into c from feature_catalog where key = p_key;
-    if not found or v_kind is null then
+    -- A tool this kind does not have is not hidden — not even by a rule
+    -- left over from the business's former kind (the board shows such a
+    -- rule so it can be cleared; it never decides anything).
+    if not found or v_kind is null or not (v_kind = any (c.kinds)) then
         return false;
     end if;
     select r.state into v_state from feature_rules r
@@ -220,11 +241,71 @@ begin
          where r.scope = 'kind' and r.kind = v_kind and r.feature = p_key
            and (r.until is null or r.until > now());
     end if;
-    if coalesce(v_state, case when v_kind = any (c.default_hidden_kinds)
-                              then 'hidden' else 'visible' end) <> 'hidden' then
-        return false;
+    return coalesce(v_state, case when v_kind = any (c.default_hidden_kinds)
+                                  then 'hidden' else 'visible' end) = 'hidden';
+end;
+$$;
+
+-- The rules, and a paid feature is never hidden.
+create or replace function feature_hidden(p_org uuid, p_key text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select feature_rule_hides(p_org, p_key) and not feature_paid(p_org, p_key);
+$$;
+
+-- A Pro tool a rule hides, kept while the business pays: when the payment
+-- ends (the plan's date, the tool's cauris) the rule takes over — the
+-- admin's rule applies — and the owner is told, once per lapse:
+-- « Votre Mara Pro a pris fin : … ». Paid again, it is back ('kept'), and
+-- the next lapse is told again. Run when the business is read
+-- (feature_states) or spends (spend_cauris); with no rule for its kind or
+-- for itself and nothing remembered, it does nothing.
+create or replace function feature_lapse_watch(p_org uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    c      record;
+    v_kind text := org_kind(p_org);
+begin
+    if v_kind is null
+       or (not exists (select 1 from feature_rules r
+                        where (r.scope = 'org' and r.org_id = p_org)
+                           or (r.scope = 'kind' and r.kind = v_kind))
+           and not exists (select 1 from feature_pay_watch w where w.org_id = p_org)) then
+        return;
     end if;
-    return not feature_paid(p_org, p_key);
+    for c in select f.key, f.label from feature_catalog f
+              where f.pro_tool is not null order by f.sort, f.key loop
+        if not feature_rule_hides(p_org, c.key) then
+            delete from feature_pay_watch where org_id = p_org and feature = c.key;
+        elsif feature_paid(p_org, c.key) then
+            insert into feature_pay_watch (org_id, feature, state, since)
+            values (p_org, c.key, 'kept', now())
+            on conflict (org_id, feature) do update set state = 'kept', since = now()
+                where feature_pay_watch.state <> 'kept';
+        else
+            update feature_pay_watch set state = 'lapsed', since = now()
+             where org_id = p_org and feature = c.key and state = 'kept';
+            if found then
+                -- The owner, whoever is reading (notify_org_owners would
+                -- skip an owner who is the one opening the app).
+                insert into notifications (recipient_id, org_id, kind, message, params)
+                select distinct m.user_id, p_org, 'feature_lapsed',
+                       'Votre Mara Pro a pris fin : ' || c.label
+                           || ' n''est plus disponible pour votre activité.',
+                       jsonb_build_object('to', 'shop', 'feature', c.key, 'label', c.label)
+                  from memberships m
+                 where m.org_id = p_org and m.role = 'owner' and not m.is_trainer;
+            end if;
+        end if;
+    end loop;
 end;
 $$;
 
@@ -1368,6 +1449,8 @@ begin
     if not is_org_admin(p_org_id) then
         raise exception 'Seul un administrateur dépense les cauris de l''entreprise';
     end if;
+    -- The business moves: a payment that ended under a rule is noticed.
+    perform feature_lapse_watch(p_org_id);
     -- No cauris for a tool the platform hid here (104).
     perform feature_guard(p_org_id, c.key) from feature_catalog c where c.pro_tool = p_feature;
     select * into v_cost from cauris_costs where feature = p_feature;
@@ -1542,7 +1625,10 @@ as $$
 $$;
 
 -- For a kind (p_kind) or one business (p_org): each feature it has, the
--- switch at that level, what it comes to, and why.
+-- switch at that level, what it comes to, and why. A rule left over for a
+-- tool the kind does not have (a business that changed kind) is listed too,
+-- 'leftover' true, so it can be put back « Par défaut »: it decides nothing
+-- (feature_hidden ignores it).
 create or replace function platform_feature_board(p_kind text default null, p_org uuid default null)
 returns jsonb
 language plpgsql
@@ -1564,7 +1650,7 @@ begin
     else
         v_kind := case when p_kind = 'church' then 'association' else p_kind end;
         if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
-            raise exception 'Genre d''activité inconnu : %', coalesce(p_kind, '');
+            raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
         end if;
     end if;
 
@@ -1579,6 +1665,7 @@ begin
                    'until', own.until,
                    'note', own.note,
                    'effective', case
+                       when not (v_kind = any (c.kinds)) then 'visible'
                        when p_org is not null then
                            case when feature_hidden(p_org, c.key) then 'hidden' else 'visible' end
                        else coalesce(kr.state,
@@ -1590,7 +1677,8 @@ begin
                        when p_org is not null and kr.state is not null then 'kind'
                        else 'catalog'
                    end,
-                   'paid', p_org is not null and feature_paid(p_org, c.key)
+                   'paid', p_org is not null and feature_paid(p_org, c.key),
+                   'leftover', not (v_kind = any (c.kinds))
                ) order by c.sort, c.key)
           from feature_catalog c
           left join lateral (
@@ -1604,7 +1692,7 @@ begin
                where r.feature = c.key and r.scope = 'kind' and r.kind = v_kind
                  and (r.until is null or r.until > now())
           ) kr on true
-         where v_kind = any (c.kinds)), '[]'::jsonb);
+         where v_kind = any (c.kinds) or own.state is not null), '[]'::jsonb);
 end;
 $$;
 
@@ -1619,12 +1707,25 @@ set search_path = public, auth
 as $$
 declare
     v_kind text := case when p_kind = 'church' then 'association' else p_kind end;
+    c      feature_catalog%rowtype;
 begin
     if not caller_is_platform_admin() then
         raise exception 'Réservé à la plateforme';
     end if;
-    if not exists (select 1 from feature_catalog where key = p_feature) then
+    -- The same refusals as the switch itself: an impact line is only ever
+    -- drawn for a switch that could be saved.
+    select * into c from feature_catalog where key = p_feature;
+    if not found then
         raise exception 'Fonction inconnue : %', coalesce(p_feature, '');
+    end if;
+    if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
+        raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
+    end if;
+    if p_state is null or p_state not in ('default', 'visible', 'hidden') then
+        raise exception 'Réglage inconnu : %', coalesce(p_state, '');
+    end if;
+    if not (v_kind = any (c.kinds)) then
+        raise exception 'Cette fonction n''existe pas pour ce type d''activité.';
     end if;
     return (
         with o as (
@@ -1690,7 +1791,7 @@ begin
 
     if p_scope = 'kind' then
         if v_kind is null or v_kind not in ('retail', 'farm', 'association') then
-            raise exception 'Genre d''activité inconnu : %', coalesce(p_kind, '');
+            raise exception 'Type d''activité inconnu : %', coalesce(p_kind, '');
         end if;
     elsif p_scope = 'org' then
         select name into v_name from orgs where id = p_org;
@@ -1701,8 +1802,10 @@ begin
     else
         raise exception 'Portée inconnue : %', coalesce(p_scope, '');
     end if;
-    if not (v_kind = any (c.kinds)) then
-        raise exception 'Cette fonction n''existe pas pour ce genre d''activité.';
+    -- A tool the kind does not have is never switched — only a rule left
+    -- over from a former kind may be put back « Par défaut » (cleared).
+    if not (v_kind = any (c.kinds)) and p_state <> 'default' then
+        raise exception 'Cette fonction n''existe pas pour ce type d''activité.';
     end if;
     if p_scope = 'org' and p_state = 'hidden' and feature_paid(p_org, p_feature) then
         raise exception 'Fonction payée par l''activité : elle ne peut pas être masquée.';
@@ -1734,6 +1837,19 @@ begin
         return null;
     end if;
 
+    -- A kind's switch hides a Pro tool: every business of that kind paying
+    -- for it keeps it — remembered, so its owner is told the day the
+    -- payment ends and the tool goes (feature_lapse_watch).
+    if p_scope = 'kind' and p_state = 'hidden' and c.pro_tool is not null then
+        insert into feature_pay_watch (org_id, feature, state, since)
+        select o.id, p_feature, 'kept', now()
+          from orgs o
+         where o.archived_at is null
+           and (case when o.profile::text = 'church' then 'association' else o.profile::text end) = v_kind
+           and feature_paid(o.id, p_feature)
+        on conflict (org_id, feature) do update set state = 'kept', since = now();
+    end if;
+
     v_label := c.label;
     v_what := case p_state
         when 'hidden'  then 'masqué'
@@ -1758,7 +1874,8 @@ begin
                            'org_id', v_org, 'feature', p_feature,
                            'rule', v_before, 'expect', v_after));
 
-    if p_scope = 'org' then
+    -- A leftover cleared rings no bell: the business never had that tool.
+    if p_scope = 'org' and v_kind = any (c.kinds) then
         perform notify_org_owners(p_org, 'feature_rule',
             case p_state
                 when 'hidden'  then 'Mara a masqué « ' || v_label || ' » pour votre activité.'
@@ -1835,6 +1952,8 @@ begin
         return null;
     end if;
     perform cauris_expire(p_org_id);
+    -- A Pro tool a rule hides, whose payment just ended: the owner told.
+    perform feature_lapse_watch(p_org_id);
     return jsonb_build_object(
         'plan', org_plan(p_org_id),
         'balance', cauris_balance(p_org_id),
@@ -1874,6 +1993,8 @@ $$;
 revoke execute on function org_kind(uuid)                                   from public;
 revoke execute on function feature_paid(uuid, text)                         from public;
 revoke execute on function feature_hidden(uuid, text)                       from public;
+revoke execute on function feature_rule_hides(uuid, text)                   from public;
+revoke execute on function feature_lapse_watch(uuid)                        from public;
 revoke execute on function feature_guard(uuid, text)                        from public;
 revoke execute on function features_hidden_for(uuid)                        from public;
 revoke execute on function trg_feature_hidden()                             from public;
@@ -1893,6 +2014,8 @@ begin
         revoke execute on function org_kind(uuid)                                   from anon;
         revoke execute on function feature_paid(uuid, text)                         from anon;
         revoke execute on function feature_hidden(uuid, text)                       from anon;
+        revoke execute on function feature_rule_hides(uuid, text)                   from anon;
+        revoke execute on function feature_lapse_watch(uuid)                        from anon;
         revoke execute on function feature_guard(uuid, text)                        from anon;
         revoke execute on function features_hidden_for(uuid)                        from anon;
         revoke execute on function trg_feature_hidden()                             from anon;
@@ -1911,6 +2034,8 @@ begin
         revoke execute on function org_kind(uuid)                                   from authenticated;
         revoke execute on function feature_paid(uuid, text)                         from authenticated;
         revoke execute on function feature_hidden(uuid, text)                       from authenticated;
+        revoke execute on function feature_rule_hides(uuid, text)                   from authenticated;
+        revoke execute on function feature_lapse_watch(uuid)                        from authenticated;
         revoke execute on function features_hidden_for(uuid)                        from authenticated;
         revoke execute on function trg_feature_hidden()                             from authenticated;
         revoke execute on function platform_log_action(uuid, text, text, jsonb, jsonb, text, jsonb) from authenticated;

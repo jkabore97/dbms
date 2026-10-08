@@ -11,6 +11,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import '../admin/admin_pill.dart';
 import '../common/phone_field.dart';
 import 'setup_screen.dart';
 
@@ -377,6 +378,9 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
                   Text('${_at + 1} / $_count',
                       key: const Key('asetup-count'),
                       style: theme.textTheme.labelLarge),
+                  // « Admin » (104): the platform's way to its center, here too
+                  // — drawn for a platform admin only.
+                  const AdminPill(),
                 ],
               ),
             ),

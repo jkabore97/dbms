@@ -5,7 +5,8 @@
 -- every later migration are applied. The same photograph, taken again by
 -- the same function, must be the same answer for answer: every member's
 -- access to every tool, every business's feature_states (the new 'hidden'
--- aside, which must be empty), and everything the street is shown. And
+-- aside, which must be empty) and the paywall's terms, and everything the
+-- street is shown — a vitrine dressed on Basic and one on Pro included. And
 -- with no rule written, nothing in the catalog is hidden for any business
 -- of any kind.
 -- ============================================================
@@ -26,7 +27,7 @@ begin
     if v_diff is not null then
         raise exception 'FAIL: % answers changed with 104 and after: %', v_count, v_diff;
     end if;
-    raise notice 'PASS: P1 — % answers identical before and after 104–107 (access, feature_states, every vitrine and the street)', n;
+    raise notice 'PASS: P1 — % answers identical before and after 104–107 (each member''s access, feature_states and plan_terms, every vitrine — dressed on Basic and on Pro, never dressed, not open — and the street)', n;
 end $$;
 
 do $$

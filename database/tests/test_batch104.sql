@@ -207,12 +207,12 @@ begin
     end if;
     execute 'set local role authenticated';
     if zz_b104_try($q$select platform_set_feature_rule('kind', 'association', null, 'production', 'hidden')$q$)
-       <> 'P0001: Cette fonction n''existe pas pour ce genre d''activité.'
+       <> 'P0001: Cette fonction n''existe pas pour ce type d''activité.'
        or zz_b104_try($q$select platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000004', 'analytics', 'hidden')$q$)
-       <> 'P0001: Cette fonction n''existe pas pour ce genre d''activité.' then
+       <> 'P0001: Cette fonction n''existe pas pour ce type d''activité.' then
         raise exception 'FAIL: a switch was offered for a tool the kind does not have';
     end if;
-    if zz_b104_try($q$select platform_set_feature_rule('kind', 'generic', null, 'credits', 'hidden')$q$) not like 'P0001: Genre d''activité inconnu%'
+    if zz_b104_try($q$select platform_set_feature_rule('kind', 'generic', null, 'credits', 'hidden')$q$) not like 'P0001: Type d''activité inconnu%'
        or zz_b104_try($q$select platform_set_feature_rule('kind', 'retail', null, 'nope', 'hidden')$q$) not like 'P0001: Fonction inconnue%'
        or zz_b104_try($q$select platform_set_feature_rule('kind', 'retail', null, 'credits', 'maybe')$q$) not like 'P0001: Réglage inconnu%'
        or zz_b104_try($q$select platform_set_feature_rule('kind', 'retail', null, 'credits', 'hidden', now() - interval '1 day')$q$)
@@ -776,6 +776,174 @@ begin
         end if;
     end loop;
     raise notice 'PASS: five lines of one transaction, paged two by two, come back exactly once — even sharing one moment';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 11: a rule left over from a former kind decides nothing, is shown and cleared; the impact line refuses what the switch refuses ---'
+begin;
+do $$
+declare
+    b jsonb;
+    a uuid;
+    n int;
+begin
+    -- The farm's own Production hidden; then it becomes an association,
+    -- which has no Production: the rule is left over.
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    perform platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000003', 'production', 'hidden');
+    execute 'reset role';
+    if not zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'production') then
+        raise exception 'FAIL: the farm''s own switch did not hide Production';
+    end if;
+    perform set_config('request.jwt.claim.sub', '', true);
+    update orgs set profile = 'association' where id = '10400000-0000-0000-0000-000000000003';
+    if zz_b104_hidden('10400000-0000-0000-0000-000000000003', 'production') then
+        raise exception 'FAIL: a rule for a tool the kind does not have still hides it';
+    end if;
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000004', true);
+    execute 'set local role authenticated';
+    if feature_states('10400000-0000-0000-0000-000000000003')->'hidden' ? 'production' then
+        raise exception 'FAIL: feature_states still says Production is hidden';
+    end if;
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    select x into b from jsonb_array_elements(platform_feature_board(null, '10400000-0000-0000-0000-000000000003')) x
+     where x->>'key' = 'production';
+    if b is null or not (b->>'leftover')::boolean or b->>'state' <> 'hidden' or b->>'effective' <> 'visible' then
+        raise exception 'FAIL: the board does not show the leftover rule to clear: %', b;
+    end if;
+    if zz_b104_try($q$select platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000003', 'production', 'visible')$q$)
+       <> 'P0001: Cette fonction n''existe pas pour ce type d''activité.' then
+        raise exception 'FAIL: a leftover was switched instead of cleared';
+    end if;
+    execute 'reset role';
+    select count(*) into n from notifications
+     where recipient_id = '10404040-0000-0000-0000-000000000004' and kind = 'feature_rule';
+    execute 'set local role authenticated';
+    a := platform_set_feature_rule('org', null, '10400000-0000-0000-0000-000000000003', 'production', 'default');
+    if a is null then
+        raise exception 'FAIL: the leftover was not cleared';
+    end if;
+    if exists (select 1 from jsonb_array_elements(platform_feature_board(null, '10400000-0000-0000-0000-000000000003')) x
+                where x->>'key' = 'production') then
+        raise exception 'FAIL: the cleared leftover is still on the board';
+    end if;
+    execute 'reset role';
+    if (select count(*) from notifications
+         where recipient_id = '10404040-0000-0000-0000-000000000004' and kind = 'feature_rule') <> n then
+        raise exception 'FAIL: clearing a leftover rang the owner about a tool they never had';
+    end if;
+    -- The impact line: only for a switch that could be saved.
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    if zz_b104_try($q$select platform_feature_impact('generic', 'credits', 'hidden')$q$) <> 'P0001: Type d''activité inconnu : generic'
+       or zz_b104_try($q$select platform_feature_impact(null, 'credits', 'hidden')$q$) <> 'P0001: Type d''activité inconnu : '
+       or zz_b104_try($q$select platform_feature_impact('retail', 'credits', 'masque')$q$) <> 'P0001: Réglage inconnu : masque'
+       or zz_b104_try($q$select platform_feature_impact('association', 'production', 'hidden')$q$)
+          <> 'P0001: Cette fonction n''existe pas pour ce type d''activité.'
+       or zz_b104_try($q$select platform_feature_impact('church', 'credits', 'default')$q$) <> 'ok' then
+        raise exception 'FAIL: the impact line answered for a switch that cannot be';
+    end if;
+    execute 'reset role';
+    raise notice 'PASS: a farm turned association: its Production rule hides nothing, the board shows it « leftover » to clear, it cannot be switched, cleared without a bell; the impact line refuses an unknown kind or state and a tool the kind does not have';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 12: a kind''s rule hides a Pro tool, Mara Pro ends: the rule applies, the owner is told once per lapse, « À faire » lists it, renewing brings it back ---'
+begin;
+do $$
+declare
+    v_msg text := 'Votre Mara Pro a pris fin : Analyses n''est plus disponible pour votre activité.';
+    n int;
+begin
+    -- Every shop's Analyses hidden; the Pro shop pays, so it keeps them.
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    perform platform_set_feature_rule('kind', 'retail', null, 'analytics', 'hidden');
+    execute 'reset role';
+    if not exists (select 1 from feature_pay_watch where org_id = '10400000-0000-0000-0000-000000000001'
+                      and feature = 'analytics' and state = 'kept') then
+        raise exception 'FAIL: the paying shop was not remembered as keeping its tool';
+    end if;
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
+    execute 'set local role authenticated';
+    if feature_states('10400000-0000-0000-0000-000000000001')->'hidden' ? 'analytics' then
+        raise exception 'FAIL: a paid tool hidden';
+    end if;
+    execute 'reset role';
+
+    -- Mara Pro ends (its date passed). Read twice: hidden, told once.
+    perform set_config('request.jwt.claim.sub', '', true);
+    update orgs set plan_until = current_date - 2 where id = '10400000-0000-0000-0000-000000000001';
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
+    execute 'set local role authenticated';
+    if not feature_states('10400000-0000-0000-0000-000000000001')->'hidden' ? 'analytics' then
+        raise exception 'FAIL: the admin''s rule did not apply once nothing pays';
+    end if;
+    perform feature_states('10400000-0000-0000-0000-000000000001');
+    -- The owner spends cauris on it: still refused.
+    if zz_b104_try($q$select spend_cauris('10400000-0000-0000-0000-000000000001', 'analytics')$q$) not like 'MA002%' then
+        raise exception 'FAIL: cauris opened a hidden tool after the lapse';
+    end if;
+    execute 'reset role';
+    select count(*) into n from notifications
+     where recipient_id = '10404040-0000-0000-0000-000000000002' and kind = 'feature_lapsed' and message = v_msg
+       and org_id = '10400000-0000-0000-0000-000000000001' and params->>'feature' = 'analytics';
+    if n <> 1 then
+        raise exception 'FAIL: the owner was told % times (once expected)', n;
+    end if;
+    if exists (select 1 from notifications where kind = 'feature_lapsed'
+                  and recipient_id = '10404040-0000-0000-0000-000000000003') then
+        raise exception 'FAIL: the employee was told the owner''s news';
+    end if;
+
+    -- « À faire »: the business and the tool.
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    if (platform_todo()->>'features_lapsed')::int < 1
+       or not platform_todo_list('features_lapsed') @> '[{"org_name": "Boutique 11", "feature": "analytics", "label": "Analyses"}]' then
+        raise exception 'FAIL: « À faire » does not list the tool hidden after the payment ended';
+    end if;
+    execute 'reset role';
+
+    -- Renewed: back, off the list; ended again: told again.
+    perform set_config('request.jwt.claim.sub', '', true);
+    update orgs set plan_until = '2099-01-01' where id = '10400000-0000-0000-0000-000000000001';
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
+    execute 'set local role authenticated';
+    if feature_states('10400000-0000-0000-0000-000000000001')->'hidden' ? 'analytics' then
+        raise exception 'FAIL: renewing Mara Pro did not bring the tool back';
+    end if;
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    if platform_todo_list('features_lapsed') @> '[{"org_name": "Boutique 11"}]' then
+        raise exception 'FAIL: a renewed business still in « À faire »';
+    end if;
+    execute 'reset role';
+    perform set_config('request.jwt.claim.sub', '', true);
+    update orgs set plan_until = current_date - 2 where id = '10400000-0000-0000-0000-000000000001';
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
+    execute 'set local role authenticated';
+    perform feature_states('10400000-0000-0000-0000-000000000001');
+    execute 'reset role';
+    if (select count(*) from notifications
+         where recipient_id = '10404040-0000-0000-0000-000000000002' and kind = 'feature_lapsed') <> 2 then
+        raise exception 'FAIL: the second lapse was not told';
+    end if;
+    -- The rule back « Par défaut »: nothing remembered, nothing hidden.
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000001', true);
+    execute 'set local role authenticated';
+    perform platform_set_feature_rule('kind', 'retail', null, 'analytics', 'default');
+    perform set_config('request.jwt.claim.sub', '10404040-0000-0000-0000-000000000002', true);
+    if feature_states('10400000-0000-0000-0000-000000000001')->'hidden' ? 'analytics' then
+        raise exception 'FAIL: the cleared rule still hides';
+    end if;
+    execute 'reset role';
+    if exists (select 1 from feature_pay_watch where org_id = '10400000-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: a cleared rule left its watch';
+    end if;
+    raise notice 'PASS: Mara Pro ended under a kind''s rule — the tool hidden (cauris refused), the owner told once (not the employee), « À faire » lists it; renewed it is back and off the list; ended again, told again; the rule cleared, nothing left';
 end $$;
 rollback;
 

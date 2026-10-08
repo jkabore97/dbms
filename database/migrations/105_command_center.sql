@@ -12,9 +12,11 @@
 --
 --   1. platform_todo(): the counts « À faire » opens on — requests
 --      waiting, « J'ai payé » to confirm (Mara Pro and the spots), couriers
---      to check, orders stuck, businesses silent 30 days, and what ends in
---      the next 7 days (a Pro plan, a tool opened, promotional cauris, a
---      spot, a rule of the switchboard), and Wave payouts that failed.
+--      to check, orders stuck (as 072: waiting over 2 hours, on the road
+--      over 3), businesses silent 30 days, and what ends in the next 7 days
+--      (a Pro plan, a tool opened, promotional cauris, a spot, a rule of
+--      the switchboard), Wave payouts that failed, and the Pro tools a rule
+--      hid again when their payment ended (104's feature_pay_watch).
 --      platform_todo_list(key) gives the rows behind the counts that have
 --      no screen of their own, so every count opens something to act on.
 --      (Refused offline sales are not counted: the server never sees
@@ -34,20 +36,25 @@
 --      app sends its single gifts and its single archive through here too,
 --      so they are in the journal as well.
 --   4. The undos, whitelisted in platform_undo_fns: a gift of cauris takes
---      back what is still in the wallet (never more; refused when it has
---      all been spent); a tool opened goes back to how it was, unless it
---      changed since; an archive is restored, a restore archived again; a
---      setting goes back to its value, unless it changed since. A message
+--      back the gift less what was spent since (never cauris earned after
+--      it; refused when nothing of it is left); a tool opened goes back to
+--      how it was, unless it changed since; an archive is restored, a
+--      restore archived again with its first date and hand; a setting goes
+--      back to its value, unless it changed since. A message
 --      cannot be unsent: it has no undo. The business is told on its bell
 --      when a gift is taken back.
 --   5. platform_settings_board() and platform_set_setting(key, value): the
 --      settings that already exist, read and changed from Réglages. Only a
 --      key already there (never an internal marker), only a value of its
 --      own type (a number for a number, oui/non for oui/non, a text, a list
---      of words), a number never below zero, a percentage never above 100;
+--      of words), a whole number from 0 to a billion — a decimal only where
+--      every reader takes one (the delivery fee and reach, the Wave
+--      commission) —, a percentage never above 100;
 --      logged with its before and after, undoable. The app's other places
 --      that change a setting (the Pro console, the Wave console, the
 --      couriers' share, the two-step switch) go through it as well.
+--   6. search_orgs (065's, the Entreprises list): one « Associations »
+--      filter, finding the legacy churches with the associations.
 --
 -- Nothing here changes what any shop, farm or association, or any vitrine,
 -- shows: no setting's value is touched, no table a business reads is
@@ -105,9 +112,11 @@ begin
         'spots_paid',     (select count(*) from promotions where status = 'paid_claimed'),
         'spots_asked',    (select count(*) from promotions where status = 'requested'),
         'couriers',       (select count(*) from couriers where status = 'pending'),
+        -- As 072 counted them: waiting over 2 hours, on the road over 3. A
+        -- « picked_up » order is finished (collected at the counter).
         'orders_stuck',   (select count(*) from orders
                             where (status = 'pending' and created_at < now() - interval '2 hours')
-                               or (status = 'picked_up' and updated_at < now() - interval '3 hours')),
+                               or (status = 'in_transit' and updated_at < now() - interval '3 hours')),
         -- The same businesses the list's « Silencieuses (30 j) » filter shows.
         'silent_30',      (select count(*) from orgs
                             where archived_at is null and last_activity_at is not null
@@ -124,7 +133,12 @@ begin
                             where status = 'approved' and ends_at > now() and ends_at <= v_week),
         'rules_ending',   (select count(*) from feature_rules
                             where until is not null and until > now() and until <= v_week),
-        'payouts_failed', (select count(*) from wave_payments where payout_status = 'failed')
+        'payouts_failed', (select count(*) from wave_payments where payout_status = 'failed'),
+        -- A Pro tool a rule hides, back to hidden when its payment ended
+        -- (104's feature_pay_watch), still hidden now.
+        'features_lapsed', (select count(*) from feature_pay_watch w join orgs o on o.id = w.org_id
+                             where w.state = 'lapsed' and o.archived_at is null
+                               and feature_hidden(w.org_id, w.feature))
     );
 end;
 $$;
@@ -201,8 +215,19 @@ begin
                                                  else d.updated_at end) as r
               from orders d join orgs o on o.id = d.org_id
              where (d.status = 'pending' and d.created_at < now() - interval '2 hours')
-                or (d.status = 'picked_up' and d.updated_at < now() - interval '3 hours')
+                or (d.status = 'in_transit' and d.updated_at < now() - interval '3 hours')
              order by d.created_at limit 200) x;
+    when 'features_lapsed' then
+        select jsonb_agg(r order by r->>'at') into v_rows from (
+            select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
+                                      'feature', w.feature, 'label', c.label,
+                                      'at', w.since) as r
+              from feature_pay_watch w
+              join orgs o on o.id = w.org_id
+              join feature_catalog c on c.key = w.feature
+             where w.state = 'lapsed' and o.archived_at is null
+               and feature_hidden(w.org_id, w.feature)
+             order by w.since limit 200) x;
     when 'payouts_failed' then
         select jsonb_agg(r order by r->>'at' desc) into v_rows from (
             select jsonb_build_object('org_id', o.id, 'org_name', o.name, 'profile', o.profile,
@@ -231,7 +256,10 @@ set search_path = public, auth
 as $$
 declare
     v_q      text := btrim(coalesce(p_q, ''));
+    v_lit    text;
     v_like   text;
+    v_start  text;
+    v_number text;
     v_digits text;
     v_orgs   jsonb;
     v_people jsonb;
@@ -242,8 +270,17 @@ begin
         return jsonb_build_object('businesses', '[]'::jsonb, 'people', '[]'::jsonb,
                                   'orders', '[]'::jsonb);
     end if;
-    -- What was typed, literally: a « % » or a « _ » is a character here.
-    v_like := '%' || replace(replace(replace(v_q, '\', '\\'), '%', '\%'), '_', '\_') || '%';
+    -- What was typed, literally: a « % » or a « _ » is a character here —
+    -- in every like below (\ is like's own escape).
+    v_lit   := replace(replace(replace(left(v_q, 100), '\', '\\'), '%', '\%'), '_', '\_');
+    v_like  := '%' || v_lit || '%';
+    v_start := v_lit || '%';
+    -- An order is found by the start of its number only when what was
+    -- typed can be one (hex digits and dashes, 4 at least): no other words
+    -- scan every order's number.
+    if v_q ~ '^[0-9A-Fa-f-]{4,36}$' then
+        v_number := lower(v_q) || '%';
+    end if;
     -- A phone is typed with spaces and without the country, kept with both.
     v_digits := regexp_replace(v_q, '\D', '', 'g');
     if length(v_digits) < 4 then v_digits := null; end if;
@@ -263,7 +300,7 @@ begin
             or (v_digits is not null
                 and (regexp_replace(coalesce(o.phone, ''), '\D', '', 'g') like '%' || v_digits || '%'
                   or regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') like '%' || v_digits || '%'))
-         order by (o.name ilike v_q || '%') desc, o.archived_at is not null, lower(o.name)
+         order by (o.name ilike v_start) desc, o.archived_at is not null, lower(o.name)
          limit 8) x;
 
     select jsonb_agg(r) into v_people from (
@@ -277,7 +314,7 @@ begin
          where p.full_name ilike v_like or u.email ilike v_like
             or (v_digits is not null
                 and regexp_replace(coalesce(p.phone, ''), '\D', '', 'g') like '%' || v_digits || '%')
-         order by (p.full_name ilike v_q || '%') desc, lower(coalesce(p.full_name, u.email, p.phone))
+         order by (p.full_name ilike v_start) desc, lower(coalesce(p.full_name, u.email, p.phone))
          limit 8) x;
 
     select jsonb_agg(r) into v_orders from (
@@ -288,7 +325,7 @@ begin
                    'at', d.created_at) as r
           from orders d
           join orgs o on o.id = d.org_id
-         where d.id::text like lower(v_q) || '%'
+         where (v_number is not null and d.id::text like v_number)
             or d.customer_name ilike v_like
             or (v_digits is not null
                 and regexp_replace(coalesce(d.phone, ''), '\D', '', 'g') like '%' || v_digits || '%')
@@ -325,6 +362,8 @@ declare
     v_kind    text;
     v_ref     uuid;
     v_promo   uuid;
+    v_mark    bigint;
+    v_line    bigint;
     v_before  jsonb;
     v_after   jsonb;
     v_res     jsonb;
@@ -398,13 +437,24 @@ begin
         begin
             v_ref := gen_random_uuid();
             if p_action = 'cauris' then
+                -- The wallet's own lock (100's), held across the gift: the
+                -- one gift line written after the mark is this gift's.
+                -- 100's platform_give_cauris returns the balance, not its
+                -- line, so the line is found by what it wrote — the ledger
+                -- row (and, for promotional cauris, the lot it names) —
+                -- never by « the newest gift ».
+                perform pg_advisory_xact_lock(hashtext('cauris:' || v_org::text));
+                select coalesce(max(id), 0) into v_mark from cauris_ledger where org_id = v_org;
                 v_before := jsonb_build_object('balance', cauris_balance(v_org));
                 v_res := platform_give_cauris(v_org, v_points, v_note, v_expires);
-                v_promo := null;
-                if v_expires is not null then
-                    select id into v_promo from cauris_promos
-                     where org_id = v_org and given_by = auth.uid()
-                     order by created_at desc limit 1;
+                select l.id, case when l.reason = 'promo' then l.ref::uuid end
+                  into v_line, v_promo
+                  from cauris_ledger l
+                 where l.org_id = v_org and l.id > v_mark and l.delta = v_points
+                   and l.reason = case when v_expires is null then 'gift' else 'promo' end
+                 order by l.id limit 1;
+                if v_line is null then
+                    raise exception 'Le cadeau n''a pas été écrit';
                 end if;
                 v_after := jsonb_build_object('balance', v_res->'balance', 'points', v_points,
                                               'expires_on', v_expires, 'note', v_note,
@@ -416,13 +466,14 @@ begin
                             else ', à utiliser avant le ' || to_char(v_expires, 'DD/MM/YYYY') end,
                     v_before, v_after, 'platform_undo_cauris',
                     jsonb_build_object('org_id', v_org, 'points', v_points,
-                                       'promo_id', v_promo, 'ref', v_ref));
+                                       'promo_id', v_promo, 'ledger_id', v_line,
+                                       'ref', v_ref));
             elsif p_action = 'unlock' then
                 -- A tool the kind does not have is not opened (099: an
                 -- association has no analyses and no delivery).
                 if (v_feature = 'analytics' and v_kind not in ('retail', 'farm'))
                    or (v_feature = 'delivery' and v_kind in ('association', 'church')) then
-                    raise exception 'Cet outil n''existe pas pour ce genre d''activité';
+                    raise exception 'Cet outil n''existe pas pour ce type d''activité';
                 end if;
                 select jsonb_build_object('until', u.until, 'note', u.note, 'gifted_by', u.gifted_by)
                   into v_before
@@ -470,7 +521,8 @@ begin
                     jsonb_build_object('archived_at', v_archived, 'archived_by', v_by),
                     jsonb_build_object('archived_at', null),
                     'platform_undo_restore',
-                    jsonb_build_object('org_id', v_org));
+                    jsonb_build_object('org_id', v_org, 'archived_at', v_archived,
+                                       'archived_by', v_by));
             end if;
             v_done := v_done + 1;
             v_actions := v_actions || to_jsonb(v_action);
@@ -499,9 +551,11 @@ declare
     v_org     uuid := (p_args->>'org_id')::uuid;
     v_points  int  := (p_args->>'points')::int;
     v_promo   uuid := nullif(p_args->>'promo_id', '')::uuid;
+    v_line    bigint := nullif(p_args->>'ledger_id', '')::bigint;
     v_ref     text := coalesce(p_args->>'ref', gen_random_uuid()::text);
     v_balance int;
     v_left    int;
+    v_spent   int;
     v_take    int;
 begin
     perform platform_only();
@@ -509,10 +563,26 @@ begin
     perform cauris_expire(v_org);
     v_balance := greatest(cauris_balance(v_org), 0);
     if v_promo is not null then
+        -- Promotional cauris are a lot of their own: spending takes from it
+        -- first (100's cauris_take), so what is left of it is exactly what
+        -- may be taken back.
         select left_points into v_left from cauris_promos where id = v_promo for update;
         v_take := least(coalesce(v_left, 0), v_balance);
     else
-        v_take := least(coalesce(v_points, 0), v_balance);
+        -- Plain cauris mix with what the business earns: never take back
+        -- more than the gift less what was spent since — cauris earned
+        -- after it are the business's own. Spent: every line out of the
+        -- wallet after the gift's own (spending, expiry), but not another
+        -- gift's undo nor a promotional lot's expiry, which are not these.
+        if v_line is null then
+            raise exception 'Ce cadeau est introuvable dans le porte-monnaie : il n''est pas repris.';
+        end if;
+        select coalesce(sum(-l.delta), 0)::int into v_spent
+          from cauris_ledger l
+         where l.org_id = v_org and l.id > v_line and l.delta < 0
+           and l.reason not in ('gift', 'promo')
+           and not (l.reason = 'expired' and l.ref like 'promo:%');
+        v_take := least(coalesce(v_points, 0) - v_spent, v_balance);
     end if;
     if v_take <= 0 then
         raise exception 'Ces cauris ont déjà été dépensés : il n''y a rien à reprendre.';
@@ -602,12 +672,20 @@ set search_path = public, auth
 as $$
 declare
     v_org uuid := (p_args->>'org_id')::uuid;
+    v_at  timestamptz := nullif(p_args->>'archived_at', '')::timestamptz;
+    v_by  uuid := nullif(p_args->>'archived_by', '')::uuid;
 begin
     perform platform_only();
     if not exists (select 1 from orgs where id = v_org and archived_at is null) then
         raise exception 'Cette entreprise est déjà archivée.';
     end if;
     perform archive_org(v_org);
+    -- Archived again as it was: its first archive's date and hand, not
+    -- the undo's (the list sorts and says « archivée le … » by them).
+    if v_at is not null then
+        update orgs set archived_at = v_at, archived_by = coalesce(v_by, archived_by)
+         where id = v_org;
+    end if;
 end;
 $$;
 
@@ -690,6 +768,7 @@ as $$
 declare
     v_before jsonb;
     v_type   text;
+    v_num    numeric;
 begin
     perform platform_only();
     select value into v_before from platform_settings where key = p_key for update;
@@ -710,12 +789,33 @@ begin
             else 'Ce réglage n''accepte pas cette valeur.' end;
     end if;
     if v_type = 'number' then
-        if (p_value #>> '{}')::numeric < 0 then
+        v_num := (p_value #>> '{}')::numeric;
+        if v_num < 0 then
             raise exception 'Un nombre positif, s''il vous plaît.';
         end if;
-        if p_key like '%\_pct' and (p_value #>> '{}')::numeric > 100 then
+        if v_num > 1000000000 then
+            raise exception 'Un nombre d''un milliard au plus.';
+        end if;
+        if p_key like '%\_pct' and v_num > 100 then
             raise exception 'Un pourcentage ne dépasse pas 100.';
         end if;
+        -- A whole number, but for the five every reader takes as numeric
+        -- (061/069/081/085's delivery fee and reach, 076's commission).
+        -- Every other number is read as an integer (plan_limit,
+        -- cauris_param, a ::int cast: « 12.5 » would break plan_terms(), the
+        -- caps and the leagues), or is a count or a price in francs read
+        -- through 071's spot_setting, where a decimal means nothing.
+        if v_num <> trunc(v_num)
+           and p_key not in ('delivery_base', 'delivery_per_km', 'delivery_max_km',
+                             'delivery_included_km', 'wave_commission_pct') then
+            raise exception 'Un nombre entier, s''il vous plaît.';
+        end if;
+        -- Two switches kept as numbers (093, 097): read as « = 1 ».
+        if p_key in ('vitrine_free_basics', 'path_gates_open') and v_num not in (0, 1) then
+            raise exception 'Ce réglage vaut 0 (non) ou 1 (oui).';
+        end if;
+        -- Written the way an integer reader reads it: « 12 », never « 12.0 ».
+        p_value := case when v_num = trunc(v_num) then to_jsonb(v_num::bigint) else to_jsonb(v_num) end;
     elsif v_type = 'string' then
         if length(p_value #>> '{}') > 200 then
             raise exception 'Un texte de 200 caractères au plus.';
@@ -742,7 +842,98 @@ end;
 $$;
 
 -- ------------------------------------------------------------
--- 6. Doors
+-- 6. The Entreprises list (065's search_orgs): one « Associations »
+-- ------------------------------------------------------------
+-- The center's list filters an association by 'association', and finds
+-- the legacy churches (035) with it — they are associations everywhere
+-- else. Otherwise 065's exactly; its grant is kept by create or replace.
+create or replace function search_orgs(
+    p_query    text    default null,
+    p_profile  text    default null,   -- 'farm' | 'retail' | 'association' (or 'church') | null
+    p_status   text    default 'active', -- 'active' | 'archived' | 'all'
+    p_activity text    default null,   -- 'active7' | 'silent30' | 'never' | 'pro'
+    p_sort     text    default 'activity', -- 'activity' | 'name' | 'newest'
+    p_limit    int     default 50,
+    p_offset   int     default 0
+)
+returns table (
+    org_id           uuid,
+    name             text,
+    slug             text,
+    profile          text,
+    currency         text,
+    archived_at      timestamptz,
+    created_at       timestamptz,
+    last_activity_at timestamptz,
+    member_count     int,
+    total_count      int
+)
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_limit  int := least(greatest(coalesce(p_limit, 50), 1), 200);
+    v_offset int := greatest(coalesce(p_offset, 0), 0);
+    v_query  text := nullif(btrim(coalesce(p_query, '')), '');
+begin
+    if not exists (
+        select 1 from profiles where id = auth.uid() and is_platform_admin
+    ) then
+        raise exception 'Only a platform admin can search every business';
+    end if;
+
+    return query
+    with filtered as (
+        select o.id, o.name, o.slug, o.profile, o.default_currency,
+               o.archived_at, o.created_at, o.last_activity_at,
+               count(*) over () as total
+        from orgs o
+        where
+            -- Status
+            (   coalesce(p_status, 'active') = 'all'
+             or (p_status = 'archived' and o.archived_at is not null)
+             or (coalesce(p_status, 'active') = 'active' and o.archived_at is null))
+            -- Profile
+        and (p_profile is null or o.profile = p_profile
+             -- One « Associations »: today's and the legacy churches (035).
+             or (p_profile in ('association', 'church') and o.profile in ('association', 'church')))
+            -- Activity
+        and (   p_activity is null
+             or (p_activity = 'active7'
+                 and o.last_activity_at > now() - interval '7 days')
+             or (p_activity = 'silent30'
+                 and o.last_activity_at is not null
+                 and o.last_activity_at < now() - interval '30 days')
+             or (p_activity = 'never' and o.last_activity_at is null)
+             or (p_activity = 'pro' and org_plan(o.id) = 'pro'))
+            -- Text: name or slug. Both lowered, so case never matters.
+        and (   v_query is null
+             or lower(o.name) like '%' || lower(v_query) || '%'
+             or lower(o.slug) like '%' || lower(v_query) || '%')
+        order by
+            case when p_sort = 'name'   then lower(o.name) end asc,
+            case when p_sort = 'newest' then o.created_at  end desc,
+            -- Default: the businesses that have done something most recently,
+            -- with the never-active ones last rather than first — a null is
+            -- not "the most recent".
+            case when coalesce(p_sort, 'activity') = 'activity'
+                 then o.last_activity_at end desc nulls last,
+            lower(o.name) asc
+        limit v_limit offset v_offset
+    )
+    -- Only the page pays for this. That is the whole point of the CTE.
+    select f.id, f.name, f.slug, f.profile, f.default_currency,
+           f.archived_at, f.created_at, f.last_activity_at,
+           (select count(*)::int from memberships m where m.org_id = f.id),
+           f.total::int
+    from filtered f;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. Doors
 -- ------------------------------------------------------------
 revoke execute on function platform_only()                         from public;
 revoke execute on function platform_todo()                         from public;
@@ -757,6 +948,7 @@ revoke execute on function platform_undo_setting(jsonb)            from public;
 revoke execute on function platform_setting_internal(text)         from public;
 revoke execute on function platform_settings_board()               from public;
 revoke execute on function platform_set_setting(text, jsonb)       from public;
+revoke execute on function search_orgs(text, text, text, text, text, int, int) from public;
 
 do $$
 begin
@@ -774,6 +966,7 @@ begin
         revoke execute on function platform_setting_internal(text)     from anon;
         revoke execute on function platform_settings_board()           from anon;
         revoke execute on function platform_set_setting(text, jsonb)   from anon;
+        revoke execute on function search_orgs(text, text, text, text, text, int, int) from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         -- Internal: the refusal, the markers, and the undos, which only
@@ -792,6 +985,8 @@ begin
         grant execute on function platform_bulk(text, uuid[], jsonb)   to authenticated;
         grant execute on function platform_settings_board()            to authenticated;
         grant execute on function platform_set_setting(text, jsonb)    to authenticated;
+        -- 065's list, for the platform only (it checks on the server).
+        grant execute on function search_orgs(text, text, text, text, text, int, int) to authenticated;
     end if;
 end $$;
 

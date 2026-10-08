@@ -13,6 +13,7 @@ import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/mara_mark.dart';
+import '../auth/org_picker_screen.dart' show kindPlural, kindSingular;
 import 'admin_pill.dart';
 import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
 import 'center/bulk_sheet.dart';
@@ -194,7 +195,10 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               : _status == 'archived'
                   ? o.isArchived
                   : !o.isArchived)
-          .where((o) => _profile == null || o.profile == _profile)
+          .where((o) =>
+              _profile == null ||
+              o.profile == _profile ||
+              (_profile == 'association' && o.profile == 'church'))
           .where((o) =>
               q.isEmpty ||
               o.name.toLowerCase().contains(q) ||
@@ -492,16 +496,14 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            for (final entry in {
-              'farm': 'Fermes',
-              'retail': 'Boutiques',
-              'church': 'Associations',
-              'association': 'Associations',
-            }.entries)
+            // One « Associations »: the server's filter finds the legacy
+            // churches with them (105's search_orgs).
+            for (final kind in const ['farm', 'retail', 'association'])
               FilterChip(
-                label: Text(entry.value),
-                selected: _profile == entry.key,
-                onSelected: (_) => _applyFilter(profile: entry.key),
+                key: Key('console-kind-$kind'),
+                label: Text(kindPlural(context, kind)),
+                selected: _profile == kind,
+                onSelected: (_) => _applyFilter(profile: kind),
               ),
             const SizedBox(width: 4),
             // Sorting is a menu rather than more chips: it is one choice among
@@ -790,13 +792,6 @@ class _OrgRowTile extends StatelessWidget {
   final bool? selected;
   final VoidCallback? onTick;
 
-  static const _profiles = {
-    'farm': 'Ferme',
-    'retail': 'Boutique',
-    'church': 'Association',
-    'association': 'Association',
-  };
-
   ({String label, Color colour}) _health(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return switch (org.health) {
@@ -911,7 +906,7 @@ class _OrgRowTile extends StatelessWidget {
                     Expanded(flex: 5, child: name),
                     Expanded(
                       flex: 2,
-                      child: Text(_profiles[org.profile] ?? org.profile,
+                      child: Text(kindSingular(context, org.profile),
                           style: theme.textTheme.bodySmall),
                     ),
                     Expanded(
@@ -958,7 +953,7 @@ class _OrgRowTile extends StatelessWidget {
                               // the line ran off the card.
                               Flexible(
                                 child: Text(
-                                  '${_profiles[org.profile] ?? org.profile} · '
+                                  '${kindSingular(context, org.profile)} · '
                                   '${org.memberCount} membre'
                                   '${org.memberCount > 1 ? 's' : ''} · '
                                   '${_lastActivity()}',
@@ -991,20 +986,41 @@ class _BulkBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget act(BulkAction a, IconData icon, String label) => Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: FilledButton.tonalIcon(
-            key: Key('bulk-${a.name}'),
-            style: FilledButton.styleFrom(
-              backgroundColor: maraPaper,
-              foregroundColor: maraBlack,
-              minimumSize: const Size(48, 44),
-            ),
-            onPressed: () => onAct(a),
-            icon: Icon(icon, size: 18),
-            label: Text(label),
+    Widget act(BulkAction a, IconData icon, String label) => FilledButton.tonalIcon(
+          key: Key('bulk-${a.name}'),
+          style: FilledButton.styleFrom(
+            backgroundColor: maraPaper,
+            foregroundColor: maraBlack,
+            minimumSize: const Size(48, 44),
           ),
+          onPressed: () => onAct(a),
+          icon: Icon(icon, size: 18),
+          label: Text(label),
         );
+    // Every act in sight: they wrap, never slide off the edge — on a phone
+    // (under 480) under the count, on a computer beside it.
+    final acts = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        act(BulkAction.cauris, Icons.redeem_outlined, context.tr('Cauris')),
+        act(BulkAction.unlock, Icons.lock_open_outlined, context.tr('Outil')),
+        act(BulkAction.message, Icons.campaign_outlined, context.tr('Message')),
+        act(BulkAction.archive, Icons.archive_outlined, context.tr('Archiver')),
+      ],
+    );
+    final head = [
+      IconButton(
+        tooltip: context.tr('Tout décocher'),
+        onPressed: onClear,
+        icon: const Icon(Icons.close, color: maraPaper),
+      ),
+      Text(
+        context.tr('{n} cochée(s)', {'n': count}),
+        style: const TextStyle(color: maraCaramel, fontWeight: FontWeight.w800),
+      ),
+    ];
+    final narrow = MediaQuery.sizeOf(context).width < 480;
     return Material(
       key: const Key('bulk-bar'),
       color: maraDeep,
@@ -1012,33 +1028,25 @@ class _BulkBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: context.tr('Tout décocher'),
-                onPressed: onClear,
-                icon: const Icon(Icons.close, color: maraPaper),
-              ),
-              Text(
-                context.tr('{n} cochée(s)', {'n': count}),
-                style: const TextStyle(color: maraCaramel, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      act(BulkAction.cauris, Icons.redeem_outlined, context.tr('Cauris')),
-                      act(BulkAction.unlock, Icons.lock_open_outlined, context.tr('Outil')),
-                      act(BulkAction.message, Icons.campaign_outlined, context.tr('Message')),
-                      act(BulkAction.archive, Icons.archive_outlined, context.tr('Archiver')),
-                    ],
-                  ),
+          child: narrow
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: head),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+                      child: acts,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    ...head,
+                    const SizedBox(width: 12),
+                    Expanded(child: acts),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
