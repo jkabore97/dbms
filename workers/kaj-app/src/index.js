@@ -53,6 +53,13 @@ const SECURITY_HEADERS = {
   "X-Frame-Options": "SAMEORIGIN",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(self), geolocation=(self), microphone=(), payment=(self)",
+  // Everything this Worker serves is public (the app's files, the
+  // vitrines' previews, the legal pages): any origin may read it. That is
+  // what lets the app start behind a company proxy such as Zscaler, which
+  // sends each file through its own address and back (« ?_sm_nck=1 »): the
+  // browser then counts the answer as cross-origin, and without this
+  // header refuses the engine (canvaskit.wasm) and the manifest.
+  "Access-Control-Allow-Origin": "*",
 };
 
 export function secure(response) {

@@ -88,6 +88,7 @@ test("every page and file carries the security headers web filters look for", as
     assert.equal(r.headers.get("X-Frame-Options"), "SAMEORIGIN", path);
     assert.equal(r.headers.get("Referrer-Policy"), "strict-origin-when-cross-origin", path);
     assert.match(r.headers.get("Permissions-Policy"), /geolocation=\(self\)/, path);
+    assert.equal(r.headers.get("Access-Control-Allow-Origin"), "*", path);
   }
   // The wasm keeps its own type: with nosniff a wrong one would not load.
   assert.equal((await get("/ck/abcdefabcdef/chromium/canvaskit.wasm")).headers.get("Content-Type"), "application/wasm");
