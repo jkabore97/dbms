@@ -22,6 +22,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../admin/admin_pill.dart' show AdminPill;
 import '../home/home_nav.dart';
+import '../notify/push_offer.dart';
 import 'close_day_sheet.dart';
 import '../common/step_flow.dart';
 import '../money/expense_flow.dart';
@@ -321,6 +322,12 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // The ring with the app closed (115), until this device rings.
+                  if (widget.org?.isAdmin ?? false)
+                    PushOfferCard(
+                      notify: AppScope.of(context).notify,
+                      message: context.tr('Soyez prévenu des réservations et de votre équipe, même l\'application fermée.'),
+                    ),
                   _TodayCard(
                     moneyIn: _moneyIn,
                     moneyOut: _moneyOut,

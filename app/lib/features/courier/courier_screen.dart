@@ -9,14 +9,15 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/courier/courier_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
-import '../../core/notify/push_client.dart';
-import '../../core/orders/order_alert.dart';
+import '../../core/notify/notifications_repository.dart';
 import '../../core/orders/orders.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/url_tabs.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../storefront/shop_skeleton.dart';
 import '../storefront/shop_style.dart';
+import '../notify/notifications_screen.dart' show NotificationBell;
+import '../notify/push_offer.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The livreur's whole world on one page.
@@ -240,40 +241,10 @@ class _CourierScreenState extends State<CourierScreen>
     }
   }
 
-  /// Whether this browser already carries the ring. Read once at build:
-  /// the bell button stays until the person says yes.
-  bool _alertsOn = OrderAlert.granted;
-
-  /// Asked from the bell button — the browser grants a notification from
-  /// a person's own gesture only. Two rings in one yes: the tab in the
-  /// background (OrderAlert) and, where the build has a push Worker, the
-  /// closed app (PushClient), saved under the account so a new job on the
-  /// board reaches this phone.
-  Future<void> _enableAlerts() async {
-    // Read before the first await: a context is not for after a gap.
-    final notify = AppScope.maybeOf(context)?.notify;
-    final granted = await OrderAlert.request();
-    if (!mounted) return;
-    var reach = 'quand cet onglet est en arrière-plan';
-    if (granted && PushClient.available) {
-      final sub = await PushClient.subscribe();
-      if (sub != null && notify != null && notify.isConfigured) {
-        try {
-          await notify.savePushSubscription(sub);
-          reach = "même l'application fermée";
-        } catch (_) {
-          // The tab still rings; the closed-app ring waits for signal.
-        }
-      }
-    }
-    if (!mounted) return;
-    setState(() => _alertsOn = granted);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(granted
-          ? context.tr('Alertes activées : une nouvelle livraison sonnera {reach}.', {'reach': reach})
-          : context.tr('Le navigateur a refusé les alertes. Elles s\'activent dans ses paramètres de notifications.')),
-    ));
-  }
+  Widget _pushOffer(BuildContext context) => PushOfferCard(
+        notify: AppScope.of(context).notify,
+        message: context.tr('Recevez les nouvelles livraisons même l\'application fermée.'),
+      );
 
   Future<void> _open(String url) async {
     final uri = Uri.tryParse(url);
@@ -292,20 +263,18 @@ class _CourierScreenState extends State<CourierScreen>
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.go(Routes.directory),
       ),
-      trailing: _status == 'approved'
+      trailing: _status != null
           ? Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // The ring on a moto in traffic: a job on the board, a
-                // customer's pin, reaches a closed app once this browser
-                // has said yes. Offered only where the build can keep the
-                // promise, and gone once it is kept.
-                if (OrderAlert.supported && !_alertsOn)
-                  IconButton(
-                    tooltip: context.tr('Recevoir les alertes de livraison'),
-                    icon: const Icon(Icons.notifications_active_outlined),
-                    onPressed: _busy ? null : _enableAlerts,
-                  ),
+                // The courier's own bell (115): the dossier, the board's new
+                // jobs, a course cancelled, the cash confirmed.
+                NotificationBell(
+                  notify: AppScope.of(context).notify,
+                  scope: NotifyScope.courier,
+                  listRoute: Routes.courierNotifications,
+                ),
+                if (_status == 'approved')
                 IconButton(
                   tooltip: context.tr('Actualiser'),
                   icon: const Icon(Icons.refresh),
@@ -325,13 +294,19 @@ class _CourierScreenState extends State<CourierScreen>
               : switch (_status) {
                   // Becoming one is a dossier now (112), on its own page.
                   null => _Pitch(onStart: () => context.go(Routes.becomeCourier)),
-                  'pending' => ShopNotice(
-                      text: 'Votre inscription est à l\'étude. La plateforme '
-                          'vous préviendra dès qu\'elle est validée.',
-                      action: OutlinedButton(
-                        onPressed: () => context.go(Routes.becomeCourier),
-                        child: Text(context.tr('Voir ma demande')),
-                      ),
+                  'pending' => ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _pushOffer(context),
+                        ShopNotice(
+                          text: 'Votre inscription est à l\'étude. La plateforme '
+                              'vous préviendra dès qu\'elle est validée.',
+                          action: OutlinedButton(
+                            onPressed: () => context.go(Routes.becomeCourier),
+                            child: Text(context.tr('Voir ma demande')),
+                          ),
+                        ),
+                      ],
                     ),
                   'suspended' => const ShopNotice(
                       text: 'Votre accès livreur est suspendu. '
@@ -339,6 +314,13 @@ class _CourierScreenState extends State<CourierScreen>
                     ),
                   _ => Column(
                         children: [
+                          // The ring on a moto in traffic (115): a job on
+                          // the board reaches a closed app once this device
+                          // is in the book — offered until it is.
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            child: _pushOffer(context),
+                          ),
                           // What today paid (062): the one strip on the
                           // page a courier reads before anything else.
                           if (_earnings.isNotEmpty)

@@ -76,27 +76,37 @@ class PushPlatform {
   static Future<PushSubscriptionInfo?> subscribe(String pushUrl) async {
     if (!supported || pushUrl.isEmpty) return null;
     try {
+      // The browser's question first, at the tap itself (115): Firefox and
+      // Safari only ask from inside the person's gesture, and the key's
+      // download and the worker's wait below could outlast it.
+      if (web.Notification.permission == 'default') {
+        final answer = await web.Notification.requestPermission().toDart;
+        if (answer.toDart != 'granted') return null;
+      }
+      if (web.Notification.permission != 'granted') return null;
+
       final keyResponse = await http.get(Uri.parse('$pushUrl/v1/key'));
       if (keyResponse.statusCode != 200) return null;
       final key = (jsonDecode(keyResponse.body) as Map)['key'] as String?;
       if (key == null || key.isEmpty) return null;
 
-      final container = web.window.navigator.serviceWorker;
-      // The worker every visitor already has (mara_sw.js, which keeps the
-      // app for slow connections) carries the push handlers too;
-      // registering push_sw.js over it would throw that copy away. The
-      // bare one is only for a page no worker holds yet.
-      final current = await container.getRegistration('/').toDart;
-      if (current == null) {
-        await container.register('push_sw.js'.toJS).toDart;
+      final registration = await _activeRegistration();
+      if (registration == null) return null;
+      final options = web.PushSubscriptionOptionsInit(
+        userVisibleOnly: true,
+        applicationServerKey: _fromB64url(key).toJS,
+      );
+      web.PushSubscription subscription;
+      try {
+        subscription = await registration.pushManager.subscribe(options).toDart;
+      } catch (_) {
+        // A subscription made with another key (a VAPID pair renewed) is
+        // refused as it stands: dropped, and made again with this one.
+        final old = await registration.pushManager.getSubscription().toDart;
+        if (old == null) rethrow;
+        await old.unsubscribe().toDart;
+        subscription = await registration.pushManager.subscribe(options).toDart;
       }
-      final registration = await container.ready.toDart;
-      final subscription = await registration.pushManager
-          .subscribe(web.PushSubscriptionOptionsInit(
-            userVisibleOnly: true,
-            applicationServerKey: _fromB64url(key).toJS,
-          ))
-          .toDart;
       return _info(subscription);
     } catch (_) {
       // Refused, offline, or a browser that lies about support: no
@@ -105,11 +115,34 @@ class PushPlatform {
     }
   }
 
+  /// The registration holding this site's scope with a worker running —
+  /// what pushManager.subscribe needs. The worker every visitor has is
+  /// mara_sw.js (index.html), which carries the push handlers
+  /// (push_handlers.js); registering push_sw.js over it would throw the
+  /// kept app away, so the bare one is registered only when no worker
+  /// holds the scope, or none became active in time (mara_sw.js refuses
+  /// to install in a build the deploy did not prepare).
+  static Future<web.ServiceWorkerRegistration?> _activeRegistration() async {
+    final container = web.window.navigator.serviceWorker;
+    final current = await container.getRegistration('/').toDart;
+    if (current != null && current.active != null) return current;
+    if (current != null) {
+      final ready = await container.ready.toDart
+          .then<web.ServiceWorkerRegistration?>((r) => r)
+          .timeout(const Duration(seconds: 15), onTimeout: () => null);
+      if (ready != null && ready.active != null) return ready;
+    }
+    await container.register('/push_sw.js'.toJS, web.RegistrationOptions(scope: '/')).toDart;
+    return container.ready.toDart
+        .then<web.ServiceWorkerRegistration?>((r) => r)
+        .timeout(const Duration(seconds: 15), onTimeout: () => null);
+  }
+
   static Future<String?> unsubscribe() async {
     if (!supported) return null;
     try {
       final registration =
-          await web.window.navigator.serviceWorker.getRegistration('push_sw.js').toDart;
+          await web.window.navigator.serviceWorker.getRegistration('/').toDart;
       if (registration == null) return null;
       final subscription = await registration.pushManager.getSubscription().toDart;
       if (subscription == null) return null;

@@ -22,6 +22,7 @@ import '../cauris/path_card.dart';
 import '../common/refused_notice.dart';
 import '../admin/admin_pill.dart' show AdminPill;
 import '../home/home_nav.dart';
+import '../notify/push_offer.dart';
 import '../orders/home_doorbell.dart';
 import 'farm_animal_flows.dart';
 import 'farm_crop_flows.dart';
@@ -315,6 +316,13 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     PathFallbackCard(org: widget.org, onBack: _refresh),
                     const SizedBox(height: 16),
                   ],
+                  // The ring with the app closed (115), until this device rings.
+                  if (widget.org.isAdmin)
+                    PushOfferCard(
+                      notify: AppScope.of(context).notify,
+                      doorbell: true,
+                      message: context.tr('Soyez prévenu des commandes et du stock, même l\'application fermée.'),
+                    ),
                   _TodayCard(
                     day: _today,
                     moneyIn: _moneyIn,

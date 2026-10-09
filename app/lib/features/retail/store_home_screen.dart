@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/alert_tone.dart';
-import '../../core/notify/push_client.dart';
 import '../../core/orders/order_alert.dart';
 
 import '../../l10n/strings.dart';
@@ -23,6 +22,7 @@ import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
 import '../home/home_nav.dart';
+import '../notify/push_offer.dart';
 import 'article_flow.dart';
 import '../common/step_flow.dart';
 import 'sale_flow.dart';
@@ -127,7 +127,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
   /// browser allows it, always the badge. A shopkeeper serving the counter
   /// does not refresh pages; the page has to come to her.
   Timer? _doorbell;
-  bool _alertsOn = OrderAlert.granted;
 
   static const _doorbellEvery = Duration(seconds: 90);
 
@@ -174,39 +173,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         onPressed: () =>
             context.push(Routes.inside(widget.org.id, 'commandes')),
       ),
-    ));
-  }
-
-  /// The browser only grants a notification from a person's own gesture,
-  /// so this hangs off a button — never off a page load.
-  ///
-  /// Two rings in one yes: the doorbell for a background tab (OrderAlert),
-  /// and — where the build has a push Worker — the subscription that
-  /// reaches this browser with the app closed (PushClient), saved under
-  /// the account so the bell's rows find it.
-  Future<void> _enableAlerts() async {
-    // Read before the first await: a context is not for after a gap.
-    final notify = AppScope.maybeOf(context)?.notify;
-    final granted = await OrderAlert.request();
-    if (!mounted) return;
-    var reach = 'même si cet onglet est en arrière-plan';
-    if (granted && PushClient.available) {
-      final sub = await PushClient.subscribe();
-      if (sub != null && notify != null && notify.isConfigured) {
-        try {
-          await notify.savePushSubscription(sub);
-          reach = "même l'application fermée";
-        } catch (_) {
-          // The tab still rings; the closed-app ring waits for signal.
-        }
-      }
-    }
-    if (!mounted) return;
-    setState(() => _alertsOn = granted);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(granted
-          ? context.tr('Alertes activées : une commande sonnera {reach}.', {'reach': reach})
-          : context.tr('Le navigateur a refusé les alertes. Elles s\'activent dans ses paramètres de notifications.')),
     ));
   }
 
@@ -574,13 +540,16 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
               const SizedBox(height: 16),
             ],
 
-            if (widget.retail != null &&
-                widget.access.canSee('orders') &&
-                OrderAlert.supported &&
-                !_alertsOn) ...[
-              _AlertsCard(onEnable: _enableAlerts),
-              const SizedBox(height: 16),
-            ],
+            // The ring with the app closed (115), offered while THIS device
+            // is not in the person's book — not merely until the browser's
+            // permission was given (the bug: such a browser never rang) —
+            // and the tab's doorbell for whoever answers the orders.
+            if (widget.org.isAdmin || widget.access.canSee('orders'))
+              PushOfferCard(
+                notify: AppScope.of(context).notify,
+                doorbell: widget.retail != null && widget.access.canSee('orders'),
+                message: context.tr('Soyez prévenu à chaque commande de la vitrine.'),
+              ),
 
             // What is about to be lost, first and in money.
             if (_expiring.isNotEmpty) ...[
@@ -868,37 +837,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
 /// Asks once whether the till may ring for a new order. A one-time choice,
 /// so it is a card on the page that goes away when answered — not a button
 /// that sits on the bar and then vanishes from it.
-class _AlertsCard extends StatelessWidget {
-  const _AlertsCard({required this.onEnable});
-
-  final VoidCallback onEnable;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return _Panel(
-      colour: theme.colorScheme.primaryContainer,
-      child: Row(
-        children: [
-          Icon(Icons.notifications_active_outlined,
-              color: theme.colorScheme.onPrimaryContainer),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              context.tr('Soyez prévenu à chaque commande de la vitrine.'),
-              style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
-            ),
-          ),
-          FilledButton.tonal(
-            onPressed: onEnable,
-            child: Text(context.tr('Activer')),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Panel extends StatelessWidget {
   const _Panel({required this.child, this.colour, this.gradient})
       : assert(colour != null || gradient != null,

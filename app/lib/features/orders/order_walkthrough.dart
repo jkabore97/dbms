@@ -388,7 +388,10 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
                     FlowChoice<String>(
                       options: [
                         for (final r in _booking ? _bookingReasons : _refuseReasons)
-                          FlowOption(r, context.tr(r)),
+                          // « Trop loin » only where it is carried.
+                          if (r != 'Trop loin pour livrer' ||
+                              _order.fulfilment == 'delivery')
+                            FlowOption(r, context.tr(r)),
                         FlowOption('other', context.tr('Autre raison')),
                       ],
                       value: _reason,
