@@ -18,6 +18,8 @@ export const PRIVACY = {
     "Uniquement pour vous fournir le service : afficher vos livres, vos rapports et vos stocks à vous et aux personnes que vous autorisez. Nous ne vendons pas vos données et ne les partageons pas à des fins publicitaires.",
     "# Où elles sont stockées",
     "Sur des serveurs sécurisés (Supabase et Cloudflare). Chaque activité ne voit que ses propres données ; l'isolement entre activités est appliqué par le serveur.",
+    "# Les prestataires",
+    "Mara fait appel à quelques prestataires, chacun seulement pour ce qui le concerne : Supabase (la base de données et les comptes) et Cloudflare (le site, les photos) hébergent les données ; Google pour la connexion avec Google et l'envoi des notifications sur le téléphone (Firebase) ; Stripe pour le paiement par carte de Mara Pro (Mara ne voit jamais le numéro de la carte) ; Sentry pour les rapports d'erreur de l'application (sans nom, numéro ni contenu de vos livres) ; et, quand ils sont ouverts, Wave pour le paiement par mobile money et WhatsApp (Meta) pour envoyer le code de vérification du numéro. Aucun ne reçoit vos données pour de la publicité.",
     "# Les visites des vitrines",
     "Quand vous ouvrez la vitrine d'une activité, l'application ou votre navigateur envoie un numéro tiré au hasard et gardé sur l'appareil, afin que chaque visiteur ne soit compté qu'une fois par jour. Ce numéro n'est jamais lié à vous ni à votre compte, et la vitrine n'affiche que le nombre de ses visiteurs. Les membres de l'activité ne sont pas comptés ; les visites de plus de 400 jours sont effacées (le total reste).",
     "# Devenir livreur",
