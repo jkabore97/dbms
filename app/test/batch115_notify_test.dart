@@ -319,7 +319,7 @@ void main() {
           expect(find.text('Il arrive dans la cloche de chaque membre de leur équipe.'), findsOneWidget);
         }
         await tester.enterText(find.byKey(const Key('bulk-message-text')), 'Bonne semaine');
-        await tester.tap(find.text('Envoyer').last);
+        await tester.tap(find.text('Envoyer (1)'));
         await tester.pumpAndSettle();
       }
 

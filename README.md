@@ -428,19 +428,22 @@ builds and forks report nothing anywhere.
 
 ### Push notifications
 
-The bell used to ring only inside the app. With this set up, an order, a
-delivery taken or a job on the board reaches a **closed** app on the web
-(Chrome and Firefox on Android and desktop; Safari from iOS 16.4 when the
-site is added to the home screen). The pieces: migration 060 (the address
-book), `workers/push` (the sender), `web/push_handlers.js` (the receiver,
-carried by `web/mara_sw.js` — or by the bare `web/push_sw.js` where no
-worker holds the site yet), and a database webhook that wakes the Worker on
-every bell row.
+The bell (030) rings inside the app, live (115: Realtime on `notifications`,
+under its row security — each phone hears its own rows — plus a return to
+the app and a one-minute poll), and with this set up it also reaches a
+**closed** app: in a browser by Web Push (Chrome and Firefox on Android and
+desktop; Safari from iOS 16.4 when the site is added to the home screen),
+on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
+and 115 (the address book, `push_subscriptions`, browsers and phones),
+`workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
+(the browser's receiver, carried by `web/mara_sw.js` — or by the bare
+`web/push_sw.js` where no worker holds the site yet), and a database webhook
+that wakes the Worker on every bell row.
 
-One-time setup:
+One-time setup, in this order:
 
-1. **The site's push identity.** Run once, never again (a new pair silently
-   orphans every subscriber):
+1. **The site's push identity**, in a Codespace, once — never again (a new
+   pair silently orphans every subscriber):
 
        node workers/push/scripts/make-vapid.mjs
 
@@ -448,20 +451,37 @@ One-time setup:
    and the private line as the repository *secret* `VAPID_PRIVATE_KEY`.
 2. **Two more secrets.** `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project
    Settings → API — the push Worker is the only component that holds it,
-   and it uses it for exactly two functions granted to that role alone) and
-   `PUSH_WEBHOOK_SECRET` (any long random string, e.g. `openssl rand -hex 32`).
+   and it uses it for push_devices / push_targets / remove_push_target,
+   granted to that role alone) and `PUSH_WEBHOOK_SECRET` (any long random
+   string, e.g. `openssl rand -hex 32`).
 3. **Deploy the Worker**: the "Deploy the push Worker" workflow. Its summary
-   prints the Worker's origin — set that as the repository variable
-   `PUSH_URL` and re-run *Deploy to Cloudflare*; the app then shows the
-   push toggle on the store home and the courier screen.
-4. **The webhook.** Supabase → Database → Webhooks → Create: table
+   prints the Worker's origin.
+4. **`PUSH_URL`**: set that origin as the repository variable `PUSH_URL` and
+   re-run *Deploy to Cloudflare* (and the APK build) — the web app then
+   offers « Activer » on every home of the three kinds, the shopper's
+   profile, the courier's space and the command center's Réglages, and
+   quietly writes back a browser that had already said yes.
+5. **The webhook.** Supabase → Database → Webhooks → Create: table
    `notifications`, event `INSERT`, HTTP `POST` to `<PUSH_URL>/v1/notify`,
    HTTP header `Authorization: Bearer <PUSH_WEBHOOK_SECRET>`.
+6. **Android (optional).** In the Firebase console: a project, an Android
+   app with the id `bf.kaj.app`; download its `google-services.json` and
+   put the whole file in the repository *secret* `GOOGLE_SERVICES_JSON`
+   (the APK build writes it to `app/android/app/`, gitignored — the Gradle
+   plugin is applied only when the file is there, so a build without it
+   still succeeds and simply offers no Android push). Then Project settings
+   → Service accounts → Generate new private key: put that JSON in the
+   repository *secret* `FCM_SERVICE_ACCOUNT` and re-run "Deploy the push
+   Worker" (without it the Worker skips phones and rings browsers).
+7. **Check it**: Compte › Notifications › « M'envoyer une notification
+   test » (anyone), or the command center's Réglages › « Tester la
+   notification », which also says how many devices the account has and
+   whether the webhook of step 5 exists.
 
-Until every step is done nothing rings — and nothing breaks: the app hides
-the toggle without a `PUSH_URL`, and the Worker answers a wrong secret with
-401. Android with the app closed needs FCM (a Firebase project) and is not
-covered here.
+Until every step is done nothing rings with the app closed — and nothing
+breaks: the app offers no push without a `PUSH_URL` (or, on Android,
+without Firebase), the Worker answers a wrong secret with 401, and the bell
+inside the app works throughout.
 
 ### Wave checkout
 

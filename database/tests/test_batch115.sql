@@ -205,7 +205,7 @@ begin
     v_order := pg_temp.order115(v_shop, false);
     perform pg_temp.as115('11511511-0000-0000-0000-000000000002');
     perform decide_order(v_order, 'refused');
-    select message into m from notifications where kind = 'order_refused';
+    select message into m from notifications where kind = 'order_refused' and params ->> 'order_id' = v_order::text;
     if m <> 'Votre commande chez Boutique 115 : refusée' then
         raise exception 'FAIL: a refusal without reason now says %', m;
     end if;
@@ -215,9 +215,9 @@ begin
                                                        and recipient_id = '11511511-0000-0000-0000-000000000006') then
         raise exception 'FAIL: the old door reached % people', v_n;
     end if;
-    if (select params from notifications where kind = 'platform_message')
+    if (select params from notifications where kind = 'platform_message' and created_at = now())
        <> jsonb_build_object('to', 'shop', 'text', 'Bonjour 115', 'audience', 'admins')
-       or (select message from notifications where kind = 'platform_message') <> 'Kaj : Bonjour 115' then
+       or (select message from notifications where kind = 'platform_message' and created_at = now()) <> 'Kaj : Bonjour 115' then
         raise exception 'FAIL: the message''s words or facts changed';
     end if;
     raise notice 'PASS: a refusal says what it said; send_platform_message reaches the responsables, with its facts';
@@ -233,8 +233,8 @@ begin
     perform pg_temp.as115('11511511-0000-0000-0000-000000000001');
     r := platform_bulk('message', array[v_shop, v_farm, v_assoc], '{"message": "Tous"}'::jsonb);
     if (r ->> 'done')::int <> 3
-       or (select count(*) from notifications where kind = 'platform_message') <> 3 then
-        raise exception 'FAIL: the default audience reached %', (select count(*) from notifications where kind = 'platform_message');
+       or (select count(*) from notifications where kind = 'platform_message' and created_at = now()) <> 3 then
+        raise exception 'FAIL: the default audience reached %', (select count(*) from notifications where kind = 'platform_message' and created_at = now());
     end if;
     r := platform_bulk('message', array[v_shop], '{"message": "Équipe", "audience": "team"}'::jsonb);
     if (select count(*) from notifications where kind = 'platform_message' and params ->> 'text' = 'Équipe') <> 2
@@ -394,8 +394,8 @@ begin
         raise exception 'FAIL: Mara reads % (no webhook in CI)', r;
     end if;
     reset role;
-    if (select count(*) from notifications where kind = 'test_push') <> 2
-       or exists (select 1 from notifications where kind = 'test_push'
+    if (select count(*) from notifications where kind = 'test_push' and created_at = now()) <> 2
+       or exists (select 1 from notifications where kind = 'test_push' and created_at = now()
                    and (scope <> 'me' or recipient_id not in ('11511511-0000-0000-0000-000000000005',
                                                               '11511511-0000-0000-0000-000000000001'))) then
         raise exception 'FAIL: the test rang someone else';
@@ -422,7 +422,7 @@ begin
         raise exception 'FAIL: the verified phone was not said';
     end if;
     update auth.users set email = 'awa115b@example.com' where id = '11511511-0000-0000-0000-000000000005';
-    if (select count(*) from notifications where kind = 'phone_verified') <> 1 then
+    if (select count(*) from notifications where kind = 'phone_verified' and created_at = now()) <> 1 then
         raise exception 'FAIL: another change rang again';
     end if;
     raise notice 'PASS: phone_verified once, in the account''s list';
@@ -452,14 +452,16 @@ begin
     perform decide_order(v_order, 'ready');
     select string_agg(p.full_name, ', ' order by p.full_name) into v_told
       from notifications n join profiles p on p.id = n.recipient_id
-     where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text;
+     where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text
+       and n.recipient_id::text like '11511511-%';
     if v_told <> 'Livreur Maison, Livreur Ouaga, Livreur Partout'
        or (select couriers_told_at from orders where id = v_order) is null then
         raise exception 'FAIL: the street told %', v_told;
     end if;
     -- A farm with its own courier: him at once, the street after the minutes.
     insert into org_couriers (org_id, user_id) values (v_farm, '11511511-0000-0000-0000-000000000010');
-    if (select message from notifications where kind = 'courier_shop_added') <> 'Ferme 115 vous a ajouté à ses livreurs : ses livraisons vous arrivent en premier.' then
+    if (select message from notifications where kind = 'courier_shop_added'
+                                              and recipient_id = '11511511-0000-0000-0000-000000000010') <> 'Ferme 115 vous a ajouté à ses livreurs : ses livraisons vous arrivent en premier.' then
         raise exception 'FAIL: the courier added was not told';
     end if;
     v_order := pg_temp.order115(v_farm, false, 'delivery');
@@ -470,22 +472,30 @@ begin
        or not (select (params ->> 'own')::boolean from notifications where kind = 'delivery_available' and params ->> 'order_id' = v_order::text) then
         raise exception 'FAIL: the farm''s own courier was not alone first';
     end if;
-    if deliveries_waiting() <> 0 then
+    perform deliveries_waiting();
+    if (select count(*) from notifications where kind = 'delivery_available'
+                                             and params ->> 'order_id' = v_order::text) <> 1 then
         raise exception 'FAIL: the street heard before the minutes';
     end if;
     update orders set updated_at = now() - interval '11 minutes' where id = v_order;
-    if deliveries_waiting() <> 3 or deliveries_waiting() <> 0 then
+    perform deliveries_waiting();
+    perform deliveries_waiting();
+    if (select count(*) from notifications where kind = 'delivery_available'
+                                             and params ->> 'order_id' = v_order::text
+                                             and recipient_id::text like '11511511-%'
+                                             and not (params ->> 'own')::boolean) <> 3
+       or (select couriers_told_at from orders where id = v_order) is null then
         raise exception 'FAIL: after the minutes the street (all three: the farm has no city) heard not once';
     end if;
     -- The cash handed over.
     update orders set status = 'delivered', courier_id = '11511511-0000-0000-0000-000000000007',
                       payment_method = 'cash' where id = v_order;
     perform confirm_cash_received(v_order);
-    if (select recipient_id from notifications where kind = 'courier_cash_received') <> '11511511-0000-0000-0000-000000000007'
-       or (select message from notifications where kind = 'courier_cash_received')
+    if (select recipient_id from notifications where kind = 'courier_cash_received' and params ->> 'order_id' = v_order::text) <> '11511511-0000-0000-0000-000000000007'
+       or (select message from notifications where kind = 'courier_cash_received' and params ->> 'order_id' = v_order::text)
           <> 'Ferme 115 confirme avoir reçu l''argent de la livraison pour Awa Cliente : '
              || to_char(1500, 'FM999G999G999') || ' F.' then
-        raise exception 'FAIL: the cash was not said: %', (select message from notifications where kind = 'courier_cash_received');
+        raise exception 'FAIL: the cash was not said: %', (select message from notifications where kind = 'courier_cash_received' and params ->> 'order_id' = v_order::text);
     end if;
     -- The nudge: only who switched it on, once a week.
     update orders set updated_at = now() - interval '8 days' where courier_id is not null;
@@ -525,6 +535,8 @@ begin
     v_due := exists (select 1 from information_schema.columns
                       where table_schema = 'public' and table_name = 'debts' and column_name = 'due_on');
     if v_due then
+        -- Written as the owner: 031's guard asks who holds the carnet.
+        perform pg_temp.as115('11511511-0000-0000-0000-000000000002');
         insert into journal_entries (org_id, created_by) values (v_shop, '11511511-0000-0000-0000-000000000002')
         returning id into v_entry;
         execute 'insert into debts (org_id, customer_id, journal_entry_id, label, amount, created_by, due_on)
