@@ -111,6 +111,8 @@ begin
                              'invitation_preview',
                              -- 122: the web's « download the app » pop-up.
                              'app_store_links',
+                             -- 123: a vitrine's visitors, counted signed out.
+                             'record_vitrine_visit',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

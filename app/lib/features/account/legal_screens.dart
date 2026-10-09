@@ -82,6 +82,14 @@ class PrivacyScreen extends StatelessWidget {
         'Sur des serveurs sécurisés (Supabase et Cloudflare). Chaque activité '
             'ne voit que ses propres données ; l\'isolement entre activités est '
             'appliqué par le serveur.',
+        '# Les visites des vitrines',
+        'Quand vous ouvrez la vitrine d\'une activité, l\'application ou '
+            'votre navigateur envoie un numéro tiré au hasard et gardé sur '
+            'l\'appareil, afin que chaque visiteur ne soit compté qu\'une fois '
+            'par jour. Ce numéro n\'est jamais lié à vous ni à votre compte, '
+            'et la vitrine n\'affiche que le nombre de ses visiteurs. '
+            'Les membres de l\'activité ne sont pas comptés ; les visites de '
+            'plus de 400 jours sont effacées (le total reste).',
         '# Devenir livreur',
         'Pour devenir livreur, vous envoyez un selfie et la photo de votre '
             'pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces '
