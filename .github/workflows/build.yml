@@ -78,6 +78,10 @@ jobs:
       # means a debug-signed build, and the job summary says so.
       KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
       KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
+      # Google Play (README: "Publishing to Google Play"): a service
+      # account's JSON key with release rights on bf.kaj.app. Empty means
+      # the bundle is only attached to the GitHub release.
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
       KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
       KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
       # Android push (README: "Push notifications"): the Firebase project's
@@ -192,10 +196,14 @@ jobs:
             --dart-define=PAY_URL="$PAY_URL"
           # arm and arm64 only, like the APKs: x86_64 is the emulator's, and
           # carried it would add a third engine to the bundle for no phone.
+          # STORE=play: the bundle is what Google Play installs, and the
+          # store updates its own copy — that build never shows the
+          # « Télécharger » banner pointing at the GitHub APK (core/update).
           flutter build appbundle --release \
             --target-platform android-arm,android-arm64 \
             --split-debug-info=build/symbols \
             --build-number="$GITHUB_RUN_NUMBER" \
+            --dart-define=STORE=play \
             --dart-define=BUILD_SHA="$GITHUB_SHA" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
@@ -272,6 +280,32 @@ jobs:
             echo ""
             echo "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/kaj-arm64-v8a.apk"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # Every build of main goes to Google Play by itself: nobody uploads an
+      # .aab by hand after the very first one (Google requires that one
+      # through the Play Console). The track is the repository variable
+      # PLAY_TRACK — internal until it says otherwise (closed testing:
+      # alpha; production) — and the version code is the run number, so
+      # each upload is newer than the last. Only with the upload key: a
+      # debug-signed bundle would be refused anyway.
+      - name: Send to Google Play
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.PLAY_SERVICE_ACCOUNT_JSON != '' && env.KAJ_KEYSTORE_BASE64 != ''
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: bf.kaj.app
+          releaseFiles: app/out/kaj.aab
+          track: ${{ vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_STATUS || 'completed' }}
+
+      - name: Say where the bundle went
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: |
+          if [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ] && [ -n "$KAJ_KEYSTORE_BASE64" ]; then
+            echo "Sent to Google Play, track ${{ vars.PLAY_TRACK || 'internal' }}." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Not sent to Google Play: PLAY_SERVICE_ACCOUNT_JSON or the upload key is missing." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   build-web:
     runs-on: ubuntu-latest
