@@ -10,6 +10,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/onboarding/business_creation.dart';
 import '../setup/create_my_business_screen.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Parcours de création » in the command center (107, renamed in 111):
 /// the questions somebody answers to create their business at once
@@ -204,6 +205,8 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Revenir au parcours d\'origine ?')),
         content: Text(context.tr('Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les activités déjà créées gardent leurs réponses.')),
         actions: [
@@ -359,7 +362,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Parcours de création'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Parcours de création'))),
       body: wide
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,

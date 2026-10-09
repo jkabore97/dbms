@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// How the street side looks — the vitrine and the directory — and why it
 /// does not look like the rest of the app.
@@ -235,7 +236,7 @@ class _ShopPageState extends State<ShopPage> {
           child: AppBar(
           primary: widget.announcements.isEmpty,
           leading: widget.leading,
-          actions: widget.trailing == null ? null : [widget.trailing!],
+          actions: [?widget.trailing, bellRoom],
           automaticallyImplyLeading: false,
           centerTitle: true,
           title: widget.brand != null
@@ -579,6 +580,7 @@ Future<T?> showShopSheet<T>({
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: showDragHandle,
       builder: builder,
     );

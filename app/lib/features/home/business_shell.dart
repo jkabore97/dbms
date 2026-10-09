@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart';
 import '../notify/notifications_screen.dart';
@@ -70,6 +71,7 @@ class BusinessShell extends StatelessWidget {
             SwitchActivityButton(activities: session.orgs.length),
             NotificationBell(
               notify: scope.notify,
+              scope: NotifyScope.org(org.id),
               listRoute: Routes.inside(org.id, 'notifications'),
               enabled: live,
             ),

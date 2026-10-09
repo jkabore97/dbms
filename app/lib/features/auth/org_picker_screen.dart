@@ -11,6 +11,7 @@ import '../../core/auth/models.dart';
 import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Shown when someone belongs to more than one business — the accountant who
 /// keeps books for a church and a farm, or an owner with two shops.
@@ -117,6 +118,7 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
               icon: const Icon(Icons.logout),
               tooltip: Strings.of(context).signOut,
             ),
+          bellRoom,
         ],
       ),
       body: Center(

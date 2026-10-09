@@ -6,6 +6,7 @@ import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What each courier owes for a month (067, M10 block 4).
 ///
@@ -120,6 +121,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: ListView(

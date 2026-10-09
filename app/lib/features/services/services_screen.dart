@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,8 +13,12 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/nav/app_scope.dart';
 import '../capture/capture_action.dart';
+import '../common/step_flow.dart';
+import 'service_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -89,17 +91,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
     }
   }
 
-  Future<void> _open([Product? service]) async {
+  /// « Nouveau service » (115): one entry at a time.
+  Future<void> _add() async {
+    final saved = await StepFlow.push(context,
+        ServiceFlow(org: widget.org, retail: widget.retail, capture: widget.capture));
+    if (saved == true) await _load();
+  }
+
+  /// A service already offered: its price, words, photo — or retire it.
+  Future<void> _open(Product service) async {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => ServiceSheet(
         org: widget.org,
         retail: widget.retail,
         capture: widget.capture,
         service: service,
-        photoKey: service == null ? null : _photos[service.id],
+        photoKey: _photos[service.id],
       ),
     );
     if (saved == true) await _load();
@@ -121,12 +132,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
               icon: const Icon(Icons.storefront_outlined),
               label: Text(context.tr('Ma vitrine')),
             ),
+          bellRoom,
         ],
       ),
       floatingActionButton: _canWrite
           ? FloatingActionButton.extended(
               key: const Key('services-add'),
-              onPressed: _missing || _loading ? null : () => _open(),
+              onPressed: _missing || _loading ? null : _add,
               backgroundColor: _missing
                   ? theme.colorScheme.surfaceContainerHighest
                   : null,
@@ -335,14 +347,16 @@ class ServiceSheet extends StatefulWidget {
     required this.org,
     required this.retail,
     this.capture,
-    this.service,
+    required this.service,
     this.photoKey,
   });
 
   final OrgSummary org;
   final RetailRepository retail;
   final CaptureRepository? capture;
-  final Product? service;
+
+  /// What is edited. A new one is the « Service » flow (115).
+  final Product service;
 
   /// The service's current photo, shown until another is picked.
   final String? photoKey;
@@ -355,21 +369,20 @@ class _ServiceSheetState extends State<ServiceSheet> {
   /// What a service is counted by, offered as one tap; anything else typed.
   static const units = ['heure', 'séance', 'personne', 'jour', 'mois'];
 
-  late final _name = TextEditingController(text: widget.service?.name ?? '');
+  late final _name = TextEditingController(text: widget.service.name);
   late final _price = TextEditingController(
-    text: widget.service == null || widget.service!.salePrice == 0
+    text: widget.service.salePrice == 0
         ? ''
-        : _plain(widget.service!.salePrice),
+        : _plain(widget.service.salePrice),
   );
-  late final _unit = TextEditingController(text: widget.service?.unit ?? '');
+  late final _unit = TextEditingController(text: widget.service.unit ?? '');
   late final _description = TextEditingController(
-    text: widget.service?.description ?? '',
+    text: widget.service.description ?? '',
   );
-  late bool _from = widget.service?.priceFrom ?? false;
-  late bool _published = widget.service?.isPublished ?? true;
+  late bool _from = widget.service.priceFrom;
+  late bool _published = widget.service.isPublished;
 
-  Uint8List? _photo;
-  String? _photoType;
+  PickedPhoto? _photo;
   bool _busy = false;
   String? _error;
 
@@ -394,12 +407,10 @@ class _ServiceSheetState extends State<ServiceSheet> {
         !mounted) {
       return;
     }
-    final picked = await CaptureAction.pick(context);
+    final picked =
+        await CaptureAction.pick(context, orgId: widget.org.id, photos: widget.capture);
     if (picked == null || !mounted) return;
-    setState(() {
-      _photo = picked.bytes;
-      _photoType = picked.contentType;
-    });
+    setState(() => _photo = picked);
   }
 
   Future<void> _save() async {
@@ -416,16 +427,7 @@ class _ServiceSheetState extends State<ServiceSheet> {
       _error = null;
     });
     try {
-      final id =
-          widget.service?.id ??
-          // The server refuses a name an article holds, retired or not
-          // (098): a service never turns an article into one.
-          await widget.retail.ensureProduct(
-            orgId: widget.org.id,
-            name: name,
-            salePrice: price,
-            isService: true,
-          );
+      final id = widget.service.id;
       await widget.retail.updateProduct(
         id,
         name: name,
@@ -437,16 +439,17 @@ class _ServiceSheetState extends State<ServiceSheet> {
         priceFrom: _from,
       );
       final capture = widget.capture;
-      if (_photo != null && capture != null) {
-        final doc = await capture.capture(
+      final photo = _photo;
+      if (photo != null && capture != null) {
+        final doc = await CaptureAction.hang(
+          capture,
           orgId: widget.org.id,
-          bytes: _photo!,
-          contentType: _photoType ?? 'image/jpeg',
-          kind: 'product_photo',
-          caption: name,
+          productId: id,
+          name: name,
+          photo: photo,
+          hadPhoto: widget.photoKey != null,
         );
         if (doc != null) {
-          await capture.file(documentId: doc, productId: id);
           if (mounted) await AppScope.read(context)?.session.reloadFeatures(widget.org.id);
         }
       }
@@ -462,10 +465,11 @@ class _ServiceSheetState extends State<ServiceSheet> {
   /// named it keeps it.
   Future<void> _remove() async {
     final service = widget.service;
-    if (service == null) return;
     final sure = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         key: const Key('service-remove-confirm'),
         title: Text(dialog.tr('Retirer ce service ?')),
         content: Text(
@@ -505,20 +509,28 @@ class _ServiceSheetState extends State<ServiceSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final editing = widget.service != null;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    // The fields scroll; « Enregistrer » stays above the keyboard (A6).
+    return KeyboardSheet(
+          footer: SizedBox(
+            height: 52,
+            child: FilledButton(
+              key: const Key('service-save'),
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      context.tr('Enregistrer'),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+          ),
           children: [
             Text(
-              editing
-                  ? context.tr('Modifier le service')
-                  : context.tr('Nouveau service'),
+              context.tr('Modifier le service'),
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -535,11 +547,11 @@ class _ServiceSheetState extends State<ServiceSheet> {
                       height: 76,
                       color: theme.colorScheme.surfaceContainerHighest,
                       child: _photo != null
-                          ? Image.memory(_photo!, fit: BoxFit.cover)
+                          ? Image.memory(_photo!.bytes, fit: BoxFit.cover)
                           : widget.photoKey != null
                           ? ProductPhoto(
                               key: const Key('service-photo-current'),
-                              name: widget.service?.name ?? '',
+                              name: widget.service.name,
                               photoKey: widget.photoKey,
                               capture: widget.capture,
                             )
@@ -651,37 +663,13 @@ class _ServiceSheetState extends State<ServiceSheet> {
               const SizedBox(height: 4),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('service-save'),
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        editing
-                            ? context.tr('Enregistrer')
-                            : context.tr('Ajouter le service'),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-              ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const Key('service-remove'),
+              onPressed: _busy ? null : _remove,
+              child: Text(context.tr('Retirer ce service')),
             ),
-            if (editing) ...[
-              const SizedBox(height: 8),
-              TextButton(
-                key: const Key('service-remove'),
-                onPressed: _busy ? null : _remove,
-                child: Text(context.tr('Retirer ce service')),
-              ),
-            ],
           ],
-        ),
-      ),
     );
   }
 }

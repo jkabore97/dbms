@@ -10,19 +10,24 @@ import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/credit/credit_repository.dart';
 import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
-import '../retail/sale_sheet.dart';
+import '../common/step_flow.dart';
 import '../../core/retail/retail_repository.dart';
-import '../../core/retail/models.dart';
 import '../../l10n/strings.dart';
+import 'credit_flows.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Qui me doit combien — the carnet de crédit.
 ///
 /// Sorted oldest debt first, because that is the collection order: the
 /// screen's job is to answer "who do I visit today", not to be a report.
 /// Amounts are large and names are larger; this is read behind a counter,
-/// not at a desk.
+/// not at a desk. A customer past the date they gave (117) says so in red.
+///
+/// Its two acts are flows (115), the same for a shop, a farm and an
+/// association: « Nouveau crédit » and « Remboursement » (credit_flows.dart).
 class CreditBookScreen extends StatefulWidget {
   const CreditBookScreen({
     super.key,
@@ -47,12 +52,29 @@ class CreditBookScreen extends StatefulWidget {
   State<CreditBookScreen> createState() => _CreditBookScreenState();
 }
 
+/// The earliest date a customer gave for what is still open, by customer.
+Map<String, DateTime> _earliest(List<DebtDate> dates) {
+  final out = <String, DateTime>{};
+  for (final d in dates) {
+    final had = out[d.customerId];
+    if (had == null || d.dueOn.isBefore(had)) out[d.customerId] = d.dueOn;
+  }
+  return out;
+}
+
+bool _late(DateTime due) {
+  final now = DateTime.now();
+  return due.isBefore(DateTime(now.year, now.month, now.day));
+}
+
 class _CreditBookScreenState extends State<CreditBookScreen> {
   List<DebtorRow> _rows = const [];
+  Map<String, DateTime> _due = const {};
   bool _loading = true;
   String? _error;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
+  late final _date = DateFormat('d MMM', 'fr_FR');
 
   @override
   void initState() {
@@ -67,9 +89,15 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     });
     try {
       final rows = await widget.credit.debtors(widget.org.id);
+      // Before 117 is on the server: no dates, the carnet as it was.
+      var due = const <String, DateTime>{};
+      try {
+        due = _earliest(await widget.credit.dueDates(widget.org.id));
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _rows = rows;
+        _due = due;
         _loading = false;
       });
     } catch (error) {
@@ -81,49 +109,32 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     }
   }
 
-  /// A credit sale, product-backed: the same SaleSheet the store uses, opened
-  /// on the Crédit method, so it picks real articles, moves stock and snapshots
-  /// cost, and the debt it records is linked to that sale — not a free-text
-  /// line unrelated to the inventory.
-  Future<void> _newSale() async {
-    // Locked (089): what was kept is read, nothing new is written.
-    if (PathGate.locks(context, widget.org, 'credits')) {
-      return PathGate.guard(context, widget.org, 'credits', () {});
-    }
-    List<Product> products = const [];
-    try {
-      products = await widget.retail.products(widget.org.id);
-    } catch (_) {
-      // Offline: the sheet still lets a name be typed; better than blocking.
-    }
-    if (!mounted) return;
-    final done = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => SaleSheet(
-        orgId: widget.org.id,
+  /// Locked (089): what was kept is read, nothing new is written.
+  bool _locked() {
+    if (!PathGate.locks(context, widget.org, 'credits')) return false;
+    PathGate.guard(context, widget.org, 'credits', () {});
+    return true;
+  }
+
+  Future<void> _newCredit() async {
+    if (_locked()) return;
+    final done = await StepFlow.push(
+      context,
+      NewCreditFlow(
+        org: widget.org,
+        credit: widget.credit,
         retail: widget.retail,
-        currency: widget.org.currency,
-        products: products,
-        initialMethod: 'credit',
-        farm: widget.org.profile == 'farm',
+        db: AppScope.maybeOf(context)?.db,
+        debtors: _rows,
       ),
     );
     if (done == true && mounted) await _load();
   }
 
-  /// A debt with no article behind it — money lent, a service owed. Kept as a
-  /// deliberate secondary path: most carnet entries are goods taken on trust,
-  /// which now go through _newSale; this is the exception, not the door.
-  Future<void> _newLoan() async {
-    // Locked (089): what was kept is read, nothing new is written.
-    if (PathGate.locks(context, widget.org, 'credits')) {
-      return PathGate.guard(context, widget.org, 'credits', () {});
-    }
-    final done = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _CreditSaleSheet(org: widget.org, credit: widget.credit),
+  Future<void> _repay() async {
+    final done = await StepFlow.push(
+      context,
+      RepayFlow(org: widget.org, credit: widget.credit, debtors: _rows),
     );
     if (done == true && mounted) await _load();
   }
@@ -133,36 +144,37 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     final strings = Strings.of(context);
     final theme = Theme.of(context);
     final total = _rows.fold<double>(0, (s, r) => s + r.totalOwed);
+    final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.creditBook),
-        actions: [
-          if (widget.access.canEdit('credits') && !widget.org.isAssociation)
-            IconButton(
-              tooltip: context.tr('Dette sans article (prêt)'),
-              icon: const Icon(Icons.request_quote_outlined),
-              onPressed: _newLoan,
-            ),
-        ],
-      ),
-      // An association keeps no stock: what it is owed — a cotisation, the
-      // hall's rent, a loan to a member — is a debt with no article, and
-      // that is its one button.
-      floatingActionButton: !widget.access.canEdit('credits')
+      appBar: AppBar(actions: const [bellRoom], title: Text(strings.creditBook)),
+      floatingActionButton: !canEdit
           ? null
-          : widget.org.isAssociation
-              ? FloatingActionButton.extended(
-                  key: const Key('credit-new-debt'),
-                  onPressed: _newLoan,
-                  icon: const Icon(Icons.request_quote_outlined),
-                  label: Text(context.tr('Une somme due')),
-                )
-              : FloatingActionButton.extended(
-        onPressed: _newSale,
-        icon: const Icon(Icons.handshake_outlined),
-        label: Text(strings.creditSale),
-      ),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_rows.isNotEmpty) ...[
+                  FloatingActionButton.extended(
+                    key: const Key('credit-repay'),
+                    heroTag: 'credit-repay',
+                    onPressed: _repay,
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    foregroundColor: theme.colorScheme.onSecondaryContainer,
+                    icon: const Icon(Icons.savings_outlined),
+                    label: Text(context.tr('Remboursement')),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                FloatingActionButton.extended(
+                  key: const Key('credit-new'),
+                  heroTag: 'credit-new',
+                  onPressed: _newCredit,
+                  icon: const Icon(Icons.handshake_outlined),
+                  label: Text(context.tr('Nouveau crédit')),
+                ),
+              ],
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -194,7 +206,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 160),
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(8),
@@ -212,11 +224,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                                     style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600)),
-                                subtitle: Text(
-                                  row.daysOld == null
-                                      ? ''
-                                      : strings.owedForDays(row.daysOld!),
-                                ),
+                                subtitle: _subtitle(context, row),
                                 trailing: Text(
                                   _money.format(row.totalOwed),
                                   style: theme.textTheme.titleMedium?.copyWith(
@@ -238,11 +246,31 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                     ),
     );
   }
+
+  /// How old the debt is, and the date given — in red once it has passed.
+  Widget? _subtitle(BuildContext context, DebtorRow row) {
+    final strings = Strings.of(context);
+    final due = _due[row.customerId];
+    final age = row.daysOld == null ? null : strings.owedForDays(row.daysOld!);
+    if (due == null) return age == null ? null : Text(age);
+    final late = _late(due);
+    final word = late
+        ? context.tr('En retard depuis le {date}', {'date': _date.format(due)})
+        : context.tr('À payer le {date}', {'date': _date.format(due)});
+    return Text(
+      [?age, word].join(' · '),
+      style: late
+          ? TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w600)
+          : null,
+    );
+  }
 }
 
-/// One customer's page of the carnet: each debt, what remains, and the
-/// repayment button. Lives at its own address so it can be reopened from the
-/// list after a refresh.
+/// One customer's page of the carnet: each debt, what remains, the date
+/// given, the reminder and the repayment. Lives at its own address so it
+/// can be reopened from the list after a refresh.
 class CustomerDebtsScreen extends StatefulWidget {
   const CustomerDebtsScreen({
     super.key,
@@ -265,11 +293,20 @@ class CustomerDebtsScreen extends StatefulWidget {
 
 class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
   List<DebtRow> _rows = const [];
+  List<DebtorRow> _debtors = const [];
+  Map<String, DateTime> _due = const {};
   bool _loading = true;
   String? _error;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
   late final _date = DateFormat('d MMM y', 'fr_FR');
+
+  DebtorRow? get _me {
+    for (final d in _debtors) {
+      if (d.customerId == widget.customerId) return d;
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -285,9 +322,19 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     try {
       final rows =
           await widget.credit.debtsOf(widget.org.id, widget.customerId);
+      final debtors = await widget.credit.debtors(widget.org.id);
+      var due = const <String, DateTime>{};
+      try {
+        due = {
+          for (final d in await widget.credit.dueDates(widget.org.id))
+            d.debtId: d.dueOn,
+        };
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _rows = rows;
+        _debtors = debtors;
+        _due = due;
         _loading = false;
       });
     } catch (error) {
@@ -299,46 +346,32 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     }
   }
 
-  Future<void> _repay(DebtRow debt) async {
-    final strings = Strings.of(context);
-    final controller =
-        TextEditingController(text: debt.remaining.toStringAsFixed(0));
-    final amount = await showDialog<double>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(strings.recordRepayment),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: strings.amount,
-            helperText: strings.remainingOf(
-                '${_money.format(debt.remaining)} ${widget.org.currency}'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(strings.cancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(ctx, double.tryParse(controller.text.trim())),
-            child: Text(strings.save),
-          ),
-        ],
+  Future<void> _repay() async {
+    final done = await StepFlow.push(
+      context,
+      RepayFlow(
+        org: widget.org,
+        credit: widget.credit,
+        debtors: _debtors,
+        customerId: widget.customerId,
       ),
     );
-    if (amount == null || amount <= 0 || !mounted) return;
-    try {
-      await widget.credit.recordPayment(debtId: debt.debtId, amount: amount);
-      if (mounted) await _load();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(describeError(error))));
-    }
+    if (done == true && mounted) await _load();
+  }
+
+  void _remind(DebtorRow me) {
+    final open = [for (final r in _rows) if (r.remaining > 0) _due[r.debtId]]
+        .whereType<DateTime>()
+        .toList()
+      ..sort();
+    sendReminder(
+      me.phone,
+      creditReminder(context,
+          customer: me.name,
+          business: widget.org.name,
+          amount: _money.format(me.totalOwed),
+          due: open.isEmpty ? null : open.first),
+    );
   }
 
   @override
@@ -346,15 +379,25 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     final strings = Strings.of(context);
     final theme = Theme.of(context);
     final remaining = _rows.fold<double>(0, (s, r) => s + r.remaining);
+    final me = _me;
+    final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.creditBook)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(me?.name ?? strings.creditBook)),
+      floatingActionButton: !canEdit || remaining <= 0
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('customer-repay'),
+              onPressed: _repay,
+              icon: const Icon(Icons.savings_outlined),
+              label: Text(context.tr('Remboursement')),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!))
               : ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8),
@@ -365,155 +408,46 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                         style: theme.textTheme.titleLarge,
                       ),
                     ),
+                    if (me != null && remaining > 0) ...[
+                      SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          key: const Key('customer-remind'),
+                          onPressed: () => _remind(me),
+                          icon: const Icon(Icons.chat_outlined),
+                          label: Text(context.tr('Envoyer un rappel sur WhatsApp')),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     for (final debt in _rows)
                       KajCard(
                         child: ListTile(
                           title: Text(debt.label),
-                          subtitle: Text(
+                          subtitle: Text([
                             '${_date.format(debt.occurredAt)} · '
-                            '${_money.format(debt.amount)}'
-                            '${debt.paid > 0 ? ' − ${_money.format(debt.paid)}' : ''}',
-                          ),
+                                '${_money.format(debt.amount)}'
+                                '${debt.paid > 0 ? ' − ${_money.format(debt.paid)}' : ''}',
+                            if (_due[debt.debtId] != null)
+                              _late(_due[debt.debtId]!)
+                                  ? context.tr('En retard depuis le {date}',
+                                      {'date': _date.format(_due[debt.debtId]!)})
+                                  : context.tr('À payer le {date}',
+                                      {'date': _date.format(_due[debt.debtId]!)}),
+                          ].join('\n')),
                           trailing: debt.remaining <= 0
                               ? Icon(Icons.check_circle,
                                   color: theme.colorScheme.primary)
-                              : FilledButton.tonal(
-                                  onPressed:
-                                      widget.access.canEdit('credits')
-                                          ? () => _repay(debt)
-                                          : null,
-                                  child: Text(_money.format(debt.remaining)),
-                                ),
+                              : Text(_money.format(debt.remaining),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                      color: _due[debt.debtId] != null &&
+                                              _late(_due[debt.debtId]!)
+                                          ? theme.colorScheme.error
+                                          : null)),
                         ),
                       ),
                   ],
                 ),
-    );
-  }
-}
-
-/// Recording a sale on credit: a name, an amount, a label. Three fields,
-/// because the queue at the counter is real.
-class _CreditSaleSheet extends StatefulWidget {
-  const _CreditSaleSheet({required this.org, required this.credit});
-
-  final OrgSummary org;
-  final CreditRepository credit;
-
-  @override
-  State<_CreditSaleSheet> createState() => _CreditSaleSheetState();
-}
-
-class _CreditSaleSheetState extends State<_CreditSaleSheet> {
-  final _name = TextEditingController();
-  final _amount = TextEditingController();
-  final _label = TextEditingController();
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _amount.dispose();
-    _label.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final strings = Strings.of(context);
-    final amount = double.tryParse(_amount.text.trim());
-    if (_name.text.trim().isEmpty) {
-      setState(() => _error = strings.enterCustomerName);
-      return;
-    }
-    if (amount == null || amount <= 0) {
-      setState(() => _error = strings.enterAmount);
-      return;
-    }
-    if (_label.text.trim().isEmpty) {
-      setState(() => _error = strings.enterLabel);
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await widget.credit.recordCreditSale(
-        orgId: widget.org.id,
-        customerName: _name.text.trim(),
-        amount: amount,
-        label: _label.text.trim(),
-      );
-      if (mounted) Navigator.pop(context, true);
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _error = describeError(error);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = Strings.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(strings.creditSale,
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _name,
-            enabled: !_busy,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(labelText: strings.customerName),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _amount,
-            enabled: !_busy,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: strings.amount,
-              suffixText: widget.org.currency,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _label,
-            enabled: !_busy,
-            decoration: InputDecoration(
-              labelText: strings.whatWasSold,
-              hintText: strings.whatWasSoldHint,
-            ),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: _busy ? null : _save,
-              child: _busy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(strings.save),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

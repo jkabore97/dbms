@@ -17,6 +17,8 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindSingular;
 import '../cauris/cauri_icon.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// Console › Mara Pro › Cauris › « Offrir » (100): for any business — a
 /// shop, a farm, an association — the platform gives cauris, gives
@@ -106,7 +108,7 @@ class _CaurisGiftsScreenState extends State<CaurisGiftsScreen> {
     final theme = Theme.of(context);
     final org = _org;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Offrir des cauris'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Offrir des cauris'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -239,6 +241,7 @@ class _OrgGiftsState extends State<OrgGifts> {
     final done = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => GiftSheet(
         org: org,
@@ -441,6 +444,8 @@ class _GiftSheetState extends State<GiftSheet> {
       final sure = await showDialog<bool>(
         context: context,
         builder: (dialog) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Offrir {n} cauris ?', {'n': points})),
           content: Text(context.tr('À {name}. C\'est plus de {limit} cauris.',
               {'name': widget.org.name, 'limit': GiftSheet.confirmAbove})),
@@ -491,13 +496,29 @@ class _GiftSheetState extends State<GiftSheet> {
       GiftKind.promo => context.tr('Cauris à utiliser avant une date'),
       GiftKind.unlock => context.tr('Ouvrir un outil jusqu\'à une date'),
     };
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton.icon(
+                key: const Key('gift-save'),
+                onPressed: _busy ? null : _save,
+                icon: const Icon(Icons.redeem),
+                label: Text(context.tr('Offrir'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
+      ),
+      children: [
             Text(title, style: theme.textTheme.titleLarge),
             Text(widget.org.name, style: theme.textTheme.bodyMedium?.copyWith(color: maraBrown)),
             const SizedBox(height: 16),
@@ -566,23 +587,7 @@ class _GiftSheetState extends State<GiftSheet> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 52,
-              child: FilledButton.icon(
-                key: const Key('gift-save'),
-                onPressed: _busy ? null : _save,
-                icon: const Icon(Icons.redeem),
-                label: Text(context.tr('Offrir'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

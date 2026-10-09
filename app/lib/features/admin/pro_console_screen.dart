@@ -10,6 +10,7 @@ import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'cauris_console_card.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Kaj Pro, from the platform's side (066, M10 block 2).
 ///
@@ -165,6 +166,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

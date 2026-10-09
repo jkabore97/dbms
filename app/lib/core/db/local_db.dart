@@ -546,11 +546,11 @@ class LocalDb {
 
   /// Records anything, by the name the person gave it.
   ///
-  /// This is the general form and it is what both sheets now call. The two
-  /// methods below it — recordContribution and recordExpense — stay because
-  /// devices upgrading from an older build may still hold outbox rows written
-  /// by them, and the server functions they name still exist; nothing new
-  /// goes through them.
+  /// This is the general form and the only one: the older recordContribution
+  /// and recordExpense (and their church words) are gone (batch 115). An
+  /// upgrading device's outbox rows written by them still drain — the outbox
+  /// sends each row under its own action name, and the server functions
+  /// they name still exist.
   ///
   /// Returns immediately. There is no loading spinner and no network call —
   /// the entry is saved the moment the button is tapped, connection or not.
@@ -678,108 +678,6 @@ class LocalDb {
         'amount': amount,
         'direction': 'transfer',
         'method': '$fromMethod>$toMethod',
-        'memo': memo,
-        'occurred_at': when,
-      });
-    });
-
-    return clientUuid;
-  }
-
-  /// Records a contribution locally and queues it for sync.
-  ///
-  /// Superseded by [recordEntry] and kept for the outbox rows an upgrading
-  /// device may still be holding. Nothing in the app calls it any more.
-  Future<String> recordContribution({
-    required String orgId,
-    required double amount,
-    required String kind, // tithe | offering | special | donation
-    required String method, // cash | bank | mobile_money
-    String? memberId,
-    String? memberName,
-    String? memo,
-    DateTime? occurredAt,
-  }) async {
-    final clientUuid = _uuid.v4();
-    final when = (occurredAt ?? DateTime.now()).toUtc().toIso8601String();
-
-    final payload = {
-      'p_org_id': orgId,
-      'p_amount': amount,
-      'p_kind': kind,
-      'p_method': method,
-      'p_member_id': memberId,
-      'p_memo': memo,
-      'p_client_uuid': clientUuid,
-      'p_occurred_at': when,
-    };
-
-    await _db.transaction((txn) async {
-      await txn.insert('outbox', {
-        'client_uuid': clientUuid,
-        'org_id': orgId,
-        'action': 'record_contribution',
-        'payload': jsonEncode(payload),
-        'created_at': when,
-      });
-
-      await txn.insert('entries', {
-        'client_uuid': clientUuid,
-        'org_id': orgId,
-        'kind': kind,
-        'label': _labelFor(kind),
-        'amount': amount,
-        'direction': 'in',
-        'method': method,
-        'member_name': memberName,
-        'memo': memo,
-        'occurred_at': when,
-      });
-    });
-
-    return clientUuid;
-  }
-
-  /// Superseded by [recordEntry], and kept for the same reason.
-  Future<String> recordExpense({
-    required String orgId,
-    required double amount,
-    required String expenseCode,
-    required String expenseName,
-    required String method,
-    String? memo,
-    DateTime? occurredAt,
-  }) async {
-    final clientUuid = _uuid.v4();
-    final when = (occurredAt ?? DateTime.now()).toUtc().toIso8601String();
-
-    final payload = {
-      'p_org_id': orgId,
-      'p_amount': amount,
-      'p_expense_code': expenseCode,
-      'p_method': method,
-      'p_memo': memo,
-      'p_client_uuid': clientUuid,
-      'p_occurred_at': when,
-    };
-
-    await _db.transaction((txn) async {
-      await txn.insert('outbox', {
-        'client_uuid': clientUuid,
-        'org_id': orgId,
-        'action': 'record_expense',
-        'payload': jsonEncode(payload),
-        'created_at': when,
-      });
-
-      await txn.insert('entries', {
-        'client_uuid': clientUuid,
-        'org_id': orgId,
-        'kind': 'expense',
-        'label': expenseName,
-        'amount': amount,
-        'direction': 'out',
-        'method': method,
         'memo': memo,
         'occurred_at': when,
       });
@@ -1422,6 +1320,28 @@ class LocalDb {
     );
   }
 
+  /// The due date of a credit sale (117's set_debt_due), kept to be sent
+  /// after the sale it names: the outbox goes oldest first, so the queued
+  /// sale reaches the server before its date does. Sent with the generic
+  /// path (p_recorded_by added by SyncService).
+  Future<void> queueDebtDue({
+    required String orgId,
+    required String saleClientUuid,
+    required String dueOn,
+  }) async {
+    await _db.insert('outbox', {
+      'client_uuid': _uuid.v4(),
+      'org_id': orgId,
+      'action': 'set_debt_due',
+      'payload': jsonEncode({
+        'p_org_id': orgId,
+        'p_due_on': dueOn,
+        'p_sale_client_uuid': saleClientUuid,
+      }),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
   /// Sales kept on this phone and not yet sent, for one business.
   Future<int> pendingSales(String orgId) async {
     final result = await _db.rawQuery(
@@ -1584,20 +1504,5 @@ class LocalDb {
       } catch (_) {}
     }
     return taken;
-  }
-
-  static String _labelFor(String kind) {
-    switch (kind) {
-      case 'tithe':
-        return 'Dîme';
-      case 'offering':
-        return 'Offrande';
-      case 'special':
-        return 'Collecte spéciale';
-      case 'donation':
-        return 'Don';
-      default:
-        return kind;
-    }
   }
 }

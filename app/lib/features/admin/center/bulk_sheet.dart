@@ -9,6 +9,7 @@ import '../../../core/format/money.dart' show parseAmount;
 import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'todo_section.dart' show featureName;
+import '../../common/keyboard_sheet.dart';
 
 /// What several ticked businesses can be given at once (105's
 /// platform_bulk).
@@ -27,6 +28,7 @@ Future<BulkResult?> showBulkSheet(
   final result = await showModalBottomSheet<BulkResult>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     showDragHandle: true,
     builder: (_) => BulkSheet(action: action, orgs: orgs, center: center, tools: tools),
   );
@@ -92,6 +94,10 @@ class _BulkSheetState extends State<BulkSheet> {
   final _note = TextEditingController();
   final _message = TextEditingController();
   bool _promo = false;
+
+  /// Whom a message reaches (115): « Responsables » (owners and admins, as
+  /// before) or « Toute l'équipe » (every member).
+  bool _team = false;
   late DateTime _until = DateUtils.dateOnly(DateTime.now()).add(const Duration(days: 30));
   String? _tool;
   bool _busy = false;
@@ -166,7 +172,7 @@ class _BulkSheetState extends State<BulkSheet> {
           return;
         }
         action = 'message';
-        args = {'message': text};
+        args = {'message': text, if (_team) 'audience': 'team'};
       case BulkAction.archive:
         action = 'archive';
         args = const {};
@@ -192,6 +198,8 @@ class _BulkSheetState extends State<BulkSheet> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(question),
         actions: [
           TextButton(
@@ -221,14 +229,35 @@ class _BulkSheetState extends State<BulkSheet> {
       BulkAction.message => (context.tr('Envoyer un message'), context.tr('Envoyer')),
       BulkAction.archive => (context.tr('Archiver'), context.tr('Archiver')),
     };
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          key: const Key('bulk-sheet'),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const Key('bulk-send'),
+                style: widget.action == BulkAction.archive
+                    ? FilledButton.styleFrom(backgroundColor: theme.colorScheme.error)
+                    : null,
+                onPressed: _busy ? null : _send,
+                child: _busy
+                    ? const SizedBox(
+                        width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(context.tr('{action} ({n})', {'action': cta, 'n': n}),
+                        style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
+      ),
+      children: [
             Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             Text(context.tr('{n} entreprise(s) : {names}', {'n': n, 'names': names}),
                 style: theme.textTheme.bodyMedium?.copyWith(color: maraBrown)),
@@ -297,7 +326,17 @@ class _BulkSheetState extends State<BulkSheet> {
                 ),
               ),
             ],
-            if (widget.action == BulkAction.message)
+            if (widget.action == BulkAction.message) ...[
+              SegmentedButton<bool>(
+                key: const Key('bulk-message-audience'),
+                segments: [
+                  ButtonSegment(value: false, label: Text(context.tr('Responsables'))),
+                  ButtonSegment(value: true, label: Text(context.tr('Toute l\'équipe'))),
+                ],
+                selected: {_team},
+                onSelectionChanged: _busy ? null : (v) => setState(() => _team = v.first),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 key: const Key('bulk-message-text'),
                 controller: _message,
@@ -307,34 +346,15 @@ class _BulkSheetState extends State<BulkSheet> {
                 maxLength: 500,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  hintText: context.tr('Il arrive dans la cloche de leurs propriétaires et administrateurs.'),
+                  hintText: _team
+                      ? context.tr('Il arrive dans la cloche de chaque membre de leur équipe.')
+                      : context.tr('Il arrive dans la cloche de leurs propriétaires et administrateurs.'),
                 ),
               ),
+            ],
             if (widget.action == BulkAction.archive)
               Text(context.tr('Elles disparaissent de l\'accueil de leurs membres ; rien n\'est effacé. Le Journal les restaure d\'un « Annuler ».')),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('bulk-send'),
-                style: widget.action == BulkAction.archive
-                    ? FilledButton.styleFrom(backgroundColor: theme.colorScheme.error)
-                    : null,
-                onPressed: _busy ? null : _send,
-                child: _busy
-                    ? const SizedBox(
-                        width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(context.tr('{action} ({n})', {'action': cta, 'n': n}),
-                        style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

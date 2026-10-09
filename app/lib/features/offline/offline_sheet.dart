@@ -79,6 +79,7 @@ class OfflineSheet extends StatefulWidget {
       showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
         showDragHandle: true,
         builder: (_) =>
             OfflineSheet(org: org, prep: prep, askFirst: askFirst),

@@ -85,6 +85,7 @@ class PhoneField extends StatelessWidget {
     final chosen = await showModalBottomSheet<CountryCode>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _CountrySheet(selected: country),
     );
     if (chosen != null) onCountry(chosen);

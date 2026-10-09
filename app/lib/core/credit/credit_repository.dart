@@ -63,13 +63,16 @@ class DebtRow {
       );
 }
 
+/// One open debt's due date (117).
+typedef DebtDate = ({String debtId, String customerId, DateTime dueOn});
+
 /// The carnet de crédit, server side.
 ///
-/// Online-only for now, like the invoices: a debt is a claim against a named
-/// person and the amount that settles a dispute, so the server's copy is the
-/// one that counts. The offline path (queueing a credit sale in the outbox
-/// exactly as cash sales queue) is a later step, and the SQL is already
-/// idempotent by client_uuid to receive it.
+/// Online-only, like the invoices: a debt is a claim against a named person
+/// and the amount that settles a dispute, so the server's copy is the one
+/// that counts. A credit sale of articles is the exception — it is a sale
+/// (record_sale), kept in the outbox like any other when there is no
+/// signal, and its due date waits there behind it (LocalDb.queueDebtDue).
 class CreditRepository {
   CreditRepository(this._client);
 
@@ -106,16 +109,17 @@ class CreditRepository {
 
   /// The keys mirror `record_credit_sale()` in 024 exactly — the payload
   /// shape is asserted by test, because a drifted key fails on somebody's
-  /// phone days later, not here.
-  Future<void> recordCreditSale({
+  /// phone days later, not here. Answers the debt's id.
+  Future<String> recordCreditSale({
     required String orgId,
     required String customerName,
     required double amount,
     required String label,
     String? customerPhone,
     String? category,
+    String? clientUuid,
   }) async {
-    await _c.rpc('record_credit_sale', params: {
+    final id = await _c.rpc('record_credit_sale', params: {
       'p_org_id': orgId,
       'p_customer_name': customerName,
       'p_amount': amount,
@@ -124,21 +128,66 @@ class CreditRepository {
         'p_customer_phone': customerPhone,
       if (category != null && category.isNotEmpty) 'p_category': category,
       'p_recorded_by': _c.auth.currentUser?.id,
-      'p_client_uuid': _uuid.v4(),
+      'p_client_uuid': clientUuid ?? _uuid.v4(),
     });
+    return id as String;
   }
 
-  Future<void> recordPayment({
-    required String debtId,
+  /// When the customer said they would pay (117). By the debt's id (a sum
+  /// just written) or by the credit sale's client_uuid. Answers the debt's
+  /// id, or null when that sale is not on the server (yet).
+  Future<String?> setDue({
+    required String orgId,
+    required DateTime? dueOn,
+    String? debtId,
+    String? saleClientUuid,
+  }) async {
+    final id = await _c.rpc('set_debt_due', params: {
+      'p_org_id': orgId,
+      'p_due_on': dueOn == null ? null : day(dueOn),
+      'p_debt_id': ?debtId,
+      'p_sale_client_uuid': ?saleClientUuid,
+      'p_recorded_by': _c.auth.currentUser?.id,
+    });
+    return id as String?;
+  }
+
+  /// Each open debt that has a date (117), earliest first, with its
+  /// customer — for the carnet's « en retard » and each debt's date.
+  Future<List<DebtDate>> dueDates(String orgId) async {
+    final rows = await _c.rpc('debt_dates', params: {'p_org_id': orgId});
+    return [
+      for (final r in rows as List)
+        (
+          debtId: '${(r as Map)['debt_id']}',
+          customerId: '${r['customer_id']}',
+          dueOn: DateTime.parse('${r['due_on']}'),
+        ),
+    ];
+  }
+
+  /// A repayment by customer (117): spread over their open debts, oldest
+  /// first, in one transaction. [clientUuid] makes a retry harmless.
+  /// Answers what they still owe.
+  Future<double> repay({
+    required String orgId,
+    required String customerId,
     required double amount,
     String method = 'cash',
+    String? clientUuid,
   }) async {
-    await _c.rpc('record_debt_payment', params: {
-      'p_debt_id': debtId,
+    final left = await _c.rpc('repay_customer', params: {
+      'p_org_id': orgId,
+      'p_customer_id': customerId,
       'p_amount': amount,
       'p_method': method,
       'p_recorded_by': _c.auth.currentUser?.id,
-      'p_client_uuid': _uuid.v4(),
+      'p_client_uuid': clientUuid ?? _uuid.v4(),
     });
+    return (left as num).toDouble();
   }
+
+  /// yyyy-mm-dd, as Postgres reads a date.
+  static String day(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

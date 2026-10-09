@@ -6,6 +6,7 @@ import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// One account, every movement, with the balance after each.
 ///
@@ -85,6 +86,7 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [bellRoom],
         title: Text(widget.account.label),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(20),

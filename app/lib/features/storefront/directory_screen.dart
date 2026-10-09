@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../notify/notifications_screen.dart' show ShopperBell;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -463,6 +464,8 @@ class _AccountCorner extends StatelessWidget {
                   icon: const Icon(Icons.sports_motorsports_outlined),
                   onPressed: () => context.go(Routes.courier),
                 ),
+                // The shopper's bell (115): their orders and vitrines.
+                const ShopperBell(),
                 PopupMenuButton<String>(
                   tooltip: context.tr('Mon compte'),
                   icon: const Icon(Icons.person_outline),

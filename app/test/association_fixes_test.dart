@@ -69,7 +69,11 @@ class _Bell extends NotificationsRepository {
   @override
   Future<List<NotificationRow>> recent({int limit = 50}) async => rows;
   @override
-  Future<void> markAllRead() async {}
+  Future<List<NotificationRow>> inScope(NotifyScope scope, {int limit = 50}) async => rows;
+  @override
+  Future<void> markRead(Iterable<String> ids) async {}
+  @override
+  Future<NotificationCounts> counts() async => NotificationCounts.none;
 }
 
 class _Admin extends AdminRepository {
@@ -298,6 +302,7 @@ void main() {
           GoRoute(
             path: '/n',
             builder: (_, _) => NotificationsScreen(
+              scope: const NotifyScope.org('a1'),
               notify: _Bell([
                 _row('new_order', 'Nouvelle demande de Awa : 2 000,00 XOF',
                     params: {

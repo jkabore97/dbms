@@ -21,6 +21,7 @@ import {
   vapidAuthorization,
 } from "../src/webpush.js";
 import { deliver, payloadFor } from "../src/index.js";
+import { forgetAccessToken, readServiceAccount, signedAssertion } from "../src/fcm.js";
 
 const te = new TextEncoder();
 const td = new TextDecoder();
@@ -196,4 +197,138 @@ test("nobody subscribed means nothing sent and no key work", async () => {
   const result = await deliver({ recipient_id: "u1" }, env,
     { sendPush: async () => 201, fetch: async () => new Response("[]", { status: 200 }) });
   assert.deepEqual(result, { sent: 0, dropped: 0, failed: 0 });
+});
+
+// ------------------------------------------------------------------ 115
+
+test("a customer's ring opens their own orders; the platform's its queue", () => {
+  const env = { APP_ORIGIN: "https://app.example" };
+  assert.equal(payloadFor({ kind: "order_accepted", org_id: "o1", message: "m",
+    params: { to: "customer", booking: false } }, env).url, "https://app.example/mes-commandes");
+  assert.equal(payloadFor({ kind: "order_accepted", org_id: "o1", message: "m",
+    params: { to: "customer", booking: true } }, env).path, "/mon-compte/reservations");
+  assert.equal(payloadFor({ kind: "order_in_transit", org_id: "o1", message: "m", scope: "customer" }, env).path,
+    "/mes-commandes");
+  assert.equal(payloadFor({ kind: "new_order", org_id: "o1", message: "m", params: { to: "shop" } }, env).path,
+    "/o/o1/commandes");
+  assert.equal(payloadFor({ kind: "org_application", message: "m" }, env).path, "/demandes");
+  assert.equal(payloadFor({ kind: "spot_requested", message: "m" }, env).path, "/console/a-la-une");
+  assert.equal(payloadFor({ kind: "new_device", message: "m" }, env).path, "/securite");
+  assert.equal(payloadFor({ kind: "courier_received", message: "m", params: { to: "courier" } }, env).path,
+    "/devenir-livreur");
+  assert.equal(payloadFor({ kind: "delivery_available", org_id: "o1", message: "m", params: { to: "courier" } }, env).path,
+    "/livreur");
+  assert.equal(payloadFor({ kind: "test_push", message: "m", params: { to: "me" } }, env).path, "/");
+});
+
+async function serviceAccount() {
+  const pair = await crypto.subtle.generateKey(
+    { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+    true, ["sign", "verify"]);
+  const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
+  let s = "";
+  for (const b of pkcs8) s += String.fromCharCode(b);
+  const pem = `-----BEGIN PRIVATE KEY-----\n${btoa(s).replace(/(.{64})/g, "$1\n")}\n-----END PRIVATE KEY-----\n`;
+  return {
+    publicKey: pair.publicKey,
+    json: JSON.stringify({ type: "service_account", project_id: "mara-test", client_email: "push@mara-test.iam.gserviceaccount.com",
+      private_key: pem, token_uri: "https://oauth2.example/token" }),
+  };
+}
+
+test("the FCM assertion is signed by the service account, for the messaging scope", async () => {
+  const { publicKey, json } = await serviceAccount();
+  const sa = readServiceAccount({ FCM_SERVICE_ACCOUNT: json });
+  const jwt = await signedAssertion(sa, 1000);
+  const [h, c, sig] = jwt.split(".");
+  const claims = JSON.parse(td.decode(b64urlDecode(c)));
+  assert.deepEqual(claims, { iss: "push@mara-test.iam.gserviceaccount.com",
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.example/token", iat: 1000, exp: 4600 });
+  assert.equal(JSON.parse(td.decode(b64urlDecode(h))).alg, "RS256");
+  assert.ok(await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, b64urlDecode(sig), te.encode(`${h}.${c}`)));
+  assert.equal(readServiceAccount({}), null);
+  assert.equal(readServiceAccount({ FCM_SERVICE_ACCOUNT: "{not json" }), null);
+});
+
+test("deliver rings browsers and phones; phones stay dormant without the secret", async () => {
+  forgetAccessToken();
+  const { json } = await serviceAccount();
+  const devices = [
+    { endpoint: "https://p/alive", platform: "web", p256dh: "a", auth: "b", fcm_token: null },
+    { endpoint: "fcm:tok-ok", platform: "android", p256dh: null, auth: null, fcm_token: "tok-ok" },
+    { endpoint: "fcm:tok-gone", platform: "android", p256dh: null, auth: null, fcm_token: "tok-gone" },
+  ];
+  const calls = [];
+  const fetchStub = async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith("/push_devices")) return new Response(JSON.stringify(devices), { status: 200 });
+    if (url === "https://oauth2.example/token") {
+      return new Response(JSON.stringify({ access_token: "ya29.test", expires_in: 3600 }), { status: 200 });
+    }
+    if (url.startsWith("https://fcm.googleapis.com/v1/projects/mara-test/messages:send")) {
+      const msg = JSON.parse(init.body).message;
+      return msg.token === "tok-ok"
+        ? new Response("{}", { status: 200 })
+        : new Response(JSON.stringify({ error: { status: "NOT_FOUND", message: "UNREGISTERED" } }), { status: 404 });
+    }
+    return new Response("", { status: 204 });
+  };
+  const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const env = {
+    SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "service",
+    VAPID_PUBLIC_KEY: b64urlEncode(await crypto.subtle.exportKey("raw", pair.publicKey)),
+    VAPID_PRIVATE_KEY: JSON.stringify(await crypto.subtle.exportKey("jwk", pair.privateKey)),
+    APP_ORIGIN: "https://app.example",
+  };
+  const row = { id: "n1", recipient_id: "u1", kind: "order_ready", org_id: "o1", message: "Prête",
+    params: { to: "customer" } };
+
+  // Without FCM_SERVICE_ACCOUNT: the browser only, the phones untouched.
+  let result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
+  assert.deepEqual(result, { sent: 1, dropped: 0, failed: 0 });
+  assert.ok(!calls.some((c) => c.url.includes("fcm.googleapis.com") || c.url.includes("oauth2")));
+
+  calls.length = 0;
+  result = await deliver(row, { ...env, FCM_SERVICE_ACCOUNT: json }, { sendPush: async () => 201, fetch: fetchStub });
+  assert.deepEqual(result, { sent: 2, dropped: 1, failed: 0 });
+  const sends = calls.filter((c) => c.url.includes("messages:send"));
+  assert.equal(sends.length, 2);
+  assert.ok(sends.every((c) => c.init.headers.Authorization === "Bearer ya29.test"));
+  const sent = JSON.parse(sends[0].init.body).message;
+  assert.deepEqual(sent.notification, { title: "Mara", body: "Prête" });
+  assert.deepEqual(sent.data, { path: "/mes-commandes", url: "https://app.example/mes-commandes" });
+  assert.equal(sent.android.notification.channel_id, "mara_alerts");
+  // One token for both phones (cached), the gone one dropped by its endpoint.
+  assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 1);
+  assert.deepEqual(calls.filter((c) => c.url.endsWith("/remove_push_target")).map((c) => JSON.parse(c.init.body)),
+    [{ p_endpoint: "fcm:tok-gone" }]);
+  // The key and the token never travel anywhere but Google.
+  assert.ok(calls.filter((c) => c.url.startsWith("https://x.supabase.co")).every((c) => !c.init.body.includes("ya29")));
+});
+
+test("a token endpoint that fails is asked once per deliver, not once per phone", async () => {
+  forgetAccessToken();
+  const { json } = await serviceAccount();
+  const devices = [1, 2, 3].map((i) => ({ endpoint: `fcm:tok-${i}`, platform: "android",
+    p256dh: null, auth: null, fcm_token: `tok-${i}` }));
+  const calls = [];
+  const fetchStub = async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith("/push_devices")) return new Response(JSON.stringify(devices), { status: 200 });
+    if (url === "https://oauth2.example/token") return new Response("{}", { status: 500 });
+    return new Response("{}", { status: 200 });
+  };
+  const env = { SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "service",
+    FCM_SERVICE_ACCOUNT: json };
+  const row = { id: "n2", recipient_id: "u1", kind: "order_ready", org_id: "o1", message: "Prête",
+    params: { to: "customer" } };
+  let result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
+  assert.deepEqual(result, { sent: 0, dropped: 0, failed: 3 });
+  assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 1);
+  assert.ok(!calls.some((c) => c.url.includes("messages:send")));
+  assert.ok(!calls.some((c) => c.url.endsWith("/remove_push_target")));
+  // The next deliver asks again (a failure is remembered for one call only).
+  result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
+  assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 2);
 });

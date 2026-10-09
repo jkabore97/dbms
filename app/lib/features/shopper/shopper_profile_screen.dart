@@ -19,6 +19,10 @@ import '../account/alert_tone_tile.dart';
 import '../storefront/shop_style.dart';
 import '../storefront/whatsapp_verify_screen.dart';
 import 'report_sheet.dart';
+import '../../core/notify/notifications_repository.dart';
+import '../notify/notification_settings_sheet.dart';
+import '../notify/notifications_screen.dart' show NotificationBell;
+import '../notify/push_offer.dart';
 
 /// « Mon compte » for somebody who shops (113): the approved proposal, in
 /// the street's own look. Who they are (photo, name, WhatsApp number, city);
@@ -178,6 +182,12 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.canPop() ? context.pop() : context.go(Routes.directory),
       ),
+      // The shopper's bell (115): their orders, bookings, followed vitrines.
+      trailing: NotificationBell(
+        notify: AppScope.of(context).notify,
+        scope: NotifyScope.customer,
+        listRoute: Routes.myNotifications,
+      ),
       body: p == null
           ? (_error == null
               ? const Center(child: CircularProgressIndicator())
@@ -217,6 +227,13 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
         onName: () => context.push(Routes.myProfile),
         onVerify: p.verifiedPhone == null && p.verifyOn ? _verify : null,
         onCity: _busy ? null : _editCity,
+      ),
+      // The ring with the app closed (115), until this device rings; its
+      // space only when it is drawn.
+      PushOfferCard(
+        notify: scope.notify,
+        padding: const EdgeInsets.only(top: 16),
+        message: context.tr('Soyez prévenu quand votre commande avance, même l\'application fermée.'),
       ),
       _Section(context.tr('Mes achats'), [
         _Row(
@@ -274,6 +291,15 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           title: context.tr('Notifications'),
           subtitle: context.tr('Vos commandes et les nouveautés de vos vitrines'),
           onTap: () => context.push(Routes.myNotifications),
+        ),
+        // The switches per type, this device's ring and the test (115).
+        _Row(
+          key: const Key('shopper-notification-settings'),
+          icon: Icons.tune,
+          title: context.tr('Réglages des notifications'),
+          subtitle: context.tr('Ce qui sonne, et une notification test'),
+          onTap: () => NotificationSettingsSheet.open(context,
+              notify: scope.notify, audiences: {'customer', if (courier) 'courier'}),
         ),
         AlertToneTile(db: scope.db),
         _Row(
@@ -661,6 +687,8 @@ class _CityDialogState extends State<_CityDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Ma ville')),
       content: SizedBox(
         width: 380,
@@ -751,6 +779,8 @@ class _DeleteDialogState extends State<_DeleteDialog> {
     final ready = _typed.text.trim().toUpperCase() == word && !_busy;
     final error = Theme.of(context).colorScheme.error;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       icon: Icon(Icons.delete_forever_outlined, color: error),
       title: Text(context.tr('Supprimer mon compte ?')),
       content: SizedBox(

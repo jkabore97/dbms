@@ -12,6 +12,7 @@ import '../../core/courier/courier_dossier.dart';
 import '../../core/nav/router.dart';
 import '../courier/courier_words.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The platform decides who carries (056). Dossiers first (112): « À
 /// valider » — sent and waiting, oldest first, each opening its review
@@ -133,6 +134,7 @@ class _CouriersScreenState extends State<CouriersScreen> {
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

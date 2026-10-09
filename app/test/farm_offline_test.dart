@@ -62,11 +62,20 @@ void main() {
     await flush(tester);
   }
 
-  Future<void> tapKeys(WidgetTester tester, List<String> keys) async {
-    for (final key in keys) {
-      await tester.tap(find.widgetWithText(InkWell, key));
-      await tester.pump();
-    }
+  // One entry at a time (115): the home's buttons open the flows.
+  Future<void> next(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('flow-next')));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> newItem(WidgetTester tester, String name) async {
+    // The item did not exist a moment ago. Typing its name is what creates
+    // it, here and on the server.
+    await tester.tap(find.byKey(const Key('flow-option-__new__')));
+    await tester.pump();
+    await tester.enterText(find.byKey(const Key('farm-new-item')), name);
+    await tester.pump();
+    await next(tester);
   }
 
   group('the home screen', () {
@@ -98,28 +107,19 @@ void main() {
 
       await tester.tap(find.byTooltip('Réception de stock'));
       await flush(tester);
+      await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Quantité'),
-        '20',
-      );
+      await newItem(tester, 'Aliment ponte');
+      await tester.enterText(find.byKey(const Key('farm-quantity')), '20');
       await tester.pump();
-
-      // The item did not exist a moment ago. Typing its name is what creates
-      // it, here and on the server.
-      await tester.tap(find.text('Autre…'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextField, "Nom de l'article"),
-        'Aliment ponte',
-      );
-      await tester.tap(find.text('Valider'));
-      await tester.pumpAndSettle();
-
+      await next(tester);
       // 17 500 per sack.
-      await tapKeys(tester, ['1', '7', '5', '0', '0']);
-
-      await tester.tap(find.text('Enregistrer la réception'));
+      await tester.enterText(find.byKey(const Key('farm-price')), '17500');
+      await tester.pump();
+      await next(tester);
+      await next(tester); // « Aliment des animaux », as 009 filed it
+      await next(tester); // no supplier
+      await tester.tap(find.byKey(const Key('flow-save')));
       await flush(tester);
 
       // The physical ledger.
@@ -161,21 +161,16 @@ void main() {
 
       await tester.tap(find.byTooltip('Réception de stock'));
       await flush(tester);
-
-      await tester.tap(find.text('Autre…'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextField, "Nom de l'article"),
-        'Sciure',
-      );
-      await tester.tap(find.text('Valider'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.widgetWithText(TextField, 'Quantité'), '6');
+      await newItem(tester, 'Sciure');
+      await tester.enterText(find.byKey(const Key('farm-quantity')), '6');
       await tester.pump();
-
+      await next(tester);
       // The invoice is in the truck. The sacks are here.
-      await tester.tap(find.text('Enregistrer la réception'));
+      await next(tester); // no price
+      await next(tester); // no supplier
+      await tester.tap(find.byKey(const Key('flow-save')));
       await flush(tester);
 
       final events = await tester.runAsync(
@@ -194,23 +189,23 @@ void main() {
 
   testWidgets('feed distributed moves the count and not the money',
       (tester) async {
+    await tester.runAsync(() => db.cacheFarmItems(org.id, [
+          {'item_id': 'i1', 'name': 'Aliment ponte', 'unit': 'sac', 'on_hand': 10},
+        ]));
     await pumpHome(tester);
 
     await tester.tap(find.byTooltip('Aliment distribué'));
     await flush(tester);
-
-    await tester.tap(find.text('Autre…'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, "Nom de l'article"),
-      'Aliment ponte',
-    );
-    await tester.tap(find.text('Valider'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextField, 'Quantité'), '3');
+    await tester.tap(find.byKey(const Key('flow-option-Aliment ponte')));
     await tester.pump();
-    await tester.tap(find.text('Enregistrer'));
+    await next(tester);
+    await tester.enterText(find.byKey(const Key('farm-quantity')), '3');
+    await tester.pump();
+    await next(tester);
+    await next(tester); // no note
+    await tester.tap(find.byKey(const Key('flow-save')));
     await flush(tester);
 
     final events = await tester.runAsync(

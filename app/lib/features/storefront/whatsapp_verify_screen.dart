@@ -9,6 +9,7 @@ import '../../core/phone/country_codes.dart';
 import '../../core/theme/mara_mark.dart';
 import '../common/phone_field.dart';
 import 'shop_style.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Votre numéro WhatsApp » (F2): before the first order, once the
 /// platform asks for it (109's order_phone_verified), a shopper with no
@@ -142,6 +143,7 @@ class _WhatsAppVerifyScreenState extends State<WhatsAppVerifyScreen> {
       child: Builder(
         builder: (context) => Scaffold(
           appBar: AppBar(
+            actions: const [bellRoom],
             leading: IconButton(
               tooltip: context.tr('Fermer'),
               icon: const Icon(Icons.close),

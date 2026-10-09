@@ -9,6 +9,10 @@
          notifications, switchable off). A normal permission: granted at
          install, never asked. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The bell with the app closed (115, Firebase Cloud Messaging). On
+         Android 13 and later it is asked from the « Activer » button of the
+         push offer, never at start-up. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- The vitrine map: "utiliser ma position" places a shop on the map
          from where the phone is, and "près de moi" sorts the directory by
@@ -35,6 +39,11 @@
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="ocr,barcode" />
+        <!-- The channel MainActivity makes at start (115): FCM rings on it
+             rather than on a fallback channel of its own. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="mara_alerts" />
 
         <activity
             android:name=".MainActivity"

@@ -32,6 +32,9 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
       PUSH_WEBHOOK_SECRET: ${{ secrets.PUSH_WEBHOOK_SECRET }}
+      # Optional (115): the Firebase service account's JSON key. Without it
+      # Android phones are skipped and browsers ring as before.
+      FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
       # Variables: public by nature.
       VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}
       PUSH_SUBJECT: ${{ vars.PUSH_SUBJECT || 'mailto:kabore.boss@gmail.com' }}
@@ -84,6 +87,11 @@ jobs:
           printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/push/wrangler.toml
           printf '%s' "$VAPID_PRIVATE_KEY"         | npx --yes wrangler@4 secret put VAPID_PRIVATE_KEY         --config workers/push/wrangler.toml
           printf '%s' "$PUSH_WEBHOOK_SECRET"       | npx --yes wrangler@4 secret put PUSH_WEBHOOK_SECRET       --config workers/push/wrangler.toml
+          if [ -n "$FCM_SERVICE_ACCOUNT" ]; then
+            printf '%s' "$FCM_SERVICE_ACCOUNT"     | npx --yes wrangler@4 secret put FCM_SERVICE_ACCOUNT       --config workers/push/wrangler.toml
+          else
+            echo "FCM_SERVICE_ACCOUNT not set: Android phones stay quiet (browsers ring)."
+          fi
 
       - name: Say what is left to do
         run: |
@@ -92,6 +100,9 @@ jobs:
             echo
             echo "1. Set the repository variable \`PUSH_URL\` to the kaj-push Worker origin above and re-run *Deploy to Cloudflare* — the app then offers push alerts."
             echo "2. In Supabase: Database → Webhooks → Create: table \`notifications\`, event INSERT, HTTP POST to \`<PUSH_URL>/v1/notify\`, header \`Authorization: Bearer <PUSH_WEBHOOK_SECRET>\`."
+            if [ -z "$FCM_SERVICE_ACCOUNT" ]; then
+              echo "3. Android (optional): add the secret \`FCM_SERVICE_ACCOUNT\` (Firebase service account JSON) and re-run this workflow; build the APK with \`app/android/app/google-services.json\` — README, 'Push notifications'."
+            fi
             echo
             echo "Until both are done nothing rings — nothing breaks either."
           } >> "$GITHUB_STEP_SUMMARY"

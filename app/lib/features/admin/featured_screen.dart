@@ -6,6 +6,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/format/money.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The paid spots on the welcome page — "à la une".
 ///
@@ -177,6 +178,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

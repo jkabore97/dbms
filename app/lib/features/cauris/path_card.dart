@@ -470,6 +470,7 @@ class PathGate {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheet) => PathGateSheet(
         org: org,
         feature: feature,

@@ -234,6 +234,7 @@ class FarmRepository {
     required int headCount,
     String? breed,
     String? purpose,
+    DateTime? arrivedOn,
   }) async {
     final client = _requireClient();
     final id = await client.rpc('open_herd', params: {
@@ -243,6 +244,7 @@ class FarmRepository {
       'p_head_count': headCount,
       if (breed != null && breed.isNotEmpty) 'p_breed': breed,
       if (purpose != null && purpose.isNotEmpty) 'p_purpose': purpose,
+      if (arrivedOn != null) 'p_arrived_on': _date(arrivedOn),
     });
     return id as String;
   }
@@ -322,6 +324,7 @@ class FarmRepository {
     DateTime? harvestedOn,
     String? note,
     String? clientUuid,
+    bool toStock = false,
   }) async {
     final client = _requireClient();
     final id = await client.rpc('record_harvest', params: {
@@ -333,8 +336,34 @@ class FarmRepository {
       if (harvestedOn != null) 'p_harvested_on': _date(harvestedOn),
       if (note != null && note.isNotEmpty) 'p_note': note,
       'p_client_uuid': ?clientUuid,
+      // 119: into the farm's « À vendre » article of that crop, in the same
+      // transaction. Sent only when asked, so a server before 119 answers
+      // every other harvest exactly as it did.
+      if (toStock) 'p_to_stock': true,
     });
     return id as String;
+  }
+
+  /// The size of the plot a planting is on (019's plots.area, which
+  /// open_crop_cycle() does not take): written to the plot itself, the RLS
+  /// of 019 letting whoever may write for the farm. Nothing when the
+  /// planting has no plot.
+  Future<void> setPlotArea({
+    required String cropCycleId,
+    required double area,
+    required String unit, // 'ha' | 'm2'
+  }) async {
+    final client = _requireClient();
+    final row = await client
+        .from('crop_cycles')
+        .select('plot_id')
+        .eq('id', cropCycleId)
+        .maybeSingle();
+    final plotId = row?['plot_id'] as String?;
+    if (plotId == null) return;
+    await client
+        .from('plots')
+        .update({'area': area, 'area_unit': unit}).eq('id', plotId);
   }
 
   // ----------------------------------------------------------------

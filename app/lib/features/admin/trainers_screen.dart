@@ -5,6 +5,7 @@ import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Where the platform runs its trainers (038): the students sent out to teach
 /// businesses the app.
@@ -75,6 +76,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _TrainerSheet(console: widget.console, trainer: trainer),
     );
     if (mounted) await _load();
@@ -92,6 +94,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -176,6 +179,8 @@ class _AddTrainerDialogState extends State<_AddTrainerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Ajouter un formateur')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -252,6 +257,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
     final org = await showModalBottomSheet<OrgRow>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _BusinessPicker(console: widget.console),
     );
     if (org == null) return;

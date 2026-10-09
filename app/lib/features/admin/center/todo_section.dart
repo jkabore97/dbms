@@ -13,6 +13,7 @@ import '../../auth/org_picker_screen.dart' show iconForProfile, kindColour, kind
 import '../console_today.dart';
 import 'center_search.dart' show orderStatusLabel;
 import 'reports_sheet.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// « À faire » (105): the center's first page. What waits on the platform
 /// and what ends within seven days, as numbers to tap — each opens the
@@ -64,6 +65,7 @@ class _TodoSectionState extends State<TodoSection> {
   Future<void> _list(String key, String title) => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
         showDragHandle: true,
         builder: (_) => TodoListSheet(
           center: widget.center,
@@ -154,6 +156,7 @@ class _TodoSectionState extends State<TodoSection> {
                   },
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: RefreshIndicator(

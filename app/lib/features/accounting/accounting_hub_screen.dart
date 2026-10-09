@@ -9,6 +9,7 @@ import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The accounting section.
 ///
@@ -55,7 +56,7 @@ class AccountingHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).accounting)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(Strings.of(context).accounting)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -6,6 +6,7 @@ import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -184,7 +185,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(widget.title)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

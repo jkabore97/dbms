@@ -26,7 +26,12 @@
 //   PUSH_WEBHOOK_SECRET         what the database must present at /notify
 //   PUSH_SUBJECT                mailto:… the push services may write to
 //   APP_ORIGIN                  where a tapped notification opens
+//   FCM_SERVICE_ACCOUNT         (115, optional) a Firebase service account's
+//                               JSON key: Android phones ring through FCM
+//                               HTTP v1 (src/fcm.js). Absent, the phones'
+//                               rows are skipped and browsers ring as before.
 
+import { FcmTokenError, readServiceAccount, sendFcm } from "./fcm.js";
 import { importVapidPrivateKey, sendPush } from "./webpush.js";
 
 export default {
@@ -64,24 +69,48 @@ export default {
   },
 };
 
-/// One notifications row → a push to every browser of its recipient.
-export async function deliver(row, env, io = { sendPush, fetch }) {
-  const targets = await rpc(env, "push_targets", { p_recipient: row.recipient_id }, io.fetch);
+/// One notifications row → a push to every device of its recipient: each
+/// browser by Web Push, each Android phone by FCM (115). A database before
+/// 115 has no push_devices(); its browsers are read from push_targets().
+export async function deliver(row, env, io = { sendPush, sendFcm, fetch }) {
+  let targets = null;
+  try {
+    targets = await rpc(env, "push_devices", { p_recipient: row.recipient_id }, io.fetch);
+  } catch {
+    targets = null;
+  }
+  if (!Array.isArray(targets)) {
+    targets = await rpc(env, "push_targets", { p_recipient: row.recipient_id }, io.fetch);
+  }
   if (!Array.isArray(targets) || targets.length === 0) return { sent: 0, dropped: 0, failed: 0 };
 
-  const vapid = {
+  const browsers = targets.filter((t) => (t.platform || "web") === "web");
+  const phones = targets.filter((t) => t.platform === "android" && t.fcm_token);
+  const vapid = browsers.length === 0 ? null : {
     publicKey: env.VAPID_PUBLIC_KEY,
     privateKey: await importVapidPrivateKey(env.VAPID_PRIVATE_KEY),
     subject: env.PUSH_SUBJECT || "mailto:kabore.boss@gmail.com",
   };
+  // Dormant without its secret: the phones are not tried, nor counted.
+  const account = phones.length === 0 ? null : readServiceAccount(env);
   const payload = payloadFor(row, env);
 
   let sent = 0, dropped = 0, failed = 0;
-  for (const target of targets) {
+  // Google's token endpoint said no once: the other phones of this call
+  // are counted failed without asking it again (it would say the same).
+  let tokenFailed = false;
+  for (const target of [...browsers, ...(account ? phones : [])]) {
     let status;
+    if (target.platform === "android" && tokenFailed) {
+      failed++;
+      continue;
+    }
     try {
-      status = await io.sendPush(target, payload, vapid);
-    } catch {
+      status = target.platform === "android"
+        ? await (io.sendFcm || sendFcm)(target.fcm_token, payload, account, io.fetch)
+        : await io.sendPush(target, payload, vapid);
+    } catch (e) {
+      if (e instanceof FcmTokenError) tokenFailed = true;
       status = 0;
     }
     if (status === 201 || status === 200) {
@@ -107,6 +136,8 @@ export function payloadFor(row, env) {
   // A followed vitrine's news (113) opens that vitrine; a shopper's
   // report answered, their own notifications.
   const slug = row.params && typeof row.params.slug === "string" ? row.params.slug : "";
+  const to = (row.params && typeof row.params.to === "string" ? row.params.to : "") ||
+    (row.scope === "customer" ? "customer" : "");
   if (kind === "vitrine_news" && /^[a-z0-9-]{1,80}$/.test(slug)) path = `/s/${slug}`;
   else if (kind === "report_handled") path = "/mon-compte/notifications";
   // 112: the platform's bell for a courier's application opens the
@@ -117,14 +148,31 @@ export function payloadFor(row, env) {
   else if (kind === "courier_refused" || kind === "courier_photo") path = "/devenir-livreur";
   // 111: an older app's request answered at once opens the creation.
   else if (kind === "application_update_app") path = "/creer-mon-activite";
+  // 115: the dossier received opens its progress; the platform's own
+  // bells their queue; the account's its security.
+  else if (kind === "courier_received") path = "/devenir-livreur";
+  else if (kind === "org_application") path = "/demandes";
+  else if (kind.startsWith("spot_") && !row.org_id) path = "/console/a-la-une";
+  else if (kind === "new_device") path = "/securite";
   else if (kind.startsWith("courier_") || kind === "delivery_available") path = "/livreur";
-  else if (row.org_id && (kind.startsWith("order") || kind.startsWith("delivery"))) path = `/o/${row.org_id}/commandes`;
+  // A customer's order or booking (to: customer, 099) opens their own
+  // orders — never the shop's, which they cannot open.
+  else if (to === "customer" && (kind.startsWith("order") || kind.startsWith("delivery"))) {
+    path = row.params?.booking === true ? "/mon-compte/reservations" : "/mes-commandes";
+  }
+  // The shop's own: a new order (« new_order », which the bare prefix
+  // missed — it opened the home) and every order or delivery line.
+  else if (row.org_id && (kind === "new_order" || kind.startsWith("order") || kind.startsWith("delivery"))) {
+    path = `/o/${row.org_id}/commandes`;
+  }
   else if (row.org_id) path = `/o/${row.org_id}`;
   return {
     title: "Mara",
     // The database's sentences were written when the app was Kaj.
     body: (row.message || "").replace(/\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)/g, "Mara"),
     url: `${origin}${path}`,
+    // The app's own address, for the Android app's tap (115).
+    path,
     tag: row.id ? `kaj-${row.id}` : undefined,
   };
 }

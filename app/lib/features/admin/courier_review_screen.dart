@@ -10,6 +10,7 @@ import '../../core/nav/router.dart' show Routes;
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../courier/courier_words.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Livreurs à valider » › one dossier (112): the selfie beside the
 /// identity document, the vehicle, the quartiers and the hours, the number
@@ -176,6 +177,7 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
             onPressed: _busy ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       bottomNavigationBar: d != null && d.status == 'pending' && !d.isApprovedCourier

@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/kaj_card.dart';
 import '../../core/nav/url_tabs.dart';
+import 'farm_animal_flows.dart';
 import 'farm_corrections.dart';
+import 'farm_crop_flows.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/db/local_db.dart';
+import '../../core/retail/retail_repository.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Animals that are not chickens, and things that grow in the ground.
 ///
@@ -33,11 +37,21 @@ class LivestockScreen extends StatefulWidget {
     super.key,
     required this.org,
     required this.farm,
+    required this.db,
+    this.retail,
     this.initialTab = 0,
   });
 
   final OrgSummary org;
   final FarmRepository farm;
+
+  /// What an animal cost is booked through (the outbox), one entry at a
+  /// time (115).
+  final LocalDb db;
+
+  /// The farm's « À vendre » articles, which a harvest kept for sale is
+  /// counted onto (119). Null offers only « Pour la maison ».
+  final RetailRepository? retail;
   final int initialTab;
 
   @override
@@ -84,75 +98,31 @@ class _LivestockScreenState extends State<LivestockScreen>
     }
   }
 
-  Future<void> _openHerd() async {
-    final added = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _NewHerdSheet(org: widget.org, farm: widget.farm),
-    );
-    if (added == true) await _load();
+  // One entry at a time (115): « Ajouter des animaux », « Ajouter une
+  // culture », what happens to a group, and a harvest.
+  Future<void> _after(Future<bool?> flow) async {
+    if (await flow == true && mounted) await _load();
   }
 
-  Future<void> _openCrop() async {
-    final added = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _NewCropSheet(org: widget.org, farm: widget.farm),
-    );
-    if (added == true) await _load();
-  }
+  Future<void> _openHerd() => _after(FarmAnimalFlow.add(context,
+      db: widget.db, org: widget.org, farm: widget.farm));
 
-  Future<void> _herdEvent(Herd herd, String kind, String title) async {
-    final quantity = await showModalBottomSheet<double>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _QuantitySheet(
-        title: title,
-        subtitle: context.tr('{label} — {headCount} têtes', {'label': herd.label, 'headCount': herd.headCount}),
-        label: kind == 'weight' ? context.tr('Poids (kg)') : context.tr('Nombre'),
-      ),
-    );
-    if (quantity == null) return;
+  Future<void> _openCrop() =>
+      _after(FarmCropFlow.add(context, org: widget.org, farm: widget.farm));
 
-    await _run(() => widget.farm.recordHerdEvent(
-          orgId: widget.org.id,
-          herdId: herd.id,
-          kind: kind,
-          quantity: quantity,
-          clientUuid: const Uuid().v4(),
-        ));
-  }
+  Future<void> _herdEvent(Herd herd, String kind) => _after(
+      FarmAnimalFlow.herdEvent(context,
+          db: widget.db,
+          org: widget.org,
+          farm: widget.farm,
+          herd: herd,
+          kind: kind));
 
-  Future<void> _harvest(CropCycle cycle) async {
-    final quantity = await showModalBottomSheet<double>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _QuantitySheet(
-        title: context.tr('Récolte'),
-        subtitle:
-            '${cycle.crop}${cycle.plotName == null ? '' : ' — ${cycle.plotName}'}',
-        label: context.tr('Quantité ({unit})', {'unit': cycle.unit}),
-      ),
-    );
-    if (quantity == null) return;
-
-    await _run(() => widget.farm.recordHarvest(
-          orgId: widget.org.id,
-          cropCycleId: cycle.id,
-          quantity: quantity,
-          clientUuid: const Uuid().v4(),
-        ));
-  }
-
-  Future<void> _run(Future<void> Function() action) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await action();
-      await _load();
-    } catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
-    }
-  }
+  Future<void> _harvest(CropCycle cycle) => _after(FarmCropFlow.harvest(context,
+      org: widget.org,
+      farm: widget.farm,
+      retail: widget.retail,
+      cropId: cycle.id));
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +130,7 @@ class _LivestockScreenState extends State<LivestockScreen>
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [bellRoom],
         title: Text(context.tr('Élevage et cultures')),
         bottom: TabBar(
           controller: tabs,
@@ -239,20 +210,20 @@ class _LivestockScreenState extends State<LivestockScreen>
                       children: [
                         OutlinedButton.icon(
                           onPressed: () =>
-                              _herdEvent(herd, 'birth', 'Naissances'),
+                              _herdEvent(herd, 'birth'),
                           icon: const Icon(Icons.add_circle_outline, size: 18),
                           label: Text(context.tr('Naissance')),
                         ),
                         OutlinedButton.icon(
                           onPressed: () =>
-                              _herdEvent(herd, 'mortality', 'Pertes'),
+                              _herdEvent(herd, 'mortality'),
                           icon:
                               const Icon(Icons.remove_circle_outline, size: 18),
                           label: Text(context.tr('Perte')),
                         ),
                         OutlinedButton.icon(
                           onPressed: () =>
-                              _herdEvent(herd, 'vaccination', 'Vaccination'),
+                              _herdEvent(herd, 'vaccination'),
                           icon: const Icon(Icons.vaccines_outlined, size: 18),
                           label: Text(context.tr('Vaccin')),
                         ),
@@ -411,379 +382,4 @@ class _LivestockScreenState extends State<LivestockScreen>
           ],
         ),
       );
-}
-
-class _NewHerdSheet extends StatefulWidget {
-  const _NewHerdSheet({required this.org, required this.farm});
-
-  final OrgSummary org;
-  final FarmRepository farm;
-
-  @override
-  State<_NewHerdSheet> createState() => _NewHerdSheetState();
-}
-
-class _NewHerdSheetState extends State<_NewHerdSheet> {
-  final _label = TextEditingController();
-  final _species = TextEditingController();
-  final _breed = TextEditingController();
-  final _purpose = TextEditingController();
-  final _count = TextEditingController();
-
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    for (final c in [_label, _species, _count]) {
-      c.addListener(() => setState(() {}));
-    }
-  }
-
-  @override
-  void dispose() {
-    for (final c in [_label, _species, _breed, _purpose, _count]) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  int? get _headCount => int.tryParse(_count.text.trim());
-
-  bool get _ready =>
-      !_busy &&
-      _label.text.trim().isNotEmpty &&
-      _species.text.trim().isNotEmpty &&
-      (_headCount ?? 0) > 0;
-
-  Future<void> _save() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await widget.farm.openHerd(
-        orgId: widget.org.id,
-        species: _species.text.trim(),
-        label: _label.text.trim(),
-        headCount: _headCount!,
-        breed: _breed.text.trim(),
-        purpose: _purpose.text.trim(),
-      );
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _error = describeError(error);
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.tr('Nouveau groupe'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _label,
-              decoration: InputDecoration(
-                labelText: context.tr('Nom du groupe'),
-                helperText: context.tr('Troupeau A, Chèvres du bas-fond…'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _species,
-              decoration: InputDecoration(
-                labelText: context.tr('Espèce'),
-                // Free text on purpose: a compiled list is wrong for the
-                // first farmer with guinea fowl.
-                helperText: context.tr('Caprin, bovin, ovin, porcin, pintade…'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _count,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Nombre de têtes'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _breed,
-              decoration: InputDecoration(
-                labelText: context.tr('Race (facultatif)'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _purpose,
-              decoration: InputDecoration(
-                labelText: context.tr('Destination (facultatif)'),
-                helperText: context.tr('Lait, engraissement, reproduction…'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: _ready ? _save : null,
-              child: Text(context.tr('Créer le groupe')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NewCropSheet extends StatefulWidget {
-  const _NewCropSheet({required this.org, required this.farm});
-
-  final OrgSummary org;
-  final FarmRepository farm;
-
-  @override
-  State<_NewCropSheet> createState() => _NewCropSheetState();
-}
-
-class _NewCropSheetState extends State<_NewCropSheet> {
-  final _crop = TextEditingController();
-  final _variety = TextEditingController();
-  final _plot = TextEditingController();
-  final _yield = TextEditingController();
-  DateTime _planted = DateTime.now();
-  DateTime? _expected;
-
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _crop.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    for (final c in [_crop, _variety, _plot, _yield]) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await widget.farm.openCropCycle(
-        orgId: widget.org.id,
-        crop: _crop.text.trim(),
-        plotName: _plot.text.trim(),
-        variety: _variety.text.trim(),
-        plantedOn: _planted,
-        expectedOn: _expected,
-        expectedYield: double.tryParse(_yield.text.trim().replaceAll(',', '.')),
-      );
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _error = describeError(error);
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.tr('Nouvelle culture'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _crop,
-              decoration: InputDecoration(
-                labelText: context.tr('Culture'),
-                helperText: context.tr('Oignon, maïs, tomate…'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _variety,
-              decoration: InputDecoration(
-                labelText: context.tr('Variété (facultatif)'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _plot,
-              decoration: InputDecoration(
-                labelText: context.tr('Parcelle'),
-                // Created from its name if it does not exist, so nobody has
-                // to define a field before planting in it.
-                helperText: context.tr('Créée automatiquement si elle est nouvelle.'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _yield,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Rendement attendu en kg (facultatif)'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _planted,
-                  firstDate: DateTime(DateTime.now().year - 2),
-                  lastDate: DateTime(DateTime.now().year + 2),
-                  helpText: 'Date de semis',
-                );
-                if (picked != null) setState(() => _planted = picked);
-              },
-              icon: const Icon(Icons.event),
-              label: Text(
-                  'Semé le ${DateFormat('d MMM y', 'fr_FR').format(_planted)}'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate:
-                      _expected ?? DateTime.now().add(const Duration(days: 90)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(DateTime.now().year + 3),
-                  helpText: 'Récolte prévue',
-                );
-                if (picked != null) setState(() => _expected = picked);
-              },
-              icon: const Icon(Icons.event_available),
-              label: Text(_expected == null
-                  ? context.tr('Récolte prévue (facultatif)')
-                  : 'Récolte prévue le ${DateFormat('d MMM y', 'fr_FR').format(_expected!)}'),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: _busy || _crop.text.trim().isEmpty ? null : _save,
-              child: Text(context.tr('Enregistrer la culture')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// One number, asked for once. Used for a birth, a loss, a weighing and a
-/// harvest, because all four are "how many" and a separate screen for each
-/// would be four screens saying the same thing.
-class _QuantitySheet extends StatefulWidget {
-  const _QuantitySheet({
-    required this.title,
-    required this.subtitle,
-    required this.label,
-  });
-
-  final String title;
-  final String subtitle;
-  final String label;
-
-  @override
-  State<_QuantitySheet> createState() => _QuantitySheetState();
-}
-
-class _QuantitySheetState extends State<_QuantitySheet> {
-  final _value = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _value.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _value.dispose();
-    super.dispose();
-  }
-
-  double? get _number =>
-      double.tryParse(_value.text.trim().replaceAll(',', '.'));
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.title, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(widget.subtitle, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _value,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: widget.label,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: (_number ?? 0) > 0
-                ? () => Navigator.of(context).pop(_number)
-                : null,
-            child: Text(context.tr('Enregistrer')),
-          ),
-        ],
-      ),
-    );
-  }
 }

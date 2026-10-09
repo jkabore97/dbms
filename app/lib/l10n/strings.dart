@@ -1001,53 +1001,11 @@ abstract class Strings {
   /// **'Aucune production enregistrée.\nRecevez d\'abord vos ingrédients en stock, puis enregistrez ici ce que vous fabriquez avec.'**
   String get noProduction;
 
-  /// No description provided for @whatWasMade.
-  ///
-  /// In fr, this message translates to:
-  /// **'Produit fabriqué'**
-  String get whatWasMade;
-
-  /// No description provided for @whatWasMadeHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Gâteau, savon, beurre de karité…'**
-  String get whatWasMadeHint;
-
-  /// No description provided for @quantityMade.
-  ///
-  /// In fr, this message translates to:
-  /// **'Quantité fabriquée'**
-  String get quantityMade;
-
-  /// No description provided for @ingredientsUsed.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ingrédients utilisés'**
-  String get ingredientsUsed;
-
-  /// No description provided for @ingredient.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ingrédient'**
-  String get ingredient;
-
   /// No description provided for @quantity.
   ///
   /// In fr, this message translates to:
   /// **'Quantité'**
   String get quantity;
-
-  /// No description provided for @addIngredient.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter un ingrédient'**
-  String get addIngredient;
-
-  /// No description provided for @estimatedUnitCost.
-  ///
-  /// In fr, this message translates to:
-  /// **'Coût de revient estimé : {amount} par unité'**
-  String estimatedUnitCost(String amount);
 
   /// No description provided for @unitCostIs.
   ///
@@ -1072,48 +1030,6 @@ abstract class Strings {
   /// In fr, this message translates to:
   /// **'Refaire'**
   String get makeAgain;
-
-  /// No description provided for @searchProduct.
-  ///
-  /// In fr, this message translates to:
-  /// **'Rechercher un article…'**
-  String get searchProduct;
-
-  /// No description provided for @noProductFound.
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun article trouvé. Recevez-le d\'abord en stock.'**
-  String get noProductFound;
-
-  /// No description provided for @salePriceOptional.
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix de vente (facultatif)'**
-  String get salePriceOptional;
-
-  /// No description provided for @belowUnitCost.
-  ///
-  /// In fr, this message translates to:
-  /// **'Attention : en dessous du coût de revient.'**
-  String get belowUnitCost;
-
-  /// No description provided for @enterProductMade.
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez ce qui a été fabriqué.'**
-  String get enterProductMade;
-
-  /// No description provided for @enterQuantityMade.
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez la quantité fabriquée.'**
-  String get enterQuantityMade;
-
-  /// No description provided for @enterIngredients.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajoutez au moins un ingrédient avec sa quantité.'**
-  String get enterIngredients;
 
   /// No description provided for @save.
   ///

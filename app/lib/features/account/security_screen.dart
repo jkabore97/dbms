@@ -9,6 +9,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/security/security_repository.dart';
 import '../../core/security/security_settings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Compte › Sécurité.
 ///
@@ -246,7 +247,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final others = _sessions.where((s) => !s.current).length;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Sécurité'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Sécurité'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -542,6 +543,8 @@ class _ChangeCodeDialogState extends State<_ChangeCodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Changer le code')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -617,6 +620,8 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Changer le mot de passe')),
       content: Column(
         mainAxisSize: MainAxisSize.min,

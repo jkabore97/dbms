@@ -106,6 +106,7 @@ class UnlockSheet extends StatefulWidget {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => UnlockSheet(
         org: org,
         feature: feature,

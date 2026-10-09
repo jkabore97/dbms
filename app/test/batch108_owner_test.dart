@@ -16,8 +16,9 @@ import 'package:kaj_app/features/capture/confirm_products_screen.dart';
 import 'package:kaj_app/features/cauris/path_card.dart';
 import 'package:kaj_app/features/cauris/unlock_sheet.dart';
 import 'package:kaj_app/features/home/home_nav.dart';
-import 'package:kaj_app/features/invoicing/new_invoice_screen.dart';
-import 'package:kaj_app/features/retail/sale_sheet.dart';
+import 'package:kaj_app/features/invoicing/invoice_flow.dart';
+import 'package:kaj_app/features/common/step_flow.dart';
+import 'package:kaj_app/features/retail/sale_flow.dart';
 import 'package:kaj_app/l10n/strings.dart';
 
 /// The owner's list (108), on the screens: « Nouvelle vente » says what to
@@ -127,23 +128,23 @@ void main() {
   setUpAll(() async => initializeDateFormatting('fr_FR', null));
 
   group('E4 — « Nouvelle vente » says what to do', () {
+    // Since 115 the sale is the « Vente » flow: the line is its first
+    // question's, right under it.
     testWidgets('the shop: the articles the customer asks for', (tester) async {
       await _tall(tester);
-      await tester.pumpWidget(_app(SaleSheet(orgId: 'o1', retail: _Till())));
+      await tester.pumpWidget(_app(SaleFlow(orgId: 'o1', retail: _Till(), store: MemoryFlowStore())));
       await tester.pump();
-      expect(find.text('Nouvelle vente'), findsOneWidget);
-      final line = find.byKey(const Key('sale-helper'));
-      expect(tester.widget<Text>(line).data, 'Choisissez les articles demandés par le client ici');
-      // Right under the title.
-      expect(tester.getTopLeft(line).dy, greaterThan(tester.getTopLeft(find.text('Nouvelle vente')).dy));
+      final line = find.text('Choisissez les articles demandés par le client ici');
+      expect(line, findsOneWidget);
+      expect(tester.getTopLeft(line).dy,
+          greaterThan(tester.getTopLeft(find.byKey(const Key('flow-question'))).dy));
     });
 
     testWidgets('the farm (its carnet de crédit): the products', (tester) async {
       await _tall(tester);
-      await tester.pumpWidget(_app(SaleSheet(orgId: 'f1', retail: _Till(), farm: true, initialMethod: 'credit')));
+      await tester.pumpWidget(_app(SaleFlow(orgId: 'f1', retail: _Till(), farm: true, initialMethod: 'credit', store: MemoryFlowStore())));
       await tester.pump();
-      expect(tester.widget<Text>(find.byKey(const Key('sale-helper'))).data,
-          'Choisissez les produits demandés par le client ici');
+      expect(find.text('Choisissez les produits demandés par le client ici'), findsOneWidget);
     });
   });
 
@@ -310,7 +311,7 @@ void main() {
       await _tall(tester);
       final nav = BusinessNav();
       addTearDown(nav.dispose);
-      await tester.pumpWidget(framed(nav, NewInvoiceScreen(org: _shop, invoicing: InvoicingRepository(null))));
+      await tester.pumpWidget(framed(nav, InvoiceFlow(org: _shop, invoicing: InvoicingRepository(null), store: MemoryFlowStore())));
       await tester.pump();
       expect(nav.hasUnsaved, isFalse);
       await tester.enterText(find.byType(TextField).first, 'Hôtel Liberté');
@@ -323,8 +324,9 @@ void main() {
         lines: const [InvoiceLine(description: 'Savon', quantity: 20, unitPrice: 750)]);
       final fix = BusinessNav();
       addTearDown(fix.dispose);
-      await tester.pumpWidget(framed(fix, NewInvoiceScreen(
-          key: const Key('fix'), org: _shop, invoicing: InvoicingRepository(null), revisionOf: doc)));
+      await tester.pumpWidget(framed(fix, InvoiceFlow(
+          key: const Key('fix'), org: _shop, invoicing: InvoicingRepository(null), revisionOf: doc,
+          store: MemoryFlowStore())));
       await tester.pump();
       expect(fix.hasUnsaved, isFalse, reason: 'opened with the document: nothing changed yet');
       await tester.enterText(find.byType(TextField).first, 'Hôtel Indépendance');

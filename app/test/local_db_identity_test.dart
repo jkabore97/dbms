@@ -99,11 +99,12 @@ void main() {
     await db.cacheOrgs(const [
       OrgSummary(id: 'org-1', name: 'Grace Chapel', profile: 'church'),
     ]);
-    await db.recordContribution(
+    await db.recordEntry(
       orgId: 'org-1',
       amount: 50000,
-      kind: 'tithe',
-      method: 'cash',
+      direction: 'in',
+      label: 'Cotisation',
+      category: 'Cotisations',
     );
 
     await db.clearIdentity();

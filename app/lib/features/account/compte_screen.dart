@@ -16,11 +16,13 @@ import '../../core/cauris/feature_states.dart';
 import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
 import 'alert_tone_tile.dart';
+import '../notify/notification_settings_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// One screen for everything that used to be scattered across a long popup
 /// menu: who you are, the business you are in, help, and the legal pages.
@@ -138,7 +140,7 @@ class CompteScreen extends StatelessWidget {
       // « Admin » (104): the command center, for a platform admin.
       appBar: AppBar(
         title: Text(Strings.of(context).account),
-        actions: const [AdminPill(), SizedBox(width: 8)],
+        actions: const [AdminPill(), SizedBox(width: 8), bellRoom],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -180,6 +182,17 @@ class CompteScreen extends StatelessWidget {
               _EnglishSwitch(controller: scope.localeController),
               // The app's own ring: which tone, and the buzz (batch 100).
               AlertToneTile(db: scope.db),
+              // What rings, this device's ring with the app closed, and
+              // « M'envoyer une notification test » (115).
+              if (live)
+                _Tile(
+                  key: const Key('compte-notifications'),
+                  icon: Icons.notifications_outlined,
+                  title: context.tr('Notifications'),
+                  subtitle: context.tr('Ce qui sonne, et une notification test'),
+                  onTap: () => NotificationSettingsSheet.open(context,
+                      notify: scope.notify, audiences: const {'shop', 'customer'}),
+                ),
               // Working with no signal: the business's admins prepare it.
               if (admin) OfflineTile(org: org),
             ],

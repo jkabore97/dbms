@@ -21,7 +21,21 @@ class _Farm extends RetailRepository {
 
   final items = <Product>[];
   final created = <String>[];
+  final prices = <double?>[];
+  final received = <double>[];
   final saved = <Map<String, Object?>>[];
+
+  @override
+  Future<void> receive({
+    required String orgId,
+    required String productId,
+    required double quantity,
+    double? unitCost,
+    DateTime? expiresOn,
+    String method = 'cash',
+    String? clientUuid,
+  }) async =>
+      received.add(quantity);
 
   @override
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async =>
@@ -42,6 +56,7 @@ class _Farm extends RetailRepository {
   }) async {
     expect(isService, isFalse, reason: 'À vendre creates articles');
     created.add(name);
+    prices.add(salePrice);
     return 'new-${created.length}';
   }
 
@@ -76,8 +91,8 @@ class _Farm extends RetailRepository {
     });
     items.add(Product(
       id: productId,
-      name: name ?? '',
-      salePrice: salePrice ?? 0,
+      name: name ?? created.last,
+      salePrice: salePrice ?? prices.last ?? 0,
       quantity: quantity ?? 0,
       unit: unit,
       isPublished: isPublished ?? false,
@@ -136,24 +151,46 @@ void main() {
     await tester.pump();
     expect(find.textContaining('Rien en vente'), findsOneWidget);
 
+    // « Mettre en vente » is the « Ajouter un produit » flow (115), one
+    // question at a time, already on « pour vendre ».
     await tester.tap(find.byKey(const Key('for-sale-add')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('for-sale-name')), 'Œufs frais');
-    await tester.enterText(find.byKey(const Key('for-sale-price')), '2500');
-    await tester.tap(find.widgetWithText(ChoiceChip, 'plateau'));
+    Future<void> next() async {
+      await tester.tap(find.byKey(const Key('flow-next')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text('Quel produit ?'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('article-name')), 'Œufs frais');
     await tester.pump();
-    await tester.enterText(find.byKey(const Key('for-sale-quantity')), '12');
-    await tester.ensureVisible(find.byKey(const Key('for-sale-save')));
-    await tester.tap(find.byKey(const Key('for-sale-save')));
+    await next();
+    await tester.enterText(find.byKey(const Key('article-price')), '2500');
+    await tester.pump();
+    await next();
+    await next(); // no buying price: grown, not bought
+    await tester.enterText(find.byKey(const Key('article-quantity')), '12');
+    await tester.tap(find.byKey(const ValueKey('article-unit-plateau')));
+    await tester.pump();
+    await next();
+    await next(); // no alert
+    await next(); // on the vitrine, by default
+    await next(); // not an ingredient
+    await next(); // ready now
+    expect(find.byKey(const Key('flow-summary')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('flow-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Œufs frais ajouté'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('flow-finish')));
     await tester.pumpAndSettle();
 
     expect(farm.created, ['Œufs frais']);
+    expect(farm.prices, [2500]);
+    expect(farm.received, isEmpty, reason: 'grown, not bought: no purchase');
     final s = farm.saved.single;
-    expect(s['price'], 2500);
     expect(s['unit'], 'plateau');
     expect(s['quantity'], 12);
     expect(s['published'], isTrue, reason: 'on the vitrine by default');
-    expect(s['clear'], isTrue, reason: 'there now: no date');
+    expect(s['from'], isNull, reason: 'there now: no date');
     // The list reads it back the way a buyer would.
     expect(find.textContaining('/ plateau'), findsOneWidget);
     expect(find.textContaining('12 disponibles'), findsOneWidget);

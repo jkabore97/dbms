@@ -14,6 +14,7 @@ import '../../account/compte_screen.dart';
 import '../../home/business_shell.dart';
 import '../../pro/pro_strip.dart';
 import 'look_only_view.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// « Voir comme le commerçant » — for an association, its « responsable »:
 /// the name of the owner's view, in the fiche's button and on the view.
@@ -91,6 +92,7 @@ class _MerchantPreviewScreenState extends State<MerchantPreviewScreen> {
       key: const Key('merchant-preview'),
       backgroundColor: const Color(0xFF2A2927),
       appBar: AppBar(
+        actions: const [bellRoom],
         backgroundColor: maraDeep,
         foregroundColor: maraPaper,
         title: Text(previewTitle(context, widget.org.profile),

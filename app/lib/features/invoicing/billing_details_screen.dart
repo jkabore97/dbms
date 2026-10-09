@@ -7,6 +7,7 @@ import '../../core/phone/country_codes.dart';
 import '../common/phone_field.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What goes at the top of every invoice this business issues.
 ///
@@ -144,7 +145,7 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
     final ownerOnly = owner ? null : context.tr('Réservé au propriétaire');
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('En-tête de facture'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('En-tête de facture'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

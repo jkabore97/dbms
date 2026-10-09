@@ -5,6 +5,7 @@
 # repository variables and sets the secrets with `wrangler secret put`:
 #
 #   secrets   SUPABASE_SERVICE_ROLE_KEY   VAPID_PRIVATE_KEY   PUSH_WEBHOOK_SECRET
+#             FCM_SERVICE_ACCOUNT (optional, 115: Android phones through FCM)
 #   vars      SUPABASE_URL  VAPID_PUBLIC_KEY  PUSH_SUBJECT  APP_ORIGIN  ALLOWED_ORIGINS
 
 name = "kaj-push"

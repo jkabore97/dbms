@@ -134,6 +134,8 @@ void main() {
           .map((t) => (t.title as Text).data)
           .toList();
       expect(sheet, [
+        // Money out (115), for whoever records.
+        'Dépense',
         'Mon chemin',
         'Mes services',
         'Production',

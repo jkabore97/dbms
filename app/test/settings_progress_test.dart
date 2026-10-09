@@ -149,7 +149,7 @@ void main() {
     for (var i = 0; i < 4; i++) {
       expect(find.byKey(Key('articles-step-$i')), findsOneWidget);
     }
-    expect(find.text('Une entrée de stock'), findsOneWidget);
+    expect(find.text('Un article à la fois'), findsOneWidget);
     expect(find.byKey(const Key('articles-count')), findsOneWidget);
     expect(find.text('Ajouter un article'), findsOneWidget);
   });

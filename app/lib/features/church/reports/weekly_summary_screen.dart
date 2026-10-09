@@ -10,6 +10,7 @@ import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// The Sunday summary.
 ///
@@ -152,6 +153,7 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

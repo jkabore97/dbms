@@ -9,6 +9,8 @@ import '../../core/db/local_db.dart';
 import 'report_shell.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The categories money falls into, and what has landed in each.
 ///
@@ -97,6 +99,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
         await showModalBottomSheet<({String name, String type, String? note})>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => const _NewAccountSheet(),
     );
     if (result == null) return;
@@ -181,6 +184,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               ),
               onPressed: () => setState(() => _showRetired = !_showRetired),
             ),
+          bellRoom,
         ],
       ),
       floatingActionButton: widget.canEdit
@@ -273,6 +277,8 @@ class _RenameAccountDialogState extends State<_RenameAccountDialog> {
     final account = widget.account;
 
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Renommer')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -427,17 +433,25 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
     final theme = Theme.of(context);
     final name = _nameController.text.trim();
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: name.isEmpty
+                  ? null
+                  : () => Navigator.pop(context, (
+                        name: name,
+                        type: _type,
+                        note: _noteController.text.trim().isEmpty
+                            ? null
+                            : _noteController.text.trim(),
+                      )),
+              child: Text(context.tr('Créer')),
+            ),
+          ),
+      children: [
           Text(context.tr('Nouveau compte'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 20),
           TextField(
@@ -483,24 +497,7 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: name.isEmpty
-                  ? null
-                  : () => Navigator.pop(context, (
-                        name: name,
-                        type: _type,
-                        note: _noteController.text.trim().isEmpty
-                            ? null
-                            : _noteController.text.trim(),
-                      )),
-              child: Text(context.tr('Créer')),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

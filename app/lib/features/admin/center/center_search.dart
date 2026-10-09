@@ -28,14 +28,20 @@ Future<void> showCenterSearch(BuildContext context, CommandCenterRepository cent
               child: CenterSearch(center: center, outer: context),
             ),
           )
-        : Dialog.fullscreen(child: CenterSearch(center: center, outer: context)),
+        // A phone: the whole screen, its list filling what the keyboard
+        // leaves (never a panel sized to its content that the keyboard
+        // can leave blank — A6).
+        : Dialog.fullscreen(child: CenterSearch(center: center, outer: context, fill: true)),
   );
 }
 
 class CenterSearch extends StatefulWidget {
-  const CenterSearch({super.key, required this.center, required this.outer});
+  const CenterSearch({super.key, required this.center, required this.outer, this.fill = false});
 
   final CommandCenterRepository center;
+
+  /// Full screen (a phone): the answers fill the height above the keyboard.
+  final bool fill;
 
   /// The page under the search, where what is chosen opens.
   final BuildContext outer;
@@ -113,6 +119,7 @@ class _CenterSearchState extends State<CenterSearch> {
       context: widget.outer,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => OrderSheet(order: o, outer: widget.outer),
     );
   }
@@ -132,7 +139,7 @@ class _CenterSearchState extends State<CenterSearch> {
     return Material(
       color: theme.colorScheme.surface,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: widget.fill ? MainAxisSize.max : MainAxisSize.min,
         children: [
           Container(
             color: maraDeep,
@@ -172,8 +179,11 @@ class _CenterSearchState extends State<CenterSearch> {
           ),
           if (_busy) const LinearProgressIndicator(minHeight: 2),
           Flexible(
+            fit: widget.fill ? FlexFit.tight : FlexFit.loose,
             child: ListView(
-              shrinkWrap: true,
+              key: const Key('center-search-list'),
+              shrinkWrap: !widget.fill,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
               children: [
                 if (_error != null)

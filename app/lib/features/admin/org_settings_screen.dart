@@ -27,6 +27,7 @@ import '../cauris/unlock_sheet.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The business's own details.
 ///
@@ -512,6 +513,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Mara Pro sans date de fin ?')),
           content: Text(
             context.tr('Sans date, cette entreprise reste Pro jusqu\'à ce que vous changiez sa formule à la main. Pour un paiement, indiquez plutôt la date de fin.'),
@@ -583,6 +586,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (dialog) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Suspendre cette entreprise ?')),
           content: Text(
             context.tr('Ses membres pourront encore tout consulter, mais ne pourront plus rien enregistrer — ni vente, ni dépense, ni stock — jusqu\'à la réactivation. Les données ne sont pas supprimées.'),
@@ -688,6 +693,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       context: context,
       builder: (context) => OwnedController(
         builder: (context, controller) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Lien Google Maps')),
           content: TextField(
             controller: controller,
@@ -1320,8 +1327,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 'Laissez « Sur la vitrine » coché : vos clients le voient et le commandent.'),
           ]
         : <(IconData, String, String)>[
-            (Icons.add_box_outlined, 'Une entrée de stock',
-                'Dans « Articles », le bouton « Entrée de stock » : le nom, combien vous en avez, le prix. L\'article est créé.'),
+            (Icons.add_box_outlined, 'Un article à la fois',
+                'Dans « Articles », le bouton « Ajouter un article » : la photo, le nom, le prix, combien vous en avez — une question à la fois.'),
             (Icons.playlist_add, 'Plusieurs à la fois',
                 '« Ajout multiple » : un article par ligne, par exemple « Savon 20 300 ».'),
             (Icons.photo_camera_outlined, 'Une photo',
@@ -2321,7 +2328,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
+        appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paramètres de l\'activité'))),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -2329,7 +2336,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // A desk: the index on the left, the open part beside it.
     if (wide) {
       return Scaffold(
-        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
+        appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paramètres de l\'activité'))),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2356,7 +2363,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // index, not out of the settings.
     if (open == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(context.tr('Paramètres de l\'activité'))),
+        appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paramètres de l\'activité'))),
         body: _index(theme, wide: false),
       );
     }
@@ -2367,6 +2374,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          actions: const [bellRoom],
           leading: IconButton(
             tooltip: context.tr('Retour aux paramètres'),
             icon: const Icon(Icons.arrow_back),
@@ -2748,6 +2756,8 @@ class _RateDialogState extends State<RateDialog> {
   Widget build(BuildContext context) {
     final home = widget.homeCurrency == 'XOF' ? 'FCFA' : widget.homeCurrency;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(
         widget.existing == null ? context.tr('Ajouter une monnaie') : context.tr('Modifier le taux'),
       ),

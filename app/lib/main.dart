@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/auth/two_step.dart';
 import 'core/nav/app_scope.dart';
+import 'core/nav/back_first.dart';
 import 'core/nav/router.dart';
 import 'core/nav/session.dart';
 import 'core/nav/url_strategy.dart';
@@ -30,6 +31,8 @@ import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/notify/alert_tone.dart';
 import 'core/notify/notifications_repository.dart';
+import 'core/notify/push_client.dart';
+import 'core/notify/push_setup.dart';
 import 'core/observability/crash_reporting.dart';
 import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
@@ -295,12 +298,21 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   DateTime? _awayAt;
   bool _deviceRegistered = false;
 
+  /// The bell, once for the app (115): its live counts (notify.bell) are
+  /// shared by every bell and every bar, so it is never rebuilt.
+  late final NotificationsRepository _notify =
+      NotificationsRepository(widget.auth.client);
+  StreamSubscription<String>? _pushTaps;
+
   void _onSession() {
     if (_session.phase != SessionPhase.ready || _deviceRegistered) return;
     _deviceRegistered = true;
     unawaited(() async {
       final id = await _security.deviceId();
       await _securityApi.registerDevice(id, SecuritySettings.deviceLabel());
+      // A device already allowed but missing from the book is written back
+      // (115) — silently, nothing is asked.
+      await PushSetup.ensure(_notify);
       _security.setPolicy(await _securityApi.lockPolicy());
     }());
   }
@@ -326,6 +338,11 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           (widget.auth.isConfigured ? TwoStep(widget.auth.client) : null),
     );
     _router = buildRouter(_session);
+    // Before the router is first drawn: the back and the browser's history
+    // are heard here first (114).
+    BackFirst.instance.attach(_router);
+    // A tapped push on Android opens what it is about (115).
+    _pushTaps = PushClient.opened.listen((path) => _router.push(path));
     // Kicks the state machine off. The router is already listening, so the
     // first phase it settles on is the first address the person sees.
     _session.addListener(_onSession);
@@ -359,6 +376,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       }
       unawaited(_session.refresh());
       unawaited(_update.check());
+      if (_session.phase == SessionPhase.ready) unawaited(PushSetup.ensure(_notify));
       unawaited(() async {
         _security.setPolicy(await _securityApi.lockPolicy());
       }());
@@ -368,6 +386,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_pushTaps?.cancel());
+    _notify.bell.dispose();
+    BackFirst.instance.detach(_router);
     _refreshTimer?.cancel();
     _updateTimer?.cancel();
     _update.dispose();
@@ -403,7 +424,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       credit: CreditRepository(widget.auth.client),
       tontine: TontineRepository(widget.auth.client),
       production: ProductionRepository(widget.auth.client),
-      notify: NotificationsRepository(widget.auth.client),
+      notify: _notify,
       analytics: AnalyticsRepository(widget.auth.client),
       sync: widget.sync,
       security: _security,
@@ -455,6 +476,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
           // Which business opens is decided by the signed-in user's
           // memberships; the URL only says which of those to show.
           routerConfig: _router,
+          // Back closes what is open first, in the whole app (114).
+          scaffoldMessengerKey: BackFirst.instance.messenger,
+          onNavigationNotification: BackFirst.instance.onNavigationNotification,
         ),
       ),
     );

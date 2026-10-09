@@ -6,6 +6,7 @@ import '../../core/analytics/models.dart';
 import '../../core/format/money.dart';
 import 'widgets.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What the platform admin sees: the whole platform in a line of totals, then
 /// every business ranked by what it takes. Backed by the two SECURITY DEFINER
@@ -92,6 +93,7 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

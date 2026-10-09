@@ -187,6 +187,11 @@ const _shopOrg = OrgSummary(
   slug: 'salon-awa',
 );
 
+Future<void> _next(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('flow-next')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUpAll(() async {
     sqfliteFfiInit();
@@ -589,15 +594,23 @@ void main() {
         reason: 'goods stay in Articles',
       );
 
+      // A new one is the « Service » flow (115), one question at a time.
       await tester.tap(find.byKey(const Key('services-add')));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const Key('service-name')), 'Tresses');
-      await tester.enterText(find.byKey(const Key('service-price')), '5000');
-      await tester.tap(find.widgetWithText(ChoiceChip, 'heure'));
-      await tester.tap(find.byKey(const Key('service-from')));
+      await tester.enterText(find.byKey(const Key('service-flow-name')), 'Tresses');
       await tester.pump();
-      await tester.ensureVisible(find.byKey(const Key('service-save')));
-      await tester.tap(find.byKey(const Key('service-save')));
+      await _next(tester);
+      await tester.tap(find.byKey(const Key('flow-option-true'))); // à partir de
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('service-flow-price')), '5000');
+      await tester.tap(find.byKey(const ValueKey('service-flow-unit-heure')));
+      await tester.pump();
+      await _next(tester);
+      await _next(tester); // no duration
+      await _next(tester); // on the vitrine
+      await tester.tap(find.byKey(const Key('flow-save')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('flow-finish')));
       await tester.pumpAndSettle();
 
       expect(books.created, ['Tresses']);
@@ -638,16 +651,22 @@ void main() {
       await tester.tap(find.byKey(const Key('services-add')));
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.byKey(const Key('service-name')),
+        find.byKey(const Key('service-flow-name')),
         'shampoing',
       );
-      await tester.enterText(find.byKey(const Key('service-price')), '500');
-      await tester.ensureVisible(find.byKey(const Key('service-save')));
-      await tester.tap(find.byKey(const Key('service-save')));
+      await tester.pump();
+      await _next(tester);
+      await tester.enterText(find.byKey(const Key('service-flow-price')), '500');
+      await tester.pump();
+      await _next(tester);
+      await _next(tester);
+      await _next(tester);
+      await tester.tap(find.byKey(const Key('flow-save')));
       await tester.pumpAndSettle();
       expect(books.created, isEmpty);
       expect(books.saved, isEmpty);
-      expect(find.text('Un article porte déjà ce nom'), findsOneWidget);
+      expect(find.text('Un article porte déjà ce nom'), findsOneWidget,
+          reason: 'said under « Enregistrer », the summary stays');
     });
 
     testWidgets('a database before 098: said, and nothing is added', (

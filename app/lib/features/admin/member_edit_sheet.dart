@@ -5,6 +5,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/l10n/tr.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The admin edit of one member's own information (moved from the old
 /// People screen into Équipe, 101). Pre-filled from the roster, saved
@@ -78,18 +79,34 @@ class _EditMemberSheetState extends State<EditMemberSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final locale = context.trLanguage == 'en' ? 'en' : 'fr_FR';
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const Key('member-save'),
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      children: [
             Text(context.tr('Informations — {label}', {'label': widget.member.label}),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
@@ -162,28 +179,7 @@ class _EditMemberSheetState extends State<EditMemberSheet> {
                   : context.tr('Né(e) le {date}',
                       {'date': DateFormat('d MMMM y', locale).format(_dob!)})),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('member-save'),
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

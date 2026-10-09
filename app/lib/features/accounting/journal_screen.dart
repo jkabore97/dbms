@@ -6,6 +6,7 @@ import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Every entry, newest first, in the words it was written in.
 ///
@@ -114,7 +115,7 @@ class _JournalScreenState extends State<JournalScreen> {
     final summaryOnly = widget.org.visibility == 'summary';
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Journal'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Journal'))),
       body: Column(
         children: [
           const SizedBox(height: 12),

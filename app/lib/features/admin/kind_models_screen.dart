@@ -10,6 +10,7 @@ import '../../core/storefront/storefront_repository.dart' show StorefrontStyle;
 import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import 'vitrine_plus_card.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Types d'activité » in the command center (107): one tab per kind —
 /// shops, farms, associations (a legacy church is an association) — and in
@@ -45,6 +46,7 @@ class KindModelsScreen extends StatelessWidget {
       length: kinds.length,
       child: Scaffold(
         appBar: AppBar(
+          actions: const [bellRoom],
           title: Text(context.tr('Types d\'activité')),
           bottom: TabBar(
             key: const Key('kinds-tabs'),
@@ -712,6 +714,8 @@ class _SettingDialogState extends State<_SettingDialog> {
     final n = int.tryParse(_field.text.trim());
     final valid = n != null && n >= r.min && n <= r.max;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(widget.label),
       content: Column(
         mainAxisSize: MainAxisSize.min,

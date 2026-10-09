@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/auth_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The invited person's side: type the code, see whose business it is, join.
 ///
@@ -107,7 +108,7 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
     final busy = _checking || _joining;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('J\'ai un code'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('J\'ai un code'))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

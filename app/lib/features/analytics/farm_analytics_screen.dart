@@ -10,6 +10,7 @@ import '../../core/theme/mara_mark.dart';
 import 'charts.dart';
 import 'widgets.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// A farm's analyses (101), drawn like the shop's: what came in and went
 /// out, this month against the last; what sold best and worst; where the
@@ -107,6 +108,7 @@ class _FarmAnalyticsScreenState extends State<FarmAnalyticsScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

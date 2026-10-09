@@ -147,6 +147,18 @@ class OnboardingRepository {
     return Invitation.fromRow(Map<String, dynamic>.from(rows.first as Map));
   }
 
+  /// The salary said with the invitation (118), written on the person's
+  /// payroll row when they join. 0 clears it. Refused by the server for a
+  /// responsibility not below the caller's, unless the caller is the owner.
+  Future<void> setInvitationSalary(String invitationId, double amount,
+      {String period = 'month'}) async {
+    await _requireClient().rpc('set_invitation_salary', params: {
+      'p_invitation_id': invitationId,
+      'p_amount': amount,
+      'p_period': period,
+    });
+  }
+
   static String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}-'
       '${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';

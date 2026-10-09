@@ -4,6 +4,7 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../storefront/shop_style.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The topics of « Signaler un problème » (113's problem_reports), in order.
 const reportTopics = ['order', 'vitrine', 'payment', 'delivery', 'app', 'other'];
@@ -96,14 +97,23 @@ class _ReportSheetState extends State<ReportSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('report-send'),
+                onPressed: _busy ? null : _send,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: ShopStyle.paper))
+                    : Text(context.tr('Envoyer à Mara')),
+              ),
+            ),
+      children: [
             Text(context.tr('Signaler un problème'),
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ShopStyle.ink)),
             const SizedBox(height: 6),
@@ -139,23 +149,7 @@ class _ReportSheetState extends State<ReportSheet> {
                 errorMaxLines: 3,
               ),
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                key: const Key('report-send'),
-                onPressed: _busy ? null : _send,
-                child: _busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: ShopStyle.paper))
-                    : Text(context.tr('Envoyer à Mara')),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

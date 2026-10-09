@@ -65,6 +65,8 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(rule.label),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -121,6 +123,8 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Prix en cauris')),
         content: Column(
           mainAxisSize: MainAxisSize.min,

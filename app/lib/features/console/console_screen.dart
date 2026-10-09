@@ -9,6 +9,7 @@ import 'activity_log_tab.dart';
 import 'database_tab.dart';
 import 'device_tab.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The super admin's console.
 ///
@@ -55,6 +56,7 @@ class _ConsoleScreenState extends State<ConsoleScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: const [bellRoom],
         title: Text(context.tr('Console')),
         bottom: TabBar(
           controller: tabs,

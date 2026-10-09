@@ -11,8 +11,11 @@ import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
 import '../../../core/nav/session.dart';
 import '../../../core/theme/mara_mark.dart';
+import '../../../core/notify/notifications_repository.dart';
 import '../admin_pill.dart';
+import '../../notify/notifications_screen.dart' show NotificationBell;
 import 'center_search.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// One page of a section: its name and its address. [leaves] marks a page
 /// outside the center (the street).
@@ -411,6 +414,17 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
+              // The platform's own bell (115): requests, couriers, spots.
+              if (AppScope.maybeOf(context)?.notify case final notify?)
+                IconButtonTheme(
+                  data: IconButtonThemeData(
+                      style: IconButton.styleFrom(foregroundColor: maraPaper)),
+                  child: NotificationBell(
+                    notify: notify,
+                    scope: NotifyScope.platform,
+                    listRoute: Routes.consoleNotifications,
+                  ),
+                ),
               IconButton(
                 key: const Key('center-leave'),
                 tooltip: context.tr('Quitter le centre admin'),
@@ -691,7 +705,7 @@ class _NotForYou extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       key: const Key('center-not-for-you'),
-      appBar: AppBar(),
+      appBar: AppBar(actions: const [bellRoom], ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),

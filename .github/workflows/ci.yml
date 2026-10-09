@@ -783,6 +783,26 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch113.sql
 
+      - name: Prove the bell for everyone — each row in its list and each list counting its own, the same words as before, Mara's message to the responsables or the whole team, a refusal with its reason, switches that write nothing when off, Android tokens in the Worker's book only, the test notification, the shopper's and the courier's new bells, the bar's counts per kind, the doors (115)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch115.sql
+
+      - name: Prove the carnet's due date and the repayment by customer — no date as before and the carnet read as 104, a sum dated by its debt and a credit sale by its client_uuid, oldest debt first and once only, never past what is owed, the doors (117)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch117.sql
+
+      - name: Prove the salary said at the invitation — none as before, written on the claim by code or by the sign-in sweep (an hourly row left alone), 103's rule on who says it, never in the way of the claim (118)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch118.sql
+
+      - name: Prove a harvest kept in stock — as before without the word, the farm's article of that crop gains it (made off the vitrine at price 0, or brought back), counted once, never booked, another unit or a service refused, the doors (119)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch119.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,
@@ -825,6 +845,7 @@ jobs:
       - run: node --check workers/tenant-router/src/index.js
       - run: node --check workers/push/src/index.js
       - run: node --check workers/push/src/webpush.js
+      - run: node --check workers/push/src/fcm.js
       # The push Worker's crypto has a real test: it plays the browser and
       # decrypts what the Worker encrypted, and the push service that checks
       # the VAPID signature. Node's WebCrypto is the Worker's WebCrypto.

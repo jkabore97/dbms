@@ -6,10 +6,13 @@ import '../../../core/console/command_center.dart';
 import '../../../core/errors.dart';
 import '../../../core/format/money.dart' show parseAmount;
 import '../../../core/l10n/tr.dart';
+import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
+import '../../notify/push_check.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'todo_section.dart' show featureName;
+import '../../../core/notify/bell_room.dart';
 
 /// How a setting is typed in.
 enum SettingType {
@@ -319,6 +322,7 @@ class _SettingsSectionState extends State<SettingsSection> {
             onPressed: _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: _error != null
@@ -338,6 +342,16 @@ class _SettingsSectionState extends State<SettingsSection> {
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
+                    // The bell with the app closed, checked end to end (115).
+                    if (AppScope.maybeOf(context)?.notify case final notify?) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+                        child: Text(context.tr('Notifications'),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800)),
+                      ),
+                      PushCheck(notify: notify),
+                    ],
                     for (final g in groups) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
@@ -530,6 +544,8 @@ class _EditDialogState extends State<_EditDialog> {
         def.type == SettingType.km ||
         def.type == SettingType.pct;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(settingLabel(context, def.key)),
       content: SizedBox(
         width: 420,

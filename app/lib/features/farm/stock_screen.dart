@@ -7,8 +7,11 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
 import '../church/entry_controls.dart' show promptForName;
-import 'farm_sheets.dart';
+import '../../core/nav/app_scope.dart';
+import '../retail/article_flow.dart';
+import 'farm_flows.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What is in the store, and what is about to run out.
 ///
@@ -123,13 +126,9 @@ class _StockScreenState extends State<StockScreen> {
     }
   }
 
-  Future<void> _record(Widget sheet) async {
-    final recorded = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => sheet,
-    );
-    if (recorded == true) await _load();
+  /// Réception, Perte (115): one entry at a time, on this phone first.
+  Future<void> _record(Future<bool?> flow) async {
+    if (await flow == true && mounted) await _load();
   }
 
   @override
@@ -145,23 +144,29 @@ class _StockScreenState extends State<StockScreen> {
             IconButton(
               tooltip: context.tr('Perte'),
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => _record(MoveStockSheet(
-                db: widget.db,
-                orgId: widget.org.id,
-                kind: 'wasted',
-              )),
+              onPressed: () => _record(FarmStockFlow.use(context,
+                  db: widget.db, org: widget.org, wasted: true)),
             ),
+          bellRoom,
         ],
       ),
+      // « Ajouter » (115): first « C'est pour vendre » (an article, « À
+      // vendre ») or « C'est une fourniture » (on to « Réception », here).
       floatingActionButton: _canWrite
           ? FloatingActionButton.extended(
-              onPressed: () => _record(ReceiveStockSheet(
-                db: widget.db,
-                orgId: widget.org.id,
-                currency: widget.org.currency,
-              )),
-              icon: const Icon(Icons.local_shipping_outlined),
-              label: Text(context.tr('Réception')),
+              key: const Key('stock-add'),
+              onPressed: () {
+                final scope = AppScope.maybeOf(context);
+                _record(scope == null
+                    ? FarmStockFlow.receive(context, db: widget.db, org: widget.org)
+                    : ArticleFlow.open(context,
+                        org: widget.org,
+                        retail: scope.retail,
+                        capture: scope.capture,
+                        db: widget.db));
+              },
+              icon: const Icon(Icons.add),
+              label: Text(context.tr('Ajouter')),
             )
           : null,
       body: ReportBody(

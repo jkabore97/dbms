@@ -4,6 +4,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Choosing the colours everybody in this business will see.
 ///
@@ -108,7 +109,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
       child: Builder(builder: (context) {
         final previewTheme = Theme.of(context);
         return Scaffold(
-          appBar: AppBar(title: Text(context.tr('Couleurs'))),
+          appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Couleurs'))),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [

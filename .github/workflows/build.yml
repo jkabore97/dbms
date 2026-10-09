@@ -80,6 +80,10 @@ jobs:
       KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
       KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
       KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
+      # Android push (README: "Push notifications"): the Firebase project's
+      # google-services.json, whole, as a secret. Empty means a build with no
+      # Android push — it still builds.
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
     steps:
       - uses: actions/checkout@v4
 
@@ -145,6 +149,13 @@ jobs:
             echo "keyPassword=$KAJ_KEY_PASSWORD"
           } > key.properties
           echo "Upload key installed; this run is publishable." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install Firebase's config (Android push)
+        if: env.GOOGLE_SERVICES_JSON != ''
+        working-directory: app/android
+        run: |
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+          echo "google-services.json installed: Android push is in this build." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Note an unsigned build
         if: env.KAJ_KEYSTORE_BASE64 == ''

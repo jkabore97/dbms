@@ -13,11 +13,15 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/auth/models.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/invoicing/models.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../common/step_flow.dart';
+import 'invoice_flow.dart';
 import '../accounting/report_shell.dart';
 import 'invoice_paper.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The invoice as a document somebody can actually be handed.
 ///
@@ -204,9 +208,18 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
     final doc = _doc;
     if (doc == null) return;
 
-    final newId = await context.push<String>(
-      Routes.inside(widget.org.id, 'factures/corriger'),
-      extra: doc,
+    // « Facture » (115) opened filled from this document; its replacement's
+    // id comes back as soon as the server issued it.
+    String? newId;
+    await StepFlow.push(
+      context,
+      InvoiceFlow(
+        org: widget.org,
+        invoicing: widget.invoicing,
+        retail: AppScope.maybeOf(context)?.retail,
+        revisionOf: doc,
+        onSaved: (id) => newId = id,
+      ),
     );
     if (newId != null && mounted) {
       context.pushReplacement(
@@ -329,6 +342,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
                 ),
               ],
             ),
+          bellRoom,
         ],
       ),
       body: _loading
@@ -402,6 +416,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
     // ledger never carries a negative receivable.
     final tooMuch = _amount > widget.outstanding;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Paiement reçu')),
       content: Column(
         mainAxisSize: MainAxisSize.min,

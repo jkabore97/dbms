@@ -10,8 +10,12 @@ import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/invoicing/models.dart';
 import '../accounting/report_shell.dart';
 import '../../core/errors.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../common/step_flow.dart';
+import 'invoice_flow.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Invoicing, for whichever business is open.
 ///
@@ -103,12 +107,19 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     if (PathGate.locks(context, widget.org, 'invoices')) {
       return PathGate.guard(context, widget.org, 'invoices', () {});
     }
-    final id = await context
-        .push<String>(Routes.inside(widget.org.id, 'factures/nouvelle'));
-    if (id == null || !mounted) return;
-    // Straight to the document: raising an invoice and sending it are one
-    // errand, and a list is not what somebody wanted when they pressed create.
-    await _openDocument(id);
+    // « Facture » (115), one question a screen. « Voir et partager » on its
+    // last screen goes straight to the document: raising an invoice and
+    // sending it are one errand.
+    final saved = await StepFlow.push(
+      context,
+      InvoiceFlow(
+        org: widget.org,
+        invoicing: widget.invoicing,
+        retail: AppScope.maybeOf(context)?.retail,
+        onOpen: _openDocument,
+      ),
+    );
+    if (saved == true && mounted) await _load();
   }
 
   Future<void> _openDocument(String id) async {
@@ -143,6 +154,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               icon: const Icon(Icons.storefront_outlined),
               tooltip: context.tr('En-tête de facture'),
             ),
+          bellRoom,
         ],
       ),
       body: _loading

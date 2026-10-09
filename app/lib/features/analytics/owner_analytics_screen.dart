@@ -7,6 +7,7 @@ import '../../core/format/money.dart';
 import 'charts.dart';
 import 'widgets.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What the owner sees: what sells more or less, when the shop earns, and how
 /// the takings trend — the "smart things" asked for, over a window they choose.
@@ -93,6 +94,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

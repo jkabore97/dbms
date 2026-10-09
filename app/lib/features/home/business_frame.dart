@@ -142,29 +142,8 @@ class _BusinessFrameState extends State<BusinessFrame> {
   }
 
   /// « Quitter sans enregistrer ? » — true to leave.
-  Future<bool> _leaveUnsaved(BuildContext themed) async {
-    final leave = await showDialog<bool>(
-      context: themed,
-      builder: (dialog) => AlertDialog(
-        key: const Key('unsaved-dialog'),
-        title: Text(dialog.tr('Quitter sans enregistrer ?')),
-        content: Text(dialog.tr('Ce que vous avez saisi ici sera perdu.')),
-        actions: [
-          TextButton(
-            key: const Key('unsaved-stay'),
-            onPressed: () => Navigator.pop(dialog, false),
-            child: Text(dialog.tr('Rester')),
-          ),
-          FilledButton(
-            key: const Key('unsaved-leave'),
-            onPressed: () => Navigator.pop(dialog, true),
-            child: Text(dialog.tr('Quitter')),
-          ),
-        ],
-      ),
-    );
-    return leave == true;
-  }
+  Future<bool> _leaveUnsaved(BuildContext themed) =>
+      UnsavedInput.askLeave(themed);
 
   @override
   Widget build(BuildContext context) {
@@ -353,6 +332,32 @@ class UnsavedInput extends StatefulWidget {
 
   final bool Function() isDirty;
   final Widget child;
+
+  /// « Quitter sans enregistrer ? » (Rester / Quitter) — true to leave.
+  /// The bar's question, and the step flows' (115) on their first step.
+  static Future<bool> askLeave(BuildContext context) async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        key: const Key('unsaved-dialog'),
+        title: Text(dialog.tr('Quitter sans enregistrer ?')),
+        content: Text(dialog.tr('Ce que vous avez saisi ici sera perdu.')),
+        actions: [
+          TextButton(
+            key: const Key('unsaved-stay'),
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(dialog.tr('Rester')),
+          ),
+          FilledButton(
+            key: const Key('unsaved-leave'),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(dialog.tr('Quitter')),
+          ),
+        ],
+      ),
+    );
+    return leave == true;
+  }
 
   @override
   State<UnsavedInput> createState() => _UnsavedInputState();

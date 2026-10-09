@@ -21,19 +21,24 @@ import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../admin/admin_pill.dart' show AdminPill;
+import '../home/home_counts.dart';
 import '../home/home_nav.dart';
+import '../notify/push_offer.dart';
 import 'close_day_sheet.dart';
-import 'record_entry_sheet.dart';
+import '../common/step_flow.dart';
+import '../money/expense_flow.dart';
+import '../money/income_flow.dart';
 import 'record_transfer_sheet.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Israel's home screen.
 ///
 /// Three design decisions, all deliberate:
 ///
-/// 1. The primary action is enormous and always visible. Recording an offering
+/// 1. The primary action is enormous and always visible. Recording money in
 ///    is the reason the app exists; it is never more than one tap away.
 /// 2. Today's total is shown at the top, updating instantly from local data.
 ///    Progress you can see is progress you keep making.
@@ -109,7 +114,13 @@ class ChurchHomeScreen extends StatefulWidget {
 }
 
 class _ChurchHomeScreenState extends State<ChurchHomeScreen>
-    with HomeDoorbell<ChurchHomeScreen> {
+    with HomeDoorbell<ChurchHomeScreen>, HomeCounts<ChurchHomeScreen> {
+  @override
+  String get countsOrgId => widget.org?.id ?? '';
+
+  @override
+  bool get countsShown => !(widget.org?.isObserverOnly ?? true);
+
   // The doorbell (100): a new demande on the association's vitrine rings
   // here, as an order does on a shop's home, for its administrators.
   @override
@@ -176,19 +187,28 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     });
   }
 
-  /// Money in and money out are the same sheet with the direction flipped, so
-  /// the only thing that varies between the two buttons is what they mean.
-  Future<void> _openRecordSheet(String direction) async {
-    final session = AppScope.maybeOf(context)?.session;
-    final recorded = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => RecordEntrySheet(
-        db: widget.db,
-        orgId: widget.orgId,
-        direction: direction,
-        currency: widget.org?.currency ?? 'XOF',
-      ),
+  /// « Recette » and « Dépense » (115): each its own flow, one question a
+  /// screen, written to the phone first as the sheet was.
+  Future<void> _openRecord(String direction) async {
+    final scope = AppScope.maybeOf(context);
+    final session = scope?.session;
+    final currency = widget.org?.currency ?? 'XOF';
+    final recorded = await StepFlow.push(
+      context,
+      direction == 'in'
+          ? IncomeFlow(
+              db: widget.db,
+              orgId: widget.orgId,
+              currency: currency,
+              reports: widget.reports,
+            )
+          : ExpenseFlow(
+              db: widget.db,
+              orgId: widget.orgId,
+              profile: widget.org?.profile ?? 'association',
+              currency: currency,
+              capture: widget.capture,
+            ),
     );
 
     if (recorded == true) {
@@ -205,6 +225,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     final recorded = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => RecordTransferSheet(
         db: widget.db,
         orgId: widget.orgId,
@@ -219,6 +240,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     final closed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => CloseDaySheet(
         db: widget.db,
         orgId: widget.orgId,
@@ -301,6 +323,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               ),
             ),
           if (widget.accountAction != null) widget.accountAction!,
+          bellRoom,
         ],
       ),
       body: _loading
@@ -310,6 +333,13 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // The ring with the app closed (115), until this device
+                  // rings — for every member but an observer.
+                  if (!(widget.org?.isObserverOnly ?? true))
+                    PushOfferCard(
+                      notify: AppScope.maybeOf(context)?.notify,
+                      message: context.tr('Soyez prévenu des réservations et de votre équipe, même l\'application fermée.'),
+                    ),
                   _TodayCard(
                     moneyIn: _moneyIn,
                     moneyOut: _moneyOut,
@@ -420,7 +450,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'record-expense',
-            onPressed: () => _openRecordSheet('out'),
+            onPressed: () => _openRecord('out'),
             backgroundColor: Colors.orange.shade100,
             foregroundColor: Colors.orange.shade900,
             icon: const Icon(Icons.arrow_upward, size: 20),
@@ -432,7 +462,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'record-income',
-            onPressed: () => _openRecordSheet('in'),
+            onPressed: () => _openRecord('in'),
             icon: const Icon(Icons.arrow_downward, size: 28),
             label: Text(
               context.tr('Recette'),
@@ -461,7 +491,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
         }
         return Padding(
           padding: const EdgeInsets.only(top: 16),
-          child: FirstContributionCard(onTap: () => _openRecordSheet('in')),
+          child: FirstContributionCard(onTap: () => _openRecord('in')),
         );
       },
     );
@@ -513,6 +543,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            // Invoices past their due date and not paid (115).
+            badge: homeCount('invoices'),
             route: 'factures',
             onTap: () => context.push(Routes.inside(org.id, 'factures')),
           ),
@@ -532,6 +564,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             HomeDestination(
               icon: Icons.groups_outlined,
               label: context.tr('Équipe'),
+              // Invitations not claimed yet (115).
+              badge: homeCount('invitations'),
               route: 'equipe',
               onTap: () => context.push(Routes.inside(org.id, 'equipe')),
             ),
@@ -547,6 +581,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.account_circle_outlined,
             label: s.account,
+            // The carnet's credits past their date (115, 117), as on a
+            // shop's Compte: the association's carnet opens from there.
+            badge: widget.access.canSee('credits') ? homeCount('credit') : 0,
             route: 'compte',
             onTap: () => context.push(Routes.inside(org.id, 'compte')),
           ),
@@ -557,7 +594,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
 }
 
 /// « Encaissez la première cotisation » (102): the next step after the
-/// walkthrough, one tap from the Recette sheet.
+/// walkthrough, one tap from the Recette flow.
 class FirstContributionCard extends StatelessWidget {
   const FirstContributionCard({super.key, required this.onTap});
 

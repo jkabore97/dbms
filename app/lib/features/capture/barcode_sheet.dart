@@ -25,6 +25,7 @@ class BarcodeSheet extends StatefulWidget {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => BarcodeSheet(title: title ?? context.tr('Scanner un code')),
     );
   }

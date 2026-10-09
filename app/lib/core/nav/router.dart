@@ -20,6 +20,7 @@ import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
+import '../notify/notifications_repository.dart' show NotifyScope;
 import '../../features/shopper/addresses_screen.dart';
 import '../../features/shopper/favourites_screen.dart';
 import '../../features/shopper/shopper_profile_screen.dart';
@@ -32,7 +33,6 @@ import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
 import '../accounting/models.dart';
-import '../invoicing/models.dart' show InvoiceDocument;
 import '../auth/models.dart';
 import '../capture/invoice_reading.dart';
 import '../capture/models.dart';
@@ -40,6 +40,7 @@ import '../retail/models.dart';
 import '../../features/account/two_step_screen.dart';
 import '../../features/admin/admin_pill.dart' show AdminTrail;
 import 'app_scope.dart';
+import 'back_first.dart';
 import 'business_cover.dart';
 import 'session.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -98,6 +99,8 @@ abstract final class Routes {
   static const bookings = '/mon-compte/reservations';
   static const myNotifications = '/mon-compte/notifications';
   static const courier = '/livreur';
+  /// The courier's bell (115).
+  static const courierNotifications = '/livreur/notifications';
   /// One running course on a map, for its courier.
   static String courierJob(String orderId) => '/livreur/course/$orderId';
   /// Becoming a courier (112): the dossier, one question per screen, then
@@ -129,6 +132,8 @@ abstract final class Routes {
   static const consoleRequestForm = '/demandes/formulaire';
   static const consoleSettings = '/console/reglages';
   static const consoleJournal = '/console/journal';
+  /// The platform's bell (115).
+  static const consoleNotifications = '/console/notifications';
   static const language = '/langue';
   static const security = '/securite';
   /// Where Wave sends the person back after paying (076): the payment's own
@@ -424,6 +429,9 @@ GoRouter buildRouter(SessionController session) {
   return GoRouter(
     initialLocation: Routes.splash,
     refreshListenable: session,
+    // What is open over a page, on every navigator (114): back closes it
+    // first.
+    observers: [BackFirst.instance.watch()],
     redirect: (context, state) {
       // The business the center opened is forgotten once it is left
       // another way (104): its strip is never stale.
@@ -528,7 +536,8 @@ GoRouter buildRouter(SessionController session) {
           ),
           GoRoute(
             path: 'notifications',
-            builder: (context, _) => NotificationsScreen(notify: AppScope.of(context).notify),
+            builder: (context, _) => NotificationsScreen(
+                notify: AppScope.of(context).notify, scope: NotifyScope.customer),
           ),
         ],
       ),
@@ -540,6 +549,12 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, state) => biz.CourierScreen(
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
+      ),
+      // The courier's own bell (115): their deliveries.
+      GoRoute(
+        path: Routes.courierNotifications,
+        builder: (context, _) => NotificationsScreen(
+            notify: AppScope.of(context).notify, scope: NotifyScope.courier),
       ),
       GoRoute(
         path: '${Routes.courier}/course/:id',
@@ -887,6 +902,9 @@ GoRouter buildRouter(SessionController session) {
           _centerPage(Routes.consoleJournal, (context, _) => biz.JournalSection(
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),
+          // The platform's own bell (115).
+          _centerPage(Routes.consoleNotifications, (context, _) => NotificationsScreen(
+                notify: AppScope.of(context).notify, scope: NotifyScope.platform)),
         ],
       ),
 
@@ -1138,45 +1156,12 @@ GoRouter buildRouter(SessionController session) {
             ),
             routes: [
               GoRoute(
-                path: 'nouvelle',
-                builder: (context, state) => _withOrg(
-                  context,
-                  state,
-                  (scope, org) =>
-                      biz.NewInvoiceScreen(org: org, invoicing: scope.invoicing),
-                  feature: 'invoices',
-                ),
-              ),
-              GoRoute(
                 path: 'facturation',
                 builder: (context, state) => _withOrg(
                   context,
                   state,
                   (scope, org) => biz.BillingDetailsScreen(
                       org: org, invoicing: scope.invoicing),
-                  feature: 'invoices',
-                ),
-              ),
-              GoRoute(
-                path: 'corriger',
-                builder: (context, state) => _withOrg(
-                  context,
-                  state,
-                  (scope, org) {
-                    // Reached from the document with the document in hand;
-                    // a cold load has nothing to correct — see `extra` note.
-                    final doc = state.extra;
-                    if (doc is! InvoiceDocument) {
-                      return _MissingContext(
-                        backTo: Routes.inside(org.id, 'factures'),
-                      );
-                    }
-                    return biz.NewInvoiceScreen(
-                      org: org,
-                      invoicing: scope.invoicing,
-                      revisionOf: doc,
-                    );
-                  },
                   feature: 'invoices',
                 ),
               ),
@@ -1529,7 +1514,8 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.NotificationsScreen(notify: scope.notify),
+              (scope, org) =>
+                  biz.NotificationsScreen(notify: scope.notify, scope: NotifyScope.org(org.id)),
             ),
           ),
           GoRoute(
@@ -1572,6 +1558,8 @@ GoRouter buildRouter(SessionController session) {
               (scope, org) => biz.LivestockScreen(
                 org: org,
                 farm: scope.farm,
+                db: scope.db,
+                retail: scope.retail,
                 initialTab:
                     int.tryParse(state.uri.queryParameters['onglet'] ?? '') ??
                         0,
@@ -1702,7 +1690,17 @@ Widget _withOrg(
             : feature != null &&
                     scope.session.accessFor(org.id).isHidden(feature)
                 ? FeatureUnavailableScreen(org: org)
-                : biz.ProStrip(org: org, child: build(scope, org)),
+                : biz.ProStrip(
+                    org: org,
+                    // The business's bell on every tool page (115).
+                    child: biz.PageBell(
+                      org: org,
+                      notify: scope.notify,
+                      path: state.uri.path,
+                      enabled: scope.auth.hasLiveSession,
+                      child: build(scope, org),
+                    ),
+                  ),
       );
     },
   ));

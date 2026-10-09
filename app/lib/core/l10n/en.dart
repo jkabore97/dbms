@@ -88,8 +88,6 @@ const enStrings = <String, String>{
       'Add a {name}',
   'Ajouter un {name} au panier':
       'Add a {name} to the basket',
-  'Ajouter une caractéristique':
-      'Add a feature',
   'Ajouter une monnaie':
       'Add a currency',
   'Ajouter une personne':
@@ -192,8 +190,6 @@ const enStrings = <String, String>{
       'None',
   'Aucune activité.':
       'No activity.',
-  'Aucune bande enregistrée. Ouvrez-en une dans « Bandes » — cela demande le réseau.':
-      'No batch recorded. Open one in « Batches » — this needs the network.',
   'Aucune demande en attente.':
       'No pending requests.',
   'Aucune entreprise affectée.':
@@ -228,8 +224,6 @@ const enStrings = <String, String>{
       'Other',
   'Autres couleurs':
       'Other colours',
-  'Autre…':
-      'Other…',
   'Avec un numéro, le code ne marche que pour lui.':
       'With a number, the code only works for them.',
   'Balance générale':
@@ -268,16 +262,12 @@ const enStrings = <String, String>{
       'Hidden',
   'Caché de la vente, proposé en premier en production.':
       'Hidden from sale, offered first in production.',
-  'Caprin, bovin, ovin, porcin, pintade…':
-      'Goat, cattle, sheep, pig, guinea fowl…',
   'Carte':
       'Map',
   'Cauris':
       'Cauris',
   'Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.':
       'This link has no position. Open it in Google Maps and copy the full address.',
-  'Ce qu\'il faut se rappeler de cette entrée':
-      'What to remember about this entry',
   'Ce que chaque action rapporte. Une valeur changée vaut pour les prochaines ; rien de déjà gagné ne bouge.':
       'What each action earns. A changed value applies to the next ones; nothing already earned moves.',
   'Ce que chaque niveau voit et peut modifier. Les propriétaires et administrateurs gardent toujours tout. Les prix, le crédit et la production sont aussi refusés par le serveur — pas seulement cachés.':
@@ -392,8 +382,6 @@ const enStrings = <String, String>{
       'Code copied.',
   'Code d\'invitation':
       'Invitation code',
-  'Code de la bande':
-      'Batch code',
   'Code du client':
       'Customer\'s code',
   'Code prêt':
@@ -430,8 +418,6 @@ const enStrings = <String, String>{
       'Account',
   'Compte de résultat':
       'Income statement',
-  'Compter ce qui est distribué chaque jour est ce qui permet de savoir lundi que l\'aliment finira jeudi.':
-      'Counting what is given out each day is how you know on Monday that the feed will run out on Thursday.',
   'Comptes, factures et photos sans limite (gratuit : {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo)':
       'Accounts, invoices and photos without limit (free: {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo)',
   'Compté en':
@@ -502,10 +488,6 @@ const enStrings = <String, String>{
       'Credit',
   'Créer':
       'Create',
-  'Créer le groupe':
-      'Create the group',
-  'Créée automatiquement si elle est nouvelle.':
-      'Created automatically if it is new.',
   'Culture':
       'Crop',
   'C’est validé — vous en êtes propriétaire. Ouverture de votre entreprise…':
@@ -514,22 +496,14 @@ const enStrings = <String, String>{
       'LAST ACTIVITY',
   'De':
       'From',
-  'Demande le réseau : le code doit être unique dans toute l\'activité.':
-      'Needs the network: the code must be unique across the whole business.',
   'Demandes':
       'Requests',
   'Demandes en attente ({length})':
       'Pending requests ({length})',
   'Demandez au client les 4 chiffres affichés dans sa commande : ils prouvent que le colis est bien arrivé.':
       'Ask the customer for the 4 digits shown in their order: they prove the parcel really arrived.',
-  'Derrière la maison':
-      'Behind the house',
   'Description pour la vitrine (facultatif)':
       'Description for the vitrine (optional)',
-  'Destination (facultatif)':
-      'Destination (optional)',
-  'Dette sans article (prêt)':
-      'Debt without an item (loan)',
   'Deuxième prénom (facultatif)':
       'Middle name (optional)',
   'Discrétion':
@@ -574,8 +548,6 @@ const enStrings = <String, String>{
       'Expenses',
   'Dépensé':
       'Spent',
-  'Dépôt de la collecte du dimanche':
-      'Deposit of Sunday\'s collection',
   'Désignation':
       'Description',
   'Détail':
@@ -624,16 +596,8 @@ const enStrings = <String, String>{
       'Save',
   'Enregistrer la correction':
       'Save the correction',
-  'Enregistrer la culture':
-      'Save the crop',
   'Enregistrer la formule':
       'Save the plan',
-  'Enregistrer la perte':
-      'Save the loss',
-  'Enregistrer la réception':
-      'Save the delivery',
-  'Enregistrer la récolte':
-      'Save the harvest',
   'Enregistrer la vitrine':
       'Save the vitrine',
   'Enregistrer le numéro et les prix':
@@ -674,8 +638,6 @@ const enStrings = <String, String>{
       'Enter the phone number of the account to make a trainer. The account must already exist.',
   'Entré':
       'In',
-  'Entrée de stock':
-      'Stock delivery',
   'Entrées de stock':
       'Stock deliveries',
   'Envoie une image du résumé — lisible sans l\'application.':
@@ -692,8 +654,6 @@ const enStrings = <String, String>{
       'Sent',
   'Espace livreur':
       'Courier space',
-  'Espèce':
-      'Species',
   'Espèces':
       'Cash',
   'Espèces pour le moment':
@@ -784,8 +744,6 @@ const enStrings = <String, String>{
       'Invite someone',
   'Inviter quelqu’un d’autre':
       'Invite someone else',
-  'Isa Brown':
-      'Isa Brown',
   'Itinéraire':
       'Directions',
   'J\'accepte':
@@ -810,8 +768,6 @@ const enStrings = <String, String>{
       '{fullName}\'s day',
   'Journée travaillée':
       'Day worked',
-  'Kaboré':
-      'Kaboré',
   'L\'adresse web et le type d\'activité changent ce que voient tous les membres. Contactez Kaj-consulting pour les modifier.':
       'The web address and the type of business change what every member sees. Contact Kaj-consulting to change them.',
   'L\'application n\'a pas pu démarrer':
@@ -858,10 +814,6 @@ const enStrings = <String, String>{
       'The sale will go in the credit book.',
   'La vitrine est fermée : ces réglages servent dès son ouverture (rubrique Vitrine).':
       'The vitrine is closed: these settings apply as soon as it opens (Vitrine section).',
-  'Laissez à zéro si vous ne connaissez pas encore le prix':
-      'Leave at zero if you don\'t know the price yet',
-  'Lait, engraissement, reproduction…':
-      'Milk, fattening, breeding…',
   'Latitude':
       'Latitude',
   'Le classement 4 fois par semaine':
@@ -946,16 +898,12 @@ const enStrings = <String, String>{
       'Link copied',
   'Ligne {lineNumber} : {error}':
       'Line {lineNumber}: {error}',
-  'Lignes':
-      'Lines',
   'Lire une page de carnet':
       'Read a notebook page',
   'Livraison':
       'Delivery',
   'Livraison : {address}':
       'Delivery: {address}',
-  'Livraison SODEPAL':
-      'SODEPAL delivery',
   'Livraison enregistrée. Merci !':
       'Delivery recorded. Thank you!',
   'Livrer':
@@ -1120,16 +1068,12 @@ const enStrings = <String, String>{
       'Wave sender\'s name',
   'Nom de la boutique':
       'Shop name',
-  'Nom de la catégorie':
-      'Category name',
   'Nom de la ferme':
       'Farm name',
   'Nom de la personne (facultatif)':
       'Person\'s name (optional)',
   'Nom du client':
       'Customer\'s name',
-  'Nom du groupe':
-      'Group name',
   'Nom du produit':
       'Product name',
   'Nom déjà utilisé, informations manquantes…':
@@ -1138,10 +1082,6 @@ const enStrings = <String, String>{
       'Name, date of birth, phone. Needed for a contract or a payslip.',
   'Nom, téléphone ou e-mail…':
       'Name, phone or e-mail…',
-  'Nombre d\'oiseaux à l\'arrivée':
-      'Number of birds on arrival',
-  'Nombre de têtes':
-      'Number of head',
   'Non':
       'No',
   'Non modifiable ici':
@@ -1156,8 +1096,6 @@ const enStrings = <String, String>{
       'Note (for the platform)',
   'Note : {note}':
       'Note: {note}',
-  'Note interne (facultatif)':
-      'Internal note (optional)',
   'Nous vous répondrons bientôt. Vous pouvez modifier la demande tant qu’elle est en attente.':
       'We will answer soon. You can edit the request while it is pending.',
   'Nouveau : mettez un article en avant…':
@@ -1166,24 +1104,16 @@ const enStrings = <String, String>{
       'New account',
   'Nouveau département':
       'New department',
-  'Nouveau groupe':
-      'New group',
   'Nouveau mot de passe':
       'New password',
   'Nouveau mot de passe — {label}':
       'New password — {label}',
-  'Nouvel article':
-      'New item',
   'Nouvelle':
       'New',
   'Nouvelle activité':
       'New business',
-  'Nouvelle bande':
-      'New batch',
   'Nouvelle commande : {pending} à traiter sur la vitrine.':
       'New order: {pending} to handle on the vitrine.',
-  'Nouvelle culture':
-      'New crop',
   'Nouvelle dépense':
       'New expense',
   'Nouvelle entreprise':
@@ -1212,8 +1142,6 @@ const enStrings = <String, String>{
       'No. {number}',
   'Observateur':
       'Observer',
-  'Oignon, maïs, tomate…':
-      'Onion, maize, tomato…',
   'On vous a envoyé un code ?':
       'Were you sent a code?',
   'On vous a parrainé ?':
@@ -1236,8 +1164,6 @@ const enStrings = <String, String>{
       'Open',
   'Ouvrir l\'application d\'authentification':
       'Open the authenticator app',
-  'Ouvrir la bande':
-      'Open the batch',
   'Ouvrir la formule':
       'Open the plan',
   'Ouvrir la vitrine':
@@ -1292,8 +1218,6 @@ const enStrings = <String, String>{
       'Business settings',
   'Parcelle':
       'Plot',
-  'Parcelle (facultatif)':
-      'Plot (optional)',
   'Part (%)':
       'Share (%)',
   'Part de la plateforme sur une commande (%)':
@@ -1426,8 +1350,6 @@ const enStrings = <String, String>{
       'Price per year ({currency})',
   'Prix par mois ({currency})':
       'Price per month ({currency})',
-  'Prix par {_unit}':
-      'Price per {_unit}',
   'Prix unitaire':
       'Unit price',
   'Pro':
@@ -1462,8 +1384,6 @@ const enStrings = <String, String>{
       'When it sells',
   'Quantité':
       'Quantity',
-  'Quantité ({unit})':
-      'Quantity ({unit})',
   'Quantité produite':
       'Quantity produced',
   'Quartier, repère':
@@ -1472,8 +1392,6 @@ const enStrings = <String, String>{
       'Neighbourhood, landmark, opposite…',
   'Que récoltez-vous ?':
       'What do you harvest?',
-  'Quelle bande ?':
-      'Which batch?',
   'Quelqu\'un':
       'Someone',
   'Quelques mots sur la boutique (facultatif)':
@@ -1486,8 +1404,6 @@ const enStrings = <String, String>{
       'What',
   'Quoi ?':
       'What?',
-  'Race (facultatif)':
-      'Breed (optional)',
   'Raison (facultatif)':
       'Reason (optional)',
   'Ralentit':
@@ -1528,8 +1444,6 @@ const enStrings = <String, String>{
       'Hand over',
   'Remettre en service':
       'Put back in service',
-  'Rendement attendu en kg (facultatif)':
-      'Expected yield in kg (optional)',
   'Renommer':
       'Rename',
   'Renommer le département':
@@ -1730,8 +1644,6 @@ const enStrings = <String, String>{
       'Done',
   'Titre (facultatif)':
       'Title (optional)',
-  'Tomate, gombo, maïs…':
-      'Tomato, okra, maize…',
   'Total':
       'Total',
   'Total disponible':
@@ -1766,8 +1678,6 @@ const enStrings = <String, String>{
       'Transfer',
   'Trop tard : la boutique a déjà répondu.':
       'Too late: the shop has already answered.',
-  'Troupeau A, Chèvres du bas-fond…':
-      'Herd A, Lowland goats…',
   'Type':
       'Type',
   'Type (facultatif)':
@@ -1806,8 +1716,6 @@ const enStrings = <String, String>{
       'Once the payment is sent, say so here: Mara checks it and the featured spot starts.',
   'Une photo sans nom reste une preuve. La classer la rend trouvable.':
       'A photo without a name is still proof. Filing it makes it findable.',
-  'Unité':
-      'Unit',
   'Utiliser':
       'Use',
   'Utiliser ma position':
@@ -1824,8 +1732,6 @@ const enStrings = <String, String>{
       'Approve the delivery',
   'Valider {name} ?':
       'Approve {name}?',
-  'Variété (facultatif)':
-      'Variety (optional)',
   'Vendeuse, gardien, comptable…':
       'Saleswoman, guard, accountant…',
   'Vendeuse, gérant, comptable…':
@@ -1974,8 +1880,6 @@ const enStrings = <String, String>{
       '{label}: {place}',
   '{label} · {days} jours':
       '{label} · {days} days',
-  '{label} — {headCount} têtes':
-      '{label} — {headCount} head',
   '{length}':
       '{length}',
   '{length} boutiques ici':
@@ -2044,8 +1948,6 @@ const enStrings = <String, String>{
       '— end —',
   'Ajoutez au moins un article.':
       'Add at least one item.',
-  'Ajoutez au moins une ligne avec une quantité et un prix.':
-      'Add at least one line with a quantity and a price.',
   'Au moins 8 caractères.':
       'At least 8 characters.',
   'Aucune application d\'authentification n\'a répondu. Installez-en une, ou tapez la clé ci-dessous.':
@@ -2090,8 +1992,6 @@ const enStrings = <String, String>{
       'Give the base and the price per km of delivery, or neither to keep the platform\'s.',
   'Indiquez la latitude et la longitude, ou aucune des deux.':
       'Give the latitude and the longitude, or neither.',
-  'Indiquez le client.':
-      'Give the customer.',
   'Indiquez où livrer.':
       'Say where to deliver.',
   'L\'adresse « {_slug} » est déjà utilisée par une autre activité.':
@@ -2368,8 +2268,6 @@ const enStrings = <String, String>{
       'The item appears at the top of « Featured » on the home page, marked « Sponsored ». It needs a photo, a price and stock.',
   'L\'envoi de photos n\'est pas disponible sur cette installation.':
       'Sending photos is not available on this installation.',
-  'La bande n\'a pas pu être ouverte. Vérifiez le réseau.':
-      'The batch could not be opened. Check the network.',
   'La boutique apparaît en tête de la liste des boutiques, marquée « Sponsorisé ».':
       'The shop appears at the top of the list of shops, marked « Sponsored ».',
   'La course commence.':
@@ -2438,8 +2336,6 @@ const enStrings = <String, String>{
       'New invoice',
   'Offert : Mara Pro inclut une mise en avant de 7 jours par mois.':
       'Included: Mara Pro includes a 7-day featured spot every month.',
-  'Offrande du dimanche':
-      'Sunday offering',
   'Ouverte':
       'Open',
   'Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.':
@@ -2468,8 +2364,6 @@ const enStrings = <String, String>{
       'Placed on the map',
   'Plus que ce qui est dû.':
       'More than what is owed.',
-  'Poids (kg)':
-      'Weight (kg)',
   'Position non renseignée':
       'Position not set',
   'Premier jour clôturé':
@@ -2516,8 +2410,6 @@ const enStrings = <String, String>{
       'Nothing to pay yet.',
   'Règle retirée : chacun choisit son délai.':
       'Rule removed: everyone chooses their own wait.',
-  'Récolte prévue (facultatif)':
-      'Expected harvest (optional)',
   'Réparation du toit':
       'Roof repair',
   'Salaire mensuel':
@@ -2552,16 +2444,12 @@ const enStrings = <String, String>{
       'A Kaj-consulting administrator reviews the request. Once approved, you will be its owner.',
   'Une bande ou une récolte à venir : les clients commandent à l\'avance.':
       'A batch or a harvest to come: customers order in advance.',
-  'Une bande porte déjà ce code.':
-      'A batch already has this code.',
   'Une base pour la course, plus un prix par kilomètre entre votre boutique et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.':
       'A base for the trip, plus a price per kilometre between your shop and the customer\'s door. Empty: the platform\'s rates (500 + 150 F/km). The amount is shown to the customer before they order, and paid to the courier at the door.',
   'Une page publique de la boutique, avec les articles que vous choisissez d\'afficher — photo et prix — à partager sur WhatsApp. Les clients commandent depuis la vitrine.':
       'A public page for the shop, with the items you choose to show — photo and price — to share on WhatsApp. Customers order from the vitrine.',
   'Une page publique de la ferme, avec ce que vous mettez « À vendre » — photo, prix, à l\'unité ou au plateau — à partager sur WhatsApp. Les clients commandent, même à l\'avance pour une bande ou une récolte à venir.':
       'A public page for the farm, with what you put « For sale » — photo, price, by the unit or the tray — to share on WhatsApp. Customers order, even in advance for a batch or a harvest to come.',
-  'Vente de terrain':
-      'Land sale',
   'Vitrine {score} % · {orders}/3 commandes':
       'Vitrine {score} % · {orders}/3 orders',
   'Votre accès porte sur les totaux. Le détail des bandes ne vous est pas communiqué.':
@@ -2618,8 +2506,6 @@ const enStrings = <String, String>{
       'suspended',
   'trop loin':
       'too far',
-  '{alive} oiseaux au dernier point':
-      '{alive} birds at the last count',
   '{animals} animaux':
       '{animals} animals',
   '{base} F jusqu\'à {km} km, puis {perKm} F/km':
@@ -2762,8 +2648,8 @@ const enStrings = <String, String>{
   'Tout est prêt': 'All set',
   '{done} sur {total} terminés': '{done} of {total} done',
   'À faire': 'To do',
-  'Une entrée de stock': 'A stock entry',
-  'Dans « Articles », le bouton « Entrée de stock » : le nom, combien vous en avez, le prix. L\'article est créé.': 'In “Articles”, the “Stock entry” button: the name, how many you have, the price. The article is created.',
+  'Un article à la fois': 'One item at a time',
+  'Dans « Articles », le bouton « Ajouter un article » : la photo, le nom, le prix, combien vous en avez — une question à la fois.': 'In “Articles”, the “Add an item” button: the photo, the name, the price, how many you have — one question at a time.',
   'Plusieurs à la fois': 'Several at once',
   '« Ajout multiple » : un article par ligne, par exemple « Savon 20 300 ».': '“Bulk add”: one article per line, for example “Soap 20 300”.',
   'Une photo': 'A photo',
@@ -2899,7 +2785,6 @@ const enStrings = <String, String>{
   'Complétez votre activité': 'Complete your business',
   'Chaque étape faite ouvre un outil de plus.': 'Each step done opens one more tool.',
   'Voir ce qui manque': 'See what\'s missing',
-  'Ajouter le service': 'Add the service',
   'Ajouter un service': 'Add a service',
   'Ajouter un service, en quatre gestes': 'Add a service, in four steps',
   'Aucun service pour le moment. « Ajouter un service » : une adhésion, un cours, la salle pour une soirée…': 'No services yet. “Add a service”: a membership, a class, the hall for an evening…',
@@ -3032,7 +2917,6 @@ const enStrings = <String, String>{
   'Boutiques': 'Shops',
   '{amount} dépensé': '{amount} spent',
   'corrigé': 'corrected',
-  'Une somme due': 'An amount owed',
   'Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.': 'Your shop window at the top of the list, for 7 or 30 days.',
   // Batch 100 (app): the picker, the tones.
   'Nom ou propriétaire': 'Name or owner',
@@ -3183,7 +3067,6 @@ const enStrings = <String, String>{
   'Tontine': 'Tontine',
   'On cotise, chacun reçoit à son tour.': 'Everyone pays in, each receives in turn.',
   'Église': 'Church',
-  'Offrandes, dîmes et dons des fidèles.': 'Offerings, tithes and gifts of the faithful.',
   'Groupement': 'Group',
   'On produit et on vend ensemble.': 'We produce and sell together.',
   'Culturelle': 'Cultural',
@@ -4254,4 +4137,533 @@ const enStrings = <String, String>{
   'Créez votre compte pour commander.': 'Create your account to order.',
   '1 article en vente': '1 item for sale',
   '1 produit en vente': '1 product for sale',
+  'Choisir dans Photos': 'Choose from Photos',
+  'Une photo déjà prise par votre activité': 'A photo your business already took',
+  'Aucune photo dans Photos pour le moment.': 'No photos in Photos yet.',
+  'Prenez-la avec « Prendre une photo » : elle y sera gardée.': 'Take it with “Take a photo”: it will be kept there.',
+  'Les photos de votre activité. Touchez celle à mettre.': 'Your business\'s photos. Tap the one to use.',
+  'Sur : {name}': 'On: {name}',
+  'C\'est fait': 'Done',
+  '(facultatif)': '(optional)',
+  'Vérifiez avant d\'enregistrer': 'Check before saving',
+  'Étape {at} sur {total}': 'Step {at} of {total}',
+  'Nous avons repris là où vous étiez.': 'We picked up where you left off.',
+  'Un article qui n\'est pas dans la liste': 'An item that is not in the list',
+  'Un produit qui n\'est pas dans la liste': 'A product that is not in the list',
+  'Client : {name}': 'Customer: {name}',
+  'Client de passage': 'Walk-in customer',
+  'Combien ?': 'How many?',
+  'Comment le client paie ?': 'How does the customer pay?',
+  'Le client paie en': 'The customer pays in',
+  'Le client scanne le code avec Wave.': 'The customer scans the code with Wave.',
+  'Merci !': 'Thank you!',
+  'Paiement : {method}': 'Payment: {method}',
+  'Partager le reçu sur WhatsApp': 'Share the receipt on WhatsApp',
+  'Payé : {amount}': 'Paid: {amount}',
+  'Payé par : {name}': 'Paid by: {name}',
+  'Plus en stock': 'Out of stock',
+  'Pour quel client ?': 'For which customer?',
+  'Quels articles ?': 'Which items?',
+  'Quels produits ?': 'Which products?',
+  'Rechercher un produit…': 'Search for a product…',
+  'Reste : {n}': 'Left: {n}',
+  'Reçu copié.': 'Receipt copied.',
+  'Son nom va sur le reçu (et dans le carnet pour un crédit).': 'Their name goes on the receipt (and in the credit book for a credit).',
+  'Total : {total}': 'Total: {total}',
+  'Un client que je connais': 'A customer I know',
+  'Vente à crédit enregistrée': 'Credit sale recorded',
+  '{n} dans le panier · {total}': '{n} in the basket · {total}',
+  'Hier': 'Yesterday',
+  'Un autre jour': 'Another day',
+  'Fonctionne sans connexion : envoyé dès que le réseau revient.': 'Works offline: sent as soon as the network is back.',
+  'Fournisseur : {name}': 'Supplier: {name}',
+  'Aliment des animaux': 'Animal feed',
+  'Médicaments, vaccins': 'Medicine, vaccines',
+  'Semences': 'Seeds',
+  'Engrais et traitements': 'Fertiliser and treatments',
+  'Autre fourniture': 'Other supplies',
+  'Qu\'est-ce qui arrive ?': 'What is arriving?',
+  'Il reste {n} {unit}': '{n} {unit} left',
+  'Un nouvel article': 'A new item',
+  'Aliment ponte, vaccin, sciure…': 'Layer feed, vaccine, sawdust…',
+  'Prix par {unit} ?': 'Price per {unit}?',
+  'Laissez vide si vous ne connaissez pas encore le prix.': 'Leave empty if you do not know the price yet.',
+  'Total {amount}': 'Total {amount}',
+  'C\'est pour quoi ?': 'What is it for?',
+  'La dépense est rangée là.': 'The expense is filed there.',
+  'Qui l\'a livré ?': 'Who delivered it?',
+  'SODEPAL, le vétérinaire…': 'SODEPAL, the vet…',
+  'Prix': 'Price',
+  '{price} par {unit}': '{price} per {unit}',
+  'Pas encore connu': 'Not known yet',
+  'Total payé': 'Total paid',
+  'Rangé dans': 'Filed under',
+  '{item} : {q} {unit} reçus': '{item}: {q} {unit} received',
+  'Une autre réception': 'Another delivery',
+  'Abîmé': 'Damaged',
+  'Mouillé': 'Wet',
+  'Périmé': 'Expired',
+  'Mangé par les rats': 'Eaten by rats',
+  'Volé': 'Stolen',
+  'Pour {name}': 'For {name}',
+  'Qu\'est-ce qui est perdu ?': 'What was lost?',
+  'Qu\'est-ce qui est donné ?': 'What was given?',
+  'Rien en stock pour le moment. Enregistrez d\'abord ce qui est arrivé.': 'Nothing in stock yet. Record what arrived first.',
+  'Enregistrer une réception': 'Record a delivery',
+  'Pour quels animaux ?': 'For which animals?',
+  'Toute la ferme': 'The whole farm',
+  'Pourquoi ?': 'Why?',
+  'Une note ?': 'A note?',
+  'Pour': 'For',
+  'Perte enregistrée : {item}, {q} {unit}': 'Loss recorded: {item}, {q} {unit}',
+  '{item} : {q} {unit} donnés': '{item}: {q} {unit} given',
+  'Une autre perte': 'Another loss',
+  'Une autre consommation': 'Another feeding',
+  'Poules pondeuses': 'Laying hens',
+  'Poulets de chair': 'Broilers',
+  'Pintades': 'Guinea fowl',
+  'Canards': 'Ducks',
+  'Chèvres': 'Goats',
+  'Moutons': 'Sheep',
+  'Bœufs': 'Cattle',
+  'Porcs': 'Pigs',
+  'Lapins': 'Rabbits',
+  'Autres animaux': 'Other animals',
+  'Ajouter des animaux demande le réseau.': 'Adding animals needs the network.',
+  'Achat d\'animaux — {name}': 'Animals bought — {name}',
+  'Ajouter des animaux': 'Add animals',
+  'Quels animaux ?': 'Which animals?',
+  'Lesquels ?': 'Which ones?',
+  'Dindes, ânes, escargots…': 'Turkeys, donkeys, snails…',
+  'Quel nom pour cette bande ?': 'What name for this batch?',
+  'Quel nom pour ce groupe ?': 'What name for this group?',
+  'Un nom à vous, pour les retrouver. Deux lots ne portent pas le même.': 'A name of yours, to find them again. Two batches never share one.',
+  'Chèvres du bas-fond': 'Lowland goats',
+  'Depuis quand ?': 'Since when?',
+  'Leur âge se compte à partir de là.': 'Their age is counted from then.',
+  'Ils arrivent aujourd\'hui': 'They arrive today',
+  'Ils sont arrivés un autre jour': 'They arrived another day',
+  'Je connais leur âge': 'I know their age',
+  'Arrivés le': 'Arrived on',
+  'mois': 'months',
+  'semaines': 'weeks',
+  'Combien les avez-vous payés ?': 'How much did you pay for them?',
+  'Le total. Laissez vide s\'ils sont nés chez vous ou donnés.': 'The total. Leave empty if they were born here or given.',
+  'Âge': 'Age',
+  'Coût': 'Cost',
+  'Rien payé': 'Nothing paid',
+  'Demande le réseau : le nom doit être unique dans toute l\'activité.': 'Needs the network: the name must be unique across the business.',
+  '{n} {species} ajoutés · {name}': '{n} {species} added · {name}',
+  '{amount} comptés en dépense « Achat d\'animaux ».': '{amount} counted as the expense “Animals bought”.',
+  'Ajouter d\'autres animaux': 'Add more animals',
+  'Mortalité': 'Deaths',
+  'Pesée': 'Weighing',
+  'Vaccination': 'Vaccination',
+  'Vendus vivants': 'Sold alive',
+  'Traitement': 'Treatment',
+  'grammes': 'grams',
+  'doses': 'doses',
+  'oiseaux': 'birds',
+  'têtes': 'head',
+  'Maladie': 'Disease',
+  'Chaleur': 'Heat',
+  'Prédateur': 'Predator',
+  'Accident': 'Accident',
+  'Je ne sais pas': 'I don\'t know',
+  'Un groupe d\'animaux demande le réseau.': 'A group of animals needs the network.',
+  'Aucune bande enregistrée. Ouvrez-en une avec « Ajouter des animaux » — cela demande le réseau.': 'No batch recorded. Open one with “Add animals” — it needs the network.',
+  '{n} oiseaux': '{n} birds',
+  '{n} têtes': '{n} head',
+  'Que s\'est-il passé ?': 'What happened?',
+  'Combien sont morts ?': 'How many died?',
+  'Quel poids ?': 'What weight?',
+  'Combien sont nés ?': 'How many were born?',
+  'Combien sont vendus ?': 'How many were sold?',
+  '{n} oiseaux au dernier point': '{n} birds at the last count',
+  '{n} têtes aujourd\'hui': '{n} head today',
+  'Il n\'y a que {n} têtes dans ce groupe.': 'There are only {n} head in this group.',
+  'De quoi ?': 'From what?',
+  '{kind} : {n} {unit} · {group}': '{kind}: {n} {unit} · {group}',
+  'Enregistrer autre chose': 'Record something else',
+  'Tomate': 'Tomato',
+  'Oignon': 'Onion',
+  'Maïs': 'Maize',
+  'Gombo': 'Okra',
+  'Piment': 'Chilli',
+  'Chou': 'Cabbage',
+  'Salade': 'Lettuce',
+  'Arachide': 'Groundnut',
+  'Riz': 'Rice',
+  'Sorgho': 'Sorghum',
+  'hectares': 'hectares',
+  'm²': 'm²',
+  'Ajouter une culture': 'Add a crop',
+  'Quelle culture ?': 'Which crop?',
+  'Une autre culture': 'Another crop',
+  'Laquelle ?': 'Which one?',
+  'Aubergine, haricot, sésame…': 'Eggplant, bean, sesame…',
+  'Sur quelle parcelle ?': 'On which plot?',
+  'Une nouvelle est créée à partir de son nom.': 'A new one is created from its name.',
+  'Une nouvelle parcelle': 'A new plot',
+  'Derrière la maison, bas-fond 2…': 'Behind the house, lowland 2…',
+  'Quelle surface ?': 'What area?',
+  'Semée quand ?': 'Sown when?',
+  'Date de semis': 'Sowing date',
+  'Vous la récoltez en…': 'You harvest it in…',
+  'Récolte prévue ?': 'Harvest expected?',
+  'Dans 1 mois': 'In 1 month',
+  'Dans 2 mois': 'In 2 months',
+  'Dans 3 mois': 'In 3 months',
+  'Récolte prévue': 'Harvest expected',
+  'Non précisée': 'Not said',
+  'Surface': 'Area',
+  'Semée le': 'Sown on',
+  'Récoltée en': 'Harvested in',
+  'Demande le réseau.': 'Needs the network.',
+  '{crop} ajoutée': '{crop} added',
+  '{crop} ajoutée · {plot}': '{crop} added · {plot}',
+  'La surface n\'a pas pu être enregistrée.': 'The area could not be saved.',
+  'Ajouter une autre culture': 'Add another crop',
+  'Gardée pour vendre': 'Kept to sell',
+  'Vendue tout de suite': 'Sold right away',
+  'Pour la maison': 'For the house',
+  'Aucune culture en cours. Ajoutez celle que vous récoltez.': 'No crop in the ground. Add the one you are harvesting.',
+  'Quelle qualité ?': 'What quality?',
+  'Comptée à part : elle ne se vend pas au même prix.': 'Counted apart: it does not sell at the same price.',
+  'Où va la récolte ?': 'Where does the harvest go?',
+  'Ajoutée à « À vendre »': 'Added to “For sale”',
+  'Ajoutée à « À vendre », puis la vente': 'Added to “For sale”, then the sale',
+  'Mangée, donnée : le stock ne change pas': 'Eaten, given: the stock does not change',
+  '« {name} » se vend par {unit}. En {unit}, cela fait combien ?': '“{name}” sells by the {unit}. How many {unit} is that?',
+  'Où': 'Where',
+  'Nouvel article « {name} », hors vitrine': 'New item “{name}”, off the shop window',
+  '+{q} {unit} sur « {name} »': '+{q} {unit} on “{name}”',
+  '{crop} : {q} {unit} récoltés': '{crop}: {q} {unit} harvested',
+  'Le stock de « À vendre » n\'a pas changé : mettez-le à jour dans À vendre.': 'The “For sale” stock did not change: update it in For sale.',
+  'Le stock ne change pas.': 'The stock does not change.',
+  'Ajoutés à « {name} » dans À vendre. Mettez-lui un prix pour la vendre.': 'Added to “{name}” in For sale. Give it a price to sell it.',
+  'Ajoutés à « {name} » dans À vendre.': 'Added to “{name}” in For sale.',
+  'Mettre un prix': 'Set a price',
+  'Une autre récolte': 'Another harvest',
+  'Premier choix': 'First grade',
+  'Deuxième choix': 'Second grade',
+  'Les articles ne se chargent pas. Vérifiez la connexion.': 'The items will not load. Check the connection.',
+  'Qu\'avez-vous fabriqué ?': 'What did you make?',
+  'Le produit fini : pain, savon, jus, aliment…': 'The finished product: bread, soap, juice, feed…',
+  'Ex. Gâteaux, Savon liquide': 'E.g. Cakes, Liquid soap',
+  'Qu\'avez-vous utilisé ?': 'What did you use?',
+  'Touchez chaque ingrédient.': 'Tap each ingredient.',
+  'Combien de chaque ?': 'How much of each?',
+  'Combien de {name} avez-vous fait ?': 'How many {name} did you make?',
+  'Un coûte {cost}': 'One costs {cost}',
+  'À combien le vendrez-vous ?': 'What will you sell it for?',
+  'Le prix d\'un, sur l\'étagère et la vitrine.': 'The price of one, on the shelf and the vitrine.',
+  'Un vous coûte {cost}': 'One costs you {cost}',
+  'Ce prix est en dessous de ce que vous coûte un.': 'This price is below what one costs you.',
+  'Fabriqué': 'Made',
+  'Coût total': 'Total cost',
+  'Coût d\'un': 'Cost of one',
+  'Vos ingrédients n\'ont pas de prix d\'achat : le coût est compté à 0. Notez leur prix d\'achat dans Articles.': 'Your ingredients have no purchase price: the cost counts as 0. Note their purchase price in Items.',
+  '{qty} × {name} fabriqués': '{qty} × {name} made',
+  'Un coûte {cost}. Le stock de vos ingrédients a baissé, celui de {name} a monté.': 'One costs {cost}. Your ingredients\' stock went down, {name}\'s went up.',
+  'Fabriquer autre chose': 'Make something else',
+  'Ajoutez d\'abord vos ingrédients comme articles et cochez « Utilisé en production ».': 'First add your ingredients as items and tick « Used in production ».',
+  'Ensuite revenez ici : vous continuez où vous étiez.': 'Then come back here: you carry on where you were.',
+  'Ajouter un ingrédient': 'Add an ingredient',
+  'Plus dans vos articles : {names}': 'No longer in your items: {names}',
+  'Chercher un article': 'Search an item',
+  'Aucun article trouvé.': 'No item found.',
+  'Seulement les ingrédients': 'Ingredients only',
+  'Voir tous mes articles': 'See all my items',
+  'En stock : {n}': 'In stock: {n}',
+  'Plus que votre stock : il passera en dessous de zéro.': 'More than your stock: it will go below zero.',
+  'Le service est rendu': 'The service is done',
+  'Livrée au client': 'Delivered to the customer',
+  'Le livreur ou vous l\'avez remise': 'The courier or you handed it over',
+  'Je la livre moi-même': 'I deliver it myself',
+  'Elle passe « en route » ; vous encaissez la livraison': 'It goes « on the way »; you collect the delivery fee',
+  'Remise au client': 'Handed to the customer',
+  '{name} est venu la chercher': '{name} came to collect it',
+  'Réservation refusée. {name} est prévenu.': 'Booking refused. {name} has been told.',
+  'Commande refusée. {name} est prévenu.': 'Order refused. {name} has been told.',
+  'Réservation confirmée. {name} est prévenu.': 'Booking confirmed. {name} has been told.',
+  'Commande acceptée. {name} est prévenu.': 'Order accepted. {name} has been told.',
+  'Ses articles sont retirés de votre stock.': 'Its items are taken off your stock.',
+  'Prête. {name} est prévenu.': 'Ready. {name} has been told.',
+  'Les livreurs la voient maintenant. Vous pouvez aussi la livrer vous-même.': 'Couriers can see it now. You can also deliver it yourself.',
+  'Quand {name} vient la chercher, touchez « Remise au client ».': 'When {name} comes for it, tap « Handed to the customer ».',
+  'En route : vous livrez {name}.': 'On the way: you are delivering to {name}.',
+  'Une fois remise, touchez « Confirmer la livraison ».': 'Once handed over, tap « Confirm the delivery ».',
+  'Réservation terminée.': 'Booking done.',
+  'Commande terminée.': 'Order done.',
+  'La vente est enregistrée toute seule — ne la passez pas à la caisse.': 'The sale records itself — do not ring it at the till.',
+  'Réservation': 'Booking',
+  'Commande': 'Order',
+  '{name} demande un rendez-vous': '{name} asks for an appointment',
+  '{name} commande': '{name} is ordering',
+  'Accepter le rendez-vous': 'Accept the appointment',
+  'Accepter la commande': 'Accept the order',
+  '{name} lira cette raison.': '{name} will read this reason.',
+  'Votre raison, en quelques mots': 'Your reason, in a few words',
+  'Préparez la commande': 'Prepare the order',
+  'Touchez chaque article une fois mis de côté.': 'Tap each item once it is set aside.',
+  '{n} sur {total} prêts': '{n} of {total} ready',
+  'Le rendez-vous de {name}': '{name}\'s appointment',
+  'La livraison de {name}': '{name}\'s delivery',
+  '{name} est là ?': 'Is {name} here?',
+  'Annuler la réservation': 'Cancel the booking',
+  'Avez-vous reçu l\'argent ?': 'Have you received the money?',
+  '{amount} · {how}': '{amount} · {how}',
+  'Oui, payé': 'Yes, paid',
+  'Pas encore': 'Not yet',
+  '« Paiement reçu » reste sur la commande': '« Payment received » stays on the order',
+  'Réponse': 'Answer',
+  'Raison': 'Reason',
+  'Articles prêts': 'Items ready',
+  'Ensuite': 'Next',
+  'Proposée aux livreurs': 'Offered to couriers',
+  '{name} est prévenu de venir': '{name} is told to come',
+  'Le paiement n\'a pas pu être noté : touchez « Paiement reçu » sur la commande.': 'The payment could not be noted: tap « Payment received » on the order.',
+  'Répondre': 'Answer',
+  'Préparer': 'Prepare',
+  'Confirmer la livraison': 'Confirm the delivery',
+  'Remettre au client': 'Hand to the customer',
+  'Fermé en ce moment': 'Closed right now',
+  'Trop loin pour livrer': 'Too far to deliver',
+  'Pas de place à cette heure': 'No room at that time',
+  'cette personne': 'this person',
+  'Tout ce que vous voyez, et les réglages.': 'Everything you see, and the settings.',
+  'Tout regarder, sans rien enregistrer.': 'Look at everything, record nothing.',
+  'Les ventes et le stock, et :': 'Sales and stock, and:',
+  'Le propriétaire change cela dans Administration › Accès de l\'équipe.': 'The owner changes this in Administration › Team access.',
+  'Les chiffres': 'The figures',
+  'Tout le détail': 'Every detail',
+  'Chaque vente, chaque client': 'Each sale, each customer',
+  'Seulement les totaux': 'Totals only',
+  'Les sommes du jour, pas le détail': 'The day\'s totals, not the detail',
+  'Créer l\'invitation': 'Create the invitation',
+  'Comment s\'appelle cette personne ?': 'What is this person\'s name?',
+  'Prénom et nom': 'First and last name',
+  'Son numéro WhatsApp': 'Their WhatsApp number',
+  'Quelle responsabilité ?': 'Which responsibility?',
+  'Seulement en dessous de la vôtre.': 'Only below your own.',
+  'Votre responsabilité ne permet pas d\'inviter quelqu\'un.': 'Your responsibility does not allow inviting someone.',
+  'Ce que {name} verra': 'What {name} will see',
+  'Son salaire': 'Their salary',
+  'Noté dans Équipe dès qu\'il rejoint. Le payer reste dans « Paie et journées ».': 'Noted in Team as soon as they join. Paying it stays in « Pay and days ».',
+  'Fonction': 'Job',
+  'Pas de numéro : le code marche pour qui l\'a': 'No number: the code works for whoever has it',
+  'Responsabilité': 'Responsibility',
+  'Pas dit': 'Not said',
+  'L\'invitation de {name} est prête': '{name}\'s invitation is ready',
+  'Le salaire n\'a pas pu être noté : dites-le dans Équipe quand {name} aura rejoint.': 'The salary could not be noted: say it in Team once {name} has joined.',
+  'Gère tout : ventes, articles, équipe, réglages — sauf l\'argent et le type de l\'activité, qui restent au propriétaire': 'Manages everything: sales, items, team, settings — except the money and the kind of business, which stay the owner\'s',
+  'Dirige le travail du jour et l\'équipe en dessous': 'Runs the day\'s work and the team below',
+  'Surveille les ventes, le stock et le travail des employés': 'Watches the sales, the stock and the employees\' work',
+  'Valide les dépenses et les paiements': 'Approves expenses and payments',
+  'Vend et enregistre au quotidien': 'Sells and records day to day',
+  'Regarde seulement : ne peut rien enregistrer': 'Only looks: cannot record anything',
+  'C\'est pour vendre': 'It\'s for sale',
+  'C\'est une fourniture': 'It\'s a supply',
+  'Ce qu\'un article vous coûte : il fait votre marge.': 'What an item costs you: it makes your margin.',
+  'Non, pas pour l\'instant': 'No, not for now',
+  'Oui, c\'est un ingrédient': 'Yes, it\'s an ingredient',
+  'Prix d\'achat ?': 'Buying price?',
+  'Prix d\'achat': 'Buying price',
+  'Seulement si vous l\'avez acheté pour le revendre — ce que vous produisez n\'en a pas.': 'Only if you bought it to resell — what you produce has none.',
+  'Ajouter un autre article': 'Add another item',
+  'Ajouter un autre produit': 'Add another product',
+  'Ajouter un produit': 'Add a product',
+  'Alerte stock bas': 'Low-stock alert',
+  'Aliment, médicaments, matériel — ce que la ferme utilise : une réception de stock.': 'Feed, medicine, equipment — what the farm uses: a stock delivery.',
+  'Arrivent': 'Arriving',
+  'Attention : vendu en dessous de ce que ça coûte.': 'Careful: sold below what it costs.',
+  'Autres détails': 'Other details',
+  'Combien arrivent ?': 'How many are arriving?',
+  'Disponible à partir du {date}': 'Available from {date}',
+  'Disponible à partir du': 'Available from',
+  'Déjà dans vos {things} : {n} en stock. On ajoute à son stock.': 'Already in your {things}: {n} in stock. We add to its stock.',
+  'Déjà en stock : {n}': 'Already in stock: {n}',
+  'Déjà prêt ?': 'Ready already?',
+  'Elle paraît sur la vitrine et dans la recherche.': 'It shows on the storefront and in search.',
+  'En dessous de ce nombre, Mara vous prévient.': 'Below this number, Mara warns you.',
+  'Expire le {date}': 'Expires on {date}',
+  'Expire le': 'Expires on',
+  'Non, je le vends': 'No, I sell it',
+  'Numéro de série': 'Serial number',
+  'Oui, prêt à vendre': 'Yes, ready to sell',
+  'Oui, sur la vitrine': 'Yes, on the storefront',
+  'Prendre ou choisir une photo': 'Take or choose a photo',
+  'Prix de vente ?': 'Selling price?',
+  'Produit par la ferme : compté, sans achat.': 'Produced by the farm: counted, no purchase.',
+  'Prévenir quand il en reste peu ?': 'Warn me when few are left?',
+  'Quel article ?': 'Which item?',
+  'Quel produit ?': 'Which product?',
+  'Sans photo': 'No photo',
+  'Stock après': 'Stock after',
+  'Sur la vitrine ?': 'On the storefront?',
+  'Un ingrédient est caché de la vente et proposé en premier en production.': 'An ingredient is hidden from sales and offered first in production.',
+  'Une photo ?': 'A photo?',
+  'Utilisé en production ?': 'Used in production?',
+  'Utilisé en production': 'Used in production',
+  'Visible du public, avec sa photo et son prix, si votre vitrine est ouverte.': 'Visible to the public, with its photo and price, if your storefront is open.',
+  'articles': 'items',
+  'produits': 'products',
+  '{name} ajouté': '{name} added',
+  '{n} en stock': '{n} in stock',
+  'Œufs, poulets, légumes… — dans « À vendre », sur la vitrine et à la vente.': 'Eggs, chickens, vegetables… — in “For sale”, on the storefront and at the till.',
+  'Photo du reçu enregistrée.': 'Receipt photo saved.',
+  'La dépense est enregistrée, mais pas la photo : {error}': 'The expense is saved, but not the photo: {error}',
+  'Pour quoi ?': 'What for?',
+  'Quel nom pour cette dépense ?': 'What do you call this expense?',
+  'Il servira la prochaine fois.': 'It will be offered next time.',
+  'Payée comment ?': 'Paid how?',
+  'Un mot sur cette dépense ?': 'A word about this expense?',
+  'La photo du reçu ?': 'The receipt\'s photo?',
+  'L\'appareil photo, le téléphone ou vos Photos': 'The camera, the phone or your Photos',
+  'Retirer la photo': 'Remove the photo',
+  'Payée': 'Paid',
+  'Pas de photo': 'No photo',
+  'Photo jointe': 'Photo attached',
+  'Argent qui sort. Fonctionne sans connexion.': 'Money going out. Works offline.',
+  '{label} : {amount} dépensé': '{label}: {amount} spent',
+  'Cotisation': 'Contribution',
+  'Don': 'Gift',
+  'Qu\'est-ce que c\'est ?': 'What is it?',
+  'Ce qu\'un membre verse': 'What a member pays in',
+  'Un cadeau, sans contrepartie': 'A gift, nothing in return',
+  'Ce que l\'association a vendu': 'What the association sold',
+  'Vous lui donnez un nom': 'You give it a name',
+  'Quel nom pour cette recette ?': 'What do you call this income?',
+  'Location de la salle': 'Hall rental',
+  'De qui ?': 'From whom?',
+  'Son nom': 'Their name',
+  'Quelqu\'un d\'autre': 'Someone else',
+  'Reçue comment ?': 'Received how?',
+  'Reçue': 'Received',
+  '{label} : {amount} reçu': '{label}: {amount} received',
+  'Remboursement': 'Repayment',
+  'Nouveau crédit': 'New credit',
+  'En retard depuis le {date}': 'Overdue since {date}',
+  'À payer le {date}': 'Due on {date}',
+  'Envoyer un rappel sur WhatsApp': 'Send a reminder on WhatsApp',
+  'Bonjour {name}, c\'est {business}.': 'Hello {name}, this is {business}.',
+  'Il reste {amount} à payer.': '{amount} is still to be paid.',
+  'Il reste {amount} à payer avant le {date}.': '{amount} is still to be paid before {date}.',
+  'Pour qui ?': 'For whom?',
+  'Son numéro WhatsApp ?': 'Their WhatsApp number?',
+  'Pour lui envoyer un rappel.': 'To send them a reminder.',
+  'Qu\'est-ce qu\'il doit ?': 'What do they owe?',
+  'Des articles': 'Items',
+  'Pris maintenant, payés plus tard — le stock bouge': 'Taken now, paid later — the stock moves',
+  'Une somme': 'A sum',
+  'Un prêt, un service, un reste à payer': 'A loan, a service, a balance left to pay',
+  'Cotisation de mars': 'March contribution',
+  'Prêt, réparation…': 'Loan, repair…',
+  'Il paiera quand ?': 'When will they pay?',
+  'Pas de date': 'No date',
+  'Dans une semaine': 'In a week',
+  'Dans deux semaines': 'In two weeks',
+  'Dans un mois': 'In a month',
+  'Une date précise': 'A specific date',
+  'Des articles, choisis à l\'étape suivante': 'Items, chosen at the next step',
+  '« Choisir les articles » ouvre la vente, déjà sur Crédit.': '« Choose the items » opens the sale, already on Credit.',
+  'Il faut du réseau pour enregistrer un crédit.': 'Recording a credit needs a connection.',
+  'Choisir les articles': 'Choose the items',
+  'Enregistrer le crédit': 'Save the credit',
+  'Vente à crédit enregistrée pour {name}': 'Credit sale recorded for {name}',
+  '{name} doit {amount}': '{name} owes {amount}',
+  'La date partira avec la vente, dès le retour du réseau.': 'The date will go with the sale as soon as the network is back.',
+  'Un autre crédit': 'Another credit',
+  'Qui rembourse ?': 'Who is repaying?',
+  'Personne ne vous doit rien.': 'Nobody owes you anything.',
+  '{name} doit {amount}.': '{name} owes {amount}.',
+  'Tout : {amount}': 'All of it: {amount}',
+  'C\'est plus que ce qu\'il doit.': 'That is more than they owe.',
+  'Il paie': 'They pay',
+  'Il restera': 'Left after',
+  'Les crédits les plus anciens sont payés en premier.': 'The oldest credits are paid first.',
+  '{name} a payé {amount}': '{name} paid {amount}',
+  'Il ne doit plus rien.': 'They owe nothing more.',
+  'Il reste {amount}.': '{amount} left.',
+  'Vos clients': 'Your customers',
+  'Comment le joindre ?': 'How to reach them?',
+  'Qu\'est-ce que vous facturez ?': 'What are you invoicing?',
+  'Touchez chaque article ou service, un à la fois.': 'Tap each item or service, one at a time.',
+  'Sur la facture : {lines}': 'On the invoice: {lines}',
+  'Chercher': 'Search',
+  'Combien, et à quel prix ?': 'How many, and at what price?',
+  'À payer quand ?': 'Due when?',
+  'Une note pour vous ?': 'A note for yourself?',
+  'La facture': 'The invoice',
+  'Contact': 'Contact',
+  'Note interne': 'Internal note',
+  'Il faut du réseau pour créer la facture : son numéro vient du serveur.': 'Creating the invoice needs a connection: its number comes from the server.',
+  'Facture corrigée : {total}': 'Invoice corrected: {total}',
+  'Facture créée pour {customer} : {total}': 'Invoice created for {customer}: {total}',
+  'Voir et partager la facture': 'See and share the invoice',
+  'Dépôt de la caisse à la banque': 'Cash box deposited at the bank',
+  'Ses membres, leurs cotisations et leurs dons.': 'Its members, their contributions and their gifts.',
+  '45 min, 3 séances…': '45 min, 3 sessions…',
+  'Ajouter un autre service': 'Add another service',
+  'Durée': 'Duration',
+  'Les clients le voient et le réservent, si votre vitrine est ouverte.': 'Customers see it and book it, if your storefront is open.',
+  'Quel prix ?': 'What price?',
+  'Un prix fixe': 'A fixed price',
+  'À partir de {price}': 'From {price}',
+  'Écrit sous son nom, sur la vitrine.': 'Written under its name, on the storefront.',
+  'Réglages des notifications': 'Notification settings',
+  'Les notifications sont refusées sur cet appareil. Elles s\'activent dans ses paramètres.': 'Notifications are blocked on this device. Turn them on in its settings.',
+  'Le test arrive avec la prochaine mise à jour du serveur.': 'The test comes with the next server update.',
+  'Cet appareil sonne même l\'application fermée': 'This device rings even with the app closed',
+  'Cet appareil ne sonne que l\'application ouverte': 'This device rings only while the app is open',
+  'Sur cet appareil, les notifications arrivent dans la cloche quand l\'application est ouverte.': 'On this device, notifications arrive in the bell while the app is open.',
+  'Ce que vous voulez entendre': 'What you want to hear about',
+  'Éteint : rien n\'est écrit dans la cloche et rien ne sonne. Les messages de votre compte sonnent toujours.': 'Off: nothing is written in the bell and nothing rings. Your account\'s own messages always ring.',
+  'M\'envoyer une notification test': 'Send me a test notification',
+  'Envoyée dans la cloche. Aucun appareil n\'est inscrit pour sonner application fermée : touchez « Activer ».': 'Sent to the bell. No device is set to ring with the app closed: tap “Turn on”.',
+  'Envoyée à {n} appareil(s) : {web} navigateur(s), {android} téléphone(s) Android.': 'Sent to {n} device(s): {web} browser(s), {android} Android phone(s).',
+  'Le webhook de la base est en place.': 'The database webhook is in place.',
+  'Aucun webhook sur la table notifications : rien ne réveille le Worker push (README, « Push notifications »).': 'No webhook on the notifications table: nothing wakes the push Worker (README, “Push notifications”).',
+  'Activé : les notifications sonneront même l\'application fermée.': 'On: notifications will ring even with the app closed.',
+  'Activé : une commande sonnera quand cet onglet est en arrière-plan.': 'On: an order will ring while this tab is in the background.',
+  'Recevez les demandes et les signalements même l\'application fermée.': 'Get requests and reports even with the app closed.',
+  'Tester la notification': 'Test the notification',
+  'Votre demande de livreur est bien arrivée : Mara l\'examine et vous répond ici.': 'Your courier application has arrived: Mara is reviewing it and will answer here.',
+  'Nouvelle livraison près de vous : {shop}': 'New delivery near you: {shop}',
+  'Nouvelle livraison près de vous : {shop} ({fee})': 'New delivery near you: {shop} ({fee})',
+  '{shop} vous a ajouté à ses livreurs : ses livraisons vous arrivent en premier.': '{shop} added you to its couriers: its deliveries reach you first.',
+  '{shop} confirme avoir reçu l\'argent de la livraison pour {name} : {amount}.': '{shop} confirms it received the money of the delivery for {name}: {amount}.',
+  'Cela fait 7 jours sans livraison : des courses vous attendent sur Mara.': '7 days without a delivery: jobs are waiting for you on Mara.',
+  'Votre numéro {phone} est vérifié.': 'Your number {phone} is verified.',
+  'Mara : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.': 'Mara: this is a test notification. If it shows on your phone, everything works.',
+  'Soyez prévenu des commandes et du stock, même l\'application fermée.': 'Hear about orders and stock, even with the app closed.',
+  'Soyez prévenu des réservations et de votre équipe, même l\'application fermée.': 'Hear about bookings and your team, even with the app closed.',
+  'Recevez les nouvelles livraisons même l\'application fermée.': 'Get new deliveries even with the app closed.',
+  'Soyez prévenu quand votre commande avance, même l\'application fermée.': 'Hear when your order moves on, even with the app closed.',
+  'Ce qui sonne, et une notification test': 'What rings, and a test notification',
+  'Responsables': 'Managers',
+  'Toute l\'équipe': 'The whole team',
+  'Il arrive dans la cloche de chaque membre de leur équipe.': 'It reaches the bell of every member of their team.',
+  'Nouveautés des vitrines suivies': 'News from followed storefronts',
+  'Réponses à mes signalements': 'Answers to my reports',
+  'Nouvelles livraisons près de moi': 'New deliveries near me',
+  'Mes courses : annulées, boutiques': 'My jobs: cancelled, shops',
+  'Argent remis à la boutique': 'Money handed to the shop',
+  'Rappel après 7 jours sans livraison': 'Reminder after 7 days without a delivery',
+  'Commandes de la vitrine': 'Storefront orders',
+  'Stock bas': 'Low stock',
+  'Nouveaux membres de l\'équipe': 'New team members',
+  'Crédits soldés et tontines': 'Credits paid off and tontines',
+  'Classement des cauris': 'Cauris ranking',
+  'Récolte demande le réseau. Réessayez quand vous avez du signal.':
+      'Harvest needs the network. Try again when you have signal.',
+  'Votre activité n\'est pas encore créée. Vos réponses sont gardées : vous reprendrez ici.':
+      'Your business is not created yet. Your answers are kept: you will pick up here.',
+  'Libellé': 'Label',
+  'Ce qui aidera à s\'en souvenir : le fournisseur, le numéro du reçu…':
+      'What will help remember it: the supplier, the receipt number…',
+  'Ce qui aidera à s\'en souvenir : pour quel mois, quelle occasion…':
+      'What will help remember it: which month, which occasion…',
+  'L\'invitation est prête': 'The invitation is ready',
 };

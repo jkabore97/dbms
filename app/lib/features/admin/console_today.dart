@@ -250,6 +250,8 @@ class _MessageDialogState extends State<_MessageDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Écrire aux boutiques')),
       content: Column(
         mainAxisSize: MainAxisSize.min,

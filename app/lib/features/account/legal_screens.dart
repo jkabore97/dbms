@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The three static pages the app must carry to be publishable: a privacy
 /// policy, terms of use, and a short FAQ. They ship inside the app rather than
@@ -26,7 +27,7 @@ class _DocScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(title)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [

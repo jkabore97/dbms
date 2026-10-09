@@ -9,6 +9,8 @@ import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import '../../core/tontine/tontine_repository.dart';
 import '../../l10n/strings.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The business's tontines, and the one screen a round needs: who has paid,
 /// who has not, whose turn the pot is.
@@ -67,6 +69,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
     final made = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _NewTontineSheet(org: widget.org, tontine: widget.tontine),
     );
     if (made == true && mounted) await _load();
@@ -76,7 +79,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
   Widget build(BuildContext context) {
     final strings = Strings.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(strings.tontines)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(strings.tontines)),
       floatingActionButton: !widget.access.canEdit('tontines')
           ? null
           : FloatingActionButton.extended(
@@ -220,7 +223,7 @@ class _TontineScreenState extends State<TontineScreen> {
     final allPaid = _members.isNotEmpty && _members.every((m) => m.hasPaid);
 
     return Scaffold(
-      appBar: AppBar(title: Text(s?.name ?? strings.tontines)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(s?.name ?? strings.tontines)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -348,14 +351,34 @@ class _NewTontineSheetState extends State<_NewTontineSheet> {
   @override
   Widget build(BuildContext context) {
     final strings = Strings.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!,
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(strings.save),
+              ),
+            ),
+        ],
+      ),
+      children: [
             Text(strings.newTontine,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
@@ -400,28 +423,7 @@ class _NewTontineSheetState extends State<_NewTontineSheet> {
                 alignLabelWithHint: true,
               ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!,
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(strings.save),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

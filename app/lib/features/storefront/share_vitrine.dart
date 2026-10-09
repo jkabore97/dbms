@@ -12,6 +12,7 @@ import '../../core/format/money.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Partager » on a vitrine (the owner's or anybody's): three ways out,
 /// each made for WhatsApp, where a vitrine travels here.
@@ -468,6 +469,7 @@ class _StatusPreviewState extends State<StatusPreview> {
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: maraBlack,
         appBar: AppBar(
+          actions: const [bellRoom],
           backgroundColor: maraBlack,
           foregroundColor: maraPaper,
           title: Text(context.tr('Votre statut')),
