@@ -21,6 +21,7 @@ import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
+import '../home/home_counts.dart';
 import '../home/home_nav.dart';
 import '../notify/push_offer.dart';
 import 'article_flow.dart';
@@ -95,7 +96,11 @@ class StoreHomeScreen extends StatefulWidget {
   State<StoreHomeScreen> createState() => _StoreHomeScreenState();
 }
 
-class _StoreHomeScreenState extends State<StoreHomeScreen> {
+class _StoreHomeScreenState extends State<StoreHomeScreen>
+    with HomeCounts<StoreHomeScreen> {
+  @override
+  String get countsOrgId => widget.org.id;
+
   NumberFormat get _money => moneyFormat(widget.org.currency);
 
   StoreDay _day = const StoreDay();
@@ -730,6 +735,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.sell_outlined,
             label: s.productsLabel,
+            // Articles at zero or under their alert level (115).
+            badge: homeCount('articles'),
             route: 'produits',
             onTap: () => _openThenReload('produits'),
           ),
@@ -738,7 +745,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.inbox_outlined,
             label: context.tr('Commandes'),
-            badge: _pendingOrders,
+            // Orders and bookings not answered yet (115's home_counts,
+            // live with the bell; the doorbell's own count before 115).
+            badge: homeCountsKnown
+                ? homeCount('orders') + homeCount('bookings')
+                : _pendingOrders,
             route: 'commandes',
             onTap: () => _openThenReload('commandes'),
           ),
@@ -746,6 +757,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            // Invoices past their due date and not paid (115).
+            badge: homeCount('invoices'),
             route: 'factures',
             onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => context.push(Routes.inside(widget.org.id, 'factures'))),
@@ -799,6 +812,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           HomeDestination(
             icon: Icons.groups_outlined,
             label: context.tr('Équipe'),
+            // Invitations not claimed yet (115).
+            badge: homeCount('invitations'),
             route: 'equipe',
             onTap: () => context.push(Routes.inside(widget.org.id, 'equipe')),
           ),
@@ -826,6 +841,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
         HomeDestination(
           icon: Icons.account_circle_outlined,
           label: s.account,
+          // The carnet's credits past their date (115, 117's due date):
+          // the shop's carnet is opened from Compte.
+          badge: homeCount('credit'),
           route: 'compte',
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
         ),

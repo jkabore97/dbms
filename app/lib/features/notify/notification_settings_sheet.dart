@@ -114,7 +114,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     try {
       final r = await widget.notify.sendTest();
       if (!mounted) return;
-      setState(() => _said = testOutcome(context, web: r.web, android: r.android, webhook: r.webhook));
+      setState(() => _said = r == null
+          ? context.tr('Le test arrive avec la prochaine mise à jour du serveur.')
+          : testOutcome(context, web: r.web, android: r.android, webhook: r.webhook));
     } catch (e) {
       if (mounted) setState(() => _error = describeError(e));
     } finally {

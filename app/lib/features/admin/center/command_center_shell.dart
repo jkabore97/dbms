@@ -11,7 +11,9 @@ import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
 import '../../../core/nav/session.dart';
 import '../../../core/theme/mara_mark.dart';
+import '../../../core/notify/notifications_repository.dart';
 import '../admin_pill.dart';
+import '../../notify/notifications_screen.dart' show NotificationBell;
 import 'center_search.dart';
 
 /// One page of a section: its name and its address. [leaves] marks a page
@@ -411,6 +413,17 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
+              // The platform's own bell (115): requests, couriers, spots.
+              if (AppScope.maybeOf(context)?.notify case final notify?)
+                IconButtonTheme(
+                  data: IconButtonThemeData(
+                      style: IconButton.styleFrom(foregroundColor: maraPaper)),
+                  child: NotificationBell(
+                    notify: notify,
+                    scope: NotifyScope.platform,
+                    listRoute: Routes.consoleNotifications,
+                  ),
+                ),
               IconButton(
                 key: const Key('center-leave'),
                 tooltip: context.tr('Quitter le centre admin'),

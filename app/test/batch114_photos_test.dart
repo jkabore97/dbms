@@ -289,6 +289,8 @@ void main() {
       await settle(tester);
       expect(photos.sent, ['org-1 image/jpeg product_photo Coupe homme ${_png.length}'], reason: org.profile);
       expect(photos.filed, ['new-doc→p-new'], reason: org.profile);
+      await tester.tap(find.byKey(const Key('flow-finish')));
+      await settle(tester);
     }
   });
 

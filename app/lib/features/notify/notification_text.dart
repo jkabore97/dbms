@@ -73,9 +73,11 @@ String notificationLine(BuildContext context, NotificationRow n) {
         'refused' => context.tr('refusée'),
         _ => context.tr('annulée'),
       };
-      return yes('booking')
+      final line = yes('booking')
           ? context.tr('Votre réservation chez {shop} : {status}', {'shop': s('shop'), 'status': status})
           : context.tr('Votre commande chez {shop} : {status}', {'shop': s('shop'), 'status': status});
+      // The shop's own words on a refusal (115), as it typed them.
+      return s('reason').isEmpty ? line : '$line — ${s('reason')}';
     case 'delivery_cancelled':
       return context.tr('La livraison pour {name} a été annulée par la boutique', {'name': s('name')});
     case 'courier_approved':
@@ -93,6 +95,28 @@ String notificationLine(BuildContext context, NotificationRow n) {
           : context.tr('Mara demande une nouvelle photo de votre pièce d\'identité.');
     case 'courier_application':
       return context.tr('Nouvelle demande de livreur : {name}', {'name': s('name')});
+    // 115: the dossier arrived; a delivery waits near the courier; a shop
+    // named them its courier; the cash handed over; the 7-day nudge.
+    case 'courier_received':
+      return context.tr('Votre demande de livreur est bien arrivée : Mara l\'examine et vous répond ici.');
+    case 'delivery_available':
+      final fee = money('fee');
+      return fee.isEmpty
+          ? context.tr('Nouvelle livraison près de vous : {shop}', {'shop': s('shop')})
+          : context.tr('Nouvelle livraison près de vous : {shop} ({fee})', {'shop': s('shop'), 'fee': fee});
+    case 'courier_shop_added':
+      return context.tr('{shop} vous a ajouté à ses livreurs : ses livraisons vous arrivent en premier.',
+          {'shop': s('shop')});
+    case 'courier_cash_received':
+      return context.tr('{shop} confirme avoir reçu l\'argent de la livraison pour {name} : {amount}.',
+          {'shop': s('shop'), 'name': s('name'), 'amount': money('amount')});
+    case 'courier_idle':
+      return context.tr('Cela fait 7 jours sans livraison : des courses vous attendent sur Mara.');
+    // 115: the account's own.
+    case 'phone_verified':
+      return context.tr('Votre numéro {phone} est vérifié.', {'phone': s('phone')});
+    case 'test_push':
+      return context.tr('Mara : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.');
     case 'courier_suspended':
       return context.tr('Votre accès livreur est suspendu.');
     case 'courier_pending':
@@ -352,8 +376,14 @@ String? notificationTarget(
     case 'courier_application':
       return Routes.consoleCouriers;
     case 'courier_approved' || 'courier_suspended' || 'courier_pending' ||
-          'delivery_cancelled':
+          'delivery_cancelled' || 'delivery_available' || 'courier_shop_added' ||
+          'courier_cash_received' || 'courier_idle':
       return Routes.courier;
+    // 115: the dossier received opens its progress.
+    case 'courier_received':
+      return Routes.becomeCourier;
+    case 'test_push' || 'phone_verified':
+      return null;
     case 'new_device':
       return Routes.security;
     case 'org_application':

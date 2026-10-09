@@ -6,7 +6,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/notify/push_client.dart';
-import '../../core/orders/order_alert.dart';
+import '../../core/notify/push_setup.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_style.dart';
@@ -94,17 +94,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
   /// from a tap — as the shop's « Activer les alertes ».
   Future<void> _enablePush() async {
     final notify = AppScope.maybeOf(context)?.notify;
-    final granted = await OrderAlert.request();
-    var saved = false;
-    if (granted && PushClient.available) {
-      final sub = await PushClient.subscribe();
-      if (sub != null && notify != null && notify.isConfigured) {
-        try {
-          await notify.savePushSubscription(sub);
-          saved = true;
-        } catch (_) {}
-      }
-    }
+    final saved = notify != null && await PushSetup.enable(notify);
     if (!mounted) return;
     _say(saved
         ? context.tr('Activé : les nouveautés sonneront même l\'application fermée.')

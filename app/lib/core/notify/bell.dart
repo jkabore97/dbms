@@ -42,6 +42,9 @@ class Bell extends ChangeNotifier with WidgetsBindingObserver {
   /// One number of a business's bar ('orders', 'articles', …); 0 unknown.
   int homeCount(String orgId, String key) => _home[orgId]?[key] ?? 0;
 
+  /// Whether a business's numbers came from the server (115 is live).
+  bool knowsHome(String orgId) => _home[orgId]?.isNotEmpty ?? false;
+
   /// A business's bar is on screen: its numbers are read with the bell's.
   void watchHome(String orgId) {
     _homeWatchers[orgId] = (_homeWatchers[orgId] ?? 0) + 1;

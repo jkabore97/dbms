@@ -372,7 +372,9 @@ class _ArticleFlowState extends State<ArticleFlow> {
   @override
   Widget build(BuildContext context) {
     final existing = _existing;
-    final sell = _kind == 'sell';
+    // Before the farm's answer the steps of « pour vendre » are counted:
+    // the step bar does not jump from 2 to 10.
+    final sell = _kind != ArticleFlow.supply;
     return StepFlow(
       title: _farm ? context.tr('Ajouter un produit') : context.tr('Ajouter un article'),
       controller: _flow,

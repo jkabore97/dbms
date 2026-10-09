@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/nav/router.dart';
+import '../../core/nav/session.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart' show AdminTrail;
@@ -268,6 +270,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         );
                       },
                     ),
+    );
+  }
+}
+
+/// The shopper's bell on the street and on a vitrine (115): drawn for a
+/// signed-in person only — a stranger has no bell to read.
+class ShopperBell extends StatelessWidget {
+  const ShopperBell({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.maybeOf(context);
+    if (scope == null) return const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: scope.session,
+      builder: (context, _) {
+        final phase = scope.session.phase;
+        final signedIn = phase == SessionPhase.ready ||
+            phase == SessionPhase.noOrg ||
+            phase == SessionPhase.picking;
+        if (!signedIn || scope.notify.me == null) return const SizedBox.shrink();
+        return NotificationBell(
+          key: const Key('shopper-bell'),
+          notify: scope.notify,
+          scope: NotifyScope.customer,
+          listRoute: Routes.myNotifications,
+        );
+      },
     );
   }
 }

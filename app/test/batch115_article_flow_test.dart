@@ -284,7 +284,7 @@ void main() {
     expect(find.byKey(const Key('article-known')), findsOneWidget);
     await next(tester);
     await next(tester);
-    expect(tester.widget<TextField>(find.byKey(const Key('article-quantity'))).controller!.text, '1');
+    expect(tester.widget<FlowNumberField>(find.byKey(const Key('article-quantity'))).controller.text, '1');
   });
 
   testWidgets('a scanned code never seen goes onto the new article', (tester) async {

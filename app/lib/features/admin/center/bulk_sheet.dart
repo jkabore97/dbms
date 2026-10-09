@@ -92,6 +92,10 @@ class _BulkSheetState extends State<BulkSheet> {
   final _note = TextEditingController();
   final _message = TextEditingController();
   bool _promo = false;
+
+  /// Whom a message reaches (115): « Responsables » (owners and admins, as
+  /// before) or « Toute l'équipe » (every member).
+  bool _team = false;
   late DateTime _until = DateUtils.dateOnly(DateTime.now()).add(const Duration(days: 30));
   String? _tool;
   bool _busy = false;
@@ -166,7 +170,7 @@ class _BulkSheetState extends State<BulkSheet> {
           return;
         }
         action = 'message';
-        args = {'message': text};
+        args = {'message': text, if (_team) 'audience': 'team'};
       case BulkAction.archive:
         action = 'archive';
         args = const {};
@@ -297,7 +301,17 @@ class _BulkSheetState extends State<BulkSheet> {
                 ),
               ),
             ],
-            if (widget.action == BulkAction.message)
+            if (widget.action == BulkAction.message) ...[
+              SegmentedButton<bool>(
+                key: const Key('bulk-message-audience'),
+                segments: [
+                  ButtonSegment(value: false, label: Text(context.tr('Responsables'))),
+                  ButtonSegment(value: true, label: Text(context.tr('Toute l\'équipe'))),
+                ],
+                selected: {_team},
+                onSelectionChanged: _busy ? null : (v) => setState(() => _team = v.first),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 key: const Key('bulk-message-text'),
                 controller: _message,
@@ -307,9 +321,12 @@ class _BulkSheetState extends State<BulkSheet> {
                 maxLength: 500,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  hintText: context.tr('Il arrive dans la cloche de leurs propriétaires et administrateurs.'),
+                  hintText: _team
+                      ? context.tr('Il arrive dans la cloche de chaque membre de leur équipe.')
+                      : context.tr('Il arrive dans la cloche de leurs propriétaires et administrateurs.'),
                 ),
               ),
+            ],
             if (widget.action == BulkAction.archive)
               Text(context.tr('Elles disparaissent de l\'accueil de leurs membres ; rien n\'est effacé. Le Journal les restaure d\'un « Annuler ».')),
             if (_error != null) ...[

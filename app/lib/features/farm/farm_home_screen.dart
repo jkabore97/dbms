@@ -21,6 +21,7 @@ import '../../core/nav/app_scope.dart';
 import '../cauris/path_card.dart';
 import '../common/refused_notice.dart';
 import '../admin/admin_pill.dart' show AdminPill;
+import '../home/home_counts.dart';
 import '../home/home_nav.dart';
 import '../notify/push_offer.dart';
 import '../orders/home_doorbell.dart';
@@ -100,7 +101,10 @@ class FarmHomeScreen extends StatefulWidget {
 }
 
 class _FarmHomeScreenState extends State<FarmHomeScreen>
-    with HomeDoorbell<FarmHomeScreen> {
+    with HomeDoorbell<FarmHomeScreen>, HomeCounts<FarmHomeScreen> {
+  @override
+  String get countsOrgId => widget.org.id;
+
   // The doorbell (100): a new order on the farm's vitrine rings here, as
   // on a shop's home, for whoever sees the orders.
   @override
@@ -521,12 +525,16 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         HomeDestination(
           icon: Icons.inventory_2_outlined,
           label: s.stock,
+          // Supplies under their reorder level (115).
+          badge: homeCount('supplies'),
           route: 'stock',
           onTap: () => _push(Routes.inside(id, 'stock')),
         ),
         HomeDestination(
           icon: Icons.pets_outlined,
           label: s.flocks,
+          // Open batches with nothing written today (115).
+          badge: homeCount('livestock'),
           route: 'bandes',
           onTap: () => _push(Routes.inside(id, 'bandes')),
         ),
@@ -534,6 +542,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            // Invoices past their due date and not paid (115).
+            badge: homeCount('invoices'),
             route: 'factures',
             onTap: () => PathGate.open(context, widget.org, 'invoices',
                 () => _push(Routes.inside(id, 'factures'))),
@@ -552,6 +562,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         HomeDestination(
           icon: Icons.storefront_outlined,
           label: context.tr('À vendre'),
+          // Articles at zero or under their alert level (115).
+          badge: homeCount('articles'),
           route: 'a-vendre',
           onTap: () => _push(Routes.inside(id, 'a-vendre')),
         ),
@@ -567,6 +579,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         HomeDestination(
           icon: Icons.shopping_bag_outlined,
           label: context.tr('Commandes'),
+          // Orders and bookings not answered yet (115).
+          badge: homeCount('orders') + homeCount('bookings'),
           route: 'commandes',
           onTap: () => _push(Routes.inside(id, 'commandes')),
         ),
@@ -581,6 +595,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           HomeDestination(
             icon: Icons.handshake_outlined,
             label: s.creditBook,
+            // Credits past their due date (115, 117).
+            badge: homeCount('credit'),
             route: 'credits',
             onTap: () => PathGate.open(context, widget.org, 'credits',
                 () => context.push(Routes.inside(id, 'credits'))),
@@ -606,6 +622,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           HomeDestination(
             icon: Icons.groups_outlined,
             label: context.tr('Équipe'),
+            // Invitations not claimed yet (115).
+            badge: homeCount('invitations'),
             route: 'equipe',
             onTap: () => context.push(Routes.inside(id, 'equipe')),
           ),

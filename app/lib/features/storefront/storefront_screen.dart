@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../notify/notifications_screen.dart' show ShopperBell;
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -711,6 +712,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
+      // The shopper's bell (115), once signed in.
+      trailing: const ShopperBell(),
       overlay: _basket.isEmpty || _inlineShown
           ? null
           : basketBar(floating: true),

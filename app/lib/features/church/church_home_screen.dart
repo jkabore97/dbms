@@ -21,6 +21,7 @@ import '../../core/reports/reports_repository.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../admin/admin_pill.dart' show AdminPill;
+import '../home/home_counts.dart';
 import '../home/home_nav.dart';
 import '../notify/push_offer.dart';
 import 'close_day_sheet.dart';
@@ -112,7 +113,10 @@ class ChurchHomeScreen extends StatefulWidget {
 }
 
 class _ChurchHomeScreenState extends State<ChurchHomeScreen>
-    with HomeDoorbell<ChurchHomeScreen> {
+    with HomeDoorbell<ChurchHomeScreen>, HomeCounts<ChurchHomeScreen> {
+  @override
+  String get countsOrgId => widget.org?.id ?? '';
+
   // The doorbell (100): a new demande on the association's vitrine rings
   // here, as an order does on a shop's home, for its administrators.
   @override
@@ -531,6 +535,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.receipt_long_outlined,
             label: s.invoices,
+            // Invoices past their due date and not paid (115).
+            badge: homeCount('invoices'),
             route: 'factures',
             onTap: () => context.push(Routes.inside(org.id, 'factures')),
           ),
@@ -550,6 +556,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             HomeDestination(
               icon: Icons.groups_outlined,
               label: context.tr('Équipe'),
+              // Invitations not claimed yet (115).
+              badge: homeCount('invitations'),
               route: 'equipe',
               onTap: () => context.push(Routes.inside(org.id, 'equipe')),
             ),

@@ -416,8 +416,16 @@ class NotificationsRepository {
   /// « M'envoyer une notification test » (115): rings the caller's own
   /// devices; answers how many browsers and phones they have, and — to the
   /// platform — whether the database webhook that wakes the Worker exists.
-  Future<({int web, int android, bool? webhook})> sendTest() async {
-    final v = Map<String, dynamic>.from(await _c.rpc('send_test_notification') as Map);
+  /// Null on a database before 115, which has no such door.
+  Future<({int web, int android, bool? webhook})?> sendTest() async {
+    final Object? raw;
+    try {
+      raw = await _c.rpc('send_test_notification');
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+    final v = Map<String, dynamic>.from(raw as Map);
     int n(Object? x) => x is num ? x.toInt() : 0;
     return (
       web: n(v['web']),

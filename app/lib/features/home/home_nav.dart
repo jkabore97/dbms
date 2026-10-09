@@ -178,6 +178,8 @@ class HomeNav {
         HomeDestination(
           icon: Icons.more_horiz,
           label: moreLabel,
+          // What waits under Plus, added up (115): its lines say which.
+          badge: rest.fold(0, (n, p) => n + p.badge),
           onTap: () => showMore(context, rest),
         ),
     ];
@@ -258,9 +260,10 @@ class HomeNav {
     );
   }
 
+  /// A place's count, as the bell says its own (115): « 9+ » past nine.
   static Widget placeIcon(HomeDestination p, IconData icon) => Badge(
         isLabelVisible: p.badge > 0,
-        label: Text('${p.badge}'),
+        label: Text(p.badge > 9 ? '9+' : '${p.badge}'),
         child: Icon(icon),
       );
 

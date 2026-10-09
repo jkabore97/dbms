@@ -6,7 +6,9 @@ import '../../../core/console/command_center.dart';
 import '../../../core/errors.dart';
 import '../../../core/format/money.dart' show parseAmount;
 import '../../../core/l10n/tr.dart';
+import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
+import '../../notify/push_check.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'todo_section.dart' show featureName;
@@ -338,6 +340,16 @@ class _SettingsSectionState extends State<SettingsSection> {
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
+                    // The bell with the app closed, checked end to end (115).
+                    if (AppScope.maybeOf(context)?.notify case final notify?) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+                        child: Text(context.tr('Notifications'),
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800)),
+                      ),
+                      PushCheck(notify: notify),
+                    ],
                     for (final g in groups) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
