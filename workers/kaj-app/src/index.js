@@ -37,6 +37,35 @@ const SITE = "https://marakaj.com";
 
 export default {
   async fetch(request, env) {
+    return secure(await serve(request, env));
+  },
+};
+
+// The headers web filters (company VPNs such as Zscaler, browsers' own
+// checks) look for on a trustworthy site: HTTPS only from now on, no type
+// guessing, no framing by another site, the referrer kept to the origin,
+// and the phone features the app uses (camera, position) for this site
+// only. No Content-Security-Policy: the Flutter engine compiles
+// WebAssembly and a wrong policy is a blank page.
+const SECURITY_HEADERS = {
+  "Strict-Transport-Security": "max-age=31536000",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(self), geolocation=(self), microphone=(), payment=(self)",
+};
+
+export function secure(response) {
+  if (response.status >= 300 && response.status < 400) return response;
+  const out = new Response(response.body, response);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!out.headers.has(name)) out.headers.set(name, value);
+  }
+  return out;
+}
+
+async function serve(request, env) {
+  {
     const url = new URL(request.url);
 
     if (url.hostname.endsWith(".workers.dev")) {
@@ -58,8 +87,8 @@ export default {
       }
     }
     return cacheFor(url.pathname, await env.ASSETS.fetch(request));
-  },
-};
+  }
+}
 
 // /app/<hash>/, /ck/<hash>/, /a/<hash>/ — written by the deploy.
 const FINGERPRINTED = /^\/(app|ck|a)\/[0-9a-f]{12}\//;
