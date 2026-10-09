@@ -7,6 +7,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// The phone's ring with the app closed (115): Firebase Cloud Messaging reads
+// the project's google-services.json (Firebase console → the Android app
+// bf.kaj.app), written here by CI from the GOOGLE_SERVICES_JSON secret and
+// gitignored. Without the file the plugin is not applied, the build succeeds
+// as before, and the app simply offers no Android push.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // The upload keystore, when the build has one. CI writes key.properties and
 // the .jks from repository secrets (see .github/workflows/build.yml); a
 // developer's machine may carry its own. Both files are gitignored — the

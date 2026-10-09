@@ -123,6 +123,14 @@ dependencies:
   sentry_flutter: ^9.29.0
   local_auth: ^3.0.2
 
+  # The Android phone's ring with the app closed (115): Firebase Cloud
+  # Messaging, reached only through core/notify/push_client_stub.dart (the
+  # non-web side of push_client.dart). Dormant until the build carries
+  # android/app/google-services.json (Firebase.initializeApp fails without
+  # it and the app offers no Android push); the browser keeps Web Push.
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

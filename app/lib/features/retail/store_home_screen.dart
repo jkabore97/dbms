@@ -23,8 +23,10 @@ import '../../core/theme/motion.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../capture/capture_action.dart';
 import '../home/home_nav.dart';
-import 'products_screen.dart' show ReceiveSheet;
-import 'sale_sheet.dart';
+import 'article_flow.dart';
+import '../common/step_flow.dart';
+import 'sale_flow.dart';
+import '../money/expense_flow.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import '../common/refused_notice.dart';
@@ -313,23 +315,19 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     }
   }
 
-  /// A sale the server refused for want of stock: the stock entry opens on
-  /// the article it named and the number missing; once received, the same
-  /// sale (same client_uuid) is sent again.
+  /// A sale the server refused for want of stock: « Ajouter un article »
+  /// (115) opens on the article it named and the number missing; once
+  /// received, the same sale (same client_uuid) is sent again.
   Future<void> _fixRefused(RefusedAction a) async {
     final retail = widget.retail;
     final short = a.shortfall;
     if (retail == null || short == null) return;
-    final received = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => ReceiveSheet(
+    final received = await ArticleFlow.open(context,
         org: widget.org,
         retail: retail,
+        capture: widget.capture,
         initialName: short.name,
-        initialQuantity: short.missing,
-      ),
-    );
+        initialQuantity: short.missing);
     if (received != true || !mounted) return;
     await retail.requeueRefused(a.clientUuid);
     if (!mounted) return;
@@ -346,10 +344,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     final retail = widget.retail;
     if (retail == null) return;
 
-    final recorded = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => SaleSheet(
+    // One entry at a time (115): the full-screen « Vente » flow.
+    final recorded = await StepFlow.push(
+      context,
+      SaleFlow(
         orgId: widget.org.id,
         orgName: widget.org.name,
         retail: retail,
@@ -731,6 +729,20 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
     if (r == pathSellResult && mounted) await _sell();
   }
 
+  Future<void> _openExpense() async {
+    final saved = await StepFlow.push(
+      context,
+      ExpenseFlow(
+        db: AppScope.of(context).db,
+        orgId: widget.org.id,
+        profile: widget.org.profile,
+        currency: widget.org.currency,
+        capture: widget.capture,
+      ),
+    );
+    if (saved == true && mounted) await _load();
+  }
+
   /// The shop's five: Vente (this screen), Articles, Commandes, Factures,
   /// and Plus for what is consulted rather than worked in.
   HomeNav _nav(bool cameraReady) {
@@ -771,6 +783,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen> {
           ),
       ],
       more: [
+        // Money out (115): rent, transport, a repair — one question a
+        // screen, kept on the phone like a sale.
+        if (!widget.org.isObserverOnly)
+          HomeDestination(
+            icon: Icons.north_east,
+            label: context.tr('Dépense'),
+            onTap: _openExpense,
+          ),
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.route_outlined,

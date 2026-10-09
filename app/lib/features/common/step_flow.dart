@@ -104,7 +104,8 @@ class StepFlow extends StatefulWidget {
   final FlowStore? store;
 
   /// Opens [flow] over the pages, full screen. Resolves with what the flow
-  /// closed with: true once something was saved, as the sheets it replaces.
+  /// closed with: true once something was saved (even if the person then
+  /// started another and left it), as the sheets it replaces.
   static Future<bool?> push(BuildContext context, Widget flow) =>
       Navigator.of(context).push<bool>(MaterialPageRoute<bool>(
         fullscreenDialog: true,
@@ -706,8 +707,13 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
   Future<void> _leave() async {
     if (_dirty && !await UnsavedInput.askLeave(context)) return;
     await _forgetDraft();
-    if (mounted) Navigator.of(context).pop(false);
+    // Something saved earlier in this flow (« Ajouter un autre », « Nouvelle
+    // vente ») still tells the page underneath to read itself again.
+    if (mounted) Navigator.of(context).pop(_savedOnce);
   }
+
+  /// True once a save went through, even if the person started another.
+  bool _savedOnce = false;
 
   Future<void> _save() async {
     if (_busy) return;
@@ -719,6 +725,7 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
       final saved = await widget.onSave();
       if (!mounted) return;
       if (saved) {
+        _savedOnce = true;
         await _forgetDraft();
         if (!mounted) return;
         setState(() => _phase = _Phase.done);

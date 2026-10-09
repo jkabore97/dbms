@@ -23,7 +23,13 @@ import '../common/refused_notice.dart';
 import '../admin/admin_pill.dart' show AdminPill;
 import '../home/home_nav.dart';
 import '../orders/home_doorbell.dart';
-import 'farm_sheets.dart';
+import 'farm_animal_flows.dart';
+import 'farm_crop_flows.dart';
+import 'farm_flows.dart';
+import '../money/expense_flow.dart';
+import '../common/step_flow.dart';
+import '../retail/sale_flow.dart';
+import '../../core/retail/models.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -115,7 +121,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
   List<RefusedAction> _refused = const [];
 
   List<Map<String, Object?>> _events = const [];
-  List<Map<String, Object?>> _flocks = const [];
   List<Map<String, Object?>> _lowStock = const [];
 
   bool _loading = true;
@@ -153,6 +158,20 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     armDoorbell();
   }
 
+  Future<void> _openExpense() async {
+    final saved = await StepFlow.push(
+      context,
+      ExpenseFlow(
+        db: widget.db,
+        orgId: widget.org.id,
+        profile: widget.org.profile,
+        currency: widget.org.currency,
+        capture: widget.capture,
+      ),
+    );
+    if (saved == true && mounted) await _refresh();
+  }
+
   Future<void> _refresh() async {
     final today = DateTime.now();
 
@@ -182,11 +201,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     await _readPath();
 
     if (!mounted) return;
-    final flocks = await widget.db.cachedFlocks(widget.org.id);
     final items = await widget.db.cachedFarmItems(widget.org.id);
     if (!mounted) return;
     setState(() {
-      _flocks = flocks;
       _lowStock =
           items.where((i) => (i['below_reorder'] as int? ?? 0) == 1).toList();
     });
@@ -243,43 +260,10 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     }
   }
 
-  Future<void> _open(Widget sheet) async {
-    final recorded = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => sheet,
-    );
-    if (recorded == true) await _refresh();
-  }
-
-  Future<void> _recordFlockEvent() async {
-    if (_flocks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr('Aucune bande enregistrée. Ouvrez-en une dans « Bandes » — cela demande le réseau.'),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // One flock is the common case and needs no picker.
-    final flock = _flocks.length == 1
-        ? _flocks.first
-        : await showModalBottomSheet<Map<String, Object?>>(
-            context: context,
-            builder: (_) => _FlockPicker(flocks: _flocks),
-          );
-    if (flock == null || !mounted) return;
-
-    await _open(FlockEventSheet(
-      db: widget.db,
-      orgId: widget.org.id,
-      flockId: flock['flock_id'] as String,
-      batchCode: flock['batch_code'] as String,
-      alive: flock['alive'] as int?,
-    ));
+  /// The day's four, one entry at a time (115). Each saves on this phone
+  /// first where it did before; the home is read again once one is saved.
+  Future<void> _record(Future<bool?> flow) async {
+    if (await flow == true && mounted) await _refresh();
   }
 
   @override
@@ -403,14 +387,24 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // « Vente » (115): what the farm sells, one entry at a time.
+              if (widget.retail != null && !widget.org.isObserverOnly) ...[
+                FloatingActionButton.small(
+                  key: const Key('farm-sell'),
+                  heroTag: 'farm-sell',
+                  tooltip: context.tr('Vente'),
+                  onPressed: _sell,
+                  backgroundColor: Colors.green.shade100,
+                  foregroundColor: Colors.green.shade900,
+                  child: const Icon(Icons.point_of_sale_outlined),
+                ),
+                const SizedBox(width: 12),
+              ],
               FloatingActionButton.small(
                 heroTag: 'farm-receive',
                 tooltip: Strings.of(context).stockReceipt,
-                onPressed: () => _open(ReceiveStockSheet(
-                  db: widget.db,
-                  orgId: widget.org.id,
-                  currency: widget.org.currency,
-                )),
+                onPressed: () => _record(FarmStockFlow.receive(context,
+                    db: widget.db, org: widget.org)),
                 backgroundColor: Colors.orange.shade100,
                 foregroundColor: Colors.orange.shade900,
                 child: const Icon(Icons.local_shipping_outlined),
@@ -419,10 +413,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
               FloatingActionButton.small(
                 heroTag: 'farm-consume',
                 tooltip: Strings.of(context).feedGiven,
-                onPressed: () => _open(MoveStockSheet(
-                  db: widget.db,
-                  orgId: widget.org.id,
-                )),
+                onPressed: () => _record(FarmStockFlow.use(context,
+                    db: widget.db, org: widget.org, farm: widget.farm)),
                 backgroundColor: Colors.brown.shade100,
                 foregroundColor: Colors.brown.shade800,
                 child: const Icon(Icons.restaurant_outlined),
@@ -431,7 +423,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
               FloatingActionButton.small(
                 heroTag: 'farm-mortality',
                 tooltip: Strings.of(context).mortality,
-                onPressed: _recordFlockEvent,
+                onPressed: () => _record(FarmAnimalFlow.event(context,
+                    db: widget.db, org: widget.org, farm: widget.farm)),
                 backgroundColor: theme.colorScheme.errorContainer,
                 foregroundColor: theme.colorScheme.onErrorContainer,
                 child: const Icon(Icons.pets_outlined),
@@ -441,11 +434,13 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'farm-harvest',
-            onPressed: () => _open(RecordHarvestSheet(
-              db: widget.db,
-              orgId: widget.org.id,
-              farm: widget.farm,
-            )),
+            onPressed: () => _record(FarmCropFlow.harvest(context,
+                org: widget.org,
+                farm: widget.farm,
+                retail: widget.retail,
+                onSell: widget.retail == null || widget.org.isObserverOnly
+                    ? null
+                    : _sell)),
             backgroundColor: KajTheme.of(context).ink,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.agriculture_outlined, size: 28),
@@ -458,6 +453,39 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         ],
       ),
     ));
+  }
+
+  /// The farm's « Vente » (115): the same flow as the shop's till, over
+  /// what it has for sale (« À vendre »). No signal: the list it last had
+  /// is not kept, so the produce is typed by name — and the sale waits on
+  /// the phone, as the shop's does.
+  Future<void> _sell() async {
+    final retail = widget.retail;
+    if (retail == null) return;
+    List<Product> products = const [];
+    try {
+      products = await retail.products(widget.org.id);
+    } catch (_) {}
+    if (!mounted) return;
+    final sold = await StepFlow.push(
+      context,
+      SaleFlow(
+        orgId: widget.org.id,
+        orgName: widget.org.name,
+        retail: retail,
+        currency: widget.org.currency,
+        products: products,
+        farm: true,
+        canCredit: widget.access.canEdit('credits') &&
+            !PathGate.locks(context, widget.org, 'credits'),
+        allowWave: AppScope.read(context)
+                ?.session
+                .featuresFor(widget.org.id)
+                ?.waveAllowed ??
+            false,
+      ),
+    );
+    if (sold == true && mounted) await _refresh();
   }
 
   Future<void> _push(String location) async {
@@ -504,6 +532,14 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           ),
       ],
       more: [
+        // Money out (115): the vet, a day's labour, transport — one question
+        // a screen, kept on the phone like everything the farm records.
+        if (!widget.org.isObserverOnly)
+          HomeDestination(
+            icon: Icons.north_east,
+            label: context.tr('Dépense'),
+            onTap: _openExpense,
+          ),
         // The farm's vitrine (083): what it sells, and the orders for it.
         HomeDestination(
           icon: Icons.storefront_outlined,
@@ -826,37 +862,6 @@ class _EventTile extends StatelessWidget {
           fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
-      ),
-    );
-  }
-}
-
-/// Which batch this event belongs to. Only shown when there is more than one
-/// open — a single-house operation never sees it.
-class _FlockPicker extends StatelessWidget {
-  const _FlockPicker({required this.flocks});
-
-  final List<Map<String, Object?>> flocks;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 16),
-          Text(context.tr('Quelle bande ?'),
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          for (final flock in flocks)
-            ListTile(
-              leading: const Icon(Icons.pets_outlined),
-              title: Text(flock['batch_code'] as String),
-              subtitle: Text('${flock['alive']} oiseaux'),
-              onTap: () => Navigator.pop(context, flock),
-            ),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }

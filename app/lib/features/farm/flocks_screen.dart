@@ -9,7 +9,7 @@ import '../../core/db/local_db.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
-import 'farm_sheets.dart';
+import 'farm_animal_flows.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The batches, and how they are doing.
@@ -93,58 +93,23 @@ class _FlocksScreenState extends State<FlocksScreen> {
     }
   }
 
-  /// Opening a batch needs the server, unlike everything else Ignace records.
-  ///
-  /// The batch code has to be unique within the business: two devices
-  /// inventing "B-2026-01" while offline would produce one flock with two
-  /// histories that no report could add back together. Better to ask for
-  /// signal once, when a batch arrives, than to let a whole cycle's figures
-  /// split in half.
+  /// « Ajouter des animaux » (115): a batch of birds is one of them. Opening
+  /// it needs the server, unlike everything else Ignace records — the code
+  /// has to be unique within the business, and two devices inventing
+  /// "B-2026-01" offline would split one batch's figures in half.
   Future<void> _openFlock() async {
-    final result =
-        await showModalBottomSheet<({String code, int count, String? breed})>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _NewFlockSheet(),
-    );
-    if (result == null) return;
-
-    try {
-      await widget.farm!.openFlock(
-        orgId: widget.org.id,
-        batchCode: result.code,
-        birdCount: result.count,
-        breed: result.breed,
-      );
-      await _load();
-    } catch (error) {
-      if (!mounted) return;
-      final text = error.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            text.contains('duplicate') || text.contains('unique')
-                ? context.tr('Une bande porte déjà ce code.')
-                : context.tr('La bande n\'a pas pu être ouverte. Vérifiez le réseau.'),
-          ),
-        ),
-      );
-    }
+    final farm = widget.farm;
+    if (farm == null) return;
+    final added =
+        await FarmAnimalFlow.add(context, db: widget.db, org: widget.org, farm: farm);
+    if (added == true && mounted) await _load();
   }
 
+  /// Mortality, a weighing, a vaccination, birds sold — offline (115).
   Future<void> _record(Flock flock) async {
-    final recorded = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => FlockEventSheet(
-        db: widget.db,
-        orgId: widget.org.id,
-        flockId: flock.id,
-        batchCode: flock.batchCode,
-        alive: flock.alive,
-      ),
-    );
-    if (recorded == true) await _load();
+    final recorded = await FarmAnimalFlow.flockEvent(context,
+        db: widget.db, org: widget.org, flock: flock);
+    if (recorded == true && mounted) await _load();
   }
 
   Future<void> _close(Flock flock) async {
@@ -202,7 +167,7 @@ class _FlocksScreenState extends State<FlocksScreen> {
           ? FloatingActionButton.extended(
               onPressed: _openFlock,
               icon: const Icon(Icons.add),
-              label: Text(context.tr('Bande')),
+              label: Text(context.tr('Ajouter des animaux')),
             )
           : null,
       body: ReportBody(
@@ -408,115 +373,6 @@ class _Stat extends StatelessWidget {
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
-    );
-  }
-}
-
-class _NewFlockSheet extends StatefulWidget {
-  const _NewFlockSheet();
-
-  @override
-  State<_NewFlockSheet> createState() => _NewFlockSheetState();
-}
-
-class _NewFlockSheetState extends State<_NewFlockSheet> {
-  final _codeController = TextEditingController();
-  final _countController = TextEditingController();
-  final _breedController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // A default that is already unique and already sorts correctly. Somebody
-    // naming batches by hand will invent a scheme; somebody who does not want
-    // to should not have to.
-    final now = DateTime.now();
-    _codeController.text =
-        'B-${now.year}-${now.month.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void dispose() {
-    _codeController.dispose();
-    _countController.dispose();
-    _breedController.dispose();
-    super.dispose();
-  }
-
-  int get _count => int.tryParse(_countController.text.trim()) ?? 0;
-  bool get _valid => _count > 0 && _codeController.text.trim().isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(context.tr('Nouvelle bande'), style: theme.textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(
-            context.tr('Demande le réseau : le code doit être unique dans toute l\'activité.'),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _codeController,
-            decoration: InputDecoration(
-              labelText: context.tr('Code de la bande'),
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _countController,
-            autofocus: true,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: context.tr('Nombre d\'oiseaux à l\'arrivée'),
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _breedController,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: context.tr('Race (facultatif)'),
-              hintText: context.tr('Isa Brown'),
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: _valid
-                  ? () => Navigator.pop(context, (
-                        code: _codeController.text.trim(),
-                        count: _count,
-                        breed: _breedController.text.trim().isEmpty
-                            ? null
-                            : _breedController.text.trim(),
-                      ))
-                  : null,
-              child: Text(context.tr('Ouvrir la bande')),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

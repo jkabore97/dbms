@@ -51,6 +51,7 @@ void main() {
         appBar: AppBar(actions: [
           NotificationBell(
             notify: NotificationsRepository(null),
+            scope: const NotifyScope.org('o1'),
             listRoute: '/x',
             enabled: false,
           ),
@@ -68,6 +69,7 @@ void main() {
         appBar: AppBar(actions: [
           NotificationBell(
             notify: NotificationsRepository(null),
+            scope: const NotifyScope.org('o1'),
             listRoute: '/x',
             enabled: true,
           ),

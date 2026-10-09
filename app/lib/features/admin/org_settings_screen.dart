@@ -1320,8 +1320,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 'Laissez « Sur la vitrine » coché : vos clients le voient et le commandent.'),
           ]
         : <(IconData, String, String)>[
-            (Icons.add_box_outlined, 'Une entrée de stock',
-                'Dans « Articles », le bouton « Entrée de stock » : le nom, combien vous en avez, le prix. L\'article est créé.'),
+            (Icons.add_box_outlined, 'Un article à la fois',
+                'Dans « Articles », le bouton « Ajouter un article » : la photo, le nom, le prix, combien vous en avez — une question à la fois.'),
             (Icons.playlist_add, 'Plusieurs à la fois',
                 '« Ajout multiple » : un article par ligne, par exemple « Savon 20 300 ».'),
             (Icons.photo_camera_outlined, 'Une photo',

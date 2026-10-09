@@ -19,6 +19,7 @@ import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_skeleton.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'order_walkthrough.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -145,38 +146,13 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     }
   }
 
-  Future<void> _move(ShopOrder order, String status) async {
-    if (status == 'refused' || status == 'cancelled') {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(status == 'refused'
-              ? context.tr('Refuser cette commande ?')
-              : context.tr('Annuler cette commande ?')),
-          content: Text(context.tr('{customerName} en sera informé.', {'customerName': order.customerName})),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(context.tr('Retour'))),
-            FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(context.tr(orderActionLabel(status)))),
-          ],
-        ),
-      );
-      if (ok != true) return;
-    }
-    setState(() => _busyId = order.id);
-    try {
-      await widget.retail.decideOrder(order.id, status);
-      await _load();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AuthRepository.describeError(error))));
-    } finally {
-      if (mounted) setState(() => _busyId = null);
-    }
+  /// One step at a time (115): the order's walkthrough at its stage —
+  /// answer, prepare, hand over, paid. The list is read again however it
+  /// was left: a stage may have been written before.
+  Future<void> _walk(ShopOrder order) async {
+    await OrderWalkthrough.open(context,
+        org: widget.org, retail: widget.retail, order: order);
+    if (mounted) await _load(silent: true);
   }
 
   /// "Je livre moi-même" (073): nobody took it; the shop carries it.
@@ -299,7 +275,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       empty: 'Aucune commande à traiter. Les clients '
                           'commandent depuis votre vitrine.',
                       busyId: _busyId,
-                      onMove: _move,
+                      onWalk: _walk,
                       onOpen: _open,
                       onSetPaid: _setPaid,
                       clocks: _clocks,
@@ -328,7 +304,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       orders: past,
                       empty: 'Aucune commande passée pour le moment.',
                       busyId: _busyId,
-                      onMove: _move,
+                      onWalk: _walk,
                       onOpen: _open,
                       onSetPaid: _setPaid,
                       clocks: _clocks,
@@ -344,7 +320,7 @@ class _List extends StatelessWidget {
     required this.orders,
     required this.empty,
     required this.busyId,
-    required this.onMove,
+    required this.onWalk,
     required this.onOpen,
     required this.onSetPaid,
     this.clocks = const {},
@@ -365,7 +341,7 @@ class _List extends StatelessWidget {
   final List<ShopOrder> orders;
   final String empty;
   final String? busyId;
-  final Future<void> Function(ShopOrder, String) onMove;
+  final Future<void> Function(ShopOrder) onWalk;
   final Future<void> Function(String) onOpen;
   final Future<void> Function(ShopOrder, bool) onSetPaid;
 
@@ -406,7 +382,7 @@ class _List extends StatelessWidget {
           _OrderCard(
             order: o,
             busy: busyId == o.id,
-            onMove: onMove,
+            onWalk: onWalk,
             onOpen: onOpen,
             onSetPaid: onSetPaid,
             clock: clocks[o.id],
@@ -421,7 +397,7 @@ class _OrderCard extends StatelessWidget {
   const _OrderCard({
     required this.order,
     required this.busy,
-    required this.onMove,
+    required this.onWalk,
     required this.onOpen,
     required this.onSetPaid,
     this.clock,
@@ -433,7 +409,7 @@ class _OrderCard extends StatelessWidget {
 
   final ShopOrder order;
   final bool busy;
-  final Future<void> Function(ShopOrder, String) onMove;
+  final Future<void> Function(ShopOrder) onWalk;
   final Future<void> Function(String) onOpen;
   final Future<void> Function(ShopOrder, bool) onSetPaid;
 
@@ -444,10 +420,14 @@ class _OrderCard extends StatelessWidget {
     final when = DateFormat('EEE d MMM, HH:mm', 'fr_FR').format(order.createdAt);
     final phone = (order.phone ?? '').trim();
     final whatsapp = whatsappUrl(order.phone);
-    final next = order.nextStatuses;
+    final action = stageAction(order);
 
     return KajCard(
-      child: Padding(
+      child: InkWell(
+        key: Key('order-card-${order.id}'),
+        borderRadius: BorderRadius.circular(16),
+        onTap: action.isEmpty || busy ? null : () => onWalk(order),
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,12 +602,21 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(context.tr('Note : {note}', {'note': order.note}), style: theme.textTheme.bodySmall),
             ],
-            if (next.isNotEmpty || order.isOpen || order.isPaid) ...[
+            if (action.isNotEmpty || order.isOpen || order.isPaid) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  // The order's next step, one screen at a time (115).
+                  if (action.isNotEmpty)
+                    FilledButton.icon(
+                      key: Key('order-walk-${order.id}'),
+                      onPressed: busy ? null : () => onWalk(order),
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: Text(context.tr(action)),
+                    ),
                   // The money's word lives beside the state's: the shop
                   // confirms a payment arrived, or unsays a mis-tap.
                   if (!order.isPaid && order.isOpen)
@@ -643,38 +632,12 @@ class _OrderCard extends StatelessWidget {
                           busy ? null : () => onSetPaid(order, false),
                       child: Text(context.tr('Annuler le paiement')),
                     ),
-                  for (var i = 0; i < next.length; i++)
-                    if (next[i] == 'refused' || next[i] == 'cancelled')
-                      TextButton(
-                        onPressed: busy ? null : () => onMove(order, next[i]),
-                        style: TextButton.styleFrom(
-                            foregroundColor: theme.colorScheme.error),
-                        child: Text(context.tr(
-                            orderActionLabel(next[i], booking: order.isBooking))),
-                      )
-                    else if (i == 0)
-                      FilledButton(
-                        onPressed: busy ? null : () => onMove(order, next[i]),
-                        child: busy
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2))
-                            : Text(context.tr(
-                            orderActionLabel(next[i], booking: order.isBooking))),
-                      )
-                    else
-                      OutlinedButton(
-                        onPressed: busy ? null : () => onMove(order, next[i]),
-                        child: Text(context.tr(
-                            orderActionLabel(next[i], booking: order.isBooking))),
-                      ),
                 ],
               ),
             ],
           ],
         ),
+      ),
       ),
     );
   }

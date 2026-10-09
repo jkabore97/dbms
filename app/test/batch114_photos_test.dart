@@ -12,7 +12,8 @@ import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/capture/capture_action.dart';
 import 'package:kaj_app/features/farm/for_sale_screen.dart';
 import 'package:kaj_app/features/retail/products_screen.dart';
-import 'package:kaj_app/features/services/services_screen.dart';
+import 'package:kaj_app/features/common/step_flow.dart';
+import 'package:kaj_app/features/services/service_flow.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The owner (114): « Enable using an existing pictures in "Photo" to add
@@ -260,8 +261,9 @@ void main() {
     phone(tester);
     for (final org in [_shop, _asso]) {
       final photos = _Photos(db: db);
-      await sheetOn(tester, ServiceSheet(org: org, retail: _Shelf(), capture: photos));
-      await tester.tap(find.byKey(const Key('service-photo')));
+      // A new service is the « Service » flow (115): its first step, the photo.
+      await sheetOn(tester, ServiceFlow(org: org, retail: _Shelf(), capture: photos, store: MemoryFlowStore()));
+      await tester.tap(find.byKey(const Key('service-flow-photo-pick')));
       await settle(tester);
       await openLibrary(tester);
       await tester.tap(find.byKey(const Key('photo-library-d6')));
@@ -269,34 +271,48 @@ void main() {
       expect(find.text('Choisir dans Photos'), findsNothing);
       expect(photos.sent, isEmpty, reason: 'nothing sent before « Enregistrer »');
 
-      await tester.enterText(find.byType(TextField).at(0), 'Coupe homme');
-      await tester.enterText(find.byType(TextField).at(1), '1500');
-      final save = find.byKey(const Key('service-save'));
-      await tester.ensureVisible(save);
-      await tester.tap(save);
+      Future<void> next() async {
+        await tester.tap(find.byKey(const Key('flow-next')));
+        await settle(tester);
+      }
+
+      await next();
+      await tester.enterText(find.byKey(const Key('service-flow-name')), 'Coupe homme');
+      await tester.pump();
+      await next();
+      await tester.enterText(find.byKey(const Key('service-flow-price')), '1500');
+      await tester.pump();
+      await next();
+      await next();
+      await next();
+      await tester.tap(find.byKey(const Key('flow-save')));
       await settle(tester);
       expect(photos.sent, ['org-1 image/jpeg product_photo Coupe homme ${_png.length}'], reason: org.profile);
       expect(photos.filed, ['new-doc→p-new'], reason: org.profile);
     }
   });
 
-  testWidgets('the farm\'s « À vendre »: an unfiled photo moved onto the new article', (tester) async {
+  testWidgets('the farm\'s « À vendre »: an unfiled photo moved onto the article', (tester) async {
     phone(tester);
     final photos = _Photos(db: db);
-    await sheetOn(tester, ForSaleSheet(org: _farm, retail: _Shelf(), capture: photos));
+    await sheetOn(
+        tester,
+        ForSaleSheet(
+            org: _farm,
+            retail: _Shelf(),
+            capture: photos,
+            product: const Product(id: 'p1', name: 'Poulets', costPrice: 0, salePrice: 3500, quantity: 12)));
     await tester.tap(find.byKey(const Key('for-sale-photo')));
     await settle(tester);
     await openLibrary(tester);
     await tester.tap(find.byKey(const Key('photo-library-d1')));
     await settle(tester);
 
-    await tester.enterText(find.byType(TextField).at(0), 'Poulets');
-    await tester.enterText(find.byType(TextField).at(1), '3500');
     final save = find.byKey(const Key('for-sale-save'));
     await tester.ensureVisible(save);
     await tester.tap(save);
     await settle(tester);
-    expect(photos.filed, ['d1→p-new « Poulets »']);
+    expect(photos.filed, ['d1→p1 « Poulets »']);
     expect(photos.sent, isEmpty);
   });
 

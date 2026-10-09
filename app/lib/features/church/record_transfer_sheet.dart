@@ -194,7 +194,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: context.tr('Nom de l\'entrée'),
-                hintText: context.tr('Dépôt de la collecte du dimanche'),
+                hintText: context.tr('Dépôt de la caisse à la banque'),
                 helperText: _labelController.text.trim().isEmpty
                     ? context.tr('Sans nom, ce sera « Transfert »')
                     : null,

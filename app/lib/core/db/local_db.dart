@@ -1422,6 +1422,28 @@ class LocalDb {
     );
   }
 
+  /// The due date of a credit sale (117's set_debt_due), kept to be sent
+  /// after the sale it names: the outbox goes oldest first, so the queued
+  /// sale reaches the server before its date does. Sent with the generic
+  /// path (p_recorded_by added by SyncService).
+  Future<void> queueDebtDue({
+    required String orgId,
+    required String saleClientUuid,
+    required String dueOn,
+  }) async {
+    await _db.insert('outbox', {
+      'client_uuid': _uuid.v4(),
+      'org_id': orgId,
+      'action': 'set_debt_due',
+      'payload': jsonEncode({
+        'p_org_id': orgId,
+        'p_due_on': dueOn,
+        'p_sale_client_uuid': saleClientUuid,
+      }),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
   /// Sales kept on this phone and not yet sent, for one business.
   Future<int> pendingSales(String orgId) async {
     final result = await _db.rawQuery(

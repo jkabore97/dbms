@@ -18,6 +18,52 @@ import 'push_client.dart';
 class PushPlatform {
   const PushPlatform._();
 
+  /// A browser with push, and a build that knows the Worker.
+  static bool available(String pushUrl) => pushUrl.isNotEmpty && supported;
+
+  /// Nothing to start in a browser.
+  static Future<void> prepare() async {}
+
+  static Future<bool> granted() async {
+    try {
+      return web.window.hasProperty('Notification'.toJS).toDart &&
+          web.Notification.permission == 'granted';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A browser's tap is opened by the service worker (push_sw.js /
+  /// mara_sw.js), not by the page: nothing comes through here.
+  static Stream<String> get opened => const Stream.empty();
+
+  /// The subscription this browser already holds, asking nothing.
+  static Future<PushSubscriptionInfo?> current() async {
+    if (!supported) return null;
+    try {
+      final registration =
+          await web.window.navigator.serviceWorker.getRegistration('/').toDart;
+      if (registration == null) return null;
+      final subscription = await registration.pushManager.getSubscription().toDart;
+      if (subscription == null) return null;
+      return _info(subscription);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static PushSubscriptionInfo? _info(web.PushSubscription subscription) {
+    final p256dh = subscription.getKey('p256dh');
+    final auth = subscription.getKey('auth');
+    if (p256dh == null || auth == null) return null;
+    return PushSubscriptionInfo(
+      endpoint: subscription.endpoint,
+      p256dh: _toB64url(p256dh.toDart.asUint8List()),
+      auth: _toB64url(auth.toDart.asUint8List()),
+      userAgent: web.window.navigator.userAgent,
+    );
+  }
+
   static bool get supported {
     try {
       return web.window.navigator.hasProperty('serviceWorker'.toJS).toDart &&
@@ -51,16 +97,7 @@ class PushPlatform {
             applicationServerKey: _fromB64url(key).toJS,
           ))
           .toDart;
-
-      final p256dh = subscription.getKey('p256dh');
-      final auth = subscription.getKey('auth');
-      if (p256dh == null || auth == null) return null;
-      return PushSubscriptionInfo(
-        endpoint: subscription.endpoint,
-        p256dh: _toB64url(p256dh.toDart.asUint8List()),
-        auth: _toB64url(auth.toDart.asUint8List()),
-        userAgent: web.window.navigator.userAgent,
-      );
+      return _info(subscription);
     } catch (_) {
       // Refused, offline, or a browser that lies about support: no
       // subscription, and the caller says so in words.

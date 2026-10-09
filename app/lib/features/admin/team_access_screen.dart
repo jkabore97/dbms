@@ -32,8 +32,10 @@ class TeamAccessScreen extends StatefulWidget {
   State<TeamAccessScreen> createState() => _TeamAccessScreenState();
 }
 
-class _Feature {
-  const _Feature(this.key, this.icon, this.title, this.subtitle,
+/// One tool of the dial (also read by « Ajouter une personne », 115, to say
+/// what each responsibility sees).
+class TeamDialFeature {
+  const TeamDialFeature(this.key, this.icon, this.title, this.subtitle,
       {this.editable = true});
   final String key;
   final IconData icon;
@@ -44,22 +46,22 @@ class _Feature {
   final bool editable;
 }
 
-const _features = [
-  _Feature('products', Icons.inventory_2_outlined, 'Articles',
+const teamDialFeatures = [
+  TeamDialFeature('products', Icons.inventory_2_outlined, 'Articles',
       'Les prix, les noms, les entrées de stock'),
-  _Feature('production', Icons.precision_manufacturing_outlined, 'Production',
+  TeamDialFeature('production', Icons.precision_manufacturing_outlined, 'Production',
       'Transformer des ingrédients en produits'),
-  _Feature('credits', Icons.handshake_outlined, 'Carnet de crédit',
+  TeamDialFeature('credits', Icons.handshake_outlined, 'Carnet de crédit',
       'Vendre à crédit et encaisser les remboursements'),
-  _Feature('tontines', Icons.group_outlined, 'Tontines',
+  TeamDialFeature('tontines', Icons.group_outlined, 'Tontines',
       'Les tours, les cotisations, la caisse'),
-  _Feature('invoices', Icons.receipt_long_outlined, 'Factures',
+  TeamDialFeature('invoices', Icons.receipt_long_outlined, 'Factures',
       'Créer et partager des factures'),
-  _Feature('photos', Icons.photo_library_outlined, 'Photos',
+  TeamDialFeature('photos', Icons.photo_library_outlined, 'Photos',
       'Photographier et classer les documents'),
-  _Feature('reports', Icons.menu_book_outlined, 'Comptabilité et rapports',
+  TeamDialFeature('reports', Icons.menu_book_outlined, 'Comptabilité et rapports',
       'Journal, résultat, bilan', editable: false),
-  _Feature('staff', Icons.groups_outlined, 'Personnel',
+  TeamDialFeature('staff', Icons.groups_outlined, 'Personnel',
       'Les fiches, les pointages'),
 ];
 
@@ -83,10 +85,10 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
   /// The dial's tools, less those Mara's switchboard hid here (104): a
   /// hidden tool has no dial, and its rule is kept as it was and saved
   /// back unchanged.
-  List<_Feature> get _shownFeatures {
+  List<TeamDialFeature> get _shownFeatures {
     final access = AppScope.maybeOf(context)?.session.accessFor(widget.orgId);
     return [
-      for (final f in _features)
+      for (final f in teamDialFeatures)
         if (!(access?.isHidden(f.key) ?? false)) f,
     ];
   }
@@ -100,7 +102,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
       if (!mounted) return;
       setState(() {
         for (final tier in ['employee', 'supervisor']) {
-          for (final f in _features) {
+          for (final f in teamDialFeatures) {
             _rules[tier]![f.key] =
                 stored[tier]?[f.key] ?? _defaultFor(f.key);
           }
@@ -136,7 +138,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
     }
   }
 
-  Widget _tierRow(String tier, String label, _Feature feature) {
+  Widget _tierRow(String tier, String label, TeamDialFeature feature) {
     final value = _rules[tier]![feature.key]!;
     return Padding(
       padding: const EdgeInsets.only(top: 10),

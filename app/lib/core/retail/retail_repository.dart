@@ -74,6 +74,20 @@ class RetailRepository {
     });
   }
 
+  /// A refusal with its reason, which the customer reads (115's
+  /// refuse_order). On a database before 115 the refusal still goes
+  /// through decide_order, without the reason.
+  Future<void> refuseOrder(String orderId, String reason) async {
+    final client = _requireClient();
+    try {
+      await client.rpc('refuse_order',
+          params: {'p_order_id': orderId, 'p_reason': reason.trim()});
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      await decideOrder(orderId, 'refused');
+    }
+  }
+
   /// How long each open order has sat in its state, and which are stuck
   /// (073). Keyed by order id; empty on a database before 073.
   Future<Map<String, OrderClock>> orderClocks(String orgId) async {

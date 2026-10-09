@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/format/money.dart';
@@ -274,7 +273,7 @@ class _ProductionFlowState extends State<ProductionFlow> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cur = widget.org.currency;
+    final cur = _money.currencySymbol;
     final unit = _unitCost;
     final price = _num(_price);
     return StepFlow(
@@ -344,8 +343,7 @@ class _ProductionFlowState extends State<ProductionFlow> {
               if (unit != null) ...[
                 const SizedBox(height: 16),
                 Text(
-                  context.tr('Un coûte {cost} {cur}',
-                      {'cost': _money.format(unit), 'cur': cur}),
+                  context.tr('Un coûte {cost}', {'cost': _money.format(unit)}),
                   key: const Key('production-unit-cost'),
                   style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
@@ -371,8 +369,7 @@ class _ProductionFlowState extends State<ProductionFlow> {
               ),
               if (unit != null) ...[
                 const SizedBox(height: 12),
-                Text(context.tr('Un vous coûte {cost} {cur}',
-                    {'cost': _money.format(unit), 'cur': cur})),
+                Text(context.tr('Un vous coûte {cost}', {'cost': _money.format(unit)})),
                 // The comparison the flow is for: the price against the cost.
                 if (price != null && price > 0 && price < unit) ...[
                   const SizedBox(height: 6),
@@ -399,13 +396,13 @@ class _ProductionFlowState extends State<ProductionFlow> {
                 '${_product(e.key) == null ? '' : _unitOf(_product(e.key)!)}',
                 step: 'quantities'),
           FlowSummaryRow(context.tr('Coût total'),
-              '${_money.format(_totalCost)} $cur'),
+              _money.format(_totalCost)),
           FlowSummaryRow(context.tr('Coût d\'un'),
-              unit == null ? '—' : '${_money.format(unit)} $cur',
+              unit == null ? '—' : _money.format(unit),
               bold: true),
           if (price != null && price > 0)
             FlowSummaryRow(context.tr('Prix de vente'),
-                '${_money.format(price)} $cur', step: 'price'),
+                _money.format(price), step: 'price'),
         ],
         footer: _totalCost == 0
             ? Text(
@@ -422,8 +419,8 @@ class _ProductionFlowState extends State<ProductionFlow> {
         details: unit == null
             ? null
             : Text(
-                context.tr('Un coûte {cost} {cur}. Le stock de vos ingrédients a baissé, celui de {name} a monté.',
-                    {'cost': _money.format(unit), 'cur': cur, 'name': _name.text.trim()}),
+                context.tr('Un coûte {cost}. Le stock de vos ingrédients a baissé, celui de {name} a monté.',
+                    {'cost': _money.format(unit), 'name': _name.text.trim()}),
                 textAlign: TextAlign.center),
         actions: [
           FlowAction(

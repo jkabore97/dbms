@@ -506,30 +506,7 @@ class StringsDyu extends Strings {
       'Aucune production enregistrée.\nRecevez d\'abord vos ingrédients en stock, puis enregistrez ici ce que vous fabriquez avec.';
 
   @override
-  String get whatWasMade => 'Produit fabriqué';
-
-  @override
-  String get whatWasMadeHint => 'Gâteau, savon, beurre de karité…';
-
-  @override
-  String get quantityMade => 'Quantité fabriquée';
-
-  @override
-  String get ingredientsUsed => 'Ingrédients utilisés';
-
-  @override
-  String get ingredient => 'Ingrédient';
-
-  @override
   String get quantity => 'Quantité';
-
-  @override
-  String get addIngredient => 'Ajouter un ingrédient';
-
-  @override
-  String estimatedUnitCost(String amount) {
-    return 'Coût de revient estimé : $amount par unité';
-  }
 
   @override
   String unitCostIs(String amount) {
@@ -545,29 +522,6 @@ class StringsDyu extends Strings {
 
   @override
   String get makeAgain => 'Refaire';
-
-  @override
-  String get searchProduct => 'Rechercher un article…';
-
-  @override
-  String get noProductFound =>
-      'Aucun article trouvé. Recevez-le d\'abord en stock.';
-
-  @override
-  String get salePriceOptional => 'Prix de vente (facultatif)';
-
-  @override
-  String get belowUnitCost => 'Attention : en dessous du coût de revient.';
-
-  @override
-  String get enterProductMade => 'Indiquez ce qui a été fabriqué.';
-
-  @override
-  String get enterQuantityMade => 'Indiquez la quantité fabriquée.';
-
-  @override
-  String get enterIngredients =>
-      'Ajoutez au moins un ingrédient avec sa quantité.';
 
   @override
   String get save => 'Enregistrer';

@@ -12,11 +12,11 @@ import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
+import 'article_flow.dart';
 import 'convert_dialog.dart';
 import 'photo_quota.dart';
 import 'product_photo.dart';
 import '../../core/retail/retail_repository.dart';
-import '../../core/retail/stock_rule.dart';
 import '../capture/barcode_sheet.dart';
 import '../capture/capture_action.dart';
 import '../admin/spots_card.dart';
@@ -148,12 +148,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  /// « Ajouter un article » (115): one entry at a time — a new article, or
+  /// more of one already here (its name is enough).
   Future<void> _addStock() async {
-    final added = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => ReceiveSheet(org: widget.org, retail: widget.retail),
-    );
+    final added = await ArticleFlow.open(context,
+        org: widget.org, retail: widget.retail, capture: widget.capture);
     if (added == true) await _load();
   }
 
@@ -222,15 +221,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
         return;
       }
 
-      final added = await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => ReceiveSheet(
+      if (!mounted) return;
+      final added = await ArticleFlow.open(context,
           org: widget.org,
           retail: widget.retail,
-          barcode: code,
-        ),
-      );
+          capture: widget.capture,
+          barcode: code);
       if (added == true) await _load();
     } catch (error) {
       if (!mounted) return;
@@ -405,8 +401,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       floatingActionButton: widget.access.canEdit('products')
           ? FloatingActionButton.extended(
               onPressed: _addStock,
+              key: const Key('products-add'),
               icon: const Icon(Icons.add),
-              label: Text(context.tr('Entrée de stock')),
+              label: Text(context.tr('Ajouter un article')),
             )
           : null,
       body: RefreshIndicator(
@@ -1194,260 +1191,5 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         });
       }
     }
-  }
-}
-
-/// A delivery arriving. Creates the product if it is new.
-/// « Entrée de stock »: an article received onto the shelf. Also what a
-/// refused offline sale's « Corriger le stock » opens (store home), on the
-/// article the server named and the number missing.
-class ReceiveSheet extends StatefulWidget {
-  const ReceiveSheet({
-    super.key,
-    required this.org,
-    required this.retail,
-    this.barcode,
-    this.initialName,
-    this.initialQuantity,
-  });
-
-  /// The article and the count to open on; the person can change both.
-  final String? initialName;
-  final double? initialQuantity;
-
-  final OrgSummary org;
-  final RetailRepository retail;
-
-  /// Carried in from a scan. The number is read once, by the camera, and
-  /// never typed — which is the only reason scanning an unknown code is
-  /// better than not scanning at all.
-  final String? barcode;
-
-  @override
-  State<ReceiveSheet> createState() => _ReceiveSheetState();
-}
-
-class _ReceiveSheetState extends State<ReceiveSheet> {
-  late final _name = TextEditingController(text: widget.initialName ?? '');
-  late final _quantity = TextEditingController(
-      text: widget.initialQuantity == null
-          ? '1'
-          : stockQty(widget.initialQuantity!));
-  final _cost = TextEditingController();
-  final _price = TextEditingController();
-  final _serial = TextEditingController();
-  DateTime? _expiresOn;
-
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _quantity.dispose();
-    _cost.dispose();
-    _price.dispose();
-    _serial.dispose();
-    super.dispose();
-  }
-
-  double? get _qty =>
-      double.tryParse(_quantity.text.trim().replaceAll(',', '.'));
-
-  bool get _ready => _name.text.trim().isNotEmpty && (_qty ?? 0) > 0;
-
-  Future<void> _save() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final cost = double.tryParse(_cost.text.trim().replaceAll(',', '.'));
-      final price = double.tryParse(_price.text.trim().replaceAll(',', '.'));
-
-      final productId = await widget.retail.ensureProduct(
-        orgId: widget.org.id,
-        name: _name.text.trim(),
-        costPrice: cost,
-        salePrice: price,
-        barcode: widget.barcode,
-        expiresOn: _expiresOn,
-      );
-
-      final serial = _serial.text.trim();
-      if (serial.isNotEmpty) {
-        await widget.retail.setSerial(productId, serial);
-      }
-      await widget.retail.receive(
-        orgId: widget.org.id,
-        productId: productId,
-        quantity: _qty!,
-        unitCost: cost,
-        expiresOn: _expiresOn,
-      );
-      if (mounted) Navigator.of(context).pop(true);
-    } catch (error) {
-      if (mounted) setState(() => _error = describeError(error));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.tr('Entrée de stock'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _name,
-              enabled: !_busy,
-              autofocus: true,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: context.tr('Article'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _quantity,
-                    enabled: !_busy,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Quantité'),
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _cost,
-                    enabled: !_busy,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: context.tr('Coût unitaire'),
-                      border: const OutlineInputBorder(),
-                      // Goods bought in another currency: convert, and the
-                      // field receives the home-currency figure.
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.currency_exchange, size: 20),
-                        tooltip: context.tr('Payé dans une autre monnaie'),
-                        onPressed: _busy
-                            ? null
-                            : () async {
-                                final converted =
-                                    await CurrencyConvertDialog.open(
-                                  context,
-                                  retail: widget.retail,
-                                  orgId: widget.org.id,
-                                  homeCurrency: widget.org.currency,
-                                );
-                                if (converted != null && mounted) {
-                                  setState(() => _cost.text =
-                                      converted.round().toString());
-                                }
-                              },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _price,
-              enabled: !_busy,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Prix de vente'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _serial,
-              enabled: !_busy,
-              decoration: InputDecoration(
-                labelText: context.tr('Numéro de série (facultatif)'),
-                // Only matters for the goods where it matters: a phone, a
-                // radio, a panel. It is what a warranty claim is looked up by.
-                helperText: context.tr('Pour un téléphone, une radio, un panneau…'),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            if (widget.barcode != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.qr_code_2, size: 16),
-                  const SizedBox(width: 6),
-                  Text(context.tr('Code-barres scanné : {barcode}', {'barcode': widget.barcode}),
-                      style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ],
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _busy
-                  ? null
-                  : () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate:
-                            DateTime.now().add(const Duration(days: 30)),
-                        firstDate:
-                            DateTime.now().subtract(const Duration(days: 365)),
-                        lastDate:
-                            DateTime.now().add(const Duration(days: 365 * 5)),
-                      );
-                      if (picked != null) setState(() => _expiresOn = picked);
-                    },
-              icon: const Icon(Icons.event_outlined),
-              label: Text(_expiresOn == null
-                  ? context.tr('Date d\'expiration (facultatif)')
-                  : 'Expire le '
-                      '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: _ready && !_busy ? _save : null,
-                child: _busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

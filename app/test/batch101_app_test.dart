@@ -19,7 +19,7 @@ import 'package:kaj_app/features/admin/team_access_screen.dart';
 import 'package:kaj_app/features/admin/team_screen.dart';
 import 'package:kaj_app/features/analytics/farm_analytics_screen.dart';
 import 'package:kaj_app/features/invoicing/billing_details_screen.dart';
-import 'package:kaj_app/features/farm/farm_sheets.dart';
+import 'package:kaj_app/features/farm/farm_flows.dart';
 import 'package:kaj_app/l10n/strings.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -166,19 +166,32 @@ void main() {
     tester.view.physicalSize = const Size(700, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_fr(Scaffold(body: MoveStockSheet(db: db, orgId: 'f1'))));
+    // « Consommation », one entry at a time (115).
+    await tester.pumpWidget(_fr(Builder(
+      builder: (context) => Scaffold(
+        body: TextButton(
+          onPressed: () => FarmStockFlow.use(context,
+              db: db,
+              org: const OrgSummary(id: 'f1', name: 'Ferme', profile: 'farm')),
+          child: const Text('Ouvrir'),
+        ),
+      ),
+    )));
+    await tester.tap(find.text('Ouvrir'));
     for (var i = 0; i < 5; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump();
     }
-    await tester.enterText(find.widgetWithText(TextField, 'Quantité'), '5');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('flow-option-Aliment')));
     await tester.pump();
-    await tester.tap(find.text('Enregistrer'));
-    for (var i = 0; i < 5; i++) {
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-      await tester.pump();
-    }
+    await tester.tap(find.byKey(const Key('flow-next')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('farm-quantity')), '5');
+    await tester.pump();
     expect(find.text('Il ne reste que 3 Aliment'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('flow-next'))).onPressed, isNull,
+        reason: 'the step cannot be passed past what is left');
     expect(await tester.runAsync(db.pendingCount), 0, reason: 'nothing left the phone');
   });
 

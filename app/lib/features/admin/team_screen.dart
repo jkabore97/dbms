@@ -19,8 +19,8 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import '../cauris/unlock_sheet.dart';
-import 'invite_generator_sheet.dart';
 import 'member_edit_sheet.dart';
+import 'team_invite_flow.dart';
 
 /// « Équipe » (100): the one place for the business's people — who is in,
 /// adding somebody (the invitation, 017), replacing or removing them, the
@@ -134,8 +134,13 @@ class _TeamScreenState extends State<TeamScreen> {
       await _unlock();
       return;
     }
-    await InviteGeneratorSheet.open(context,
-        orgId: widget.org.id, onboarding: widget.onboarding);
+    await _invite();
+  }
+
+  /// « Ajouter une personne », one question a screen (115).
+  Future<void> _invite() async {
+    await TeamInviteFlow.open(context,
+        org: widget.org, onboarding: widget.onboarding, admin: widget.admin);
     if (mounted) await _reloadAll();
   }
 
@@ -354,11 +359,7 @@ class _TeamScreenState extends State<TeamScreen> {
           await _salary(m);
         }
       case 'replace':
-        if (await _remove(m, replace: true) && mounted) {
-          await InviteGeneratorSheet.open(context,
-              orgId: widget.org.id, onboarding: widget.onboarding);
-          if (mounted) await _reloadAll();
-        }
+        if (await _remove(m, replace: true) && mounted) await _invite();
       case 'remove':
         await _remove(m);
       case 'edit':

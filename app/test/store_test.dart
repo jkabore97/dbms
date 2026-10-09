@@ -7,7 +7,6 @@ import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/retail/models.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/home/home_router.dart';
-import 'package:kaj_app/features/retail/sale_sheet.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The store module, at the two points where it can silently do the wrong
@@ -137,26 +136,5 @@ void main() {
 
       expect(find.text('Quelque chose'), findsWidgets);
     });
-  });
-
-  testWidgets('the sale button is dead until the basket has something in it',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('fr'),
-      localizationsDelegates: Strings.localizationsDelegates,
-      supportedLocales: Strings.supportedLocales,
-      home: Scaffold(
-        body: SaleSheet(orgId: 'org-3', retail: RetailRepository(null)),
-      ),
-    ));
-    await tester.pumpAndSettle();
-
-    final button = tester.widget<FilledButton>(
-      find.ancestor(
-        of: find.text('Enregistrer la vente'),
-        matching: find.byType(FilledButton),
-      ),
-    );
-    expect(button.onPressed, isNull);
   });
 }

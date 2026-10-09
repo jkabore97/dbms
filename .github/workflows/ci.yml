@@ -783,6 +783,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch113.sql
 
+      - name: Prove the bell for everyone — each row in its list and each list counting its own, the same words as before, Mara's message to the responsables or the whole team, a refusal with its reason, switches that write nothing when off, Android tokens in the Worker's book only, the test notification, the shopper's and the courier's new bells, the bar's counts per kind, the doors (115)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch115.sql
+
       - name: Prove the carnet's due date and the repayment by customer — no date as before and the carnet read as 104, a sum dated by its debt and a credit sale by its client_uuid, oldest debt first and once only, never past what is owed, the doors (117)
         env:
           PGPASSWORD: postgres

@@ -12,6 +12,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/nav/app_scope.dart';
 import '../capture/capture_action.dart';
+import '../retail/article_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -88,7 +89,19 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     }
   }
 
-  Future<void> _open([Product? product]) async {
+  /// « Mettre en vente » (115): the « Ajouter un produit » flow, one entry
+  /// at a time, already on « pour vendre ».
+  Future<void> _add() async {
+    final saved = await ArticleFlow.open(context,
+        org: widget.org,
+        retail: widget.retail,
+        capture: widget.capture,
+        forSale: true);
+    if (saved == true) await _load();
+  }
+
+  /// What is already for sale: its price, its count, its photo, its words.
+  Future<void> _open(Product product) async {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -98,7 +111,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         retail: widget.retail,
         capture: widget.capture,
         product: product,
-        hasPhoto: product != null && _photos.containsKey(product.id),
+        hasPhoto: _photos.containsKey(product.id),
       ),
     );
     if (saved == true) await _load();
@@ -125,7 +138,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
       floatingActionButton: _canWrite
           ? FloatingActionButton.extended(
               key: const Key('for-sale-add'),
-              onPressed: () => _open(),
+              onPressed: _add,
               icon: const Icon(Icons.add),
               label: Text(context.tr('Mettre en vente')),
             )
@@ -245,7 +258,7 @@ class ForSaleSheet extends StatefulWidget {
     required this.org,
     required this.retail,
     this.capture,
-    this.product,
+    required this.product,
     this.hasPhoto = false,
   });
 
@@ -255,7 +268,9 @@ class ForSaleSheet extends StatefulWidget {
   /// The article has a photo already: a new one takes no new place (100).
   final bool hasPhoto;
   final CaptureRepository? capture;
-  final Product? product;
+
+  /// What is edited. A new one is the « Ajouter un produit » flow (115).
+  final Product product;
 
   @override
   State<ForSaleSheet> createState() => _ForSaleSheetState();
@@ -265,18 +280,18 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   /// The units a farm sells by, offered as one tap; anything else is typed.
   static const units = ['pièce', 'plateau', 'kg', 'sac', 'tête', 'litre'];
 
-  late final _name = TextEditingController(text: widget.product?.name ?? '');
+  late final _name = TextEditingController(text: widget.product.name);
   late final _price = TextEditingController(
-      text: widget.product == null || widget.product!.salePrice == 0
+      text: widget.product.salePrice == 0
           ? ''
-          : _plain(widget.product!.salePrice));
+          : _plain(widget.product.salePrice));
   late final _quantity = TextEditingController(
-      text: widget.product == null ? '' : _plain(widget.product!.quantity));
-  late final _unit = TextEditingController(text: widget.product?.unit ?? '');
+      text: _plain(widget.product.quantity));
+  late final _unit = TextEditingController(text: widget.product.unit ?? '');
   late final _description =
-      TextEditingController(text: widget.product?.description ?? '');
-  late DateTime? _availableFrom = widget.product?.availableFrom;
-  late bool _published = widget.product?.isPublished ?? true;
+      TextEditingController(text: widget.product.description ?? '');
+  late DateTime? _availableFrom = widget.product.availableFrom;
+  late bool _published = widget.product.isPublished;
 
   PickedPhoto? _photo;
   bool _busy = false;
@@ -333,9 +348,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
       _error = null;
     });
     try {
-      final id = widget.product?.id ??
-          await widget.retail.ensureProduct(
-              orgId: widget.org.id, name: name, salePrice: price);
+      final id = widget.product.id;
       await widget.retail.updateProduct(
         id,
         name: name,
@@ -372,7 +385,6 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
 
   Future<void> _remove() async {
     final product = widget.product;
-    if (product == null) return;
     setState(() => _busy = true);
     try {
       await widget.retail.archiveProduct(product.id);
@@ -390,7 +402,6 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final editing = widget.product != null;
     return Padding(
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -399,7 +410,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(editing ? context.tr('Modifier') : context.tr('Mettre en vente'),
+            Text(context.tr('Modifier'),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
@@ -556,11 +567,11 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(editing ? context.tr('Enregistrer') : context.tr('Mettre en vente'),
+                    : Text(context.tr('Enregistrer'),
                         style: const TextStyle(fontSize: 16)),
               ),
             ),
-            if (editing) ...[
+            ...[
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _busy ? null : _remove,
