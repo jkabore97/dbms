@@ -250,9 +250,8 @@ class _LivestockScreenState extends State<LivestockScreen>
             _empty(
                 theme,
                 Icons.pets,
-                'Aucun groupe d’animaux.',
-                'Chèvres, bovins, pintades — tout ce qui n’est pas une bande '
-                    'de volailles suivie séparément.'),
+                context.tr('Aucun groupe d’animaux.'),
+                context.tr('Chèvres, bovins, pintades — tout ce qui n’est pas une bande de volailles suivie séparément.')),
         ],
       ),
     );
@@ -290,26 +289,31 @@ class _LivestockScreenState extends State<LivestockScreen>
                       [
                         cycle.plotName,
                         if (cycle.plantedOn != null)
-                          'semé le ${DateFormat('d MMM y', intlLocale()).format(cycle.plantedOn!)}',
+                          context.tr('semé le {date}', {'date': DateFormat('d MMM y', intlLocale()).format(cycle.plantedOn!)}),
                       ].whereType<String>().join(' · '),
                       style: theme.textTheme.bodySmall,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       cycle.harvested > 0
-                          ? '${cycle.harvested.toStringAsFixed(0)} ${cycle.unit} récoltés'
-                              '${cycle.expectedYield == null ? '' : ' sur ${cycle.expectedYield!.toStringAsFixed(0)} attendus'}'
+                          ? (cycle.expectedYield == null
+                              ? context.tr('{n} {unit} récoltés', {'n': cycle.harvested.toStringAsFixed(0), 'unit': cycle.unit})
+                              : context.tr('{n} {unit} récoltés sur {expected} attendus', {
+                                  'n': cycle.harvested.toStringAsFixed(0),
+                                  'unit': cycle.unit,
+                                  'expected': cycle.expectedYield!.toStringAsFixed(0),
+                                }))
                           : cycle.expectedYield == null
                               ? context.tr('Rien récolté pour l’instant')
-                              : '${cycle.expectedYield!.toStringAsFixed(0)} ${cycle.unit} attendus',
+                              : context.tr('{n} {unit} attendus', {'n': cycle.expectedYield!.toStringAsFixed(0), 'unit': cycle.unit}),
                       style: theme.textTheme.bodyMedium,
                     ),
                     if (cycle.daysToHarvest != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         cycle.isOverdue
-                            ? 'À récolter depuis ${-cycle.daysToHarvest!} jours'
-                            : 'Récolte dans ${cycle.daysToHarvest} jours',
+                            ? context.tr('À récolter depuis {n} jours', {'n': -cycle.daysToHarvest!})
+                            : context.tr('Récolte dans {n} jours', {'n': cycle.daysToHarvest}),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: cycle.isOverdue
                               ? FontWeight.bold
@@ -350,9 +354,8 @@ class _LivestockScreenState extends State<LivestockScreen>
             _empty(
                 theme,
                 Icons.grass,
-                'Aucune culture en cours.',
-                'Une culture, c’est ce qui est semé sur une parcelle et à '
-                    'quelle date. La parcelle est créée à partir de son nom.'),
+                context.tr('Aucune culture en cours.'),
+                context.tr('Une culture, c’est ce qui est semé sur une parcelle et à quelle date. La parcelle est créée à partir de son nom.')),
         ],
       ),
     );

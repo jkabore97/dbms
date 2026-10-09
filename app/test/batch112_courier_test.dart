@@ -648,7 +648,8 @@ void main() {
       final street = File('lib/features/storefront/directory_screen.dart').readAsStringSync();
       final vitrine = File('lib/features/storefront/storefront_screen.dart').readAsStringSync();
       expect(RegExp(r'ShopFooter\(onBecomeCourier: \(\) => context\.go\(Routes\.becomeCourier\)\)')
-          .allMatches(street).length, 2);
+          .allMatches(street).length, 1,
+          reason: 'one foot under the list and the search results alike (122: ShopScroll)');
       expect(vitrine.contains('onBecomeCourier'), isFalse);
     });
 

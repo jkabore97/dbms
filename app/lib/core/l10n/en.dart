@@ -5128,4 +5128,58 @@ const enStrings = <String, String>{
       'On Mara for {months} months.',
   'Sur Mara depuis {months} mois : la confiance se gagne avec le temps.':
       'On Mara for {months} months: trust is earned with time.',
+  'Aucun groupe d’animaux.':
+      'No animal groups.',
+  'Chèvres, bovins, pintades — tout ce qui n’est pas une bande de volailles suivie séparément.':
+      'Goats, cattle, guinea fowl — anything that is not a poultry batch tracked separately.',
+  'semé le {date}':
+      'sown on {date}',
+  '{n} {unit} récoltés':
+      '{n} {unit} harvested',
+  '{n} {unit} récoltés sur {expected} attendus':
+      '{n} {unit} harvested of {expected} expected',
+  '{n} {unit} attendus':
+      '{n} {unit} expected',
+  'À récolter depuis {n} jours':
+      'Due for harvest for {n} days',
+  'Récolte dans {n} jours':
+      'Harvest in {n} days',
+  'Aucune culture en cours.':
+      'No crop in progress.',
+  'Une culture, c’est ce qui est semé sur une parcelle et à quelle date. La parcelle est créée à partir de son nom.':
+      'A crop is what is sown on a plot, and when. The plot is created from its name.',
+  '{name} archivée.':
+      '{name} archived.',
+  '{name} restaurée.':
+      '{name} restored.',
+  '{name} supprimée définitivement.':
+      '{name} deleted for good.',
+  '{n} membres':
+      '{n} members',
+  '{n} membre':
+      '{n} member',
+  '{n} écritures':
+      '{n} entries',
+  '{n} écriture':
+      '{n} entry',
+  'depuis {date}':
+      'since {date}',
+  'Toute la comptabilité de {name} sera détruite : {entries} écriture(s), les articles, le personnel, les photos et les {members} accès. C’est irréversible.':
+      'All of {name}\'s accounts will be destroyed: {entries} entry(ies), the items, the staff, the photos and the {members} accesses. This cannot be undone.',
+  '{name} n’a aucune écriture. Sa suppression est définitive et ne peut pas être annulée.':
+      '{name} has no entries. Deleting it is final and cannot be undone.',
+  'Un compte porte déjà ce nom.':
+      'An account already has this name.',
+  'Seul un administrateur peut modifier le plan comptable.':
+      'Only an administrator can change the chart of accounts.',
+  'Échec : la modification n\'a pas été enregistrée.':
+      'Failed: the change was not saved.',
+  'Aucun compte pour le moment. Le premier est créé tout seul, la première fois que quelqu\'un enregistre une entrée.':
+      'No accounts yet. The first is created by itself, the first time someone records an entry.',
+  '{n} écriture(s) portent déjà ce nom. Le renommer les renomme toutes.':
+      '{n} entry(ies) already carry this name. Renaming it renames them all.',
+  'retiré':
+      'retired',
+  'jamais utilisé':
+      'never used',
 };
