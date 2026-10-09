@@ -168,9 +168,8 @@ class _CouriersScreenState extends State<CouriersScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                       children: [
                         Text(
-                          'Un livreur approuvé voit les livraisons prêtes, '
-                          'les adresses et les numéros des clients. '
-                          '$pending inscription${pending > 1 ? 's' : ''} en attente.',
+                          context.tr('Un livreur approuvé voit les livraisons prêtes, les adresses et les numéros des clients. {n} inscription(s) en attente.',
+                              {'n': pending}),
                           style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant),
                         ),
@@ -242,13 +241,13 @@ class _CouriersScreenState extends State<CouriersScreen> {
                                 ),
                                 title: Text(row.name),
                                 subtitle: Text(
-                                  '${row.phone ?? 'Sans numéro'} · '
-                                  '${switch (row.status) {
+                                  '${row.phone ?? context.tr('Sans numéro')} · '
+                                  '${context.tr(switch (row.status) {
                                     'approved' => 'Approuvé',
                                     'suspended' => 'Suspendu',
                                     _ => 'En attente',
-                                  }} · '
-                                  'inscrit le ${date.format(row.createdAt)}',
+                                  })} · '
+                                  '${context.tr('inscrit le {date}', {'date': date.format(row.createdAt)})}',
                                 ),
                                 // A courier with a dossier: it opens from here.
                                 onTap: withDossier.contains(row.userId) ? () => _open(row.userId) : null,

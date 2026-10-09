@@ -51,8 +51,8 @@ enum Period {
 
   String describe() {
     final r = range;
-    if (r.from == null) return 'Depuis le début';
-    final f = DateFormat('d MMM', 'fr_FR');
+    if (r.from == null) return translate(trCurrent, 'Depuis le début');
+    final f = DateFormat('d MMM', intlLocale());
     return '${f.format(r.from!)} — ${f.format(r.to!)}';
   }
 }
@@ -78,7 +78,7 @@ class PeriodSelector extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(period.label),
+                label: Text(context.tr(period.label)),
                 selected: value == period,
                 onSelected: (_) => onChanged(period),
               ),
@@ -169,7 +169,7 @@ class ReportBody extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  emptyMessage,
+                  context.tr(emptyMessage),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -321,7 +321,7 @@ class SectionHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              title.toUpperCase(),
+              context.tr(title).toUpperCase(),
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,

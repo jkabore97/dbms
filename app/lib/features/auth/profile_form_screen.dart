@@ -7,6 +7,8 @@ import '../common/phone_field.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -175,7 +177,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       initialDate: _birth ?? DateTime(now.year - 30, now.month, now.day),
       firstDate: DateTime(now.year - 100),
       lastDate: DateTime(now.year - 14, now.month, now.day),
-      helpText: 'Date de naissance',
+      helpText: context.tr('Date de naissance'),
     );
     if (picked != null) setState(() => _birth = picked);
   }
@@ -184,15 +186,15 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(widget.title)),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(context.tr(widget.title))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               children: [
                 if (widget.intro != null) ...[
-                  Text(widget.intro!, style: theme.textTheme.bodyMedium),
+                  Text(context.tr(widget.intro!), style: theme.textTheme.bodyMedium),
                   const SizedBox(height: 20),
                 ],
                 TextField(
@@ -227,7 +229,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   icon: const Icon(Icons.cake_outlined),
                   label: Text(_birth == null
                       ? context.tr('Date de naissance')
-                      : DateFormat('d MMMM y', 'fr_FR').format(_birth!)),
+                      : DateFormat('d MMMM y', intlLocale()).format(_birth!)),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -282,7 +284,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.arrow_forward),
-                  label: Text(widget.nextLabel),
+                  label: Text(context.tr(widget.nextLabel)),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -294,6 +296,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
               ],
             ),
-    );
+    ));
   }
 }

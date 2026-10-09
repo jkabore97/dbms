@@ -124,7 +124,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
             name: 'facture-${doc.number}.png',
           ),
         ],
-        text: '${doc.orgName} — facture ${doc.number}',
+        text: translate(trCurrent, '{name} — facture {number}', {'name': doc.orgName, 'number': doc.number}),
       ));
     } catch (error) {
       if (!mounted) return;
@@ -423,7 +423,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Reste à payer : ${widget.money.format(widget.outstanding)}'),
+          Text(context.tr('Reste à payer : {amount}', {'amount': widget.money.format(widget.outstanding)})),
           const SizedBox(height: 12),
           TextField(
             controller: _controller,

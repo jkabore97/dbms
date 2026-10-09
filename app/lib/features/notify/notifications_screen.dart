@@ -14,6 +14,8 @@ import '../admin/admin_pill.dart' show AdminTrail;
 import 'notification_settings_sheet.dart';
 import 'notification_text.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// The bell (115): on every home of the three kinds, on every tool page of
 /// a business (PageBell), on the street and the vitrine for a signed-in
@@ -217,9 +219,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final english = context.trLanguage == 'en';
     final dates = english
         ? DateFormat('d MMM, HH:mm', 'en')
-        : DateFormat('d MMM à HH:mm', 'fr_FR');
-    return Scaffold(
-      appBar: AppBar(
+        : DateFormat('d MMM, HH:mm', intlLocale());
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context),
         title: Text(strings.notifications),
         actions: [
           IconButton(
@@ -276,7 +278,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         );
                       },
                     ),
-    );
+    ));
   }
 }
 

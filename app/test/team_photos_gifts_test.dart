@@ -163,7 +163,10 @@ void main() {
     // Paid by the hour in the payroll: said as such.
     expect(find.textContaining('/ heure'), findsOneWidget);
     // The invitations, each with where it stands.
-    expect(find.text('Coumba'), findsOneWidget);
+    // (Named again on top since 122: why « Équipe » has a red number.)
+    expect(find.descendant(of: find.byKey(const Key('team-invite-i1')), matching: find.text('Coumba')),
+        findsOneWidget);
+    expect(find.byKey(const Key('team-attention')), findsOneWidget);
     expect(find.textContaining('ne peut pas entrer : place prise'), findsOneWidget);
     expect(find.textContaining('en attente'), findsOneWidget);
 

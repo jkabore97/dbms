@@ -717,7 +717,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
               for (final u in _farm ? _farmUnits : _shopUnits)
                 ChoiceChip(
                   key: ValueKey('article-unit-$u'),
-                  label: Text(u, style: const TextStyle(fontSize: 16)),
+                  label: Text(context.tr(u), style: const TextStyle(fontSize: 16)),
                   selected: _unit == u,
                   onSelected: (on) {
                     setState(() => _unit = on ? u : '');
@@ -765,7 +765,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
             label: Text(_expiresOn == null
                 ? context.tr('Date d\'expiration (facultatif)')
                 : context.tr('Expire le {date}',
-                    {'date': DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)})),
+                    {'date': DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)})),
           ),
         ),
         const SizedBox(height: 16),

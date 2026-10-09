@@ -178,11 +178,39 @@
       retry.textContent = say.retry;
       // What arrived is kept (the browser's cache, the service worker):
       // trying again asks only for what is missing.
-      retry.onclick = function () { location.reload(); };
+      retry.onclick = function () { heal(true); };
+
+      // A phone's kept copy of an older build can ask for files the site no
+      // longer has (each deploy replaces them): then loading stops, and
+      // reloading the same copy stops again. The cure is the network: the
+      // kept copy is let go (the worker and its shell — the app's own data,
+      // the local database, is not touched) and the page comes again from
+      // the site. Once by itself per tab; the button always.
+      function heal(asked) {
+        var reload = function () { location.reload(); };
+        if (!sw || !sw.controller) {
+          if (asked) reload();
+          return false;
+        }
+        try {
+          if (!asked && sessionStorage.getItem('mara-healed')) return false;
+          sessionStorage.setItem('mara-healed', '1');
+        } catch (e) { if (!asked) return false; }
+        sw.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).then(function () {
+          return window.caches ? caches.keys().then(function (keys) {
+            return Promise.all(keys.filter(function (k) { return k.indexOf('mara-shell-') === 0; })
+              .map(function (k) { return caches.delete(k); }));
+          }) : null;
+        }).then(reload, reload);
+        return true;
+      }
 
       // Loading stopped: say why in a word and offer the one thing to do.
       function fail() {
         if (painted) return;
+        if (navigator.onLine !== false && heal(false)) return;
         // Nothing is moving any more: the line says so too.
         splash.querySelector('.line').style.visibility = 'hidden';
         slow.className = 'slow';

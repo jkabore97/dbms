@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The Sécurité page's calls to the server (075). Every function answers
 /// about the caller alone — their devices, their sessions, their history —
@@ -128,8 +129,7 @@ class SecurityRepository {
     final client = _requireClient();
     final email = client.auth.currentUser?.email;
     if (email == null || email.isEmpty) {
-      throw StateError('Ce compte n\'a pas d\'adresse e-mail pour vérifier '
-          'le mot de passe actuel.');
+      throw StateError('Ce compte n\'a pas d\'adresse e-mail pour vérifier le mot de passe actuel.');
     }
     try {
       await client.auth.signInWithPassword(email: email, password: current);
@@ -188,15 +188,19 @@ class SecurityEvent {
   final DateTime at;
 
   String get label => switch (kind) {
-        'new_device' => 'Nouvel appareil${detail == null ? '' : ' : $detail'}',
-        'password_changed' => 'Mot de passe changé',
-        'pin_changed' => 'Code de l\'appareil changé',
-        'two_step_enabled' => 'Validation en deux étapes activée',
-        'lock_changed' => 'Verrouillage modifié${detail == null ? '' : ' : $detail'}',
-        'session_closed' => 'Un appareil déconnecté',
-        'signed_out_others' => 'Autres appareils déconnectés',
-        'signed_out_by_admin' =>
-          'Déconnecté partout par ${detail ?? 'un administrateur'}',
+        'new_device' => detail == null
+            ? translate(trCurrent, 'Nouvel appareil')
+            : translate(trCurrent, 'Nouvel appareil : {detail}', {'detail': detail}),
+        'password_changed' => translate(trCurrent, 'Mot de passe changé'),
+        'pin_changed' => translate(trCurrent, 'Code de l\'appareil changé'),
+        'two_step_enabled' => translate(trCurrent, 'Validation en deux étapes activée'),
+        'lock_changed' => detail == null
+            ? translate(trCurrent, 'Verrouillage modifié')
+            : translate(trCurrent, 'Verrouillage modifié : {detail}', {'detail': detail}),
+        'session_closed' => translate(trCurrent, 'Un appareil déconnecté'),
+        'signed_out_others' => translate(trCurrent, 'Autres appareils déconnectés'),
+        'signed_out_by_admin' => translate(trCurrent, 'Déconnecté partout par {who}',
+            {'who': detail ?? translate(trCurrent, 'un administrateur')}),
         _ => kind,
       };
 }
@@ -206,7 +210,7 @@ DateTime? _t(Object? v) => v == null ? null : DateTime.tryParse('$v')?.toLocal()
 /// The system and the browser, from a user-agent string.
 String describeUserAgent(String? ua) {
   final s = ua ?? '';
-  if (s.isEmpty) return 'Appareil inconnu';
+  if (s.isEmpty) return translate(trCurrent, 'Appareil inconnu');
   final os = s.contains('Android')
       ? 'Android'
       : (s.contains('iPhone') || s.contains('iPad'))
@@ -217,9 +221,9 @@ String describeUserAgent(String? ua) {
                   ? 'Mac'
                   : s.contains('Linux')
                       ? 'Linux'
-                      : 'Appareil';
+                      : translate(trCurrent, 'Appareil');
   final app = s.startsWith('Dart/') || s.contains('dart:io')
-      ? 'application Mara'
+      ? translate(trCurrent, 'application Mara')
       : s.contains('Edg/')
           ? 'Edge'
           : s.contains('Firefox/')
@@ -228,6 +232,6 @@ String describeUserAgent(String? ua) {
                   ? 'Chrome'
                   : s.contains('Safari/')
                       ? 'Safari'
-                      : 'navigateur';
+                      : translate(trCurrent, 'navigateur');
   return '$os · $app';
 }

@@ -50,13 +50,13 @@ class CreateBusinessScreen extends StatefulWidget {
 
   /// Null when the slug is usable, otherwise why it is not.
   static String? slugProblem(String slug) {
-    if (slug.length < 3) return 'Au moins 3 caractères.';
-    if (slug.length > 40) return 'Au plus 40 caractères.';
+    if (slug.length < 3) return translate(trCurrent, 'Au moins 3 caractères.');
+    if (slug.length > 40) return translate(trCurrent, 'Au plus 40 caractères.');
     if (!RegExp(r'^[a-z0-9-]+$').hasMatch(slug)) {
-      return 'Lettres sans accent, chiffres et tirets uniquement.';
+      return translate(trCurrent, 'Lettres sans accent, chiffres et tirets uniquement.');
     }
     if (slug.startsWith('-') || slug.endsWith('-')) {
-      return 'Ne peut pas commencer ni finir par un tiret.';
+      return translate(trCurrent, 'Ne peut pas commencer ni finir par un tiret.');
     }
     return null;
   }
@@ -195,7 +195,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: context.tr('Nom de l\'activité'),
-                hintText: context.tr('Association Bethel'),
+                hintText: context.tr('Ex. : Association Bethel, Café Lumière, Green Market'),
+                hintMaxLines: 2,
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -232,8 +233,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                     : theme.colorScheme.surfaceContainerHighest,
                 child: ListTile(
                   leading: Icon(p.icon, color: theme.colorScheme.primary),
-                  title: Text(p.label),
-                  subtitle: Text(p.detail, style: theme.textTheme.bodySmall),
+                  title: Text(context.tr(p.label)),
+                  subtitle: Text(context.tr(p.detail), style: theme.textTheme.bodySmall),
                   trailing: selected
                       ? Icon(Icons.check_circle,
                           color: theme.colorScheme.primary)

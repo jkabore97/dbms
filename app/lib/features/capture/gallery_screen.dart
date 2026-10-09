@@ -214,11 +214,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     ? Icons.sync_problem
                     : Icons.cloud_upload_outlined,
                 text: _queue.stuck > 0
-                    ? '${_queue.waiting} photo${_queue.waiting > 1 ? 's' : ''} '
-                        'sur cet appareil. Le serveur en a refusé '
-                        '${_queue.stuck}.'
-                    : '${_queue.waiting} photo${_queue.waiting > 1 ? 's' : ''} '
-                        'en attente de réseau.',
+                    ? context.tr('{n} photo(s) sur cet appareil. Le serveur en a refusé {stuck}.',
+                        {'n': _queue.waiting, 'stuck': _queue.stuck})
+                    : context.tr('{n} photo(s) en attente de réseau.', {'n': _queue.waiting}),
                 action: TextButton(
                   onPressed: _load,
                   child: Text(context.tr('Envoyer')),
@@ -309,7 +307,7 @@ class _DocumentTile extends StatelessWidget {
         title: Text(document.title),
         subtitle: Text(
           [
-            if (when != null) DateFormat('d MMM y', 'fr_FR').format(when),
+            if (when != null) DateFormat('d MMM y', intlLocale()).format(when),
             if (document.kind != null) document.kind!,
             if (document.barcode != null) document.barcode!,
           ].join(' · '),
@@ -454,7 +452,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
   Future<void> _fetch() async {
     if (widget.document.isPdf) {
       setState(
-          () => _imageError = 'PDF — ouvrez-le depuis le lien de partage.');
+          () => _imageError = context.tr('PDF — ouvrez-le depuis le lien de partage.'));
       return;
     }
     try {
@@ -610,9 +608,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_invoiceLines.length} article'
-                      '${_invoiceLines.length > 1 ? 's' : ''} '
-                      'lu${_invoiceLines.length > 1 ? 's' : ''} sur cette photo',
+                      context.tr('{n} article(s) lu(s) sur cette photo', {'n': _invoiceLines.length}),
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),
@@ -656,14 +652,15 @@ class _DocumentScreenState extends State<DocumentScreen> {
                     if (_suggestions.price != null)
                       Chip(
                         avatar: const Icon(Icons.sell_outlined, size: 16),
-                        label: Text('Prix lu : '
-                            '${_suggestions.price!.toStringAsFixed(0)}'),
+                        label: Text(context.tr('Prix lu : {price}',
+                            {'price': _suggestions.price!.toStringAsFixed(0)})),
                       ),
                     if (_suggestions.expiresOn != null)
                       Chip(
                         avatar: const Icon(Icons.event_outlined, size: 16),
-                        label: Text('Péremption lue : '
-                            '${DateFormat('d MMM y', 'fr_FR').format(_suggestions.expiresOn!)}'),
+                        label: Text(context.tr('Péremption lue : {date}', {
+                          'date': DateFormat('d MMM y', intlLocale()).format(_suggestions.expiresOn!),
+                        })),
                       ),
                     if (_suggestions.barcode != null)
                       Chip(

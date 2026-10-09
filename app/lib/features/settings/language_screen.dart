@@ -4,6 +4,8 @@ import '../../core/l10n/locale_controller.dart';
 import '../../core/nav/app_scope.dart';
 import '../../l10n/strings.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Choosing the language of this device.
 ///
@@ -32,8 +34,8 @@ class LanguageScreen extends StatelessWidget {
     final locale = AppScope.of(context).localeController;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(strings.language)),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(strings.language)),
       body: ListenableBuilder(
         listenable: locale,
         builder: (context, _) {
@@ -61,7 +63,7 @@ class LanguageScreen extends StatelessWidget {
           );
         },
       ),
-    );
+    ));
   }
 
 }

@@ -120,7 +120,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Au ${DateFormat('d MMMM y', 'fr_FR').format(DateTime.now())}',
+                      context.tr('Au {date}', {'date': DateFormat('d MMMM y', intlLocale()).format(DateTime.now())}),
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

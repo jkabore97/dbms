@@ -60,10 +60,10 @@ class _ConsoleScreenState extends State<ConsoleScreen>
         title: Text(context.tr('Console')),
         bottom: TabBar(
           controller: tabs,
-          tabs: const [
-            Tab(icon: Icon(Icons.history), text: 'Activité'),
-            Tab(icon: Icon(Icons.storage_outlined), text: 'Données'),
-            Tab(icon: Icon(Icons.phone_android), text: 'Appareil'),
+          tabs: [
+            Tab(icon: const Icon(Icons.history), text: context.tr('Activité')),
+            Tab(icon: const Icon(Icons.storage_outlined), text: context.tr('Données')),
+            Tab(icon: const Icon(Icons.phone_android), text: context.tr('Appareil')),
           ],
         ),
       ),

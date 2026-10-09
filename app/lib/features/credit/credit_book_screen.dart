@@ -16,6 +16,7 @@ import '../common/step_flow.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../l10n/strings.dart';
 import 'credit_flows.dart';
+import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -70,11 +71,14 @@ bool _late(DateTime due) {
 class _CreditBookScreenState extends State<CreditBookScreen> {
   List<DebtorRow> _rows = const [];
   Map<String, DateTime> _due = const {};
+
+  /// Open debts past their date, by customer (122): what the bar counts.
+  Map<String, int> _lateDebts = const {};
   bool _loading = true;
   String? _error;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  late final _date = DateFormat('d MMM', 'fr_FR');
+  late final _date = DateFormat('d MMM', intlLocale());
 
   @override
   void initState() {
@@ -91,13 +95,19 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
       final rows = await widget.credit.debtors(widget.org.id);
       // Before 117 is on the server: no dates, the carnet as it was.
       var due = const <String, DateTime>{};
+      final late = <String, int>{};
       try {
-        due = _earliest(await widget.credit.dueDates(widget.org.id));
+        final dates = await widget.credit.dueDates(widget.org.id);
+        due = _earliest(dates);
+        for (final d in dates) {
+          if (_late(d.dueOn)) late[d.customerId] = (late[d.customerId] ?? 0) + 1;
+        }
       } catch (_) {}
       if (!mounted) return;
       setState(() {
         _rows = rows;
         _due = due;
+        _lateDebts = late;
         _loading = false;
       });
     } catch (error) {
@@ -217,13 +227,25 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                               style: theme.textTheme.titleMedium,
                             ),
                           ),
+                          // Why the carnet has a red number (122).
+                          _lateBanner(context),
                           for (final row in _rows)
                             KajCard(
                               child: ListTile(
-                                title: Text(row.name,
-                                    style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600)),
+                                title: Wrap(
+                                  spacing: 6,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(row.name,
+                                        style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600)),
+                                    if (_lateDebts.containsKey(row.customerId))
+                                      AttentionChip(
+                                          key: Key('credit-late-${row.customerId}'),
+                                          label: context.tr('En retard')),
+                                  ],
+                                ),
                                 subtitle: _subtitle(context, row),
                                 trailing: Text(
                                   _money.format(row.totalOwed),
@@ -244,6 +266,47 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                         ],
                       ),
                     ),
+    );
+  }
+
+  Future<void> _openCustomer(String customerId) async {
+    await context.push(Routes.inside(widget.org.id, 'credits/$customerId'));
+    if (mounted) await _load();
+  }
+
+  /// « 2 crédits ont dépassé leur date de remboursement : Awa, Issa »,
+  /// each customer with « Voir ».
+  Widget _lateBanner(BuildContext context) {
+    final late = [
+      for (final r in _rows)
+        if (_lateDebts.containsKey(r.customerId)) r,
+    ];
+    if (late.isEmpty) return const SizedBox.shrink();
+    final n = _lateDebts.values.fold<int>(0, (a, b) => a + b);
+    final names = attentionNames(context, [for (final r in late) r.name]);
+    return AttentionBanner(
+      key: const Key('credit-attention'),
+      icon: Icons.handshake_outlined,
+      margin: const EdgeInsets.fromLTRB(0, 4, 0, 12),
+      title: n == 1
+          ? context.tr('1 crédit a dépassé sa date de remboursement : {names}', {'names': names})
+          : context.tr('{n} crédits ont dépassé leur date de remboursement : {names}',
+              {'n': n, 'names': names}),
+      stays: context.tr('Le chiffre rouge reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.'),
+      items: [
+        for (final r in late)
+          AttentionItem(
+            id: r.customerId,
+            label: r.name,
+            detail: [
+              if (_due[r.customerId] case final due?)
+                context.tr('En retard depuis le {date}', {'date': _date.format(due)}),
+              _money.format(r.totalOwed),
+            ].join(' · '),
+            actionLabel: context.tr('Voir'),
+            onAction: () => _openCustomer(r.customerId),
+          ),
+      ],
     );
   }
 
@@ -299,7 +362,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
   String? _error;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  late final _date = DateFormat('d MMM y', 'fr_FR');
+  late final _date = DateFormat('d MMM y', intlLocale());
 
   DebtorRow? get _me {
     for (final d in _debtors) {

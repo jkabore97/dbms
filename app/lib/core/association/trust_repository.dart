@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// An association's trust level (088): read off its own books on the
 /// server, never declared. Null where it does not apply (a business) or
@@ -97,32 +98,30 @@ class TrustPillar {
   /// Where it stands, and — when not met — what to do, in a line.
   String get line {
     final v = value ?? 0;
-    return switch (key) {
+    final args = {'v': v, 'of': of ?? 0, 'months': (v / 30).floor()};
+    return translate(trCurrent, switch (key) {
       'verified' => met
           ? 'Mara a vérifié qui vous êtes.'
-          : 'Mara vérifie l\'association (récépissé, responsables). '
-              'Demandez-le à votre contact Mara.',
+          : 'Mara vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Mara.',
       'regular' => met
-          ? '$v semaines sur les 8 dernières ont leurs entrées.'
-          : '$v semaine${v > 1 ? 's' : ''} sur 8 : notez les entrées et '
-              'sorties au moins 6 semaines sur 8.',
+          ? '{v} semaines sur les 8 dernières ont leurs entrées.'
+          : v > 1
+              ? '{v} semaines sur 8 : notez les entrées et sorties au moins 6 semaines sur 8.'
+              : '{v} semaine sur 8 : notez les entrées et sorties au moins 6 semaines sur 8.',
       'justified' => (of ?? 0) < 3
           ? 'Moins de 3 dépenses en 90 jours : pas encore de quoi juger.'
           : met
-              ? '$v dépenses sur ${of ?? 0} ont leur reçu.'
-              : 'Seulement $v sur ${of ?? 0} ont leur reçu : photographiez '
-                  'chaque reçu (8 sur 10 au moins).',
+              ? '{v} dépenses sur {of} ont leur reçu.'
+              : 'Seulement {v} sur {of} ont leur reçu : photographiez chaque reçu (8 sur 10 au moins).',
       'clean' => (of ?? 0) < 5
           ? 'Moins de 5 entrées en 90 jours : pas encore de quoi juger.'
           : met
-              ? '$v correction${v > 1 ? 's' : ''} pour ${of ?? 0} entrées.'
-              : '$v corrections pour ${of ?? 0} entrées : vérifiez avant '
-                  'd\'enregistrer (moins d\'une sur 10).',
+              ? (v > 1 ? '{v} corrections pour {of} entrées.' : '{v} correction pour {of} entrées.')
+              : '{v} corrections pour {of} entrées : vérifiez avant d\'enregistrer (moins d\'une sur 10).',
       'lasting' => met
-          ? 'Sur Mara depuis ${(v / 30).floor()} mois.'
-          : 'Sur Mara depuis ${(v / 30).floor()} mois : la confiance se '
-              'gagne avec le temps.',
+          ? 'Sur Mara depuis {months} mois.'
+          : 'Sur Mara depuis {months} mois : la confiance se gagne avec le temps.',
       _ => '',
-    };
+    }, args);
   }
 }

@@ -225,7 +225,8 @@ void main() {
       expect(find.byKey(const Key('basket-bar')), findsOneWidget,
           reason: 'among the goods, the basket floats');
 
-      await tester.drag(find.byType(ListView).first, const Offset(0, -20000));
+      // The vitrine scrolls in a CustomScrollView since 122 (the footer at the foot).
+      await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -20000));
       await tester.pump();
       await tester.pump();
       await tester.pump();

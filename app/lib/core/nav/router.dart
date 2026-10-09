@@ -26,6 +26,7 @@ import '../../features/shopper/addresses_screen.dart';
 import '../../features/shopper/favourites_screen.dart';
 import '../../features/shopper/shopper_profile_screen.dart';
 import '../shopper/shopper_repository.dart';
+import '../site/app_download.dart' show AppDownloadPrompt;
 import '../storefront/storefront_repository.dart';
 import '../storefront/street_cache.dart';
 import '../auth/whatsapp_phone.dart';
@@ -484,7 +485,10 @@ GoRouter buildRouter(SessionController session) {
         path: '/s/:slug',
         builder: (context, state) {
           final scope = AppScope.of(context);
-          return StorefrontScreen(
+          // A phone's browser is offered the app (122), once a week.
+          return AppDownloadPrompt(
+            client: scope.auth.client,
+            child: StorefrontScreen(
             slug: state.pathParameters['slug'] ?? '',
             // The street's last look on this phone (street_cache.dart):
             // shown at once on a slow line, and all there is with none.
@@ -493,7 +497,7 @@ GoRouter buildRouter(SessionController session) {
             capture: scope.capture,
             session: scope.session,
             shopper: ShopperRepository(scope.auth.client),
-          );
+          ));
         },
       ),
 
@@ -584,13 +588,15 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.directory,
         builder: (context, state) {
           final scope = AppScope.of(context);
-          return DirectoryScreen(
+          return AppDownloadPrompt(
+            client: scope.auth.client,
+            child: DirectoryScreen(
             storefront: StorefrontRepository(scope.auth.client,
                 keep: StreetCache(scope.db)),
             capture: scope.capture,
             session: scope.session,
             shopper: ShopperRepository(scope.auth.client),
-          );
+          ));
         },
       ),
 
@@ -739,9 +745,7 @@ GoRouter buildRouter(SessionController session) {
           onboarding: AppScope.of(context).onboarding,
           title: context.tr('Mes informations'),
           nextLabel: 'Enregistrer',
-          intro: 'Ces informations vous suivent dans toutes les entreprises '
-              'que vous rejoignez. Elles figurent sur un contrat ou un '
-              'bulletin de paie.',
+          intro: 'Ces informations vous suivent dans toutes les entreprises que vous rejoignez. Elles figurent sur un contrat ou un bulletin de paie.',
         ),
       ),
 

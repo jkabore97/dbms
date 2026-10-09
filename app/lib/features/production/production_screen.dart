@@ -139,7 +139,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = Strings.of(context);
-    final dates = DateFormat('d MMM', 'fr_FR');
+    final dates = DateFormat('d MMM', intlLocale());
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(strings.production)),
       floatingActionButton: !widget.access.canEdit('production')

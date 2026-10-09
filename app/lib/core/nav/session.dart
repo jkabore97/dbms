@@ -14,6 +14,7 @@ import '../auth/models.dart';
 import '../auth/pin_codec.dart';
 import '../auth/two_step.dart';
 import '../db/local_db.dart';
+import '../l10n/tr.dart';
 import '../sync/sync_service.dart';
 
 /// Where the app is between launching and landing in a business.
@@ -576,12 +577,15 @@ class SessionController extends ChangeNotifier {
       final pending = await db.pendingCount();
       if (pending > 0) {
         await auth.signOut();
-        throw StateError(
-          '$pending enregistrement${pending > 1 ? 's' : ''} de '
-          '${previous.label} ${pending > 1 ? 'attendent' : 'attend'} encore '
-          "le réseau. Reconnectez-vous avec ce compte et attendez l'envoi "
-          'avant de changer d\'utilisateur.',
-        );
+        // Said in the phone's language here: a sentence with a number in
+        // it is no key describeError() could look up.
+        throw StateError(translate(
+          trCurrent,
+          pending > 1
+              ? '{n} enregistrements de {name} attendent encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.'
+              : '{n} enregistrement de {name} attend encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.',
+          {'n': pending, 'name': previous.label},
+        ));
       }
       await db.clearIdentity();
     }

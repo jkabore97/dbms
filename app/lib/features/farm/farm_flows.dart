@@ -23,13 +23,15 @@ import '../common/step_flow.dart';
 class FarmStockFlow {
   FarmStockFlow._();
 
-  /// « Réception ». True once something was recorded.
+  /// « Réception ». True once something was recorded. [item] opens it on
+  /// a supply already kept — « Ajouter du stock » on one running out (122).
   static Future<bool?> receive(
     BuildContext context, {
     required LocalDb db,
     required OrgSummary org,
+    String? item,
   }) =>
-      StepFlow.push(context, _ReceiveFlow(db: db, org: org));
+      StepFlow.push(context, _ReceiveFlow(db: db, org: org, item: item));
 
   /// « Consommation » ([wasted] false) or « Perte » ([wasted] true). [farm]
   /// lists the groups of animals besides the flocks this phone knows, when
@@ -68,7 +70,7 @@ class FarmUnitChips extends StatelessWidget {
               key: Key('farm-unit-$u'),
               label: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Text(u, style: const TextStyle(fontSize: 17)),
+                child: Text(context.tr(u), style: const TextStyle(fontSize: 17)),
               ),
               selected: u == value,
               onSelected: (_) => onChanged(u),
@@ -175,9 +177,10 @@ const _newItem = '__new__';
 // ----------------------------------------------------------------
 
 class _ReceiveFlow extends StatefulWidget {
-  const _ReceiveFlow({required this.db, required this.org});
+  const _ReceiveFlow({required this.db, required this.org, this.item});
   final LocalDb db;
   final OrgSummary org;
+  final String? item;
 
   @override
   State<_ReceiveFlow> createState() => _ReceiveFlowState();
@@ -191,7 +194,7 @@ class _ReceiveFlowState extends State<_ReceiveFlow> {
   final _supplier = TextEditingController();
 
   List<_Supply> _known = const [];
-  String? _item;
+  late String? _item = widget.item;
   String _unit = 'sac';
 
   /// The expense account a priced delivery is booked to — 009 booked every
@@ -411,7 +414,7 @@ class _ReceiveFlowState extends State<_ReceiveFlow> {
             textCapitalization: TextCapitalization.words,
             style: const TextStyle(fontSize: 20),
             decoration: InputDecoration(
-              hintText: context.tr('SODEPAL, le vétérinaire…'),
+              hintText: context.tr('SODEPAL, Agri Supply, le vétérinaire…'),
               border: const OutlineInputBorder(),
             ),
             onChanged: (_) => setState(() {}),

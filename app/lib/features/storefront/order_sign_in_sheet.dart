@@ -20,6 +20,7 @@ Future<OrderSignIn?> showOrderSignInSheet(
   BuildContext context, {
   required bool booking,
   required Future<bool> Function() googleAvailable,
+  Color? accent,
 }) {
   return showModalBottomSheet<OrderSignIn>(
     context: context,
@@ -28,7 +29,8 @@ Future<OrderSignIn?> showOrderSignInSheet(
     showDragHandle: true,
     backgroundColor: ShopStyle.paper,
     builder: (sheet) => Theme(
-      data: ShopStyle.theme(sheet),
+      // The vitrine's own colour on its sheet (122).
+      data: ShopStyle.theme(sheet, accent: accent),
       child: OrderSignInSheet(booking: booking, googleAvailable: googleAvailable),
     ),
   );

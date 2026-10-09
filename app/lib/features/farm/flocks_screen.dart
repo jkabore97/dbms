@@ -10,6 +10,7 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
 import 'farm_animal_flows.dart';
+import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -48,6 +49,10 @@ class _FlocksScreenState extends State<FlocksScreen> {
   bool _showClosed = false;
   Object? _error;
 
+  /// Open batches with nothing written today (122) — what the bar counts;
+  /// null until read (and when it cannot be).
+  Set<String>? _quiet;
+
   bool get _canWrite => !widget.org.isObserverOnly;
 
   @override
@@ -80,9 +85,21 @@ class _FlocksScreenState extends State<FlocksScreen> {
         widget.org.id,
         flocks.map((f) => f.toCache()).toList(),
       );
+      final open = [
+        for (final f in flocks)
+          if (f.isOpen) f.id,
+      ];
+      Set<String>? quiet;
+      try {
+        final written = await farm.flocksWrittenToday(open);
+        quiet = {for (final id in open) if (!written.contains(id)) id};
+      } catch (_) {
+        // The list without the marks.
+      }
       if (!mounted) return;
       setState(() {
         _flocks = flocks;
+        _quiet = quiet;
         _loading = false;
       });
     } catch (error) {
@@ -146,6 +163,36 @@ class _FlocksScreenState extends State<FlocksScreen> {
     }
   }
 
+  /// « 2 bandes sans saisie aujourd'hui : B-01, B-02 », each with
+  /// « Saisir ».
+  Widget _quietBanner(BuildContext context) {
+    final quiet = [
+      for (final f in _flocks)
+        if (_quiet?.contains(f.id) ?? false) f,
+    ];
+    if (quiet.isEmpty) return const SizedBox.shrink();
+    final n = quiet.length;
+    final names = attentionNames(context, [for (final f in quiet) f.batchCode]);
+    return AttentionBanner(
+      key: const Key('flocks-attention'),
+      icon: Icons.pets_outlined,
+      title: n == 1
+          ? context.tr('1 bande sans saisie aujourd\'hui : {names}', {'names': names})
+          : context.tr('{n} bandes sans saisie aujourd\'hui : {names}', {'n': n, 'names': names}),
+      stays: context.tr('Le chiffre rouge sur « Bandes » reste jusqu\'à une saisie du jour pour chacune (œufs, mortalité, pesée, vaccination) : ouvrir cette page ne l\'efface pas, et il revient chaque matin.'),
+      items: [
+        for (final f in quiet)
+          AttentionItem(
+            id: f.id,
+            label: f.batchCode,
+            detail: context.tr('{alive} vivants', {'alive': f.alive}),
+            actionLabel: _canWrite ? context.tr('Saisir') : null,
+            onAction: _canWrite ? () => _record(f) : null,
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,9 +230,12 @@ class _FlocksScreenState extends State<FlocksScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Why « Bandes » has a red number (122).
+            _quietBanner(context),
             for (final flock in _flocks)
               _FlockCard(
                 flock: flock,
+                quiet: _quiet?.contains(flock.id) ?? false,
                 canWrite: _canWrite,
                 onRecord: () => _record(flock),
                 onClose: () => _close(flock),
@@ -211,6 +261,7 @@ class _FlocksScreenState extends State<FlocksScreen> {
 class _FlockCard extends StatelessWidget {
   const _FlockCard({
     required this.flock,
+    this.quiet = false,
     required this.canWrite,
     required this.onRecord,
     required this.onClose,
@@ -218,6 +269,9 @@ class _FlockCard extends StatelessWidget {
   });
 
   final Flock flock;
+
+  /// Nothing written today (122): marked, as the bar counts it.
+  final bool quiet;
   final bool canWrite;
   final VoidCallback onRecord;
   final VoidCallback onClose;
@@ -256,8 +310,8 @@ class _FlockCard extends StatelessWidget {
                       Text(
                         [
                           if (flock.breed != null) flock.breed!,
-                          '${flock.ageDays} jours',
-                          'arrivée ${DateFormat('d MMM y', 'fr_FR').format(flock.arrivedOn)}',
+                          context.tr('{n} jours', {'n': flock.ageDays}),
+                          context.tr('arrivée {date}', {'date': DateFormat('d MMM y', intlLocale()).format(flock.arrivedOn)}),
                         ].join(' · '),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -266,6 +320,12 @@ class _FlockCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (quiet)
+                  AttentionChip(
+                    key: Key('flock-quiet-${flock.id}'),
+                    label: context.tr('Rien aujourd\'hui'),
+                    soft: true,
+                  ),
                 if (!flock.isOpen)
                   Chip(
                     label: Text(context.tr('clôturée')),
@@ -302,14 +362,14 @@ class _FlockCard extends StatelessWidget {
                   child: _Stat(
                     label: context.tr('Ponte (7 j)'),
                     value: flock.layRateLabel,
-                    hint: '${flock.eggs7d} œufs',
+                    hint: context.tr('{n} œufs', {'n': flock.eggs7d}),
                   ),
                 ),
                 Expanded(
                   child: _Stat(
                     label: context.tr('Vivants'),
                     value: '${flock.alive}',
-                    hint: 'sur ${flock.started}',
+                    hint: context.tr('sur {n}', {'n': flock.started}),
                   ),
                 ),
                 Expanded(

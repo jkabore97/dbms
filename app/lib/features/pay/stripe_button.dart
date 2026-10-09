@@ -103,7 +103,9 @@ class _StripeCardButtonState extends State<StripeCardButton> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.credit_card),
             label: Text(
-              "S'abonner par carte · $price F / ${year ? 'an' : 'mois'}",
+              year
+                  ? context.tr('S\'abonner par carte · {price} F / an', {'price': price})
+                  : context.tr('S\'abonner par carte · {price} F / mois', {'price': price}),
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16),
             ),
@@ -126,8 +128,9 @@ class _StripeCardButtonState extends State<StripeCardButton> {
         ],
         const SizedBox(height: 6),
         Text(
-          'Visa, Mastercard. Renouvelé chaque ${year ? context.tr('année') : 'mois'}, '
-          'annulable à tout moment. Paiement sécurisé par Stripe.',
+          year
+              ? context.tr('Visa, Mastercard. Renouvelé chaque année, annulable à tout moment. Paiement sécurisé par Stripe.')
+              : context.tr('Visa, Mastercard. Renouvelé chaque mois, annulable à tout moment. Paiement sécurisé par Stripe.'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: kMist),
         ),
@@ -202,7 +205,7 @@ class _StripeManageState extends State<StripeManage> {
     final theme = Theme.of(context);
     final until = sub.until == null
         ? ''
-        : DateFormat('d MMMM yyyy', 'fr_FR').format(sub.until!.toLocal());
+        : DateFormat('d MMMM yyyy', intlLocale()).format(sub.until!.toLocal());
     final line = !sub.active
         ? context.tr('Abonnement par carte arrêté.')
         : sub.cancelAtEnd

@@ -167,7 +167,8 @@ class _BillingDetailsScreenState extends State<BillingDetailsScreen> {
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: context.tr('Adresse'),
-                    hintText: context.tr('Rue 14.28, secteur 15, Ouagadougou'),
+                    hintText: context.tr('Ex. : Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris'),
+                    hintMaxLines: 2,
                     border: const OutlineInputBorder(),
                   ),
                 ),

@@ -10,6 +10,8 @@ import '../../core/security/security_repository.dart';
 import '../../core/security/security_settings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Compte › Sécurité.
 ///
@@ -60,6 +62,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   void initState() {
     super.initState();
     _settings?.addListener(_changed);
+    _settings?.refreshBiometric();
     _load();
   }
 
@@ -109,6 +112,37 @@ class _SecurityScreenState extends State<SecurityScreen> {
     await _api?.log('lock_changed', detail: SecuritySettings.label(minutes));
   }
 
+  /// On: the system prompt, once — the person's authorization. Off: no
+  /// prompt, the code alone.
+  Future<void> _setBiometric(bool on) async {
+    final settings = _settings;
+    if (settings == null) return;
+    if (!on) {
+      await settings.setBiometric(false);
+      return;
+    }
+    setState(() => _busy = 'bio');
+    final outcome = await settings.turnOnBiometric();
+    if (!mounted) return;
+    setState(() => _busy = null);
+    switch (outcome) {
+      case BiometricOutcome.on:
+        break;
+      case BiometricOutcome.refused:
+        await settings.setBiometric(false);
+      case BiometricOutcome.notEnrolled:
+        await settings.setBiometric(false);
+        if (mounted) {
+          _say(context.tr('Aucune empreinte ni visage n\'est enregistré sur ce téléphone. Ajoutez-en un dans les réglages du téléphone (Sécurité), puis revenez ici.'));
+        }
+      case BiometricOutcome.failed:
+        await settings.setBiometric(false);
+        if (mounted) {
+          _say(context.tr('Le téléphone n\'a pas pu vérifier l\'empreinte. Réessayez, ou gardez le code.'));
+        }
+    }
+  }
+
   Future<void> _changeCode() async {
     final scope = AppScope.read(context);
     if (scope == null) return;
@@ -120,7 +154,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
     if (done == true) {
       await _api?.log('pin_changed');
-      _say('Code changé.');
+      _say(translate(trCurrent, 'Code changé.'));
       await _load();
     }
   }
@@ -133,7 +167,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       builder: (_) => _ChangePasswordDialog(api: api),
     );
     if (done == true) {
-      _say('Mot de passe changé.');
+      _say(translate(trCurrent, 'Mot de passe changé.'));
       await _load();
     }
   }
@@ -177,7 +211,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         // The resolve now stops at the code screen, which enrols.
         await session?.resolveOrgs();
       } else {
-        _say('Validation en deux étapes désactivée.');
+        _say(context.tr('Validation en deux étapes désactivée.'));
       }
     } catch (e) {
       _say(describeError(e));
@@ -226,7 +260,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       _say(
         n == 0
             ? context.tr('Aucun autre appareil n\'était connecté.')
-            : '$n appareil${n > 1 ? 's' : ''} déconnecté${n > 1 ? 's' : ''}.',
+            : context.tr('{n} appareil(s) déconnecté(s).', {'n': n}),
       );
       await _load();
     } catch (e) {
@@ -240,14 +274,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = _settings;
-    final when = DateFormat('d MMM, HH:mm', 'fr_FR');
+    final when = DateFormat('d MMM, HH:mm', intlLocale());
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
     final others = _sessions.where((s) => !s.current).length;
 
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Sécurité'))),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(context.tr('Sécurité'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -256,8 +290,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
               title: context.tr('Verrouillage du téléphone'),
               note: settings.policy == null
                   ? context.tr('Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.')
-                  : 'Votre entreprise demande le code après '
-                        '${SecuritySettings.label(settings.policy)} au plus.',
+                  : context.tr('Votre entreprise demande le code après {delay} au plus.',
+                      {'delay': context.tr(SecuritySettings.label(settings.policy))}),
               children: [
                 RadioGroup<int?>(
                   groupValue: settings.effectiveLock,
@@ -271,7 +305,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                           title: Text(
                             m == null
                                 ? context.tr('Jamais')
-                                : 'Après ${SecuritySettings.label(m)}',
+                                : context.tr('Après {delay}', {'delay': context.tr(SecuritySettings.label(m))}),
                           ),
                           subtitle: m == SecuritySettings.defaultLock
                               ? Text(context.tr('Conseillé'))
@@ -284,13 +318,21 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     ],
                   ),
                 ),
-                if (settings.biometricReady)
+                if (settings.biometricHardware)
                   SwitchListTile(
-                    value: settings.biometric,
-                    onChanged: settings.setBiometric,
+                    value: settings.biometric && settings.biometricReady,
+                    onChanged: settings.biometricReady && _busy != 'bio'
+                        ? _setBiometric
+                        : null,
                     secondary: const Icon(Icons.fingerprint),
-                    title: Text(context.tr('Déverrouiller avec l\'empreinte')),
-                    subtitle: Text(context.tr('Le code reste toujours possible.')),
+                    title: Text(
+                      context.tr('Déverrouiller avec l\'empreinte / Face ID'),
+                    ),
+                    subtitle: Text(
+                      settings.biometricReady
+                          ? context.tr('Le code reste toujours possible.')
+                          : context.tr('Aucune empreinte ni visage n\'est enregistré sur ce téléphone. Ajoutez-en un dans les réglages du téléphone (Sécurité), puis revenez ici.'),
+                    ),
                   ),
                 ListTile(
                   leading: const Icon(Icons.pin_outlined),
@@ -344,9 +386,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     title: Text(s.label),
                     subtitle: Text(
                       [
-                        if (s.current) 'Cet appareil',
+                        if (s.current) context.tr('Cet appareil'),
                         if (!s.current && s.lastUsed != null)
-                          'utilisé le ${when.format(s.lastUsed!)}',
+                          context.tr('utilisé le {date}', {'date': when.format(s.lastUsed!)}),
                         if ((s.ip ?? '').isNotEmpty) s.ip!,
                       ].join(' · '),
                     ),
@@ -408,7 +450,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   static IconData _iconFor(String kind) => switch (kind) {

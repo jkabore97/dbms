@@ -145,12 +145,12 @@ class _SpotRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = DateFormat('d MMM', 'fr_FR');
+    final date = DateFormat('d MMM', intlLocale());
     final state = spot.stateLabel();
     final running = state == 'En cours' || state == 'Terminée';
     final dates = spot.startsAt == null
         ? context.tr('{days} jours', {'days': spot.days})
-        : 'du ${date.format(spot.startsAt!)} au ${date.format(spot.endsAt!)}';
+        : context.tr('du {from} au {to}', {'from': date.format(spot.startsAt!), 'to': date.format(spot.endsAt!)});
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
@@ -176,7 +176,7 @@ class _SpotRow extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              [dates, if (spot.free) 'offerte par Mara Pro'].join(' · '),
+              [dates, if (spot.free) context.tr('offerte par Mara Pro')].join(' · '),
               style: theme.textTheme.bodySmall,
             ),
             if (running) ...[
@@ -220,7 +220,7 @@ class _StateChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(label,
+      child: Text(context.tr(label),
           style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
@@ -517,7 +517,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       Text(
         _proFree
             ? context.tr('Offert : Mara Pro inclut une mise en avant de 7 jours par mois.')
-            : 'Prix : ${_money(price)}',
+            : context.tr('Prix : {price}', {'price': _money(price)}),
         style: theme.textTheme.titleMedium,
       ),
       Text(
@@ -542,7 +542,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       Text(context.tr('{label} · {days} jours', {'label': spot.label, 'days': spot.days}),
           style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
-      Text('À payer : ${moneyFormat(spot.currency).format(spot.price)}',
+      Text(context.tr('À payer : {amount}', {'amount': moneyFormat(spot.currency).format(spot.price)}),
           style: theme.textTheme.titleLarge),
       const SizedBox(height: 12),
       // Paid and programmed at once, by Wave or card (076), when the

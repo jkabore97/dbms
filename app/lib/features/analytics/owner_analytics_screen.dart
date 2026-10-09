@@ -146,7 +146,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
         KpiCard(
           label: context.tr('Bénéfice'),
           value: _money.format(h.margin),
-          hint: '$marginPct % du CA',
+          hint: context.tr('{pct} % du CA', {'pct': marginPct}),
           icon: Icons.trending_up,
         ),
         KpiCard(
@@ -258,12 +258,12 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     final values = [for (final d in daily) d.revenue];
     final total = values.fold<double>(0, (a, b) => a + b);
     final peak = daily.reduce((a, b) => a.revenue >= b.revenue ? a : b);
-    final df = DateFormat('d MMM', 'fr_FR');
+    final df = DateFormat('d MMM', intlLocale());
 
     return SectionCard(
       title: context.tr('Tendance'),
       subtitle:
-          'Meilleur jour : ${df.format(peak.day)} (${_money.format(peak.revenue)})',
+          context.tr('Meilleur jour : {day} ({amount})', {'day': df.format(peak.day), 'amount': _money.format(peak.revenue)}),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -273,7 +273,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(df.format(daily.first.day), style: _muted(context)),
-              Text('Total : ${_money.format(total)}', style: _muted(context)),
+              Text(context.tr('Total : {total}', {'total': _money.format(total)}), style: _muted(context)),
               Text(df.format(daily.last.day), style: _muted(context)),
             ],
           ),

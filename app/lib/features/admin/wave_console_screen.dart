@@ -80,7 +80,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = moneyFormat('XOF');
-    final when = DateFormat('d MMM, HH:mm', 'fr_FR');
+    final when = DateFormat('d MMM, HH:mm', intlLocale());
     final failed = _rows.where((r) => r.payoutStatus == 'failed').length;
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paiements Wave'))),
@@ -137,7 +137,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                 Text(
                     failed == 0
                         ? context.tr('Paiements')
-                        : 'Paiements · $failed versement${failed > 1 ? 's' : ''} en échec',
+                        : context.tr('Paiements · {n} versement(s) en échec', {'n': failed}),
                     style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (_rows.isEmpty)
@@ -154,22 +154,22 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                       title: Text('${r.orgName} · ${money.format(r.amount)}'),
                       subtitle: Text([
                         switch (r.kind) {
-                          'order' => 'Commande',
+                          'order' => context.tr('Commande'),
                           'pro' => 'Mara Pro',
                           _ => 'Mise en avant',
                         },
-                        r.method == 'card' ? 'carte' : context.tr('Wave'),
+                        r.method == 'card' ? context.tr('carte') : context.tr('Wave'),
                         switch (r.status) {
-                          'succeeded' => 'payé',
-                          'failed' => 'échoué',
-                          'expired' => 'expiré',
-                          _ => 'en cours',
+                          'succeeded' => context.tr('payé'),
+                          'failed' => context.tr('échoué'),
+                          'expired' => context.tr('expiré'),
+                          _ => context.tr('en cours'),
                         },
                         if (r.kind == 'order')
                           switch (r.payoutStatus) {
-                            'sent' => 'versé à ${r.payoutTo ?? 'la boutique'}',
-                            'pending' => 'versement en cours',
-                            'failed' => 'versement échoué : ${r.payoutError ?? ''}',
+                            'sent' => context.tr('versé à {to}', {'to': r.payoutTo ?? context.tr('la boutique')}),
+                            'pending' => context.tr('versement en cours'),
+                            'failed' => context.tr('versement échoué : {why}', {'why': r.payoutError ?? ''}),
                             _ => '',
                           },
                         if (r.commission > 0) 'part ${money.format(r.commission)}',

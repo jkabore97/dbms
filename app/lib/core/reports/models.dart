@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 // What the report functions in 002_church_profile.sql hand back, and what the
 // screens need to make of it.
 
@@ -33,7 +34,7 @@ const _accountNames = <String, String>{
 /// Falls through to the original rather than blanking: an account added
 /// server-side after this build shipped should still be readable, in English,
 /// instead of vanishing from a financial report.
-String accountLabel(String name) => _accountNames[name] ?? name;
+String accountLabel(String name) => translate(trCurrent, _accountNames[name] ?? name);
 
 /// One line of `church_weekly_summary`.
 class SummaryLine {
@@ -138,7 +139,7 @@ class ChurchMember {
 
   factory ChurchMember.fromRow(Map<String, dynamic> row) => ChurchMember(
         id: row['id'] as String,
-        fullName: (row['full_name'] as String?) ?? 'Sans nom',
+        fullName: (row['full_name'] as String?) ?? translate(trCurrent, 'Sans nom'),
         phone: row['phone'] as String?,
       );
 }

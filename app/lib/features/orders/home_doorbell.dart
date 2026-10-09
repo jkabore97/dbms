@@ -66,10 +66,15 @@ mixin HomeDoorbell<T extends StatefulWidget> on State<T> {
     final org = doorbellOrg;
     if (ModalRoute.of(context)?.isCurrent ?? true) unawaited(AlertTone.ring());
     final demande = org.isAssociation;
-    final s = pending > 1 ? 's' : '';
     OrderAlert.show(
-      demande ? 'Nouvelle demande — ${org.name}' : 'Nouvelle commande — ${org.name}',
-      '$pending ${demande ? 'demande' : 'commande'}$s à traiter sur la vitrine.',
+      demande
+          ? context.tr('Nouvelle demande — {name}', {'name': org.name})
+          : context.tr('Nouvelle commande — {name}', {'name': org.name}),
+      context.tr(
+          demande
+              ? (pending > 1 ? '{n} demandes à traiter sur la vitrine.' : '{n} demande à traiter sur la vitrine.')
+              : (pending > 1 ? '{n} commandes à traiter sur la vitrine.' : '{n} commande à traiter sur la vitrine.'),
+          {'n': pending}),
     );
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
       content: Text(demande

@@ -79,7 +79,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
   Future<void> _savePct() async {
     final pct = int.tryParse(_pct.text.trim());
     if (pct == null || pct < 0 || pct > 100) {
-      setState(() => _saved = 'Le pourcentage va de 0 à 100.');
+      setState(() => _saved = context.tr('Le pourcentage va de 0 à 100.'));
       return;
     }
     setState(() {
@@ -91,8 +91,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saved = 'Enregistré : $pct % sur les prochaines livraisons. '
-            'Les commandes déjà passées gardent leur part.';
+        _saved = context.tr('Enregistré : {pct} % sur les prochaines livraisons. Les commandes déjà passées gardent leur part.', {'pct': pct});
       });
     } catch (error) {
       if (!mounted) return;
@@ -107,7 +106,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = NumberFormat.decimalPattern('fr_FR');
-    final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(_month);
+    final monthLabel = DateFormat('MMMM yyyy', intlLocale()).format(_month);
     final owed = _rows.fold<double>(0, (sum, r) => sum + r.share);
     final now = DateTime.now();
     final isCurrent = _month.year == now.year && _month.month == now.month;
@@ -172,11 +171,11 @@ class _SettlementScreenState extends State<SettlementScreen> {
               color: theme.colorScheme.primaryContainer,
               child: ListTile(
                 leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text('${money.format(owed)} F CFA dus à Mara',
+                title: Text(context.tr('{amount} F CFA dus à Mara', {'amount': money.format(owed)}),
                     style: theme.textTheme.titleMedium),
-                subtitle: Text(
-                    '${_rows.length} livreur${_rows.length > 1 ? 's' : ''} · '
-                    '${_rows.fold<int>(0, (s, r) => s + r.courses)} courses'),
+                subtitle: Text(context.tr(
+                    _rows.length > 1 ? '{n} livreurs · {c} courses' : '{n} livreur · {c} courses',
+                    {'n': _rows.length, 'c': _rows.fold<int>(0, (s, r) => s + r.courses)})),
               ),
             ),
             const SizedBox(height: 8),
@@ -194,9 +193,9 @@ class _SettlementScreenState extends State<SettlementScreen> {
                   title: Text(r.name),
                   subtitle: Text([
                     if (r.phone != null) r.phone!,
-                    '${r.courses} course${r.courses > 1 ? 's' : ''}',
-                    'encaissé ${money.format(r.fees)} F',
-                    'gardé ${money.format(r.net)} F',
+                    r.courses > 1 ? context.tr('{n} courses', {'n': r.courses}) : context.tr('{n} course', {'n': r.courses}),
+                    context.tr('encaissé {amount} F', {'amount': money.format(r.fees)}),
+                    context.tr('gardé {amount} F', {'amount': money.format(r.net)}),
                   ].join(' · ')),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

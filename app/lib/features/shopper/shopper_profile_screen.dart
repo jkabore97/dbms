@@ -10,12 +10,12 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/onboarding/business_creation.dart' show suggestedTowns, townCountry;
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/site/site.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl, whatsappUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../l10n/strings.dart';
-import '../account/alert_tone_tile.dart';
 import '../storefront/shop_style.dart';
 import '../storefront/whatsapp_verify_screen.dart';
 import 'report_sheet.dart';
@@ -197,8 +197,13 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
                 ))
           : RefreshIndicator(
               onRefresh: _load,
-              child: ListView(
-                padding: EdgeInsets.zero,
+              child: ShopScroll(
+                footer: ShopWidth(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 640),
+                    child: const ShopFooter(),
+                  ),
+                ),
                 children: [
                   ShopWidth(
                     child: ConstrainedBox(
@@ -301,7 +306,6 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           onTap: () => NotificationSettingsSheet.open(context,
               notify: scope.notify, audiences: {'customer', if (courier) 'courier'}),
         ),
-        AlertToneTile(db: scope.db),
         _Row(
           key: const Key('shopper-language'),
           icon: Icons.translate,
@@ -395,7 +399,6 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           foregroundColor: ShopStyle.ink,
         ),
       ),
-      const ShopFooter(),
     ];
   }
 }
@@ -676,7 +679,9 @@ class _CityDialog extends StatefulWidget {
 class _CityDialogState extends State<_CityDialog> {
   late final _text = TextEditingController(text: widget.current ?? '');
 
-  static const _cities = ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Abidjan'];
+  /// The person's country first, then the world's big cities (122).
+  late final _cities = suggestedTowns(
+      townCountry(AppScope.read(context)?.session.identity?.phone));
 
   @override
   void dispose() {
@@ -702,7 +707,8 @@ class _CityDialogState extends State<_CityDialog> {
               autofocus: true,
               maxLength: 60,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(hintText: 'Ouagadougou'),
+              decoration: InputDecoration(
+                  hintText: context.tr('Ex. : Ouagadougou, Paris, Montréal')),
               onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
             ),
             Wrap(

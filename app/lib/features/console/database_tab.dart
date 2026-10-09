@@ -139,8 +139,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${numbers.format(total)} lignes réparties sur '
-                    '${_tables.length} tables',
+                    context.tr('{n} lignes réparties sur {tables} tables', {'n': numbers.format(total), 'tables': _tables.length}),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onPrimaryContainer,
                     ),
@@ -189,7 +188,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
                         // this is often about to go and look at it directly.
                         table.name,
                         if (table.lastChange != null)
-                          'modifié le ${DateFormat('d MMM', 'fr_FR').format(table.lastChange!)}',
+                          context.tr('modifié le {date}', {'date': DateFormat('d MMM', intlLocale()).format(table.lastChange!)}),
                       ].join(' · '),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontFamily: 'monospace',
@@ -358,8 +357,8 @@ class _ColumnTile extends StatelessWidget {
       subtitle: Text(
         [
           column.dataType,
-          if (!column.isNullable) 'obligatoire',
-          if (column.hasDefault) 'valeur par défaut',
+          if (!column.isNullable) context.tr('obligatoire'),
+          if (column.hasDefault) context.tr('valeur par défaut'),
           if (column.references != null) '→ ${column.references}',
         ].join(' · '),
         style: theme.textTheme.bodySmall,

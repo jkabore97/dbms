@@ -8,6 +8,7 @@ import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart';
 import '../notify/notifications_screen.dart';
+import 'activity_switch.dart';
 import 'home_router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -65,10 +66,15 @@ class BusinessShell extends StatelessWidget {
             // « Admin » (104): the platform's way to its command center,
             // on every home — drawn for a platform admin only.
             const AdminPill(),
-            // « Changer d'activité » (100), just left of the bell, for
-            // whoever has more than one — every home, shop, farm and
-            // association alike, since they all ride this one slot.
-            SwitchActivityButton(activities: session.orgs.length),
+            // « Changer d'activité » (100), just left of the bell — every
+            // home, shop, farm and association alike, since they all ride
+            // this one slot. Since 122 also for the owner or admin of one
+            // activity: a second one, or why it needs Mara Pro.
+            SwitchActivityButton(
+              activities: session.orgs.length,
+              mode: ActivitySwitch.of(context, org),
+              org: org,
+            ),
             NotificationBell(
               notify: scope.notify,
               scope: NotifyScope.org(org.id),
@@ -108,22 +114,36 @@ class BusinessShell extends StatelessWidget {
   }
 }
 
-/// « Changer d'activité » on the home's app bar (100): only for someone with
-/// more than one activity — for everybody else it takes no room at all.
+/// « Changer d'activité » on the home's app bar (100): for someone with
+/// more than one activity, the picker; for the owner or admin of one (122),
+/// the sheet with « + Créer une nouvelle activité » — or, when a second
+/// needs Mara Pro, why, with « Passer à Pro ». For somebody who only works
+/// in one activity it takes no room at all.
 class SwitchActivityButton extends StatelessWidget {
-  const SwitchActivityButton({super.key, required this.activities});
+  const SwitchActivityButton(
+      {super.key, required this.activities, this.mode, this.org});
 
   /// How many activities the signed-in person can open.
   final int activities;
 
+  /// What the tap does; null reads it off [activities] alone (the picker
+  /// from two, nothing below).
+  final ActivitySwitchMode? mode;
+
+  /// The activity open now, for the one-activity sheet.
+  final OrgSummary? org;
+
   @override
   Widget build(BuildContext context) {
-    if (activities < 2) return const SizedBox.shrink();
+    final mode = this.mode ?? ActivitySwitch.modeFor(activities: activities);
+    if (mode == ActivitySwitchMode.none) return const SizedBox.shrink();
     return IconButton(
       key: const Key('switch-activity'),
+      // The same door for everybody: the sheet is where a single activity
+      // learns about a second.
       icon: const Icon(Icons.swap_horiz),
       tooltip: Strings.of(context).switchBusiness,
-      onPressed: () => context.go(Routes.picker),
+      onPressed: () => ActivitySwitch.open(context, org, mode),
     );
   }
 }

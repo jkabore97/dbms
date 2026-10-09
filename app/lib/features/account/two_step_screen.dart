@@ -242,7 +242,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
         children: [
           CircleAvatar(radius: 12, child: Text(n)),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: t.textTheme.bodyMedium)),
+          Expanded(child: Text(context.tr(text), style: t.textTheme.bodyMedium)),
         ],
       ),
     );
@@ -252,13 +252,11 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     return [
       step(
         '1',
-        'Installez Google Authenticator ou Microsoft Authenticator '
-            '(Play Store).',
+        'Installez Google Authenticator ou Microsoft Authenticator (Play Store).',
       ),
       step(
         '2',
-        'Ajoutez Mara : scannez ce code depuis un autre écran, ou '
-            'touchez le bouton sur ce téléphone.',
+        'Ajoutez Mara : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.',
       ),
       const SizedBox(height: 8),
       Center(

@@ -319,7 +319,9 @@ void main() {
       final retail = _Retail(orders: [_order('pending')]);
       await tester.pumpWidget(_app(ShopOrdersScreen(org: _shop, retail: retail)));
       await tester.pumpAndSettle();
-      expect(find.text('Répondre'), findsOneWidget);
+      // On the card (and, since 122, beside the reason on top).
+      expect(find.descendant(of: find.byKey(const Key('order-card-o1')), matching: find.text('Répondre')),
+          findsOneWidget);
       // The card's old one-tap buttons are gone: one way, the walkthrough.
       expect(find.text('Refuser'), findsNothing);
       await tester.tap(find.byKey(const Key('order-walk-o1')));

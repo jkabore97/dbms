@@ -48,8 +48,9 @@ class ConsoleTodayState extends State<ConsoleToday> {
     );
     if (sent != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Message envoyé à $sent personne${sent > 1 ? 's' : ''}.')));
+          content: Text(sent > 1
+              ? context.tr('Message envoyé à {n} personnes.', {'n': sent})
+              : context.tr('Message envoyé à {n} personne.', {'n': sent}))));
     }
   }
 
@@ -66,14 +67,14 @@ class ConsoleTodayState extends State<ConsoleToday> {
     final trend = week == last
         ? context.tr('comme la semaine dernière')
         : week > last
-            ? '+${week - last} sur la semaine dernière'
-            : '${week - last} sur la semaine dernière';
+            ? context.tr('{n} sur la semaine dernière', {'n': '+${week - last}'})
+            : context.tr('{n} sur la semaine dernière', {'n': '${week - last}'});
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Heading('Ce mois',
-            trailing: 'gagné ${money.format(today.earnedMonth)}'),
+            trailing: context.tr('gagné {amount}', {'amount': money.format(today.earnedMonth)})),
         _Figures([
           _Figure('Mara Pro', money.format(m['pro'] ?? 0)),
           _Figure('Mises en avant', money.format(m['spots'] ?? 0)),
@@ -84,9 +85,9 @@ class ConsoleTodayState extends State<ConsoleToday> {
         const _Heading('Croissance'),
         _Figures([
           _Figure('Entreprises', n.format(c(g, 'businesses')),
-              note: '+${c(g, 'new_month')} ce mois'),
+              note: context.tr('+{n} ce mois', {'n': c(g, 'new_month')})),
           _Figure('Vitrines garnies', n.format(c(g, 'windows_stocked')),
-              note: 'sur ${c(g, 'windows_open')} ouvertes'),
+              note: context.tr('sur {n} ouvertes', {'n': c(g, 'windows_open')})),
           _Figure('Commandes, 7 jours', n.format(week), note: trend),
           _Figure('Nouveaux clients', n.format(c(g, 'shoppers_new')),
               note: 'ce mois'),
@@ -103,7 +104,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
           _Figure('Repères loin', n.format(c(h, 'pins_far')),
               note: 'hors de la zone de la monnaie', warn: c(h, 'pins_far') > 0),
           _Figure('Sans photo', n.format(c(h, 'no_photo')),
-              note: 'sur ${c(h, 'published')} articles en vitrine',
+              note: context.tr('sur {n} articles en vitrine', {'n': c(h, 'published')}),
               warn: c(h, 'no_photo') > 0),
         ]),
         const SizedBox(height: 12),
@@ -134,7 +135,7 @@ class _Heading extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Expanded(child: Text(text, style: theme.textTheme.titleMedium)),
+          Expanded(child: Text(context.tr(text), style: theme.textTheme.titleMedium)),
           if (trailing != null)
             Text(trailing!,
                 style: theme.textTheme.labelLarge
@@ -183,7 +184,7 @@ class _Figures extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(f.label,
+                  Text(context.tr(f.label),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall),
@@ -196,7 +197,7 @@ class _Figures extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w700)),
                   ),
                   if (f.note != null)
-                    Text(f.note!,
+                    Text(context.tr(f.note!),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(

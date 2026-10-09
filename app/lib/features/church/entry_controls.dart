@@ -33,7 +33,7 @@ class ChoiceChipRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final chips = values.entries
         .map((e) => ChoiceChip(
-              label: Text(e.value),
+              label: Text(context.tr(e.value)),
               selected: selected == e.key,
               onSelected: (_) => onSelect(e.key),
             ))

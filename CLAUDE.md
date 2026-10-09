@@ -44,8 +44,12 @@ in this project. Follow them without being asked again.
 
 ## Standing technical facts, not to be rediscovered
 
-- Ship targets are web and Android only. Never add macos/windows/linux/ios
-  scaffolding — `flutter create` generates it by default; delete it.
+- Ship targets are web, Android and iOS (iOS since batch 122, built on
+  Codemagic — `codemagic.yaml`; it cannot be built in this container).
+  Never add macos/windows/linux scaffolding — `flutter create` generates it
+  by default; delete it. `app/ios/` is tracked: regenerate it only with
+  `flutter create --platforms=ios .` and keep its bundle id (bf.kaj.app),
+  minimum iOS and usage strings.
 - Supabase credentials reach the app only via `--dart-define`, sourced from
   Codespaces secrets. Never hardcoded, never committed, never pasted into
   chat by anyone, including you.

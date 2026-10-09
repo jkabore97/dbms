@@ -125,7 +125,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
               name: 'releve-${_member!.fullName}-$_year.png',
             ),
           ],
-          text: '${widget.orgName} — relevé $_year',
+          text: translate(trCurrent, '{name} — relevé {year}', {'name': widget.orgName, 'year': _year}),
         ),
       );
     } catch (error) {
@@ -275,7 +275,7 @@ class _StatementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(currency);
-    final date = DateFormat('d MMM', 'fr_FR');
+    final date = DateFormat('d MMM', intlLocale());
     final total = lines.fold<double>(0, (sum, l) => sum + l.amount);
 
     return Container(
@@ -380,8 +380,7 @@ class _StatementCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Établi le '
-            '${DateFormat('d MMMM yyyy', 'fr_FR').format(DateTime.now())}',
+            context.tr('Établi le {date}', {'date': DateFormat('d MMMM yyyy', intlLocale()).format(DateTime.now())}),
             style: const TextStyle(fontSize: 11, color: _muted),
           ),
         ],

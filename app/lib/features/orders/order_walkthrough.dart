@@ -620,7 +620,7 @@ class _OrderSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = moneyFormat(order.currency);
-    final when = DateFormat('EEE d MMM, HH:mm', 'fr_FR').format(order.createdAt);
+    final when = DateFormat('EEE d MMM, HH:mm', intlLocale()).format(order.createdAt);
     final phone = (order.phone ?? '').trim();
     final whatsapp = whatsappUrl(order.phone);
     return Container(

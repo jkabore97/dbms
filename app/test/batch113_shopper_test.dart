@@ -497,10 +497,12 @@ void main() {
       await profilePage(tester, await shopper(tester), me);
       await tester.tap(find.byKey(const Key('shopper-city')));
       await settle(tester);
-      await tester.tap(find.text('Bobo-Dioulasso'));
+      // The chips follow the person's country (122); Abidjan is offered
+      // to every country but Côte d'Ivoire (where it is the first own town).
+      await tester.tap(find.text('Abidjan'));
       await settle(tester);
-      expect(me.settings.last['city'], 'Bobo-Dioulasso');
-      expect(find.text('Bobo-Dioulasso'), findsOneWidget);
+      expect(me.settings.last['city'], 'Abidjan');
+      expect(find.text('Abidjan'), findsOneWidget);
     });
 
     testWidgets('« Signaler un problème »: too short is said; sent with its topic', (tester) async {
@@ -887,6 +889,42 @@ void main() {
         await tester.tap(find.byKey(const Key('compte-favourites')));
         await settle(tester);
         expect(find.text('page ${Routes.favourites}'), findsOneWidget);
+      });
+    }
+
+    // 122 (R3): the language is a choice between the two, not a switch
+    // that turns English on; the tap applies it and keeps it.
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('Compte of a $profile: Français / English, the current one selected', (tester) async {
+        final session = await shopper(tester);
+        final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        await pump(tester, session, at: '/compte', routes: [
+          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org)),
+        ]);
+        await tester.tap(find.byKey(const Key('group-Préférences')));
+        await settle(tester);
+        expect(find.byKey(const Key('compte-english')), findsNothing, reason: 'the old switch is gone');
+        final choice = find.byKey(const Key('compte-language'));
+        expect(choice, findsOneWidget);
+        final buttons = find.descendant(of: choice, matching: find.byType(SegmentedButton<String>));
+        final controller = AppScope.of(tester.element(choice)).localeController;
+        // Until one is tapped it follows the phone (the test host says en).
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected,
+            {controller.effective.languageCode == 'en' ? 'en' : 'fr'});
+        await tester.runAsync(() async {
+          await tester.tap(find.descendant(of: choice, matching: find.text('Français')));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await settle(tester);
+        expect(controller.chosen, const Locale('fr'));
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected, {'fr'});
+        await tester.runAsync(() async {
+          await tester.tap(find.descendant(of: choice, matching: find.text('English')));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await settle(tester);
+        expect(controller.chosen, const Locale('en'));
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected, {'en'});
       });
     }
 

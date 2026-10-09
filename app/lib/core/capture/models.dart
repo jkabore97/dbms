@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 /// What a photograph is, once it has been taken.
 ///
 /// Deliberately almost entirely nullable. The whole premise of M5's capture
@@ -73,7 +74,7 @@ class CapturedDocument {
     if (p != null && p.trim().isNotEmpty) return p.trim();
     final e = entryLabel;
     if (e != null && e.trim().isNotEmpty) return e.trim();
-    return 'Photo sans nom';
+    return translate(trCurrent, 'Photo sans nom');
   }
 
   factory CapturedDocument.fromRow(Map<String, dynamic> row) {

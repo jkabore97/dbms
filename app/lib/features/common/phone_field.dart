@@ -226,7 +226,7 @@ class _CountrySheetState extends State<_CountrySheet> {
         country.iso,
         style: Theme.of(context).textTheme.labelLarge,
       ),
-      title: Text(country.name),
+      title: Text(context.tr(country.name)),
       trailing: Text(
         country.dial,
         style: Theme.of(context).textTheme.bodyLarge,

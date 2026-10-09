@@ -153,12 +153,12 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   static String _describe(Object error) {
     final text = error.toString();
     if (text.contains('already exists')) {
-      return 'Un compte porte déjà ce nom.';
+      return translate(trCurrent, 'Un compte porte déjà ce nom.');
     }
     if (text.contains('administrator')) {
-      return 'Seul un administrateur peut modifier le plan comptable.';
+      return translate(trCurrent, 'Seul un administrateur peut modifier le plan comptable.');
     }
-    return 'Échec : la modification n\'a pas été enregistrée.';
+    return translate(trCurrent, 'Échec : la modification n\'a pas été enregistrée.');
   }
 
   @override
@@ -199,9 +199,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
         error: _error,
         onRetry: _load,
         isEmpty: visible.isEmpty,
-        emptyMessage: 'Aucun compte pour le moment. '
-            'Le premier est créé tout seul, la première fois que quelqu\'un '
-            'enregistre une entrée.',
+        emptyMessage: context.tr('Aucun compte pour le moment. Le premier est créé tout seul, la première fois que quelqu\'un enregistre une entrée.'),
         child: ListView(
           children: [
             for (final type in accountTypes.keys)
@@ -305,9 +303,8 @@ class _RenameAccountDialogState extends State<_RenameAccountDialog> {
           if (account.hasHistory) ...[
             const SizedBox(height: 12),
             Text(
-              '${account.entryCount} écriture'
-              '${account.entryCount > 1 ? 's' : ''} portent déjà ce nom. '
-              'Le renommer les renomme toutes.',
+              context.tr('{n} écriture(s) portent déjà ce nom. Le renommer les renomme toutes.',
+                  {'n': account.entryCount}),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -365,8 +362,8 @@ class _AccountTile extends StatelessWidget {
         [
           account.code,
           if (account.description != null) account.description!,
-          if (faded) 'retiré',
-          if (account.entryCount == 0) 'jamais utilisé',
+          if (faded) context.tr('retiré'),
+          if (account.entryCount == 0) context.tr('jamais utilisé'),
         ].join(' · '),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,

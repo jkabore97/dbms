@@ -79,3 +79,19 @@ test("a vitrine's page, previewed or not, is asked about every time", async () =
   assert.equal(r.status, 200);
   assert.equal(r.headers.get("Cache-Control"), "no-cache");
 });
+
+test("every page and file carries the security headers web filters look for", async () => {
+  for (const path of ["/", "/app/0123456789ab/main.dart.js", "/ck/abcdefabcdef/chromium/canvaskit.wasm", "/version.json"]) {
+    const r = await get(path);
+    assert.equal(r.headers.get("Strict-Transport-Security"), "max-age=31536000", path);
+    assert.equal(r.headers.get("X-Content-Type-Options"), "nosniff", path);
+    assert.equal(r.headers.get("X-Frame-Options"), "SAMEORIGIN", path);
+    assert.equal(r.headers.get("Referrer-Policy"), "strict-origin-when-cross-origin", path);
+    assert.match(r.headers.get("Permissions-Policy"), /geolocation=\(self\)/, path);
+  }
+  // The wasm keeps its own type: with nosniff a wrong one would not load.
+  assert.equal((await get("/ck/abcdefabcdef/chromium/canvaskit.wasm")).headers.get("Content-Type"), "application/wasm");
+  // A redirect is left as it is.
+  const moved = await site.fetch(new Request("https://dbms.kabore-boss.workers.dev/x"), env);
+  assert.equal(moved.status, 301);
+});

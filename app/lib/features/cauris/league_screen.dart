@@ -72,10 +72,13 @@ class _LeagueScreenState extends State<LeagueScreen> {
   }
 
   Future<void> _share(LeagueBoard b) async {
-    final place = b.rank == 1 ? '1er' : '${b.rank}e';
+    final place = b.rank == 1 ? context.tr('1er') : context.tr('{n}e', {'n': b.rank});
     final slug = widget.org.slug;
-    final text = 'Je suis $place cette semaine sur Mara, en ${b.label} ! 🏆'
-        '${slug == null ? '' : ' Venez voir ma vitrine : ${publicShopUrl(slug)}'}';
+    final brag = context.tr('Je suis {place} cette semaine sur Mara, en {league} ! 🏆',
+        {'place': place, 'league': context.tr(b.label)});
+    final text = slug == null
+        ? brag
+        : '$brag ${context.tr('Venez voir ma vitrine : {url}', {'url': publicShopUrl(slug)})}';
     await launchUrl(
       Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}'),
       mode: LaunchMode.externalApplication,
@@ -108,8 +111,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
                   style: theme.textTheme.labelMedium
                       ?.copyWith(letterSpacing: 1.4, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              Text('Cette semaine · ${b.size} entreprise${b.size > 1 ? 's' : ''} '
-                  'dans la course',
+              Text(context.tr('Cette semaine · {n} entreprise(s) dans la course', {'n': b.size}),
                   style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
               const SizedBox(height: 16),
               _Podium(top: b.top),
@@ -118,8 +120,9 @@ class _LeagueScreenState extends State<LeagueScreen> {
               if (b.lastWeekRank != null) ...[
                 const SizedBox(height: 10),
                 Text(
-                  'La semaine dernière : ${b.lastWeekRank == 1 ? '1er' : '${b.lastWeekRank}e'} '
-                  'de votre ligue.',
+                  context.tr('La semaine dernière : {place} de votre ligue.', {
+                    'place': b.lastWeekRank == 1 ? context.tr('1er') : context.tr('{n}e', {'n': b.lastWeekRank}),
+                  }),
                   key: const Key('league-last-week'),
                   style: theme.textTheme.bodyMedium,
                 ),

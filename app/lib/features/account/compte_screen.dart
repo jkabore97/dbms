@@ -15,11 +15,13 @@ import 'package:intl/intl.dart';
 import '../../core/cauris/feature_states.dart';
 import '../cauris/path_card.dart';
 import '../cauris/unlock_sheet.dart';
-import 'alert_tone_tile.dart';
 import '../notify/notification_settings_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
 import '../offline/offline_sheet.dart';
+import '../home/activity_switch.dart';
+import '../common/attention_banner.dart';
+import '../../core/notify/bell.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -107,6 +109,9 @@ class CompteScreen extends StatelessWidget {
 
     String inside(String rest) => Routes.inside(org.id, rest);
     final tools = toolsFor(org, access, admin: admin);
+    final switchMode = live
+        ? ActivitySwitch.of(context, org)
+        : ActivitySwitch.modeFor(activities: session.orgs.length);
 
     // The door to pay (066): every badged tool opens it, and so does the
     // Kaj Pro tile below. Only an admin of the business may say "J'ai payé".
@@ -145,6 +150,16 @@ class CompteScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
+          // Why « Compte » has a red number on a shop's or an association's
+          // bar (122): the carnet's credits past their date — the carnet
+          // opens from here, folded under Outils.
+          if (live && tools.contains('credits') && scope.notify.isConfigured)
+            _LateCredits(
+              bell: scope.notify.bell,
+              orgId: org.id,
+              onOpen: () => PathGate.open(context, org, 'credits',
+                  () => context.push(inside('credits'))),
+            ),
           // Who you are: one card, and the way to your profile.
           KajCard(
             elevation: 0,
@@ -179,9 +194,7 @@ class CompteScreen extends StatelessWidget {
           _Group(
             title: context.tr('Préférences'),
             children: [
-              _EnglishSwitch(controller: scope.localeController),
-              // The app's own ring: which tone, and the buzz (batch 100).
-              AlertToneTile(db: scope.db),
+              _LanguageChoice(controller: scope.localeController),
               // What rings, this device's ring with the app closed, and
               // « M'envoyer une notification test » (115).
               if (live)
@@ -219,11 +232,15 @@ class CompteScreen extends StatelessWidget {
                   onTap: () => PathGate.guard(context, org, 'second_business',
                       () => context.push(Routes.createBusiness)),
                 ),
-              if (session.orgs.length > 1)
+              // « Changer d'activité »: the picker with several; with one
+              // that is the person's own (122), the sheet — a second one, or
+              // why it needs Mara Pro.
+              if (switchMode != ActivitySwitchMode.none)
                 _Tile(
+                  key: const Key('compte-switch'),
                   icon: Icons.swap_horiz,
                   title: Strings.of(context).switchBusiness,
-                  onTap: () => context.go(Routes.picker),
+                  onTap: () => ActivitySwitch.open(context, org, switchMode),
                 ),
             ],
           ),
@@ -497,6 +514,43 @@ class CompteScreen extends StatelessWidget {
   }
 }
 
+/// « 2 crédits ont dépassé leur date de remboursement », with « Ouvrir le
+/// carnet » — live with the bar's own number.
+class _LateCredits extends StatelessWidget {
+  const _LateCredits({required this.bell, required this.orgId, required this.onOpen});
+
+  final Bell bell;
+  final String orgId;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: bell,
+        builder: (context, _) {
+          final n = bell.homeCount(orgId, 'credit');
+          if (n <= 0) return const SizedBox.shrink();
+          return AttentionBanner(
+            key: const Key('compte-credit-attention'),
+            icon: Icons.handshake_outlined,
+            margin: const EdgeInsets.only(top: 4, bottom: 12),
+            title: n == 1
+                ? context.tr('1 crédit a dépassé sa date de remboursement')
+                : context.tr('{n} crédits ont dépassé leur date de remboursement', {'n': n}),
+            stays: context.tr('Le chiffre rouge sur « Compte » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.'),
+            items: [
+              AttentionItem(
+                id: 'credits',
+                label: Strings.of(context).creditBook,
+                chip: context.tr('En retard'),
+                actionLabel: context.tr('Ouvrir le carnet'),
+                onAction: onOpen,
+              ),
+            ],
+          );
+        },
+      );
+}
+
 /// The wallet is worth a row: something in it, or promotional points.
 bool _hasWallet(FeatureStates? f) =>
     f != null && (f.balance > 0 || f.promo.isNotEmpty);
@@ -516,34 +570,53 @@ String _walletLine(BuildContext context, FeatureStates f) => [
 /// "Verrouillé après 5 min · empreinte" — where the phone's lock stands.
 String _securityLine(AppScope scope) {
   final s = scope.security;
-  if (s == null) return 'Code, appareils, mot de passe';
+  if (s == null) return translate(trCurrent, 'Code, appareils, mot de passe');
   final lock = s.effectiveLock;
   return [
-    lock == null ? 'Jamais verrouillé' : 'Verrouillé après ${SecuritySettings.label(lock)}',
-    if (s.biometric && s.biometricReady) 'empreinte',
-    if (s.hideAmounts) 'montants cachés',
+    lock == null
+        ? translate(trCurrent, 'Jamais verrouillé')
+        : translate(trCurrent, 'Verrouillé après {delay}',
+            {'delay': translate(trCurrent, SecuritySettings.label(lock))}),
+    if (s.biometric && s.biometricReady) translate(trCurrent, 'empreinte'),
+    if (s.hideAmounts) translate(trCurrent, 'montants cachés'),
   ].join(' · ');
 }
 
-/// English or French (Compte › Préférences): the phone's language unless
-/// switched here.
-class _EnglishSwitch extends StatelessWidget {
-  const _EnglishSwitch({required this.controller});
+/// The language (Compte › Préférences): a choice between the two, each
+/// named in itself, the current one ticked — applied at once and kept on
+/// the phone (122: « switches from English to French, not a switch to
+/// activate English »). Until one is tapped it follows the phone.
+class _LanguageChoice extends StatelessWidget {
+  const _LanguageChoice({required this.controller});
 
   final LocaleController controller;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: controller,
-        builder: (context, _) => SwitchListTile(
-          key: const Key('compte-english'),
-          secondary: const Icon(Icons.translate),
-          // Each language named in itself.
-          title: const Text('English'),
-          subtitle: Text(context.tr('Langue du téléphone par défaut')),
-          value: controller.effective.languageCode == 'en',
-          onChanged: (on) =>
-              controller.choose(on ? const Locale('en') : const Locale('fr')),
+        builder: (context, _) => Padding(
+          key: const Key('compte-language'),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              const Icon(Icons.translate),
+              const SizedBox(width: 16),
+              Expanded(
+                child: SegmentedButton<String>(
+                  showSelectedIcon: true,
+                  segments: const [
+                    // Each language named in itself.
+                    ButtonSegment(value: 'fr', label: Text('Français')),
+                    ButtonSegment(value: 'en', label: Text('English')),
+                  ],
+                  selected: {
+                    controller.effective.languageCode == 'en' ? 'en' : 'fr'
+                  },
+                  onSelectionChanged: (s) => controller.choose(Locale(s.first)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
 }

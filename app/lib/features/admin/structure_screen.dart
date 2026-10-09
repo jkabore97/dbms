@@ -165,9 +165,8 @@ class _StructureScreenState extends State<StructureScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Aucun ${_entityWord.toLowerCase()} pour le moment.\n'
-                            'Ajoutez-en un pour pouvoir confier un rôle sur '
-                            'une partie seulement de l\'activité.',
+                            context.tr('Aucun {word} pour le moment.\nAjoutez-en un pour pouvoir confier un rôle sur une partie seulement de l\'activité.',
+                                {'word': context.tr(_entityWord).toLowerCase()}),
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium,
                           ),
@@ -193,8 +192,7 @@ class _StructureScreenState extends State<StructureScreen> {
                             subtitle: Text(
                               entity.departments.isEmpty
                                   ? context.tr('Aucun département')
-                                  : '${entity.departments.length} département'
-                                      '${entity.departments.length > 1 ? 's' : ''}',
+                                  : context.tr('{n} département(s)', {'n': entity.departments.length}),
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined),
@@ -264,7 +262,7 @@ class _StructureScreenState extends State<StructureScreen> {
             ? null
             : () async {
                 final name = await _askName(
-                  title: 'Nouveau ${_entityWord.toLowerCase()}',
+                  title: context.tr('Nouveau {word}', {'word': context.tr(_entityWord).toLowerCase()}),
                   hint: 'Centre-ville, Ferme Nord…',
                 );
                 if (name == null || name.isEmpty) return;
@@ -282,7 +280,7 @@ class _StructureScreenState extends State<StructureScreen> {
                 );
               },
         icon: const Icon(Icons.add_location_alt_outlined),
-        label: Text('Ajouter un ${_entityWord.toLowerCase()}'),
+        label: Text(context.tr('Ajouter un {word}', {'word': context.tr(_entityWord).toLowerCase()})),
       ),
     );
   }

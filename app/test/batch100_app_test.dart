@@ -12,7 +12,6 @@ import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/nav/session.dart';
 import 'package:kaj_app/core/notify/alert_tone.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
-import 'package:kaj_app/features/account/alert_tone_tile.dart';
 import 'package:kaj_app/features/auth/org_picker_screen.dart';
 import 'package:kaj_app/features/home/business_shell.dart';
 import 'package:kaj_app/features/storefront/storefront_screen.dart';
@@ -229,56 +228,17 @@ void main() {
   });
 
   group('the ring', () {
-    test('four original tones, each bundled and under 30 KB', () {
-      expect(AlertTone.choices, hasLength(4));
+    test('one original tone, bundled and under 30 KB; no choice of the app\'s own (122)', () async {
       final pubspec = File('pubspec.yaml').readAsStringSync();
-      for (final c in AlertTone.choices) {
-        final f = File(c.asset);
-        expect(f.existsSync(), isTrue, reason: c.asset);
-        expect(f.lengthSync(), lessThan(30 * 1024), reason: c.asset);
-        expect(String.fromCharCodes(f.readAsBytesSync().take(4)), 'RIFF');
-        expect(pubspec, contains('- ${c.asset}'));
-      }
-    });
-
-    test('the choice is kept on the phone', () async {
-      final db = await LocalDb.open(path: inMemoryDatabasePath);
-      addTearDown(db.close);
-      await AlertTone.load(db);
-      expect(AlertTone.settings.value, const AlertToneSettings());
-      await AlertTone.choose(db, tone: 'goutte', vibrate: false);
-      AlertTone.settings.value = const AlertToneSettings();
-      await AlertTone.load(db);
-      expect(AlertTone.settings.value.tone, 'goutte');
-      expect(AlertTone.settings.value.vibrate, isFalse);
+      final f = File(AlertTone.asset);
+      expect(f.existsSync(), isTrue, reason: AlertTone.asset);
+      expect(f.lengthSync(), lessThan(30 * 1024));
+      expect(String.fromCharCodes(f.readAsBytesSync().take(4)), 'RIFF');
+      expect(pubspec, contains('- ${AlertTone.asset}'));
+      expect(Directory('assets/sounds').listSync().map((e) => e.path.split('/').last),
+          ['carillon.wav'], reason: 'the other tones went with their choice');
       // A ring where nothing can play is quiet, never an error.
       await AlertTone.ring();
-      await AlertTone.preview('balafon');
-      AlertTone.settings.value = const AlertToneSettings();
-    });
-
-    testWidgets('folded until opened; a row picks its tone', (tester) async {
-      late LocalDb db;
-      await tester.runAsync(() async {
-        db = await LocalDb.open(path: inMemoryDatabasePath);
-      });
-      addTearDown(() => tester.runAsync(db.close));
-      AlertTone.settings.value = const AlertToneSettings();
-      await tester.pumpWidget(_app(Scaffold(
-        body: ListView(children: [AlertToneTile(db: db)]),
-      )));
-      expect(find.text('Sons des notifications'), findsOneWidget);
-      expect(find.byKey(const Key('tone-balafon')), findsNothing);
-      await tester.tap(find.text('Sons des notifications'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('tone-play-balafon')), findsOneWidget);
-      await tester.runAsync(() async {
-        await tester.tap(find.byKey(const Key('tone-clochette')));
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      });
-      await tester.pump();
-      expect(AlertTone.settings.value.tone, 'clochette');
-      AlertTone.settings.value = const AlertToneSettings();
     });
   });
 

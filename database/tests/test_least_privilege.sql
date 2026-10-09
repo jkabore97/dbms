@@ -109,6 +109,8 @@ begin
                              'storefront_previews', 'record_visit', 'record_seen',
                              'storefront_spotlights',
                              'invitation_preview',
+                             -- 122: the web's « download the app » pop-up.
+                             'app_store_links',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

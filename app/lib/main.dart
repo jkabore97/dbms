@@ -29,7 +29,6 @@ import 'core/invoicing/invoicing_repository.dart';
 import 'core/l10n/locale_controller.dart';
 import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
-import 'core/notify/alert_tone.dart';
 import 'core/notify/notifications_repository.dart';
 import 'core/notify/push_client.dart';
 import 'core/notify/push_setup.dart';
@@ -143,8 +142,8 @@ Future<void> _startup() async {
   // the setting did not work.
   final locale = LocaleController(db);
   await locale.load();
-  // The ring this phone chose (Compte › Préférences › Sons des notifications).
-  await AlertTone.load(db);
+  // Whether the person switched « Notifications sur ce téléphone » off (122).
+  await PushSetup.load(db);
 
   runApp(KajApp(
     locale: locale,
@@ -357,7 +356,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     _router = buildRouter(_session);
     // Before the router is first drawn: the back and the browser's history
     // are heard here first (114).
-    BackFirst.instance.attach(_router);
+    // From a page with nothing under it, back goes to its parent (122):
+    // a business's home to the picker for someone with several.
+    BackFirst.instance.attach(_router, businesses: () => _session.orgs.length);
     // A tapped push on Android opens what it is about (115).
     _pushTaps = PushClient.opened.listen((path) => _router.push(path));
     // Kicks the state machine off. The router is already listening, so the

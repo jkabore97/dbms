@@ -111,7 +111,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   bool _legacy = false;
 
   final _number = NumberFormat.decimalPattern('fr_FR');
-  final _date = DateFormat('d MMM y', 'fr_FR');
+  final _date = DateFormat('d MMM y', intlLocale());
 
   @override
   void initState() {
@@ -532,11 +532,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               ],
               child: Chip(
                 avatar: const Icon(Icons.sort, size: 18),
-                label: Text(switch (_sort) {
+                label: Text(context.tr(switch (_sort) {
                   'name' => 'Nom',
                   'newest' => 'Plus récentes',
                   _ => 'Activité',
-                }),
+                })),
               ),
             ),
             if (_isFiltered)
@@ -556,9 +556,12 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
     final to = (_page * _pageSize + _rows.length);
     return Text(
       _total <= _pageSize
-          ? '${_number.format(_total)} entreprise${_total > 1 ? 's' : ''}'
-          : '${_number.format(from)}–${_number.format(to)} sur '
-              '${_number.format(_total)}',
+          ? context.tr('{n} entreprise(s)', {'n': _number.format(_total)})
+          : context.tr('{from}–{to} sur {n}', {
+              'from': _number.format(from),
+              'to': _number.format(to),
+              'n': _number.format(_total),
+            }),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -819,9 +822,9 @@ class _OrgRowTile extends StatelessWidget {
   String _lastActivity() {
     if (org.lastActivityAt == null) return '—';
     final days = org.daysSinceActivity!;
-    if (days == 0) return 'aujourd\'hui';
-    if (days == 1) return 'hier';
-    if (days < 30) return 'il y a $days j';
+    if (days == 0) return translate(trCurrent, 'aujourd\'hui');
+    if (days == 1) return translate(trCurrent, 'hier');
+    if (days < 30) return translate(trCurrent, 'il y a {n} j', {'n': days});
     return date.format(org.lastActivityAt!);
   }
 
@@ -961,8 +964,7 @@ class _OrgRowTile extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   '${kindSingular(context, org.profile)} · '
-                                  '${org.memberCount} membre'
-                                  '${org.memberCount > 1 ? 's' : ''} · '
+                                  '${org.memberCount > 1 ? context.tr('{n} membres', {'n': org.memberCount}) : context.tr('{n} membre', {'n': org.memberCount})} · '
                                   '${_lastActivity()}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

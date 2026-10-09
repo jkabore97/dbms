@@ -103,7 +103,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
 
   List<Widget> _askSection(ThemeData theme) {
     if (_asks.isEmpty) return const [];
-    final date = DateFormat('d MMM', 'fr_FR');
+    final date = DateFormat('d MMM', intlLocale());
     return [
       Text(context.tr('Mises en avant achetées'), style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),
@@ -129,10 +129,10 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                       ? context.tr('offerte (Pro)')
                       : moneyFormat(a.currency).format(a.price),
                   switch (a.status) {
-                    'paid_claimed' => 'dit avoir payé',
-                    'requested' => 'pas encore payé',
+                    'paid_claimed' => context.tr('dit avoir payé'),
+                    'requested' => context.tr('pas encore payé'),
                     _ => a.startsAt != null && a.endsAt != null
-                        ? 'du ${date.format(a.startsAt!)} au ${date.format(a.endsAt!)}'
+                        ? context.tr('du {from} au {to}', {'from': date.format(a.startsAt!), 'to': date.format(a.endsAt!)})
                         : context.tr('en cours'),
                   },
                   if ((a.note ?? '').isNotEmpty) '« ${a.note} »',

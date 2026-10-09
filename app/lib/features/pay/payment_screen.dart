@@ -8,6 +8,8 @@ import '../../core/nav/router.dart';
 import '../../core/pay/wave_pay.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Where Wave sends the person back (076): it waits for Wave's own word —
 /// the webhook, not the return address, decides — and says what happened.
@@ -72,14 +74,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 'Rien n\'a été débité. Vous pouvez réessayer.')
             : gaveUp
                 ? (Icons.schedule, 'Confirmation en attente',
-                    'Wave n\'a pas encore confirmé. Si vous avez payé, la '
-                    'commande se mettra à jour toute seule.')
+                    'Wave n\'a pas encore confirmé. Si vous avez payé, la commande se mettra à jour toute seule.')
                 : (Icons.hourglass_top, 'Confirmation en cours…',
                     widget.issue == 'erreur'
                         ? context.tr('Wave signale un problème ; nous vérifions.')
                         : context.tr('Nous attendons la confirmation de Wave.'));
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paiement'))),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(context.tr('Paiement'))),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -96,9 +97,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? theme.colorScheme.primary
                         : theme.colorScheme.error),
               const SizedBox(height: 20),
-              Text(title, style: theme.textTheme.headlineSmall),
+              Text(context.tr(title), style: theme.textTheme.headlineSmall),
               const SizedBox(height: 8),
-              Text(line, textAlign: TextAlign.center),
+              Text(context.tr(line), textAlign: TextAlign.center),
               const SizedBox(height: 28),
               FilledButton(
                 onPressed: () => context.canPop()
@@ -110,6 +111,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

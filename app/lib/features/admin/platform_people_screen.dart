@@ -257,7 +257,7 @@ class _PersonSheetState extends State<_PersonSheet> {
       _changed = true;
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(done)));
+            .showSnackBar(SnackBar(content: Text(context.tr(done))));
       }
     } catch (error) {
       if (mounted) setState(() => _error = AuthRepository.describeError(error));
@@ -342,9 +342,9 @@ class _PersonSheetState extends State<_PersonSheet> {
               FilledButton(
                 onPressed: () {
                   if (pw1.text.length < 8) {
-                    setLocal(() => err = 'Au moins 8 caractères.');
+                    setLocal(() => err = context.tr('Au moins 8 caractères.'));
                   } else if (pw1.text != pw2.text) {
-                    setLocal(() => err = 'Les mots de passe diffèrent.');
+                    setLocal(() => err = context.tr('Les mots de passe diffèrent.'));
                   } else {
                     Navigator.pop(ctx, pw1.text);
                   }

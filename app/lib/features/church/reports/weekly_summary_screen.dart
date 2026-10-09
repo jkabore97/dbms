@@ -118,7 +118,7 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
               name: 'resume-$label.png',
             ),
           ],
-          text: '${widget.orgName} — résumé de la semaine',
+          text: translate(trCurrent, '{name} — résumé de la semaine', {'name': widget.orgName}),
         ),
       );
     } catch (error) {
@@ -128,9 +128,8 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Le partage a échoué sur cet appareil. '
-            "Faites une capture d'écran en attendant. "
-            '(${AuthRepository.describeError(error)})',
+            context.tr('Le partage a échoué sur cet appareil. Faites une capture d\'écran en attendant. ({error})',
+                {'error': AuthRepository.describeError(error)}),
           ),
         ),
       );
@@ -265,7 +264,7 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(currency);
-    final dates = DateFormat('d MMM', 'fr_FR');
+    final dates = DateFormat('d MMM', intlLocale());
 
     return Container(
       width: 360,
@@ -289,8 +288,8 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Semaine du ${dates.format(summary.weekStarting)} '
-            'au ${dates.format(summary.weekEnding)}',
+            context.tr('Semaine du {from} au {to}',
+                {'from': dates.format(summary.weekStarting), 'to': dates.format(summary.weekEnding)}),
             style: const TextStyle(fontSize: 13, color: _muted),
           ),
           const SizedBox(height: 20),
@@ -368,7 +367,7 @@ class SummaryCard extends StatelessWidget {
 
           const SizedBox(height: 20),
           Text(
-            'Mara · ${DateFormat('d MMMM yyyy', 'fr_FR').format(DateTime.now())}',
+            'Mara · ${DateFormat('d MMMM yyyy', intlLocale()).format(DateTime.now())}',
             style: const TextStyle(fontSize: 11, color: _muted),
           ),
         ],
@@ -387,7 +386,7 @@ class _SectionHeading extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
-        text.toUpperCase(),
+        context.tr(text).toUpperCase(),
         style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -487,7 +486,7 @@ class _WeekPicker extends StatelessWidget {
         Text(
           isThisWeek
               ? context.tr('Cette semaine')
-              : 'Semaine au ${DateFormat('d MMMM', 'fr_FR').format(weekEnding)}',
+              : context.tr('Semaine au {date}', {'date': DateFormat('d MMMM', intlLocale()).format(weekEnding)}),
           style: theme.textTheme.titleSmall,
         ),
         IconButton(

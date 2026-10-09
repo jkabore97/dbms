@@ -4,6 +4,8 @@ import '../../l10n/strings.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Signed in, invited to nothing.
 ///
@@ -42,8 +44,8 @@ class NoOrgScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final contact = identity.phone ?? identity.email;
 
-    return Scaffold(
-      appBar: AppBar(
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context),
         title: Text(Strings.of(context).waiting),
         actions: [
           IconButton(
@@ -202,6 +204,6 @@ class NoOrgScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

@@ -148,8 +148,6 @@ const enStrings = <String, String>{
       'Items sold',
   'Association':
       'Association',
-  'Association Bethel':
-      'Bethel Association',
   'Au Service du Peuple':
       'Au Service du Peuple',
   'Au moins 8 caractères':
@@ -292,8 +290,6 @@ const enStrings = <String, String>{
       'This phone stays signed in. The others will have to sign in again with the password.',
   'Cela prend plus de temps que prévu.':
       'This is taking longer than expected.',
-  'Ces couleurs sont celles de votre activité : toute votre équipe les verra.':
-      'These colours are your business\'s: your whole team will see them.',
   'Ces informations apparaissent en haut de chaque facture que vous envoyez.':
       'This information appears at the top of every invoice you send.',
   'Ces écrans ont besoin du réseau. Un rapport est un chiffre à un instant : mieux vaut ne rien afficher que de présenter celui de la semaine dernière.':
@@ -660,8 +656,6 @@ const enStrings = <String, String>{
       'Cash for now',
   'Ex. 3 : toute course de 0 à 3 km coûte le minimum.':
       'E.g. 3: any trip from 0 to 3 km costs the minimum.',
-  'Ex. : Le riz et l\'huile du quartier':
-      'E.g.: Rice and oil for the neighbourhood',
   'Ex. : Plateau d\'œufs':
       'E.g.: Tray of eggs',
   'Ex. : Sac de riz 25 kg':
@@ -1184,8 +1178,6 @@ const enStrings = <String, String>{
       'Previous page',
   'Page suivante':
       'Next page',
-  'Pagnes et gâteaux depuis 1998':
-      'Cloth and cakes since 1998',
   'Paiement':
       'Payment',
   'Paiement Wave':
@@ -1502,8 +1494,6 @@ const enStrings = <String, String>{
       'Nothing to show. The log records changes to access, structure and the chart of accounts from the moment it was installed — it does not go further back.',
   'Rien à récolter pour l\'instant. Ouvrez une culture dans « Élevage et cultures » — cela demande le réseau.':
       'Nothing to harvest yet. Open a crop in « Livestock and crops » — this needs the network.',
-  'Rue 14.28, secteur 15, Ouagadougou':
-      'Rue 14.28, secteur 15, Ouagadougou',
   'Règlement des livreurs':
       'Courier settlements',
   'Règlement du mois':
@@ -2254,8 +2244,6 @@ const enStrings = <String, String>{
       'Active plan',
   'Historique':
       'History',
-  'Il reste peu de {name}.':
-      '{name} is running low.',
   'Jamais':
       'Never',
   'Journée déjà clôturée — vous pouvez la revalider.':
@@ -2514,8 +2502,6 @@ const enStrings = <String, String>{
       '{label} will be able to see and manage every business on the platform.',
   '{length} articles presque épuisés : {names}.':
       '{length} items almost sold out: {names}.',
-  '{length} articles presque épuisés.':
-      '{length} items almost sold out.',
   '{length} sur la carte · {unplaced} sans position':
       '{length} on the map · {unplaced} without a position',
   '{length} sur {totalCount}':
@@ -2661,7 +2647,6 @@ const enStrings = <String, String>{
   'Ajouter un article': 'Add an article',
   '{n} article(s) publié(s) sur la vitrine.': '{n} article(s) published on the shop window.',
   'Téléphone de la boutique': 'Shop phone',
-  'Gounghin, près du marché': 'Gounghin, near the market',
   'Couverture, couleur, horaires · aperçu': 'Cover, colour, hours · preview',
   'Une place en tête de la rue': 'A spot at the top of the street',
   'Verrouillé : vos clients ne le voient qu\'avec Mara Pro.': 'Locked: your customers only see it with Mara Pro.',
@@ -2767,7 +2752,6 @@ const enStrings = <String, String>{
   'Étape du chemin': 'Path step',
   'Podium de la semaine': 'Week\'s podium',
   'Leçon de l\'Académie Mara': 'Mara Academy lesson',
-  'Langue du téléphone par défaut': 'Phone language by default',
   'Voir les articles et commander :': 'See the items and order:',
   'Partager {name}': 'Share {name}',
   'Mettre en statut WhatsApp': 'Post as a WhatsApp status',
@@ -2917,14 +2901,6 @@ const enStrings = <String, String>{
   'Aucune activité ne correspond.': 'No business matches.',
   'Associations': 'Associations',
   'Autres': 'Others',
-  'Sons des notifications': 'Notification sounds',
-  'vibreur': 'vibrate',
-  'Vibrer': 'Vibrate',
-  'Écouter': 'Play',
-  'Carillon': 'Chime',
-  'Balafon': 'Balafon',
-  'Clochette': 'Little bell',
-  'Goutte': 'Drop',
   // Batch 100 (server side): the team, the photos, the platform's gifts.
   'Équipe': 'Team',
   'Les personnes': 'The people',
@@ -3078,7 +3054,6 @@ const enStrings = <String, String>{
   'Un service, votre téléphone, votre quartier.': 'A service, your phone, your area.',
   'Nom de l\'association': 'Name of the association',
   'En une phrase (facultatif)': 'In one sentence (optional)',
-  'Ex. : L\'entraide des femmes de Gounghin': 'E.g.: The Gounghin women\'s mutual aid',
   'Des membres, pas des comptes : gratuits, sans Pro.': 'Members, not accounts: free, no Pro needed.',
   'Inviter sur WhatsApp': 'Invite on WhatsApp',
   'Passer': 'Skip',
@@ -3686,23 +3661,17 @@ const enStrings = <String, String>{
   'Le nom de votre boutique': 'Your shop\'s name',
   'Le nom de votre ferme': 'Your farm\'s name',
   'Le nom de votre association': 'Your association\'s name',
-  'Ex. : Chez Awa': 'E.g. Chez Awa',
-  'Ex. : Ferme Wendkouni': 'E.g. Ferme Wendkouni',
-  'Ex. : Tontine des femmes de Dapoya': 'E.g. Tontine des femmes de Dapoya',
   'Votre adresse': 'Your address',
   'Changer l\'adresse': 'Change the address',
   'Que vend votre boutique ?': 'What does your shop sell?',
   'Que produit votre ferme ?': 'What does your farm produce?',
   'Quel genre d\'association ?': 'What kind of association?',
-  'Ex. : Riz, huile et savon au détail': 'E.g. Rice, oil and soap, sold loose',
-  'Ex. : Œufs frais et poulets de chair': 'E.g. Fresh eggs and broiler chickens',
   'Ex. : On cotise chaque semaine depuis 2019': 'E.g. We have contributed every week since 2019',
   'Elle paraîtra sur votre vitrine.': 'It will appear on your vitrine.',
   'Où se trouve votre boutique ?': 'Where is your shop?',
   'Où se trouve votre ferme ?': 'Where is your farm?',
   'Où se trouve votre association ?': 'Where is your association?',
   'Quartier (facultatif)': 'Neighbourhood (optional)',
-  'Ex. : Dapoya, près du marché': 'E.g. Dapoya, near the market',
   'Le numéro de votre boutique': 'Your shop\'s number',
   'Le numéro de votre ferme': 'Your farm\'s number',
   'Le numéro de votre association': 'Your association\'s number',
@@ -4185,7 +4154,6 @@ const enStrings = <String, String>{
   'C\'est pour quoi ?': 'What is it for?',
   'La dépense est rangée là.': 'The expense is filed there.',
   'Qui l\'a livré ?': 'Who delivered it?',
-  'SODEPAL, le vétérinaire…': 'SODEPAL, the vet…',
   'Prix': 'Price',
   '{price} par {unit}': '{price} per {unit}',
   'Pas encore connu': 'Not known yet',
@@ -4298,7 +4266,6 @@ const enStrings = <String, String>{
   'Sur quelle parcelle ?': 'On which plot?',
   'Une nouvelle est créée à partir de son nom.': 'A new one is created from its name.',
   'Une nouvelle parcelle': 'A new plot',
-  'Derrière la maison, bas-fond 2…': 'Behind the house, lowland 2…',
   'Quelle surface ?': 'What area?',
   'Semée quand ?': 'Sown when?',
   'Date de semis': 'Sowing date',
@@ -4608,8 +4575,6 @@ const enStrings = <String, String>{
   'Réglages des notifications': 'Notification settings',
   'Les notifications sont refusées sur cet appareil. Elles s\'activent dans ses paramètres.': 'Notifications are blocked on this device. Turn them on in its settings.',
   'Le test arrive avec la prochaine mise à jour du serveur.': 'The test comes with the next server update.',
-  'Cet appareil sonne même l\'application fermée': 'This device rings even with the app closed',
-  'Cet appareil ne sonne que l\'application ouverte': 'This device rings only while the app is open',
   'Sur cet appareil, les notifications arrivent dans la cloche quand l\'application est ouverte.': 'On this device, notifications arrive in the bell while the app is open.',
   'Ce que vous voulez entendre': 'What you want to hear about',
   'Éteint : rien n\'est écrit dans la cloche et rien ne sonne. Les messages de votre compte sonnent toujours.': 'Off: nothing is written in the bell and nothing rings. Your account\'s own messages always ring.',
@@ -4751,8 +4716,6 @@ const enStrings = <String, String>{
       'to be agreed with the association',
   'à discuter avec la ferme':
       'to be agreed with the farm',
-  'Ce son retentit quand l\'application est ouverte. Application fermée, la notification sonne avec le son du téléphone.':
-      'This sound plays while the app is open. With the app closed, the notification rings with the phone\'s sound.',
   'Mes activités':
       'My businesses',
   '≈ {usd} par mois, payé en dollars':
@@ -4763,4 +4726,1343 @@ const enStrings = <String, String>{
       'Card rate: FCFA for \$1',
   'Un nombre entier plus grand que zéro.':
       'A whole number above zero.',
+  'Déverrouiller avec l\'empreinte / Face ID':
+      'Unlock with fingerprint / Face ID',
+  'Aucune empreinte ni visage n\'est enregistré sur ce téléphone. Ajoutez-en un dans les réglages du téléphone (Sécurité), puis revenez ici.':
+      'No fingerprint or face is set up on this phone. Add one in the phone\'s settings (Security), then come back here.',
+  'Le téléphone n\'a pas pu vérifier l\'empreinte. Réessayez, ou gardez le code.':
+      'The phone could not check the fingerprint. Try again, or keep the code.',
+  'Autoriser Mara à utiliser l\'empreinte ou Face ID':
+      'Allow Mara to use your fingerprint or Face ID',
+  'Déverrouiller Mara':
+      'Unlock Mara',
+  'Vos activités':
+      'Your businesses',
+  'Créer une nouvelle activité':
+      'Create a new business',
+  'Une deuxième activité demande Mara Pro':
+      'A second business needs Mara Pro',
+  'Avec Mara Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.':
+      'With Mara Pro you run several businesses from the same account and switch between them here.',
+  'Passer à Pro':
+      'Go Pro',
+  'Notifications sur ce téléphone':
+      'Notifications on this phone',
+  'Elles sonnent avec le son et la vibration du téléphone, même l\'application fermée.':
+      'They ring with the phone\'s own sound and vibration, even with the app closed.',
+  'Bloquées dans les réglages du téléphone : c\'est là qu\'elles se rallument.':
+      'Blocked in the phone\'s settings: that is where they are turned back on.',
+  'Éteint : ce téléphone ne sonne pas. La cloche de l\'application garde tout.':
+      'Off: this phone does not ring. The app\'s bell keeps everything.',
+  'Dans le navigateur : le cadenas à côté de l\'adresse, puis Notifications.':
+      'In the browser: the padlock next to the address, then Notifications.',
+  'Ouvrir les réglages du téléphone':
+      'Open the phone\'s settings',
+  // 122 (builder S): the couriers' radius, the web's download pop-up.
+  'Applications mobiles':
+      'Mobile apps',
+  'Distance où les livreurs reçoivent une livraison (km, 1 à 100)':
+      'Distance within which couriers receive a delivery (km, 1 to 100)',
+  'Mara est publiée sur Google Play (sinon : le fichier APK)':
+      'Mara is live on Google Play (otherwise: the APK file)',
+  'Adresse de Mara sur l\'App Store (vide : écran d\'accueil)':
+      'Mara\'s App Store address (empty: home screen)',
+  'Un nombre de {lo} à {hi}.':
+      'A number from {lo} to {hi}.',
+  'Une adresse qui commence par https://, ou rien.':
+      'An address starting with https://, or nothing.',
+  'L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur Google Play.':
+      'The Mara app is faster and tells you about your orders. It is on Google Play.',
+  'L\'application Mara est plus rapide et vous prévient de vos commandes. Téléchargez-la pour Android (fichier APK).':
+      'The Mara app is faster and tells you about your orders. Download it for Android (APK file).',
+  'Ouvrir Google Play':
+      'Open Google Play',
+  'Télécharger pour Android':
+      'Download for Android',
+  'L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur l\'App Store.':
+      'The Mara app is faster and tells you about your orders. It is on the App Store.',
+  'Ouvrir l\'App Store':
+      'Open the App Store',
+  'Ajoutez Mara à l\'écran d\'accueil : dans Safari, touchez Partager, puis « Sur l\'écran d\'accueil ».':
+      'Add Mara to your home screen: in Safari, tap Share, then “Add to Home Screen”.',
+  'Mara sur votre écran d\'accueil':
+      'Mara on your home screen',
+  'Mara sur votre téléphone':
+      'Mara on your phone',
+  // Batch 122, builder P: back from a root asks before leaving.
+  'Quitter Mara ?': 'Leave Mara?',
+  'Ex. : Chez Awa, Café Lumière, Green Market':
+      'E.g. Chez Awa, Café Lumière, Green Market',
+  'Ex. : Ferme Wendkouni, Green Valley Farm, Rancho Sol':
+      'E.g. Ferme Wendkouni, Green Valley Farm, Rancho Sol',
+  'Ex. : Tontine des femmes de Dapoya, Club des amis, Hope Foundation':
+      'E.g. Tontine des femmes de Dapoya, Friends\' Club, Hope Foundation',
+  'Ex. : Riz et savon au détail, café et pâtisseries, vêtements':
+      'E.g. Rice and soap sold loose, coffee and pastries, clothing',
+  'Ex. : Œufs frais, légumes bio, miel':
+      'E.g. Fresh eggs, organic vegetables, honey',
+  'Ex. : Dapoya près du marché, Le Plateau, Centre-ville':
+      'E.g. Dapoya near the market, Le Plateau, Downtown',
+  'Ex. : L\'entraide des femmes de Gounghin, Les Amis du quartier, Hope Club':
+      'E.g. The Gounghin women\'s mutual aid, Neighbourhood Friends, Hope Club',
+  'Ex. : Gounghin près du marché, Le Plateau, Centre-ville':
+      'E.g. Gounghin near the market, Le Plateau, Downtown',
+  'Ex. : Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris':
+      'E.g. Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris',
+  'Ex. : Pagnes et gâteaux depuis 1998, Le café du coin, Frais et local':
+      'E.g. Wax prints and cakes since 1998, The corner café, Fresh & local',
+  'Ex. : Association Bethel, Café Lumière, Green Market':
+      'E.g. Association Bethel, Café Lumière, Green Market',
+  'SODEPAL, Agri Supply, le vétérinaire…':
+      'SODEPAL, Agri Supply, the vet…',
+  'Ex. : Le riz et l\'huile du quartier, café et pâtisseries, vêtements':
+      'E.g. The neighbourhood\'s rice and oil, coffee and pastries, clothing',
+  'Derrière la maison, bas-fond 2, serre nord…':
+      'Behind the house, lowland 2, north greenhouse…',
+  'Ex. : Ouagadougou, Paris, Montréal':
+      'E.g. Ouagadougou, Paris, Montreal',
+  '1 invitation pas encore acceptée : {names}':
+      '1 invitation not accepted yet: {names}',
+  '{n} invitations pas encore acceptées : {names}':
+      '{n} invitations not accepted yet: {names}',
+  'Le chiffre rouge reste tant que la personne n\'a pas rejoint avec son code, ou que vous n\'avez pas annulé l\'invitation : ouvrir cette page ne l\'efface pas.':
+      'The red number stays until the person joins with their code, or you cancel the invitation: opening this page does not clear it.',
+  '1 demande attend votre réponse':
+      '1 request is waiting for your answer',
+  '{n} demandes attendent votre réponse':
+      '{n} requests are waiting for your answer',
+  '1 réservation attend votre réponse':
+      '1 booking is waiting for your answer',
+  '{n} réservations attendent votre réponse':
+      '{n} bookings are waiting for your answer',
+  '1 commande attend votre réponse':
+      '1 order is waiting for your answer',
+  '{n} commandes attendent votre réponse':
+      '{n} orders are waiting for your answer',
+  'Le chiffre rouge reste tant que vous n\'avez pas accepté ou refusé : ouvrir cette page ne l\'efface pas.':
+      'The red number stays until you accept or refuse: opening this page does not clear it.',
+  'À répondre':
+      'Needs an answer',
+  '1 facture en retard de paiement : {names}':
+      '1 invoice overdue: {names}',
+  '{n} factures en retard de paiement : {names}':
+      '{n} invoices overdue: {names}',
+  'Le chiffre rouge reste tant que ces factures ne sont pas payées ou annulées : ouvrir cette page ne l\'efface pas.':
+      'The red number stays until these invoices are paid or cancelled: opening this page does not clear it.',
+  'En retard':
+      'Overdue',
+  '{number} · reste {amount} · {days} j de retard':
+      '{number} · {amount} left · {days} days late',
+  '1 crédit a dépassé sa date de remboursement':
+      '1 credit is past its repayment date',
+  '{n} crédits ont dépassé leur date de remboursement':
+      '{n} credits are past their repayment date',
+  'Le chiffre rouge sur « Compte » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
+      'The red number on « Account » stays until these credits are repaid: opening this page does not clear it.',
+  'Ouvrir le carnet':
+      'Open the credit book',
+  '… et {n} autre(s), plus bas dans la liste':
+      '… and {n} more, further down the list',
+  '{names} et {n} autre(s)':
+      '{names} and {n} more',
+  '1 crédit a dépassé sa date de remboursement : {names}':
+      '1 credit is past its repayment date: {names}',
+  '{n} crédits ont dépassé leur date de remboursement : {names}':
+      '{n} credits are past their repayment date: {names}',
+  'Le chiffre rouge reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
+      'The red number stays until these credits are repaid: opening this page does not clear it.',
+  'Ajouter du stock':
+      'Add stock',
+  'Rupture':
+      'Out of stock',
+  'Bientôt épuisé':
+      'Running low',
+  '1 article en rupture de stock : {names}':
+      '1 item out of stock: {names}',
+  '{n} articles en rupture de stock : {names}':
+      '{n} items out of stock: {names}',
+  '1 article presque épuisé : {names}':
+      '1 item running low: {names}',
+  '{n} articles presque épuisés : {names}':
+      '{n} items running low: {names}',
+  '{n} articles à réapprovisionner : {names}':
+      '{n} items to restock: {names}',
+  'Le chiffre rouge sur « {place} » reste tant que ces articles ne sont pas réapprovisionnés : ouvrir cette page ne l\'efface pas.':
+      'The red number on « {place} » stays until these items are restocked: opening this page does not clear it.',
+  'Plus rien en stock':
+      'Nothing left in stock',
+  'Reste {q} (alerte à {low})':
+      '{q} left (alert at {low})',
+  '1 fourniture sous son seuil : {names}':
+      '1 supply under its threshold: {names}',
+  '{n} fournitures sous leur seuil : {names}':
+      '{n} supplies under their threshold: {names}',
+  'Le chiffre rouge sur « Stock » reste tant que ces fournitures ne sont pas réapprovisionnées : ouvrir cette page ne l\'efface pas.':
+      'The red number on « Stock » stays until these supplies are restocked: opening this page does not clear it.',
+  'Reste {q} {unit} (seuil {low})':
+      '{q} {unit} left (threshold {low})',
+  '1 bande sans saisie aujourd\'hui : {names}':
+      '1 batch with nothing recorded today: {names}',
+  '{n} bandes sans saisie aujourd\'hui : {names}':
+      '{n} batches with nothing recorded today: {names}',
+  'Le chiffre rouge sur « Bandes » reste jusqu\'à une saisie du jour pour chacune (œufs, mortalité, pesée, vaccination) : ouvrir cette page ne l\'efface pas, et il revient chaque matin.':
+      'The red number on « Batches » stays until each has an entry for today (eggs, deaths, weighing, vaccination): opening this page does not clear it, and it comes back every morning.',
+  '{alive} vivants':
+      '{alive} alive',
+  'Saisir':
+      'Record',
+  'Rien aujourd\'hui':
+      'Nothing today',
+  'Ces couleurs sont celles de votre activité : toute votre équipe les verra, et votre vitrine aussi tant qu\'elle n\'a pas sa propre couleur.':
+      'These are your business\'s colours: your whole team will see them, and so will your vitrine as long as it has no colour of its own.',
+  'Dans votre application Wave, envoyez {amount} au marchand : {raw}':
+      'In your Wave app, send {amount} to the merchant: {raw}',
+  'Passées':
+      'Past',
+  'Payer avec Wave · {amount}':
+      'Pay with Wave · {amount}',
+  'livraison jusqu\'à {km} km':
+      'delivery up to {km} km',
+  'Aucun article ne répond à « {q} » dans cette boutique.':
+      'No item matches « {q} » in this shop.',
+  'Les articles':
+      'Items',
+  'épuisé':
+      'sold out',
+  'Voir l\'article':
+      'See the item',
+  'Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Mara.':
+      'Hello {shop}, a question about « {item} » seen on your Mara vitrine.',
+  'Retrait en boutique, ou livraison dans le quartier':
+      'Pick up at the shop, or delivery in the neighbourhood',
+  'Des boutiques de chez vous, tenues par leurs commerçants':
+      'Shops from your area, run by their owners',
+  'Commandez en ligne, payez au retrait ou à la livraison':
+      'Order online, pay at pick-up or on delivery',
+  'Retrait à la ferme, ou livraison dans le quartier':
+      'Pick up at the farm, or delivery in the neighbourhood',
+  'Tout droit de la ferme, sans intermédiaire':
+      'Straight from the farm, no middleman',
+  'Commandez à l\'avance la prochaine bande ou la récolte':
+      'Order the next batch or the harvest in advance',
+  'Résultats':
+      'Results',
+  'chez {shop}':
+      'at {shop}',
+  'à {distance}':
+      '{distance} away',
+  'à la une':
+      'featured',
+  'sponsorisé':
+      'sponsored',
+  'pas à proximité':
+      'not nearby',
+  'vend {names}':
+      'sells {names}',
+  'Aucune commande à traiter. Les clients commandent depuis votre vitrine.':
+      'No orders to handle. Customers order from your vitrine.',
+  'Aucune commande passée pour le moment.':
+      'No past orders yet.',
+  'Livraison échouée : {why}':
+      'Delivery failed: {why}',
+  'Le client attend votre réponse.':
+      'The customer is waiting for your answer.',
+  'Aucun livreur ne l\'a prise. Appelez un de vos livreurs, ou livrez-la vous-même.':
+      'No courier has taken it. Call one of your couriers, or deliver it yourself.',
+  'Cette livraison est en route depuis longtemps : appelez le livreur.':
+      'This delivery has been on the way for a long time: call the courier.',
+  'Livraison : {fee} au livreur, à la porte':
+      'Delivery: {fee} to the courier, at the door',
+  'Argent chez les livreurs : {amount}':
+      'Money held by couriers: {amount}',
+  '{n} commandes payées en espèces à la porte':
+      '{n} orders paid in cash at the door',
+  '{n} commande payée en espèces à la porte':
+      '{n} order paid in cash at the door',
+  'Client absent':
+      'Customer absent',
+  'Client injoignable':
+      'Customer unreachable',
+  'Le client refuse la commande':
+      'The customer refuses the order',
+  'Votre inscription est à l\'étude. La plateforme vous préviendra dès qu\'elle est validée.':
+      'Your application is being reviewed. The platform will tell you as soon as it is approved.',
+  'Aucune livraison à prendre pour le moment. Revenez un peu plus tard.':
+      'No delivery to take for now. Come back a little later.',
+  'Aucune course. Prenez-en une dans Disponibles.':
+      'No run. Take one in Available.',
+  'Le retrait n\'a pas pu être enregistré.':
+      'The pick-up could not be saved.',
+  'Cette course ne peut plus être remise.':
+      'This run can no longer be handed back.',
+  'Code refusé : demandez au client les 4 chiffres affichés dans sa commande.':
+      'Code refused: ask the customer for the 4 digits shown in their order.',
+  'L\'échec n\'a pas pu être enregistré.':
+      'The failure could not be saved.',
+  'à {km} km de vous':
+      '{km} km from you',
+  'Marchandise déjà payée ({how}) — seule la course est à encaisser':
+      'Goods already paid ({how}) — only the run is to collect',
+  'Marchandise déjà payée ({how}) — à encaisser : {fee} (course)':
+      'Goods already paid ({how}) — to collect: {fee} (run)',
+  'À encaisser à la porte : {amount}':
+      'To collect at the door: {amount}',
+  'À encaisser à la porte : {amount} (dont course {fee})':
+      'To collect at the door: {amount} (including the run, {fee})',
+  'À remettre aux boutiques : {amount}':
+      'To hand to the shops: {amount}',
+  'an':
+      'year',
+  '{n} mois':
+      '{n} months',
+  'Pour tous':
+      'For everyone',
+  'Sans limite':
+      'No limit',
+  'Caisse, articles et stock':
+      'Till, items and stock',
+  'Carnet de crédit et reçus':
+      'Credit book and receipts',
+  'Vitrine en ligne et commandes à retirer':
+      'Online vitrine and pick-up orders',
+  'Logo de la boutique':
+      'Shop logo',
+  'Alertes de nouvelles commandes':
+      'New order alerts',
+  'Comptes de l\'équipe':
+      'Team accounts',
+  'Illimité':
+      'Unlimited',
+  'Complet':
+      'Full',
+  'Mise en avant offerte':
+      'Free featuring',
+  '1 par mois':
+      '1 a month',
+  'Pointages et paie du personnel':
+      'Staff time and pay',
+  'Accès de l\'équipe : qui voit quoi, qui modifie quoi':
+      'Team access: who sees what, who changes what',
+  'Analyses : ventes par heure, par jour, par article':
+      'Analytics: sales by hour, by day, by item',
+  'Comptabilité : journal, résultat, bilan, grand livre':
+      'Accounting: journal, income statement, balance sheet, ledger',
+  'Devises : encaisser et compter en plusieurs monnaies':
+      'Currencies: take and count several currencies',
+  'Vitrine personnalisée : photo de couverture, horaires, couleur, articles épinglés':
+      'Custom vitrine: cover photo, hours, colour, pinned items',
+  'Livraison depuis la vitrine : prix selon la distance, livreurs, suivi':
+      'Delivery from the vitrine: price by distance, couriers, tracking',
+  'Paiement en ligne des commandes : Wave ou carte, versé sur votre numéro':
+      'Online payment of orders: Wave or card, paid to your number',
+  'Message envoyé à {n} personnes.':
+      'Message sent to {n} people.',
+  'Message envoyé à {n} personne.':
+      'Message sent to {n} person.',
+  '{n} sur la semaine dernière':
+      '{n} on last week',
+  'gagné {amount}':
+      'earned {amount}',
+  '+{n} ce mois':
+      '+{n} this month',
+  'sur {n} ouvertes':
+      'of {n} open',
+  'sur {n} articles en vitrine':
+      'of {n} items on vitrines',
+  'Ce mois':
+      'This month',
+  'Part livraison':
+      'Delivery share',
+  'Vendu par les vitrines':
+      'Sold through vitrines',
+  'Vitrines garnies':
+      'Stocked vitrines',
+  'Commandes, 7 jours':
+      'Orders, 7 days',
+  'Nouveaux clients':
+      'New customers',
+  'ce mois':
+      'this month',
+  'Vitrines visitées':
+      'Vitrines visited',
+  'Santé':
+      'Health',
+  'Silencieuses':
+      'Silent',
+  'rien depuis 30 jours':
+      'nothing for 30 days',
+  'Vitrines vides':
+      'Empty vitrines',
+  'ouvertes sans article':
+      'open with no item',
+  'Repères loin':
+      'Pins far away',
+  'hors de la zone de la monnaie':
+      'outside the currency\'s area',
+  'Mara a vérifié qui vous êtes.':
+      'Mara has checked who you are.',
+  'Mara vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Mara.':
+      'Mara checks the association (registration receipt, officers). Ask your Mara contact.',
+  '{v} semaines sur les 8 dernières ont leurs entrées.':
+      '{v} of the last 8 weeks have their entries.',
+  '{v} semaines sur 8 : notez les entrées et sorties au moins 6 semaines sur 8.':
+      '{v} weeks of 8: record money in and out at least 6 weeks of 8.',
+  '{v} semaine sur 8 : notez les entrées et sorties au moins 6 semaines sur 8.':
+      '{v} week of 8: record money in and out at least 6 weeks of 8.',
+  'Moins de 3 dépenses en 90 jours : pas encore de quoi juger.':
+      'Fewer than 3 expenses in 90 days: not enough to judge yet.',
+  '{v} dépenses sur {of} ont leur reçu.':
+      '{v} expenses of {of} have their receipt.',
+  'Seulement {v} sur {of} ont leur reçu : photographiez chaque reçu (8 sur 10 au moins).':
+      'Only {v} of {of} have their receipt: photograph every receipt (at least 8 in 10).',
+  'Moins de 5 entrées en 90 jours : pas encore de quoi juger.':
+      'Fewer than 5 entries in 90 days: not enough to judge yet.',
+  '{v} corrections pour {of} entrées.':
+      '{v} corrections for {of} entries.',
+  '{v} correction pour {of} entrées.':
+      '{v} correction for {of} entries.',
+  '{v} corrections pour {of} entrées : vérifiez avant d\'enregistrer (moins d\'une sur 10).':
+      '{v} corrections for {of} entries: check before saving (fewer than one in 10).',
+  'Sur Mara depuis {months} mois.':
+      'On Mara for {months} months.',
+  'Sur Mara depuis {months} mois : la confiance se gagne avec le temps.':
+      'On Mara for {months} months: trust is earned with time.',
+  'Aucun groupe d’animaux.':
+      'No animal groups.',
+  'Chèvres, bovins, pintades — tout ce qui n’est pas une bande de volailles suivie séparément.':
+      'Goats, cattle, guinea fowl — anything that is not a poultry batch tracked separately.',
+  'semé le {date}':
+      'sown on {date}',
+  '{n} {unit} récoltés':
+      '{n} {unit} harvested',
+  '{n} {unit} récoltés sur {expected} attendus':
+      '{n} {unit} harvested of {expected} expected',
+  '{n} {unit} attendus':
+      '{n} {unit} expected',
+  'À récolter depuis {n} jours':
+      'Due for harvest for {n} days',
+  'Récolte dans {n} jours':
+      'Harvest in {n} days',
+  'Aucune culture en cours.':
+      'No crop in progress.',
+  'Une culture, c’est ce qui est semé sur une parcelle et à quelle date. La parcelle est créée à partir de son nom.':
+      'A crop is what is sown on a plot, and when. The plot is created from its name.',
+  '{name} archivée.':
+      '{name} archived.',
+  '{name} restaurée.':
+      '{name} restored.',
+  '{name} supprimée définitivement.':
+      '{name} deleted for good.',
+  '{n} membres':
+      '{n} members',
+  '{n} membre':
+      '{n} member',
+  '{n} écritures':
+      '{n} entries',
+  '{n} écriture':
+      '{n} entry',
+  'depuis {date}':
+      'since {date}',
+  '{name} n’a aucune écriture. Sa suppression est définitive et ne peut pas être annulée.':
+      '{name} has no entries. Deleting it is final and cannot be undone.',
+  'Un compte porte déjà ce nom.':
+      'An account already has this name.',
+  'Seul un administrateur peut modifier le plan comptable.':
+      'Only an administrator can change the chart of accounts.',
+  'Échec : la modification n\'a pas été enregistrée.':
+      'Failed: the change was not saved.',
+  'Aucun compte pour le moment. Le premier est créé tout seul, la première fois que quelqu\'un enregistre une entrée.':
+      'No accounts yet. The first is created by itself, the first time someone records an entry.',
+  '{n} écriture(s) portent déjà ce nom. Le renommer les renomme toutes.':
+      '{n} entry(ies) already carry this name. Renaming it renames them all.',
+  'retiré':
+      'retired',
+  'jamais utilisé':
+      'never used',
+  'Espèces en caisse':
+      'Cash on hand',
+  'Compte bancaire':
+      'Bank account',
+  'Dîmes':
+      'Tithes',
+  'Offrandes':
+      'Offerings',
+  'Collectes spéciales':
+      'Special collections',
+  'Dons':
+      'Donations',
+  'Eau et électricité':
+      'Water and electricity',
+  'Loyer':
+      'Rent',
+  'Salaires':
+      'Salaries',
+  'Entretien':
+      'Maintenance',
+  'Œuvres sociales':
+      'Charity work',
+  'Fournitures':
+      'Supplies',
+  'Événements':
+      'Events',
+  'Sans nom':
+      'No name',
+  '{name} — déjà en stock':
+      '{name} — already in stock',
+  'ingrédient':
+      'ingredient',
+  'expire le {date}':
+      'expires {date}',
+  '{shown} / {n} articles':
+      '{shown} / {n} items',
+  '{n} ligne(s) déjà enregistrée(s) — retirez-les du texte avant de réessayer.':
+      '{n} line(s) already saved — remove them from the text before trying again.',
+  '{n} en stock — le stock bouge par les entrées, les ventes et la production':
+      '{n} in stock — stock moves with stock-ins, sales and production',
+  'Attention : vendu en dessous de ce que ça coûte ({cost}).':
+      'Careful: sold below what it costs ({cost}).',
+  '{n} articles ajoutés au stock.':
+      '{n} items added to stock.',
+  '{n} article ajouté au stock.':
+      '{n} item added to stock.',
+  '{n} ligne(s) enregistrée(s), puis : {error}\nRéessayez : les lignes déjà enregistrées ne seront pas comptées deux fois.':
+      '{n} line(s) saved, then: {error}\nTry again: lines already saved will not be counted twice.',
+  'Ajouter {n} article(s) — {total}':
+      'Add {n} item(s) — {total}',
+  '{n} ligne(s) lue(s) sur la photo.':
+      '{n} line(s) read from the photo.',
+  '{n} ligne(s) dont le calcul ne tombe pas juste. Vérifiez avant d’enregistrer.':
+      '{n} line(s) whose sums do not add up. Check before saving.',
+  'Les prix, les noms, les entrées de stock':
+      'Prices, names, stock-ins',
+  'Transformer des ingrédients en produits':
+      'Turn ingredients into products',
+  'Vendre à crédit et encaisser les remboursements':
+      'Sell on credit and collect repayments',
+  'Les tours, les cotisations, la caisse':
+      'Turns, contributions, the cash box',
+  'Créer et partager des factures':
+      'Create and share invoices',
+  'Photographier et classer les documents':
+      'Photograph and file documents',
+  'Comptabilité et rapports':
+      'Accounting and reports',
+  'Journal, résultat, bilan':
+      'Journal, income statement, balance sheet',
+  'Les fiches, les pointages':
+      'Records, time sheets',
+  'Employés':
+      'Employees',
+  'Superviseurs':
+      'Supervisors',
+  'La base de données n\'est pas à jour. Appliquez les migrations manquantes.':
+      'The database is not up to date. Apply the missing migrations.',
+  'La base de données n\'est pas à jour : {name} est introuvable. Appliquez les migrations manquantes.':
+      'The database is not up to date: {name} cannot be found. Apply the missing migrations.',
+  'Cet enregistrement existe déjà.':
+      'This record already exists.',
+  'Cette adresse n\'a pas encore de compte. Choisissez « Créer un compte ».':
+      'This address has no account yet. Choose « Create an account ».',
+  'Un compte existe déjà pour ces informations. Choisissez « Se connecter ».':
+      'An account already exists for these details. Choose « Sign in ».',
+  'Le mot de passe doit contenir au moins 6 caractères.':
+      'The password must have at least 6 characters.',
+  'Adresse e-mail ou mot de passe incorrect.':
+      'Wrong e-mail address or password.',
+  'Ce code a expiré. Demandez-en un nouveau.':
+      'This code has expired. Ask for a new one.',
+  'Ce lien est incorrect ou a déjà été utilisé.':
+      'This link is wrong or has already been used.',
+  'La sécurité du compte a besoin d\'une connexion.':
+      'Account security needs a connection.',
+  'Ce compte n\'a pas d\'adresse e-mail pour vérifier le mot de passe actuel.':
+      'This account has no e-mail address to check the current password.',
+  'Nouvel appareil':
+      'New device',
+  'Nouvel appareil : {detail}':
+      'New device: {detail}',
+  'Mot de passe changé':
+      'Password changed',
+  'Code de l\'appareil changé':
+      'Device code changed',
+  'Validation en deux étapes activée':
+      'Two-step verification turned on',
+  'Verrouillage modifié':
+      'Lock changed',
+  'Verrouillage modifié : {detail}':
+      'Lock changed: {detail}',
+  'Un appareil déconnecté':
+      'A device signed out',
+  'Autres appareils déconnectés':
+      'Other devices signed out',
+  'Déconnecté partout par {who}':
+      'Signed out everywhere by {who}',
+  'un administrateur':
+      'an administrator',
+  'Appareil inconnu':
+      'Unknown device',
+  'Appareil':
+      'Device',
+  'application Mara':
+      'Mara app',
+  'navigateur':
+      'browser',
+  'Nouvelle commande — {name}':
+      'New order — {name}',
+  '{n} commandes à traiter sur la vitrine.':
+      '{n} orders to handle on the vitrine.',
+  '{n} commande à traiter sur la vitrine.':
+      '{n} order to handle on the vitrine.',
+  '{n} ventes en attente d\'envoi. Elles partiront dès le retour du réseau ; le total du jour les comptera alors.':
+      '{n} sales waiting to be sent. They will go as soon as the network is back; the day\'s total will count them then.',
+  '{n} vente en attente d\'envoi. Elle partira dès le retour du réseau ; le total du jour la comptera alors.':
+      '{n} sale waiting to be sent. It will go as soon as the network is back; the day\'s total will count it then.',
+  '{n} photo(s) sur cet appareil, en attente de réseau.':
+      '{n} photo(s) on this device, waiting for the network.',
+  '{n} articles bientôt périmés':
+      '{n} items expiring soon',
+  '{n} article bientôt périmé':
+      '{n} item expiring soon',
+  '{n} ventes':
+      '{n} sales',
+  '{n} vente':
+      '{n} sale',
+  '{amount} rendus':
+      '{amount} returned',
+  'Accès':
+      'Access',
+  'Sites':
+      'Sites',
+  'Départements':
+      'Departments',
+  'Invitations':
+      'Invitations',
+  'Écritures':
+      'Entries',
+  'Membres':
+      'Members',
+  'Créé':
+      'Created',
+  'Modifié':
+      'Changed',
+  'Supprimé':
+      'Deleted',
+  'Il manque le nom.':
+      'The name is missing.',
+  'Il faut au moins la quantité et le prix : « {name} 10 600 ».':
+      'At least the quantity and the price are needed: « {name} 10 600 ».',
+  'La quantité doit être supérieure à zéro.':
+      'The quantity must be above zero.',
+  'Un prix ne peut pas être négatif.':
+      'A price cannot be negative.',
+  'Doublon : « {name} » est déjà plus haut. Renommez-le (ex. « {name} 25kg ») ou retirez la ligne.':
+      'Duplicate: « {name} » is already above. Rename it (e.g. « {name} 25kg ») or remove the line.',
+  '{n} photo(s) sur cet appareil. Le serveur en a refusé {stuck}.':
+      '{n} photo(s) on this device. The server refused {stuck}.',
+  '{n} photo(s) en attente de réseau.':
+      '{n} photo(s) waiting for the network.',
+  'PDF — ouvrez-le depuis le lien de partage.':
+      'PDF — open it from the share link.',
+  '{n} article(s) lu(s) sur cette photo':
+      '{n} item(s) read from this photo',
+  'Prix lu : {price}':
+      'Price read: {price}',
+  'Péremption lue : {date}':
+      'Expiry read: {date}',
+  'Paiements · {n} versement(s) en échec':
+      'Payments · {n} payout(s) failed',
+  'carte':
+      'card',
+  'payé':
+      'paid',
+  'échoué':
+      'failed',
+  'expiré':
+      'expired',
+  'versé à {to}':
+      'paid to {to}',
+  'la boutique':
+      'the shop',
+  'versement en cours':
+      'payout in progress',
+  'versement échoué : {why}':
+      'payout failed: {why}',
+  'Le pourcentage va de 0 à 100.':
+      'The percentage goes from 0 to 100.',
+  'Enregistré : {pct} % sur les prochaines livraisons. Les commandes déjà passées gardent leur part.':
+      'Saved: {pct} % on the next deliveries. Orders already placed keep their share.',
+  '{amount} F CFA dus à Mara':
+      '{amount} F CFA owed to Mara',
+  '{n} courses':
+      '{n} runs',
+  '{n} course':
+      '{n} run',
+  'encaissé {amount} F':
+      'collected {amount} F',
+  'gardé {amount} F':
+      'kept {amount} F',
+  'Code changé.':
+      'Code changed.',
+  'Validation en deux étapes désactivée.':
+      'Two-step verification turned off.',
+  '{n} appareil(s) déconnecté(s).':
+      '{n} device(s) signed out.',
+  'Votre entreprise demande le code après {delay} au plus.':
+      'Your business asks for the code after {delay} at most.',
+  'Après {delay}':
+      'After {delay}',
+  'utilisé le {date}':
+      'used {date}',
+  '1 h':
+      '1 h',
+  'Merci ! La confirmation est enregistrée.':
+      'Thank you! The confirmation is saved.',
+  'Paiement non abouti':
+      'Payment not completed',
+  'Rien n\'a été débité. Vous pouvez réessayer.':
+      'Nothing was charged. You can try again.',
+  'Confirmation en attente':
+      'Confirmation pending',
+  'Wave n\'a pas encore confirmé. Si vous avez payé, la commande se mettra à jour toute seule.':
+      'Wave has not confirmed yet. If you paid, the order will update by itself.',
+  'Confirmation en cours…':
+      'Confirming…',
+  'Aucun {word} pour le moment.\nAjoutez-en un pour pouvoir confier un rôle sur une partie seulement de l\'activité.':
+      'No {word} yet.\nAdd one to give someone a role over only part of the business.',
+  '{n} département(s)':
+      '{n} department(s)',
+  'Ajouter un {word}':
+      'Add a {word}',
+  'Section':
+      'Section',
+  'Un livreur approuvé voit les livraisons prêtes, les adresses et les numéros des clients. {n} inscription(s) en attente.':
+      'An approved courier sees ready deliveries, customers\' addresses and numbers. {n} application(s) waiting.',
+  'Sans numéro':
+      'No number',
+  'Approuvé':
+      'Approved',
+  'inscrit le {date}':
+      'signed up {date}',
+  'Vente de {total} du {date}. Les articles retournent en stock.':
+      'Sale of {total} on {date}. The items go back into stock.',
+  '{qty} {name} entré(s) le {date}. Le stock est retiré et l\'achat est annulé dans les comptes.':
+      '{qty} {name} received on {date}. The stock is removed and the purchase is cancelled in the books.',
+  'Code, appareils, mot de passe':
+      'Code, devices, password',
+  'Jamais verrouillé':
+      'Never locked',
+  'Verrouillé après {delay}':
+      'Locked after {delay}',
+  'empreinte':
+      'fingerprint',
+  'montants cachés':
+      'amounts hidden',
+  'à partir du {date}':
+      'from {date}',
+  '{n} disponibles':
+      '{n} available',
+  '{n} disponible':
+      '{n} available',
+  '{name} — résumé de la semaine':
+      '{name} — the week\'s summary',
+  'Le partage a échoué sur cet appareil. Faites une capture d\'écran en attendant. ({error})':
+      'Sharing failed on this device. Take a screenshot meanwhile. ({error})',
+  'Semaine du {from} au {to}':
+      'Week of {from} to {to}',
+  'Semaine au {date}':
+      'Week ending {date}',
+  'Les mots de passe diffèrent.':
+      'The passwords differ.',
+  'Mot de passe réinitialisé':
+      'Password reset',
+  'Compte supprimé':
+      'Account deleted',
+  'dit avoir payé':
+      'says they paid',
+  'pas encore payé':
+      'not paid yet',
+  'du {from} au {to}':
+      'from {from} to {to}',
+  'Membres, cotisations, dépenses, résumé':
+      'Members, contributions, expenses, summary',
+  'Stock, troupeaux, production, factures':
+      'Stock, herds, production, invoices',
+  'Ventes et dépenses':
+      'Sales and expenses',
+  'Mois dernier':
+      'Last month',
+  'Cette année':
+      'This year',
+  'Depuis le début':
+      'Since the start',
+  'Rien à afficher pour cette période.':
+      'Nothing to show for this period.',
+  'Ouvrez ce lien dans votre navigateur : {url}':
+      'Open this link in your browser: {url}',
+  'Une nouvelle version de Mara est en ligne.':
+      'A new version of Mara is online.',
+  'Une nouvelle version de Mara est disponible.':
+      'A new version of Mara is available.',
+  'Recharger':
+      'Reload',
+  'Télécharger':
+      'Download',
+  'Connectez-vous pour payer.':
+      'Sign in to pay.',
+  'Le paiement n\'a pas pu commencer.':
+      'The payment could not start.',
+  'Toute la boutique':
+      'The whole shop',
+  'En attente de paiement':
+      'Waiting for payment',
+  'Paiement en vérification':
+      'Payment being checked',
+  'Programmée':
+      'Scheduled',
+  'En cours':
+      'Running',
+  'offerte par Mara Pro':
+      'given by Mara Pro',
+  'Prix : {price}':
+      'Price: {price}',
+  'À payer : {amount}':
+      'To pay: {amount}',
+  'Voir la boutique':
+      'See the shop',
+  'Rapprocher la carte':
+      'Zoom in',
+  '{n} vitrine(s) sur la carte':
+      '{n} vitrine(s) on the map',
+  '{amount}, pour les heures non réglées.':
+      '{amount}, for the unpaid hours.',
+  '{amount}, salaire de la semaine.':
+      '{amount}, the week\'s pay.',
+  '{amount}, salaire de la journée.':
+      '{amount}, the day\'s pay.',
+  '{amount}, salaire du mois.':
+      '{amount}, the month\'s pay.',
+  '/semaine':
+      '/week',
+  '/jour':
+      '/day',
+  '/mois':
+      '/month',
+  '{amount} à payer':
+      '{amount} to pay',
+  '{name} — facture {number}':
+      '{name} — invoice {number}',
+  'Reste à payer : {amount}':
+      'Left to pay: {amount}',
+  'Les deux prix doivent être des nombres entiers.':
+      'Both prices must be whole numbers.',
+  'Enregistré. Les prochains écrans Mara Pro le disent.':
+      'Saved. The next Mara Pro screens say so.',
+  '{from}–{to} sur {n}':
+      '{from}–{to} of {n}',
+  'Payé jusqu\'au':
+      'Paid until',
+  'Pour encaisser une vente dans une autre monnaie. Les livres restent en {currency}.':
+      'To take a sale in another currency. The books stay in {currency}.',
+  'La couleur des fermes':
+      'The farms\' colour',
+  'La couleur des associations':
+      'The associations\' colour',
+  'La couleur des boutiques':
+      'The shops\' colour',
+  'La couleur de l\'application':
+      'The app\'s colour',
+  'À vérifier':
+      'To check',
+  '{n} commandes comptées · {pct} % d\'un seul client':
+      '{n} orders counted · {pct} % from a single customer',
+  'Vos informations':
+      'Your details',
+  'Ces informations vous suivent dans toutes les entreprises que vous rejoindrez.':
+      'These details follow you into every business you join.',
+  'Ces informations vous suivent dans toutes les entreprises que vous rejoignez. Elles figurent sur un contrat ou un bulletin de paie.':
+      'These details follow you into every business you join. They appear on a contract or a payslip.',
+  'Appeler {name}':
+      'Call {name}',
+  'le livreur':
+      'the courier',
+  'Nouvelle demande — {name}':
+      'New request — {name}',
+  '{n} demandes à traiter sur la vitrine.':
+      '{n} requests to handle on the vitrine.',
+  '{n} demande à traiter sur la vitrine.':
+      '{n} request to handle on the vitrine.',
+  'Visa, Mastercard. Renouvelé chaque année, annulable à tout moment. Paiement sécurisé par Stripe.':
+      'Visa, Mastercard. Renewed every year, cancel any time. Payment secured by Stripe.',
+  'Visa, Mastercard. Renouvelé chaque mois, annulable à tout moment. Paiement sécurisé par Stripe.':
+      'Visa, Mastercard. Renewed every month, cancel any time. Payment secured by Stripe.',
+  'Tél. {phone}':
+      'Tel. {phone}',
+  'Échéance {date}':
+      'Due {date}',
+  '{month} par mois, ou {year} par an.':
+      '{month} a month, or {year} a year.',
+  'Installez Google Authenticator ou Microsoft Authenticator (Play Store).':
+      'Install Google Authenticator or Microsoft Authenticator (Play Store).',
+  'Ajoutez Mara : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.':
+      'Add Mara: scan this code from another screen, or tap the button on this phone.',
+  '1er':
+      '1st',
+  '{n}e':
+      '#{n}',
+  'Je suis {place} cette semaine sur Mara, en {league} ! 🏆':
+      'I am {place} this week on Mara, in {league}! 🏆',
+  'Venez voir ma vitrine : {url}':
+      'Come and see my vitrine: {url}',
+  'Cette semaine · {n} entreprise(s) dans la course':
+      'This week · {n} business(es) in the race',
+  'La semaine dernière : {place} de votre ligue.':
+      'Last week: {place} in your league.',
+  'Ouvert jusqu\'au {date}. Bravo, vous l\'avez gagné !':
+      'Open until {date}. Well done, you earned it!',
+  'Sans votre position, la carte montre la boutique et le client.':
+      'Without your position, the map shows the shop and the customer.',
+  'Position indisponible sur cet appareil.':
+      'Position unavailable on this device.',
+  'Autorisez la position, ou choisissez « Plus tard ».':
+      'Allow location, or choose « Later ».',
+  'Prévenir en dessous de ce nombre':
+      'Warn below this number',
+  '{n} jours':
+      '{n} days',
+  'arrivée {date}':
+      'arrived {date}',
+  '{n} œufs':
+      '{n} eggs',
+  'Distribué':
+      'Fed out',
+  '{animals} animaux en {herds} groupe(s)':
+      '{animals} animals in {herds} group(s)',
+  '{n} culture(s) en cours':
+      '{n} crop(s) in progress',
+  '{n} kg récoltés cette semaine':
+      '{n} kg harvested this week',
+  '{name} — relevé {year}':
+      '{name} — statement {year}',
+  'Établi le {date}':
+      'Issued on {date}',
+  '{pct} % du CA':
+      '{pct} % of revenue',
+  'Meilleur jour : {day} ({amount})':
+      'Best day: {day} ({amount})',
+  'Dernière : {date}':
+      'Last: {date}',
+  '{n} lignes réparties sur {tables} tables':
+      '{n} rows across {tables} tables',
+  'obligatoire':
+      'required',
+  'valeur par défaut':
+      'default value',
+  'modifié le {date}':
+      'changed {date}',
+  'Données':
+      'Data',
+  'Cette version de l\'application a été compilée sans serveur. Reconstruisez-la avec SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY.':
+      'This version of the app was built without a server. Rebuild it with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
+  'Article {n}':
+      'Item {n}',
+  'Pas de serveur.':
+      'No server.',
+  'Rien enregistré pour le moment.':
+      'Nothing recorded yet.',
+  'Aucun mouvement sur cette période.':
+      'No movement in this period.',
+  'Rien enregistré sur cette période.':
+      'Nothing recorded in this period.',
+  'Le code doit contenir 4 chiffres.':
+      'The code must have 4 digits.',
+  'Aucun code n\'est enregistré sur ce téléphone.':
+      'No code is saved on this phone.',
+  'Ajoutez au moins un article avant d\'enregistrer.':
+      'Add at least one item before saving.',
+  'Les photos ne sont pas disponibles sur cette installation.':
+      'Photos are not available on this install.',
+  'Reconnectez-vous pour envoyer des photos.':
+      'Sign in again to send photos.',
+  'Photo sans nom':
+      'Unnamed photo',
+  'Le service de photos a répondu {code}.':
+      'The photo service answered {code}.',
+  'Ce que possède l\'activité':
+      'What the business owns',
+  'Ce qu\'elle doit':
+      'What it owes',
+  'Capital':
+      'Equity',
+  'Entrée':
+      'Entry',
+  'Dollar américain':
+      'US dollar',
+  'Euro':
+      'Euro',
+  'Cedi ghanéen':
+      'Ghanaian cedi',
+  'Naira nigérian':
+      'Nigerian naira',
+  'Livre sterling':
+      'Pound sterling',
+  'Dollar canadien':
+      'Canadian dollar',
+  'Franc CFA (CEMAC)':
+      'CFA franc (CEMAC)',
+  'Dirham marocain':
+      'Moroccan dirham',
+  'Yuan chinois':
+      'Chinese yuan',
+  'Caramel':
+      'Caramel',
+  'Graphite':
+      'Graphite',
+  'Verdure':
+      'Greenery',
+  'Indigo':
+      'Indigo',
+  'Terre cuite':
+      'Terracotta',
+  'Lagune':
+      'Lagoon',
+  'Océan':
+      'Ocean',
+  'Prune':
+      'Plum',
+  'Savane':
+      'Savannah',
+  'Ardoise':
+      'Slate',
+  'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.':
+      'Hello! You are invited to join « {org} » on Mara.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
+  'quelques jours':
+      'a few days',
+  'Normal':
+      'Normal',
+  'Petit':
+      'Small',
+  'Fêlé':
+      'Cracked',
+  'Super administrateur':
+      'Super administrator',
+  'Gestionnaire':
+      'Manager',
+  'Superviseur':
+      'Supervisor',
+  'En retard de {n} j':
+      '{n} d overdue',
+  'Partiel':
+      'Partial',
+  'correction':
+      'correction',
+  'Vendus':
+      'Sold',
+  'Second choix':
+      'Second grade',
+  'Burkina Faso':
+      'Burkina Faso',
+  'Côte d\'Ivoire':
+      'Côte d\'Ivoire',
+  'Mali':
+      'Mali',
+  'Niger':
+      'Niger',
+  'Sénégal':
+      'Senegal',
+  'Togo':
+      'Togo',
+  'Bénin':
+      'Benin',
+  'Ghana':
+      'Ghana',
+  'Nigéria':
+      'Nigeria',
+  'Guinée':
+      'Guinea',
+  'Afrique du Sud':
+      'South Africa',
+  'Algérie':
+      'Algeria',
+  'Allemagne':
+      'Germany',
+  'Angola':
+      'Angola',
+  'Arabie saoudite':
+      'Saudi Arabia',
+  'Argentine':
+      'Argentina',
+  'Australie':
+      'Australia',
+  'Autriche':
+      'Austria',
+  'Belgique':
+      'Belgium',
+  'Brésil':
+      'Brazil',
+  'Burundi':
+      'Burundi',
+  'Cameroun':
+      'Cameroon',
+  'Canada':
+      'Canada',
+  'Cap-Vert':
+      'Cape Verde',
+  'Chili':
+      'Chile',
+  'Chine':
+      'China',
+  'Chypre':
+      'Cyprus',
+  'Congo-Brazzaville':
+      'Congo-Brazzaville',
+  'Congo-Kinshasa':
+      'Congo-Kinshasa',
+  'Corée du Sud':
+      'South Korea',
+  'Danemark':
+      'Denmark',
+  'Égypte':
+      'Egypt',
+  'Émirats arabes unis':
+      'United Arab Emirates',
+  'Espagne':
+      'Spain',
+  'États-Unis':
+      'United States',
+  'Éthiopie':
+      'Ethiopia',
+  'Finlande':
+      'Finland',
+  'France':
+      'France',
+  'Gabon':
+      'Gabon',
+  'Gambie':
+      'Gambia',
+  'Guinée-Bissau':
+      'Guinea-Bissau',
+  'Guinée équatoriale':
+      'Equatorial Guinea',
+  'Grèce':
+      'Greece',
+  'Inde':
+      'India',
+  'Indonésie':
+      'Indonesia',
+  'Irlande':
+      'Ireland',
+  'Israël':
+      'Israel',
+  'Italie':
+      'Italy',
+  'Japon':
+      'Japan',
+  'Jordanie':
+      'Jordan',
+  'Kenya':
+      'Kenya',
+  'Liban':
+      'Lebanon',
+  'Libéria':
+      'Liberia',
+  'Libye':
+      'Libya',
+  'Luxembourg':
+      'Luxembourg',
+  'Madagascar':
+      'Madagascar',
+  'Malaisie':
+      'Malaysia',
+  'Maroc':
+      'Morocco',
+  'Mauritanie':
+      'Mauritania',
+  'Mexique':
+      'Mexico',
+  'Mozambique':
+      'Mozambique',
+  'Namibie':
+      'Namibia',
+  'Norvège':
+      'Norway',
+  'Pays-Bas':
+      'Netherlands',
+  'Philippines':
+      'Philippines',
+  'Pologne':
+      'Poland',
+  'Portugal':
+      'Portugal',
+  'Qatar':
+      'Qatar',
+  'République centrafricaine':
+      'Central African Republic',
+  'Royaume-Uni':
+      'United Kingdom',
+  'Russie':
+      'Russia',
+  'Rwanda':
+      'Rwanda',
+  'Sierra Leone':
+      'Sierra Leone',
+  'Singapour':
+      'Singapore',
+  'Suède':
+      'Sweden',
+  'Suisse':
+      'Switzerland',
+  'Tanzanie':
+      'Tanzania',
+  'Tchad':
+      'Chad',
+  'Tchéquie':
+      'Czechia',
+  'Thaïlande':
+      'Thailand',
+  'Tunisie':
+      'Tunisia',
+  'Turquie':
+      'Turkey',
+  'Ouganda':
+      'Uganda',
+  'Zambie':
+      'Zambia',
+  'Zimbabwe':
+      'Zimbabwe',
+  '{n} chiffres pour {country} ({dial})':
+      '{n} digits for {country} ({dial})',
+  ' ou ':
+      ' or ',
+  'sur {n}':
+      'of {n}',
+  'pièce':
+      'piece',
+  'kg':
+      'kg',
+  'litre':
+      'litre',
+  'paquet':
+      'pack',
+  'sac':
+      'bag',
+  'carton':
+      'box',
+  'plateau':
+      'tray',
+  'tête':
+      'head',
+  'heure':
+      'hour',
+  'séance':
+      'session',
+  'personne':
+      'person',
+  'jour':
+      'day',
+  '30 min':
+      '30 min',
+  '2 h':
+      '2 h',
+  'une demi-journée':
+      'half a day',
+  'une journée':
+      'a day',
+  'panier':
+      'basket',
+  'botte':
+      'bunch',
+  'dose':
+      'dose',
+  'unité':
+      'unit',
+  'Toute la comptabilité de {name} sera détruite : {entries}, les articles, le personnel, les photos et les {members} accès. C’est irréversible.':
+      'All of {name}\'s accounts will be destroyed: {entries}, the items, the staff, the photos and the {members} accesses. This cannot be undone.',
+  '{n} articles sur la vitrine':
+      '{n} items on the vitrine',
+  '{n} article sur la vitrine':
+      '{n} item on the vitrine',
+  'Pour voir les livraisons à moins de {km} km':
+      'To see deliveries within {km} km',
+  'Activer la position':
+      'Turn on location',
+  'Activez la position pour voir les livraisons proches':
+      'Turn on location to see nearby deliveries',
+  'Nouveau {word}':
+      'New {word}',
+  '{fee} au livreur':
+      '{fee} to the courier',
+  'S\'abonner par carte · {price} F / an':
+      'Subscribe by card · {price} F / year',
+  'S\'abonner par carte · {price} F / mois':
+      'Subscribe by card · {price} F / month',
+  'reste {amount}':
+      '{amount} left',
+  'Au {date}':
+      'As of {date}',
+  '{amount} en jeu':
+      '{amount} at stake',
+  '{name} — {n} en stock':
+      '{name} — {n} in stock',
+  'Valeur : {value}':
+      'Value: {value}',
+  'Disponibles':
+      'Available',
+  'part Mara {amount}':
+      'Mara\'s share {amount}',
+  '{births} naissances · {losses} pertes':
+      '{births} births · {losses} losses',
+  '{n} tentatives':
+      '{n} attempts',
+  '{n} tentative':
+      '{n} attempt',
+  '{n} livreurs · {c} courses':
+      '{n} couriers · {c} deliveries',
+  '{n} livreur · {c} courses':
+      '{n} courier · {c} deliveries',
+  'Photo de l\'article':
+      'Item photo',
+  'Cette vitrine n\'existe pas, ou n\'est pas ouverte.':
+      'This vitrine does not exist, or is not open.',
+  'Vous n\'avez pas encore commandé.':
+      'You have not ordered yet.',
+  '{n} enregistrements de {name} attendent encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.':
+      '{n} entries by {name} are still waiting for the network. Sign back in with that account and wait for them to be sent before changing user.',
+  '{n} enregistrement de {name} attend encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.':
+      '{n} entry by {name} is still waiting for the network. Sign back in with that account and wait for it to be sent before changing user.',
+  '# L\'application fonctionne-t-elle sans internet ?':
+      '# Does the app work without internet?',
+  'Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; elles sont envoyées au serveur dès que la connexion revient. Certains écrans (rapports, historique) ont besoin de la connexion.':
+      'Yes. You can record sales and expenses offline; they are sent to the server as soon as the connection is back. Some screens (reports, history) need the connection.',
+  '# Comment ajouter un employé ?':
+      '# How do I add an employee?',
+  'Dans Compte › Administration › Personnel, puis invitez la personne. Vous décidez ce que chacun peut voir et modifier.':
+      'In Account › Administration › Staff, then invite the person. You decide what each one can see and change.',
+  '# Comment changer la monnaie de mon activité ?':
+      '# How do I change my business\'s currency?',
+  'Dans Compte › Administration › Paramètres, choisissez la monnaie. Elle s\'applique partout dans l\'application.':
+      'In Account › Administration › Settings, choose the currency. It applies everywhere in the app.',
+  '# Comment recevoir un paiement Wave ?':
+      '# How do I receive a Wave payment?',
+  'Renseignez votre numéro Wave dans Paramètres, puis choisissez « Wave » au moment de la vente : le client scanne le QR et paie.':
+      'Enter your Wave number in Settings, then choose “Wave” at the time of the sale: the customer scans the QR code and pays.',
+  '# Un client veut payer en dollars ou en euros.':
+      '# A customer wants to pay in dollars or euros.',
+  'Définissez vos taux dans Compte › Administration › Paramètres › Taux de change. À la vente, touchez la monnaie du client : l\'application affiche exactement le montant à encaisser, et le reçu garde les deux montants et le taux. Vos livres restent dans votre monnaie.':
+      'Set your rates in Account › Administration › Settings › Exchange rates. At the sale, tap the customer\'s currency: the app shows exactly the amount to collect, and the receipt keeps both amounts and the rate. Your books stay in your currency.',
+  '# Comment imprimer ou envoyer une facture ?':
+      '# How do I print or send an invoice?',
+  'Ouvrez la facture : l\'icône imprimante lance l\'impression, et « Envoyer » la partage en image (WhatsApp ou autre). Le propriétaire peut aussi la corriger tant que rien n\'a été payé.':
+      'Open the invoice: the printer icon prints it, and “Send” shares it as an image (WhatsApp or another app). The owner can also correct it as long as nothing has been paid.',
+  '# Où sont les analyses et le carnet de crédit ?':
+      '# Where are the analytics and the credit book?',
+  'Sous Compte › Mon entreprise, pour garder l\'écran de vente simple. Les analyses sont réservées au propriétaire.':
+      'Under Account › My business, to keep the sales screen simple. Analytics are for the owner only.',
+  '# J\'ai oublié mon code (PIN).':
+      '# I forgot my code (PIN).',
+  'Reconnectez-vous avec votre mot de passe pour définir un nouveau code.':
+      'Sign in again with your password to set a new code.',
+  '# Comment contacter quelqu\'un ?':
+      '# How do I reach someone?',
+  'Depuis Compte › Aide › Contacter le support, sur WhatsApp.':
+      'From Account › Help › Contact support, on WhatsApp.',
 };

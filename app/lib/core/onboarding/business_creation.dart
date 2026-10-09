@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../phone/country_codes.dart';
 import 'application_form.dart';
 
 /// Creating one's business, at once (111): no request, no wait. The person
@@ -273,16 +275,116 @@ String currencyOfCountry(String iso) => switch (iso.toUpperCase()) {
       _ => 'XOF',
     };
 
-/// The towns offered as one tap on the « où » screen: Burkina's largest
-/// (086's league_towns, in order of size). Any other is typed.
-const businessTowns = [
-  'Ouagadougou',
-  'Bobo-Dioulasso',
-  'Koudougou',
-  'Ouahigouya',
-  'Banfora',
-  'Kaya',
-  'Tenkodogo',
-  'Fada N\'Gourma',
-  'Dédougou',
+/// The towns offered as one tap wherever a city is asked (the « où »
+/// screen of a new business, the shopper's « Ma ville »): the person's own
+/// country first — for Burkina, 086's league_towns in order of size — then
+/// the big cities of their part of the world, then a few of every other
+/// (122: « more international, not just Africa »). Any other is typed.
+///
+/// [iso] is the person's country (their phone number's, see [townCountry]).
+/// Six of their own towns, three of their region, two of every other —
+/// about seventeen chips. Names are in French, the language a town is
+/// stored in whatever the screen's language (a league counts by name).
+List<String> suggestedTowns(String? iso) {
+  final country = (iso ?? 'BF').toUpperCase();
+  final region = _regionOf(country);
+  final out = <String>[...?_townsByCountry[country]?.take(6)];
+  void add(Iterable<String> towns) {
+    for (final t in towns) {
+      if (!out.contains(t)) out.add(t);
+    }
+  }
+
+  add(_hubs[region]!.take(out.isEmpty ? 6 : 3));
+  for (final other in _regionOrder) {
+    if (other == region) continue;
+    // West Africa's own neighbours already lead; the rest of the continent
+    // is not needed twice.
+    if (region == _Region.westAfrica && other == _Region.africa) continue;
+    add(_hubs[other]!.take(2));
+  }
+  return out;
+}
+
+/// The country to suggest towns for: the person's phone number's, else the
+/// phone's own region setting, else Burkina.
+String townCountry(String? e164, {String? deviceRegion}) {
+  final byNumber = e164 == null ? null : countryOfNumber(e164);
+  if (byNumber != null) return byNumber.iso;
+  final region = deviceRegion ??
+      WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+  return (region == null || region.isEmpty) ? defaultCountry.iso : region.toUpperCase();
+}
+
+const _townsByCountry = <String, List<String>>{
+  'BF': ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Ouahigouya', 'Banfora',
+      'Kaya', 'Tenkodogo', 'Fada N\'Gourma', 'Dédougou'],
+  'CI': ['Abidjan', 'Bouaké', 'Yamoussoukro', 'Daloa', 'San-Pédro', 'Korhogo'],
+  'SN': ['Dakar', 'Thiès', 'Saint-Louis', 'Touba', 'Kaolack', 'Ziguinchor'],
+  'ML': ['Bamako', 'Sikasso', 'Ségou', 'Mopti', 'Kayes'],
+  'NE': ['Niamey', 'Zinder', 'Maradi', 'Tahoua'],
+  'TG': ['Lomé', 'Sokodé', 'Kara', 'Kpalimé'],
+  'BJ': ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi'],
+  'GH': ['Accra', 'Kumasi', 'Tamale', 'Takoradi'],
+  'NG': ['Lagos', 'Abuja', 'Kano', 'Ibadan', 'Port Harcourt'],
+  'GN': ['Conakry', 'Kankan', 'Labé', 'Nzérékoré'],
+  'CM': ['Douala', 'Yaoundé', 'Bafoussam', 'Garoua'],
+  'GA': ['Libreville', 'Port-Gentil', 'Franceville'],
+  'MA': ['Casablanca', 'Rabat', 'Marrakech', 'Tanger', 'Fès'],
+  'FR': ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Lille', 'Bordeaux'],
+  'BE': ['Bruxelles', 'Liège', 'Anvers', 'Charleroi'],
+  'DE': ['Berlin', 'Hambourg', 'Munich', 'Francfort'],
+  'ES': ['Madrid', 'Barcelone', 'Valence', 'Séville'],
+  'IT': ['Rome', 'Milan', 'Naples', 'Turin'],
+  'GB': ['London', 'Manchester', 'Birmingham'],
+  'US': ['New York', 'Washington', 'Atlanta', 'Houston', 'Los Angeles', 'Chicago'],
+  'CA': ['Montréal', 'Toronto', 'Ottawa', 'Québec', 'Vancouver'],
+  'BR': ['São Paulo', 'Rio de Janeiro', 'Brasília'],
+  'CN': ['Shanghai', 'Pékin', 'Canton', 'Shenzhen'],
+  'IN': ['Mumbai', 'Delhi', 'Bangalore'],
+  'JP': ['Tokyo', 'Osaka', 'Kyoto'],
+  'AE': ['Dubai', 'Abu Dhabi', 'Sharjah'],
+  'TR': ['Istanbul', 'Ankara', 'Izmir'],
+};
+
+enum _Region { westAfrica, africa, europe, americas, asia, middleEast }
+
+const _regionOrder = [
+  _Region.westAfrica,
+  _Region.europe,
+  _Region.americas,
+  _Region.middleEast,
+  _Region.asia,
+  _Region.africa,
 ];
+
+/// The big cities of each part of the world, best known first.
+const _hubs = <_Region, List<String>>{
+  _Region.westAfrica: ['Abidjan', 'Dakar', 'Bamako', 'Lomé', 'Cotonou', 'Accra', 'Lagos'],
+  _Region.africa: ['Douala', 'Kinshasa', 'Casablanca', 'Nairobi', 'Johannesburg', 'Le Caire'],
+  _Region.europe: ['Paris', 'Bruxelles', 'London', 'Berlin', 'Madrid', 'Rome'],
+  _Region.americas: ['Montréal', 'New York', 'Toronto', 'São Paulo', 'Mexico'],
+  _Region.middleEast: ['Dubai', 'Istanbul', 'Doha', 'Riyad'],
+  _Region.asia: ['Tokyo', 'Shanghai', 'Mumbai', 'Singapour', 'Séoul'],
+};
+
+_Region _regionOf(String iso) {
+  if (westAfrica.any((c) => c.iso == iso) ||
+      const {'LR', 'SL', 'GM', 'GW', 'MR', 'CV'}.contains(iso)) {
+    return _Region.westAfrica;
+  }
+  if (const {'FR', 'BE', 'DE', 'ES', 'IT', 'PT', 'NL', 'LU', 'AT', 'IE', 'FI', 'GR',
+    'CY', 'GB', 'CH', 'DK', 'SE', 'NO', 'PL'}.contains(iso)) {
+    return _Region.europe;
+  }
+  if (const {'US', 'CA', 'BR', 'MX', 'AR', 'CL', 'CO', 'HT', 'PE'}.contains(iso)) {
+    return _Region.americas;
+  }
+  if (const {'AE', 'SA', 'QA', 'TR', 'LB', 'JO', 'IL', 'KW', 'OM', 'BH'}.contains(iso)) {
+    return _Region.middleEast;
+  }
+  if (const {'CN', 'JP', 'KR', 'IN', 'ID', 'MY', 'SG', 'TH', 'VN', 'PH', 'AU'}.contains(iso)) {
+    return _Region.asia;
+  }
+  return _Region.africa;
+}

@@ -17,7 +17,7 @@ class InvoicePaper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(doc.currency);
-    final date = DateFormat('d MMMM y', 'fr_FR');
+    final date = DateFormat('d MMMM y', intlLocale());
     // The palette's ink, not a hero stop: the hero stops are pale washes for
     // painting behind text, and the invoice is dark type on white paper.
     final accent = KajTheme.of(context).ink;
@@ -51,7 +51,7 @@ class InvoicePaper extends StatelessWidget {
                       if ((doc.orgAddress ?? '').trim().isNotEmpty)
                         Text(doc.orgAddress!.trim()),
                       if ((doc.orgPhone ?? '').trim().isNotEmpty)
-                        Text('Tél. ${doc.orgPhone!.trim()}'),
+                        Text(context.tr('Tél. {phone}', {'phone': doc.orgPhone!.trim()})),
                       if ((doc.orgEmail ?? '').trim().isNotEmpty)
                         Text(doc.orgEmail!.trim()),
                       if (doc.taxLine != null) Text(doc.taxLine!),
@@ -70,7 +70,7 @@ class InvoicePaper extends StatelessWidget {
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text(date.format(doc.issuedOn)),
                     if (doc.dueOn != null)
-                      Text('Échéance ${date.format(doc.dueOn!)}'),
+                      Text(context.tr('Échéance {date}', {'date': date.format(doc.dueOn!)})),
                   ],
                 ),
               ],

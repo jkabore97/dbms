@@ -12,6 +12,8 @@ import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Shown when someone belongs to more than one business — the accountant who
 /// keeps books for a church and a farm, or an owner with two shops.
@@ -94,8 +96,8 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
     final theme = Theme.of(context);
     final widget = this.widget;
 
-    return Scaffold(
-      appBar: AppBar(
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context),
         title: Text(widget.title ?? Strings.of(context).pickBusiness),
         actions: [
           IconButton(
@@ -128,7 +130,7 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
               widget.orgs.isEmpty ? _empty(context) : _list(context, theme),
         ),
       ),
-    );
+    ));
   }
 
   /// Loading or truly empty — never a blank page. While the list is still on
@@ -346,7 +348,7 @@ class _OrgCard extends StatelessWidget {
                                 // The chips' word, in the singular.
                                 kindSingular(context, org.profile),
                                 if (org.roles.isNotEmpty)
-                                  labelForRole(org.roles.first),
+                                  context.tr(labelForRole(org.roles.first)),
                               ].join(' · '),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant),

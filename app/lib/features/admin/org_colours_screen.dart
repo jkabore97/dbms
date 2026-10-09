@@ -114,7 +114,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               Text(
-                context.tr('Ces couleurs sont celles de votre activité : toute votre équipe les verra.'),
+                context.tr('Ces couleurs sont celles de votre activité : toute votre équipe les verra, et votre vitrine aussi tant qu\'elle n\'a pas sa propre couleur.'),
                 style: previewTheme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 20),
@@ -124,7 +124,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
               _PaletteCard(
                 palette: paletteFor(widget.profile),
                 title: context.tr('Couleur par défaut'),
-                subtitle: _profileLabel(widget.profile),
+                subtitle: context.tr(_profileLabel(widget.profile)),
                 selected: _selected == null,
                 onTap: _saving ? null : () => setState(() => _selected = null),
               ),
@@ -135,7 +135,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
               for (final palette in allPalettes) ...[
                 _PaletteCard(
                   palette: palette,
-                  title: palette.label,
+                  title: context.tr(palette.label),
                   selected: _selected == palette.name,
                   onTap: _saving
                       ? null

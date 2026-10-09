@@ -201,10 +201,10 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
                   return ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    title: Text('${_label(row)} · '
+                    title: Text('${context.tr(_label(row))} · '
                         '${qty.toStringAsFixed(0)}${unit == null ? '' : ' $unit'}'),
                     subtitle: Text([
-                      DateFormat('d MMM y', 'fr_FR').format(date),
+                      DateFormat('d MMM y', intlLocale()).format(date),
                       if (note != null && note.isNotEmpty) note,
                     ].join(' · ')),
                     trailing: widget.canWrite

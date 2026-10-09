@@ -194,7 +194,7 @@ class _ActivityLogTabState extends State<ActivityLogTab> {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(entry.value),
+                label: Text(context.tr(entry.value)),
                 selected: _table == entry.key,
                 onSelected: (on) => on
                     ? _setFilter(table: entry.key)
@@ -330,7 +330,7 @@ class _EventTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${event.actorLabel} · '
-        '${DateFormat('d MMM y à HH:mm', 'fr_FR').format(event.at)}',
+        '${DateFormat('d MMM y, HH:mm', intlLocale()).format(event.at)}',
         style: theme.textTheme.bodySmall,
       ),
       children: [

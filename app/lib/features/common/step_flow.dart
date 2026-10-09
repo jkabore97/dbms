@@ -8,6 +8,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../home/business_frame.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/theme/scroll_hint.dart';
 import 'keyboard_sheet.dart';
 
 /// One entry at a time (115): the shared full-screen step flow every
@@ -863,8 +864,9 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                     children: [
                       Expanded(
                         // The field typed into whole above the keyboard,
-                        // « Suivant » under it (A6).
-                        child: FocusedFieldInView(
+                        // « Suivant » under it (A6); the arrow when the
+                        // step goes on below the screen (122).
+                        child: ScrollHint(child: FocusedFieldInView(
                          child: ListView(
                           padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                           children: [
@@ -900,7 +902,7 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                             body,
                           ],
                          ),
-                        ),
+                        )),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

@@ -24,6 +24,10 @@ extension Tr on BuildContext {
   String tr(String fr, [Map<String, Object?> args = const {}]) =>
       translate(trLanguage, fr, args);
 
+  /// The intl locale for this screen's dates (« 5 oct. » / « Oct 5 »):
+  /// see [intlLocale].
+  String get trLocale => intlLocale(trLanguage);
+
   /// 'en' or 'fr' (any other language reads French).
   String get trLanguage {
     final l = findAncestorWidgetOfExactType<Localizations>();
@@ -36,6 +40,11 @@ extension Tr on BuildContext {
 /// BuildContext (the server's refusals, through describeError). Set by the
 /// app each time it builds (main.dart).
 String trCurrent = 'fr';
+
+/// The intl locale for dates in [language] (default: the app's language
+/// now): main.dart loads fr_FR's date names; English is built into intl.
+String intlLocale([String? language]) =>
+    (language ?? trCurrent) == 'en' ? 'en' : 'fr_FR';
 
 String translate(String language, String fr, [Map<String, Object?> args = const {}]) {
   var s = language == 'en' ? (enStrings[fr] ?? fr) : fr;

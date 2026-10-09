@@ -105,11 +105,11 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     );
     if (confirmed != true) return;
 
-    await _run(() => widget.admin.archiveOrg(org.id), '${org.name} archivée.');
+    await _run(() => widget.admin.archiveOrg(org.id), translate(trCurrent, '{name} archivée.', {'name': org.name}));
   }
 
   Future<void> _restore(PlatformOrg org) =>
-      _run(() => widget.admin.restoreOrg(org.id), '${org.name} restaurée.');
+      _run(() => widget.admin.restoreOrg(org.id), context.tr('{name} restaurée.', {'name': org.name}));
 
   Future<void> _delete(PlatformOrg org) async {
     final confirmed = await showDialog<bool>(
@@ -127,7 +127,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
         // it for an empty business changes nothing.
         force: org.hasBooks,
       ),
-      '${org.name} supprimée définitivement.',
+      translate(trCurrent, '{name} supprimée définitivement.', {'name': org.name}),
     );
   }
 
@@ -279,9 +279,9 @@ class _BusinessCard extends StatelessWidget {
             // The two numbers that decide whether deleting this is a tidy-up
             // or the destruction of somebody's history.
             Text(
-              '${org.memberCount} membre${org.memberCount > 1 ? 's' : ''} · '
-              '${org.entryCount} écriture${org.entryCount > 1 ? 's' : ''}'
-              '${org.createdAt == null ? '' : ' · depuis ${DateFormat('MMMM y', 'fr_FR').format(org.createdAt!)}'}',
+              '${org.memberCount > 1 ? context.tr('{n} membres', {'n': org.memberCount}) : context.tr('{n} membre', {'n': org.memberCount})} · '
+              '${org.entryCount > 1 ? context.tr('{n} écritures', {'n': org.entryCount}) : context.tr('{n} écriture', {'n': org.entryCount})}'
+              '${org.createdAt == null ? '' : ' · ${context.tr('depuis {date}', {'date': DateFormat('MMMM y', intlLocale()).format(org.createdAt!)})}'}',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
@@ -392,12 +392,15 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
                 // Said in what is being destroyed, not in row counts: "42
                 // écritures" is a number, "toute la comptabilité" is what it
                 // means.
-                ? 'Toute la comptabilité de ${org.name} sera détruite : '
-                    '${org.entryCount} écriture${org.entryCount > 1 ? 's' : ''}, '
-                    'les articles, le personnel, les photos et les '
-                    '${org.memberCount} accès. C’est irréversible.'
-                : '${org.name} n’a aucune écriture. Sa suppression est '
-                    'définitive et ne peut pas être annulée.',
+                ? context.tr('Toute la comptabilité de {name} sera détruite : {entries}, les articles, le personnel, les photos et les {members} accès. C’est irréversible.', {
+                    'name': org.name,
+                    'entries': org.entryCount > 1
+                        ? context.tr('{n} écritures', {'n': org.entryCount})
+                        : context.tr('{n} écriture', {'n': org.entryCount}),
+                    'members': org.memberCount,
+                  })
+                : context.tr('{name} n’a aucune écriture. Sa suppression est définitive et ne peut pas être annulée.',
+                    {'name': org.name}),
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),

@@ -507,7 +507,9 @@ class _SetupScreenState extends State<SetupScreen> {
             children: [
               const Icon(Icons.check_circle, color: maraGreen),
               const SizedBox(width: 6),
-              Text('$_articles article${_articles > 1 ? 's' : ''} sur la vitrine',
+              Text(_articles > 1
+                  ? context.tr('{n} articles sur la vitrine', {'n': _articles})
+                  : context.tr('{n} article sur la vitrine', {'n': _articles}),
                   key: const Key('setup-articles'),
                   style: theme.textTheme.titleSmall),
             ],
@@ -535,7 +537,8 @@ class _SetupScreenState extends State<SetupScreen> {
           maxLength: 80,
           decoration: InputDecoration(
             labelText: context.tr('En une phrase'),
-            hintText: context.tr('Ex. : Le riz et l\'huile du quartier'),
+            hintText: context.tr('Ex. : Le riz et l\'huile du quartier, café et pâtisseries, vêtements'),
+            hintMaxLines: 2,
             prefixIcon: const Icon(Icons.short_text),
             border: const OutlineInputBorder(),
           ),
@@ -681,7 +684,7 @@ class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
                           color: i < lit ? maraDeep : maraDeep.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 4),
-                    Text(widget.items[i].$2, style: theme.textTheme.labelMedium),
+                    Text(context.tr(widget.items[i].$2), style: theme.textTheme.labelMedium),
                   ],
                 ),
               ),

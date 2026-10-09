@@ -570,7 +570,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       initialDate: _planUntil ?? DateTime(now.year + 1, now.month, now.day),
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 10),
-      helpText: 'Payé jusqu\'au',
+      helpText: context.tr('Payé jusqu\'au'),
     );
     if (picked != null && mounted) setState(() => _planUntil = picked);
   }
@@ -1188,7 +1188,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 8),
     _ColourRow(
       palette: paletteFor(_profile, theme: _theme),
-      label: paletteNamed(_theme)?.label ?? context.tr('Couleur par défaut'),
+      label: paletteNamed(_theme) == null ? context.tr('Couleur par défaut') : context.tr(paletteNamed(_theme)!.label),
       onTap: _saving ? null : _openColours,
     ),
     const SizedBox(height: 32),
@@ -1262,8 +1262,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(context.tr('Taux de change'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
-      'Pour encaisser une vente dans une autre monnaie. Les '
-      'livres restent en ${_currency == 'XOF' ? 'FCFA' : _currency}.',
+      context.tr('Pour encaisser une vente dans une autre monnaie. Les livres restent en {currency}.',
+          {'currency': _currency == 'XOF' ? 'FCFA' : _currency}),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1274,7 +1274,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.currency_exchange),
         title: Text(rateLabel(r.currency, r.rate, _currency)),
-        subtitle: Text(knownCurrencies[r.currency] ?? ''),
+        subtitle: Text(context.tr(knownCurrencies[r.currency] ?? '')),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
           tooltip: context.tr('Retirer'),
@@ -1566,7 +1566,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
           labelText: context.tr('Adresse'),
-          hintText: context.tr('Gounghin, près du marché'),
+          hintText: context.tr('Ex. : Gounghin près du marché, Le Plateau, Centre-ville'),
+          hintMaxLines: 2,
           prefixIcon: const Icon(Icons.home_work_outlined),
         ),
       ),
@@ -1580,6 +1581,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           key: const Key('vitrine-advanced'),
+          // Open (122): the vitrine's own look — cover, colour, tagline,
+          // hours — is what « my design » means to an owner; folded, it
+          // read as gone.
+          initiallyExpanded: true,
           tilePadding: EdgeInsets.zero,
           leading: const Icon(Icons.tune),
           title: Text(context.tr('Vitrine avancée'),
@@ -1875,8 +1880,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           label: Text(
             _planUntil == null
                 ? context.tr('Payé jusqu\'au… (sans date = sans fin)')
-                : 'Payé jusqu\'au '
-                      '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}',
+                : context.tr('Payé jusqu\'au {date}',
+                    {'date': DateFormat('d MMMM yyyy', intlLocale()).format(_planUntil!)}),
           ),
         ),
       ],
@@ -2783,7 +2788,7 @@ class _RateDialogState extends State<RateDialog> {
                 for (final code in _choices)
                   DropdownMenuItem(
                     value: code,
-                    child: Text('$code — ${knownCurrencies[code]}'),
+                    child: Text('$code — ${context.tr(knownCurrencies[code] ?? '')}'),
                   ),
               ],
               onChanged: _pick,
@@ -2793,7 +2798,7 @@ class _RateDialogState extends State<RateDialog> {
               alignment: Alignment.centerLeft,
               child: Text(
                 '${widget.existing!.currency} — '
-                '${knownCurrencies[widget.existing!.currency] ?? ''}',
+                '${context.tr(knownCurrencies[widget.existing!.currency] ?? '')}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),

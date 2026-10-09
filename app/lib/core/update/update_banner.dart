@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'reload_stub.dart' if (dart.library.js_interop) 'reload_web.dart';
 import 'update_check.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// The one strip that tells a phone — or a stale tab — that Kaj moved on.
 ///
@@ -27,7 +28,7 @@ class UpdateBanner extends StatelessWidget {
         mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-          content: Text('Ouvrez ce lien dans votre navigateur : $url')));
+          content: Text(context.tr('Ouvrez ce lien dans votre navigateur : {url}', {'url': url}))));
     }
   }
 
@@ -54,21 +55,21 @@ class UpdateBanner extends StatelessWidget {
                       Expanded(
                         child: Text(
                           check.isWeb
-                              ? 'Une nouvelle version de Mara est en ligne.'
-                              : 'Une nouvelle version de Mara est disponible.',
+                              ? context.tr('Une nouvelle version de Mara est en ligne.')
+                              : context.tr('Une nouvelle version de Mara est disponible.'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onInverseSurface),
                         ),
                       ),
                       TextButton(
                         onPressed: check.dismiss,
-                        child: Text('Plus tard',
+                        child: Text(context.tr('Plus tard'),
                             style: TextStyle(
                                 color: theme.colorScheme.onInverseSurface)),
                       ),
                       FilledButton(
                         onPressed: () => _act(context),
-                        child: Text(check.isWeb ? 'Recharger' : 'Télécharger'),
+                        child: Text(check.isWeb ? context.tr('Recharger') : context.tr('Télécharger')),
                       ),
                     ],
                   ),

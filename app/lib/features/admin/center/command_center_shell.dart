@@ -11,6 +11,7 @@ import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
 import '../../../core/nav/session.dart';
 import '../../../core/theme/mara_mark.dart';
+import '../../../core/theme/scroll_hint.dart';
 import '../../../core/notify/notifications_repository.dart';
 import '../admin_pill.dart';
 import '../../notify/notifications_screen.dart' show NotificationBell;
@@ -294,7 +295,8 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
             builder: (inside) => MediaQuery.removePadding(
               context: inside,
               removeTop: true,
-              child: widget.child,
+              // « The list continues » (122) on every center page.
+              child: ScrollHint(child: widget.child),
             ),
           ),
         ),

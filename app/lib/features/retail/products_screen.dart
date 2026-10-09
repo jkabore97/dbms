@@ -13,6 +13,8 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
 import 'article_flow.dart';
+import 'stock_attention.dart';
+import '../common/attention_banner.dart';
 import 'convert_dialog.dart';
 import 'photo_quota.dart';
 import 'product_photo.dart';
@@ -207,9 +209,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     for (final product in _products) {
       if (product.barcode == code) {
         messenger.showSnackBar(SnackBar(
-          content:
-              Text('${product.name} — ${product.quantity.toStringAsFixed(0)} '
-                  'en stock'),
+          content: Text(context.tr('{name} — {n} en stock', {
+            'name': product.name,
+            'n': product.quantity.toStringAsFixed(0),
+          })),
         ));
         return;
       }
@@ -221,7 +224,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
       if (row != null) {
         messenger.showSnackBar(
-            SnackBar(content: Text('${row['name']} — déjà en stock')));
+            SnackBar(content: Text(context.tr('{name} — déjà en stock', {'name': row['name']}))));
         return;
       }
 
@@ -239,11 +242,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   String _details(Product p) => [
-        '${_trim(p.quantity)} en stock',
-        if (p.isIngredient) 'ingrédient',
+        context.tr('{n} en stock', {'n': _trim(p.quantity)}),
+        if (p.isIngredient) context.tr('ingrédient'),
         if (p.salePrice > 0) _money.format(p.salePrice),
         if (p.expiresOn != null)
-          'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
+          context.tr('expire le {date}', {'date': DateFormat('d MMM', intlLocale()).format(p.expiresOn!)}),
       ].join(' · ');
 
   /// The door to the vitrine, drawn on every article: the long press is a
@@ -263,11 +266,31 @@ class _ProductsScreenState extends State<ProductsScreen> {
         onPressed: widget.access.canEdit('products') ? () => _edit(p) : null,
       );
 
-  Widget _lowChip(ThemeData theme) => Chip(
-        label: const Text('bas'),
-        visualDensity: VisualDensity.compact,
-        backgroundColor: theme.colorScheme.errorContainer,
-      );
+  /// « Rupture » at zero, « Bientôt épuisé » under the alert level (122):
+  /// the rows the bar's red number counts.
+  Widget? _stockChip(Product p) {
+    final label = stockChip(context, p);
+    return label == null
+        ? null
+        : AttentionChip(
+            key: ValueKey('product-chip-${p.id}'),
+            label: label,
+            soft: p.quantity > 0);
+  }
+
+  /// « Ajouter du stock » on an article (122): the same entry as « Ajouter
+  /// un article », opened on it — its name is enough for the flow to know
+  /// it and add what arrived.
+  Future<void> _restock(Product p) async {
+    final added = await ArticleFlow.open(context,
+        org: widget.org,
+        retail: widget.retail,
+        capture: widget.capture,
+        initialName: p.name);
+    if (added == true) await _load();
+  }
+
+  bool get _canRestock => widget.access.canEdit('products');
 
   // Long press, not tap, on purpose: a thumb scrolling the shelves must not
   // fall into a sheet that changes prices. And only for those the owner lets
@@ -293,11 +316,29 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           title: Text(p.name),
-          subtitle: Text(_details(p)),
+          subtitle: p.quantity <= 0 && _canRestock
+              // At zero, its own way back on the shelf (122).
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_details(p)),
+                    TextButton.icon(
+                      key: ValueKey('product-restock-${p.id}'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => _restock(p),
+                      icon: const Icon(Icons.add_box_outlined, size: 18),
+                      label: Text(context.tr('Ajouter du stock')),
+                    ),
+                  ],
+                )
+              : Text(_details(p)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (p.isLow) _lowChip(theme),
+              ?_stockChip(p),
               _vitrineButton(p, theme),
             ],
           ),
@@ -325,8 +366,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       capture: widget.capture,
                       letterSize: 40,
                     ),
-                    if (p.isLow)
-                      Positioned(left: 6, top: 6, child: _lowChip(theme)),
+                    if (_stockChip(p) case final chip?)
+                      Positioned(left: 6, top: 6, child: chip),
                   ],
                 ),
               ),
@@ -357,6 +398,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                     ),
+                    if (p.quantity <= 0 && _canRestock)
+                      IconButton(
+                        key: ValueKey('product-restock-${p.id}'),
+                        tooltip: context.tr('Ajouter du stock'),
+                        onPressed: () => _restock(p),
+                        icon: const Icon(Icons.add_box_outlined),
+                      ),
                     _vitrineButton(p, theme),
                   ],
                 ),
@@ -427,6 +475,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Text(_error!,
                         style: TextStyle(color: theme.colorScheme.error)),
                   if (_products.isNotEmpty) ...[
+                    // Why « Articles » has a red number (122), on top.
+                    StockAttention(
+                      products: _products,
+                      place: context.tr('Articles'),
+                      onRestock: _canRestock ? _restock : null,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -440,13 +494,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         // whole shelf, not the filtered view.
                         Flexible(
                           child: Text(
-                            '${_search.text.trim().isEmpty ? '${_products.length} article'
-                                    '${_products.length > 1 ? 's' : ''}' : '${visible.length} / ${_products.length} articles'}'
-                                ' · ${_trim(totalItems)} en stock',
+                            '${_search.text.trim().isEmpty ? (_products.length > 1 ? context.tr('{n} articles', {'n': _products.length}) : context.tr('{n} article', {'n': _products.length})) : context.tr('{shown} / {n} articles', {'shown': visible.length, 'n': _products.length})}'
+                                ' · ${context.tr('{n} en stock', {'n': _trim(totalItems)})}',
                             style: theme.textTheme.titleMedium,
                           ),
                         ),
-                        Text('Valeur : ${_money.format(stockValue)}',
+                        Text(context.tr('Valeur : {value}', {'value': _money.format(stockValue)}),
                             style: theme.textTheme.titleMedium),
                       ],
                     ),
@@ -592,8 +645,7 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
         setState(() {
           _busy = false;
           _error = '${describeError(error)}\n'
-              '$_saved ligne(s) déjà enregistrée(s) — retirez-les du texte '
-              'avant de réessayer.';
+              '${context.tr('{n} ligne(s) déjà enregistrée(s) — retirez-les du texte avant de réessayer.', {'n': _saved})}';
         });
       }
     }
@@ -900,8 +952,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             Text(widget.product.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              '${_EditProductSheetState._plain(widget.product.quantity)} en stock '
-              '— le stock bouge par les entrées, les ventes et la production',
+              context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
+                  {'n': _EditProductSheetState._plain(widget.product.quantity)}),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -969,8 +1021,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             if (price != null && cost > 0 && price < cost) ...[
               const SizedBox(height: 8),
               Text(
-                'Attention : vendu en dessous de ce que ça coûte '
-                '(${_EditProductSheetState._plain(cost)}).',
+                context.tr('Attention : vendu en dessous de ce que ça coûte ({cost}).',
+                    {'cost': _EditProductSheetState._plain(cost)}),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
@@ -1003,8 +1055,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               icon: const Icon(Icons.event_outlined),
               label: Text(_expiresOn == null
                   ? context.tr('Date d\'expiration (facultatif)')
-                  : 'Expire le '
-                      '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
+                  : context.tr('Expire le {date}',
+                      {'date': DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)})),
             ),
             const SizedBox(height: 4),
             // Production's own option: gone with production once Mara's
@@ -1039,7 +1091,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                         child: _photoBytes != null
                             ? Image.memory(_photoBytes!,
                                 fit: BoxFit.cover,
-                                semanticLabel: "Photo de l'article")
+                                semanticLabel: context.tr('Photo de l\'article'))
                             : Icon(
                                 _photoKnown
                                     ? Icons.image_outlined

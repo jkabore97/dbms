@@ -128,9 +128,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(context.tr('Payer avec Wave')),
-          content: Text('Dans votre application Wave, envoyez '
-              '${moneyFormat(order.currency).format(order.total)} '
-              'au marchand : $raw'),
+          content: Text(context.tr('Dans votre application Wave, envoyez {amount} au marchand : {raw}', {
+            'amount': moneyFormat(order.currency).format(order.total),
+            'raw': raw,
+          })),
           actions: [
             FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -219,14 +220,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   ? ShopNotice(
                       text: widget.bookingsOnly
                           ? context.tr('Vous n\'avez pas encore réservé de service.')
-                          : "Vous n'avez pas encore commandé.",
+                          : context.tr('Vous n\'avez pas encore commandé.'),
                       action: FilledButton(
                         onPressed: () => context.go(Routes.directory),
                         child: Text(context.tr('Voir les vitrines')),
                       ),
                     )
-                  : ListView(
-                      padding: EdgeInsets.zero,
+                  : ShopScroll(
+                      footer: const ShopWidth(child: ShopFooter()),
                       children: [
                         ShopWidth(
                           child: Column(
@@ -234,7 +235,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                             children: [
                               const SizedBox(height: 28),
                               if (open.isNotEmpty) ...[
-                                ShopSectionLabel('En cours',
+                                ShopSectionLabel(context.tr('En cours'),
                                     note: '${open.length}'),
                                 const SizedBox(height: 12),
                                 for (final (i, o) in open.indexed)
@@ -271,7 +272,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                 const SizedBox(height: 28),
                               ],
                               if (past.isNotEmpty) ...[
-                                ShopSectionLabel('Passées',
+                                ShopSectionLabel(context.tr('Passées'),
                                     note: '${past.length}'),
                                 const SizedBox(height: 12),
                                 for (final (i, o) in past.indexed)
@@ -284,7 +285,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                     ),
                                   ),
                               ],
-                              const ShopFooter(),
                             ],
                           ),
                         ),
@@ -323,7 +323,7 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(order.currency);
-    final when = DateFormat('d MMM, HH:mm', 'fr_FR').format(order.createdAt);
+    final when = DateFormat('d MMM, HH:mm', intlLocale()).format(order.createdAt);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -353,7 +353,7 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
               '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
-              '${order.isPaid ? context.tr('Payé') : paymentLabel(order.paymentMethod)}',
+              '${order.isPaid ? context.tr('Payé') : context.tr(paymentLabel(order.paymentMethod))}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           const SizedBox(height: 12),
           for (final l in order.lines)
@@ -386,7 +386,7 @@ class _OrderCard extends StatelessWidget {
                 Text(
                     order.deliveryFee == null
                         ? context.tr('à discuter')
-                        : '${money.format(order.deliveryFee!)} au livreur',
+                        : context.tr('{fee} au livreur', {'fee': money.format(order.deliveryFee!)}),
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
               ],
             ),
@@ -434,7 +434,9 @@ class _OrderCard extends StatelessWidget {
                       onPressed: busy ? null : onPay,
                       icon: const Icon(Icons.phone_iphone_outlined, size: 18),
                       label: Text(
-                          'Payer avec Wave · ${moneyFormat(order.currency).format(order.total)}'),
+                          context.tr('Payer avec Wave · {amount}', {
+                            'amount': moneyFormat(order.currency).format(order.total),
+                          })),
                     ),
             ),
           ],

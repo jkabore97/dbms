@@ -201,7 +201,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   _Header(
                     proPrice: org.isPro
                         ? null
-                        : '${_money(price)} / ${_period == 'year' ? 'an' : 'mois'}',
+                        : '${_money(price)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
                   ),
                   for (final (title, rows) in rowsFor(t, costs: _costs)) ...[
                     const SizedBox(height: 18),
@@ -209,7 +209,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 6, left: 4),
                         child: Text(
-                          title.toUpperCase(),
+                          context.tr(title).toUpperCase(),
                           style: theme.textTheme.labelMedium?.copyWith(
                             letterSpacing: 1.4,
                             fontWeight: FontWeight.w700,
@@ -424,7 +424,7 @@ class _Row extends StatelessWidget {
         return Icon(Icons.check, size: 20, color: pro ? kInk : kMist);
       }
       if (v == null) return const Text('—', style: TextStyle(color: kMist));
-      return Text('$v',
+      return Text(v is String ? context.tr(v) : '$v',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: pro ? FontWeight.w700 : FontWeight.w400,
@@ -436,7 +436,7 @@ class _Row extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          Expanded(flex: 5, child: Text(row.label, style: theme.textTheme.bodyMedium)),
+          Expanded(flex: 5, child: Text(context.tr(row.label), style: theme.textTheme.bodyMedium)),
           Expanded(flex: 2, child: Center(child: cell(row.free, pro: false))),
           Expanded(flex: 3, child: Center(child: cell(row.pro, pro: true))),
         ],
@@ -475,7 +475,7 @@ class ProPlansScreenRows {
             PlanRow('Comptes de l\'équipe', '${t.freeMaxStaff}', 'Illimité'),
             PlanRow('Factures par mois', '${t.freeMaxInvoicesMonth}', 'Illimité'),
             PlanRow('Articles en photo', '${t.freePhotoItems}', 'Illimité'),
-            PlanRow('Historique', '${t.freeHistoryMonths} mois', 'Complet'),
+            PlanRow('Historique', translate(trCurrent, '{n} mois', {'n': t.freeHistoryMonths}), 'Complet'),
             const PlanRow('Mise en avant offerte', null, '1 par mois'),
           ],
         ),

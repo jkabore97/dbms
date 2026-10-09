@@ -3,6 +3,22 @@ import 'package:local_auth/local_auth.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/local_db.dart';
+import '../l10n/tr.dart';
+
+/// What switching the fingerprint / Face ID on came to (Sécurité).
+enum BiometricOutcome {
+  /// The system prompt was answered: the phone unlocks Mara from now on.
+  on,
+
+  /// The person closed the prompt; nothing changed.
+  refused,
+
+  /// The phone can, but has no fingerprint or face recorded yet.
+  notEnrolled,
+
+  /// Anything else (locked out after too many tries, no hardware…).
+  failed,
+}
 
 /// This phone's own security choices (Compte › Sécurité), kept on the phone.
 ///
@@ -65,8 +81,14 @@ class SecuritySettings extends ChangeNotifier {
   bool _biometricReady = false;
   bool get biometricReady => _biometricReady;
 
+  /// Whether this phone has a fingerprint reader or a face sensor at all,
+  /// enrolled or not: Sécurité offers the switch then, and says what to do
+  /// when nothing is recorded yet.
+  bool _biometricHardware = false;
+  bool get biometricHardware => _biometricHardware;
+
   Future<void> load() async {
-    _biometricReady = await biometricAvailable();
+    await refreshBiometric(notify: false);
     try {
       final lock = await _db.readPref(_lockKey);
       _lockAfter = lock == null
@@ -128,6 +150,57 @@ class SecuritySettings extends ChangeNotifier {
     return '$os · ${kIsWeb ? 'navigateur' : 'application'}';
   }
 
+  /// Reads again what the phone has: a fingerprint added in the phone's
+  /// settings while Mara was in the background shows when Sécurité opens.
+  Future<void> refreshBiometric({bool notify = true}) async {
+    var hardware = false;
+    if (!kIsWeb) {
+      try {
+        hardware = await _bio.canCheckBiometrics;
+      } catch (_) {}
+    }
+    final ready = await biometricAvailable();
+    final changed =
+        hardware != _biometricHardware || ready != _biometricReady;
+    _biometricHardware = hardware || ready;
+    _biometricReady = ready;
+    if (notify && changed) notifyListeners();
+  }
+
+  /// Switching the fingerprint / Face ID on: the system's own prompt is
+  /// asked once, here — that answer is the person's authorization (and, on
+  /// an iPhone, what makes iOS ask for Face ID). Only a success turns it on.
+  Future<BiometricOutcome> turnOnBiometric() async {
+    await refreshBiometric();
+    if (!_biometricReady) {
+      return _biometricHardware
+          ? BiometricOutcome.notEnrolled
+          : BiometricOutcome.failed;
+    }
+    try {
+      final ok = await _bio.authenticate(
+        localizedReason: translate(
+            trCurrent, 'Autoriser Mara à utiliser l\'empreinte ou Face ID'),
+        biometricOnly: true,
+      );
+      if (!ok) return BiometricOutcome.refused;
+    } on LocalAuthException catch (e) {
+      return switch (e.code) {
+        LocalAuthExceptionCode.noBiometricsEnrolled =>
+          BiometricOutcome.notEnrolled,
+        LocalAuthExceptionCode.userCanceled ||
+        LocalAuthExceptionCode.systemCanceled ||
+        LocalAuthExceptionCode.userRequestedFallback =>
+          BiometricOutcome.refused,
+        _ => BiometricOutcome.failed,
+      };
+    } catch (_) {
+      return BiometricOutcome.failed;
+    }
+    await setBiometric(true);
+    return BiometricOutcome.on;
+  }
+
   /// Whether this phone can unlock with a fingerprint or a face at all.
   /// False on the web, and wherever the plugin is missing.
   Future<bool> biometricAvailable() async {
@@ -145,7 +218,7 @@ class SecuritySettings extends ChangeNotifier {
   Future<bool> unlockWithBiometrics() async {
     try {
       return await _bio.authenticate(
-        localizedReason: 'Déverrouiller Mara',
+        localizedReason: translate(trCurrent, 'Déverrouiller Mara'),
         biometricOnly: true,
       );
     } catch (_) {

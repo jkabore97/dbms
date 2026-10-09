@@ -21,10 +21,11 @@ import '../site/site.dart';
 const buildSha = String.fromEnvironment('BUILD_SHA');
 
 /// Where this build is installed from: `play` for the bundle CI sends to
-/// Google Play (`--dart-define=STORE=play`), empty for the GitHub APK and
-/// the web. The Play Store updates its own copy by itself, and the GitHub
-/// APK — signed differently — would not even install over it: a Play
-/// build never shows the banner.
+/// Google Play (`--dart-define=STORE=play`), `appstore` for the iPhone
+/// build Codemagic sends to TestFlight and the App Store (codemagic.yaml),
+/// empty for the GitHub APK and the web. A store updates its own copy by
+/// itself, and the GitHub APK — signed differently, and no iPhone's — would
+/// not even install over it: a store build never shows the banner.
 const installStore = String.fromEnvironment('STORE');
 
 /// Where the deployed app lives, and therefore where its version.json is.
@@ -69,7 +70,7 @@ class UpdateCheck extends ChangeNotifier {
     required this.fetch,
     this.currentSha = buildSha,
     this.isWeb = kIsWeb,
-    this.fromPlay = installStore == 'play',
+    this.fromPlay = installStore == 'play' || installStore == 'appstore',
     Uri? versionUrl,
   }) : versionUrl = versionUrl ?? _defaultVersionUrl(isWeb);
 
@@ -79,7 +80,8 @@ class UpdateCheck extends ChangeNotifier {
   final String currentSha;
   final bool isWeb;
 
-  /// Installed from Google Play, which brings the updates itself.
+  /// Installed from a store (Google Play, the App Store), which brings the
+  /// updates itself.
   final bool fromPlay;
   final Uri versionUrl;
 
@@ -102,8 +104,8 @@ class UpdateCheck extends ChangeNotifier {
   }
 
   /// True when [info] describes a different build than this one. A build
-  /// with no sha of its own compares against nothing, and a Play build
-  /// leaves its updates to the store.
+  /// with no sha of its own compares against nothing, and a store build
+  /// (Google Play, the App Store) leaves its updates to the store.
   bool isNewer(UpdateInfo info) =>
       !fromPlay &&
       currentSha.isNotEmpty && info.sha.isNotEmpty && info.sha != currentSha;

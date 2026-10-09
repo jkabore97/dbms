@@ -166,8 +166,9 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$created article${created > 1 ? 's' : ''} '
-            'ajouté${created > 1 ? 's' : ''} au stock.'),
+        content: Text(created > 1
+            ? context.tr('{n} articles ajoutés au stock.', {'n': created})
+            : context.tr('{n} article ajouté au stock.', {'n': created})),
       ));
     } catch (error) {
       if (!mounted) return;
@@ -178,10 +179,8 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
         // client_uuid — so the message says both.
         _error = created == 0
             ? describeError(error)
-            : '$created ligne${created > 1 ? 's' : ''} enregistrée'
-                '${created > 1 ? 's' : ''}, puis : $error\n'
-                'Réessayez : les lignes déjà enregistrées ne seront pas '
-                'comptées deux fois.';
+            : context.tr('{n} ligne(s) enregistrée(s), puis : {error}\nRéessayez : les lignes déjà enregistrées ne seront pas comptées deux fois.',
+                {'n': created, 'error': error});
       });
     }
   }
@@ -215,9 +214,8 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                 : const Icon(Icons.add_shopping_cart),
             label: Text(_selected.isEmpty
                 ? context.tr('Aucune ligne sélectionnée')
-                : 'Ajouter ${_selected.length} article'
-                    '${_selected.length > 1 ? 's' : ''} — '
-                    '${_money.format(_total)}'),
+                : context.tr('Ajouter {n} article(s) — {total}',
+                    {'n': _selected.length, 'total': _money.format(_total)})),
           ),
         ),
         ),
@@ -226,8 +224,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           Text(
-            '${_rows.length} ligne${_rows.length > 1 ? 's' : ''} '
-            'lue${_rows.length > 1 ? 's' : ''} sur la photo.',
+            context.tr('{n} ligne(s) lue(s) sur la photo.', {'n': _rows.length}),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
@@ -249,9 +246,8 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '$unsure ligne${unsure > 1 ? 's' : ''} dont le calcul '
-                      'ne tombe pas juste. Vérifiez-${unsure > 1 ? 'les' : 'la'} '
-                      'avant d’enregistrer.',
+                      context.tr('{n} ligne(s) dont le calcul ne tombe pas juste. Vérifiez avant d’enregistrer.',
+                          {'n': unsure}),
                     ),
                   ),
                 ],

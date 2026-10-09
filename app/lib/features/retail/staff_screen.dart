@@ -111,12 +111,15 @@ class _StaffScreenState extends State<StaffScreen> {
         content: Text(
           amount == null || amount == 0
               ? context.tr('Rien à payer pour l\'instant.')
-              : '${_money.format(amount)}'
-                  '${person.isCasual ? ", pour les heures non réglées." : switch (person.payPeriod) {
-                      'week' => ', salaire de la semaine.',
-                      'day' => ', salaire de la journée.',
-                      _ => ', salaire du mois.',
-                    }}',
+              : context.tr(
+                  person.isCasual
+                      ? '{amount}, pour les heures non réglées.'
+                      : switch (person.payPeriod) {
+                          'week' => '{amount}, salaire de la semaine.',
+                          'day' => '{amount}, salaire de la journée.',
+                          _ => '{amount}, salaire du mois.',
+                        },
+                  {'amount': _money.format(amount)}),
         ),
         actions: [
           TextButton(
@@ -212,14 +215,14 @@ class _StaffScreenState extends State<StaffScreen> {
                     person.isCasual
                         ? '${_money.format(person.hourlyRate)}/h'
                         // One payment pays one period (100).
-                        : '${_money.format(person.salary)}${switch (person.payPeriod) {
+                        : '${_money.format(person.salary)}${context.tr(switch (person.payPeriod) {
                             'week' => '/semaine',
                             'day' => '/jour',
                             _ => '/mois',
-                          }}',
+                          })}',
                     if (person.roleTitle != null) person.roleTitle!,
                     if (owed != null && owed > 0)
-                      '${_money.format(owed)} à payer',
+                      context.tr('{amount} à payer', {'amount': _money.format(owed)}),
                   ].join(' · ')),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

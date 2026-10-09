@@ -209,10 +209,10 @@ class _JournalTile extends StatelessWidget {
       ),
       subtitle: Text(
         [
-          DateFormat('d MMM', 'fr_FR').format(row.occurredAt),
+          DateFormat('d MMM', intlLocale()).format(row.occurredAt),
           row.recordedBy,
-          if (row.isReversal) 'correction',
-          if (row.reversed) 'corrigé',
+          if (row.isReversal) context.tr('correction'),
+          if (row.reversed) context.tr('corrigé'),
         ].join(' · '),
       ),
       trailing: Text(
@@ -241,7 +241,7 @@ class _JournalTile extends StatelessWidget {
                 _Fact(label: entry.key, value: '${entry.value}'),
               _Fact(
                 label: context.tr('Enregistré'),
-                value: DateFormat('d MMMM y à HH:mm', 'fr_FR')
+                value: DateFormat('d MMMM y, HH:mm', intlLocale())
                     .format(row.occurredAt),
               ),
             ],
