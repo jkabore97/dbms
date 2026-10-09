@@ -382,6 +382,41 @@ any phone) and `app-release.aab` (what the Play Console takes). Without the
 secrets it still builds, signed with the debug key — fine for testing on a
 phone, refused by the store, and the run's summary says which one you got.
 
+### Publishing to Google Play
+
+Once set up, nobody uploads an `.aab` by hand: every push to `main` builds
+the bundle, signs it with the upload key and sends it to Google Play
+("Send to Google Play" in *Build App*). The version code is the run
+number, so each one is newer than the last. Google reviews each update
+(usually a few hours) and phones update themselves. The Play copy never
+shows the « Télécharger » banner (it is built with `STORE=play`): the store
+brings its updates, and the GitHub APK, signed by a different key once Play
+App Signing holds the app's key, would not install over it.
+
+Once:
+
+1. The upload key secrets ("Signing the Android app" above).
+2. In the Play Console, create the app (package `bf.kaj.app`), and upload
+   the **first** `kaj.aab` by hand to *Testing › Internal testing*, then roll it
+   out. Google accepts the API only after that first one. Take it from the
+   latest GitHub release.
+3. In Google Cloud (any project, e.g. the Firebase one): *IAM › Service
+   accounts › Create*, no roles; then *Keys › Add key › JSON*. Enable the
+   **Google Play Android Developer API** on that project.
+4. In the Play Console: *Users and permissions › Invite new users*, the
+   service account's e-mail, app `bf.kaj.app`, with *Release to production,
+   exclude devices, and use Play App Signing* and *Release apps to testing
+   tracks*.
+5. Repository secret `PLAY_SERVICE_ACCOUNT_JSON` = the whole JSON file.
+
+Repository variables (optional): `PLAY_TRACK` — `internal` by default;
+`alpha` for closed testing, `production` once the store listing is
+approved. `PLAY_STATUS` — `completed` by default; `draft` leaves each
+release for a person to roll out in the Console.
+
+Without `PLAY_SERVICE_ACCOUNT_JSON` the bundle is only attached to the
+GitHub release, and the run's summary says so.
+
 ### Installing and updating the Android app
 
 The web app is whatever was deployed last, every time it loads. A phone is

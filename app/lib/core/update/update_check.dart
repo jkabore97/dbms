@@ -20,6 +20,13 @@ import '../site/site.dart';
 /// newer than anything deployed anyway.
 const buildSha = String.fromEnvironment('BUILD_SHA');
 
+/// Where this build is installed from: `play` for the bundle CI sends to
+/// Google Play (`--dart-define=STORE=play`), empty for the GitHub APK and
+/// the web. The Play Store updates its own copy by itself, and the GitHub
+/// APK — signed differently — would not even install over it: a Play
+/// build never shows the banner.
+const installStore = String.fromEnvironment('STORE');
+
 /// Where the deployed app lives, and therefore where its version.json is.
 /// On the web the page's own origin is used instead, so a preview deploy
 /// compares against itself rather than against production.
@@ -62,6 +69,7 @@ class UpdateCheck extends ChangeNotifier {
     required this.fetch,
     this.currentSha = buildSha,
     this.isWeb = kIsWeb,
+    this.fromPlay = installStore == 'play',
     Uri? versionUrl,
   }) : versionUrl = versionUrl ?? _defaultVersionUrl(isWeb);
 
@@ -70,6 +78,9 @@ class UpdateCheck extends ChangeNotifier {
   final Future<String> Function(Uri uri) fetch;
   final String currentSha;
   final bool isWeb;
+
+  /// Installed from Google Play, which brings the updates itself.
+  final bool fromPlay;
   final Uri versionUrl;
 
   UpdateInfo? _available;
@@ -91,8 +102,10 @@ class UpdateCheck extends ChangeNotifier {
   }
 
   /// True when [info] describes a different build than this one. A build
-  /// with no sha of its own compares against nothing.
+  /// with no sha of its own compares against nothing, and a Play build
+  /// leaves its updates to the store.
   bool isNewer(UpdateInfo info) =>
+      !fromPlay &&
       currentSha.isNotEmpty && info.sha.isNotEmpty && info.sha != currentSha;
 
   /// One look. Quiet on any failure: no signal is not news, and the next

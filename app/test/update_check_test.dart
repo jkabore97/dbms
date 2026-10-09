@@ -44,6 +44,20 @@ void main() {
       );
     }
 
+    test('a build from Google Play never shows the banner: the store updates it',
+        () async {
+      final check = UpdateCheck(
+        currentSha: 'old',
+        isWeb: false,
+        fromPlay: true,
+        versionUrl: Uri.parse('https://kaj.test/version.json'),
+        fetch: (_) async => '{"sha":"new","apk":"https://x/kaj.apk"}',
+      );
+      await check.check();
+      expect(check.available, isNull);
+      expect(check.shouldShow, isFalse);
+    });
+
     test('a different deployed commit is newer; the same one is not',
         () async {
       final asked = <Uri>[];
