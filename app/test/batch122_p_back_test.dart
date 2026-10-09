@@ -6,6 +6,7 @@ import 'package:kaj_app/core/nav/back_first.dart';
 import 'package:kaj_app/core/nav/parent_route.dart';
 import 'package:kaj_app/core/nav/router.dart';
 import 'package:kaj_app/features/account/legal_screens.dart';
+import 'package:kaj_app/features/home/business_frame.dart' show UnsavedInput;
 import 'package:kaj_app/l10n/strings.dart';
 
 /// Batch 122, builder P2 — the owner: « Every page has a return button and
@@ -40,7 +41,9 @@ GoRouter _router(String at) => GoRouter(
         GoRoute(path: Routes.myOrders, builder: (_, _) => _page('commandes')),
         GoRoute(path: Routes.picker, builder: (_, _) => _page('entreprises')),
         GoRoute(path: Routes.privacy, builder: (_, _) => const PrivacyScreen()),
-        GoRoute(path: Routes.language, builder: (_, _) => _page('langue')),
+        GoRoute(
+            path: Routes.language,
+            builder: (_, _) => UnsavedInput(isDirty: () => _typed, child: _page('langue'))),
         GoRoute(
           path: Routes.shopperProfile,
           builder: (_, _) => _page('compte'),
@@ -73,6 +76,9 @@ GoRouter _router(String at) => GoRouter(
         ),
       ],
     );
+
+/// Whether the « langue » page holds input not saved (108's guard).
+var _typed = false;
 
 class _Engine {
   _Engine(WidgetTester tester) {
@@ -246,6 +252,41 @@ void main() {
       await _back(tester);
       expect(path(router), Routes.picker);
       expect(engine.phonePops, 0);
+    });
+
+    testWidgets('input not saved: back asks « Quitter sans enregistrer ? » before the parent', (tester) async {
+      final engine = _Engine(tester);
+      addTearDown(() => _typed = false);
+      _typed = true;
+      final router = await open(tester, '/langue');
+      await _back(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+      expect(path(router), '/langue');
+
+      await tester.tap(find.byKey(const Key('unsaved-stay')));
+      await _settle(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+      expect(path(router), '/langue', reason: '« Rester » keeps the page');
+
+      await _back(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+      await _back(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsNothing, reason: 'back closes the question');
+      expect(path(router), '/langue');
+
+      await _back(tester);
+      await tester.tap(find.byKey(const Key('unsaved-leave')));
+      await _settle(tester);
+      expect(path(router), '/vitrines', reason: '« Quitter »: the parent');
+      expect(engine.phonePops, 0);
+
+      // Nothing typed: straight to the parent, no question.
+      _typed = false;
+      router.go('/langue');
+      await _settle(tester);
+      await _back(tester);
+      expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+      expect(path(router), '/vitrines');
     });
 
     testWidgets('back still closes an open sheet first (114), then goes to the parent', (tester) async {

@@ -198,7 +198,8 @@ declare
 begin
     perform pg_temp.as_('11211211-0000-0000-0000-000000000002');
     v := my_courier_application();
-    if v ->> 'status' is not null or v -> 'rules' <> jsonb_build_object(
+    -- (122 adds the couriers' radius to the rules, for the board's line.)
+    if v ->> 'status' is not null or (v -> 'rules') - 'radius_km' <> jsonb_build_object(
             'licence_required', false, 'phone_verified', false, 'mobile_money', false, 'charter_version', 1)
        or v ->> 'verified_phone' <> '+22670112002'
        or v -> 'open_steps' <> '["zone", "hours", "vehicle", "selfie", "id", "phone", "charter"]'::jsonb then

@@ -1050,7 +1050,7 @@ class _PhotoState extends State<_Photo> {
           child: Image.memory(bytes,
               fit: BoxFit.cover,
               cacheWidth: width,
-              semanticLabel: "Photo de l'article"),
+              semanticLabel: context.tr('Photo de l\'article')),
         ),
       ),
     );

@@ -8,6 +8,8 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import 'package:kaj_app/features/setup/setup_screen.dart';
 import 'package:kaj_app/l10n/strings.dart';
 
+import 'tr_literals.dart';
+
 /// Every phrase the screens pass through context.tr() has its English, and
 /// an English phone reads the screens in English.
 class _A implements SetupActions {
@@ -43,38 +45,78 @@ void main() {
     expect(missing, isEmpty, reason: 'add these to lib/core/l10n/en.dart');
   });
 
-  test('no raw French sentence is handed straight to a widget (122)', () {
-    // A heuristic, not a parser: a literal right after Text(, a field's
-    // label, hint, helper or error, a tooltip or a semantic label, that
-    // reads as French (an accent, a guillemet, or one of French's small
-    // words), and is not passed through context.tr(). What is French on
-    // purpose (a language named in itself, a person's own quoted note)
-    // is allowed by name below.
-    final at = RegExp(r"(?:\bText\(|labelText:|hintText:|helperText:|errorText:|"
-        r"tooltip:|semanticLabel:|\bhint:|barrierLabel:|ShopSectionLabel\(|helpText:)"
-        r"\s*'((?:[^'\\\n]|\\.)*)'");
-    final french = RegExp(
-        r"[àâçéèêëîïôûùüœÀÂÇÉÈÊÔ«»]|\b(le|la|les|des|du|une|et|pour|avec|sur|dans|vos|votre|aucun|aucune|pas|est|sont)\b",
-        caseSensitive: false);
-    const allowed = {
-      'Français', // the language's own name, on the language choice
-      '« \${r.note} »', // a person's own words, quoted
-    };
-    final raw = <String>[];
+  // French's marks: an accent, a guillemet, or one of its small words.
+  final french = RegExp(
+      r"[àâçéèêëîïôûùüœÀÂÇÉÈÊÔ«»]|\b(le|la|les|des|du|une|un|et|pour|avec|sur|dans|vos|votre|aucun|aucune|pas|est|sont|au|aux|en|de|mes|mon|vous|ce|cette)\b",
+      caseSensitive: false);
+  // A literal passed to context.tr() / translate() is the key, not raw.
+  final viaTr = RegExp(r"(\btr|\btranslate)\(\s*(\w+,\s*)?$");
+  // What is French on purpose, allowed by name (the literal's words, every
+  // interpolation a space): a language named in itself, a person's own
+  // quoted note, the brand, an address.
+  const allowed = {
+    'Français', // the language's own name, on the language choice
+    '«   »', // a person's own words, quoted
+    '  ·  ©   Mara', // the footer: the year and the brand
+    'Mara ·  ', // a printed report's foot: the brand and the date
+    'marakaj.com/s/ ', // a vitrine's address
+    'Durée :  ', // a service's description, stored in the vitrine's language
+  };
+  Iterable<(String, Literal)> all() sync* {
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart') || f.path.contains('/l10n/')) continue;
-      final lines = f.readAsLinesSync();
-      for (var i = 0; i < lines.length; i++) {
-        if (lines[i].trimLeft().startsWith('//')) continue;
-        for (final m in at.allMatches(lines[i])) {
-          final text = m.group(1)!;
-          if (french.hasMatch(text) && !allowed.contains(text)) {
-            raw.add('${f.path}:${i + 1}: $text');
-          }
-        }
+      for (final l in literals(f.readAsStringSync())) {
+        if (!viaTr.hasMatch(l.before) && !allowed.contains(l.text)) yield (f.path, l);
       }
     }
+  }
+
+  test('no raw French sentence is handed straight to a widget (122)', () {
+    // A heuristic, not a parser: a literal (single or double quotes, joined
+    // with the ones next to it) right after Text(, a tab's or a span's
+    // text, a field's label, hint, helper or error, a tooltip or a semantic
+    // label, that reads as French and is not passed through context.tr().
+    final at = RegExp(r"(?:\bText\(|\btext:|labelText:|hintText:|helperText:|errorText:|"
+        r"tooltip:|semanticLabel:|\bhint:|barrierLabel:|ShopSectionLabel\(|helpText:)\s*$");
+    final raw = [
+      for (final (path, l) in all())
+        if (at.hasMatch(l.before) && french.hasMatch(l.text)) '$path:${l.line}: ${l.text}',
+    ];
     expect(raw, isEmpty, reason: 'wrap these in context.tr() and add their English');
+  });
+
+  test('no French built around a value — « Valeur : \${x} », « \$n en jeu » (122)', () {
+    // An interpolated literal cannot be a key of en.dart: it reaches the
+    // screen in French whatever the language. Caught: one that reads as
+    // French anywhere, and any word at all where a widget shows it.
+    final shown = RegExp(r"(?:\bText\(|\btext:|labelText:|hintText:|helperText:|errorText:|"
+        r"tooltip:|semanticLabel:|\bhint:|\blabel:|\btitle:|\bsubtitle:|\bmessage:|"
+        r"\bdescription:|ShopSectionLabel\()\s*$");
+    final word = RegExp(r"[A-Za-zÀ-ÿ]{3,}");
+    final raw = [
+      for (final (path, l) in all())
+        if (l.interpolated &&
+            (french.hasMatch(l.text) || (shown.hasMatch(l.before) && word.hasMatch(l.text))))
+          '$path:${l.line}: ${l.text}',
+    ];
+    expect(raw, isEmpty,
+        reason: "say these as context.tr('… {x} …', {'x': …}) and add their English");
+  });
+
+  test('the literal reader sees through interpolation, quotes and comments', () {
+    final ls = literals(r'''
+// Text('Commentaire ignoré')
+Text('Valeur : ${money.format(v, 'XOF')}');
+x = "Rien d'autre" 'ici $n';
+y = context.tr('{n} en stock', {'n': n});
+''');
+    expect([for (final l in ls) (l.line, l.text, l.interpolated)], [
+      (2, 'Valeur :  ', true),
+      (3, "Rien d'autreici  ", true),
+      (4, '{n} en stock', false),
+      (4, 'n', false),
+    ]);
+    expect(ls.first.before, endsWith('Text('));
   });
 
   test('every word Le Chemin (097) sends has its English', () {

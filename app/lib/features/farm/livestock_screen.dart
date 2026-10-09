@@ -199,8 +199,10 @@ class _LivestockScreenState extends State<LivestockScreen>
                     if (herd.losses > 0 || herd.births > 0) ...[
                       const SizedBox(height: 6),
                       Text(
-                        '${herd.births.toStringAsFixed(0)} naissances · '
-                        '${herd.losses.toStringAsFixed(0)} pertes',
+                        context.tr('{births} naissances · {losses} pertes', {
+                          'births': herd.births.toStringAsFixed(0),
+                          'losses': herd.losses.toStringAsFixed(0),
+                        }),
                         style: theme.textTheme.bodySmall,
                       ),
                     ],

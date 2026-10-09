@@ -209,9 +209,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
     for (final product in _products) {
       if (product.barcode == code) {
         messenger.showSnackBar(SnackBar(
-          content:
-              Text('${product.name} — ${product.quantity.toStringAsFixed(0)} '
-                  'en stock'),
+          content: Text(context.tr('{name} — {n} en stock', {
+            'name': product.name,
+            'n': product.quantity.toStringAsFixed(0),
+          })),
         ));
         return;
       }
@@ -498,7 +499,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             style: theme.textTheme.titleMedium,
                           ),
                         ),
-                        Text('Valeur : ${_money.format(stockValue)}',
+                        Text(context.tr('Valeur : {value}', {'value': _money.format(stockValue)}),
                             style: theme.textTheme.titleMedium),
                       ],
                     ),
@@ -1090,7 +1091,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                         child: _photoBytes != null
                             ? Image.memory(_photoBytes!,
                                 fit: BoxFit.cover,
-                                semanticLabel: "Photo de l'article")
+                                semanticLabel: context.tr('Photo de l\'article'))
                             : Icon(
                                 _photoKnown
                                     ? Icons.image_outlined

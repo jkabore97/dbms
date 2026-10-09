@@ -262,7 +262,7 @@ class _StructureScreenState extends State<StructureScreen> {
             ? null
             : () async {
                 final name = await _askName(
-                  title: 'Nouveau ${_entityWord.toLowerCase()}',
+                  title: context.tr('Nouveau {word}', {'word': context.tr(_entityWord).toLowerCase()}),
                   hint: 'Centre-ville, Ferme Nord…',
                 );
                 if (name == null || name.isEmpty) return;

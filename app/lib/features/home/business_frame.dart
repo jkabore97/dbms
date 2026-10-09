@@ -328,8 +328,8 @@ class BusinessPage extends StatelessWidget {
 
 /// Input on a page of a business not saved yet (108, A4): while [isDirty]
 /// says so — asked at the moment of the tap — a tap on the business's bar
-/// or rail first asks « Quitter sans enregistrer ? ». Outside a business
-/// frame it is nothing.
+/// or rail first asks « Quitter sans enregistrer ? »; so does Android's
+/// back before it goes to the page's parent (122).
 class UnsavedInput extends StatefulWidget {
   const UnsavedInput({super.key, required this.isDirty, required this.child});
 
@@ -362,14 +362,29 @@ class UnsavedInput extends StatefulWidget {
     return leave == true;
   }
 
+  /// Input not saved on the page on top (122): Android's back asks
+  /// [askLeave] before it goes to the page's parent (back_first.dart),
+  /// inside a business frame or not.
+  static bool dirtyOnTop() => _UnsavedInputState._live
+      .any((s) => s._dirty() && (ModalRoute.isCurrentOf(s.context) ?? true));
+
   @override
   State<UnsavedInput> createState() => _UnsavedInputState();
 }
 
 class _UnsavedInputState extends State<UnsavedInput> {
+  /// Every guard drawn, for [UnsavedInput.dirtyOnTop].
+  static final _live = <_UnsavedInputState>{};
+
   BusinessNav? _nav;
 
   bool _dirty() => mounted && widget.isDirty();
+
+  @override
+  void initState() {
+    super.initState();
+    _live.add(this);
+  }
 
   @override
   void didChangeDependencies() {
@@ -383,6 +398,7 @@ class _UnsavedInputState extends State<UnsavedInput> {
 
   @override
   void dispose() {
+    _live.remove(this);
     _nav?.releaseUnsaved(_dirty);
     super.dispose();
   }

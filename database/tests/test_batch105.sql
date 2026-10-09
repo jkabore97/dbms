@@ -755,7 +755,7 @@ declare
         'delivery_included_km', 'delivery_share_pct', 'own_courier_minutes', 'stuck_ready_minutes',
         -- 112: read by courier_rules(), which the courier's dossier asks.
         'courier_licence_required', 'courier_phone_verified',
-        -- 122: read by courier_near(), which the couriers' bell and board ask.
+        -- 122: read by courier_reach(), which the couriers' bell and board ask.
         'courier_radius_km',
         'wave_checkout', 'wave_card', 'wave_commission_pct',
         'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',

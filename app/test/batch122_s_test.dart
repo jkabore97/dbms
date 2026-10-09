@@ -48,7 +48,7 @@ class _Browser {
 final _now = DateTime(2026, 10, 9, 12);
 
 Future<void> _street(WidgetTester tester, _Browser browser,
-    {AppLinks links = const AppLinks.fallback(), Size size = const Size(390, 844)}) async {
+    {AppLinks links = const AppLinks.fallback(), Size size = const Size(390, 844), bool wait = true}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
@@ -60,7 +60,9 @@ Future<void> _street(WidgetTester tester, _Browser browser,
       now: () => _now,
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('La rue')),
+          appBar: AppBar(title: const Text('La rue'), actions: [
+            TextButton(key: const Key('sign-in'), onPressed: () {}, child: const Text('Se connecter')),
+          ]),
           body: Center(
             child: FilledButton(
               key: const Key('open-order'),
@@ -75,6 +77,7 @@ Future<void> _street(WidgetTester tester, _Browser browser,
       ),
     ),
   ));
+  if (!wait) return;
   await tester.pump(const Duration(seconds: 2));
   await tester.pumpAndSettle();
 }
@@ -224,6 +227,46 @@ void main() {
       ));
       await tester.pump(const Duration(seconds: 3));
       expect(find.byKey(const Key('app-download')), findsNothing);
+    });
+
+    testWidgets('a bottom card: never over the header\'s sign-in corner', (tester) async {
+      await _street(tester, _Browser(AppPhone.android));
+      final card = tester.getRect(find.byKey(const Key('app-download')));
+      final signIn = tester.getRect(find.byKey(const Key('sign-in')));
+      expect(card.overlaps(signIn), isFalse);
+      expect(card.bottom, closeTo(844 - 12, 1), reason: 'at the bottom');
+      await tester.tap(find.byKey(const Key('sign-in')));
+    });
+
+    testWidgets('« shown » is written when it is seen: not under a sheet, not in a tab in the background',
+        (tester) async {
+      // A sheet opened before the card came: it comes under the sheet,
+      // unseen; the sheet closed, it is seen — and only then written.
+      final b = _Browser(AppPhone.android);
+      await _street(tester, b, wait: false);
+      await tester.tap(find.byKey(const Key('open-order')));
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('app-download')), findsOneWidget);
+      expect(find.byKey(const Key('app-download')).hitTestable(), findsNothing);
+      expect(b.shownAt, isNull, reason: 'covered: not seen');
+      Navigator.of(tester.element(find.text('Commande'))).pop();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('app-download')).hitTestable(), findsOneWidget);
+      expect(b.shownAt, _now);
+
+      // The tab in the background when it came: written once back in front.
+      final hidden = _Browser(AppPhone.ios);
+      await _street(tester, hidden, wait: false);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(hidden.shownAt, isNull, reason: 'a tab in the background');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(hidden.shownAt, _now);
     });
 
     testWidgets('an order sheet opened over the page covers it', (tester) async {

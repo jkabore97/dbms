@@ -366,7 +366,7 @@ class _InvoiceTile extends StatelessWidget {
                 invoice.outstanding > 0 &&
                 invoice.paid > 0)
               Text(
-                'reste ${money.format(invoice.outstanding)}',
+                context.tr('reste {amount}', {'amount': money.format(invoice.outstanding)}),
                 style: theme.textTheme.bodySmall,
               ),
           ],

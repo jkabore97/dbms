@@ -5981,4 +5981,88 @@ const enStrings = <String, String>{
       '{n} items on the vitrine',
   '{n} article sur la vitrine':
       '{n} item on the vitrine',
+  'Pour voir les livraisons à moins de {km} km':
+      'To see deliveries within {km} km',
+  'Activer la position':
+      'Turn on location',
+  'Activez la position pour voir les livraisons proches':
+      'Turn on location to see nearby deliveries',
+  'Nouveau {word}':
+      'New {word}',
+  '{fee} au livreur':
+      '{fee} to the courier',
+  'S\'abonner par carte · {price} F / an':
+      'Subscribe by card · {price} F / year',
+  'S\'abonner par carte · {price} F / mois':
+      'Subscribe by card · {price} F / month',
+  'reste {amount}':
+      '{amount} left',
+  'Au {date}':
+      'As of {date}',
+  '{amount} en jeu':
+      '{amount} at stake',
+  '{name} — {n} en stock':
+      '{name} — {n} in stock',
+  'Valeur : {value}':
+      'Value: {value}',
+  'Disponibles':
+      'Available',
+  'part Mara {amount}':
+      'Mara\'s share {amount}',
+  '{births} naissances · {losses} pertes':
+      '{births} births · {losses} losses',
+  '{n} tentatives':
+      '{n} attempts',
+  '{n} tentative':
+      '{n} attempt',
+  '{n} livreurs · {c} courses':
+      '{n} couriers · {c} deliveries',
+  '{n} livreur · {c} courses':
+      '{n} courier · {c} deliveries',
+  'Photo de l\'article':
+      'Item photo',
+  'Cette vitrine n\'existe pas, ou n\'est pas ouverte.':
+      'This vitrine does not exist, or is not open.',
+  'Vous n\'avez pas encore commandé.':
+      'You have not ordered yet.',
+  '{n} enregistrements de {name} attendent encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.':
+      '{n} entries by {name} are still waiting for the network. Sign back in with that account and wait for them to be sent before changing user.',
+  '{n} enregistrement de {name} attend encore le réseau. Reconnectez-vous avec ce compte et attendez l\'envoi avant de changer d\'utilisateur.':
+      '{n} entry by {name} is still waiting for the network. Sign back in with that account and wait for it to be sent before changing user.',
+  '# L\'application fonctionne-t-elle sans internet ?':
+      '# Does the app work without internet?',
+  'Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; elles sont envoyées au serveur dès que la connexion revient. Certains écrans (rapports, historique) ont besoin de la connexion.':
+      'Yes. You can record sales and expenses offline; they are sent to the server as soon as the connection is back. Some screens (reports, history) need the connection.',
+  '# Comment ajouter un employé ?':
+      '# How do I add an employee?',
+  'Dans Compte › Administration › Personnel, puis invitez la personne. Vous décidez ce que chacun peut voir et modifier.':
+      'In Account › Administration › Staff, then invite the person. You decide what each one can see and change.',
+  '# Comment changer la monnaie de mon activité ?':
+      '# How do I change my business\'s currency?',
+  'Dans Compte › Administration › Paramètres, choisissez la monnaie. Elle s\'applique partout dans l\'application.':
+      'In Account › Administration › Settings, choose the currency. It applies everywhere in the app.',
+  '# Comment recevoir un paiement Wave ?':
+      '# How do I receive a Wave payment?',
+  'Renseignez votre numéro Wave dans Paramètres, puis choisissez « Wave » au moment de la vente : le client scanne le QR et paie.':
+      'Enter your Wave number in Settings, then choose “Wave” at the time of the sale: the customer scans the QR code and pays.',
+  '# Un client veut payer en dollars ou en euros.':
+      '# A customer wants to pay in dollars or euros.',
+  'Définissez vos taux dans Compte › Administration › Paramètres › Taux de change. À la vente, touchez la monnaie du client : l\'application affiche exactement le montant à encaisser, et le reçu garde les deux montants et le taux. Vos livres restent dans votre monnaie.':
+      'Set your rates in Account › Administration › Settings › Exchange rates. At the sale, tap the customer\'s currency: the app shows exactly the amount to collect, and the receipt keeps both amounts and the rate. Your books stay in your currency.',
+  '# Comment imprimer ou envoyer une facture ?':
+      '# How do I print or send an invoice?',
+  'Ouvrez la facture : l\'icône imprimante lance l\'impression, et « Envoyer » la partage en image (WhatsApp ou autre). Le propriétaire peut aussi la corriger tant que rien n\'a été payé.':
+      'Open the invoice: the printer icon prints it, and “Send” shares it as an image (WhatsApp or another app). The owner can also correct it as long as nothing has been paid.',
+  '# Où sont les analyses et le carnet de crédit ?':
+      '# Where are the analytics and the credit book?',
+  'Sous Compte › Mon entreprise, pour garder l\'écran de vente simple. Les analyses sont réservées au propriétaire.':
+      'Under Account › My business, to keep the sales screen simple. Analytics are for the owner only.',
+  '# J\'ai oublié mon code (PIN).':
+      '# I forgot my code (PIN).',
+  'Reconnectez-vous avec votre mot de passe pour définir un nouveau code.':
+      'Sign in again with your password to set a new code.',
+  '# Comment contacter quelqu\'un ?':
+      '# How do I reach someone?',
+  'Depuis Compte › Aide › Contacter le support, sur WhatsApp.':
+      'From Account › Help › Contact support, on WhatsApp.',
 };

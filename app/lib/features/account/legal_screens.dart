@@ -9,6 +9,10 @@ import '../../core/theme/scroll_hint.dart';
 /// as links, so they open with no signal — a policy nobody can read offline is
 /// a policy nobody reads on a two-bar connection.
 ///
+/// The privacy policy and the terms stay in French on every phone: they are
+/// legal texts, and the French one is the text that binds (the site serves
+/// the same words). The FAQ is help, and is said in the phone's language.
+///
 /// The text is plain and in French, the app's primary language. It is written
 /// to be true of what the app actually does today (Supabase storage, no resale
 /// of data, WhatsApp support); update it when that changes. The site serves
@@ -92,6 +96,13 @@ class PrivacyScreen extends StatelessWidget {
             'puis laissée. Si vous êtes accepté, elles sont gardées tant que '
             'vous êtes livreur ; votre compte supprimé, elles ne sont plus '
             'montrées et sont effacées de la même façon.',
+        'Quand vous êtes livreur et ouvrez les livraisons disponibles, votre '
+            'téléphone donne votre position, si vous l\'autorisez. Mara garde '
+            'la dernière, pour vous seul — ni les boutiques, ni les clients, ni '
+            'les autres livreurs ne la voient — afin de vous montrer les '
+            'livraisons proches et de vous prévenir de celles-ci. Après 24 '
+            'heures, elle n\'est plus utilisée ; après 30 jours, elle est '
+            'effacée.',
         '# Vos droits',
         'Vous pouvez demander la correction ou la suppression de vos '
             'données en contactant le support. Vous pouvez aussi télécharger '
@@ -153,36 +164,24 @@ class FaqScreen extends StatelessWidget {
     return _DocScaffold(
       title: context.tr('Questions fréquentes'),
       blocks: [
-        '# L\'application fonctionne-t-elle sans internet ?',
-        'Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; '
-            'elles sont envoyées au serveur dès que la connexion revient. '
-            'Certains écrans (rapports, historique) ont besoin de la connexion.',
-        '# Comment ajouter un employé ?',
-        'Dans Compte › Administration › Personnel, puis invitez la personne. '
-            'Vous décidez ce que chacun peut voir et modifier.',
-        '# Comment changer la monnaie de mon activité ?',
-        'Dans Compte › Administration › Paramètres, choisissez la monnaie. Elle '
-            's\'applique partout dans l\'application.',
-        '# Comment recevoir un paiement Wave ?',
-        'Renseignez votre numéro Wave dans Paramètres, puis choisissez « Wave » '
-            'au moment de la vente : le client scanne le QR et paie.',
-        '# Un client veut payer en dollars ou en euros.',
-        'Définissez vos taux dans Compte › Administration › Paramètres › Taux '
-            'de change. À la vente, touchez la monnaie du client : '
-            'l\'application affiche exactement le montant à encaisser, et le '
-            'reçu garde les deux montants et le taux. Vos livres restent dans '
-            'votre monnaie.',
-        '# Comment imprimer ou envoyer une facture ?',
-        'Ouvrez la facture : l\'icône imprimante lance l\'impression, et '
-            '« Envoyer » la partage en image (WhatsApp ou autre). Le '
-            'propriétaire peut aussi la corriger tant que rien n\'a été payé.',
-        '# Où sont les analyses et le carnet de crédit ?',
-        'Sous Compte › Mon entreprise, pour garder l\'écran de vente simple. '
-            'Les analyses sont réservées au propriétaire.',
-        '# J\'ai oublié mon code (PIN).',
-        'Reconnectez-vous avec votre mot de passe pour définir un nouveau code.',
-        '# Comment contacter quelqu\'un ?',
-        'Depuis Compte › Aide › Contacter le support, sur WhatsApp.',
+        context.tr('# L\'application fonctionne-t-elle sans internet ?'),
+        context.tr('Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; elles sont envoyées au serveur dès que la connexion revient. Certains écrans (rapports, historique) ont besoin de la connexion.'),
+        context.tr('# Comment ajouter un employé ?'),
+        context.tr('Dans Compte › Administration › Personnel, puis invitez la personne. Vous décidez ce que chacun peut voir et modifier.'),
+        context.tr('# Comment changer la monnaie de mon activité ?'),
+        context.tr('Dans Compte › Administration › Paramètres, choisissez la monnaie. Elle s\'applique partout dans l\'application.'),
+        context.tr('# Comment recevoir un paiement Wave ?'),
+        context.tr('Renseignez votre numéro Wave dans Paramètres, puis choisissez « Wave » au moment de la vente : le client scanne le QR et paie.'),
+        context.tr('# Un client veut payer en dollars ou en euros.'),
+        context.tr('Définissez vos taux dans Compte › Administration › Paramètres › Taux de change. À la vente, touchez la monnaie du client : l\'application affiche exactement le montant à encaisser, et le reçu garde les deux montants et le taux. Vos livres restent dans votre monnaie.'),
+        context.tr('# Comment imprimer ou envoyer une facture ?'),
+        context.tr('Ouvrez la facture : l\'icône imprimante lance l\'impression, et « Envoyer » la partage en image (WhatsApp ou autre). Le propriétaire peut aussi la corriger tant que rien n\'a été payé.'),
+        context.tr('# Où sont les analyses et le carnet de crédit ?'),
+        context.tr('Sous Compte › Mon entreprise, pour garder l\'écran de vente simple. Les analyses sont réservées au propriétaire.'),
+        context.tr('# J\'ai oublié mon code (PIN).'),
+        context.tr('Reconnectez-vous avec votre mot de passe pour définir un nouveau code.'),
+        context.tr('# Comment contacter quelqu\'un ?'),
+        context.tr('Depuis Compte › Aide › Contacter le support, sur WhatsApp.'),
       ],
     );
   }

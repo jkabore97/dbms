@@ -23,28 +23,37 @@ class PushSetup {
   /// Whether push can be offered here at all (the build, the platform).
   static Future<bool> available() => PushClient.prepare();
 
+  /// The people who switched it off on this phone: their ids, comma
+  /// separated.
   static const _offKey = 'push.off';
   static LocalDb? _db;
-  static bool _off = false;
+  static final _offFor = <String>{};
 
-  /// The person switched « Notifications sur ce téléphone » off (122): this
-  /// device is out of their book and stays out — nothing writes it back on
-  /// a return, no pop-up or card asks again. Only their own tap on a way to
-  /// turn it on (the switch, a card, « Réessayer ») clears it.
-  static bool get off => _off;
+  /// The person signed in switched « Notifications sur ce téléphone » off
+  /// (122): this device is out of their book and stays out — nothing
+  /// writes it back on a return, no pop-up or card asks again. Only their
+  /// own tap on a way to turn it on (the switch, a card, « Réessayer »)
+  /// clears it. Per person, not per phone: someone else signing in on the
+  /// same phone is asked as anyone is.
+  static bool isOff(NotificationsRepository notify) {
+    final me = notify.me;
+    return me != null && _offFor.contains(me);
+  }
 
-  /// Reads [off] from this phone. Called once at startup.
+  /// Reads who switched it off on this phone. Called once at startup.
   static Future<void> load(LocalDb db) async {
     _db = db;
+    _offFor.clear();
     try {
-      _off = await db.readPref(_offKey) == '1';
+      _offFor.addAll(((await db.readPref(_offKey)) ?? '').split(',').where((id) => id.isNotEmpty));
     } catch (_) {}
   }
 
-  static Future<void> _setOff(bool value) async {
-    _off = value;
+  static Future<void> _setOff(String? me, bool value) async {
+    if (me == null) return;
+    if (value ? !_offFor.add(me) : !_offFor.remove(me)) return;
     try {
-      await _db?.writePref(_offKey, value ? '1' : '0');
+      await _db?.writePref(_offKey, _offFor.join(','));
     } catch (_) {}
   }
 
@@ -53,14 +62,14 @@ class PushSetup {
   /// taken out of the person's book. The bell inside the app keeps every
   /// line; only the ring outside it stops.
   static Future<void> disable(NotificationsRepository notify) async {
-    await _setOff(true);
+    await _setOff(notify.me, true);
     try {
       final endpoint = await PushClient.unsubscribe();
       if (endpoint != null && notify.isConfigured && notify.me != null) {
         await notify.removePushSubscription(endpoint);
       }
     } catch (_) {
-      // Off on this phone all the same: [off] keeps it from being written
+      // Off on this phone all the same: [isOff] keeps it from being written
       // back, and the Worker drops an address that no longer answers.
     }
     changes.value++;
@@ -70,7 +79,7 @@ class PushSetup {
   /// already given, this device's address is (re)written to the book if it
   /// is missing — nothing is ever asked. Answers whether the device is on.
   static Future<bool> ensure(NotificationsRepository notify) async {
-    if (_off) return false;
+    if (isOff(notify)) return false;
     try {
       if (!notify.isConfigured || notify.me == null) return false;
       if (!await PushClient.prepare()) return false;
@@ -102,7 +111,7 @@ class PushSetup {
   /// From the person's own tap: asks the device, then saves its address.
   /// Answers whether it is now on.
   static Future<bool> enable(NotificationsRepository notify) async {
-    await _setOff(false);
+    await _setOff(notify.me, false);
     try {
       if (!await PushClient.prepare()) return false;
       final sub = await PushClient.subscribe();
@@ -122,7 +131,7 @@ class PushSetup {
   /// without push, nobody signed in).
   static Future<PushStanding> standing(NotificationsRepository notify) async {
     // Switched off by the person: not a device to ask about.
-    if (_off) return PushStanding.unavailable;
+    if (isOff(notify)) return PushStanding.unavailable;
     try {
       if (!notify.isConfigured || notify.me == null) return PushStanding.unavailable;
       final on = await ensure(notify);
@@ -192,7 +201,7 @@ class PushSetup {
   /// device if it may still be asked (this is the person's own tap), and
   /// writes the address. Answers whether the device is now on.
   static Future<bool> retry(NotificationsRepository notify) async {
-    await _setOff(false);
+    await _setOff(notify.me, false);
     try {
       if (!await PushClient.retry()) return false;
       if (await ensure(notify)) {

@@ -59,12 +59,15 @@ class AppLinks {
 const appDownloadEvery = Duration(days: 7);
 
 /// The web's « download the app » pop-up, over a street page (the street,
-/// a vitrine): a small card at the top, on a phone's browser only — never on
-/// a computer, never in the installed web app, never in the Android app —
-/// once every seven days. Android: Google Play (or the APK); iPhone: the
-/// App Store once it has an address, else how to add Mara to the home
-/// screen. It belongs to the page, so an order sheet or the sign-in sheet
-/// opened over the page covers it; the sign-in page has none.
+/// a vitrine): a small card at the bottom — never over the header and its
+/// sign-in corner — on a phone's browser only — never on a computer, never
+/// in the installed web app, never in the Android app — once every seven
+/// days, counted from when it was actually seen: not while a sheet covers
+/// the page or the tab is in the background. Android: Google Play (or the
+/// APK); iPhone: the App Store once it has an address, else how to add
+/// Mara to the home screen. It belongs to the page, so an order sheet or
+/// the sign-in sheet opened over the page covers it; the sign-in page has
+/// none.
 class AppDownloadPrompt extends StatefulWidget {
   const AppDownloadPrompt({
     super.key,
@@ -93,10 +96,25 @@ class AppDownloadPrompt extends StatefulWidget {
   State<AppDownloadPrompt> createState() => _AppDownloadPromptState();
 }
 
-class _AppDownloadPromptState extends State<AppDownloadPrompt> {
+class _AppDownloadPromptState extends State<AppDownloadPrompt> with WidgetsBindingObserver {
   late final AppDownloadEnv _env = widget.env ?? browserEnv();
   AppLinks? _links;
   Timer? _timer;
+
+  /// The page's route, read at each build: covered by a sheet or another
+  /// page, it is not current.
+  ModalRoute<Object?>? _route;
+
+  /// « Shown » is written once, when the card is first truly on screen.
+  bool _seen = false;
+
+  /// On screen for the person: the page on top, the tab in front (a
+  /// browser tab in the background is « hidden » or « paused »).
+  bool get _visible {
+    final life = WidgetsBinding.instance.lifecycleState;
+    return (_route?.isCurrent ?? true) &&
+        (life == null || life == AppLifecycleState.resumed);
+  }
 
   DateTime _now() => (widget.now ?? DateTime.now)();
 
@@ -109,17 +127,37 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (_due) _timer = Timer(widget.delay, _open);
   }
+
+  /// The tab back in front: the card waiting there is seen now.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) => _markSeen();
 
   Future<void> _open() async {
     final links = await (widget.links ?? () => AppLinks.fetch(widget.client))();
     if (!mounted || !_due) return;
-    _env.writeShownAt(_now());
     setState(() => _links = links);
   }
 
-  void _close() => setState(() => _links = null);
+  /// After a frame with the card drawn: written the first time it is
+  /// visible. A page covered now rebuilds when it is on top again (the
+  /// route is read in build), and is asked again then.
+  void _markSeen() {
+    if (_seen || !mounted || _links == null || !_visible) return;
+    _seen = true;
+    _env.writeShownAt(_now());
+  }
+
+  /// A tap on the card: it was seen, whatever the frame said.
+  void _close() {
+    if (!_seen) {
+      _seen = true;
+      _env.writeShownAt(_now());
+    }
+    setState(() => _links = null);
+  }
 
   Future<void> _go(String url) async {
     _close();
@@ -128,27 +166,30 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _route = ModalRoute.of(context);
     final links = _links;
     if (links == null) return widget.child;
+    if (!_seen) WidgetsBinding.instance.addPostFrameCallback((_) => _markSeen());
     return Stack(
       children: [
         widget.child,
         Positioned(
-          top: 0,
+          bottom: 0,
           left: 0,
           right: 0,
           child: SafeArea(
-            bottom: false,
+            top: false,
             child: Align(
-              alignment: Alignment.topCenter,
+              alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),
                   child: _Card(

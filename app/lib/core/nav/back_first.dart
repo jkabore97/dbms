@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/business_frame.dart' show UnsavedInput;
 import '../l10n/tr.dart';
 import 'parent_route.dart';
 
@@ -38,7 +39,8 @@ import 'parent_route.dart';
 ///    business's home, the home → the picker for someone with several
 ///    businesses, a vitrine → the street); from a root (the street, the
 ///    only business's home) it asks « Quitter Mara ? » once instead of
-///    closing without a word.
+///    closing without a word. A page holding input not saved (108's
+///    [UnsavedInput]) asks « Quitter sans enregistrer ? » first.
 ///
 /// What is open is read off every navigator of the router ([watch] on the
 /// router's observers: go_router 18 tells them of the frame's and the
@@ -137,14 +139,31 @@ class BackFirst with WidgetsBindingObserver {
     if (await router.routerDelegate.popRoute()) return true;
     final here = router.routerDelegate.currentConfiguration.uri.path;
     final parent = parentIn(router, here, businesses: _businesses());
+    final context = router.routerDelegate.navigatorKey.currentContext;
     if (parent != null) {
+      // Input not saved on this page (108's guard): asked first, as the
+      // business's bar asks.
+      if (UnsavedInput.dirtyOnTop() && context != null && context.mounted) {
+        if (!_asking) unawaited(_leaveUnsaved(context, router, parent));
+        return true;
+      }
       router.go(parent);
       return true;
     }
-    final context = router.routerDelegate.navigatorKey.currentContext;
     if (context == null || !context.mounted) return false;
     if (!_asking) unawaited(_askToLeave(context));
     return true;
+  }
+
+  /// « Quitter sans enregistrer ? » before the parent: « Quitter » goes,
+  /// « Rester » keeps the page and what is typed in it.
+  Future<void> _leaveUnsaved(BuildContext context, GoRouter router, String parent) async {
+    _asking = true;
+    try {
+      if (await UnsavedInput.askLeave(context) && _router == router) router.go(parent);
+    } finally {
+      _asking = false;
+    }
   }
 
   /// « Quitter Mara ? » — « Rester » keeps the page, « Quitter » hands the

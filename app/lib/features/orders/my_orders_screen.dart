@@ -220,7 +220,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   ? ShopNotice(
                       text: widget.bookingsOnly
                           ? context.tr('Vous n\'avez pas encore réservé de service.')
-                          : "Vous n'avez pas encore commandé.",
+                          : context.tr('Vous n\'avez pas encore commandé.'),
                       action: FilledButton(
                         onPressed: () => context.go(Routes.directory),
                         child: Text(context.tr('Voir les vitrines')),
@@ -235,7 +235,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                             children: [
                               const SizedBox(height: 28),
                               if (open.isNotEmpty) ...[
-                                ShopSectionLabel('En cours',
+                                ShopSectionLabel(context.tr('En cours'),
                                     note: '${open.length}'),
                                 const SizedBox(height: 12),
                                 for (final (i, o) in open.indexed)
@@ -386,7 +386,7 @@ class _OrderCard extends StatelessWidget {
                 Text(
                     order.deliveryFee == null
                         ? context.tr('à discuter')
-                        : '${money.format(order.deliveryFee!)} au livreur',
+                        : context.tr('{fee} au livreur', {'fee': money.format(order.deliveryFee!)}),
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
               ],
             ),

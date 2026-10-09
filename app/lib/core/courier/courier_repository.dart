@@ -52,6 +52,27 @@ class CourierRepository {
     }
   }
 
+  /// The courier's declared city and the platform's radius (122), from
+  /// their dossier (112's my_courier_application, whose rules carry the
+  /// radius since 122). Never fails: unknown is an empty city and 10 km.
+  Future<CourierReach> reach() async {
+    final client = _client;
+    if (client == null) return const CourierReach();
+    try {
+      final j = Map<String, dynamic>.from(
+          await client.rpc('my_courier_application') as Map);
+      final rules = j['rules'] is Map
+          ? Map<String, dynamic>.from(j['rules'] as Map)
+          : const <String, dynamic>{};
+      return CourierReach(
+        city: (j['city'] as String?)?.trim() ?? '',
+        radiusKm: (rules['radius_km'] as num?)?.round() ?? 10,
+      );
+    } catch (_) {
+      return const CourierReach();
+    }
+  }
+
   /// Closes a delivery at the door with the shopper's four digits (073).
   Future<void> deliver(String orderId, String code) async {
     await _requireClient().rpc('courier_deliver', params: {
@@ -119,6 +140,17 @@ class CourierRepository {
       'p_status': status,
     });
   }
+}
+
+/// What the board needs to say why it asks for the position (122).
+class CourierReach {
+  const CourierReach({this.city = '', this.radiusKm = 10});
+
+  /// The city declared in the dossier; empty when none.
+  final String city;
+
+  /// The platform's radius: the street's deliveries within it ring.
+  final int radiusKm;
 }
 
 /// A cash order delivered and not yet handed to its shop (073).

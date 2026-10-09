@@ -173,9 +173,9 @@ class _SettlementScreenState extends State<SettlementScreen> {
                 leading: const Icon(Icons.account_balance_wallet_outlined),
                 title: Text(context.tr('{amount} F CFA dus à Mara', {'amount': money.format(owed)}),
                     style: theme.textTheme.titleMedium),
-                subtitle: Text(
-                    '${_rows.length} livreur${_rows.length > 1 ? 's' : ''} · '
-                    '${_rows.fold<int>(0, (s, r) => s + r.courses)} courses'),
+                subtitle: Text(context.tr(
+                    _rows.length > 1 ? '{n} livreurs · {c} courses' : '{n} livreur · {c} courses',
+                    {'n': _rows.length, 'c': _rows.fold<int>(0, (s, r) => s + r.courses)})),
               ),
             ),
             const SizedBox(height: 8),

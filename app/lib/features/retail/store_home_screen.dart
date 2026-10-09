@@ -582,7 +582,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_money.format(atRisk)} en jeu',
+                      context.tr('{amount} en jeu', {'amount': _money.format(atRisk)}),
                       style: theme.textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),

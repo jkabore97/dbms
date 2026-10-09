@@ -76,7 +76,7 @@ class _PushOfferCardState extends State<PushOfferCard> {
     if (!mounted) return;
     // Switched off on purpose (Notifications sur ce téléphone, 122): no
     // card asks again; the switch is the way back.
-    setState(() => _shown = (pushable && !on && !PushSetup.off) || _bellWanted);
+    setState(() => _shown = (pushable && !on && !PushSetup.isOff(notify)) || _bellWanted);
   }
 
   Future<void> _enable() async {

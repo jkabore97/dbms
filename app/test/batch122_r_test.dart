@@ -26,8 +26,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Batch 122, builder R: the owner's list of 2026-10-09.
 class _Notify extends NotificationsRepository {
-  _Notify() : super(null);
+  _Notify({this.who}) : super(null);
 
+  /// The person signed in.
+  final String? who;
+
+  @override
+  String? get me => who;
   @override
   bool get isConfigured => true;
   @override
@@ -163,21 +168,32 @@ void main() {
       expect(find.text('Notifications on this phone'), findsOneWidget);
     });
 
-    test('off is kept on the phone and nothing writes the device back', () async {
+    test('off is kept on the phone, for the person who said it, and nothing writes the device back', () async {
       final db = await LocalDb.open(path: inMemoryDatabasePath);
       addTearDown(db.close);
       await PushSetup.load(db);
-      expect(PushSetup.off, isFalse);
-      final notify = _Notify();
-      await PushSetup.disable(notify);
-      expect(PushSetup.off, isTrue);
-      expect(await PushSetup.ensure(notify), isFalse);
-      expect(await PushSetup.standing(notify), PushStanding.unavailable,
+      final awa = _Notify(who: 'awa');
+      final issa = _Notify(who: 'issa');
+      expect(PushSetup.isOff(awa), isFalse);
+      await PushSetup.disable(awa);
+      expect(PushSetup.isOff(awa), isTrue);
+      expect(await PushSetup.ensure(awa), isFalse);
+      expect(await PushSetup.standing(awa), PushStanding.unavailable,
           reason: 'no pop-up at the opening for a phone switched off');
+      expect(PushSetup.isOff(issa), isFalse,
+          reason: 'someone else signing in on the same phone is asked as anyone is');
+      expect(PushSetup.isOff(_Notify()), isFalse, reason: 'nobody signed in');
+      await PushSetup.disable(issa);
       await PushSetup.load(db);
-      expect(PushSetup.off, isTrue, reason: 'remembered across launches');
-      await PushSetup.enable(notify);
-      expect(PushSetup.off, isFalse, reason: 'the person\'s own tap turns it back on');
+      expect(PushSetup.isOff(awa), isTrue, reason: 'remembered across launches');
+      expect(PushSetup.isOff(issa), isTrue);
+      await PushSetup.enable(awa);
+      expect(PushSetup.isOff(awa), isFalse, reason: 'the person\'s own tap turns it back on');
+      expect(PushSetup.isOff(issa), isTrue, reason: 'for that person only');
+      await PushSetup.load(db);
+      expect(PushSetup.isOff(awa), isFalse);
+      expect(PushSetup.isOff(issa), isTrue);
+      await PushSetup.enable(issa);
     });
   });
 

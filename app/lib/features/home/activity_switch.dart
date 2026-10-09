@@ -27,8 +27,9 @@ class ActivitySwitch {
 
   /// The rule, for every kind of business alike. [secondLocked] is the
   /// server's own answer (099's second_business_locked, through
-  /// org_progress); unknown — an older database, nothing read yet — it is
-  /// read off the plan of [org].
+  /// org_progress); unknown — nothing read yet — no button at all for one
+  /// activity, rather than a « Mara Pro » the server may not say (it comes
+  /// with the server's answer, a moment later).
   static ActivitySwitchMode modeFor({
     required int activities,
     OrgSummary? org,
@@ -39,8 +40,8 @@ class ActivitySwitch {
     if (org == null || platformAdmin || !org.isAdmin) {
       return ActivitySwitchMode.none;
     }
-    final locked = secondLocked ?? !org.isPro;
-    return locked ? ActivitySwitchMode.pro : ActivitySwitchMode.create;
+    if (secondLocked == null) return ActivitySwitchMode.none;
+    return secondLocked ? ActivitySwitchMode.pro : ActivitySwitchMode.create;
   }
 
   /// The mode for the signed-in person in [org], read off the app's session.

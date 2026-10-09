@@ -103,7 +103,9 @@ class _StripeCardButtonState extends State<StripeCardButton> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.credit_card),
             label: Text(
-              "S'abonner par carte · $price F / ${year ? 'an' : 'mois'}",
+              year
+                  ? context.tr('S\'abonner par carte · {price} F / an', {'price': price})
+                  : context.tr('S\'abonner par carte · {price} F / mois', {'price': price}),
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16),
             ),

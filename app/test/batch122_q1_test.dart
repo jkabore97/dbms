@@ -28,19 +28,26 @@ void main() {
         expect(ActivitySwitch.modeFor(activities: 3, org: org(k, role: 'employee')),
             ActivitySwitchMode.picker);
       });
-      test('$k: one on Pro → create', () {
-        expect(ActivitySwitch.modeFor(activities: 1, org: org(k, plan: 'pro')),
+      test('$k: one, a second open → create', () {
+        expect(ActivitySwitch.modeFor(activities: 1, org: org(k, plan: 'pro'), secondLocked: false),
             ActivitySwitchMode.create);
         // The server's own answer wins over the plan read here.
         expect(ActivitySwitch.modeFor(activities: 1, org: org(k), secondLocked: false),
             ActivitySwitchMode.create);
       });
-      test('$k: one on Basic → Pro', () {
-        expect(ActivitySwitch.modeFor(activities: 1, org: org(k)), ActivitySwitchMode.pro);
+      test('$k: one, a second locked → Pro', () {
+        expect(ActivitySwitch.modeFor(activities: 1, org: org(k), secondLocked: true),
+            ActivitySwitchMode.pro);
         expect(ActivitySwitch.modeFor(activities: 1, org: org(k, plan: 'pro'), secondLocked: true),
             ActivitySwitchMode.pro);
-        expect(ActivitySwitch.modeFor(activities: 1, org: org(k, role: 'admin')),
+        expect(ActivitySwitch.modeFor(activities: 1, org: org(k, role: 'admin'), secondLocked: true),
             ActivitySwitchMode.pro);
+      });
+      test('$k: one, the server\'s lock not known yet → nothing, never « needs Pro »', () {
+        expect(ActivitySwitch.modeFor(activities: 1, org: org(k)), ActivitySwitchMode.none);
+        expect(ActivitySwitch.modeFor(activities: 1, org: org(k, plan: 'pro')), ActivitySwitchMode.none);
+        expect(ActivitySwitch.modeFor(activities: 2, org: org(k)), ActivitySwitchMode.picker,
+            reason: 'several: the picker needs no lock');
       });
       test('$k: one, only working in it → nothing', () {
         expect(ActivitySwitch.modeFor(activities: 1, org: org(k, role: 'employee')),

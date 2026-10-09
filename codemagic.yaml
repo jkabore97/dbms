@@ -5,8 +5,13 @@
 #
 # No secret is written here. Codemagic holds them:
 #   * Team › Integrations › Developer Portal: an App Store Connect API key,
-#     saved under the name used in `integrations` below — it signs the app
-#     (automatic code signing) and sends it to TestFlight.
+#     saved under the name used in `integrations` below — it sends the app
+#     to TestFlight.
+#   * Team › codemagic.yaml settings › Code signing identities: the Apple
+#     Distribution certificate (generated there with that key) and the App
+#     Store provisioning profile for bf.kaj.app (made on developer.apple.com,
+#     then « Fetch profiles »). `ios_signing` below picks them by bundle id
+#     and type; it does not create them (README, step 6).
 #   * App › Environment variables, group `mara_app` (the same values as the
 #     GitHub repository secrets the Android build reads):
 #       SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, UPLOADS_URL,

@@ -177,7 +177,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       initialDate: _birth ?? DateTime(now.year - 30, now.month, now.day),
       firstDate: DateTime(now.year - 100),
       lastDate: DateTime(now.year - 14, now.month, now.day),
-      helpText: 'Date de naissance',
+      helpText: context.tr('Date de naissance'),
     );
     if (picked != null) setState(() => _birth = picked);
   }

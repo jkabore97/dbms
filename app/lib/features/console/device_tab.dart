@@ -228,7 +228,7 @@ class _FailureTile extends StatelessWidget {
         ),
         subtitle: Text(
           '$action · ${DateFormat('d MMM, HH:mm', intlLocale()).format(created)} · '
-          '$attempts tentative${attempts > 1 ? 's' : ''}',
+          '${attempts > 1 ? context.tr('{n} tentatives', {'n': attempts}) : context.tr('{n} tentative', {'n': attempts})}',
           style: theme.textTheme.bodySmall,
         ),
         children: [

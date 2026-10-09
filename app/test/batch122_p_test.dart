@@ -448,6 +448,43 @@ void main() {
       expect(_hint, findsOneWidget);
     });
 
+    testWidgets('a short page pushed over a long one under one wrapper: no arrow; back on the long one, the arrow',
+        (tester) async {
+      // A business's pages share one ScrollHint above their navigator
+      // (business_frame): the long page stays mounted under the short one.
+      _size(tester);
+      final nav = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(_material(Scaffold(
+        body: ScrollHint(
+          child: Navigator(
+            key: nav,
+            onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => Material(child: _lines(40))),
+          ),
+        ),
+      )));
+      await tester.pumpAndSettle();
+      expect(_hint, findsOneWidget, reason: 'the long page');
+
+      // A short page with no list at all: it sends no notification.
+      nav.currentState!.push(MaterialPageRoute<void>(
+          builder: (_) => const Material(child: Column(children: [Text('Une ligne')]))));
+      await tester.pumpAndSettle();
+      expect(find.text('Une ligne'), findsOneWidget);
+      expect(_hint, findsNothing, reason: 'the long page is under the short one');
+
+      // A short page with a list that fits.
+      nav.currentState!.pop();
+      await tester.pumpAndSettle();
+      expect(_hint, findsOneWidget, reason: 'the long page is on top again');
+      nav.currentState!.push(MaterialPageRoute<void>(builder: (_) => Material(child: _lines(3))));
+      await tester.pumpAndSettle();
+      expect(_hint, findsNothing, reason: 'three lines fit; the long page below does not count');
+
+      nav.currentState!.pop();
+      await tester.pumpAndSettle();
+      expect(_hint, findsOneWidget);
+    });
+
     testWidgets('the Plus sheet: the arrow while tools are below, gone at the last one', (tester) async {
       _size(tester, const Size(390, 640));
       late BuildContext ctx;

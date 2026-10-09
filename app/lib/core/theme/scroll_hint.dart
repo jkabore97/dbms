@@ -21,6 +21,9 @@ import 'motion.dart';
 ///  * fades out when the end is reached, and is never there when
 ///    everything fits;
 ///  * never takes a tap (IgnorePointer);
+///  * speaks only for the lists of the page on top: a long page left under
+///    a short one pushed above it (a business's pages share one wrapper)
+///    no longer counts, and counts again once it is back on top;
 ///  * bounces a few times when it appears (a hint, not an alarm), and holds
 ///    still for someone who asked the phone for less motion.
 class ScrollHint extends StatefulWidget {
@@ -36,7 +39,7 @@ class ScrollHint extends StatefulWidget {
 }
 
 class _Seen {
-  _Seen(this.after, this.rect, this.gap);
+  _Seen(this.after, this.rect, this.gap, this.route);
 
   /// How far the list's end is below the screen's edge.
   final double after;
@@ -46,6 +49,12 @@ class _Seen {
 
   /// From the list's bottom edge to the wrapper's.
   final double gap;
+
+  /// The page the list is on; null outside any route.
+  final ModalRoute<Object?>? route;
+
+  /// On the page on top of its navigator.
+  bool get current => route == null || (route!.isActive && route!.isCurrent);
 }
 
 class _ScrollHintState extends State<ScrollHint> {
@@ -84,16 +93,37 @@ class _ScrollHintState extends State<ScrollHint> {
       metrics.maxScrollExtent <= 0 ? 0 : (metrics.maxScrollExtent - metrics.pixels).clamp(0, double.infinity).toDouble(),
       rect,
       me.size.height - rect.bottom,
+      _seen[from]?.route ?? ModalRoute.of(from),
     );
     _refresh();
+    _watch();
     return false;
   }
 
-  /// The list the arrow is for: the tallest one still on screen.
+  /// A page pushed over the list, or popped off it, sends no notification
+  /// of its own when it has no list: while lists are known, every frame
+  /// (a route's transition is frames) asks again which are on top. A
+  /// post-frame callback never asks for a frame — an idle screen costs
+  /// nothing.
+  bool _watching = false;
+  void _watch() {
+    if (_watching) return;
+    _watching = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _watching = false;
+      if (!mounted) return;
+      _apply();
+      if (_seen.isNotEmpty) _watch();
+    });
+  }
+
+  /// The list the arrow is for: the tallest one still on screen, on the
+  /// page on top.
   _Seen? _pick() {
     _seen.removeWhere((e, _) => !e.mounted);
     _Seen? best;
     for (final s in _seen.values) {
+      if (!s.current) continue;
       if (best == null || s.rect.height > best.rect.height) best = s;
     }
     if (best == null || best.after <= widget.margin) return null;

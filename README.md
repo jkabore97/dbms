@@ -489,25 +489,46 @@ owner. Step by step, once:
      `GoogleService-Info.plist` Firebase gives for an iOS app `bf.kaj.app`
      (Firebase console › Project settings › Add app › iOS). The build writes
      it into the app; it is never committed.
-6. **Supabase** — Authentication › URL Configuration › Redirect URLs: the
+6. **The signing certificate and profile** — before the first build, once.
+   `codemagic.yaml`'s `ios_signing` (`app_store`, `bf.kaj.app`) does not
+   make them: it picks, from Codemagic's *Code signing identities*, the
+   certificate and the profile matching that bundle id and type, and the
+   build stops with « No matching profiles found » when there are none.
+   - Codemagic › Team settings › codemagic.yaml settings › **Code signing
+     identities** › *iOS certificates* › **Generate certificate**: type
+     **Apple Distribution**, the API key `Mara App Store Connect`, a
+     reference name such as `mara_distribution`. Codemagic shows the `.p12`
+     and its password once: download them and keep them somewhere safe
+     (never in the repository) — Apple allows only a few distribution
+     certificates per account, and this one signs every build.
+   - developer.apple.com › Certificates, IDs & Profiles › **Profiles** ›
+     « + » › Distribution › **App Store Connect** › App ID `bf.kaj.app` ›
+     the certificate just generated › name « Mara App Store » › Generate.
+   - Back in Code signing identities › *iOS provisioning profiles* ›
+     **Fetch profiles**: tick « Mara App Store » (type App Store, bundle
+     id `bf.kaj.app`), reference name `mara_app_store`, Save. A profile
+     made again later (a new certificate, a capability added) is fetched
+     again the same way.
+7. **Supabase** — Authentication › URL Configuration › Redirect URLs: the
    Android entry `bf.kaj.app://login-callback` is the iPhone's too (the same
    URL scheme is declared in `ios/Runner/Info.plist`). Nothing to add if it
    is there.
-7. **The first build** — Codemagic › the application › *Start new build* ›
+8. **The first build** — Codemagic › the application › *Start new build* ›
    branch `main`, workflow **iPhone — TestFlight** (`ios-release`). About
-   20 minutes: Codemagic creates the distribution certificate and profile
-   itself (automatic code signing, from the API key), builds
+   20 minutes: Codemagic installs the certificate and profile of step 6
+   (`ios_signing`, then `xcode-project use-profiles` writes them into the
+   Xcode project), builds
    `flutter build ipa` with the same `--dart-define`s as the Android build
    plus `STORE=appstore` (an App Store build never shows the « Télécharger »
    banner — the store brings its updates), and uploads the `.ipa`. The build
    number is Codemagic's build counter, so each one is newer than the last.
-8. **TestFlight** — App Store Connect › the app › TestFlight: the build
+9. **TestFlight** — App Store Connect › the app › TestFlight: the build
    appears after Apple's processing (10 to 30 minutes; the export
    compliance question is already answered in `Info.plist`). Add yourself
    under *Internal Testing*, install the **TestFlight** app on the iPhone
    and open the invitation. Outside testers (*External Testing*) need
    Apple's short beta review first.
-9. **The store** — when it is right: App Store Connect › the app › the
+10. **The store** — when it is right: App Store Connect › the app › the
    version page: screenshots (6.9-inch, 1320 × 2868 — the template is
    `docs/brand/mara-neutre/brun/app-store/screenshot-template-1320x2868.png`),
    description, privacy policy URL (`https://marakaj.com/confidentialite`),

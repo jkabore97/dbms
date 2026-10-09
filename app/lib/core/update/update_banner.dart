@@ -63,7 +63,7 @@ class UpdateBanner extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: check.dismiss,
-                        child: Text('Plus tard',
+                        child: Text(context.tr('Plus tard'),
                             style: TextStyle(
                                 color: theme.colorScheme.onInverseSurface)),
                       ),

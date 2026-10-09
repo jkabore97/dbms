@@ -30,12 +30,46 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// (with the itinerary), where to bring (with the itinerary), what to
 /// collect at the door — and exactly one button per state.
 class CourierScreen extends StatefulWidget {
-  const CourierScreen({super.key, required this.courier});
+  const CourierScreen({
+    super.key,
+    required this.courier,
+    this.where = const CourierWhere(),
+  });
 
   final CourierRepository courier;
 
+  /// Where the phone is (122); a stand-in in tests.
+  final CourierWhere where;
+
   @override
   State<CourierScreen> createState() => _CourierScreenState();
+}
+
+/// The phone's position for the board (122), through geolocator — on
+/// Android and in a browser alike (getCurrentPosition).
+class CourierWhere {
+  const CourierWhere();
+
+  Future<LocationPermission> check() => Geolocator.checkPermission();
+
+  Future<LocationPermission> request() => Geolocator.requestPermission();
+
+  Future<Position> current() => Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+
+  /// Not on the web: there it throws, and the caller takes null.
+  Future<Position?> lastKnown() async {
+    try {
+      return await Geolocator.getLastKnownPosition()
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 class _CourierScreenState extends State<CourierScreen>
@@ -106,7 +140,7 @@ class _CourierScreenState extends State<CourierScreen>
       if (status == 'approved') {
         final here = _here;
         final results = await Future.wait([
-          // Nearest shop first from where the phone last was (073), once
+          // Nearest shop first from where the phone is (073, 122), once
           // known; the first load never waits for it.
           widget.courier.board(lat: here?.latitude, lng: here?.longitude),
           widget.courier.mine(),
@@ -147,10 +181,24 @@ class _CourierScreenState extends State<CourierScreen>
   Position? _here;
   bool _locating = false;
 
-  /// Learns where the phone last was, then re-sorts the board nearest first.
+  /// The city and the radius (122), for the line that asks for the
+  /// position and for the empty board.
+  CourierReach? _reach;
+
+  /// Asked once per opening, so « Plus tard » is not asked again at the
+  /// next refresh.
+  bool _asked = false;
+
+  /// The phone's position now (122): the board shows the street's
+  /// deliveries but those known beyond the radius, nearest first, and
+  /// keeps the position for the bell. Asks the permission with one line
+  /// saying why; on refusal or failure the board stays as it is — the
+  /// server falls back on the city, then shows everything.
   Future<void> _locate() async {
     _locating = true;
-    final here = await _lastKnown();
+    _reach = await widget.courier.reach();
+    if (mounted) setState(() {});
+    final here = await _where();
     if (!mounted || here == null) return;
     _here = here;
     try {
@@ -160,17 +208,46 @@ class _CourierScreenState extends State<CourierScreen>
     } catch (_) {}
   }
 
-  /// Where the phone last was, without asking: null when unknown, refused
-  /// or on a platform without the plugin.
-  static Future<Position?> _lastKnown() async {
+  /// The current position, after the permission prompt (Android, and
+  /// browsers through getCurrentPosition); else the last known one; null
+  /// when refused, unknown or without the plugin.
+  Future<Position?> _where() async {
+    final where = widget.where;
     try {
-      final permission = await Geolocator.checkPermission();
+      var permission = await where.check();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.unableToDetermine) {
+        if (_asked || !mounted) return null;
+        _asked = true;
+        final go = await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            content: Text(context.tr('Pour voir les livraisons à moins de {km} km',
+                {'km': '${_reach?.radiusKm ?? 10}'})),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialog).pop(false),
+                child: Text(context.tr('Plus tard')),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialog).pop(true),
+                child: Text(context.tr('Activer la position')),
+              ),
+            ],
+          ),
+        );
+        if (go != true) return null;
+        permission = await where.request();
+      }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         return null;
       }
-      return await Geolocator.getLastKnownPosition()
-          .timeout(const Duration(seconds: 2));
+      try {
+        return await where.current();
+      } catch (_) {
+        return await where.lastKnown();
+      }
     } catch (_) {
       return null;
     }
@@ -335,17 +412,21 @@ class _CourierScreenState extends State<CourierScreen>
                             child: TabBar(controller: tabs, tabs: [
                               Tab(
                                   text:
-                                      'Disponibles${_board.isEmpty ? '' : ' (${_board.length})'}'),
+                                      '${context.tr('Disponibles')}${_board.isEmpty ? '' : ' (${_board.length})'}'),
                               Tab(
                                   text:
-                                      'Mes courses${running == 0 ? '' : ' ($running)'}'),
+                                      '${context.tr('Mes courses')}${running == 0 ? '' : ' ($running)'}'),
                             ]),
                           ),
                           Expanded(
                             child: TabBarView(controller: tabs, children: [
                               _JobList(
                                 jobs: _board,
-                                empty: context.tr('Aucune livraison à prendre pour le moment. Revenez un peu plus tard.'),
+                                // 122: with neither a position nor a city,
+                                // the server cannot tell what is near.
+                                empty: _here == null && _reach?.city.isEmpty == true
+                                    ? context.tr('Activez la position pour voir les livraisons proches')
+                                    : context.tr('Aucune livraison à prendre pour le moment. Revenez un peu plus tard.'),
                                 busy: _busy,
                                 onOpen: _open,
                                 actionsFor: (job) => [
@@ -469,9 +550,9 @@ class _EarningsStrip extends StatelessWidget {
                           letterSpacing: -0.5,
                           color: ShopStyle.ink)),
                   Text(
-                      '${today?.courses ?? 0} course${(today?.courses ?? 0) > 1 ? 's' : ''}'
+                      '${(today?.courses ?? 0) > 1 ? context.tr('{n} courses', {'n': today!.courses}) : context.tr('{n} course', {'n': today?.courses ?? 0})}'
                       ' · ${(today?.km ?? 0).toStringAsFixed(1)} km'
-                      '${(today?.share ?? 0) > 0 ? ' · part Mara ${money.format(today!.share)}' : ''}',
+                      '${(today?.share ?? 0) > 0 ? ' · ${context.tr('part Mara {amount}', {'amount': money.format(today!.share)})}' : ''}',
                       style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
                 ],
               ),

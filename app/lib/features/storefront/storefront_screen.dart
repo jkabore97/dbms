@@ -736,7 +736,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
             )
           : shop == null
           ? ShopNotice(
-              text: "Cette vitrine n'existe pas, ou n'est pas ouverte.",
+              text: context.tr('Cette vitrine n\'existe pas, ou n\'est pas ouverte.'),
               action: OutlinedButton(
                 onPressed: _directory,
                 child: Text(context.tr('Voir les autres vitrines')),
