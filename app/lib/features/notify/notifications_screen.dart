@@ -7,6 +7,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
+import '../../core/notify/bell.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart' show AdminTrail;
@@ -120,22 +121,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String? _error;
   int _seen = 0;
 
+  /// The keeper listened to, kept: the same one is let go at dispose.
+  Bell? _bell;
+
   @override
   void initState() {
     super.initState();
-    if (widget.notify.isConfigured) widget.notify.bell.addListener(_onBell);
+    if (widget.notify.isConfigured) _bell = widget.notify.bell..addListener(_onBell);
     _load();
   }
 
   @override
   void dispose() {
-    if (widget.notify.isConfigured) widget.notify.bell.removeListener(_onBell);
+    _bell?.removeListener(_onBell);
     super.dispose();
   }
 
   /// A new row for this list while it is open: read again.
   void _onBell() {
-    final n = widget.notify.bell.unreadOf(widget.scope);
+    final n = _bell?.unreadOf(widget.scope) ?? 0;
     if (n > 0 && n != _seen && !_loading) _load();
     _seen = n;
   }
@@ -148,7 +152,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final unread = [for (final r in rows) if (r.isUnread) r.id];
       if (unread.isNotEmpty) {
         await widget.notify.markRead(unread);
-        await widget.notify.bell.refresh();
+        await _bell?.refresh();
       }
       if (!mounted) return;
       setState(() {
