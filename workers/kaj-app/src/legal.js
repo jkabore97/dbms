@@ -28,7 +28,7 @@ export const PRIVACY = {
     "# Vos droits",
     "Vous pouvez demander la correction ou la suppression de vos données en contactant le support. Vous pouvez aussi télécharger vos données et supprimer votre compte vous-même, depuis Mon profil › Mes données : vos adresses, vos favoris et vos signalements partent avec lui ; vos commandes restent chez les boutiques, au nom de « Client supprimé », sans votre numéro ni votre adresse (une vente déjà inscrite dans leurs comptes y reste telle quelle). La suppression d'une activité efface ses données de façon définitive.",
     "# Contact",
-    "Pour toute question sur vos données, contactez le support depuis l'écran Compte › Aide.",
+    "Pour toute question sur vos données, ou pour demander leur correction ou leur suppression, écrivez à hello@kaj-consulting.com, ou contactez le support depuis l'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.",
   ],
 };
 
@@ -71,9 +71,9 @@ export const DELETION = {
     "Les commandes que vous avez passées restent chez les boutiques, parce qu'elles font partie de leurs comptes, mais au nom de « Client supprimé », sans votre numéro ni votre adresse. Une vente déjà inscrite dans les comptes d'une boutique y reste telle quelle.",
     "Les copies de sauvegarde techniques du serveur disparaissent d'elles-mêmes, au plus tard 30 jours après la suppression.",
     "# Besoin d'aide ?",
-    "Si la suppression ne se fait pas, l'application vous le dit avec la raison ; écrivez alors à Mara depuis Mon profil › Aide.",
+    "Si la suppression ne se fait pas, l'application vous le dit avec la raison. Vous pouvez aussi demander la suppression sans l'application, en écrivant depuis l'adresse e-mail de votre compte à hello@kaj-consulting.com : Mara la fait dans les 30 jours.",
     "# In English",
-    "To delete your Mara account: open Mara (the Android app or marakaj.com), sign in, go to Mon profil › Mes données (or Compte › Mes données if you run or belong to a business), tap « Supprimer mon compte » and confirm. A business member's request is completed by Mara within 30 days. Your account, profile, addresses, favourites, reports and courier documents are deleted at once. Orders you placed stay with the shops, anonymised (no name, phone or address). Server backups expire within 30 days.",
+    "To delete your Mara account: open Mara (the Android app or marakaj.com), sign in, go to Mon profil › Mes données (or Compte › Mes données if you run or belong to a business), tap « Supprimer mon compte » and confirm. A business member's request is completed by Mara within 30 days. Your account, profile, addresses, favourites, reports and courier documents are deleted at once. Orders you placed stay with the shops, anonymised (no name, phone or address). Server backups expire within 30 days. You can also e-mail hello@kaj-consulting.com from your account's address to request deletion.",
   ],
 };
 

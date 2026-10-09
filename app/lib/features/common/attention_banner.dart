@@ -148,7 +148,9 @@ class AttentionBanner extends StatelessWidget {
           if (rest > 0)
             Padding(
               padding: const EdgeInsets.only(left: 36, top: 4),
-              child: Text(context.tr('… et {n} autre(s), plus bas dans la liste', {'n': rest}),
+              child: Text(rest == 1
+                  ? context.tr('… et 1 autre, plus bas dans la liste')
+                  : context.tr('… et {n} autres, plus bas dans la liste', {'n': rest}),
                   style: theme.textTheme.bodySmall),
             ),
           if (stays != null) ...[
@@ -202,6 +204,9 @@ class AttentionChip extends StatelessWidget {
 /// « Farine, Sucre et 2 autres » — the names a title can carry.
 String attentionNames(BuildContext context, List<String> names, {int max = 3}) {
   if (names.length <= max) return names.join(', ');
-  return context.tr('{names} et {n} autre(s)',
-      {'names': names.take(max).join(', '), 'n': names.length - max});
+  final rest = names.length - max;
+  final shown = names.take(max).join(', ');
+  return rest == 1
+      ? context.tr('{names} et 1 autre', {'names': shown})
+      : context.tr('{names} et {n} autres', {'names': shown, 'n': rest});
 }

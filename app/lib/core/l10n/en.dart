@@ -4861,10 +4861,6 @@ const enStrings = <String, String>{
       'The red number on « Account » stays until these credits are repaid: opening this page does not clear it.',
   'Ouvrir le carnet':
       'Open the credit book',
-  '… et {n} autre(s), plus bas dans la liste':
-      '… and {n} more, further down the list',
-  '{names} et {n} autre(s)':
-      '{names} and {n} more',
   '1 crédit a dépassé sa date de remboursement : {names}':
       '1 credit is past its repayment date: {names}',
   '{n} crédits ont dépassé leur date de remboursement : {names}':
@@ -5531,8 +5527,6 @@ const enStrings = <String, String>{
       'See the shop',
   'Rapprocher la carte':
       'Zoom in',
-  '{n} vitrine(s) sur la carte':
-      '{n} vitrine(s) on the map',
   '{amount}, pour les heures non réglées.':
       '{amount}, for the unpaid hours.',
   '{amount}, salaire de la semaine.':
@@ -6073,4 +6067,16 @@ const enStrings = <String, String>{
       'Your account is linked to {names}: your sales, stock and team carry your name there. Mara receives your request, contacts you if a business must be handed over or closed, then deletes your account and your personal data within 30 days.',
   'Demande envoyée : Mara supprime votre compte et vous prévient.':
       'Request sent: Mara deletes your account and lets you know.',
+  '1 vitrine sur la carte':
+      '1 storefront on the map',
+  '{n} vitrines sur la carte':
+      '{n} storefronts on the map',
+  '… et 1 autre, plus bas dans la liste':
+      '… and 1 more, further down the list',
+  '… et {n} autres, plus bas dans la liste':
+      '… and {n} more, further down the list',
+  '{names} et 1 autre':
+      '{names} and 1 more',
+  '{names} et {n} autres':
+      '{names} and {n} more',
 };

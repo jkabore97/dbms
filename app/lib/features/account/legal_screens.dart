@@ -134,8 +134,10 @@ class PrivacyScreen extends StatelessWidget {
             'La suppression d\'une activité efface ses données de façon '
             'définitive.',
         '# Contact',
-        'Pour toute question sur vos données, contactez le support depuis '
-            'l\'écran Compte › Aide.',
+        'Pour toute question sur vos données, ou pour demander leur '
+            'correction ou leur suppression, écrivez à '
+            'hello@kaj-consulting.com, ou contactez le support depuis '
+            'l\'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.',
       ],
     );
   }
