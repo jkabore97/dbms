@@ -49,9 +49,37 @@ export const TERMS = {
   ],
 };
 
-const PAGES = { "/confidentialite": PRIVACY, "/conditions": TERMS };
+// The page Google Play's « Delete account URL » points to: the steps first,
+// then what goes and what stays. Only on the site — the app has the button
+// itself (Mon profil › Mes données).
+export const DELETION = {
+  title: "Supprimer votre compte Mara",
+  blocks: [
+    "Vous pouvez supprimer votre compte Mara vous-même, à tout moment, depuis l'application Android ou depuis le site marakaj.com.",
+    "# Les étapes",
+    "1. Ouvrez Mara (l'application, ou marakaj.com dans un navigateur) et connectez-vous.",
+    "2. Allez dans Mon profil, puis Mes données.",
+    "3. Touchez « Supprimer mon compte ».",
+    "4. Tapez le mot demandé pour confirmer, puis validez. Le compte est supprimé tout de suite.",
+    "Vous pouvez d'abord télécharger vos données au même endroit (« Télécharger mes données »).",
+    "# Si vous tenez une activité (boutique, ferme, association) ou en êtes membre",
+    "Ouvrez Compte, puis Mes données, et touchez « Supprimer mon compte ». Vos ventes, votre stock et votre équipe portent votre nom : la demande part chez Mara, qui vous contacte si une activité doit être transmise ou fermée, puis supprime votre compte et vos données personnelles dans les 30 jours.",
+    "# Ce qui est supprimé",
+    "Votre compte et votre profil (nom, e-mail, numéro de téléphone, date de naissance, photo), vos adresses de livraison, vos vitrines favorites, vos signalements, vos réglages de notification, et, si vous étiez livreur, votre dossier et les photos de votre pièce d'identité.",
+    "Si vous supprimez une activité dont vous êtes propriétaire (depuis ses Paramètres), toutes ses données sont effacées de façon définitive.",
+    "# Ce qui est gardé",
+    "Les commandes que vous avez passées restent chez les boutiques, parce qu'elles font partie de leurs comptes, mais au nom de « Client supprimé », sans votre numéro ni votre adresse. Une vente déjà inscrite dans les comptes d'une boutique y reste telle quelle.",
+    "Les copies de sauvegarde techniques du serveur disparaissent d'elles-mêmes, au plus tard 30 jours après la suppression.",
+    "# Besoin d'aide ?",
+    "Si la suppression ne se fait pas, l'application vous le dit avec la raison ; écrivez alors à Mara depuis Mon profil › Aide.",
+    "# In English",
+    "To delete your Mara account: open Mara (the Android app or marakaj.com), sign in, go to Mon profil › Mes données (or Compte › Mes données if you run or belong to a business), tap « Supprimer mon compte » and confirm. A business member's request is completed by Mara within 30 days. Your account, profile, addresses, favourites, reports and courier documents are deleted at once. Orders you placed stay with the shops, anonymised (no name, phone or address). Server backups expire within 30 days.",
+  ],
+};
 
-/** The page for [pathname], or null when it is not one of the two. */
+const PAGES = { "/confidentialite": PRIVACY, "/conditions": TERMS, "/supprimer-mon-compte": DELETION };
+
+/** The page for [pathname], or null when it is not one of these. */
 export function legalPage(pathname) {
   const doc = PAGES[pathname.replace(/\/$/, "")];
   if (!doc) return null;
@@ -85,7 +113,7 @@ export function legalPage(pathname) {
 ${body}
 </main>
 <footer>
-<a href="/">Ouvrir Mara</a> · <a href="/confidentialite">Politique de confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a>
+<a href="/">Ouvrir Mara</a> · <a href="/confidentialite">Politique de confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/supprimer-mon-compte">Supprimer votre compte</a>
 </footer>
 </body>
 </html>`;

@@ -64,7 +64,7 @@ const FINGERPRINTED = /^\/(app|ck|a)\/[0-9a-f]{12}\/(.+)$/;
 const BUILD_FILES = new Set(BUILD ? BUILD.files : []);
 // Plain pages the site Worker writes (workers/kaj-app/src/legal.js): read
 // from the network when there is one; the app's own copy otherwise.
-const LEGAL = new Set(['/confidentialite', '/conditions']);
+const LEGAL = new Set(['/confidentialite', '/conditions', '/supprimer-mon-compte']);
 // Never kept: how the app and the browser learn a new build exists.
 const PASS = new Set(['/mara_sw.js', '/push_sw.js', '/push_handlers.js',
   '/flutter_service_worker.js', '/version.json']);
