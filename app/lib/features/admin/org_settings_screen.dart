@@ -570,7 +570,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       initialDate: _planUntil ?? DateTime(now.year + 1, now.month, now.day),
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 10),
-      helpText: 'Payé jusqu\'au',
+      helpText: context.tr('Payé jusqu\'au'),
     );
     if (picked != null && mounted) setState(() => _planUntil = picked);
   }
@@ -1262,8 +1262,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(context.tr('Taux de change'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 4),
     Text(
-      'Pour encaisser une vente dans une autre monnaie. Les '
-      'livres restent en ${_currency == 'XOF' ? 'FCFA' : _currency}.',
+      context.tr('Pour encaisser une vente dans une autre monnaie. Les livres restent en {currency}.',
+          {'currency': _currency == 'XOF' ? 'FCFA' : _currency}),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1880,8 +1880,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           label: Text(
             _planUntil == null
                 ? context.tr('Payé jusqu\'au… (sans date = sans fin)')
-                : 'Payé jusqu\'au '
-                      '${DateFormat('d MMMM yyyy', intlLocale()).format(_planUntil!)}',
+                : context.tr('Payé jusqu\'au {date}',
+                    {'date': DateFormat('d MMMM yyyy', intlLocale()).format(_planUntil!)}),
           ),
         ),
       ],

@@ -5560,4 +5560,26 @@ Add one to give someone a role over only part of the business.',
       '{name} — invoice {number}',
   'Reste à payer : {amount}':
       'Left to pay: {amount}',
+  'Les deux prix doivent être des nombres entiers.':
+      'Both prices must be whole numbers.',
+  'Enregistré. Les prochains écrans Mara Pro le disent.':
+      'Saved. The next Mara Pro screens say so.',
+  '{from}–{to} sur {n}':
+      '{from}–{to} of {n}',
+  'Payé jusqu\'au':
+      'Paid until',
+  'Pour encaisser une vente dans une autre monnaie. Les livres restent en {currency}.':
+      'To take a sale in another currency. The books stay in {currency}.',
+  'La couleur des fermes':
+      'The farms\' colour',
+  'La couleur des associations':
+      'The associations\' colour',
+  'La couleur des boutiques':
+      'The shops\' colour',
+  'La couleur de l\'application':
+      'The app\'s colour',
+  'À vérifier':
+      'To check',
+  '{n} commandes comptées · {pct} % d\'un seul client':
+      '{n} orders counted · {pct} % from a single customer',
 };

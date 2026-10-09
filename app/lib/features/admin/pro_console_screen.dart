@@ -93,7 +93,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
     final month = int.tryParse(_month.text.trim());
     final year = int.tryParse(_year.text.trim());
     if (month == null || year == null || month <= 0 || year <= 0) {
-      setState(() => _saved = 'Les deux prix doivent être des nombres entiers.');
+      setState(() => _saved = context.tr('Les deux prix doivent être des nombres entiers.'));
       return;
     }
     setState(() {
@@ -109,7 +109,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saved = 'Enregistré. Les prochains écrans Mara Pro le disent.';
+        _saved = context.tr('Enregistré. Les prochains écrans Mara Pro le disent.');
       });
     } catch (error) {
       if (!mounted) return;

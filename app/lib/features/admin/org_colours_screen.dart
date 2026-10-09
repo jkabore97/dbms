@@ -124,7 +124,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
               _PaletteCard(
                 palette: paletteFor(widget.profile),
                 title: context.tr('Couleur par défaut'),
-                subtitle: _profileLabel(widget.profile),
+                subtitle: context.tr(_profileLabel(widget.profile)),
                 selected: _selected == null,
                 onTap: _saving ? null : () => setState(() => _selected = null),
               ),

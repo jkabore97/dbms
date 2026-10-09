@@ -265,11 +265,11 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                 leading: w.suspicious
                     ? Icon(Icons.flag_outlined,
                         color: theme.colorScheme.error,
-                        semanticLabel: 'À vérifier')
+                        semanticLabel: context.tr('À vérifier'))
                     : null,
                 title: Text(w.orgName),
-                subtitle: Text('${w.orders} commandes comptées · '
-                    '${(w.topCustomerShare * 100).round()} % d\'un seul client'),
+                subtitle: Text(context.tr('{n} commandes comptées · {pct} % d\'un seul client',
+                    {'n': w.orders, 'pct': (w.topCustomerShare * 100).round()})),
                 trailing: Text(context.tr('+{week}', {'week': w.week}),
                     style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
