@@ -108,7 +108,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
           permission == LocationPermission.deniedForever) {
         if (mounted) {
           setState(() => _gpsNote =
-              'Sans votre position, la carte montre la boutique et le client.');
+              context.tr('Sans votre position, la carte montre la boutique et le client.'));
         }
         return;
       }
@@ -134,7 +134,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
       // No location plugin on this platform (tests, an odd browser): the
       // map is still the two pins.
       if (mounted) {
-        setState(() => _gpsNote = 'Position indisponible sur cet appareil.');
+        setState(() => _gpsNote = context.tr('Position indisponible sur cet appareil.'));
       }
     }
   }
@@ -262,7 +262,7 @@ class _JobMapScreenState extends State<JobMapScreen> {
         MarkerLayer(markers: [
           if (shop != null)
             _pin(shop, Icons.storefront, job.shopName),
-          if (drop != null) _pin(drop, Icons.home, 'Client'),
+          if (drop != null) _pin(drop, Icons.home, context.tr('Client')),
           if (_me != null)
             Marker(
               point: _me!,
@@ -442,7 +442,7 @@ class _Panel extends StatelessWidget {
         Icon(icon, size: 18, color: bold ? ShopStyle.ink : ShopStyle.mist),
         const SizedBox(width: 8),
         Expanded(
-          child: Text('$label · $place',
+          child: Text('${translate(trCurrent, label)} · $place',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

@@ -183,8 +183,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                             context.tr('Nom, date de naissance, téléphone. Nécessaire pour un contrat ou un bulletin de paie.')),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _editProfile(
-                          intro: 'Ces informations vous suivent dans toutes '
-                              'les entreprises que vous rejoindrez.',
+                          intro: 'Ces informations vous suivent dans toutes les entreprises que vous rejoindrez.',
                         ),
                       ),
                     ),

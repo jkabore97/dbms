@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 /// Country dialling codes, for the picker in front of every phone field.
 ///
 /// Until now every phone field in the app was prefixed with a hardcoded
@@ -45,7 +46,11 @@ class CountryCode {
     if (trunkZero && cleaned.startsWith('0')) cleaned = cleaned.substring(1);
     final n = cleaned.replaceAll(RegExp(r'\D'), '').length;
     if (want.contains(n)) return null;
-    return '${want.join(' ou ')} chiffres pour $name ($dial)';
+    return translate(trCurrent, '{n} chiffres pour {country} ({dial})', {
+      'n': want.join(translate(trCurrent, ' ou ')),
+      'country': translate(trCurrent, name),
+      'dial': dial,
+    });
   }
 
   /// ISO 3166-1 alpha-2, shown in the field.
@@ -240,6 +245,7 @@ bool countryMatches(CountryCode country, String query) {
   if (q.isEmpty) return true;
   final digits = q.replaceAll('+', '');
   return country.name.toLowerCase().contains(q) ||
+      translate('en', country.name).toLowerCase().contains(q) ||
       country.iso.toLowerCase().contains(q) ||
       (digits.isNotEmpty && country.dial.substring(1).startsWith(digits));
 }

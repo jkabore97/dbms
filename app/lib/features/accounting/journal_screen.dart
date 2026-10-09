@@ -211,8 +211,8 @@ class _JournalTile extends StatelessWidget {
         [
           DateFormat('d MMM', intlLocale()).format(row.occurredAt),
           row.recordedBy,
-          if (row.isReversal) 'correction',
-          if (row.reversed) 'corrigé',
+          if (row.isReversal) context.tr('correction'),
+          if (row.reversed) context.tr('corrigé'),
         ].join(' · '),
       ),
       trailing: Text(

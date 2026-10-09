@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../core/theme/scroll_hint.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One place a business's home screen leads to.
 class HomeDestination {
@@ -179,7 +180,7 @@ class HomeNav {
       if (rest.isNotEmpty)
         HomeDestination(
           icon: Icons.more_horiz,
-          label: moreLabel,
+          label: context.tr(moreLabel),
           // What waits under Plus, added up (115): its lines say which.
           badge: rest.fold(0, (n, p) => n + p.badge),
           onTap: () => showMore(context, rest),

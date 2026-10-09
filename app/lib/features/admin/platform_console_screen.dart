@@ -532,11 +532,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
               ],
               child: Chip(
                 avatar: const Icon(Icons.sort, size: 18),
-                label: Text(switch (_sort) {
+                label: Text(context.tr(switch (_sort) {
                   'name' => 'Nom',
                   'newest' => 'Plus récentes',
                   _ => 'Activité',
-                }),
+                })),
               ),
             ),
             if (_isFiltered)

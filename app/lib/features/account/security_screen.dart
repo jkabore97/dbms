@@ -154,7 +154,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
     if (done == true) {
       await _api?.log('pin_changed');
-      _say(context.tr('Code changé.'));
+      _say(translate(trCurrent, 'Code changé.'));
       await _load();
     }
   }
@@ -167,7 +167,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       builder: (_) => _ChangePasswordDialog(api: api),
     );
     if (done == true) {
-      _say(context.tr('Mot de passe changé.'));
+      _say(translate(trCurrent, 'Mot de passe changé.'));
       await _load();
     }
   }

@@ -135,7 +135,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
               for (final palette in allPalettes) ...[
                 _PaletteCard(
                   palette: palette,
-                  title: palette.label,
+                  title: context.tr(palette.label),
                   selected: _selected == palette.name,
                   onTap: _saving
                       ? null

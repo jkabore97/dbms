@@ -851,13 +851,8 @@ class VitrinePreview extends StatelessWidget {
     final accent = style.accent ?? _ink;
     final shown = items.isEmpty
         ? [
-            for (final n in const [
-              'Article 1',
-              'Article 2',
-              'Article 3',
-              'Article 4',
-            ])
-              (n, 1000.0),
+            for (var i = 1; i <= 4; i++)
+              (translate(lang, 'Article {n}', {'n': i}), 1000.0),
           ]
         : [for (final p in items.take(4)) (p.name, p.salePrice)];
     final hours = style.schedule?.label(lang) ?? style.hours;

@@ -318,7 +318,7 @@ class _InvoiceTile extends StatelessWidget {
       _ when invoice.isPaid => (Colors.green.shade700, 'Payée'),
       _ when invoice.isOverdue => (
           theme.colorScheme.error,
-          'En retard de ${invoice.daysOverdue} j'
+          context.tr('En retard de {n} j', {'n': invoice.daysOverdue})
         ),
       _ when invoice.isPartlyPaid => (Colors.orange.shade800, 'Partiel'),
       _ => (theme.colorScheme.primary, 'À encaisser'),
@@ -351,7 +351,7 @@ class _InvoiceTile extends StatelessWidget {
           ],
         ),
         subtitle: Text(
-          '${invoice.number} · ${date.format(invoice.issuedOn)}\n$label',
+          '${invoice.number} · ${date.format(invoice.issuedOn)}\n${context.tr(label)}',
         ),
         isThreeLine: true,
         trailing: Column(

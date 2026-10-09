@@ -424,7 +424,7 @@ class _Row extends StatelessWidget {
         return Icon(Icons.check, size: 20, color: pro ? kInk : kMist);
       }
       if (v == null) return const Text('—', style: TextStyle(color: kMist));
-      return Text(context.tr('$v'),
+      return Text(v is String ? context.tr(v) : '$v',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: pro ? FontWeight.w700 : FontWeight.w400,

@@ -1,6 +1,7 @@
-import 'package:kaj_app/core/l10n/tr.dart';
 /// Spots for sale on the street (071): what they cost, and the ones asked.
 library;
+
+import 'package:kaj_app/core/l10n/tr.dart';
 
 double _d(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 int _i(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;

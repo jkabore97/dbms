@@ -717,7 +717,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
               for (final u in _farm ? _farmUnits : _shopUnits)
                 ChoiceChip(
                   key: ValueKey('article-unit-$u'),
-                  label: Text(u, style: const TextStyle(fontSize: 16)),
+                  label: Text(context.tr(u), style: const TextStyle(fontSize: 16)),
                   selected: _unit == u,
                   onSelected: (on) {
                     setState(() => _unit = on ? u : '');

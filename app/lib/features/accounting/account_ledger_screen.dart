@@ -211,7 +211,7 @@ class _MovementTile extends StatelessWidget {
           movement.recordedBy,
           if (movement.memo != null && movement.memo!.isNotEmpty)
             movement.memo!,
-          if (movement.reversed) 'corrigé',
+          if (movement.reversed) context.tr('corrigé'),
         ].join(' · '),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,

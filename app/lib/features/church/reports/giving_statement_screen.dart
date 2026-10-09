@@ -125,7 +125,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
               name: 'releve-${_member!.fullName}-$_year.png',
             ),
           ],
-          text: '${widget.orgName} — relevé $_year',
+          text: translate(trCurrent, '{name} — relevé {year}', {'name': widget.orgName, 'year': _year}),
         ),
       );
     } catch (error) {
@@ -380,8 +380,7 @@ class _StatementCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Établi le '
-            '${DateFormat('d MMMM yyyy', intlLocale()).format(DateTime.now())}',
+            context.tr('Établi le {date}', {'date': DateFormat('d MMMM yyyy', intlLocale()).format(DateTime.now())}),
             style: const TextStyle(fontSize: 11, color: _muted),
           ),
         ],

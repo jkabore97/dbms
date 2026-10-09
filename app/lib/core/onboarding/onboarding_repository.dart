@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'application_form.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Getting into the app: saying who you are, and then joining a business —
 /// or, since 111, creating one's own (business_creation.dart).
@@ -192,13 +193,16 @@ class Invitation {
   /// The message that actually gets sent. WhatsApp is where this conversation
   /// happens, so the code is on its own line and the instruction is short
   /// enough to read on a lock screen.
-  String get message =>
-      'Bonjour ! Vous êtes invité(e) à rejoindre « $orgName » sur Mara.\n\n'
-      '1. Installez l\'application\n'
-      '2. Créez votre compte\n'
-      '3. Entrez ce code :\n\n'
-      '$code\n\n'
-      "Le code expire dans ${expiresAt == null ? 'quelques jours' : '${expiresAt!.difference(DateTime.now()).inDays} jours'}.";
+  String get message => translate(
+      trCurrent,
+      'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.',
+      {
+        'org': orgName,
+        'code': code,
+        'delay': expiresAt == null
+            ? translate(trCurrent, 'quelques jours')
+            : translate(trCurrent, '{n} jours', {'n': expiresAt!.difference(DateTime.now()).inDays}),
+      });
 
   factory Invitation.fromRow(Map<String, dynamic> row) => Invitation(
         id: row['invitation_id'] as String,

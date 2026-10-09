@@ -124,7 +124,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
             name: 'facture-${doc.number}.png',
           ),
         ],
-        text: context.tr('{name} — facture {number}', {'name': doc.orgName, 'number': doc.number}),
+        text: translate(trCurrent, '{name} — facture {number}', {'name': doc.orgName, 'number': doc.number}),
       ));
     } catch (error) {
       if (!mounted) return;

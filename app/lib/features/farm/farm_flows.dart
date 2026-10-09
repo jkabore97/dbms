@@ -70,7 +70,7 @@ class FarmUnitChips extends StatelessWidget {
               key: Key('farm-unit-$u'),
               label: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Text(u, style: const TextStyle(fontSize: 17)),
+                child: Text(context.tr(u), style: const TextStyle(fontSize: 17)),
               ),
               selected: u == value,
               onSelected: (_) => onChanged(u),

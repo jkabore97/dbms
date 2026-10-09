@@ -878,7 +878,7 @@ class _EventTile extends StatelessWidget {
         backgroundColor: tint.withValues(alpha: 0.12),
         child: Icon(icon, color: tint, size: 20),
       ),
-      title: Text('$label · ${event['subject']}'),
+      title: Text('${context.tr(label)} · ${event['subject']}'),
       subtitle: Text(
         [
           DateFormat.Hm().format(time),
@@ -930,13 +930,11 @@ class _FarmShapeCard extends StatelessWidget {
                   ? context.tr('Enregistrez vos animaux et vos parcelles.')
                   : [
                       if (shape.hasLivestock)
-                        '${shape.animals} animaux en ${shape.herds} groupe'
-                            '${shape.herds > 1 ? 's' : ''}',
+                        context.tr('{animals} animaux en {herds} groupe(s)', {'animals': shape.animals, 'herds': shape.herds}),
                       if (shape.hasCrops)
-                        '${shape.cropCycles} culture'
-                            '${shape.cropCycles > 1 ? 's' : ''} en cours',
+                        context.tr('{n} culture(s) en cours', {'n': shape.cropCycles}),
                       if (shape.harvestWeek > 0)
-                        '${shape.harvestWeek.toStringAsFixed(0)} kg récoltés cette semaine',
+                        context.tr('{n} kg récoltés cette semaine', {'n': shape.harvestWeek.toStringAsFixed(0)}),
                     ].join(' · '),
               style: theme.textTheme.bodySmall,
             ),

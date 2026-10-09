@@ -892,6 +892,42 @@ void main() {
       });
     }
 
+    // 122 (R3): the language is a choice between the two, not a switch
+    // that turns English on; the tap applies it and keeps it.
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('Compte of a $profile: Français / English, the current one selected', (tester) async {
+        final session = await shopper(tester);
+        final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        await pump(tester, session, at: '/compte', routes: [
+          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org)),
+        ]);
+        await tester.tap(find.byKey(const Key('group-Préférences')));
+        await settle(tester);
+        expect(find.byKey(const Key('compte-english')), findsNothing, reason: 'the old switch is gone');
+        final choice = find.byKey(const Key('compte-language'));
+        expect(choice, findsOneWidget);
+        final buttons = find.descendant(of: choice, matching: find.byType(SegmentedButton<String>));
+        final controller = AppScope.of(tester.element(choice)).localeController;
+        // Until one is tapped it follows the phone (the test host says en).
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected,
+            {controller.effective.languageCode == 'en' ? 'en' : 'fr'});
+        await tester.runAsync(() async {
+          await tester.tap(find.descendant(of: choice, matching: find.text('Français')));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await settle(tester);
+        expect(controller.chosen, const Locale('fr'));
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected, {'fr'});
+        await tester.runAsync(() async {
+          await tester.tap(find.descendant(of: choice, matching: find.text('English')));
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        await settle(tester);
+        expect(controller.chosen, const Locale('en'));
+        expect(tester.widget<SegmentedButton<String>>(buttons).selected, {'en'});
+      });
+    }
+
     testWidgets('À faire « Signalements »: the report read, closed with a word, « Annuler » offered', (tester) async {
       final center = _Center();
       await pump(tester, await shopper(tester), at: '/console', size: const Size(1280, 900), routes: [

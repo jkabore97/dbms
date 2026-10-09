@@ -745,9 +745,7 @@ GoRouter buildRouter(SessionController session) {
           onboarding: AppScope.of(context).onboarding,
           title: context.tr('Mes informations'),
           nextLabel: 'Enregistrer',
-          intro: 'Ces informations vous suivent dans toutes les entreprises '
-              'que vous rejoignez. Elles figurent sur un contrat ou un '
-              'bulletin de paie.',
+          intro: 'Ces informations vous suivent dans toutes les entreprises que vous rejoignez. Elles figurent sur un contrat ou un bulletin de paie.',
         ),
       ),
 

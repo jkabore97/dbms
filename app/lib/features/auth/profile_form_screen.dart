@@ -187,14 +187,14 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     final theme = Theme.of(context);
 
     return ScrollHint(child: Scaffold(
-      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(widget.title)),
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(context.tr(widget.title))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               children: [
                 if (widget.intro != null) ...[
-                  Text(widget.intro!, style: theme.textTheme.bodyMedium),
+                  Text(context.tr(widget.intro!), style: theme.textTheme.bodyMedium),
                   const SizedBox(height: 20),
                 ],
                 TextField(
@@ -284,7 +284,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.arrow_forward),
-                  label: Text(widget.nextLabel),
+                  label: Text(context.tr(widget.nextLabel)),
                 ),
                 const SizedBox(height: 12),
                 Text(

@@ -618,7 +618,7 @@ class _ServiceSheetState extends State<ServiceSheet> {
               children: [
                 for (final u in units)
                   ChoiceChip(
-                    label: Text(u),
+                    label: Text(context.tr(u)),
                     selected: _unit.text.trim() == u,
                     onSelected: _busy
                         ? null

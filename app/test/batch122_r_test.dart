@@ -12,6 +12,13 @@ import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/core/notify/push_client.dart';
 import 'package:kaj_app/core/notify/push_setup.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/phone/country_codes.dart';
+import 'package:kaj_app/core/security/security_repository.dart';
+import 'package:kaj_app/core/security/security_settings.dart';
+import 'package:kaj_app/features/account/security_screen.dart';
+import 'package:kaj_app/features/storefront/shop_style.dart';
+import 'package:intl/intl.dart';
 import 'package:kaj_app/core/onboarding/business_creation.dart';
 import 'package:kaj_app/features/notify/notification_settings_sheet.dart';
 import 'package:kaj_app/l10n/strings.dart';
@@ -249,5 +256,54 @@ void main() {
         expect(tagline.style?.color, prunePalette.ink);
       });
     }
+  });
+
+  group('R3 every word, in English too', () {
+    testWidgets('the street\'s strip and a section label read English', (tester) async {
+      await tester.pumpWidget(_app(
+          ShopPage(
+            title: 'Mara',
+            announcements: ShopPage.street,
+            body: Builder(builder: (context) => ShopSectionLabel(context.tr('Passées'))),
+          ),
+          lang: 'en'));
+      await tester.pump();
+      expect(find.text('Pick up at the shop, or delivery in the neighbourhood'), findsOneWidget);
+      expect(find.text('PAST'), findsOneWidget);
+      expect(find.text('PASSÉES'), findsNothing);
+    });
+
+    testWidgets('Sécurité in English: the delays and the fingerprint', (tester) async {
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final db = (await tester.runAsync(() => LocalDb.open(path: inMemoryDatabasePath)))!;
+      addTearDown(() => tester.runAsync(db.close));
+      final settings = SecuritySettings(db);
+      await tester.runAsync(settings.load);
+      await tester.pumpWidget(_app(SecurityScreen(settings: settings, api: SecurityRepository(null)), lang: 'en'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('After 5 min'), findsOneWidget);
+      expect(find.text('Après 5 min'), findsNothing);
+      expect(find.text('Never'), findsOneWidget);
+    });
+
+    test('dates, countries, devices and the server\'s words follow the language', () async {
+      final before = trCurrent;
+      addTearDown(() => trCurrent = before);
+      trCurrent = 'en';
+      expect(intlLocale(), 'en');
+      expect(DateFormat('d MMM', intlLocale()).format(DateTime(2026, 10, 5)), '5 Oct');
+      expect(translate('en', countryByIso('SN').name), 'Senegal');
+      expect(countryByIso('BF').lengthProblem('70 11'), '8 digits for Burkina Faso (+226)');
+      expect(countryMatches(countryByIso('DE'), 'germ'), isTrue, reason: 'searched in English too');
+      expect(describeUserAgent(null), 'Unknown device');
+      expect(translate('en', 'Pas de connexion. Réessayez quand le réseau revient.'),
+          'No connection. Try again when the network is back.');
+      trCurrent = 'fr';
+      expect(intlLocale(), 'fr_FR');
+      expect(countryByIso('BF').lengthProblem('70 11'), '8 chiffres pour Burkina Faso (+226)');
+    });
   });
 }

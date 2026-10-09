@@ -201,7 +201,7 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
                   return ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    title: Text('${_label(row)} · '
+                    title: Text('${context.tr(_label(row))} · '
                         '${qty.toStringAsFixed(0)}${unit == null ? '' : ' $unit'}'),
                     subtitle: Text([
                       DateFormat('d MMM y', intlLocale()).format(date),

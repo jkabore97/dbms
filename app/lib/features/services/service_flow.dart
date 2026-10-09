@@ -362,7 +362,7 @@ class _ServiceFlowState extends State<ServiceFlow> {
             for (final u in _units)
               ChoiceChip(
                 key: ValueKey('service-flow-unit-$u'),
-                label: Text(u, style: const TextStyle(fontSize: 16)),
+                label: Text(context.tr(u), style: const TextStyle(fontSize: 16)),
                 selected: _unit == u,
                 onSelected: (on) {
                   setState(() => _unit = on ? u : '');
@@ -386,7 +386,7 @@ class _ServiceFlowState extends State<ServiceFlow> {
             for (final d in _durations)
               ChoiceChip(
                 key: ValueKey('service-flow-duration-$d'),
-                label: Text(d, style: const TextStyle(fontSize: 16)),
+                label: Text(context.tr(d), style: const TextStyle(fontSize: 16)),
                 selected: _duration == d,
                 onSelected: (on) {
                   setState(() => _duration = on ? d : null);

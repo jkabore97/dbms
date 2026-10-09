@@ -148,8 +148,8 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 if (widget.showFeatures) ...[
                 const SizedBox(height: 16),
                 Text(
-                  '${_money(terms.priceMonth)} par mois, ou '
-                  '${_money(terms.priceYear)} par an.',
+                  context.tr('{month} par mois, ou {year} par an.',
+                      {'month': _money(terms.priceMonth), 'year': _money(terms.priceYear)}),
                   style: theme.textTheme.titleMedium,
                 ),
                 ],

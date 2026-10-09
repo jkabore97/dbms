@@ -130,7 +130,7 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
               OutlinedButton.icon(
                 onPressed: () => widget.onCall('tel:${t.courierPhone}'),
                 icon: const Icon(Icons.call_outlined, size: 18),
-                label: Text('Appeler ${t.courierName ?? 'le livreur'}'),
+                label: Text(context.tr('Appeler {name}', {'name': t.courierName ?? context.tr('le livreur')})),
               ),
             if ((t.shopPhone ?? '').isNotEmpty)
               OutlinedButton.icon(
@@ -216,7 +216,7 @@ class _Step extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(label,
+                        child: Text(context.tr(label),
                             style: TextStyle(
                                 fontSize: 14,
                                 fontWeight:

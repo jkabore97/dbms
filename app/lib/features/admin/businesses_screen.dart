@@ -105,7 +105,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     );
     if (confirmed != true) return;
 
-    await _run(() => widget.admin.archiveOrg(org.id), context.tr('{name} archivée.', {'name': org.name}));
+    await _run(() => widget.admin.archiveOrg(org.id), translate(trCurrent, '{name} archivée.', {'name': org.name}));
   }
 
   Future<void> _restore(PlatformOrg org) =>
@@ -127,7 +127,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
         // it for an empty business changes nothing.
         force: org.hasBooks,
       ),
-      context.tr('{name} supprimée définitivement.', {'name': org.name}),
+      translate(trCurrent, '{name} supprimée définitivement.', {'name': org.name}),
     );
   }
 
@@ -392,8 +392,13 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
                 // Said in what is being destroyed, not in row counts: "42
                 // écritures" is a number, "toute la comptabilité" is what it
                 // means.
-                ? context.tr('Toute la comptabilité de {name} sera détruite : {entries} écriture(s), les articles, le personnel, les photos et les {members} accès. C’est irréversible.',
-                    {'name': org.name, 'entries': org.entryCount, 'members': org.memberCount})
+                ? context.tr('Toute la comptabilité de {name} sera détruite : {entries}, les articles, le personnel, les photos et les {members} accès. C’est irréversible.', {
+                    'name': org.name,
+                    'entries': org.entryCount > 1
+                        ? context.tr('{n} écritures', {'n': org.entryCount})
+                        : context.tr('{n} écriture', {'n': org.entryCount}),
+                    'members': org.memberCount,
+                  })
                 : context.tr('{name} n’a aucune écriture. Sa suppression est définitive et ne peut pas être annulée.',
                     {'name': org.name}),
             style: theme.textTheme.bodyMedium,

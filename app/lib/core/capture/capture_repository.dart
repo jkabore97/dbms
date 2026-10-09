@@ -9,6 +9,7 @@ import '../site/site.dart';
 import 'invoice_reading.dart';
 import 'models.dart';
 import 'notebook_reading.dart';
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Photographs: taking them, sending them, reading them back.
 ///
@@ -506,7 +507,7 @@ class CaptureRepository {
     } catch (_) {
       // Falls through.
     }
-    return 'Le service de photos a répondu ${response.statusCode}.';
+    return translate(trCurrent, 'Le service de photos a répondu {code}.', {'code': response.statusCode});
   }
 
   String _requireToken() {

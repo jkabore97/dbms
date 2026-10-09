@@ -1310,8 +1310,7 @@ class AdminRepository {
     final client = _client;
     if (client == null) {
       throw StateError(
-        "Cette version de l'application a été compilée sans serveur. "
-        'Reconstruisez-la avec SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY.',
+        "Cette version de l'application a été compilée sans serveur. Reconstruisez-la avec SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY.",
       );
     }
     return client;

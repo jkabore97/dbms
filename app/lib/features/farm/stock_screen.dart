@@ -101,7 +101,7 @@ class _StockScreenState extends State<StockScreen> {
       context,
       title: item.name,
       label: context.tr('Seuil ({unit})', {'unit': item.unit}),
-      hint: 'Prévenir en dessous de ce nombre',
+      hint: context.tr('Prévenir en dessous de ce nombre'),
       initial:
           item.reorderLevel == null ? '' : trimQuantity(item.reorderLevel!),
     );

@@ -126,8 +126,9 @@ class _StripeCardButtonState extends State<StripeCardButton> {
         ],
         const SizedBox(height: 6),
         Text(
-          'Visa, Mastercard. Renouvelé chaque ${year ? context.tr('année') : 'mois'}, '
-          'annulable à tout moment. Paiement sécurisé par Stripe.',
+          year
+              ? context.tr('Visa, Mastercard. Renouvelé chaque année, annulable à tout moment. Paiement sécurisé par Stripe.')
+              : context.tr('Visa, Mastercard. Renouvelé chaque mois, annulable à tout moment. Paiement sécurisé par Stripe.'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: kMist),
         ),

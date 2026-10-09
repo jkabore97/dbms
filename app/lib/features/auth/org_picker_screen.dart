@@ -348,7 +348,7 @@ class _OrgCard extends StatelessWidget {
                                 // The chips' word, in the singular.
                                 kindSingular(context, org.profile),
                                 if (org.roles.isNotEmpty)
-                                  labelForRole(org.roles.first),
+                                  context.tr(labelForRole(org.roles.first)),
                               ].join(' · '),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant),

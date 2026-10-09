@@ -1188,7 +1188,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 8),
     _ColourRow(
       palette: paletteFor(_profile, theme: _theme),
-      label: paletteNamed(_theme)?.label ?? context.tr('Couleur par défaut'),
+      label: paletteNamed(_theme) == null ? context.tr('Couleur par défaut') : context.tr(paletteNamed(_theme)!.label),
       onTap: _saving ? null : _openColours,
     ),
     const SizedBox(height: 32),
@@ -1274,7 +1274,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.currency_exchange),
         title: Text(rateLabel(r.currency, r.rate, _currency)),
-        subtitle: Text(knownCurrencies[r.currency] ?? ''),
+        subtitle: Text(context.tr(knownCurrencies[r.currency] ?? '')),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
           tooltip: context.tr('Retirer'),
@@ -2788,7 +2788,7 @@ class _RateDialogState extends State<RateDialog> {
                 for (final code in _choices)
                   DropdownMenuItem(
                     value: code,
-                    child: Text('$code — ${knownCurrencies[code]}'),
+                    child: Text('$code — ${context.tr(knownCurrencies[code] ?? '')}'),
                   ),
               ],
               onChanged: _pick,
@@ -2798,7 +2798,7 @@ class _RateDialogState extends State<RateDialog> {
               alignment: Alignment.centerLeft,
               child: Text(
                 '${widget.existing!.currency} — '
-                '${knownCurrencies[widget.existing!.currency] ?? ''}',
+                '${context.tr(knownCurrencies[widget.existing!.currency] ?? '')}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),

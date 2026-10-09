@@ -1,4 +1,3 @@
-import 'package:kaj_app/core/l10n/tr.dart';
 /// Parsing for the multi-line quick add: one product per line, typed or
 /// pasted, twenty articles in one save.
 ///
@@ -16,6 +15,8 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// walk stops there. Comma decimals are accepted ("2,5"), because that is
 /// how a French keyboard writes them.
 library;
+
+import 'package:kaj_app/core/l10n/tr.dart';
 
 /// One parsed line: either a product ready to save, or the reason it is not.
 class BulkLine {

@@ -2064,7 +2064,7 @@ class _Window extends StatelessWidget {
                   ],
                   Text(
                     [
-                      _kindOf(shop.profile),
+                      context.tr(_kindOf(shop.profile)),
                       if (address.isNotEmpty) address,
                       // A window of services alone (098): booked, not
                       // collected.
@@ -2646,7 +2646,7 @@ String priceOf(NumberFormat money, PublicItem item, [String lang = 'fr']) {
 /// « Disponible à partir du 15/11 » — a batch or a harvest still to come,
 /// orderable now (083).
 String preorderLine(PublicItem item) => translate(trCurrent, 'Disponible à partir du {date}',
-    {'date': DateFormat.MMMd(intlLocale()).format(item.availableFrom!)});
+    {'date': DateFormat('dd/MM').format(item.availableFrom!)});
 
 /// What kind of place this is, in the word a shopper uses.
 String _kindOf(String profile) => switch (profile) {

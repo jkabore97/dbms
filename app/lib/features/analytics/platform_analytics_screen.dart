@@ -138,7 +138,7 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
             KpiCard(
               label: context.tr('Bénéfice'),
               value: _money.format(_headline.margin),
-              hint: '$marginPct % du CA',
+              hint: context.tr('{pct} % du CA', {'pct': marginPct}),
               icon: Icons.trending_up,
             ),
             KpiCard(
@@ -195,7 +195,7 @@ class _BusinessRow extends StatelessWidget {
         b.revenue == 0 ? 0 : (b.margin / b.revenue * 100).round();
     final last = b.lastSale == null
         ? context.tr('Aucune vente')
-        : 'Dernière : ${DateFormat('d MMM', intlLocale()).format(b.lastSale!.toLocal())}';
+        : context.tr('Dernière : {date}', {'date': DateFormat('d MMM', intlLocale()).format(b.lastSale!.toLocal())});
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

@@ -43,6 +43,40 @@ void main() {
     expect(missing, isEmpty, reason: 'add these to lib/core/l10n/en.dart');
   });
 
+  test('no raw French sentence is handed straight to a widget (122)', () {
+    // A heuristic, not a parser: a literal right after Text(, a field's
+    // label, hint, helper or error, a tooltip or a semantic label, that
+    // reads as French (an accent, a guillemet, or one of French's small
+    // words), and is not passed through context.tr(). What is French on
+    // purpose (a language named in itself, a person's own quoted note)
+    // is allowed by name below.
+    final at = RegExp(r"(?:\bText\(|labelText:|hintText:|helperText:|errorText:|"
+        r"tooltip:|semanticLabel:|\bhint:|barrierLabel:|ShopSectionLabel\(|helpText:)"
+        r"\s*'((?:[^'\\\n]|\\.)*)'");
+    final french = RegExp(
+        r"[àâçéèêëîïôûùüœÀÂÇÉÈÊÔ«»]|\b(le|la|les|des|du|une|et|pour|avec|sur|dans|vos|votre|aucun|aucune|pas|est|sont)\b",
+        caseSensitive: false);
+    const allowed = {
+      'Français', // the language's own name, on the language choice
+      '« \${r.note} »', // a person's own words, quoted
+    };
+    final raw = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart') || f.path.contains('/l10n/')) continue;
+      final lines = f.readAsLinesSync();
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trimLeft().startsWith('//')) continue;
+        for (final m in at.allMatches(lines[i])) {
+          final text = m.group(1)!;
+          if (french.hasMatch(text) && !allowed.contains(text)) {
+            raw.add('${f.path}:${i + 1}: $text');
+          }
+        }
+      }
+    }
+    expect(raw, isEmpty, reason: 'wrap these in context.tr() and add their English');
+  });
+
   test('every word Le Chemin (097) sends has its English', () {
     // The steps' titles and lines, the stage names, the cauris rules (084)
     // and the history's own labels: French from the server, put through

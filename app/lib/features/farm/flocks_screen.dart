@@ -310,8 +310,8 @@ class _FlockCard extends StatelessWidget {
                       Text(
                         [
                           if (flock.breed != null) flock.breed!,
-                          '${flock.ageDays} jours',
-                          'arrivée ${DateFormat('d MMM y', intlLocale()).format(flock.arrivedOn)}',
+                          context.tr('{n} jours', {'n': flock.ageDays}),
+                          context.tr('arrivée {date}', {'date': DateFormat('d MMM y', intlLocale()).format(flock.arrivedOn)}),
                         ].join(' · '),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -362,14 +362,14 @@ class _FlockCard extends StatelessWidget {
                   child: _Stat(
                     label: context.tr('Ponte (7 j)'),
                     value: flock.layRateLabel,
-                    hint: '${flock.eggs7d} œufs',
+                    hint: context.tr('{n} œufs', {'n': flock.eggs7d}),
                   ),
                 ),
                 Expanded(
                   child: _Stat(
                     label: context.tr('Vivants'),
                     value: '${flock.alive}',
-                    hint: 'sur ${flock.started}',
+                    hint: context.tr('sur {n}', {'n': flock.started}),
                   ),
                 ),
                 Expanded(

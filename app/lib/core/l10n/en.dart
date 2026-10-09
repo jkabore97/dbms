@@ -2752,7 +2752,6 @@ const enStrings = <String, String>{
   'Étape du chemin': 'Path step',
   'Podium de la semaine': 'Week\'s podium',
   'Leçon de l\'Académie Mara': 'Mara Academy lesson',
-  'Langue du téléphone par défaut': 'Phone language by default',
   'Voir les articles et commander :': 'See the items and order:',
   'Partager {name}': 'Share {name}',
   'Mettre en statut WhatsApp': 'Post as a WhatsApp status',
@@ -5164,8 +5163,6 @@ const enStrings = <String, String>{
       '{n} entry',
   'depuis {date}':
       'since {date}',
-  'Toute la comptabilité de {name} sera détruite : {entries} écriture(s), les articles, le personnel, les photos et les {members} accès. C’est irréversible.':
-      'All of {name}\'s accounts will be destroyed: {entries} entry(ies), the items, the staff, the photos and the {members} accesses. This cannot be undone.',
   '{name} n’a aucune écriture. Sa suppression est définitive et ne peut pas être annulée.':
       '{name} has no entries. Deleting it is final and cannot be undone.',
   'Un compte porte déjà ce nom.':
@@ -5228,10 +5225,8 @@ const enStrings = <String, String>{
       '{n} items added to stock.',
   '{n} article ajouté au stock.':
       '{n} item added to stock.',
-  '{n} ligne(s) enregistrée(s), puis : {error}
-Réessayez : les lignes déjà enregistrées ne seront pas comptées deux fois.':
-      '{n} line(s) saved, then: {error}
-Try again: lines already saved will not be counted twice.',
+  '{n} ligne(s) enregistrée(s), puis : {error}\nRéessayez : les lignes déjà enregistrées ne seront pas comptées deux fois.':
+      '{n} line(s) saved, then: {error}\nTry again: lines already saved will not be counted twice.',
   'Ajouter {n} article(s) — {total}':
       'Add {n} item(s) — {total}',
   '{n} ligne(s) lue(s) sur la photo.':
@@ -5432,10 +5427,8 @@ Try again: lines already saved will not be counted twice.',
       'Wave has not confirmed yet. If you paid, the order will update by itself.',
   'Confirmation en cours…':
       'Confirming…',
-  'Aucun {word} pour le moment.
-Ajoutez-en un pour pouvoir confier un rôle sur une partie seulement de l\'activité.':
-      'No {word} yet.
-Add one to give someone a role over only part of the business.',
+  'Aucun {word} pour le moment.\nAjoutez-en un pour pouvoir confier un rôle sur une partie seulement de l\'activité.':
+      'No {word} yet.\nAdd one to give someone a role over only part of the business.',
   '{n} département(s)':
       '{n} department(s)',
   'Ajouter un {word}':
@@ -5582,4 +5575,410 @@ Add one to give someone a role over only part of the business.',
       'To check',
   '{n} commandes comptées · {pct} % d\'un seul client':
       '{n} orders counted · {pct} % from a single customer',
+  'Vos informations':
+      'Your details',
+  'Ces informations vous suivent dans toutes les entreprises que vous rejoindrez.':
+      'These details follow you into every business you join.',
+  'Ces informations vous suivent dans toutes les entreprises que vous rejoignez. Elles figurent sur un contrat ou un bulletin de paie.':
+      'These details follow you into every business you join. They appear on a contract or a payslip.',
+  'Appeler {name}':
+      'Call {name}',
+  'le livreur':
+      'the courier',
+  'Nouvelle demande — {name}':
+      'New request — {name}',
+  '{n} demandes à traiter sur la vitrine.':
+      '{n} requests to handle on the vitrine.',
+  '{n} demande à traiter sur la vitrine.':
+      '{n} request to handle on the vitrine.',
+  'Visa, Mastercard. Renouvelé chaque année, annulable à tout moment. Paiement sécurisé par Stripe.':
+      'Visa, Mastercard. Renewed every year, cancel any time. Payment secured by Stripe.',
+  'Visa, Mastercard. Renouvelé chaque mois, annulable à tout moment. Paiement sécurisé par Stripe.':
+      'Visa, Mastercard. Renewed every month, cancel any time. Payment secured by Stripe.',
+  'Tél. {phone}':
+      'Tel. {phone}',
+  'Échéance {date}':
+      'Due {date}',
+  '{month} par mois, ou {year} par an.':
+      '{month} a month, or {year} a year.',
+  'Installez Google Authenticator ou Microsoft Authenticator (Play Store).':
+      'Install Google Authenticator or Microsoft Authenticator (Play Store).',
+  'Ajoutez Mara : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.':
+      'Add Mara: scan this code from another screen, or tap the button on this phone.',
+  '1er':
+      '1st',
+  '{n}e':
+      '#{n}',
+  'Je suis {place} cette semaine sur Mara, en {league} ! 🏆':
+      'I am {place} this week on Mara, in {league}! 🏆',
+  'Venez voir ma vitrine : {url}':
+      'Come and see my vitrine: {url}',
+  'Cette semaine · {n} entreprise(s) dans la course':
+      'This week · {n} business(es) in the race',
+  'La semaine dernière : {place} de votre ligue.':
+      'Last week: {place} in your league.',
+  'Ouvert jusqu\'au {date}. Bravo, vous l\'avez gagné !':
+      'Open until {date}. Well done, you earned it!',
+  'Sans votre position, la carte montre la boutique et le client.':
+      'Without your position, the map shows the shop and the customer.',
+  'Position indisponible sur cet appareil.':
+      'Position unavailable on this device.',
+  'Autorisez la position, ou choisissez « Plus tard ».':
+      'Allow location, or choose « Later ».',
+  'Prévenir en dessous de ce nombre':
+      'Warn below this number',
+  '{n} jours':
+      '{n} days',
+  'arrivée {date}':
+      'arrived {date}',
+  '{n} œufs':
+      '{n} eggs',
+  'Distribué':
+      'Fed out',
+  '{animals} animaux en {herds} groupe(s)':
+      '{animals} animals in {herds} group(s)',
+  '{n} culture(s) en cours':
+      '{n} crop(s) in progress',
+  '{n} kg récoltés cette semaine':
+      '{n} kg harvested this week',
+  '{name} — relevé {year}':
+      '{name} — statement {year}',
+  'Établi le {date}':
+      'Issued on {date}',
+  '{pct} % du CA':
+      '{pct} % of revenue',
+  'Meilleur jour : {day} ({amount})':
+      'Best day: {day} ({amount})',
+  'Dernière : {date}':
+      'Last: {date}',
+  '{n} lignes réparties sur {tables} tables':
+      '{n} rows across {tables} tables',
+  'obligatoire':
+      'required',
+  'valeur par défaut':
+      'default value',
+  'modifié le {date}':
+      'changed {date}',
+  'Données':
+      'Data',
+  'Cette version de l\'application a été compilée sans serveur. Reconstruisez-la avec SUPABASE_URL et SUPABASE_PUBLISHABLE_KEY.':
+      'This version of the app was built without a server. Rebuild it with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
+  'Article {n}':
+      'Item {n}',
+  'Pas de serveur.':
+      'No server.',
+  'Rien enregistré pour le moment.':
+      'Nothing recorded yet.',
+  'Aucun mouvement sur cette période.':
+      'No movement in this period.',
+  'Rien enregistré sur cette période.':
+      'Nothing recorded in this period.',
+  'Le code doit contenir 4 chiffres.':
+      'The code must have 4 digits.',
+  'Aucun code n\'est enregistré sur ce téléphone.':
+      'No code is saved on this phone.',
+  'Ajoutez au moins un article avant d\'enregistrer.':
+      'Add at least one item before saving.',
+  'Les photos ne sont pas disponibles sur cette installation.':
+      'Photos are not available on this install.',
+  'Reconnectez-vous pour envoyer des photos.':
+      'Sign in again to send photos.',
+  'Photo sans nom':
+      'Unnamed photo',
+  'Le service de photos a répondu {code}.':
+      'The photo service answered {code}.',
+  'Ce que possède l\'activité':
+      'What the business owns',
+  'Ce qu\'elle doit':
+      'What it owes',
+  'Capital':
+      'Equity',
+  'Entrée':
+      'Entry',
+  'Dollar américain':
+      'US dollar',
+  'Euro':
+      'Euro',
+  'Cedi ghanéen':
+      'Ghanaian cedi',
+  'Naira nigérian':
+      'Nigerian naira',
+  'Livre sterling':
+      'Pound sterling',
+  'Dollar canadien':
+      'Canadian dollar',
+  'Franc CFA (CEMAC)':
+      'CFA franc (CEMAC)',
+  'Dirham marocain':
+      'Moroccan dirham',
+  'Yuan chinois':
+      'Chinese yuan',
+  'Caramel':
+      'Caramel',
+  'Graphite':
+      'Graphite',
+  'Verdure':
+      'Greenery',
+  'Indigo':
+      'Indigo',
+  'Terre cuite':
+      'Terracotta',
+  'Lagune':
+      'Lagoon',
+  'Océan':
+      'Ocean',
+  'Prune':
+      'Plum',
+  'Savane':
+      'Savannah',
+  'Ardoise':
+      'Slate',
+  'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.':
+      'Hello! You are invited to join « {org} » on Mara.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
+  'quelques jours':
+      'a few days',
+  'Normal':
+      'Normal',
+  'Petit':
+      'Small',
+  'Fêlé':
+      'Cracked',
+  'Super administrateur':
+      'Super administrator',
+  'Gestionnaire':
+      'Manager',
+  'Superviseur':
+      'Supervisor',
+  'En retard de {n} j':
+      '{n} d overdue',
+  'Partiel':
+      'Partial',
+  'correction':
+      'correction',
+  'Vendus':
+      'Sold',
+  'Second choix':
+      'Second grade',
+  'Burkina Faso':
+      'Burkina Faso',
+  'Côte d\'Ivoire':
+      'Côte d\'Ivoire',
+  'Mali':
+      'Mali',
+  'Niger':
+      'Niger',
+  'Sénégal':
+      'Senegal',
+  'Togo':
+      'Togo',
+  'Bénin':
+      'Benin',
+  'Ghana':
+      'Ghana',
+  'Nigéria':
+      'Nigeria',
+  'Guinée':
+      'Guinea',
+  'Afrique du Sud':
+      'South Africa',
+  'Algérie':
+      'Algeria',
+  'Allemagne':
+      'Germany',
+  'Angola':
+      'Angola',
+  'Arabie saoudite':
+      'Saudi Arabia',
+  'Argentine':
+      'Argentina',
+  'Australie':
+      'Australia',
+  'Autriche':
+      'Austria',
+  'Belgique':
+      'Belgium',
+  'Brésil':
+      'Brazil',
+  'Burundi':
+      'Burundi',
+  'Cameroun':
+      'Cameroon',
+  'Canada':
+      'Canada',
+  'Cap-Vert':
+      'Cape Verde',
+  'Chili':
+      'Chile',
+  'Chine':
+      'China',
+  'Chypre':
+      'Cyprus',
+  'Congo-Brazzaville':
+      'Congo-Brazzaville',
+  'Congo-Kinshasa':
+      'Congo-Kinshasa',
+  'Corée du Sud':
+      'South Korea',
+  'Danemark':
+      'Denmark',
+  'Égypte':
+      'Egypt',
+  'Émirats arabes unis':
+      'United Arab Emirates',
+  'Espagne':
+      'Spain',
+  'États-Unis':
+      'United States',
+  'Éthiopie':
+      'Ethiopia',
+  'Finlande':
+      'Finland',
+  'France':
+      'France',
+  'Gabon':
+      'Gabon',
+  'Gambie':
+      'Gambia',
+  'Guinée-Bissau':
+      'Guinea-Bissau',
+  'Guinée équatoriale':
+      'Equatorial Guinea',
+  'Grèce':
+      'Greece',
+  'Inde':
+      'India',
+  'Indonésie':
+      'Indonesia',
+  'Irlande':
+      'Ireland',
+  'Israël':
+      'Israel',
+  'Italie':
+      'Italy',
+  'Japon':
+      'Japan',
+  'Jordanie':
+      'Jordan',
+  'Kenya':
+      'Kenya',
+  'Liban':
+      'Lebanon',
+  'Libéria':
+      'Liberia',
+  'Libye':
+      'Libya',
+  'Luxembourg':
+      'Luxembourg',
+  'Madagascar':
+      'Madagascar',
+  'Malaisie':
+      'Malaysia',
+  'Maroc':
+      'Morocco',
+  'Mauritanie':
+      'Mauritania',
+  'Mexique':
+      'Mexico',
+  'Mozambique':
+      'Mozambique',
+  'Namibie':
+      'Namibia',
+  'Norvège':
+      'Norway',
+  'Pays-Bas':
+      'Netherlands',
+  'Philippines':
+      'Philippines',
+  'Pologne':
+      'Poland',
+  'Portugal':
+      'Portugal',
+  'Qatar':
+      'Qatar',
+  'République centrafricaine':
+      'Central African Republic',
+  'Royaume-Uni':
+      'United Kingdom',
+  'Russie':
+      'Russia',
+  'Rwanda':
+      'Rwanda',
+  'Sierra Leone':
+      'Sierra Leone',
+  'Singapour':
+      'Singapore',
+  'Suède':
+      'Sweden',
+  'Suisse':
+      'Switzerland',
+  'Tanzanie':
+      'Tanzania',
+  'Tchad':
+      'Chad',
+  'Tchéquie':
+      'Czechia',
+  'Thaïlande':
+      'Thailand',
+  'Tunisie':
+      'Tunisia',
+  'Turquie':
+      'Turkey',
+  'Ouganda':
+      'Uganda',
+  'Zambie':
+      'Zambia',
+  'Zimbabwe':
+      'Zimbabwe',
+  '{n} chiffres pour {country} ({dial})':
+      '{n} digits for {country} ({dial})',
+  ' ou ':
+      ' or ',
+  'sur {n}':
+      'of {n}',
+  'pièce':
+      'piece',
+  'kg':
+      'kg',
+  'litre':
+      'litre',
+  'paquet':
+      'pack',
+  'sac':
+      'bag',
+  'carton':
+      'box',
+  'plateau':
+      'tray',
+  'tête':
+      'head',
+  'heure':
+      'hour',
+  'séance':
+      'session',
+  'personne':
+      'person',
+  'jour':
+      'day',
+  '30 min':
+      '30 min',
+  '2 h':
+      '2 h',
+  'une demi-journée':
+      'half a day',
+  'une journée':
+      'a day',
+  'panier':
+      'basket',
+  'botte':
+      'bunch',
+  'dose':
+      'dose',
+  'unité':
+      'unit',
+  'Toute la comptabilité de {name} sera détruite : {entries}, les articles, le personnel, les photos et les {members} accès. C’est irréversible.':
+      'All of {name}\'s accounts will be destroyed: {entries}, the items, the staff, the photos and the {members} accesses. This cannot be undone.',
+  '{n} articles sur la vitrine':
+      '{n} items on the vitrine',
+  '{n} article sur la vitrine':
+      '{n} item on the vitrine',
 };

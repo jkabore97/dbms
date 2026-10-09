@@ -118,7 +118,7 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
               name: 'resume-$label.png',
             ),
           ],
-          text: context.tr('{name} — résumé de la semaine', {'name': widget.orgName}),
+          text: translate(trCurrent, '{name} — résumé de la semaine', {'name': widget.orgName}),
         ),
       );
     } catch (error) {
