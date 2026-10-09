@@ -3059,7 +3059,7 @@ const enStrings = <String, String>{
   'Journal d\'activité, données, état de l\'appareil': 'Activity log, data, device status',
   'Tontine': 'Tontine',
   'On cotise, chacun reçoit à son tour.': 'Everyone pays in, each receives in turn.',
-  'Église': 'Church',
+  'Religieux': 'Religious',
   'Groupement': 'Group',
   'On produit et on vend ensemble.': 'We produce and sell together.',
   'Culturelle': 'Cultural',
