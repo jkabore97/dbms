@@ -803,6 +803,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch119.sql
 
+      - name: Prove Mara Pro by card is charged in dollars from the FCFA price — the platform's rate (a whole number above zero, journaled), rounded up to the cent, the same cents in plan_terms, no card without a rate, the three kinds, the doors (121)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch121.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

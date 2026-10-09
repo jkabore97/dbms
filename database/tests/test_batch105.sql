@@ -742,7 +742,10 @@ declare
     -- (test/command_center_test.dart checks the two lists are the same).
     v_keys text[] := array[
         'pro_price_month', 'pro_price_year', 'pro_currency', 'platform_wave', 'platform_wave_name',
-        'stripe_on', 'pro_features',
+        'stripe_on',
+        -- 121: read by stripe_usd_cents(), which stripe_begin and plan_terms ask.
+        'stripe_xof_per_usd',
+        'pro_features',
         'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
         'free_history_months', 'vitrine_free_basics',
         'vitrine_min_items', 'vitrine_min_items_association', 'progress_street_pct',

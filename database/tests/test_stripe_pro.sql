@@ -2,8 +2,8 @@
 -- test_stripe_pro.sql — Kaj Pro by card, through Stripe (082). Phone block 52.
 --
 -- The claims: nothing starts while the platform's switch is off; only an
--- administrator of the business starts, and the amount and currency are
--- the console's Pro prices, never the caller's; plan_terms() says whether
+-- administrator of the business starts, and the amount is the console's
+-- Pro price (in dollars at the platform's rate since 121), never the caller's; plan_terms() says whether
 -- the card is open; Stripe's word that a subscription is active makes the
 -- business Pro to the end of the paid period, a second delivery changes
 -- nothing, a renewal moves the date on, a cancellation leaves what was
@@ -82,13 +82,16 @@ begin
     if not (plan_terms() ->> 'stripe_on')::boolean then
         raise exception 'FAIL: plan_terms does not say the card is open';
     end if;
+    -- Since 121 the card is charged in dollars: the console's FCFA price
+    -- at stripe_xof_per_usd (600 seeded), in cents.
     b := stripe_begin('52000000-0000-0000-0000-000000000001', 'year');
-    if (b ->> 'amount')::numeric <> 30000 or b ->> 'currency' <> 'xof'
+    if (b ->> 'amount')::numeric <> 5000 or b ->> 'currency' <> 'usd'
+       or (b ->> 'price')::numeric <> 30000 or b ->> 'price_currency' <> 'XOF'
        or b ->> 'period' <> 'year' or b ->> 'org_name' <> 'Boutique Carte'
        or b ->> 'email' <> 'awa52@example.com' then
         raise exception 'FAIL: the start is not the console''s price: %', b;
     end if;
-    if (stripe_begin('52000000-0000-0000-0000-000000000001', 'month') ->> 'amount')::numeric <> 3000 then
+    if (stripe_begin('52000000-0000-0000-0000-000000000001', 'month') ->> 'amount')::numeric <> 500 then
         raise exception 'FAIL: the month is not the console''s month';
     end if;
     begin
@@ -97,7 +100,7 @@ begin
     exception when others then
         if sqlerrm not like 'Période inconnue%' then raise; end if;
     end;
-    raise notice 'PASS: 30 000 xof a year, 3 000 a month, nothing else';
+    raise notice 'PASS: 30 000 F a year ($50.00), 3 000 F a month ($5.00), nothing else';
 end $$;
 rollback;
 
