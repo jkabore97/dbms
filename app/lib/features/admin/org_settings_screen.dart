@@ -1533,6 +1533,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           border: const OutlineInputBorder(),
           labelText: _association
               ? context.tr('Quelques mots sur l\'association (facultatif)')
+              : _profile == 'farm'
+              ? context.tr('Quelques mots sur la ferme (facultatif)')
               : context.tr('Quelques mots sur la boutique (facultatif)'),
         ),
       ),
@@ -1548,6 +1550,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           border: const OutlineInputBorder(),
           labelText: _association
               ? context.tr('Téléphone de l\'association')
+              : _profile == 'farm'
+              ? context.tr('Téléphone de la ferme')
               : context.tr('Téléphone de la boutique'),
           hintText: '+226 70 00 00 00',
           prefixIcon: const Icon(Icons.call_outlined),
@@ -1631,8 +1635,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         child: ListTile(
           leading: const Icon(Icons.workspace_premium_outlined),
           title: Text(context.tr('La livraison fait partie de Mara Pro')),
-          subtitle: Text(
-              context.tr('Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
+          subtitle: Text(_profile == 'farm'
+              ? context.tr('Votre vitrine propose le retrait à la ferme. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')
+              : context.tr('Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
           trailing: const Icon(Icons.chevron_right),
           onTap: _openPro,
         ),
@@ -1656,6 +1661,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(
       _deliveryMinimum
           ? context.tr('Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande.')
+          : _profile == 'farm'
+          ? context.tr('Une base pour la course, plus un prix par kilomètre entre votre ferme et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.')
           : context.tr('Une base pour la course, plus un prix par kilomètre entre votre boutique et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.'),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,

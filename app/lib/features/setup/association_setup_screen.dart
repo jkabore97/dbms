@@ -354,7 +354,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
   @override
   Widget build(BuildContext context) {
     if (_done) {
-      return SetupReady(org: widget.org, onDone: widget.onDone, association: true);
+      return SetupReady(org: widget.org, onDone: widget.onDone);
     }
     final theme = Theme.of(context);
     final all = [

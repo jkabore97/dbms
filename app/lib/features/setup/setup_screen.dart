@@ -14,6 +14,7 @@ import '../../core/theme/motion.dart';
 import '../admin/admin_pill.dart';
 import '../admin/pin_preview.dart';
 import '../common/phone_field.dart';
+import '../notify/push_prompt.dart' show PushPromptQuiet;
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'association_setup_screen.dart';
 
@@ -692,17 +693,23 @@ class _HowToState extends State<_HowTo> with SingleTickerProviderStateMixin {
   }
 }
 
-/// « C'est prêt ! »: the store opens — or the association (102).
+/// « C'est prêt ! »: the business opens — the shop, the farm, or the
+/// association (102), each said in its own word (120: a farm finishing its
+/// setup was told « Ouvrir ma boutique »).
 class SetupReady extends StatelessWidget {
-  const SetupReady({super.key, required this.org, required this.onDone, this.association = false});
+  const SetupReady({super.key, required this.org, required this.onDone});
 
   final OrgSummary org;
   final VoidCallback onDone;
-  final bool association;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final (ready, open, icon) = org.isAssociation
+        ? (context.tr('Votre association est prête'), context.tr('Ouvrir mon association'), Icons.volunteer_activism)
+        : org.profile == 'farm'
+            ? (context.tr('Votre ferme est prête'), context.tr('Ouvrir ma ferme'), Icons.agriculture)
+            : (context.tr('Votre boutique est prête'), context.tr('Ouvrir ma boutique'), Icons.storefront);
     return Scaffold(
       backgroundColor: maraDeep,
       body: SafeArea(
@@ -720,6 +727,11 @@ class SetupReady extends StatelessWidget {
                   style: theme.textTheme.headlineMedium
                       ?.copyWith(color: maraPaper, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
+              Text(ready,
+                  key: const Key('setup-ready-kind'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(color: maraPaper)),
+              const SizedBox(height: 4),
               Text(org.name,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(color: maraCaramel)),
@@ -731,12 +743,8 @@ class SetupReady extends StatelessWidget {
                   style: FilledButton.styleFrom(
                       backgroundColor: maraCaramel, foregroundColor: maraDeep),
                   onPressed: onDone,
-                  icon: Icon(association ? Icons.volunteer_activism : Icons.storefront),
-                  label: Text(
-                      association
-                          ? context.tr('Ouvrir mon association')
-                          : context.tr('Ouvrir ma boutique'),
-                      style: const TextStyle(fontSize: 17)),
+                  icon: Icon(icon),
+                  label: Text(open, style: const TextStyle(fontSize: 17)),
                 ),
               ),
             ],
@@ -774,21 +782,23 @@ class SetupGate extends StatelessWidget {
         if (f == null || f.setupDone) return child;
         if (org.isAssociation) {
           if (f.team == null || f.team!.setupDone) return child;
-          return AssociationSetupScreen(
+          // A first setup is never interrupted by « Activer les
+          // notifications ? » (120): asked once it is done.
+          return PushPromptQuiet(child: AssociationSetupScreen(
             org: org,
             actions: SupabaseAssociationSetupActions(scope.admin, scope.retail, scope.invoicing),
             onDone: () => scope.session.reloadFeatures(org.id),
             stepsOff: () => setupStepsOff(scope.auth.client, org.id),
             known: () => setupKnown(scope.auth.client, org.id),
-          );
+          ));
         }
-        return SetupScreen(
+        return PushPromptQuiet(child: SetupScreen(
           org: org,
           actions: SupabaseSetupActions(scope.admin, scope.retail, scope.invoicing),
           onDone: () => scope.session.reloadFeatures(org.id),
           stepsOff: () => setupStepsOff(scope.auth.client, org.id),
           known: () => setupKnown(scope.auth.client, org.id),
-        );
+        ));
       },
     );
   }

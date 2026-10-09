@@ -24,6 +24,45 @@ class PushPlatform {
   /// Nothing to start in a browser.
   static Future<void> prepare() async {}
 
+  static Future<void> retry() async {}
+
+  static Future<PushPermission> permission() async {
+    try {
+      if (!web.window.hasProperty('Notification'.toJS).toDart) {
+        return PushPermission.unsupported;
+      }
+      return switch (web.Notification.permission) {
+        'granted' => PushPermission.granted,
+        // A browser that said « Bloquer » never asks again: only its own
+        // settings for the site can change it.
+        'denied' => PushPermission.blocked,
+        _ => PushPermission.prompt,
+      };
+    } catch (_) {
+      return PushPermission.unsupported;
+    }
+  }
+
+  /// A page cannot open the browser's settings.
+  static Future<bool> openSettings() async => false;
+
+  static Future<PushDeviceFacts> facts() async {
+    bool? active;
+    if (supported) {
+      try {
+        final registration =
+            await web.window.navigator.serviceWorker.getRegistration('/').toDart;
+        active = registration?.active != null;
+      } catch (_) {
+        active = false;
+      }
+    }
+    return PushDeviceFacts(
+      platform: 'Web',
+      workerActive: active,
+    );
+  }
+
   static Future<bool> granted() async {
     try {
       return web.window.hasProperty('Notification'.toJS).toDart &&

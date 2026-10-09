@@ -4,6 +4,7 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../../core/notify/push_setup.dart';
+import 'push_diagnostics.dart';
 
 /// « Notifications » (115): this device's ring with the app closed, the
 /// person's switches per type, and « M'envoyer une notification test ».
@@ -199,6 +200,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               const SizedBox(height: 8),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
+            // What stands between THIS device and a ring (120).
+            PushDiagnosticsPanel(notify: widget.notify),
           ],
         ),
       ),

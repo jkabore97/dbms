@@ -243,10 +243,15 @@ jobs:
       # tagged by run number and marked latest, so
       #   https://github.com/<owner>/<repo>/releases/latest/download/kaj-arm64-v8a.apk
       # is always the newest build — the address version.json hands to a
-      # phone on an older one. A manual run of this workflow does not
-      # publish: it is for trying a branch, not for shipping it.
+      # phone on an older one. A manual run publishes too when it is run on
+      # main (120): that is how a build is remade after a secret was added —
+      # GOOGLE_SERVICES_JSON, the upload key. Before, such a run built the
+      # right APK and published nothing, so the phones kept the last push's
+      # build: android-243, made before the Firebase secret existed, was
+      # « latest » while run 244 (with it) sat unpublished in Artifacts. A
+      # manual run on another branch is for trying it, and publishes nothing.
       - name: Publish the release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         working-directory: app
         env:
           GH_TOKEN: ${{ github.token }}

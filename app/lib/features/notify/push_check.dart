@@ -4,6 +4,7 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/notifications_repository.dart';
 import 'notification_settings_sheet.dart' show testOutcome;
+import 'push_diagnostics.dart';
 import 'push_offer.dart';
 
 /// « Tester la notification » in the command center's Réglages (115): one
@@ -75,6 +76,8 @@ class _PushCheckState extends State<PushCheck> {
               key: const Key('platform-push-said'),
               style: _failed ? TextStyle(color: theme.colorScheme.error) : null),
         ],
+        // What stands between THIS device and a ring (120).
+        PushDiagnosticsPanel(notify: widget.notify),
       ],
     );
   }

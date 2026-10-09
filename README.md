@@ -410,7 +410,8 @@ phones somebody reinstalled by hand. Two things close that gap:
 The APK is one per processor (`--split-per-abi`) and shrunk by R8, which is
 roughly half of what the single all-architectures package weighed; the
 run's summary prints the sizes. A manual run of "Build App" on a branch
-builds without publishing.
+builds without publishing; on main it publishes a new release, like a push
+— the way to remake the APK after adding a secret.
 
 ### Crash reporting
 
@@ -474,10 +475,18 @@ One-time setup, in this order:
    → Service accounts → Generate new private key: put that JSON in the
    repository *secret* `FCM_SERVICE_ACCOUNT` and re-run "Deploy the push
    Worker" (without it the Worker skips phones and rings browsers).
+   **Then install an APK built after the secret was set**: a push to main,
+   or "Run workflow" on *Build App* from main, publishes a new release
+   (the build's summary says « google-services.json installed »). An APK
+   from before has no Firebase in it and never registers — the
+   diagnostics below then say « Firebase démarré : non ».
 7. **Check it**: Compte › Notifications › « M'envoyer une notification
    test » (anyone), or the command center's Réglages › « Tester la
    notification », which also says how many devices the account has and
-   whether the webhook of step 5 exists.
+   whether the webhook of step 5 exists. Under both, « Diagnostic de cet
+   appareil » shows each step on THIS device — Firebase started, the
+   permission, the token or the browser's subscription, saved on the
+   server — with « Réessayer l'enregistrement ».
 
 Until every step is done nothing rings with the app closed — and nothing
 breaks: the app offers no push without a `PUSH_URL` (or, on Android,
@@ -618,10 +627,10 @@ None is pasted anywhere but GitHub's secrets page.
    privacy policy URL — the site's `/confidentialite` page).
 3. **Alerts on a closed Android app** — create a Firebase project, add an
    Android app with the package name `bf.kaj.app`, and
-   send me `google-services.json` through a repository secret
-   (`GOOGLE_SERVICES_JSON`, base64) — not in chat. Wiring Firebase Cloud
-   Messaging into the app and the push Worker is then a code change on our
-   side; web push already works without it.
+   put `google-services.json` in the repository secret
+   `GOOGLE_SERVICES_JSON` — the file's raw content, pasted as it is (not
+   base64), and never in chat. Firebase Cloud Messaging is wired into the
+   app and the push Worker since 115 ("Push notifications", step 6).
 
 ### The live site
 

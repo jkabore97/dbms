@@ -441,13 +441,22 @@ class _AccountCorner extends StatelessWidget {
             // remembered); a shopper's opens the way to have one.
             final member = session.phase != SessionPhase.noOrg;
             final open = session.lastOrgId;
+            // Said in the business's own word (120): a farmer's door is
+            // « Ma ferme », not « Ma boutique ».
+            final kind = open == null ? null : session.orgById(open);
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // « Admin » (104): the command center, for a platform admin.
                 const AdminPill(),
                 IconButton(
-                  tooltip: member ? context.tr('Ma boutique') : context.tr('Ouvrir ma boutique'),
+                  tooltip: !member
+                      ? context.tr('Ouvrir ma boutique')
+                      : kind?.profile == 'farm'
+                      ? context.tr('Ma ferme')
+                      : kind?.isAssociation ?? false
+                      ? context.tr('Mon association')
+                      : context.tr('Ma boutique'),
                   icon: Icon(member
                       ? Icons.store_outlined
                       : Icons.add_business_outlined),

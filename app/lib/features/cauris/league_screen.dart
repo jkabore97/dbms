@@ -151,7 +151,9 @@ class _LeagueScreenState extends State<LeagueScreen> {
                       value: b.hidden,
                       onChanged: (v) => _prefs(hidden: v),
                       title: Text(context.tr('Cacher mon nom aux autres')),
-                      subtitle: Text(context.tr('Ils voient « une boutique de … »')),
+                      subtitle: Text(widget.org.profile == 'farm'
+                          ? context.tr('Ils voient « une ferme de … »')
+                          : context.tr('Ils voient « une boutique de … »')),
                     ),
                   ],
                 ),

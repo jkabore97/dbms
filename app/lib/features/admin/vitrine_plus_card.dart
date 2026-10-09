@@ -251,7 +251,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         else ...[
           VitrinePreview(
             key: const Key('vitrine-preview'),
-            name: widget.shopName ?? context.tr('Ma boutique'),
+            name: widget.shopName ?? context.tr('Ma vitrine'),
             style: _style(plus: !locked && !plusHidden).copyWith(
               // The preview shows the Pro layout being tried, even locked:
               // seeing it is how a shop decides it wants it. Hidden by Mara

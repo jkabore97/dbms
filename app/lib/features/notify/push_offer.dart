@@ -53,7 +53,15 @@ class _PushOfferCardState extends State<PushOfferCard> {
   @override
   void initState() {
     super.initState();
+    // Turned on elsewhere (the pop-up at the app's opening): gone here too.
+    PushSetup.changes.addListener(_look);
     _look();
+  }
+
+  @override
+  void dispose() {
+    PushSetup.changes.removeListener(_look);
+    super.dispose();
   }
 
   bool get _bellWanted =>
