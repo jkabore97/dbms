@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 /// Spots for sale on the street (071): what they cost, and the ones asked.
 library;
 
@@ -108,7 +109,9 @@ class Promotion {
 
   bool get isShop => kind == 'shop';
 
-  String get label => isShop ? 'Toute la boutique' : (productName ?? 'Article');
+  String get label => isShop
+      ? translate(trCurrent, 'Toute la boutique')
+      : (productName ?? translate(trCurrent, 'Article'));
 
   /// Where the spot is, in the owner's words.
   String stateLabel([DateTime? now]) {
@@ -185,8 +188,9 @@ class PlatformPromotion {
   final String? note;
 
   bool get waiting => status == 'requested' || status == 'paid_claimed';
-  String get label =>
-      kind == 'shop' ? 'Toute la boutique' : (productName ?? 'Article');
+  String get label => kind == 'shop'
+      ? translate(trCurrent, 'Toute la boutique')
+      : (productName ?? translate(trCurrent, 'Article'));
 }
 
 /// The platform's day (072): the month's money, growth, health. What waits

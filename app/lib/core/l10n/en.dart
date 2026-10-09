@@ -5420,4 +5420,144 @@ Try again: lines already saved will not be counted twice.',
       'used {date}',
   '1 h':
       '1 h',
+  'Merci ! La confirmation est enregistrée.':
+      'Thank you! The confirmation is saved.',
+  'Paiement non abouti':
+      'Payment not completed',
+  'Rien n\'a été débité. Vous pouvez réessayer.':
+      'Nothing was charged. You can try again.',
+  'Confirmation en attente':
+      'Confirmation pending',
+  'Wave n\'a pas encore confirmé. Si vous avez payé, la commande se mettra à jour toute seule.':
+      'Wave has not confirmed yet. If you paid, the order will update by itself.',
+  'Confirmation en cours…':
+      'Confirming…',
+  'Aucun {word} pour le moment.
+Ajoutez-en un pour pouvoir confier un rôle sur une partie seulement de l\'activité.':
+      'No {word} yet.
+Add one to give someone a role over only part of the business.',
+  '{n} département(s)':
+      '{n} department(s)',
+  'Ajouter un {word}':
+      'Add a {word}',
+  'Section':
+      'Section',
+  'Un livreur approuvé voit les livraisons prêtes, les adresses et les numéros des clients. {n} inscription(s) en attente.':
+      'An approved courier sees ready deliveries, customers\' addresses and numbers. {n} application(s) waiting.',
+  'Sans numéro':
+      'No number',
+  'Approuvé':
+      'Approved',
+  'inscrit le {date}':
+      'signed up {date}',
+  'Vente de {total} du {date}. Les articles retournent en stock.':
+      'Sale of {total} on {date}. The items go back into stock.',
+  '{qty} {name} entré(s) le {date}. Le stock est retiré et l\'achat est annulé dans les comptes.':
+      '{qty} {name} received on {date}. The stock is removed and the purchase is cancelled in the books.',
+  'Code, appareils, mot de passe':
+      'Code, devices, password',
+  'Jamais verrouillé':
+      'Never locked',
+  'Verrouillé après {delay}':
+      'Locked after {delay}',
+  'empreinte':
+      'fingerprint',
+  'montants cachés':
+      'amounts hidden',
+  'à partir du {date}':
+      'from {date}',
+  '{n} disponibles':
+      '{n} available',
+  '{n} disponible':
+      '{n} available',
+  '{name} — résumé de la semaine':
+      '{name} — the week\'s summary',
+  'Le partage a échoué sur cet appareil. Faites une capture d\'écran en attendant. ({error})':
+      'Sharing failed on this device. Take a screenshot meanwhile. ({error})',
+  'Semaine du {from} au {to}':
+      'Week of {from} to {to}',
+  'Semaine au {date}':
+      'Week ending {date}',
+  'Les mots de passe diffèrent.':
+      'The passwords differ.',
+  'Mot de passe réinitialisé':
+      'Password reset',
+  'Compte supprimé':
+      'Account deleted',
+  'dit avoir payé':
+      'says they paid',
+  'pas encore payé':
+      'not paid yet',
+  'du {from} au {to}':
+      'from {from} to {to}',
+  'Membres, cotisations, dépenses, résumé':
+      'Members, contributions, expenses, summary',
+  'Stock, troupeaux, production, factures':
+      'Stock, herds, production, invoices',
+  'Ventes et dépenses':
+      'Sales and expenses',
+  'Mois dernier':
+      'Last month',
+  'Cette année':
+      'This year',
+  'Depuis le début':
+      'Since the start',
+  'Rien à afficher pour cette période.':
+      'Nothing to show for this period.',
+  'Ouvrez ce lien dans votre navigateur : {url}':
+      'Open this link in your browser: {url}',
+  'Une nouvelle version de Mara est en ligne.':
+      'A new version of Mara is online.',
+  'Une nouvelle version de Mara est disponible.':
+      'A new version of Mara is available.',
+  'Recharger':
+      'Reload',
+  'Télécharger':
+      'Download',
+  'Connectez-vous pour payer.':
+      'Sign in to pay.',
+  'Le paiement n\'a pas pu commencer.':
+      'The payment could not start.',
+  'Toute la boutique':
+      'The whole shop',
+  'En attente de paiement':
+      'Waiting for payment',
+  'Paiement en vérification':
+      'Payment being checked',
+  'Programmée':
+      'Scheduled',
+  'En cours':
+      'Running',
+  'offerte par Mara Pro':
+      'given by Mara Pro',
+  'Prix : {price}':
+      'Price: {price}',
+  'À payer : {amount}':
+      'To pay: {amount}',
+  'Voir la boutique':
+      'See the shop',
+  'Rapprocher la carte':
+      'Zoom in',
+  '{n} vitrine(s) sur la carte':
+      '{n} vitrine(s) on the map',
+  '{amount}, pour les heures non réglées.':
+      '{amount}, for the unpaid hours.',
+  '{amount}, salaire de la semaine.':
+      '{amount}, the week\'s pay.',
+  '{amount}, salaire de la journée.':
+      '{amount}, the day\'s pay.',
+  '{amount}, salaire du mois.':
+      '{amount}, the month\'s pay.',
+  '/semaine':
+      '/week',
+  '/jour':
+      '/day',
+  '/mois':
+      '/month',
+  '{amount} à payer':
+      '{amount} to pay',
+  '{name} — facture {number}':
+      '{name} — invoice {number}',
+  'Reste à payer : {amount}':
+      'Left to pay: {amount}',
 };

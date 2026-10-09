@@ -221,7 +221,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
           ),
         ),
         subtitle: Text([
-          _method(s.method),
+          context.tr(_method(s.method)),
           _when(s.occurredAt),
           if (s.note != null && s.note!.isNotEmpty) s.note!,
         ].join(' · ')),
@@ -235,8 +235,8 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
                 onPressed: () => _confirmAndReverse(
                   title: context.tr('Corriger cette vente ?'),
                   detail:
-                      'Vente de ${_money.format(s.total)} du ${_when(s.occurredAt)}. '
-                      'Les articles retournent en stock.',
+                      context.tr('Vente de {total} du {date}. Les articles retournent en stock.',
+                          {'total': _money.format(s.total), 'date': _when(s.occurredAt)}),
                   run: (reason) =>
                       widget.retail.recordReturn(s.id, note: reason),
                 ),
@@ -277,9 +277,8 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
             : OutlinedButton(
                 onPressed: () => _confirmAndReverse(
                   title: context.tr('Corriger cette entrée ?'),
-                  detail: '$qty ${d.productName} entré(s) le '
-                      '${_when(d.receivedAt)}. Le stock est retiré et '
-                      "l'achat est annulé dans les comptes.",
+                  detail: context.tr('{qty} {name} entré(s) le {date}. Le stock est retiré et l\'achat est annulé dans les comptes.',
+                      {'qty': qty, 'name': d.productName, 'date': _when(d.receivedAt)}),
                   run: (reason) =>
                       widget.retail.reverseReceipt(d.id, reason: reason),
                 ),

@@ -570,12 +570,15 @@ String _walletLine(BuildContext context, FeatureStates f) => [
 /// "Verrouillé après 5 min · empreinte" — where the phone's lock stands.
 String _securityLine(AppScope scope) {
   final s = scope.security;
-  if (s == null) return 'Code, appareils, mot de passe';
+  if (s == null) return translate(trCurrent, 'Code, appareils, mot de passe');
   final lock = s.effectiveLock;
   return [
-    lock == null ? 'Jamais verrouillé' : 'Verrouillé après ${SecuritySettings.label(lock)}',
-    if (s.biometric && s.biometricReady) 'empreinte',
-    if (s.hideAmounts) 'montants cachés',
+    lock == null
+        ? translate(trCurrent, 'Jamais verrouillé')
+        : translate(trCurrent, 'Verrouillé après {delay}',
+            {'delay': translate(trCurrent, SecuritySettings.label(lock))}),
+    if (s.biometric && s.biometricReady) translate(trCurrent, 'empreinte'),
+    if (s.hideAmounts) translate(trCurrent, 'montants cachés'),
   ].join(' · ');
 }
 

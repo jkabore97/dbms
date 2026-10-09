@@ -74,8 +74,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 'Rien n\'a été débité. Vous pouvez réessayer.')
             : gaveUp
                 ? (Icons.schedule, 'Confirmation en attente',
-                    'Wave n\'a pas encore confirmé. Si vous avez payé, la '
-                    'commande se mettra à jour toute seule.')
+                    'Wave n\'a pas encore confirmé. Si vous avez payé, la commande se mettra à jour toute seule.')
                 : (Icons.hourglass_top, 'Confirmation en cours…',
                     widget.issue == 'erreur'
                         ? context.tr('Wave signale un problème ; nous vérifions.')
@@ -98,9 +97,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? theme.colorScheme.primary
                         : theme.colorScheme.error),
               const SizedBox(height: 20),
-              Text(title, style: theme.textTheme.headlineSmall),
+              Text(context.tr(title), style: theme.textTheme.headlineSmall),
               const SizedBox(height: 8),
-              Text(line, textAlign: TextAlign.center),
+              Text(context.tr(line), textAlign: TextAlign.center),
               const SizedBox(height: 28),
               FilledButton(
                 onPressed: () => context.canPop()

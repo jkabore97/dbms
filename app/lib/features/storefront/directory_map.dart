@@ -154,7 +154,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
             child: Semantics(
               button: true,
               label: e.name,
-              hint: 'Voir la boutique',
+              hint: context.tr('Voir la boutique'),
               excludeSemantics: true,
               onTap: () => _select(i),
               child: GestureDetector(
@@ -210,7 +210,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
             child: Semantics(
               button: true,
               label: context.tr('{length} boutiques ici', {'length': g.length}),
-              hint: 'Rapprocher la carte',
+              hint: context.tr('Rapprocher la carte'),
               excludeSemantics: true,
               child: GestureDetector(
                 onTap: () => _map.fitCamera(
@@ -323,7 +323,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                               _placed.isEmpty
                                   ? context.tr('Aucune vitrine n\'a indiqué sa position')
                                   : unplaced == 0
-                                  ? '${_placed.length} vitrine${_placed.length > 1 ? 's' : ''} sur la carte'
+                                  ? context.tr('{n} vitrine(s) sur la carte', {'n': _placed.length})
                                   : context.tr('{length} sur la carte · {unplaced} sans position', {'length': _placed.length, 'unplaced': unplaced}),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

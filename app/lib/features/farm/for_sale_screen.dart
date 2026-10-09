@@ -296,8 +296,10 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final today = DateUtils.dateOnly(DateTime.now());
     final from = p.availableFrom;
     final when = from != null && from.isAfter(today)
-        ? 'à partir du ${DateFormat('dd/MM').format(from)}'
-        : '${_plain(p.quantity)} disponible${p.quantity > 1 ? 's' : ''}';
+        ? context.tr('à partir du {date}', {'date': DateFormat.MMMd(intlLocale()).format(from)})
+        : p.quantity > 1
+            ? context.tr('{n} disponibles', {'n': _plain(p.quantity)})
+            : context.tr('{n} disponible', {'n': _plain(p.quantity)});
     return '$price · $when';
   }
 
@@ -385,7 +387,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
       initialDate: _availableFrom ?? today.add(const Duration(days: 7)),
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
-      helpText: 'Disponible à partir du',
+      helpText: context.tr('Disponible à partir du'),
     );
     if (picked != null) setState(() => _availableFrom = picked);
   }
@@ -597,8 +599,8 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               title: Text(context.tr('Pas encore prêt')),
               subtitle: Text(_availableFrom == null
                   ? context.tr('Une bande ou une récolte à venir : les clients commandent à l\'avance.')
-                  : 'Disponible à partir du '
-                      '${DateFormat('dd/MM/yyyy').format(_availableFrom!)}'),
+                  : context.tr('Disponible à partir du {date}',
+                      {'date': DateFormat.yMMMd(intlLocale()).format(_availableFrom!)})),
             ),
             TextField(
               controller: _description,
