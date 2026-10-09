@@ -443,7 +443,7 @@ class _AccountCorner extends StatelessWidget {
             final open = session.lastOrgId;
             // Said in the business's own word (120): a farmer's door is
             // « Ma ferme », not « Ma boutique ».
-            final kind = open == null ? null : session.orgById(open);
+            final home = open == null ? null : session.orgById(open);
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -452,9 +452,9 @@ class _AccountCorner extends StatelessWidget {
                 IconButton(
                   tooltip: !member
                       ? context.tr('Ouvrir ma boutique')
-                      : kind?.profile == 'farm'
+                      : home?.profile == 'farm'
                       ? context.tr('Ma ferme')
-                      : kind?.isAssociation ?? false
+                      : home?.isAssociation ?? false
                       ? context.tr('Mon association')
                       : context.tr('Ma boutique'),
                   icon: Icon(member

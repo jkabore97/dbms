@@ -784,8 +784,6 @@ const enStrings = <String, String>{
       'The batch leaves the home screen and keeps all its history. Nothing is deleted.',
   'La bande n\'a pas pu être clôturée.':
       'The batch could not be closed.',
-  'La boutique':
-      'The shop',
   'La boutique confirme dans Mara quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.':
       'The shop confirms in Mara when it has received the money; the line then disappears from here.',
   'La caméra n\'est pas disponible : {error}':
@@ -1698,8 +1696,6 @@ const enStrings = <String, String>{
       'Lost or stolen phone',
   'Un article':
       'An item',
-  'Un article en tête de « À la une » sur la page d\'accueil, ou toute la boutique en haut de la liste, pour 7 ou 30 jours.':
-      'An item at the top of « Featured » on the home page, or the whole shop at the top of the list, for 7 or 30 days.',
   'Un article par ligne : nom quantité prix (coût facultatif). Exemple : Savon 20 300 200':
       'One item per line: name quantity price (cost optional). Example: Soap 20 300 200',
   'Un mot pour la boutique (facultatif)':
@@ -2268,8 +2264,6 @@ const enStrings = <String, String>{
       'The item appears at the top of « Featured » on the home page, marked « Sponsored ». It needs a photo, a price and stock.',
   'L\'envoi de photos n\'est pas disponible sur cette installation.':
       'Sending photos is not available on this installation.',
-  'La boutique apparaît en tête de la liste des boutiques, marquée « Sponsorisé ».':
-      'The shop appears at the top of the list of shops, marked « Sponsored ».',
   'La course commence.':
       'The trip begins.',
   'Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande.':
@@ -4666,4 +4660,96 @@ const enStrings = <String, String>{
   'Ce qui aidera à s\'en souvenir : pour quel mois, quelle occasion…':
       'What will help remember it: which month, which occasion…',
   'L\'invitation est prête': 'The invitation is ready',
+  'Abonnement du navigateur':
+      'This browser\'s subscription',
+  'Activer les notifications ?':
+      'Turn on notifications?',
+  'Adresse du Worker push dans cette version':
+      'Push Worker address in this build',
+  'Autorisation de l\'appareil':
+      'Device permission',
+  'Ce navigateur bloque les notifications de Mara. Touchez le cadenas à gauche de l\'adresse, puis autorisez les notifications pour ce site, et rechargez la page.':
+      'This browser blocks Mara\'s notifications. Tap the padlock left of the address, allow notifications for this site, then reload the page.',
+  'Cet appareil est inscrit : il sonnera même l\'application fermée.':
+      'This device is registered: it will ring even with the app closed.',
+  'Cette version a été construite sans google-services.json.':
+      'This build was made without google-services.json.',
+  'Chercher dans la vitrine…':
+      'Search this vitrine…',
+  'Commande envoyée. L\'association vous répondra ici.':
+      'Order sent. The association will answer you here.',
+  'Commande envoyée. La ferme vous répondra ici.':
+      'Order sent. The farm will answer you here.',
+  'Connecté':
+      'Signed in',
+  'Diagnostic de cet appareil':
+      'This device\'s diagnostics',
+  'Enregistré sur le serveur':
+      'Saved on the server',
+  'Erreur':
+      'Error',
+  'Firebase démarré':
+      'Firebase started',
+  'Ils voient « une ferme de … »':
+      'They see « a farm in … »',
+  'Jeton de l\'appareil obtenu':
+      'Device token obtained',
+  'L\'enregistrement n\'a pas abouti : voyez la ligne marquée « non » ci-dessus.':
+      'The registration did not go through: see the line marked « no » above.',
+  'La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé ».':
+      'The vitrine appears at the top of the list of vitrines, marked « Sponsored ».',
+  'Les notifications de Mara sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.':
+      'Mara\'s notifications are blocked on this phone. Open the settings, tap « Notifications » and allow them: you will get your orders, deliveries and messages even with the app closed.',
+  'Ma ferme':
+      'My farm',
+  'Mon association':
+      'My association',
+  'Notifications bloquées':
+      'Notifications blocked',
+  'Ouvrir les réglages':
+      'Open settings',
+  'Ouvrir ma ferme':
+      'Open my farm',
+  'Quelques mots sur la ferme (facultatif)':
+      'A few words about the farm (optional)',
+  'Recevez vos commandes, livraisons et messages dès qu\'ils arrivent, même l\'application fermée.':
+      'Get your orders, deliveries and messages as soon as they arrive, even with the app closed.',
+  'Réessayer l\'enregistrement':
+      'Retry the registration',
+  'Service worker actif':
+      'Service worker active',
+  'Téléphone de la ferme':
+      'Farm\'s phone',
+  'Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 ou 30 jours.':
+      'An article at the top of « Featured » on the home page, or the whole vitrine at the top of the list, for 7 or 30 days.',
+  'Un mot pour l\'association (facultatif)':
+      'A word for the association (optional)',
+  'Un mot pour la ferme (facultatif)':
+      'A word for the farm (optional)',
+  'Une base pour la course, plus un prix par kilomètre entre votre ferme et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.':
+      'A base for the trip, plus a price per kilometre between your farm and the customer\'s door. Empty: the platform\'s rates (500 + 150 F/km). The amount is shown to the customer before they order, and paid to the courier at the door.',
+  'Votre association est prête':
+      'Your association is ready',
+  'Votre boutique est prête':
+      'Your shop is ready',
+  'Votre ferme est prête':
+      'Your farm is ready',
+  'Votre vitrine propose le retrait à la ferme. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.':
+      'Your vitrine offers pickup at the farm. Move to Mara Pro to deliver to your customers, with the price worked out from the distance.',
+  'autorisées':
+      'allowed',
+  'bloquées (seuls les réglages peuvent les ouvrir)':
+      'blocked (only the settings can turn them on)',
+  'non':
+      'no',
+  'non disponibles ici':
+      'not available here',
+  'oui':
+      'yes',
+  'pas encore demandées ou refusées une fois':
+      'not asked yet, or refused once',
+  'à discuter avec l\'association':
+      'to be agreed with the association',
+  'à discuter avec la ferme':
+      'to be agreed with the farm',
 };
