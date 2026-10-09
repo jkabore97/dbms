@@ -65,8 +65,8 @@ class PageBell extends StatelessWidget {
         ),
         Positioned(
           top: padding.top,
-          right: ltr ? padding.right + 4 : null,
-          left: ltr ? null : padding.left + 4,
+          right: ltr ? padding.right : null,
+          left: ltr ? null : padding.left,
           height: kToolbarHeight,
           child: Center(
             child: NotificationBell(

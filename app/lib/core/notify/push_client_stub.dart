@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 
 import 'push_client.dart';
 
@@ -25,7 +25,8 @@ class PushPlatform {
   static Future<void> prepare() => _starting ??= _start();
 
   static Future<void> _start() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    // The real phone, not the platform a test pretends to be.
+    if (!Platform.isAndroid) return;
     try {
       await Firebase.initializeApp();
       _ready = true;
