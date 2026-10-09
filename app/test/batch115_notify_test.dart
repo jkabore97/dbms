@@ -209,6 +209,8 @@ void main() {
       await tester.pump();
       final bell = tester.getRect(find.byKey(const Key('page-bell')));
       final own = tester.getRect(find.byKey(const Key('own-action')));
+      // ignore: avoid_print
+      print('BELL $bell OWN $own');
       expect(bell.right, greaterThan(own.right));
       expect(bell.overlaps(own), isFalse);
       expect(bell.top, lessThan(kToolbarHeight));
@@ -270,6 +272,9 @@ void main() {
       await tester.pumpWidget(_app(Scaffold(
         body: NotificationSettingsSheet(notify: notify, audiences: const {'customer'}),
       )));
+      for (var i = 0; i < 5; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+      // ignore: avoid_print
+      print('SPIN ${find.byType(CircularProgressIndicator).evaluate().length} ${find.byType(SwitchListTile).evaluate().length}');
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('pref-order_updates')), findsOneWidget);
       expect(find.byKey(const Key('pref-courier_idle')), findsNothing);
@@ -325,6 +330,7 @@ void main() {
 
       await send(false);
       expect(center.args.last, {'message': 'Bonne semaine'});
+      await tester.pumpWidget(const SizedBox());
       await send(true);
       expect(center.args.last, {'message': 'Bonne semaine', 'audience': 'team'});
     });
