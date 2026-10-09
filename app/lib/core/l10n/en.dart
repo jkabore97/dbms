@@ -6065,4 +6065,6 @@ const enStrings = <String, String>{
       '# How do I reach someone?',
   'Depuis Compte › Aide › Contacter le support, sur WhatsApp.':
       'From Account › Help › Contact support, on WhatsApp.',
+  '1 visiteur': '1 visitor',
+  '{n} visiteurs': '{n} visitors',
 };

@@ -364,6 +364,22 @@ class StorefrontRepository {
     } catch (_) {}
   }
 
+  /// This device opened the vitrine (123): counted once a day, never for
+  /// the business's own people. Answers the vitrine's unique visitors of
+  /// all time, or null — a database before 123, no network, a vitrine the
+  /// street cannot open. Never awaited by the page and never fails it.
+  Future<int?> recordVitrineVisit(String slug, String visitorId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final n = await client.rpc('record_vitrine_visit',
+          params: {'p_slug': slug, 'p_visitor': visitorId});
+      return n is num ? n.toInt() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Counts the articles of a strip as seen, in one call (071).
   Future<void> recordSeen(List<String> productIds) async {
     final client = _client;
@@ -688,6 +704,7 @@ class PublicShop {
     this.lng,
     this.waveMerchant,
     this.style = StorefrontStyle.none,
+    this.visitors,
   });
 
   /// The Pro dressing (068); [StorefrontStyle.none] for everyone else.
@@ -709,6 +726,10 @@ class PublicShop {
 
   /// The shop's Wave merchant link (057), when it takes Wave.
   final String? waveMerchant;
+
+  /// The vitrine's unique visitors of all time (123), from its first one;
+  /// null before then, or on a database before 123.
+  final int? visitors;
 
   bool get hasLocation => lat != null && lng != null;
 
@@ -739,6 +760,10 @@ class PublicShop {
             ? StorefrontStyle.fromJson(
                 Map<String, dynamic>.from(row['style'] as Map))
             : StorefrontStyle.none,
+        // 123 says it in the style, and only from the first visitor.
+        visitors: row['style'] is Map && (row['style'] as Map)['visitors'] is num
+            ? ((row['style'] as Map)['visitors'] as num).toInt()
+            : null,
       );
 }
 

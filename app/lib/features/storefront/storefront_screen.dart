@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/auth/whatsapp_phone.dart';
 import '../../core/capture/capture_repository.dart';
@@ -17,6 +16,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
+import '../../core/storefront/visitor_id.dart';
 import '../../core/retail/stock_rule.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/theme/motion.dart';
@@ -30,6 +30,7 @@ import 'order_sign_in_sheet.dart';
 import 'shop_skeleton.dart';
 import 'share_vitrine.dart';
 import 'shop_style.dart';
+import 'visitors_badge.dart';
 import 'whatsapp_verify_screen.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../common/keyboard_sheet.dart';
@@ -313,19 +314,24 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _directory() => context.go(Routes.directory);
 
-  /// This phone, as one visitor of the street (084): a random id made once
-  /// and kept on the device — never a hardware id, never the person.
-  static const _visitorKey = 'street.visitor_id';
+  /// Counted once per opening (123), not at each reload of the shelf.
+  bool _visitCounted = false;
 
+  /// The vitrine's unique visitors as the visit answered them (123); until
+  /// then, or when it fails, the number storefront() said.
+  int? _visitors;
+
+  /// This phone, as one visitor of the street: its random id (visitor_id.dart)
+  /// counts the shop's cauris (084) and the vitrine's visitors (123).
+  /// Never in the way of the page, silent when it fails.
   Future<void> _countVisitor() async {
+    if (_visitCounted) return;
+    _visitCounted = true;
     try {
-      final db = widget.session.db;
-      var id = await db.readPref(_visitorKey);
-      if (id == null || id.length < 8) {
-        id = const Uuid().v4();
-        await db.writePref(_visitorKey, id);
-      }
-      await widget.storefront.recordVisitor(widget.slug, id);
+      final id = await deviceVisitorId(widget.session.db);
+      unawaited(widget.storefront.recordVisitor(widget.slug, id));
+      final n = await widget.storefront.recordVitrineVisit(widget.slug, id);
+      if (n != null && mounted) setState(() => _visitors = n);
     } catch (_) {}
   }
 
@@ -761,6 +767,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                         child: basketBar(floating: false),
                       ),
                 shop: shop,
+                visitors: _visitors ?? shop.visitors,
                 heart: FollowHeart(follows: _follows, slug: shop.slug),
                 showcase: _showcase,
                 items: _visible,
@@ -1806,6 +1813,7 @@ class _Window extends StatelessWidget {
   const _Window({
     this.basketCard,
     required this.shop,
+    this.visitors,
     this.heart,
     this.showcase = false,
     required this.items,
@@ -1825,6 +1833,9 @@ class _Window extends StatelessWidget {
   /// The basket, in the page after the goods, before the footer.
   final Widget? basketCard;
   final PublicShop shop;
+
+  /// The vitrine's unique visitors (123): the eye under the name, from 1.
+  final int? visitors;
 
   /// ♥, beside the name (113): follow this vitrine.
   final Widget? heart;
@@ -2004,6 +2015,16 @@ class _Window extends StatelessWidget {
                       ?heart,
                     ],
                   ),
+                  // How many people have looked (123), for everyone, in
+                  // the vitrine's own colour.
+                  if ((visitors ?? 0) > 0) ...[
+                    const SizedBox(height: 10),
+                    VisitorsBadge(
+                      key: const Key('shop-visitors'),
+                      count: visitors!,
+                      colour: shop.accent ?? ShopStyle.ink,
+                    ),
+                  ],
                   // The tagline (068): one line, in the shop's colour when
                   // it chose one.
                   if (style.tagline != null) ...[

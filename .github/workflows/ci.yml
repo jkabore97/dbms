@@ -813,6 +813,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch122.sql
 
+      - name: Prove a vitrine's visitors — the same visitor once a day and once for all time, a new one counted, the business's own people and the vitrines the street cannot open or the examples never, a bad id refused, a hash and never the id, 5 000 new a day at most, 400 days kept, storefront() saying it from the first one, the three kinds, the doors (123)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch123.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,
