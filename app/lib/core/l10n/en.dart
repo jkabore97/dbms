@@ -6067,4 +6067,10 @@ const enStrings = <String, String>{
       'From Account › Help › Contact support, on WhatsApp.',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
+  'Mara vous le confirme sous 30 jours':
+      'Mara confirms within 30 days',
+  'Votre compte est lié à {names} : vos ventes, votre stock et votre équipe y portent votre nom. Mara reçoit votre demande, vous contacte si une activité doit être transmise ou fermée, puis supprime votre compte et vos données personnelles sous 30 jours.':
+      'Your account is linked to {names}: your sales, stock and team carry your name there. Mara receives your request, contacts you if a business must be handed over or closed, then deletes your account and your personal data within 30 days.',
+  'Demande envoyée : Mara supprime votre compte et vous prévient.':
+      'Request sent: Mara deletes your account and lets you know.',
 };

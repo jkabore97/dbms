@@ -892,6 +892,39 @@ void main() {
       });
     }
 
+    // Google Play: every account asks for its deletion from inside the
+    // app. A member's goes to Mara as a request (113 never deletes a
+    // member's account on the spot): the word first, then the report.
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('Compte of a $profile: « Supprimer mon compte » sends the request to Mara', (tester) async {
+        final session = await shopper(tester);
+        final me = _Shopper(_profile());
+        final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        await pump(tester, session, at: '/compte', routes: [
+          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org, shopper: me)),
+        ]);
+        await tester.scrollUntilVisible(find.byKey(const Key('group-Mes données')), 300,
+            scrollable: find.byType(Scrollable).first);
+        await tester.tap(find.byKey(const Key('group-Mes données')));
+        await settle(tester);
+        await tester.ensureVisible(find.byKey(const Key('compte-delete-account')));
+        await tester.tap(find.byKey(const Key('compte-delete-account')));
+        await settle(tester);
+        // Nothing is sent before the word.
+        await tester.tap(find.byKey(const Key('delete-confirm')));
+        await settle(tester);
+        expect(me.reports, isEmpty);
+        await tester.enterText(find.byKey(const Key('delete-word')), 'supprimer');
+        await settle(tester);
+        await tester.tap(find.byKey(const Key('delete-confirm')));
+        await settle(tester);
+        expect(me.reports, hasLength(1));
+        expect(me.reports.single['topic'], 'other');
+        expect(me.reports.single['message'], contains('suppression de compte'));
+        expect(find.text('Demande envoyée : Mara supprime votre compte et vous prévient.'), findsOneWidget);
+      });
+    }
+
     // 122 (R3): the language is a choice between the two, not a switch
     // that turns English on; the tap applies it and keeps it.
     for (final profile in ['retail', 'farm', 'association']) {

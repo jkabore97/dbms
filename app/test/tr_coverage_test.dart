@@ -61,6 +61,7 @@ void main() {
     'Mara ·  ', // a printed report's foot: the brand and the date
     'marakaj.com/s/ ', // a vitrine's address
     'Durée :  ', // a service's description, stored in the vitrine's language
+    'Demande de suppression de compte (depuis Compte). Activités :  .', // read by Mara's team, not shown
   };
   Iterable<(String, Literal)> all() sync* {
     for (final f in Directory('lib').listSync(recursive: true)) {

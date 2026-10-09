@@ -151,7 +151,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
     final scope = AppScope.of(context);
     final gone = await showDialog<bool>(
       context: context,
-      builder: (_) => _DeleteDialog(
+      builder: (_) => DeleteAccountDialog(
         delete: () async {
           if (!scope.admin.canManageAccounts) {
             throw StateError(
@@ -738,16 +738,24 @@ class _CityDialogState extends State<_CityDialog> {
 }
 
 /// « Supprimer mon compte »: said plainly, confirmed by typing a word.
-class _DeleteDialog extends StatefulWidget {
-  const _DeleteDialog({required this.delete});
+/// Also the business Compte's (for a member, [delete] sends the request to
+/// Mara and [message] says so).
+class DeleteAccountDialog extends StatefulWidget {
+  const DeleteAccountDialog({super.key, required this.delete, this.message, this.confirmLabel});
 
   final Future<void> Function() delete;
 
+  /// What happens, in place of the shopper's sentence.
+  final String? message;
+
+  /// The red button, in place of « Supprimer ».
+  final String? confirmLabel;
+
   @override
-  State<_DeleteDialog> createState() => _DeleteDialogState();
+  State<DeleteAccountDialog> createState() => _DeleteAccountDialogState();
 }
 
-class _DeleteDialogState extends State<_DeleteDialog> {
+class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
   final _typed = TextEditingController();
   bool _busy = false;
   String? _error;
@@ -795,7 +803,7 @@ class _DeleteDialogState extends State<_DeleteDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr('Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.')),
+            Text(widget.message ?? context.tr('Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.')),
             const SizedBox(height: 14),
             Text(context.tr('Pour confirmer, tapez {word} :', {'word': word}),
                 style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -827,7 +835,7 @@ class _DeleteDialogState extends State<_DeleteDialog> {
           child: _busy
               ? const SizedBox(
                   width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(context.tr('Supprimer')),
+              : Text(widget.confirmLabel ?? context.tr('Supprimer')),
         ),
       ],
     );
