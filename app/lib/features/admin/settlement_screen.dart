@@ -79,7 +79,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
   Future<void> _savePct() async {
     final pct = int.tryParse(_pct.text.trim());
     if (pct == null || pct < 0 || pct > 100) {
-      setState(() => _saved = 'Le pourcentage va de 0 à 100.');
+      setState(() => _saved = context.tr('Le pourcentage va de 0 à 100.'));
       return;
     }
     setState(() {
@@ -91,8 +91,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saved = 'Enregistré : $pct % sur les prochaines livraisons. '
-            'Les commandes déjà passées gardent leur part.';
+        _saved = context.tr('Enregistré : {pct} % sur les prochaines livraisons. Les commandes déjà passées gardent leur part.', {'pct': pct});
       });
     } catch (error) {
       if (!mounted) return;
@@ -172,7 +171,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
               color: theme.colorScheme.primaryContainer,
               child: ListTile(
                 leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text('${money.format(owed)} F CFA dus à Mara',
+                title: Text(context.tr('{amount} F CFA dus à Mara', {'amount': money.format(owed)}),
                     style: theme.textTheme.titleMedium),
                 subtitle: Text(
                     '${_rows.length} livreur${_rows.length > 1 ? 's' : ''} · '
@@ -194,9 +193,9 @@ class _SettlementScreenState extends State<SettlementScreen> {
                   title: Text(r.name),
                   subtitle: Text([
                     if (r.phone != null) r.phone!,
-                    '${r.courses} course${r.courses > 1 ? 's' : ''}',
-                    'encaissé ${money.format(r.fees)} F',
-                    'gardé ${money.format(r.net)} F',
+                    r.courses > 1 ? context.tr('{n} courses', {'n': r.courses}) : context.tr('{n} course', {'n': r.courses}),
+                    context.tr('encaissé {amount} F', {'amount': money.format(r.fees)}),
+                    context.tr('gardé {amount} F', {'amount': money.format(r.net)}),
                   ].join(' · ')),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

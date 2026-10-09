@@ -154,7 +154,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
     if (done == true) {
       await _api?.log('pin_changed');
-      _say('Code changé.');
+      _say(context.tr('Code changé.'));
       await _load();
     }
   }
@@ -167,7 +167,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       builder: (_) => _ChangePasswordDialog(api: api),
     );
     if (done == true) {
-      _say('Mot de passe changé.');
+      _say(context.tr('Mot de passe changé.'));
       await _load();
     }
   }
@@ -211,7 +211,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         // The resolve now stops at the code screen, which enrols.
         await session?.resolveOrgs();
       } else {
-        _say('Validation en deux étapes désactivée.');
+        _say(context.tr('Validation en deux étapes désactivée.'));
       }
     } catch (e) {
       _say(describeError(e));
@@ -260,7 +260,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       _say(
         n == 0
             ? context.tr('Aucun autre appareil n\'était connecté.')
-            : '$n appareil${n > 1 ? 's' : ''} déconnecté${n > 1 ? 's' : ''}.',
+            : context.tr('{n} appareil(s) déconnecté(s).', {'n': n}),
       );
       await _load();
     } catch (e) {
@@ -290,8 +290,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
               title: context.tr('Verrouillage du téléphone'),
               note: settings.policy == null
                   ? context.tr('Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.')
-                  : 'Votre entreprise demande le code après '
-                        '${SecuritySettings.label(settings.policy)} au plus.',
+                  : context.tr('Votre entreprise demande le code après {delay} au plus.',
+                      {'delay': context.tr(SecuritySettings.label(settings.policy))}),
               children: [
                 RadioGroup<int?>(
                   groupValue: settings.effectiveLock,
@@ -305,7 +305,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                           title: Text(
                             m == null
                                 ? context.tr('Jamais')
-                                : 'Après ${SecuritySettings.label(m)}',
+                                : context.tr('Après {delay}', {'delay': context.tr(SecuritySettings.label(m))}),
                           ),
                           subtitle: m == SecuritySettings.defaultLock
                               ? Text(context.tr('Conseillé'))
@@ -386,9 +386,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     title: Text(s.label),
                     subtitle: Text(
                       [
-                        if (s.current) 'Cet appareil',
+                        if (s.current) context.tr('Cet appareil'),
                         if (!s.current && s.lastUsed != null)
-                          'utilisé le ${when.format(s.lastUsed!)}',
+                          context.tr('utilisé le {date}', {'date': when.format(s.lastUsed!)}),
                         if ((s.ip ?? '').isNotEmpty) s.ip!,
                       ].join(' · '),
                     ),

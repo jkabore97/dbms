@@ -1,4 +1,5 @@
 import '../admin/admin_repository.dart' show PlatformOrg;
+import 'package:kaj_app/core/l10n/tr.dart';
 
 // What the console reads: the activity log, and the shape of the data
 // underneath it. Both come from 008_audit_log.sql and both are admin-only
@@ -97,7 +98,7 @@ class AuditActor {
   factory AuditActor.fromRow(Map<String, dynamic> row) {
     return AuditActor(
       id: row['actor_id'] as String?,
-      label: (row['actor_label'] as String?) ?? 'Système',
+      label: (row['actor_label'] as String?) ?? translate(trCurrent, 'Système'),
       events: (row['events'] as num).toInt(),
       lastSeen: DateTime.parse(row['last_seen'] as String).toLocal(),
     );
@@ -182,7 +183,7 @@ const auditTableLabels = <String, String>{
   'church_members': 'Membres',
 };
 
-String auditTableLabel(String table) => auditTableLabels[table] ?? table;
+String auditTableLabel(String table) => translate(trCurrent, auditTableLabels[table] ?? table);
 
 const auditActionLabels = <String, String>{
   'insert': 'Créé',
@@ -190,7 +191,7 @@ const auditActionLabels = <String, String>{
   'delete': 'Supprimé',
 };
 
-String auditActionLabel(String action) => auditActionLabels[action] ?? action;
+String auditActionLabel(String action) => translate(trCurrent, auditActionLabels[action] ?? action);
 
 /// The shape of the whole platform, in one row.
 ///
@@ -421,7 +422,7 @@ class PlatformPerson {
   String get label {
     final name = fullName?.trim();
     if (name != null && name.isNotEmpty) return name;
-    return email ?? phone ?? 'Sans nom';
+    return email ?? phone ?? translate(trCurrent, 'Sans nom');
   }
 
   factory PlatformPerson.fromRow(Map<String, dynamic> r) {

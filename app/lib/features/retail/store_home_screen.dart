@@ -170,8 +170,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     // pushed over it, rings for itself the moment an order lands.
     if (ModalRoute.of(context)?.isCurrent ?? true) unawaited(AlertTone.ring());
     OrderAlert.show(
-      'Nouvelle commande — ${widget.org.name}',
-      '$pending commande${pending > 1 ? 's' : ''} à traiter sur la vitrine.',
+      context.tr('Nouvelle commande — {name}', {'name': widget.org.name}),
+      pending > 1
+          ? context.tr('{n} commandes à traiter sur la vitrine.', {'n': pending})
+          : context.tr('{n} commande à traiter sur la vitrine.', {'n': pending}),
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -491,11 +493,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '$_salesWaiting vente${_salesWaiting > 1 ? 's' : ''} '
-                        "en attente d'envoi. Elle${_salesWaiting > 1 ? 's' : ''} "
-                        'partira${_salesWaiting > 1 ? 'nt' : ''} dès le retour '
-                        'du réseau ; le total du jour la${_salesWaiting > 1 ? 's' : ''} '
-                        'comptera alors.',
+                        _salesWaiting > 1
+                            ? context.tr('{n} ventes en attente d\'envoi. Elles partiront dès le retour du réseau ; le total du jour les comptera alors.', {'n': _salesWaiting})
+                            : context.tr('{n} vente en attente d\'envoi. Elle partira dès le retour du réseau ; le total du jour la comptera alors.', {'n': _salesWaiting}),
                       ),
                     ),
                     TextButton(
@@ -517,8 +517,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '$_photosWaiting photo${_photosWaiting > 1 ? 's' : ''} '
-                        'sur cet appareil, en attente de réseau.',
+                        context.tr('{n} photo(s) sur cet appareil, en attente de réseau.', {'n': _photosWaiting}),
                       ),
                     ),
                     TextButton(
@@ -573,9 +572,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${_expiring.length} article'
-                            '${_expiring.length > 1 ? 's' : ''} bientôt périmé'
-                            '${_expiring.length > 1 ? 's' : ''}',
+                            _expiring.length > 1
+                                ? context.tr('{n} articles bientôt périmés', {'n': _expiring.length})
+                                : context.tr('{n} article bientôt périmé', {'n': _expiring.length}),
                             style: theme.textTheme.titleMedium,
                           ),
                         ),
@@ -644,8 +643,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_day.saleCount} vente${_day.saleCount > 1 ? 's' : ''}'
-                    '${_day.returnsTotal > 0 ? ' · ${_money.format(_day.returnsTotal)} rendus' : ''}',
+                    '${_day.saleCount > 1 ? context.tr('{n} ventes', {'n': _day.saleCount}) : context.tr('{n} vente', {'n': _day.saleCount})}'
+                    '${_day.returnsTotal > 0 ? ' · ${context.tr('{amount} rendus', {'amount': _money.format(_day.returnsTotal)})}' : ''}',
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: KajTheme.of(context).ink),
                   ),

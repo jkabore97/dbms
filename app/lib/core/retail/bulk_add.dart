@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 /// Parsing for the multi-line quick add: one product per line, typed or
 /// pasted, twenty articles in one save.
 ///
@@ -76,15 +77,14 @@ List<BulkLine> parseBulkLines(String text) {
 
     if (name.isEmpty) {
       out.add(BulkLine(
-          lineNumber: lineNumber, raw: raw, error: 'Il manque le nom.'));
+          lineNumber: lineNumber, raw: raw, error: translate(trCurrent, 'Il manque le nom.')));
       continue;
     }
     if (numbers.length < 2) {
       out.add(BulkLine(
           lineNumber: lineNumber,
           raw: raw,
-          error: 'Il faut au moins la quantité et le prix : '
-              '« $name 10 600 ».'));
+          error: translate(trCurrent, 'Il faut au moins la quantité et le prix : « {name} 10 600 ».', {'name': name})));
       continue;
     }
 
@@ -96,14 +96,14 @@ List<BulkLine> parseBulkLines(String text) {
       out.add(BulkLine(
           lineNumber: lineNumber,
           raw: raw,
-          error: 'La quantité doit être supérieure à zéro.'));
+          error: translate(trCurrent, 'La quantité doit être supérieure à zéro.')));
       continue;
     }
     if (salePrice < 0 || (costPrice != null && costPrice < 0)) {
       out.add(BulkLine(
           lineNumber: lineNumber,
           raw: raw,
-          error: 'Un prix ne peut pas être négatif.'));
+          error: translate(trCurrent, 'Un prix ne peut pas être négatif.')));
       continue;
     }
     final key = name.toLowerCase();
@@ -111,8 +111,7 @@ List<BulkLine> parseBulkLines(String text) {
       out.add(BulkLine(
           lineNumber: lineNumber,
           raw: raw,
-          error: 'Doublon : « $name » est déjà plus haut. '
-              'Renommez-le (ex. « $name 25kg ») ou retirez la ligne.'));
+          error: translate(trCurrent, 'Doublon : « {name} » est déjà plus haut. Renommez-le (ex. « {name} 25kg ») ou retirez la ligne.', {'name': name})));
       continue;
     }
 

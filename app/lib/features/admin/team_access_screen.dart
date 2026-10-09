@@ -147,7 +147,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
         children: [
           SizedBox(
             width: 104,
-            child: Text(label,
+            child: Text(context.tr(label),
                 style: const TextStyle(fontWeight: FontWeight.w500)),
           ),
           Expanded(
@@ -222,11 +222,11 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.start,
                                   children: [
-                                    Text(f.title,
+                                    Text(context.tr(f.title),
                                         style: const TextStyle(
                                             fontSize: 17,
                                             fontWeight: FontWeight.w600)),
-                                    Text(f.subtitle,
+                                    Text(context.tr(f.subtitle),
                                         style: theme.textTheme.bodySmall),
                                   ],
                                 ),

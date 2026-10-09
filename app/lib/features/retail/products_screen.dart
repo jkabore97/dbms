@@ -223,7 +223,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
       if (row != null) {
         messenger.showSnackBar(
-            SnackBar(content: Text('${row['name']} — déjà en stock')));
+            SnackBar(content: Text(context.tr('{name} — déjà en stock', {'name': row['name']}))));
         return;
       }
 
@@ -241,11 +241,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   String _details(Product p) => [
-        '${_trim(p.quantity)} en stock',
-        if (p.isIngredient) 'ingrédient',
+        context.tr('{n} en stock', {'n': _trim(p.quantity)}),
+        if (p.isIngredient) context.tr('ingrédient'),
         if (p.salePrice > 0) _money.format(p.salePrice),
         if (p.expiresOn != null)
-          'expire le ${DateFormat('d MMM', intlLocale()).format(p.expiresOn!)}',
+          context.tr('expire le {date}', {'date': DateFormat('d MMM', intlLocale()).format(p.expiresOn!)}),
       ].join(' · ');
 
   /// The door to the vitrine, drawn on every article: the long press is a
@@ -493,9 +493,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         // whole shelf, not the filtered view.
                         Flexible(
                           child: Text(
-                            '${_search.text.trim().isEmpty ? '${_products.length} article'
-                                    '${_products.length > 1 ? 's' : ''}' : '${visible.length} / ${_products.length} articles'}'
-                                ' · ${_trim(totalItems)} en stock',
+                            '${_search.text.trim().isEmpty ? (_products.length > 1 ? context.tr('{n} articles', {'n': _products.length}) : context.tr('{n} article', {'n': _products.length})) : context.tr('{shown} / {n} articles', {'shown': visible.length, 'n': _products.length})}'
+                                ' · ${context.tr('{n} en stock', {'n': _trim(totalItems)})}',
                             style: theme.textTheme.titleMedium,
                           ),
                         ),
@@ -645,8 +644,7 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
         setState(() {
           _busy = false;
           _error = '${describeError(error)}\n'
-              '$_saved ligne(s) déjà enregistrée(s) — retirez-les du texte '
-              'avant de réessayer.';
+              '${context.tr('{n} ligne(s) déjà enregistrée(s) — retirez-les du texte avant de réessayer.', {'n': _saved})}';
         });
       }
     }
@@ -953,8 +951,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             Text(widget.product.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              '${_EditProductSheetState._plain(widget.product.quantity)} en stock '
-              '— le stock bouge par les entrées, les ventes et la production',
+              context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
+                  {'n': _EditProductSheetState._plain(widget.product.quantity)}),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -1022,8 +1020,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             if (price != null && cost > 0 && price < cost) ...[
               const SizedBox(height: 8),
               Text(
-                'Attention : vendu en dessous de ce que ça coûte '
-                '(${_EditProductSheetState._plain(cost)}).',
+                context.tr('Attention : vendu en dessous de ce que ça coûte ({cost}).',
+                    {'cost': _EditProductSheetState._plain(cost)}),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
@@ -1056,8 +1054,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               icon: const Icon(Icons.event_outlined),
               label: Text(_expiresOn == null
                   ? context.tr('Date d\'expiration (facultatif)')
-                  : 'Expire le '
-                      '${DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)}'),
+                  : context.tr('Expire le {date}',
+                      {'date': DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)})),
             ),
             const SizedBox(height: 4),
             // Production's own option: gone with production once Mara's

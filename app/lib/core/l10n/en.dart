@@ -5182,4 +5182,242 @@ const enStrings = <String, String>{
       'retired',
   'jamais utilisé':
       'never used',
+  'Espèces en caisse':
+      'Cash on hand',
+  'Compte bancaire':
+      'Bank account',
+  'Dîmes':
+      'Tithes',
+  'Offrandes':
+      'Offerings',
+  'Collectes spéciales':
+      'Special collections',
+  'Dons':
+      'Donations',
+  'Eau et électricité':
+      'Water and electricity',
+  'Loyer':
+      'Rent',
+  'Salaires':
+      'Salaries',
+  'Entretien':
+      'Maintenance',
+  'Œuvres sociales':
+      'Charity work',
+  'Fournitures':
+      'Supplies',
+  'Événements':
+      'Events',
+  'Sans nom':
+      'No name',
+  '{name} — déjà en stock':
+      '{name} — already in stock',
+  'ingrédient':
+      'ingredient',
+  'expire le {date}':
+      'expires {date}',
+  '{shown} / {n} articles':
+      '{shown} / {n} items',
+  '{n} ligne(s) déjà enregistrée(s) — retirez-les du texte avant de réessayer.':
+      '{n} line(s) already saved — remove them from the text before trying again.',
+  '{n} en stock — le stock bouge par les entrées, les ventes et la production':
+      '{n} in stock — stock moves with stock-ins, sales and production',
+  'Attention : vendu en dessous de ce que ça coûte ({cost}).':
+      'Careful: sold below what it costs ({cost}).',
+  '{n} articles ajoutés au stock.':
+      '{n} items added to stock.',
+  '{n} article ajouté au stock.':
+      '{n} item added to stock.',
+  '{n} ligne(s) enregistrée(s), puis : {error}
+Réessayez : les lignes déjà enregistrées ne seront pas comptées deux fois.':
+      '{n} line(s) saved, then: {error}
+Try again: lines already saved will not be counted twice.',
+  'Ajouter {n} article(s) — {total}':
+      'Add {n} item(s) — {total}',
+  '{n} ligne(s) lue(s) sur la photo.':
+      '{n} line(s) read from the photo.',
+  '{n} ligne(s) dont le calcul ne tombe pas juste. Vérifiez avant d’enregistrer.':
+      '{n} line(s) whose sums do not add up. Check before saving.',
+  'Les prix, les noms, les entrées de stock':
+      'Prices, names, stock-ins',
+  'Transformer des ingrédients en produits':
+      'Turn ingredients into products',
+  'Vendre à crédit et encaisser les remboursements':
+      'Sell on credit and collect repayments',
+  'Les tours, les cotisations, la caisse':
+      'Turns, contributions, the cash box',
+  'Créer et partager des factures':
+      'Create and share invoices',
+  'Photographier et classer les documents':
+      'Photograph and file documents',
+  'Comptabilité et rapports':
+      'Accounting and reports',
+  'Journal, résultat, bilan':
+      'Journal, income statement, balance sheet',
+  'Les fiches, les pointages':
+      'Records, time sheets',
+  'Employés':
+      'Employees',
+  'Superviseurs':
+      'Supervisors',
+  'La base de données n\'est pas à jour. Appliquez les migrations manquantes.':
+      'The database is not up to date. Apply the missing migrations.',
+  'La base de données n\'est pas à jour : {name} est introuvable. Appliquez les migrations manquantes.':
+      'The database is not up to date: {name} cannot be found. Apply the missing migrations.',
+  'Cet enregistrement existe déjà.':
+      'This record already exists.',
+  'Cette adresse n\'a pas encore de compte. Choisissez « Créer un compte ».':
+      'This address has no account yet. Choose « Create an account ».',
+  'Un compte existe déjà pour ces informations. Choisissez « Se connecter ».':
+      'An account already exists for these details. Choose « Sign in ».',
+  'Le mot de passe doit contenir au moins 6 caractères.':
+      'The password must have at least 6 characters.',
+  'Adresse e-mail ou mot de passe incorrect.':
+      'Wrong e-mail address or password.',
+  'Ce code a expiré. Demandez-en un nouveau.':
+      'This code has expired. Ask for a new one.',
+  'Ce lien est incorrect ou a déjà été utilisé.':
+      'This link is wrong or has already been used.',
+  'La sécurité du compte a besoin d\'une connexion.':
+      'Account security needs a connection.',
+  'Ce compte n\'a pas d\'adresse e-mail pour vérifier le mot de passe actuel.':
+      'This account has no e-mail address to check the current password.',
+  'Nouvel appareil':
+      'New device',
+  'Nouvel appareil : {detail}':
+      'New device: {detail}',
+  'Mot de passe changé':
+      'Password changed',
+  'Code de l\'appareil changé':
+      'Device code changed',
+  'Validation en deux étapes activée':
+      'Two-step verification turned on',
+  'Verrouillage modifié':
+      'Lock changed',
+  'Verrouillage modifié : {detail}':
+      'Lock changed: {detail}',
+  'Un appareil déconnecté':
+      'A device signed out',
+  'Autres appareils déconnectés':
+      'Other devices signed out',
+  'Déconnecté partout par {who}':
+      'Signed out everywhere by {who}',
+  'un administrateur':
+      'an administrator',
+  'Appareil inconnu':
+      'Unknown device',
+  'Appareil':
+      'Device',
+  'application Mara':
+      'Mara app',
+  'navigateur':
+      'browser',
+  'Nouvelle commande — {name}':
+      'New order — {name}',
+  '{n} commandes à traiter sur la vitrine.':
+      '{n} orders to handle on the vitrine.',
+  '{n} commande à traiter sur la vitrine.':
+      '{n} order to handle on the vitrine.',
+  '{n} ventes en attente d\'envoi. Elles partiront dès le retour du réseau ; le total du jour les comptera alors.':
+      '{n} sales waiting to be sent. They will go as soon as the network is back; the day\'s total will count them then.',
+  '{n} vente en attente d\'envoi. Elle partira dès le retour du réseau ; le total du jour la comptera alors.':
+      '{n} sale waiting to be sent. It will go as soon as the network is back; the day\'s total will count it then.',
+  '{n} photo(s) sur cet appareil, en attente de réseau.':
+      '{n} photo(s) on this device, waiting for the network.',
+  '{n} articles bientôt périmés':
+      '{n} items expiring soon',
+  '{n} article bientôt périmé':
+      '{n} item expiring soon',
+  '{n} ventes':
+      '{n} sales',
+  '{n} vente':
+      '{n} sale',
+  '{amount} rendus':
+      '{amount} returned',
+  'Accès':
+      'Access',
+  'Sites':
+      'Sites',
+  'Départements':
+      'Departments',
+  'Invitations':
+      'Invitations',
+  'Écritures':
+      'Entries',
+  'Membres':
+      'Members',
+  'Créé':
+      'Created',
+  'Modifié':
+      'Changed',
+  'Supprimé':
+      'Deleted',
+  'Il manque le nom.':
+      'The name is missing.',
+  'Il faut au moins la quantité et le prix : « {name} 10 600 ».':
+      'At least the quantity and the price are needed: « {name} 10 600 ».',
+  'La quantité doit être supérieure à zéro.':
+      'The quantity must be above zero.',
+  'Un prix ne peut pas être négatif.':
+      'A price cannot be negative.',
+  'Doublon : « {name} » est déjà plus haut. Renommez-le (ex. « {name} 25kg ») ou retirez la ligne.':
+      'Duplicate: « {name} » is already above. Rename it (e.g. « {name} 25kg ») or remove the line.',
+  '{n} photo(s) sur cet appareil. Le serveur en a refusé {stuck}.':
+      '{n} photo(s) on this device. The server refused {stuck}.',
+  '{n} photo(s) en attente de réseau.':
+      '{n} photo(s) waiting for the network.',
+  'PDF — ouvrez-le depuis le lien de partage.':
+      'PDF — open it from the share link.',
+  '{n} article(s) lu(s) sur cette photo':
+      '{n} item(s) read from this photo',
+  'Prix lu : {price}':
+      'Price read: {price}',
+  'Péremption lue : {date}':
+      'Expiry read: {date}',
+  'Paiements · {n} versement(s) en échec':
+      'Payments · {n} payout(s) failed',
+  'carte':
+      'card',
+  'payé':
+      'paid',
+  'échoué':
+      'failed',
+  'expiré':
+      'expired',
+  'versé à {to}':
+      'paid to {to}',
+  'la boutique':
+      'the shop',
+  'versement en cours':
+      'payout in progress',
+  'versement échoué : {why}':
+      'payout failed: {why}',
+  'Le pourcentage va de 0 à 100.':
+      'The percentage goes from 0 to 100.',
+  'Enregistré : {pct} % sur les prochaines livraisons. Les commandes déjà passées gardent leur part.':
+      'Saved: {pct} % on the next deliveries. Orders already placed keep their share.',
+  '{amount} F CFA dus à Mara':
+      '{amount} F CFA owed to Mara',
+  '{n} courses':
+      '{n} runs',
+  '{n} course':
+      '{n} run',
+  'encaissé {amount} F':
+      'collected {amount} F',
+  'gardé {amount} F':
+      'kept {amount} F',
+  'Code changé.':
+      'Code changed.',
+  'Validation en deux étapes désactivée.':
+      'Two-step verification turned off.',
+  '{n} appareil(s) déconnecté(s).':
+      '{n} device(s) signed out.',
+  'Votre entreprise demande le code après {delay} au plus.':
+      'Your business asks for the code after {delay} at most.',
+  'Après {delay}':
+      'After {delay}',
+  'utilisé le {date}':
+      'used {date}',
+  '1 h':
+      '1 h',
 };

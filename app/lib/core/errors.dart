@@ -140,9 +140,11 @@ String _postgrest(PostgrestException error) {
     // needs to know which migration is missing; "p_org_id, p_to" is noise to
     // every one of them.
     final name = _missingFunction(message);
-    return "La base de données n'est pas à jour"
-        '${name == null ? '' : ' : $name est introuvable'}. '
-        'Appliquez les migrations manquantes.';
+    return name == null
+        ? translate(trCurrent, "La base de données n'est pas à jour. Appliquez les migrations manquantes.")
+        : translate(trCurrent,
+            "La base de données n'est pas à jour : {name} est introuvable. Appliquez les migrations manquantes.",
+            {'name': name});
   }
 
   // 42501 is RLS. It is not a bug — it is the tenant boundary doing its job —
@@ -178,13 +180,11 @@ String _auth(AuthException error) {
     // numéro" while sign-in was an SMS code; sending somebody to look at
     // their phone for an account they made with an e-mail address is how a
     // correct message still wastes an afternoon.
-    return "Cette adresse n'a pas encore de compte. "
-        'Choisissez « Créer un compte ».';
+    return "Cette adresse n'a pas encore de compte. Choisissez « Créer un compte ».";
   }
   if (message.contains('already registered') ||
       message.contains('already exists')) {
-    return 'Un compte existe déjà pour ces informations. '
-        'Choisissez « Se connecter ».';
+    return 'Un compte existe déjà pour ces informations. Choisissez « Se connecter ».';
   }
   if (message.contains('password') && message.contains('least')) {
     return 'Le mot de passe doit contenir au moins 6 caractères.';
