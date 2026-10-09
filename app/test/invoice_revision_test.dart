@@ -180,7 +180,11 @@ void main() {
       expect(invoicing.createdUuid, isNotNull, reason: 'one uuid per invoice: a retry cannot raise it twice');
       expect(invoicing.createdPhone, isNull);
 
+      // The document opened at once, as before (batch 115); « C'est fait »
+      // behind it.
+      expect(opened, 'inv-new');
       expect(find.byKey(const Key('flow-done')), findsOneWidget);
+      opened = null;
       await tester.tap(find.byKey(const Key('invoice-open')));
       await tester.pumpAndSettle();
       expect(opened, 'inv-new');

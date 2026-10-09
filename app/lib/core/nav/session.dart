@@ -159,6 +159,34 @@ class SessionController extends ChangeNotifier {
 
   static String _hiddenKey(String orgId) => 'hidden_features:$orgId';
 
+  /// Mara's « Wave autorisé » for this business (090) as the device last
+  /// heard it: the till keeps « Mobile » offline, when the feature states
+  /// cannot be read, rather than dropping a way of paying it has (batch
+  /// 115). Rewritten on every answer; nothing known is « not allowed ».
+  final Map<String, bool> _waveKept = {};
+
+  static String _waveKey(String orgId) => 'wave_allowed:$orgId';
+
+  /// Whether the till offers mobile money (RULE M): the server's answer,
+  /// else the last one this device heard, else no.
+  bool waveAllowedFor(String orgId) =>
+      _features[orgId]?.waveAllowed ?? _waveKept[orgId] ?? false;
+
+  Future<bool?> _readWave(String orgId) async {
+    try {
+      final v = await db.readPref(_waveKey(orgId));
+      return v == null ? null : v == '1';
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _keepWave(String orgId, bool allowed) async {
+    try {
+      await db.writePref(_waveKey(orgId), allowed ? '1' : '0');
+    } catch (_) {}
+  }
+
   Future<Set<String>?> _readHidden(String orgId) async {
     try {
       final v = await db.readPref(_hiddenKey(orgId));
@@ -241,11 +269,20 @@ class SessionController extends ChangeNotifier {
               _hiddenKept.putIfAbsent(org.id, () => k);
             }
           });
+    final wave = _features.containsKey(org.id) || _waveKept.containsKey(org.id)
+        ? null
+        : _readWave(org.id).then((w) {
+            if (w != null && !_features.containsKey(org.id)) {
+              _waveKept.putIfAbsent(org.id, () => w);
+            }
+          });
     final s = await states;
     if (s is FeatureStates) {
       _features[org.id] = s;
       _hiddenKept[org.id] = s.hidden;
       unawaited(_keepHidden(org.id, s.hidden));
+      _waveKept[org.id] = s.waveAllowed;
+      unawaited(_keepWave(org.id, s.waveAllowed));
     }
     final dial = rules == null ? null : await rules;
     OrgAccess accessNow() {
@@ -277,6 +314,8 @@ class SessionController extends ChangeNotifier {
       await kept;
       if (!_disposed) settle();
     }
+    // The device's « Wave autorisé » landed: the till reads it when it opens.
+    if (wave != null && s is! FeatureStates) await wave;
   }
 
   /// Where a reload was headed before a gate — the PIN screen, the sign-in —

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/two_step.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The platform admin's second step (077).
 ///
@@ -129,6 +130,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     final t = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        actions: const [bellRoom],
         automaticallyImplyLeading: false,
         title: Text(context.tr('Validation en deux étapes')),
       ),

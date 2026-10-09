@@ -5,6 +5,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The shape of the business: its sites, and the departments inside them.
 ///
@@ -96,6 +97,8 @@ class _StructureScreenState extends State<StructureScreen> {
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(title),
         content: TextField(
           controller: controller,
@@ -126,7 +129,7 @@ class _StructureScreenState extends State<StructureScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('{_entityWord}s et départements', {'_entityWord': _entityWord}))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('{_entityWord}s et départements', {'_entityWord': _entityWord}))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

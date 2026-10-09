@@ -15,6 +15,7 @@ import '../../../core/notify/notifications_repository.dart';
 import '../admin_pill.dart';
 import '../../notify/notifications_screen.dart' show NotificationBell;
 import 'center_search.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// One page of a section: its name and its address. [leaves] marks a page
 /// outside the center (the street).
@@ -704,7 +705,7 @@ class _NotForYou extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       key: const Key('center-not-for-you'),
-      appBar: AppBar(),
+      appBar: AppBar(actions: const [bellRoom], ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),

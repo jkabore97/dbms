@@ -13,6 +13,7 @@ import '../../l10n/strings.dart';
 import '../admin/admin_pill.dart' show AdminTrail;
 import 'notification_settings_sheet.dart';
 import 'notification_text.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The bell (115): on every home of the three kinds, on every tool page of
 /// a business (PageBell), on the street and the vitrine for a signed-in
@@ -228,6 +229,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             onPressed: () => NotificationSettingsSheet.open(context,
                 notify: widget.notify, audiences: _audiences),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

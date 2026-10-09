@@ -4,6 +4,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The activity log across every business (048) — the platform admin's
 /// oversight view. Newest first, keyset-paged, filterable to the actions a
@@ -89,7 +90,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Activité de la plateforme'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Activité de la plateforme'))),
       body: Column(
         children: [
           Padding(

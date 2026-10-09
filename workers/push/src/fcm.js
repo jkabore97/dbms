@@ -115,7 +115,8 @@ export async function sendFcm(token, payload, sa, fetchImpl = fetch) {
           data: { path: payload.path || "/", url: payload.url || "" },
           android: {
             priority: "high",
-            notification: { tag: payload.tag || undefined },
+            // The app's own channel, made at its start (MainActivity.kt).
+            notification: { tag: payload.tag || undefined, channel_id: "mara_alerts" },
           },
         },
       }),

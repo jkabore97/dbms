@@ -7,6 +7,7 @@ import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/pay/wave_pay.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Console › Paiements Wave (076): the switches, the platform's share, and
 /// every payment with its payout — failed payouts first, since each is a
@@ -82,7 +83,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
     final when = DateFormat('d MMM, HH:mm', 'fr_FR');
     final failed = _rows.where((r) => r.payoutStatus == 'failed').length;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Paiements Wave'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paiements Wave'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

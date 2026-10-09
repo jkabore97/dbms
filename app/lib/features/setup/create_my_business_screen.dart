@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/auth/whatsapp_phone.dart';
@@ -17,6 +18,8 @@ import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk
 import '../common/phone_field.dart';
 import '../storefront/whatsapp_verify_screen.dart';
 import 'association_setup_screen.dart' show associationKinds;
+import '../../core/notify/bell_room.dart';
+import '../../core/nav/router.dart';
 
 /// « Créer mon activité » (111): a person makes their business at once —
 /// no request, no wait. One question per screen, a bar that fills, Retour
@@ -395,7 +398,64 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     if (_draft.step > 0) {
       _go(_draft.step - 1);
     } else {
-      Navigator.of(context).maybePop();
+      _leave();
+    }
+  }
+
+  /// Something already answered: leaving asks first (the owner's « a button
+  /// to return to the welcome page or just go back »).
+  bool get _anythingAnswered =>
+      _draft.profile != null ||
+      _draft.answers.isNotEmpty ||
+      [_name, _slug, _about, _city, _area, _phone].any((c) => c.text.trim().isNotEmpty);
+
+  /// « Quitter sans enregistrer ? » — the business is not created; the
+  /// answers stay on the phone all the same, and the flow reopens on them.
+  Future<bool> _mayLeave() async {
+    if (widget.preview || !_anythingAnswered) return true;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        key: const Key('create-leave'),
+        title: Text(dialog.tr('Quitter sans enregistrer ?')),
+        content: Text(dialog.tr('Votre activité n\'est pas encore créée. Vos réponses sont gardées : vous reprendrez ici.')),
+        actions: [
+          TextButton(
+            key: const Key('create-leave-stay'),
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: Text(dialog.tr('Rester')),
+          ),
+          FilledButton(
+            key: const Key('create-leave-go'),
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: Text(dialog.tr('Quitter')),
+          ),
+        ],
+      ),
+    );
+    return go == true;
+  }
+
+  /// Back from the first question: where the person came from — or, with
+  /// [home] (« Retour à l'accueil »), the welcome page, the street. A page
+  /// reached by its address alone has nowhere behind it: the street too.
+  Future<void> _leave({bool home = false}) async {
+    if (_busy || !await _mayLeave() || !mounted) return;
+    // What is pending is written now: « Vos réponses sont gardées ».
+    _saveSoon?.cancel();
+    final drafts = widget.drafts;
+    if (drafts != null && !widget.preview) await drafts.write(_draft);
+    if (!mounted) return;
+    final router = GoRouter.maybeOf(context);
+    if (home && router != null) {
+      router.go(Routes.directory);
+      return;
+    }
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+    } else {
+      router?.go(Routes.directory);
     }
   }
 
@@ -502,19 +562,30 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     return PopScope(
       // Android's back steps back through the questions; the preview, drawn
       // inside the command center's page, never holds that page's back.
-      canPop: widget.preview || start == null || start.locked || _draft.step == 0,
+      canPop: widget.preview ||
+          start == null ||
+          start.locked ||
+          (_draft.step == 0 && !_anythingAnswered),
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },
       child: Scaffold(
         appBar: AppBar(
+          actions: const [bellRoom],
           title: Text(widget.preview ? context.tr('Aperçu de la création') : context.tr('Créer mon activité')),
+          // Back on every question: the previous one, and from the first
+          // where the person came from.
           leading: widget.preview
               ? null
               : IconButton(
-                  tooltip: context.tr('Fermer'),
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  key: const Key('create-bar-back'),
+                  tooltip: context.tr('Retour'),
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _busy
+                      ? null
+                      : start == null || start.locked
+                          ? () => Navigator.of(context).maybePop()
+                          : _back,
                 ),
         ),
         body: SafeArea(child: body),
@@ -629,6 +700,17 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
             ),
           ),
         ),
+        // The first question: the way back to the welcome page, in words.
+        if (at == 0 && !widget.preview)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TextButton.icon(
+              key: const Key('create-home'),
+              onPressed: _busy ? null : () => _leave(home: true),
+              icon: const Icon(Icons.storefront_outlined),
+              label: Text(context.tr('Retour à l\'accueil')),
+            ),
+          ),
       ],
     );
   }

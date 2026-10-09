@@ -14,6 +14,7 @@ import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Animals that are not chickens, and things that grow in the ground.
 ///
@@ -129,6 +130,7 @@ class _LivestockScreenState extends State<LivestockScreen>
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [bellRoom],
         title: Text(context.tr('Élevage et cultures')),
         bottom: TabBar(
           controller: tabs,

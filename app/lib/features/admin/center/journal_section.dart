@@ -11,6 +11,7 @@ import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../../courier/courier_words.dart' show courierReasonLabel;
 import 'settings_section.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// Journal (104, 105): every change the platform made — a setting, a gift,
 /// a tool opened, a message, an archive, a switch, a fiche — newest first,
@@ -202,6 +203,7 @@ class _JournalSectionState extends State<JournalSection> {
             onPressed: _loading ? null : () => _load(reset: true),
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: RefreshIndicator(

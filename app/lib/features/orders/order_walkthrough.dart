@@ -286,6 +286,8 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Annuler cette commande ?')),
         content: Text(context.tr('{customerName} en sera informé.', {'customerName': _name})),
         actions: [

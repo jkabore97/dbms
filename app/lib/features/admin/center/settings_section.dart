@@ -12,6 +12,7 @@ import '../../notify/push_check.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'todo_section.dart' show featureName;
+import '../../../core/notify/bell_room.dart';
 
 /// How a setting is typed in.
 enum SettingType {
@@ -321,6 +322,7 @@ class _SettingsSectionState extends State<SettingsSection> {
             onPressed: _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: _error != null
@@ -542,6 +544,8 @@ class _EditDialogState extends State<_EditDialog> {
         def.type == SettingType.km ||
         def.type == SettingType.pct;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(settingLabel(context, def.key)),
       content: SizedBox(
         width: 420,

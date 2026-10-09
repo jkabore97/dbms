@@ -5,6 +5,7 @@ import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Debits and credits, uninterpreted.
 ///
@@ -85,7 +86,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     final balanced = (debit - credit).abs() < 1;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Balance générale'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Balance générale'))),
       body: Column(
         children: [
           const SizedBox(height: 12),

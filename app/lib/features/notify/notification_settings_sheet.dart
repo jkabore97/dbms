@@ -34,6 +34,7 @@ class NotificationSettingsSheet extends StatefulWidget {
       showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
         showDragHandle: true,
         builder: (_) => NotificationSettingsSheet(notify: notify, audiences: audiences),
       );

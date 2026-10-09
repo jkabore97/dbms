@@ -4,6 +4,7 @@ import '../../core/format/money.dart';
 import '../../core/db/local_db.dart';
 import 'entry_controls.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../common/keyboard_sheet.dart';
 
 /// Money moved between two places the business already keeps it: cash banked
 /// at the end of the week, a withdrawal for Monday's purchases, a mobile money
@@ -118,18 +119,33 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
     final theme = Theme.of(context);
     final accent = theme.colorScheme.tertiary;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: SizedBox(
+              height: 56,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: theme.colorScheme.onTertiary,
+                ),
+                onPressed: _valid && !_saving ? _save : null,
+                child: _saving
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        context.tr('Enregistrer le transfert'),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+      children: [
             Center(
               child: Container(
                 width: 40,
@@ -204,30 +220,6 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
             ),
             const SizedBox(height: 16),
             AmountKeypad(onDigit: _tapDigit, onBackspace: _backspace),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 56,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: theme.colorScheme.onTertiary,
-                ),
-                onPressed: _valid && !_saving ? _save : null,
-                child: _saving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        context.tr('Enregistrer le transfert'),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
             const SizedBox(height: 8),
             Center(
               child: Text(
@@ -235,9 +227,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

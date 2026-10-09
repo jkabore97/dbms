@@ -380,6 +380,111 @@ void main() {
     });
   });
 
+  group('A7 — back on every question, and the way home (batch 115)', () {
+    GoRouter router(_Drafts drafts, {String at = '/depart'}) => GoRouter(
+          initialLocation: at,
+          routes: [
+            GoRoute(path: Routes.directory, builder: (_, _) => const Scaffold(body: Text('La rue'))),
+            GoRoute(
+              path: '/depart',
+              builder: (context, _) => Scaffold(
+                body: TextButton(
+                  onPressed: () => context.push(Routes.createBusiness),
+                  child: const Text('Départ'),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: Routes.createBusiness,
+              builder: (_, _) => CreateMyBusinessScreen(api: _Api(), drafts: drafts, whatsApp: _WhatsApp()),
+            ),
+          ],
+        );
+
+    Future<void> open(WidgetTester tester, GoRouter r, {bool push = true}) async {
+      await tester.pumpWidget(MaterialApp.router(
+        routerConfig: r,
+        locale: const Locale('fr'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+      ));
+      await settle(tester);
+      if (push) {
+        await tester.tap(find.text('Départ'));
+        await settle(tester);
+      }
+    }
+
+    testWidgets('the bar\'s back arrow: the previous question, then where the person came from — asked first, the answers kept',
+        (tester) async {
+      phone(tester);
+      final drafts = _Drafts();
+      await open(tester, router(drafts));
+      expect(find.text('1 / 6'), findsOneWidget);
+      // Nothing answered yet: back at once, nothing asked.
+      await tester.tap(find.byKey(const Key('create-bar-back')));
+      await settle(tester);
+      expect(find.text('Départ'), findsOneWidget);
+      expect(find.byKey(const Key('create-leave')), findsNothing);
+
+      await tester.tap(find.text('Départ'));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('create-kind-farm')));
+      await settle(tester);
+      await tapNext(tester);
+      expect(find.text('2 / 6'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('create-bar-back')));
+      await settle(tester);
+      expect(find.text('1 / 6'), findsOneWidget, reason: 'the previous question');
+
+      // Something answered: « Quitter sans enregistrer ? », and Rester stays.
+      await tester.tap(find.byKey(const Key('create-bar-back')));
+      await settle(tester);
+      expect(find.byKey(const Key('create-leave')), findsOneWidget);
+      expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+      expect(find.textContaining('Vos réponses sont gardées'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('create-leave-stay')));
+      await settle(tester);
+      expect(find.text('1 / 6'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('create-bar-back')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('create-leave-go')));
+      await settle(tester);
+      expect(find.text('Départ'), findsOneWidget);
+      expect(drafts.kept?.profile, 'farm', reason: 'the answers are kept anyway');
+    });
+
+    testWidgets('« Retour à l\'accueil » on the first question: the welcome page, the street', (tester) async {
+      phone(tester);
+      final drafts = _Drafts();
+      await open(tester, router(drafts));
+      expect(find.byKey(const Key('create-home')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('create-kind-retail')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('create-home')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('create-leave-go')));
+      await settle(tester);
+      expect(find.text('La rue'), findsOneWidget);
+      // Not on the later questions: there the back goes one question back.
+      await tester.pumpWidget(const SizedBox());
+      final again = _Drafts(BusinessDraft(step: 1, profile: 'retail'));
+      await open(tester, router(again));
+      expect(find.text('2 / 6'), findsOneWidget);
+      expect(find.byKey(const Key('create-home')), findsNothing);
+      expect(find.byKey(const Key('create-bar-back')), findsOneWidget);
+    });
+
+    testWidgets('reached by its address alone: back from the first question is the street', (tester) async {
+      phone(tester);
+      await open(tester, router(_Drafts(), at: Routes.createBusiness), push: false);
+      await tester.tap(find.byKey(const Key('create-bar-back')));
+      await settle(tester);
+      expect(find.text('La rue'), findsOneWidget);
+    });
+  });
+
   group('kept on the device, taken up again', () {
     testWidgets('reopened, it is where it was, the fields filled', (tester) async {
       phone(tester);

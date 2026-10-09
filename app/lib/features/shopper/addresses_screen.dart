@@ -11,6 +11,7 @@ import '../admin/pin_preview.dart' deferred as pin_map;
 import '../common/owned_controller.dart';
 import '../storefront/shop_style.dart';
 import 'shopper_profile_screen.dart' show addressName;
+import '../common/keyboard_sheet.dart';
 
 /// « Mes adresses de livraison » (113): Maison, Travail and the other
 /// places, each with the words a courier reads first, a note, and a pin.
@@ -286,6 +287,8 @@ class _AddressSheetState extends State<AddressSheet> {
       context: context,
       builder: (dialog) => OwnedController(
         builder: (context, controller) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Lien Google Maps')),
           content: TextField(
             controller: controller,
@@ -347,14 +350,30 @@ class _AddressSheetState extends State<AddressSheet> {
   Widget build(BuildContext context) {
     final lat = _lat;
     final lng = _lng;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          FilledButton(
+              key: const Key('address-save'),
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: ShopStyle.paper))
+                  : Text(context.tr('Enregistrer')),
+            ),
+        ],
+      ),
+      children: [
             Text(
               widget.address == null ? context.tr('Nouvelle adresse') : context.tr('Mon adresse'),
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: ShopStyle.ink),
@@ -468,24 +487,7 @@ class _AddressSheetState extends State<AddressSheet> {
                 ),
               ),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ],
-            const SizedBox(height: 14),
-            FilledButton(
-              key: const Key('address-save'),
-              onPressed: _busy ? null : _save,
-              child: _busy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: ShopStyle.paper))
-                  : Text(context.tr('Enregistrer')),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

@@ -484,7 +484,7 @@ void main() {
       await _big(tester);
       final onboarding = _Onboarding();
       await _openInvite(tester, _shop, onboarding);
-      expect(_nextEnabled(tester), isFalse);
+      expect(_nextEnabled(tester), isTrue, reason: 'the name is optional, as before (batch 115)');
       await tester.enterText(find.byKey(const Key('team-name')), 'Aïcha Sawadogo');
       await tester.enterText(find.byKey(const Key('team-title')), 'Vendeuse');
       await tester.pump();
@@ -533,6 +533,27 @@ void main() {
       expect(find.byKey(const Key('team-code')), findsOneWidget);
       expect(find.byKey(const Key('team-send')), findsOneWidget);
       expect(find.textContaining('Le salaire n\'a pas pu'), findsNothing);
+    });
+
+    testWidgets('no name: the invitation is made all the same, its name left to the account (batch 115)',
+        (tester) async {
+      await _big(tester);
+      final onboarding = _Onboarding();
+      await _openInvite(tester, _shop, onboarding);
+      await _next(tester); // no name
+      await _next(tester); // no number
+      await tester.tap(find.byKey(const Key('flow-option-employee')));
+      await tester.pump();
+      await _next(tester);
+      await _next(tester); // what they see: as offered
+      await _next(tester); // no salary
+      expect(find.byKey(const Key('flow-summary')), findsOneWidget);
+      expect(find.text('Pas dit'), findsWidgets);
+      await tester.tap(find.byKey(const Key('flow-save')));
+      await tester.pumpAndSettle();
+      expect(onboarding.invites.single['name'], isNull);
+      expect(find.text('L\'invitation est prête'), findsOneWidget);
+      expect(find.byKey(const Key('team-code')), findsOneWidget);
     });
 
     testWidgets('a manager offers only what is below them; no salary, no number', (tester) async {

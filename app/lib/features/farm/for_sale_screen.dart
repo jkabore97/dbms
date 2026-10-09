@@ -16,6 +16,8 @@ import '../retail/article_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -105,6 +107,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => ForSaleSheet(
         org: widget.org,
@@ -133,6 +136,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
               icon: const Icon(Icons.storefront_outlined),
               label: Text(context.tr('Ma vitrine')),
             ),
+          bellRoom,
         ],
       ),
       floatingActionButton: _canWrite
@@ -402,14 +406,34 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 4),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const Key('for-sale-save'),
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(context.tr('Enregistrer'),
+                        style: const TextStyle(fontSize: 16)),
+              ),
+            ),
+        ],
+      ),
+      children: [
             Text(context.tr('Modifier'),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
@@ -552,25 +576,6 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   _busy ? null : (v) => setState(() => _published = v),
               title: Text(context.tr('Sur la vitrine')),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 4),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('for-sale-save'),
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(context.tr('Enregistrer'),
-                        style: const TextStyle(fontSize: 16)),
-              ),
-            ),
             ...[
               const SizedBox(height: 8),
               TextButton(
@@ -578,9 +583,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                 child: Text(context.tr('Retirer de la vente')),
               ),
             ],
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

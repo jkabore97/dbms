@@ -131,7 +131,7 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
     final invitation = await widget.onboarding.invite(
       orgId: widget.org.id,
       role: _role!,
-      fullName: _name.text.trim(),
+      fullName: _name.text.trim().isEmpty ? null : _name.text.trim(),
       title: _title.text.trim(),
       phone: phone,
       visibility: _visibility,
@@ -306,7 +306,9 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
         FlowStep(
           id: 'name',
           title: context.tr('Comment s\'appelle cette personne ?'),
-          isValid: () => _name.text.trim().isNotEmpty,
+          // Optional, as the invitation sheet had it (batch 115): the
+          // person's own name arrives with their account.
+          optional: true,
           builder: (_) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -416,7 +418,11 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
         ),
       ],
       summary: (_) => FlowSummary(rows: [
-        FlowSummaryRow(context.tr('Nom'), _name.text.trim(), step: 'name', bold: true),
+        FlowSummaryRow(
+            context.tr('Nom'),
+            _name.text.trim().isEmpty ? context.tr('Pas dit') : _name.text.trim(),
+            step: 'name',
+            bold: true),
         if (_title.text.trim().isNotEmpty)
           FlowSummaryRow(context.tr('Fonction'), _title.text.trim(), step: 'name'),
         FlowSummaryRow(
@@ -443,7 +449,9 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
       ]),
       onSave: _save,
       done: (_) => FlowDone(
-        message: context.tr('L\'invitation de {name} est prête', {'name': _name.text.trim()}),
+        message: _name.text.trim().isEmpty
+            ? context.tr('L\'invitation est prête')
+            : context.tr('L\'invitation de {name} est prête', {'name': _name.text.trim()}),
         details: inv == null
             ? null
             : Column(
@@ -471,7 +479,7 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
                     const SizedBox(height: 8),
                     Text(
                         context.tr('Le salaire n\'a pas pu être noté : dites-le dans Équipe quand {name} aura rejoint.',
-                            {'name': _name.text.trim()}),
+                            {'name': _who}),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: theme.colorScheme.error)),
                   ],

@@ -32,6 +32,7 @@ import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import '../common/refused_notice.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Esperance's home screen.
 ///
@@ -100,6 +101,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     with HomeCounts<StoreHomeScreen> {
   @override
   String get countsOrgId => widget.org.id;
+
+  @override
+  bool get countsShown => !widget.org.isObserverOnly;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
 
@@ -327,11 +331,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         products: _products,
         canCredit: widget.access.canEdit('credits') &&
             !PathGate.locks(context, widget.org, 'credits'),
-        allowWave: AppScope.read(context)
-                ?.session
-                .featuresFor(widget.org.id)
-                ?.waveAllowed ??
-            false,
+        // The last answer the device heard when offline (batch 115).
+        allowWave: AppScope.read(context)?.session.waveAllowedFor(widget.org.id) ?? false,
       ),
     );
     if (recorded == true) await _load();
@@ -378,6 +379,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         title: Text(widget.org.name),
         actions: [
           if (widget.accountAction != null) widget.accountAction!,
+          bellRoom,
         ],
       ),
       bottomNavigationBar: nav.bar(context),
@@ -548,8 +550,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             // The ring with the app closed (115), offered while THIS device
             // is not in the person's book — not merely until the browser's
             // permission was given (the bug: such a browser never rang) —
-            // and the tab's doorbell for whoever answers the orders.
-            if (widget.org.isAdmin || widget.access.canSee('orders'))
+            // and the tab's doorbell for whoever answers the orders. Every
+            // member who records something is offered it; an observer only
+            // watches.
+            if (!widget.org.isObserverOnly)
               PushOfferCard(
                 notify: AppScope.maybeOf(context)?.notify,
                 doorbell: widget.retail != null && widget.access.canSee('orders'),
@@ -842,8 +846,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
           icon: Icons.account_circle_outlined,
           label: s.account,
           // The carnet's credits past their date (115, 117's due date):
-          // the shop's carnet is opened from Compte.
-          badge: homeCount('credit'),
+          // the shop's carnet is opened from Compte — counted only for
+          // somebody who may see the carnet.
+          badge: widget.access.canSee('credits') ? homeCount('credit') : 0,
           route: 'compte',
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
         ),
@@ -852,9 +857,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
   }
 }
 
-/// Asks once whether the till may ring for a new order. A one-time choice,
-/// so it is a card on the page that goes away when answered — not a button
-/// that sits on the bar and then vanishes from it.
 class _Panel extends StatelessWidget {
   const _Panel({required this.child, this.colour, this.gradient})
       : assert(colour != null || gradient != null,

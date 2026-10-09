@@ -55,6 +55,10 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
   final _otherName = TextEditingController();
   final _amount = TextEditingController();
   final _note = TextEditingController();
+
+  /// The memo (optional), apart from the word the entry is called by: what
+  /// the old recording sheet's « Note » kept (batch 115).
+  final _memo = TextEditingController();
   String? _heading;
   String _method = 'cash';
   List<String> _headings = const [];
@@ -81,6 +85,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
     _otherName.dispose();
     _amount.dispose();
     _note.dispose();
+    _memo.dispose();
     super.dispose();
   }
 
@@ -117,6 +122,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
         'amount': _amount.text,
         'method': _method,
         'note': _note.text,
+        'memo': _memo.text,
       };
 
   void _restore(Map<String, Object?> a) => setState(() {
@@ -125,6 +131,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
         _amount.text = (a['amount'] as String?) ?? '';
         _method = (a['method'] as String?) ?? 'cash';
         _note.text = (a['note'] as String?) ?? '';
+        _memo.text = (a['memo'] as String?) ?? '';
         _photo = null;
       });
 
@@ -144,6 +151,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
       label: label,
       category: _category,
       method: _method,
+      memo: _memo.text.trim().isEmpty ? null : _memo.text.trim(),
     );
     _photoNote = null;
     final photo = _photo;
@@ -270,6 +278,20 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
           ),
         ),
         FlowStep(
+          id: 'memo',
+          title: context.tr('Une note ?'),
+          help: context.tr('Ce qui aidera à s\'en souvenir : le fournisseur, le numéro du reçu…'),
+          optional: true,
+          builder: (_) => TextField(
+            key: const Key('expense-memo'),
+            controller: _memo,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ),
+        FlowStep(
           id: 'photo',
           title: context.tr('La photo du reçu ?'),
           optional: true,
@@ -316,7 +338,9 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
         FlowSummaryRow(context.tr('Payée'), moneyMethodLabel(context, _method),
             step: 'method'),
         if (_note.text.trim().isNotEmpty)
-          FlowSummaryRow(context.tr('Note'), _note.text.trim(), step: 'note'),
+          FlowSummaryRow(context.tr('Libellé'), _note.text.trim(), step: 'note'),
+        if (_memo.text.trim().isNotEmpty)
+          FlowSummaryRow(context.tr('Note'), _memo.text.trim(), step: 'memo'),
         if (_photos)
           FlowSummaryRow(context.tr('Reçu'),
               _photo == null ? context.tr('Pas de photo') : context.tr('Photo jointe'),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/errors.dart';
 import '../../core/farm/farm_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../common/keyboard_sheet.dart';
 
 /// Correcting a farm entry after it was recorded — the app's version of
 /// crossing a wrong number out in a notebook. Backed by the 033 update_
@@ -49,6 +50,7 @@ Future<void> showFarmCorrections(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => _CorrectionsSheet(
       title: title,
       farm: farm,
@@ -136,6 +138,7 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _EditEntrySheet(
         farm: widget.farm,
         kind: widget.kind,
@@ -295,17 +298,29 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          ],
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(context.tr('Enregistrer la correction')),
+          ),
+        ],
+      ),
+      children: [
           Text(context.tr('Corriger l’entrée'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
           Text(widget.kind == FarmEntryKind.harvest ? context.tr('Qualité') : context.tr('Type'),
@@ -343,22 +358,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
               border: const OutlineInputBorder(),
             ),
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-          ],
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(context.tr('Enregistrer la correction')),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

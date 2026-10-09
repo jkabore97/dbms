@@ -4656,4 +4656,14 @@ const enStrings = <String, String>{
   'Nouveaux membres de l\'équipe': 'New team members',
   'Crédits soldés et tontines': 'Credits paid off and tontines',
   'Classement des cauris': 'Cauris ranking',
+  'Récolte demande le réseau. Réessayez quand vous avez du signal.':
+      'Harvest needs the network. Try again when you have signal.',
+  'Votre activité n\'est pas encore créée. Vos réponses sont gardées : vous reprendrez ici.':
+      'Your business is not created yet. Your answers are kept: you will pick up here.',
+  'Libellé': 'Label',
+  'Ce qui aidera à s\'en souvenir : le fournisseur, le numéro du reçu…':
+      'What will help remember it: the supplier, the receipt number…',
+  'Ce qui aidera à s\'en souvenir : pour quel mois, quelle occasion…':
+      'What will help remember it: which month, which occasion…',
+  'L\'invitation est prête': 'The invitation is ready',
 };

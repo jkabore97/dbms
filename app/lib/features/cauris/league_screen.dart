@@ -11,6 +11,7 @@ import '../../core/theme/motion.dart';
 import '../../core/storefront/storefront_repository.dart' show publicShopUrl;
 import 'cauri_icon.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Classement » (086): this week's race in the business's league.
 ///
@@ -86,7 +87,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
     final theme = Theme.of(context);
     final b = _board;
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Classement'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Classement'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(

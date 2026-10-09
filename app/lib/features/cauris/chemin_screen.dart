@@ -18,6 +18,7 @@ import 'cauri_icon.dart';
 import 'path_card.dart';
 import 'unlock_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Mon chemin » (097): the one page for how the business grows on Mara.
 ///
@@ -198,6 +199,7 @@ class _CheminScreenState extends State<CheminScreen> {
     return Scaffold(
       // An association has no path (097), only the wallet Mara fills (100).
       appBar: AppBar(
+          actions: const [bellRoom],
           title: Text(widget.org.isAssociation
               ? context.tr('Mes cauris')
               : context.tr('Mon chemin'))),

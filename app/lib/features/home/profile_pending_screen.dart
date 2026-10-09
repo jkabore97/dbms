@@ -5,6 +5,7 @@ import '../../l10n/strings.dart';
 import '../../core/auth/models.dart';
 import '../auth/org_picker_screen.dart'
     show iconForProfile, localizedProfile;
+import '../../core/notify/bell_room.dart';
 
 /// The landing screen for an org whose profile has no module yet — the farm
 /// and the retail shop, until those land.
@@ -29,7 +30,7 @@ class ProfilePendingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(org.name),
-        actions: [?accountAction],
+        actions: [?accountAction, bellRoom],
       ),
       body: Center(
         child: ConstrainedBox(

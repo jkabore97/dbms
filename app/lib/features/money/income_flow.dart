@@ -66,6 +66,10 @@ class _IncomeFlowState extends State<IncomeFlow> {
   final _otherName = TextEditingController();
   final _who = TextEditingController();
   final _amount = TextEditingController();
+
+  /// The memo (optional), apart from the entry's name: what the old
+  /// recording sheet's « Note » kept (batch 115).
+  final _memo = TextEditingController();
   String? _kind;
   String _method = 'cash';
   ChurchMember? _member;
@@ -86,6 +90,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
     _otherName.dispose();
     _who.dispose();
     _amount.dispose();
+    _memo.dispose();
     super.dispose();
   }
 
@@ -134,6 +139,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
         'who': _who.text,
         'amount': _amount.text,
         'method': _method,
+        'memo': _memo.text,
       };
 
   void _restore(Map<String, Object?> a) => setState(() {
@@ -146,6 +152,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
         _who.text = (a['who'] as String?) ?? '';
         _amount.text = (a['amount'] as String?) ?? '';
         _method = (a['method'] as String?) ?? 'cash';
+        _memo.text = (a['memo'] as String?) ?? '';
       });
 
   Future<bool> _record() async {
@@ -159,6 +166,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
       method: _method,
       memberId: _member?.id,
       memberName: _whoName.isEmpty ? null : _whoName,
+      memo: _memo.text.trim().isEmpty ? null : _memo.text.trim(),
       details: typed.isEmpty ? const {} : {'De la part de': typed},
     );
     return true;
@@ -304,6 +312,20 @@ class _IncomeFlowState extends State<IncomeFlow> {
             onChanged: (v) => setState(() => _method = v),
           ),
         ),
+        FlowStep(
+          id: 'memo',
+          title: context.tr('Une note ?'),
+          help: context.tr('Ce qui aidera à s\'en souvenir : pour quel mois, quelle occasion…'),
+          optional: true,
+          builder: (_) => TextField(
+            key: const Key('income-memo'),
+            controller: _memo,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ),
       ],
       summary: (_) => FlowSummary(rows: [
         FlowSummaryRow(
@@ -316,6 +338,8 @@ class _IncomeFlowState extends State<IncomeFlow> {
             step: 'amount', bold: true),
         FlowSummaryRow(context.tr('Reçue'), moneyMethodLabel(context, _method),
             step: 'method'),
+        if (_memo.text.trim().isNotEmpty)
+          FlowSummaryRow(context.tr('Note'), _memo.text.trim(), step: 'memo'),
       ], footer: Text(context.tr('Fonctionne sans connexion'),
           style: theme.textTheme.bodySmall)),
       saveLabel: context.tr('Enregistrer la recette'),

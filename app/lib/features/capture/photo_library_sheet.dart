@@ -24,6 +24,7 @@ Future<CapturedDocument?> showPhotoLibrary(
     showModalBottomSheet<CapturedDocument>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => PhotoLibrarySheet(orgId: orgId, capture: capture),
     );

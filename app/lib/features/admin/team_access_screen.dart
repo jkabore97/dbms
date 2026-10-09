@@ -5,6 +5,7 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The owner's dial: per tool, per tier, who sees and who edits.
 ///
@@ -177,7 +178,7 @@ class _TeamAccessScreenState extends State<TeamAccessScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Accès de l\'équipe'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Accès de l\'équipe'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

@@ -228,13 +228,12 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
         onVerify: p.verifiedPhone == null && p.verifyOn ? _verify : null,
         onCity: _busy ? null : _editCity,
       ),
-      // The ring with the app closed (115), until this device rings.
-      Padding(
+      // The ring with the app closed (115), until this device rings; its
+      // space only when it is drawn.
+      PushOfferCard(
+        notify: scope.notify,
         padding: const EdgeInsets.only(top: 16),
-        child: PushOfferCard(
-          notify: scope.notify,
-          message: context.tr('Soyez prévenu quand votre commande avance, même l\'application fermée.'),
-        ),
+        message: context.tr('Soyez prévenu quand votre commande avance, même l\'application fermée.'),
       ),
       _Section(context.tr('Mes achats'), [
         _Row(
@@ -688,6 +687,8 @@ class _CityDialogState extends State<_CityDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Ma ville')),
       content: SizedBox(
         width: 380,
@@ -778,6 +779,8 @@ class _DeleteDialogState extends State<_DeleteDialog> {
     final ready = _typed.text.trim().toUpperCase() == word && !_busy;
     final error = Theme.of(context).colorScheme.error;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       icon: Icon(Icons.delete_forever_outlined, color: error),
       title: Text(context.tr('Supprimer mon compte ?')),
       content: SizedBox(

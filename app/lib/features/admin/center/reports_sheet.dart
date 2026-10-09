@@ -19,6 +19,7 @@ Future<void> showReportsSheet(BuildContext context, {required CommandCenterRepos
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => ReportsSheet(center: center, outer: context),
     );
@@ -270,6 +271,8 @@ class _AnswerDialogState extends State<_AnswerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Signalement traité')),
       content: SizedBox(
         width: 420,

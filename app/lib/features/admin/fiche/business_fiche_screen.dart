@@ -21,6 +21,7 @@ import 'fiche_pro_tab.dart';
 import 'fiche_vitrine_tab.dart';
 import 'fiche_widgets.dart';
 import 'merchant_preview_screen.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// The fiche entreprise (batch 104, 106): one business — a shop, a farm or
 /// an association — on one page of the command center, as only the
@@ -213,6 +214,7 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
             onPressed: _loading ? null : _changed,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
         bottom: TabBar(
           controller: _tabs,

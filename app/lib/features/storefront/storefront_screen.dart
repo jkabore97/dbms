@@ -32,6 +32,7 @@ import 'share_vitrine.dart';
 import 'shop_style.dart';
 import 'whatsapp_verify_screen.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../common/keyboard_sheet.dart';
 
 /// A shop's window, for the street.
 ///
@@ -1265,6 +1266,8 @@ class _OrderSheetState extends State<OrderSheet> {
         data: ShopStyle.theme(dialog),
         child: OwnedController(
           builder: (context, controller) => AlertDialog(
+            // The keyboard up on a small phone: the dialog scrolls (A6).
+            scrollable: true,
             title: Text(context.tr('Lien Google Maps')),
             content: TextField(
               controller: controller,
@@ -1405,16 +1408,45 @@ class _OrderSheetState extends State<OrderSheet> {
       ),
     );
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _busy || (_fulfilment == 'delivery' && _tooFar)
+                    ? null
+                    : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: ShopStyle.paper,
+                        ),
+                      )
+                    : Text(
+                        booking
+                            ? context.tr('Envoyer la réservation')
+                            : context.tr('Envoyer la commande'),
+                      ),
+              ),
+            ),
+        ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      children: [
             Text(
               booking
                   ? context.tr('Votre réservation')
@@ -1731,36 +1763,6 @@ class _OrderSheetState extends State<OrderSheet> {
                 ),
               ),
             if (!booking) ...[const SizedBox(height: 12), note],
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _busy || (_fulfilment == 'delivery' && _tooFar)
-                    ? null
-                    : _submit,
-                child: _busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: ShopStyle.paper,
-                        ),
-                      )
-                    : Text(
-                        booking
-                            ? context.tr('Envoyer la réservation')
-                            : context.tr('Envoyer la commande'),
-                      ),
-              ),
-            ),
             const SizedBox(height: 6),
             Text(
               booking && _payment != 'wave'
@@ -1776,9 +1778,7 @@ class _OrderSheetState extends State<OrderSheet> {
                     ),
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

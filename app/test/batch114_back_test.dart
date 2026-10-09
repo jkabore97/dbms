@@ -25,6 +25,7 @@ import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/features/admin/center/command_center_shell.dart';
 import 'package:kaj_app/features/church/church_home_screen.dart';
+import 'package:kaj_app/features/common/step_flow.dart';
 import 'package:kaj_app/features/farm/farm_home_screen.dart';
 import 'package:kaj_app/features/home/business_frame.dart';
 import 'package:kaj_app/features/retail/store_home_screen.dart';
@@ -391,6 +392,75 @@ void main() {
       await _settle(tester);
       expect(router.state.uri.path, '/o/org-1');
     });
+  });
+
+  testWidgets('a step flow open inside the business frame: the browser\'s back is the previous step, '
+      'the address kept; from the first step it closes the flow (batch 115)', (tester) async {
+    final engine = _Engine(tester);
+    _size(tester);
+    final back = BackFirst()..browserHistory = true;
+    Widget flow() => StepFlow(
+          title: 'Dépense',
+          store: MemoryFlowStore(),
+          steps: [
+            for (final n in [1, 2, 3])
+              FlowStep(id: 's$n', title: 'Question $n', builder: (_) => Text('Réponse $n')),
+          ],
+          summary: (_) => const Text('Résumé'),
+          onSave: () async => true,
+          done: (_) => const Text('Fait'),
+        );
+    final router = _business(
+        () => Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  key: const Key('open-flow'),
+                  onPressed: () => StepFlow.push(context, flow()),
+                  child: const Text('Accueil'),
+                ),
+              ),
+            ),
+        _shop,
+        back);
+    back.attach(router);
+    addTearDown(() => back.detach(router));
+    await tester.pumpWidget(_app(router, back));
+    await _settle(tester);
+    router.go('/o/org-1/produits');
+    await _settle(tester);
+    router.go('/o/org-1');
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('open-flow')));
+    await _settle(tester);
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byKey(const Key('flow-next')));
+      await _settle(tester);
+    }
+    expect(find.text('Question 3'), findsOneWidget);
+    // The business's bar is behind the flow (108's cover), the flow on top.
+    expect(find.byType(StepFlow), findsOneWidget);
+
+    await _browserBack(tester, '/o/org-1/produits');
+    await _settle(tester);
+    expect(find.text('Question 2'), findsOneWidget, reason: 'the previous step, not the previous page');
+    expect(router.state.uri.path, '/o/org-1');
+    expect(engine.addresses.last, '/o/org-1', reason: 'the page\'s address back in the history');
+
+    await _browserBack(tester, '/o/org-1/produits');
+    await _settle(tester);
+    expect(find.text('Question 1'), findsOneWidget);
+
+    // From the first step: the flow closes (nothing typed), the page stays.
+    await _browserBack(tester, '/o/org-1/produits');
+    await _settle(tester);
+    expect(find.byType(StepFlow), findsNothing);
+    expect(find.text('Accueil'), findsOneWidget);
+    expect(router.state.uri.path, '/o/org-1');
+
+    // Nothing open any more: the browser's back goes back as before.
+    await _browserBack(tester, '/o/org-1/produits');
+    await _settle(tester);
+    expect(router.state.uri.path, '/o/org-1/produits');
   });
 
   testWidgets('the vitrine: back closes the basket (« Votre commande ») and the vitrine stays', (tester) async {

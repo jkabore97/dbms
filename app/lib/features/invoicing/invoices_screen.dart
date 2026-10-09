@@ -15,6 +15,7 @@ import '../../core/nav/router.dart';
 import '../common/step_flow.dart';
 import 'invoice_flow.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Invoicing, for whichever business is open.
 ///
@@ -153,6 +154,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               icon: const Icon(Icons.storefront_outlined),
               tooltip: context.tr('En-tête de facture'),
             ),
+          bellRoom,
         ],
       ),
       body: _loading

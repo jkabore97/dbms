@@ -19,6 +19,7 @@ import 'businesses_screen.dart' show DeleteBusinessDialog, EditBusinessSheet;
 import 'center/bulk_sheet.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The console for somebody running a platform with thousands of businesses
 /// on it.
@@ -284,6 +285,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
     final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) =>
           EditBusinessSheet(admin: widget.admin, org: org.toPlatformOrg()),
     );
@@ -358,6 +360,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: context.tr('Actualiser'),
           ),
+          bellRoom,
         ],
       ),
       floatingActionButton: _selected.isNotEmpty
@@ -369,10 +372,14 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             ),
       bottomNavigationBar: _selected.isEmpty
           ? null
-          : _BulkBar(
-              count: _selected.length,
-              onAct: _bulk,
-              onClear: () => setState(_selected.clear),
+          // Above the keyboard while the search is typed in (A6).
+          : Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+              child: _BulkBar(
+                count: _selected.length,
+                onAct: _bulk,
+                onClear: () => setState(_selected.clear),
+              ),
             ),
       body: Column(
         children: [

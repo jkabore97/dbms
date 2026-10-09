@@ -21,6 +21,8 @@ import '../account/pro_sheet.dart';
 import '../cauris/unlock_sheet.dart';
 import 'member_edit_sheet.dart';
 import 'team_invite_flow.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// « Équipe » (100): the one place for the business's people — who is in,
 /// adding somebody (the invitation, 017), replacing or removing them, the
@@ -228,6 +230,7 @@ class _TeamScreenState extends State<TeamScreen> {
       showDragHandle: true,
       // Tall with every action: it scrolls on a small phone.
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheet) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -412,6 +415,7 @@ class _TeamScreenState extends State<TeamScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => EditMemberSheet(admin: widget.admin, member: account),
     );
     if (saved == true && mounted) await _load();
@@ -426,6 +430,8 @@ class _TeamScreenState extends State<TeamScreen> {
     final chosen = await showDialog<String>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Responsabilité de {label}', {'label': m.name})),
         content: StatefulBuilder(
           builder: (_, setInner) => RadioGroup<String>(
@@ -472,6 +478,8 @@ class _TeamScreenState extends State<TeamScreen> {
       context: context,
       builder: (dialog) => StatefulBuilder(
         builder: (dialog, setInner) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
           title: Text(context.tr('Nouveau mot de passe — {label}', {'label': m.name})),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -538,6 +546,8 @@ class _TeamScreenState extends State<TeamScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Déconnecter {label} partout ?', {'label': m.name})),
         content: Text(context.tr('Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'équipe ».')),
         actions: [
@@ -567,6 +577,8 @@ class _TeamScreenState extends State<TeamScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Supprimer le compte de {label} ?', {'label': m.name})),
         content: Text(context.tr('Le compte sera supprimé et la personne déconnectée. À sa prochaine connexion, elle arrivera sur la page d\'accueil pour rejoindre une entreprise avec un code ou en demander une.\n\nL\'historique de ce qu\'elle a enregistré reste dans les comptes.')),
         actions: [
@@ -592,6 +604,8 @@ class _TeamScreenState extends State<TeamScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(replace
             ? context.tr('Remplacer {name} ?', {'name': m.name})
             : context.tr('Retirer {name} de l\'équipe ?', {'name': m.name})),
@@ -626,6 +640,7 @@ class _TeamScreenState extends State<TeamScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => SalarySheet(org: widget.org, admin: widget.admin, member: m),
     );
@@ -681,7 +696,7 @@ class _TeamScreenState extends State<TeamScreen> {
     final payrollLocked =
         session?.accessFor(widget.org.id).isProLocked('payroll') ?? false;
     return Scaffold(
-      appBar: widget.embedded ? null : AppBar(title: Text(context.tr('Équipe'))),
+      appBar: widget.embedded ? null : AppBar(actions: const [bellRoom], title: Text(context.tr('Équipe'))),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -1121,13 +1136,28 @@ class _SalarySheetState extends State<SalarySheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const Key('salary-save'),
+                onPressed: _busy ? null : _save,
+                child: Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
+      ),
+      children: [
             Text(context.tr('Salaire de {name}', {'name': widget.member.name}),
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
@@ -1161,28 +1191,13 @@ class _SalarySheetState extends State<SalarySheet> {
               onSelectionChanged:
                   _busy ? null : (s) => setState(() => _period = s.first),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('salary-save'),
-                onPressed: _busy ? null : _save,
-                child: Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
             if (widget.member.salary != null)
               TextButton(
                 key: const Key('salary-clear'),
                 onPressed: _busy ? null : () => _save(clear: true),
                 child: Text(context.tr('Effacer le salaire')),
               ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

@@ -447,6 +447,10 @@ class _HarvestFlowState extends State<_HarvestFlow> {
 
   List<CropCycle> _crops = const [];
   bool _loaded = false;
+
+  /// The plantings could not be read (no signal, a server refusing): said
+  /// as that, never as « Aucune culture en cours ».
+  bool _loadFailed = false;
   List<Product> _articles = const [];
   String? _cropId;
   String _grade = 'first';
@@ -480,6 +484,7 @@ class _HarvestFlowState extends State<_HarvestFlow> {
         if (!mounted) return;
         setState(() {
           _crops = crops;
+          _loadFailed = false;
           if (select == _newOne) {
             final fresh = crops.where((c) => !before.contains(c.id));
             if (fresh.isNotEmpty) _cropId = fresh.first.id;
@@ -487,7 +492,9 @@ class _HarvestFlowState extends State<_HarvestFlow> {
           // One planting in the ground: nothing to choose.
           if (_cropId == null && crops.length == 1) _cropId = crops.first.id;
         });
-      } catch (_) {}
+      } catch (_) {
+        if (mounted) setState(() => _loadFailed = true);
+      }
     }
     if (mounted) setState(() => _loaded = true);
     final retail = widget.retail;
@@ -639,6 +646,31 @@ class _HarvestFlowState extends State<_HarvestFlow> {
                 label: Text(context.tr('Ajouter une culture')),
               ),
             );
+            if (_crops.isEmpty && _online && _loadFailed) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    context.tr('Récolte demande le réseau. Réessayez quand vous avez du signal.'),
+                    key: const Key('farm-harvest-offline'),
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      key: const Key('farm-harvest-retry'),
+                      onPressed: () {
+                        setState(() => _loaded = false);
+                        _load();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: Text(context.tr('Réessayer')),
+                    ),
+                  ),
+                ],
+              );
+            }
             if (_crops.isEmpty) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

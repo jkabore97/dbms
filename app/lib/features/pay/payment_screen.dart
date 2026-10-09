@@ -7,6 +7,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/pay/wave_pay.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Where Wave sends the person back (076): it waits for Wave's own word —
 /// the webhook, not the return address, decides — and says what happened.
@@ -78,7 +79,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? context.tr('Wave signale un problème ; nous vérifions.')
                         : context.tr('Nous attendons la confirmation de Wave.'));
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Paiement'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paiement'))),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),

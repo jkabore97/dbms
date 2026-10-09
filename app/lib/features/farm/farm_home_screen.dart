@@ -34,6 +34,7 @@ import '../retail/sale_flow.dart';
 import '../../core/retail/models.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Ignace's home screen.
 ///
@@ -104,6 +105,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     with HomeDoorbell<FarmHomeScreen>, HomeCounts<FarmHomeScreen> {
   @override
   String get countsOrgId => widget.org.id;
+
+  @override
+  bool get countsShown => !widget.org.isObserverOnly;
 
   // The doorbell (100): a new order on the farm's vitrine rings here, as
   // on a shop's home, for whoever sees the orders.
@@ -302,6 +306,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
               ),
             ),
           if (widget.accountAction != null) widget.accountAction!,
+          bellRoom,
         ],
       ),
       body: _loading
@@ -320,8 +325,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     PathFallbackCard(org: widget.org, onBack: _refresh),
                     const SizedBox(height: 16),
                   ],
-                  // The ring with the app closed (115), until this device rings.
-                  if (widget.org.isAdmin)
+                  // The ring with the app closed (115), until this device
+                  // rings — for every member but an observer.
+                  if (!widget.org.isObserverOnly)
                     PushOfferCard(
                       notify: AppScope.maybeOf(context)?.notify,
                       doorbell: true,
@@ -490,11 +496,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         farm: true,
         canCredit: widget.access.canEdit('credits') &&
             !PathGate.locks(context, widget.org, 'credits'),
-        allowWave: AppScope.read(context)
-                ?.session
-                .featuresFor(widget.org.id)
-                ?.waveAllowed ??
-            false,
+        // The last answer the device heard when offline (batch 115).
+        allowWave: AppScope.read(context)?.session.waveAllowedFor(widget.org.id) ?? false,
       ),
     );
     if (sold == true && mounted) await _refresh();

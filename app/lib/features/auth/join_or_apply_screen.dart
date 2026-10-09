@@ -9,6 +9,7 @@ import 'profile_form_screen.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What somebody sees when they have an account and belong to nothing.
 ///
@@ -142,6 +143,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
             icon: const Icon(Icons.logout),
             tooltip: context.tr('Se déconnecter'),
           ),
+          bellRoom,
         ],
       ),
       body: _loading

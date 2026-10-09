@@ -43,6 +43,7 @@ Future<bool> photoAllowed(BuildContext context, OrgSummary org,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => PhotoSlotSheet(org: org, quota: q),
   );
   return bought == true;
@@ -103,6 +104,7 @@ class PhotoCounter extends StatelessWidget {
                 context: context,
                 showDragHandle: true,
                 isScrollControlled: true,
+                useSafeArea: true,
                 builder: (_) => PhotoSlotSheet(org: org, quota: q),
               ),
               icon: const CauriIcon(size: 16),

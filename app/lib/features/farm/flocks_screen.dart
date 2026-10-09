@@ -11,6 +11,7 @@ import '../../core/farm/models.dart';
 import '../accounting/report_shell.dart';
 import 'farm_animal_flows.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The batches, and how they are doing.
 ///
@@ -161,6 +162,7 @@ class _FlocksScreenState extends State<FlocksScreen> {
               _load();
             },
           ),
+          bellRoom,
         ],
       ),
       floatingActionButton: _canWrite

@@ -80,7 +80,7 @@ void main() {
 
   /// « Dépense »: a heading, the amount, the method, a word — saved, closed.
   Future<void> spend(WidgetTester tester,
-      {required String heading, required String amount, String? word, String? other}) async {
+      {required String heading, required String amount, String? word, String? other, String? memo}) async {
     await tester.tap(find.widgetWithText(FloatingActionButton, 'Dépense'));
     await flush(tester);
     await tester.tap(find.byKey(Key('heading-$heading')));
@@ -99,7 +99,12 @@ void main() {
       await tester.enterText(find.byKey(const Key('expense-note')), word);
       await tester.pump();
     }
-    await next(tester); // the word, optional; no photo step without uploads
+    await next(tester); // the word, optional
+    if (memo != null) {
+      await tester.enterText(find.byKey(const Key('expense-memo')), memo);
+      await tester.pump();
+    }
+    await next(tester); // the note, optional; no photo step without uploads
     expect(find.byKey(const Key('flow-summary')), findsOneWidget);
     await tester.tap(find.byKey(const Key('flow-save')));
     await flush(tester);
@@ -142,7 +147,8 @@ void main() {
       (tester) async {
     await pumpHome(tester);
 
-    await spend(tester, heading: 'Entretien', amount: '45000', word: 'Réparation du toit');
+    await spend(tester, heading: 'Entretien', amount: '45000', word: 'Réparation du toit',
+        memo: 'Payé à Issa le maçon');
 
     final entries = await tester.runAsync(
       () => db.entriesForDay(orgId, DateTime.now()),
@@ -151,6 +157,8 @@ void main() {
     expect(entries.single['category'], 'Entretien');
     expect(entries.single['amount'], 45000);
     expect(entries.single['direction'], 'out');
+    // The note apart from the name (batch 115), as the old sheet kept it.
+    expect(entries.single['memo'], 'Payé à Issa le maçon');
 
     // And it reads back on the day's list in the words it was written in.
     expect(find.text('Réparation du toit'), findsOneWidget);
@@ -189,6 +197,10 @@ void main() {
     await tester.tap(find.byKey(const Key('flow-option-mobile_money')));
     await tester.pump();
     await next(tester);
+    // The note, apart from the name (batch 115).
+    await tester.enterText(find.byKey(const Key('income-memo')), 'Cotisation d\'octobre');
+    await tester.pump();
+    await next(tester);
     await tester.tap(find.byKey(const Key('flow-save')));
     await flush(tester);
 
@@ -210,6 +222,7 @@ void main() {
     expect(payload['p_method'], 'mobile_money');
     expect(payload['p_member_id'], isNull);
     expect(payload['p_details'], {'De la part de': 'Awa Ouédraogo'});
+    expect(payload['p_memo'], 'Cotisation d\'octobre');
     expect(payload.containsKey('p_client_uuid'), isTrue);
     expect(payload.containsKey('p_occurred_at'), isTrue);
 

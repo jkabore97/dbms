@@ -17,6 +17,8 @@ import '../../core/production/production_repository.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../l10n/strings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The transformation tool: ingredients in, a product out, and the app doing
 /// the division the maker used to do in her head.
@@ -97,6 +99,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _EditRunSheet(production: widget.production, run: run),
     );
     if (saved == true) await _load();
@@ -138,7 +141,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
     final strings = Strings.of(context);
     final dates = DateFormat('d MMM', 'fr_FR');
     return Scaffold(
-      appBar: AppBar(title: Text(strings.production)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(strings.production)),
       floatingActionButton: !widget.access.canEdit('production')
           ? null
           : FloatingActionButton.extended(
@@ -287,17 +290,29 @@ class _EditRunSheetState extends State<_EditRunSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          ],
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(context.tr('Enregistrer la correction')),
+          ),
+        ],
+      ),
+      children: [
           Text(context.tr('Corriger la production'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
@@ -321,22 +336,7 @@ class _EditRunSheetState extends State<_EditRunSheet> {
               border: const OutlineInputBorder(),
             ),
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-          ],
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(context.tr('Enregistrer la correction')),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

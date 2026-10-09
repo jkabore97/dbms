@@ -9,6 +9,7 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Undoing a transaction the honest way.
 ///
@@ -83,6 +84,8 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
       context: context,
       builder: (ctx) => OwnedController(
         builder: (ctx, controller) => AlertDialog(
+          // The keyboard up on a small phone: the dialog scrolls (A6).
+          scrollable: true,
         title: Text(title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -152,7 +155,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Corrections'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Corrections'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

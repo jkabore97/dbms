@@ -23,6 +23,8 @@ import '../admin/spots_card.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -162,6 +164,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final added = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _BulkAddSheet(org: widget.org, retail: widget.retail),
     );
     if (added == true) await _load();
@@ -175,6 +178,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _EditProductSheet(
         retail: widget.retail,
         org: widget.org,
@@ -396,6 +400,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               icon: const Icon(Icons.qr_code_scanner),
               tooltip: context.tr('Scanner un code-barres'),
             ),
+          bellRoom,
         ],
       ),
       floatingActionButton: widget.access.canEdit('products')
@@ -600,18 +605,30 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
     final lines = parseBulkLines(_text.text);
     final good = lines.where((l) => l.ok).length;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _busy || good == 0 ? null : _save,
+                child: _busy
+                    ? Text(context.tr('Enregistrement… {_saved}/{good}', {'_saved': _saved, 'good': good}))
+                    : Text(context.tr('Enregistrer {good} article(s)', {'good': good}),
+                        style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      children: [
             Text(context.tr('Ajout multiple'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
@@ -648,24 +665,7 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
                         ),
                 ),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: _busy || good == 0 ? null : _save,
-                child: _busy
-                    ? Text(context.tr('Enregistrement… {_saved}/{good}', {'_saved': _saved, 'good': good}))
-                    : Text(context.tr('Enregistrer {good} article(s)', {'good': good}),
-                        style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -870,18 +870,33 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     final price = _parse(_price);
     final cost = _parse(_cost) ?? widget.product.costPrice;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      children: [
             Text(widget.product.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
@@ -1120,24 +1135,6 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
             if (widget.canArchive) ...[
               const SizedBox(height: 8),
               TextButton.icon(
@@ -1148,9 +1145,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                     style: TextStyle(color: theme.colorScheme.error)),
               ),
             ],
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -1160,6 +1155,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Retirer {name} ?', {'name': widget.product.name})),
         content: Text(
             context.tr('Le produit disparaîtra des listes et de la vente. L\'historique de ses ventes et de son stock est conservé.')),

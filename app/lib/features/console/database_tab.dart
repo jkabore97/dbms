@@ -72,6 +72,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _StructureSheet(
         console: widget.console,
         orgId: widget.org.id,

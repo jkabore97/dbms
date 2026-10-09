@@ -23,6 +23,7 @@ class PushOfferCard extends StatefulWidget {
     required this.message,
     this.doorbell = false,
     this.onChanged,
+    this.padding = const EdgeInsets.only(bottom: 16),
   });
 
   /// Null in a tree with no app around it (a test): nothing is drawn.
@@ -35,6 +36,10 @@ class PushOfferCard extends StatefulWidget {
 
   /// Told after the person said yes (or no).
   final VoidCallback? onChanged;
+
+  /// Around the card when it is drawn — nothing at all when it is not, so
+  /// a page never keeps an empty gap where the offer was.
+  final EdgeInsets padding;
 
   @override
   State<PushOfferCard> createState() => _PushOfferCardState();
@@ -93,7 +98,7 @@ class _PushOfferCardState extends State<PushOfferCard> {
     final theme = Theme.of(context);
     final on = theme.colorScheme.onPrimaryContainer;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: widget.padding,
       child: Material(
         key: const Key('push-offer'),
         color: theme.colorScheme.primaryContainer,

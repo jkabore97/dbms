@@ -13,6 +13,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The administration hub.
 ///
@@ -64,6 +65,7 @@ class AdminHomeScreen extends StatelessWidget {
             tooltip: context.tr('Les vitrines'),
             onPressed: () => context.go(Routes.directory),
           ),
+          bellRoom,
         ],
       ),
       body: ListView(

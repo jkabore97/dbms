@@ -10,6 +10,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/errors.dart';
 import '../home/business_frame.dart' show UnsavedInput;
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The screen M5's demo is actually about: *she photographs a delivery invoice
 /// and the products are in the system without typing.*
@@ -196,8 +197,12 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
     final unsure = _rows.where((r) => !r.line.checked).length;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Articles lus'))),
-      bottomNavigationBar: SafeArea(
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Articles lus'))),
+      // « Ajouter … » rides above the keyboard while a name or a price is
+      // typed (A6): the Scaffold lifts its body, not its bottom bar.
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton.icon(
@@ -214,6 +219,7 @@ class _ConfirmProductsScreenState extends State<ConfirmProductsScreen> {
                     '${_selected.length > 1 ? 's' : ''} — '
                     '${_money.format(_total)}'),
           ),
+        ),
         ),
       ),
       body: ListView(

@@ -10,6 +10,7 @@ import '../../../core/auth/auth_repository.dart';
 import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// A member's giving for a year, for them to keep.
 ///
@@ -148,7 +149,7 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
     final thisYear = DateTime.now().year;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Relevé de dons'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Relevé de dons'))),
       body: _loadingMembers
           ? const Center(child: CircularProgressIndicator())
           : ListView(

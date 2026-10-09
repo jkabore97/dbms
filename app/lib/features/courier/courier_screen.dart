@@ -241,8 +241,11 @@ class _CourierScreenState extends State<CourierScreen>
     }
   }
 
-  Widget _pushOffer(BuildContext context) => PushOfferCard(
+  Widget _pushOffer(BuildContext context,
+          {EdgeInsets padding = const EdgeInsets.only(bottom: 16)}) =>
+      PushOfferCard(
         notify: AppScope.maybeOf(context)?.notify,
+        padding: padding,
         message: context.tr('Recevez les nouvelles livraisons même l\'application fermée.'),
       );
 
@@ -318,10 +321,8 @@ class _CourierScreenState extends State<CourierScreen>
                           // The ring on a moto in traffic (115): a job on
                           // the board reaches a closed app once this device
                           // is in the book — offered until it is.
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                            child: _pushOffer(context),
-                          ),
+                          _pushOffer(context,
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16)),
                           // What today paid (062): the one strip on the
                           // page a courier reads before anything else.
                           if (_earnings.isNotEmpty)
@@ -812,6 +813,8 @@ class _CodeDialogState extends State<_CodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Code du client')),
       content: Column(
         mainAxisSize: MainAxisSize.min,

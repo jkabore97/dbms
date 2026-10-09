@@ -548,7 +548,8 @@ begin
      where order_id = v_order and status = 'ready';
     perform deliveries_waiting();
     if (select string_agg(p.full_name, ', ') from notifications n join profiles p on p.id = n.recipient_id
-         where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text) is distinct from 'Livreur Ouaga'
+         where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text
+           and n.recipient_id::text like '11511511-%') is distinct from 'Livreur Ouaga'
        or not courier_may_take(v_order, '11511511-0000-0000-0000-000000000007') then
         raise exception 'FAIL: after the minutes the city was not told as it may take it';
     end if;

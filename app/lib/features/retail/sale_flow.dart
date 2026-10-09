@@ -14,6 +14,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/retail/stock_rule.dart';
 import '../capture/barcode_sheet.dart';
 import '../common/step_flow.dart';
+import '../common/keyboard_sheet.dart';
 
 /// « Vente », one entry at a time (115) — the shop's till and the farm's,
 /// replacing the one-form sale sheet.
@@ -42,6 +43,12 @@ import '../common/step_flow.dart';
 ///
 /// Stock never goes below zero (101): the quantities step says what is
 /// left, counting this phone's sales still waiting for the network.
+/// « Banque » at the till (the old sale sheet had it): left out until the
+/// owner decides (batch 115). THE ONE-LINE SWITCH — put 'bank' in this list
+/// and the till offers it after Mobile, labelled « Banque »; record_sale
+/// already takes it (it books it as the sheet of before did).
+const tillExtraMethods = <String>[];
+
 class SaleFlow extends StatefulWidget {
   const SaleFlow({
     super.key,
@@ -487,6 +494,7 @@ class _SaleFlowState extends State<SaleFlow> {
           // RULE M (111): mobile money only where Mara allows it.
           if (widget.allowWave) 'mobile_money',
           if (widget.allowWave && _waveMerchant != null) 'wave',
+          ...tillExtraMethods,
           if (widget.canCredit) 'credit',
         ];
 
@@ -494,6 +502,7 @@ class _SaleFlowState extends State<SaleFlow> {
         'mobile_money' => context.tr('Mobile'),
         'wave' => context.tr('Wave'),
         'credit' => context.tr('Crédit'),
+        'bank' => context.tr('Banque'),
         _ => context.tr('Espèces'),
       };
 
@@ -589,6 +598,7 @@ class _SaleFlowState extends State<SaleFlow> {
     final sender = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => WavePaymentSheet(
           merchant: merchant, amount: total, currency: widget.currency),
     );
@@ -1127,6 +1137,7 @@ class _SaleFlowState extends State<SaleFlow> {
                   'mobile_money' => Icons.phone_android,
                   'wave' => Icons.qr_code_2,
                   'credit' => Icons.menu_book_outlined,
+                  'bank' => Icons.account_balance_outlined,
                   _ => Icons.payments_outlined,
                 },
                 detail: m == 'credit'
@@ -1317,17 +1328,34 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(context.tr('Annuler')),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: _senderController.text.trim().isEmpty
+                        ? null
+                        : () => Navigator.of(context)
+                            .pop(_senderController.text.trim()),
+                    icon: const Icon(Icons.check),
+                    label: Text(context.tr('Paiement reçu')),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      children: [
           Text(context.tr('Paiement Wave'), style: theme.textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(context.tr('Faites scanner ce code au client, puis entrez son nom Wave.'),
@@ -1370,33 +1398,7 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(context.tr('Annuler')),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: FilledButton.icon(
-                    onPressed: _senderController.text.trim().isEmpty
-                        ? null
-                        : () => Navigator.of(context)
-                            .pop(_senderController.text.trim()),
-                    icon: const Icon(Icons.check),
-                    label: Text(context.tr('Paiement reçu')),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

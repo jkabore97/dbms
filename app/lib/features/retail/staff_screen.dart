@@ -7,6 +7,8 @@ import '../../core/auth/models.dart';
 import '../../core/retail/staff.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// Who gets paid, and what they are owed right now.
 ///
@@ -78,6 +80,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final added = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _AddPersonSheet(org: widget.org, staff: widget.staff),
     );
     if (added == true) await _load();
@@ -87,6 +90,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final recorded = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ShiftSheet(
         org: widget.org,
         staff: widget.staff,
@@ -153,7 +157,7 @@ class _StaffScreenState extends State<StaffScreen> {
     final totalOwed = _owed.fold<double>(0, (sum, w) => sum + w.owed);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Paie et journées'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paie et journées'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addPerson,
         icon: const Icon(Icons.person_add_alt),
@@ -297,18 +301,33 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          SizedBox(
+              height: 52,
+              child: FilledButton(
+                onPressed: _name.text.trim().isEmpty || _busy ? null : _save,
+                child: _busy
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(context.tr('Ajouter'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+        ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      children: [
             Text(context.tr('Ajouter une personne'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
@@ -356,27 +375,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: _name.text.trim().isEmpty || _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(context.tr('Ajouter'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -444,36 +443,17 @@ class _ShiftSheetState extends State<_ShiftSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(context.tr('Journée de {fullName}', {'fullName': widget.person.fullName}),
-              style: theme.textTheme.titleLarge),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _hours,
-            enabled: !_busy,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: context.tr('Heures travaillées'),
-              border: const OutlineInputBorder(),
-            ),
-          ),
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
           ],
-          const SizedBox(height: 20),
           SizedBox(
             height: 52,
             child: FilledButton(
@@ -489,6 +469,22 @@ class _ShiftSheetState extends State<_ShiftSheet> {
           ),
         ],
       ),
+      children: [
+          Text(context.tr('Journée de {fullName}', {'fullName': widget.person.fullName}),
+              style: theme.textTheme.titleLarge),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _hours,
+            enabled: !_busy,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: context.tr('Heures travaillées'),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+      ],
     );
   }
 }

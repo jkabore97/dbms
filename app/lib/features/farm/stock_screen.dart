@@ -11,6 +11,7 @@ import '../../core/nav/app_scope.dart';
 import '../retail/article_flow.dart';
 import 'farm_flows.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What is in the store, and what is about to run out.
 ///
@@ -146,6 +147,7 @@ class _StockScreenState extends State<StockScreen> {
               onPressed: () => _record(FarmStockFlow.use(context,
                   db: widget.db, org: widget.org, wasted: true)),
             ),
+          bellRoom,
         ],
       ),
       // « Ajouter » (115): first « C'est pour vendre » (an article, « À

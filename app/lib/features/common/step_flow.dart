@@ -7,6 +7,8 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../home/business_frame.dart';
+import '../../core/notify/bell_room.dart';
+import 'keyboard_sheet.dart';
 
 /// One entry at a time (115): the shared full-screen step flow every
 /// « Vente », « Ajouter un article », « Service », « Facture », « Dépense »…
@@ -842,6 +844,7 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                     icon: const Icon(Icons.close),
                     onPressed: _busy ? null : _leave,
                   ),
+                bellRoom,
               ],
               bottom: _phase == _Phase.done
                   ? null
@@ -859,7 +862,10 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: ListView(
+                        // The field typed into whole above the keyboard,
+                        // « Suivant » under it (A6).
+                        child: FocusedFieldInView(
+                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                           children: [
                             if (_resumed && _phase != _Phase.done) ...[
@@ -893,6 +899,7 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                             if (question.isNotEmpty) const SizedBox(height: 20),
                             body,
                           ],
+                         ),
                         ),
                       ),
                       Padding(

@@ -39,6 +39,11 @@
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="ocr,barcode" />
+        <!-- The channel MainActivity makes at start (115): FCM rings on it
+             rather than on a fallback channel of its own. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="mara_alerts" />
 
         <activity
             android:name=".MainActivity"

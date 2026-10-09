@@ -7,6 +7,7 @@ import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// What the business owns and what it owes, at a date.
 ///
@@ -98,7 +99,7 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
     final balanced = (totalAssets - totalClaims).abs() < 1;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Bilan'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Bilan'))),
       body: ReportBody(
         loading: _loading,
         error: _error,

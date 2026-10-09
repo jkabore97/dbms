@@ -17,6 +17,8 @@ import '../common/step_flow.dart';
 import 'service_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -101,6 +103,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => ServiceSheet(
         org: widget.org,
@@ -129,6 +132,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               icon: const Icon(Icons.storefront_outlined),
               label: Text(context.tr('Ma vitrine')),
             ),
+          bellRoom,
         ],
       ),
       floatingActionButton: _canWrite
@@ -464,6 +468,8 @@ class _ServiceSheetState extends State<ServiceSheet> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         key: const Key('service-remove-confirm'),
         title: Text(dialog.tr('Retirer ce service ?')),
         content: Text(
@@ -503,14 +509,25 @@ class _ServiceSheetState extends State<ServiceSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    // The fields scroll; « Enregistrer » stays above the keyboard (A6).
+    return KeyboardSheet(
+          footer: SizedBox(
+            height: 52,
+            child: FilledButton(
+              key: const Key('service-save'),
+              onPressed: _busy ? null : _save,
+              child: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      context.tr('Enregistrer'),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+          ),
           children: [
             Text(
               context.tr('Modifier le service'),
@@ -646,35 +663,13 @@ class _ServiceSheetState extends State<ServiceSheet> {
               const SizedBox(height: 4),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('service-save'),
-                onPressed: _busy ? null : _save,
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        context.tr('Enregistrer'),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-              ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const Key('service-remove'),
+              onPressed: _busy ? null : _remove,
+              child: Text(context.tr('Retirer ce service')),
             ),
-            ...[
-              const SizedBox(height: 8),
-              TextButton(
-                key: const Key('service-remove'),
-                onPressed: _busy ? null : _remove,
-                child: Text(context.tr('Retirer ce service')),
-              ),
-            ],
           ],
-        ),
-      ),
     );
   }
 }

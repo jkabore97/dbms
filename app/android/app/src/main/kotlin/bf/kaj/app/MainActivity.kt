@@ -1,9 +1,12 @@
 package bf.kaj.app
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
+import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -18,8 +21,40 @@ import io.flutter.plugin.common.MethodChannel
 // a bundled tone played through the notification volume — a phone on silent
 // stays silent — and a short buzz. Done here rather than through a plugin:
 // it is two calls, and no plugin was worth the weight for them.
+//
+// The notification channel is made at every start, before any push has
+// arrived (batch 115): Android lists the app's notifications by channel,
+// and FCM rings on this one (AndroidManifest's default_notification_channel_id,
+// and the push Worker's channel_id). Making it again is a no-op; the
+// person's own choices for it are kept by the system.
 class MainActivity : FlutterFragmentActivity() {
     private var player: MediaPlayer? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        createAlertsChannel()
+    }
+
+    private fun createAlertsChannel() {
+        if (Build.VERSION.SDK_INT < 26) return
+        try {
+            val manager = getSystemService(NotificationManager::class.java) ?: return
+            val channel = NotificationChannel(
+                ALERTS_CHANNEL,
+                "Commandes et messages",
+                NotificationManager.IMPORTANCE_HIGH,
+            )
+            channel.description = "Les commandes, les réservations et les messages de Mara"
+            channel.enableVibration(true)
+            manager.createNotificationChannel(channel)
+        } catch (e: Exception) {
+            // Never the reason the app does not open.
+        }
+    }
+
+    companion object {
+        const val ALERTS_CHANNEL = "mara_alerts"
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

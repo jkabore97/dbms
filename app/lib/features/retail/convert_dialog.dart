@@ -100,6 +100,8 @@ class _CurrencyConvertDialogState extends State<CurrencyConvertDialog> {
     final converted = _converted;
 
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Convertir un montant')),
       content: _loading
           ? const SizedBox(

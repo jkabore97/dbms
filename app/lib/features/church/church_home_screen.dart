@@ -32,6 +32,7 @@ import 'record_transfer_sheet.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Israel's home screen.
 ///
@@ -116,6 +117,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     with HomeDoorbell<ChurchHomeScreen>, HomeCounts<ChurchHomeScreen> {
   @override
   String get countsOrgId => widget.org?.id ?? '';
+
+  @override
+  bool get countsShown => !(widget.org?.isObserverOnly ?? true);
 
   // The doorbell (100): a new demande on the association's vitrine rings
   // here, as an order does on a shop's home, for its administrators.
@@ -221,6 +225,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     final recorded = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => RecordTransferSheet(
         db: widget.db,
         orgId: widget.orgId,
@@ -235,6 +240,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     final closed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => CloseDaySheet(
         db: widget.db,
         orgId: widget.orgId,
@@ -317,6 +323,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               ),
             ),
           if (widget.accountAction != null) widget.accountAction!,
+          bellRoom,
         ],
       ),
       body: _loading
@@ -326,8 +333,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // The ring with the app closed (115), until this device rings.
-                  if (widget.org?.isAdmin ?? false)
+                  // The ring with the app closed (115), until this device
+                  // rings — for every member but an observer.
+                  if (!(widget.org?.isObserverOnly ?? true))
                     PushOfferCard(
                       notify: AppScope.maybeOf(context)?.notify,
                       message: context.tr('Soyez prévenu des réservations et de votre équipe, même l\'application fermée.'),
@@ -573,6 +581,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           HomeDestination(
             icon: Icons.account_circle_outlined,
             label: s.account,
+            // The carnet's credits past their date (115, 117), as on a
+            // shop's Compte: the association's carnet opens from there.
+            badge: widget.access.canSee('credits') ? homeCount('credit') : 0,
             route: 'compte',
             onTap: () => context.push(Routes.inside(org.id, 'compte')),
           ),

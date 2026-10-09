@@ -21,6 +21,7 @@ import '../accounting/report_shell.dart';
 import 'invoice_paper.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The invoice as a document somebody can actually be handed.
 ///
@@ -341,6 +342,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
                 ),
               ],
             ),
+          bellRoom,
         ],
       ),
       body: _loading
@@ -414,6 +416,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
     // ledger never carries a negative receivable.
     final tooMuch = _amount > widget.outstanding;
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Paiement reçu')),
       content: Column(
         mainAxisSize: MainAxisSize.min,

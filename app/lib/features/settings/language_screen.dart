@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/l10n/locale_controller.dart';
 import '../../core/nav/app_scope.dart';
 import '../../l10n/strings.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Choosing the language of this device.
 ///
@@ -32,7 +33,7 @@ class LanguageScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.language)),
+      appBar: AppBar(actions: const [bellRoom], title: Text(strings.language)),
       body: ListenableBuilder(
         listenable: locale,
         builder: (context, _) {

@@ -20,6 +20,8 @@ import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_skeleton.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'order_walkthrough.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -191,6 +193,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _CashSheet(cash: _cash, retail: widget.retail),
     );
     if (changed == true) await _load();
@@ -201,6 +204,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _CouriersSheet(orgId: widget.org.id, retail: widget.retail),
     );
   }
@@ -245,6 +249,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
               onPressed: _loading ? null : _load,
               icon: const Icon(Icons.refresh),
             ),
+            bellRoom,
           ],
           bottom: TabBar(controller: tabs, tabs: [
             Tab(text: 'À traiter${open.isEmpty ? '' : ' (${open.length})'}'),
@@ -823,34 +828,10 @@ class _CouriersSheetState extends State<_CouriersSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            16, 0, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.tr('Mes livreurs'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text(
-                context.tr('Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Mara.'),
-                style: theme.textTheme.bodySmall),
-            const SizedBox(height: 8),
-            for (final c in _list)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.sports_motorsports_outlined),
-                title: Text(c.name),
-                subtitle: c.phone == null ? null : Text(c.phone!),
-                trailing: IconButton(
-                  tooltip: context.tr('Retirer {name}', {'name': c.name}),
-                  icon: const Icon(Icons.close),
-                  onPressed: _busy ? null : () => _remove(c),
-                ),
-              ),
-            const SizedBox(height: 8),
-            Row(
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: Row(
               children: [
                 Expanded(
                   child: TextField(
@@ -871,13 +852,30 @@ class _CouriersSheetState extends State<_CouriersSheet> {
                 ),
               ],
             ),
+      children: [
+            Text(context.tr('Mes livreurs'), style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+                context.tr('Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Mara.'),
+                style: theme.textTheme.bodySmall),
+            const SizedBox(height: 8),
+            for (final c in _list)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.sports_motorsports_outlined),
+                title: Text(c.name),
+                subtitle: c.phone == null ? null : Text(c.phone!),
+                trailing: IconButton(
+                  tooltip: context.tr('Retirer {name}', {'name': c.name}),
+                  icon: const Icon(Icons.close),
+                  onPressed: _busy ? null : () => _remove(c),
+                ),
+              ),
             if (_error != null) ...[
               const SizedBox(height: 6),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

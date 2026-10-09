@@ -7,6 +7,7 @@ import '../../../core/l10n/tr.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'fiche_widgets.dart';
+import '../../common/keyboard_sheet.dart';
 
 /// Fonctions: 104's switchboard for this one business — each tool it has,
 /// « Par défaut » (today's), « Visible » or « Masquée », until a date if
@@ -56,6 +57,7 @@ class _FicheFeaturesTabState extends State<FicheFeaturesTab> {
     final choice = await showModalBottomSheet<({DateTime? until, String? note})>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => _RuleSheet(
         row: row,
@@ -374,13 +376,23 @@ class _RuleSheetState extends State<_RuleSheet> {
       _ => context.tr('Remettre « {label} » par défaut pour {name} ?',
           {'label': widget.row.label, 'name': widget.orgName}),
     };
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const Key('rule-save'),
+                style: FilledButton.styleFrom(
+                    backgroundColor: maraDeep, foregroundColor: maraPaper),
+                onPressed: () => Navigator.of(context).pop((
+                  until: _until,
+                  note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+                )),
+                child: Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
+              ),
+            ),
+      children: [
             Text(title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
@@ -411,23 +423,7 @@ class _RuleSheetState extends State<_RuleSheet> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const Key('rule-save'),
-                style: FilledButton.styleFrom(
-                    backgroundColor: maraDeep, foregroundColor: maraPaper),
-                onPressed: () => Navigator.of(context).pop((
-                  until: _until,
-                  note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-                )),
-                child: Text(context.tr('Enregistrer'), style: const TextStyle(fontSize: 17)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

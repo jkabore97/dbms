@@ -15,6 +15,7 @@ import '../account/pro_sheet.dart';
 import '../cauris/cauri_icon.dart';
 import '../cauris/unlock_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Kaj and Kaj Pro, side by side (`/o/<id>/kaj-pro`).
 ///
@@ -137,7 +138,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Mara Pro'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Mara Pro'))),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: wide ? 48 : 20, vertical: 24),
         children: [

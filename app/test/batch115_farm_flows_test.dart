@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,8 +26,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// functions; the feed stopped on the phone past what is left (101); the
 /// network said where it is needed.
 class _Farm extends FarmRepository {
-  _Farm({this.crops = const [], this.herdList = const [], this.oldServer = false})
+  _Farm({this.crops = const [], this.herdList = const [], this.oldServer = false,
+      this.cropsFail = false})
       : super(null);
+
+  /// No signal on the way to the plantings.
+  bool cropsFail;
 
   final List<CropCycle> crops;
   final List<Herd> herdList;
@@ -39,8 +44,10 @@ class _Farm extends FarmRepository {
   bool get isConfigured => true;
 
   @override
-  Future<List<CropCycle>> cropCycles(String orgId, {bool includeClosed = false}) async =>
-      crops;
+  Future<List<CropCycle>> cropCycles(String orgId, {bool includeClosed = false}) async {
+    if (cropsFail) throw const SocketException('Failed host lookup');
+    return crops;
+  }
 
   @override
   Future<List<Herd>> herds(String orgId, {bool includeClosed = false}) async => herdList;
@@ -610,6 +617,22 @@ void main() {
       expect(find.text('Œufs'), findsNothing);
       expect(nextEnabled(tester), isFalse);
       expect(await outbox(tester), isEmpty);
+    });
+
+    testWidgets('the plantings could not be read: « Récolte demande le réseau », never « Aucune culture »',
+        (tester) async {
+      final farm = _Farm(crops: [tomato], cropsFail: true);
+      await start(tester, (c) => FarmCropFlow.harvest(c, org: _org, farm: farm));
+      await openFlow(tester);
+      expect(find.byKey(const Key('farm-harvest-offline')), findsOneWidget);
+      expect(find.textContaining('Aucune culture en cours'), findsNothing);
+      expect(nextEnabled(tester), isFalse);
+      // The signal back: « Réessayer » lists them.
+      farm.cropsFail = false;
+      await tester.tap(find.byKey(const Key('farm-harvest-retry')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('farm-harvest-offline')), findsNothing);
+      expect(nextEnabled(tester), isTrue, reason: 'one planting: already chosen');
     });
 
     testWidgets('kept for sale: onto the article of that name, its unit asked', (tester) async {

@@ -11,6 +11,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindSingular;
 import '../setup/create_my_business_screen.dart' show businessActivities;
+import '../../core/notify/bell_room.dart';
 
 /// « Activités créées » (111): what the command center's « Demandes » was.
 /// People create their business at once now — nothing waits for approval —
@@ -73,6 +74,7 @@ class _CreatedBusinessesScreenState extends State<CreatedBusinessesScreen> {
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
+          bellRoom,
         ],
       ),
       body: RefreshIndicator(

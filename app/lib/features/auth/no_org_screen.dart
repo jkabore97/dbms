@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/strings.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Signed in, invited to nothing.
 ///
@@ -50,6 +51,7 @@ class NoOrgScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             tooltip: Strings.of(context).signOut,
           ),
+          bellRoom,
         ],
       ),
       // Scrollable, and centred only while there is room to centre in. A

@@ -53,8 +53,8 @@ class InvoiceFlow extends StatefulWidget {
   final RetailRepository? retail;
   final InvoiceDocument? revisionOf;
 
-  /// « Voir et partager »: the caller opens the document (the flow has
-  /// closed by then).
+  /// Opens the document: at once over « C'est fait » when a new invoice is
+  /// created, and from « Voir et partager » (the flow closed by then).
   final ValueChanged<String>? onOpen;
 
   /// The invoice written — its id — as soon as the server answered.
@@ -291,6 +291,15 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
           );
     _savedId = id;
     widget.onSaved?.call(id);
+    // A new invoice opens its document at once, as « Créer la facture »
+    // did before (batch 115): « C'est fait » waits behind it, for « Nouvelle
+    // facture » when the person comes back.
+    final open = widget.onOpen;
+    if (revising == null && open != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) open(id);
+      });
+    }
     return true;
   }
 

@@ -7,6 +7,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// « Vitrines d'exemple » (094): the platform's own shops on the street —
 /// Rowan Bike Shop, Tony Pizza and the others — that show a shopper what a
@@ -125,7 +126,7 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
       color: theme.colorScheme.onSurfaceVariant,
     );
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Vitrines d\'exemple'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Vitrines d\'exemple'))),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

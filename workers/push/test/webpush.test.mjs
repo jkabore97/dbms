@@ -298,6 +298,7 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
   const sent = JSON.parse(sends[0].init.body).message;
   assert.deepEqual(sent.notification, { title: "Mara", body: "Prête" });
   assert.deepEqual(sent.data, { path: "/mes-commandes", url: "https://app.example/mes-commandes" });
+  assert.equal(sent.android.notification.channel_id, "mara_alerts");
   // One token for both phones (cached), the gone one dropped by its endpoint.
   assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 1);
   assert.deepEqual(calls.filter((c) => c.url.endsWith("/remove_push_target")).map((c) => JSON.parse(c.init.body)),

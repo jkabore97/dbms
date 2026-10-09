@@ -17,6 +17,10 @@ mixin HomeCounts<T extends StatefulWidget> on State<T> {
   /// The business whose numbers this home shows; empty for none yet.
   String get countsOrgId;
 
+  /// Whether this person is shown the numbers at all: an observer only
+  /// watches — nothing on the bar asks them to act (batch 115).
+  bool get countsShown => true;
+
   void _countsChanged() {
     if (mounted) setState(() {});
   }
@@ -25,7 +29,10 @@ mixin HomeCounts<T extends StatefulWidget> on State<T> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final notify = AppScope.maybeOf(context)?.notify;
-    final bell = notify != null && notify.isConfigured && countsOrgId.isNotEmpty
+    final bell = notify != null &&
+            notify.isConfigured &&
+            countsOrgId.isNotEmpty &&
+            countsShown
         ? notify.bell
         : null;
     if (identical(bell, _countsBell) && _countsOrg == countsOrgId) return;

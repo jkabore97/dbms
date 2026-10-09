@@ -242,6 +242,7 @@ class SpotSheet {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => _SpotSheetBody(
         orgId: orgId,
@@ -263,6 +264,7 @@ class SpotSheet {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (_) => _SpotSheetBody(
         orgId: '',

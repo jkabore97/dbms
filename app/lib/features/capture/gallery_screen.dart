@@ -16,6 +16,7 @@ import 'capture_action.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// Everything this business has photographed.
 ///
@@ -170,6 +171,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
               icon: const Icon(Icons.auto_stories_outlined),
               tooltip: context.tr('Lire une page de carnet'),
             ),
+          bellRoom,
         ],
       ),
       // Same posture as the store home: the camera is drawn only in a build
@@ -517,6 +519,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
       onPopInvokedWithResult: (didPop, _) {},
       child: Scaffold(
         appBar: AppBar(
+          actions: const [bellRoom],
           title: Text(document.title),
           leading:
               BackButton(onPressed: () => Navigator.of(context).pop(_changed)),

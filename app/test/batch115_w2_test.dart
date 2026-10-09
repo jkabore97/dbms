@@ -267,7 +267,12 @@ void main() {
       await tester.pump();
       await next(tester);
       await next(tester); // no word
+      // The memo, apart from the word (batch 115): kept as the entry's memo.
+      await tester.enterText(find.byKey(const Key('expense-memo')), 'Reçu n° 0042');
+      await tester.pump();
+      await next(tester);
       expect(find.byKey(const Key('flow-summary')), findsOneWidget);
+      expect(find.text('Reçu n° 0042'), findsOneWidget);
       await tester.tap(find.byKey(const Key('flow-save')));
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
       await tester.pumpAndSettle();
@@ -281,6 +286,8 @@ void main() {
       expect(payload['p_label'], heading);
       expect(payload['p_category'], heading);
       expect(payload['p_method'], 'mobile_money');
+      expect(payload['p_memo'], 'Reçu n° 0042');
+      expect(payload['p_label'], isNot('Reçu n° 0042'), reason: 'the memo is not the label');
       expect(find.byKey(const Key('flow-done')), findsOneWidget);
     });
   }

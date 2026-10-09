@@ -92,10 +92,30 @@ class Bell extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
   }
 
+  /// The minute's poll stops while the app is in the background — a phone
+  /// in a pocket pays for no request nobody sees — and starts again, with a
+  /// read at once, when the person comes back (batch 115).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(refresh());
+    if (!_running) return;
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _timer ??= Timer.periodic(every, (_) => unawaited(refresh()));
+        unawaited(refresh());
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        _timer?.cancel();
+        _timer = null;
+        _soon?.cancel();
+      case AppLifecycleState.inactive:
+        break;
+    }
   }
+
+  /// Whether the minute's poll is running (tests).
+  @visibleForTesting
+  bool get polling => _timer != null;
 
   /// Read again a moment from now — several rows written at once (an order
   /// accepted rings the customer and the shop) make one read, not five.
@@ -145,8 +165,12 @@ class Bell extends ChangeNotifier with WidgetsBindingObserver {
     _unwatch = null;
     _watching = me;
     if (me == null) {
+      // Signed out: every bell and bar says nothing at once, not at the
+      // next read.
+      final had = _counts != NotificationCounts.none || _home.isNotEmpty;
       _counts = NotificationCounts.none;
       _home.clear();
+      if (had) notifyListeners();
       return;
     }
     try {

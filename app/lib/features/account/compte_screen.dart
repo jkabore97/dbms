@@ -22,6 +22,7 @@ import 'support.dart';
 import '../offline/offline_sheet.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// One screen for everything that used to be scattered across a long popup
 /// menu: who you are, the business you are in, help, and the legal pages.
@@ -139,7 +140,7 @@ class CompteScreen extends StatelessWidget {
       // « Admin » (104): the command center, for a platform admin.
       appBar: AppBar(
         title: Text(Strings.of(context).account),
-        actions: const [AdminPill(), SizedBox(width: 8)],
+        actions: const [AdminPill(), SizedBox(width: 8), bellRoom],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

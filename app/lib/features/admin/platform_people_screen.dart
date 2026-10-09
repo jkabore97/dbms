@@ -9,6 +9,7 @@ import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/admin/models.dart' show roleLabel;
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 
 /// The platform admin's global directory of people — the other axis to the
 /// business console. Search any account across every business, see where they
@@ -98,7 +99,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Annuaire des personnes'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Annuaire des personnes'))),
       body: Column(
         children: [
           Padding(
@@ -193,6 +194,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
     final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _PersonSheet(
         person: person,
         console: widget.console,
@@ -269,6 +271,8 @@ class _PersonSheetState extends State<_PersonSheet> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(next
             ? context.tr('Donner l\'accès plateforme ?')
             : context.tr('Retirer l\'accès plateforme ?')),
@@ -303,6 +307,8 @@ class _PersonSheetState extends State<_PersonSheet> {
         String? err;
         return StatefulBuilder(builder: (ctx, setLocal) {
           return AlertDialog(
+            // The keyboard up on a small phone: the dialog scrolls (A6).
+            scrollable: true,
             title: Text(context.tr('Nouveau mot de passe — {label}', {'label': widget.person.label})),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -363,6 +369,8 @@ class _PersonSheetState extends State<_PersonSheet> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
         title: Text(context.tr('Supprimer le compte de {label} ?', {'label': widget.person.label})),
         content: Text(
             context.tr('Le compte sera supprimé définitivement et la personne sera déconnectée. Cette action est irréversible.')),

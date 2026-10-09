@@ -322,6 +322,8 @@ class _TypeTheNameState extends State<_TypeTheName> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    // The keyboard up on a small phone: the dialog scrolls (A6).
+    scrollable: true,
         title: Text(context.tr('Changer le type d\'activité ?')),
         content: Column(
           mainAxisSize: MainAxisSize.min,

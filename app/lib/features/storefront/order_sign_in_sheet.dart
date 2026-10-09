@@ -24,6 +24,7 @@ Future<OrderSignIn?> showOrderSignInSheet(
   return showModalBottomSheet<OrderSignIn>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     showDragHandle: true,
     backgroundColor: ShopStyle.paper,
     builder: (sheet) => Theme(

@@ -8,6 +8,8 @@ import 'create_business_screen.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
+import '../common/keyboard_sheet.dart';
 
 /// Every business on the platform, and the three things that can be done to
 /// one: changed, put away, destroyed.
@@ -75,6 +77,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => EditBusinessSheet(admin: widget.admin, org: org),
     );
     if (changed == true) await _load();
@@ -149,7 +152,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
     final archived = _orgs.where((o) => o.isArchived).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Entreprises'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Entreprises'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _create,
         icon: const Icon(Icons.add_business),
@@ -377,6 +380,8 @@ class _DeleteBusinessDialogState extends State<DeleteBusinessDialog> {
     final org = widget.org;
 
     return AlertDialog(
+      // The keyboard up on a small phone: the dialog scrolls (A6).
+      scrollable: true,
       title: Text(context.tr('Supprimer définitivement')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -502,15 +507,23 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final inset = MediaQuery.of(context).viewInsets.bottom;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, inset + 16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return KeyboardSheet(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      // The fields scroll; the button stays above the keyboard (A6).
+      footer: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _canSave ? _save : null,
+                icon: _saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.check),
+                label: Text(context.tr('Enregistrer')),
+              ),
+            ),
+      children: [
             Text(context.tr('Modifier l’entreprise'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextField(
@@ -571,23 +584,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _canSave ? _save : null,
-                icon: _saving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.check),
-                label: Text(context.tr('Enregistrer')),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
