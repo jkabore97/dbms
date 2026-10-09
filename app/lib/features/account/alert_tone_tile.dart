@@ -61,7 +61,7 @@ class AlertToneTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Text(
-              context.tr('Ce son retentit quand l\'application est ouverte. Application fermée, une notification web sonne avec le son du téléphone ; sur Android, pas encore de notification application fermée.'),
+              context.tr('Ce son retentit quand l\'application est ouverte. Application fermée, la notification sonne avec le son du téléphone.'),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),

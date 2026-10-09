@@ -2925,7 +2925,6 @@ const enStrings = <String, String>{
   'Balafon': 'Balafon',
   'Clochette': 'Little bell',
   'Goutte': 'Drop',
-  'Ce son retentit quand l\'application est ouverte. Application fermée, une notification web sonne avec le son du téléphone ; sur Android, pas encore de notification application fermée.': 'This sound plays while the app is open. With the app closed, a web notification uses the phone\'s own sound; Android has no closed-app notifications yet.',
   // Batch 100 (server side): the team, the photos, the platform's gifts.
   'Équipe': 'Team',
   'Les personnes': 'The people',
@@ -4752,4 +4751,6 @@ const enStrings = <String, String>{
       'to be agreed with the association',
   'à discuter avec la ferme':
       'to be agreed with the farm',
+  'Ce son retentit quand l\'application est ouverte. Application fermée, la notification sonne avec le son du téléphone.':
+      'This sound plays while the app is open. With the app closed, the notification rings with the phone\'s sound.',
 };
