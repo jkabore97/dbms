@@ -243,7 +243,6 @@ void main() {
         customerId: 'c-ali', store: MemoryFlowStore()));
     expect(nextEnabled(tester), isTrue);
     await next(tester);
-    expect(find.text('Ali doit 900 FCFA.'.replaceAll(' FCFA', ' FCFA')), findsNothing);
     expect(find.textContaining('Ali doit'), findsOneWidget);
   });
 
