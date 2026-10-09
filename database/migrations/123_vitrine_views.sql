@@ -8,9 +8,12 @@
 --      vitrine per day. The app keeps a random id on the device (web: the
 --      browser's localStorage; Android and iOS: the app's own device
 --      storage) — random, never the person, never the account; a
---      signed-in person sends the same random id. The table keeps only
---      sha256(org id ':' visitor id), never the id itself, so one
---      vitrine's rows cannot be matched with another's.
+--      signed-in person sends the same random id. This table keeps
+--      sha256(org id ':' visitor id) rather than the id. It is not a
+--      privacy wall: 084's record_visitor still keeps the raw id per
+--      vitrine per day (storefront_visitors, cauris_ledger.ref), so the two
+--      can be joined by anyone reading the database. What holds is that the
+--      id is random and never tied to a person or an account.
 --   2. org_view_counts(org_id, visitors, day, day_new): the vitrine's
 --      all-time unique visitors, kept up to date in the same call so the
 --      street reads one row (O(1)), never a count. A visitor is new when
@@ -108,6 +111,12 @@ begin
        and not (auth.uid() is not null and exists (
                 select 1 from memberships where org_id = v_org and user_id = auth.uid())) then
         v_hash := sha256(convert_to(v_org::text || ':' || v_id, 'UTF8'));
+        -- Retention, now and then, before this vitrine's count row is
+        -- locked: a big delete never holds its other visitors back. The
+        -- total keeps what is deleted.
+        if random() < 0.01 then
+            delete from vitrine_visits where day < current_date - 400;
+        end if;
         insert into org_view_counts (org_id) values (v_org) on conflict do nothing;
         select * into v_count from org_view_counts where org_id = v_org for update;
         if v_count.day is distinct from current_date then
@@ -128,10 +137,6 @@ begin
                        day_new  = v_count.day_new + 1
                  where org_id = v_org;
             end if;
-        end if;
-        -- Retention, now and then: the total keeps what is deleted.
-        if random() < 0.01 then
-            delete from vitrine_visits where day < current_date - 400;
         end if;
     end if;
     return coalesce((select visitors from org_view_counts where org_id = v_org), 0);

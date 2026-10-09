@@ -86,11 +86,10 @@ class PrivacyScreen extends StatelessWidget {
         'Quand vous ouvrez la vitrine d\'une activité, l\'application ou '
             'votre navigateur envoie un numéro tiré au hasard et gardé sur '
             'l\'appareil, afin que chaque visiteur ne soit compté qu\'une fois '
-            'par jour. Ce numéro n\'est jamais lié à vous ni à votre compte : '
-            'Mara n\'en garde qu\'une empreinte, différente pour chaque '
-            'vitrine, et la vitrine n\'affiche que le nombre de ses visiteurs. '
+            'par jour. Ce numéro n\'est jamais lié à vous ni à votre compte, '
+            'et la vitrine n\'affiche que le nombre de ses visiteurs. '
             'Les membres de l\'activité ne sont pas comptés ; les visites de '
-            'plus de 400 jours sont effacées.',
+            'plus de 400 jours sont effacées (le total reste).',
         '# Devenir livreur',
         'Pour devenir livreur, vous envoyez un selfie et la photo de votre '
             'pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces '
