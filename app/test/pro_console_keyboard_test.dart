@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/access/plan_terms.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
-import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/console/command_center.dart';
 import 'package:kaj_app/core/nav/router.dart';
 import 'package:kaj_app/features/admin/center/command_center_shell.dart';
