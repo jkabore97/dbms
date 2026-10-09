@@ -115,7 +115,7 @@ class _SpotsCardState extends State<SpotsCard> {
             Text(
               widget.vitrineOnly
                   ? context.tr('Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.')
-                  : context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la boutique en haut de la liste, pour 7 ou 30 jours.'),
+                  : context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 ou 30 jours.'),
               style: muted,
             ),
             if (_loaded && _spots.isNotEmpty) ...[
@@ -458,7 +458,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ButtonSegment(
               value: true,
               icon: const Icon(Icons.storefront_outlined),
-              label: Text(context.tr('La boutique'))),
+              label: Text(context.tr('La vitrine'))),
         ],
         selected: {shop},
         onSelectionChanged: _busy
@@ -497,7 +497,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       ],
       Text(
         shop
-            ? context.tr('La boutique apparaît en tête de la liste des boutiques, marquée « Sponsorisé ».')
+            ? context.tr('La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé ».')
             : context.tr('L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé ». Il lui faut une photo, un prix et du stock.'),
         style: muted,
       ),

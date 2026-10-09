@@ -246,7 +246,7 @@ void main() {
     await enterPin(tester, '1379');
     // Home is the street; the boutique button opens the only business
     // directly, with no picker in between.
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Mon association'));
     await flush(tester);
 
     // No picker: straight to the church module, named after the org the
@@ -264,7 +264,7 @@ void main() {
     await pumpApp(tester);
 
     await enterPin(tester, '1379');
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Ma ferme'));
     await flush(tester);
 
     // Same binary, same PIN, different business: the farm does not land in a
@@ -296,7 +296,7 @@ void main() {
     // is behind the boutique button in the corner.
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Mes activités'));
     await flush(tester);
     expect(find.text('Choisissez une activité'), findsOneWidget);
     expect(find.text('Grace Chapel'), findsOneWidget);
@@ -417,7 +417,7 @@ void main() {
     await enterPin(tester, '1379');
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Mes activités'));
     await flush(tester);
     expect(find.text('Choisissez une activité'), findsOneWidget);
 
@@ -452,7 +452,7 @@ void main() {
     ]);
     await pumpApp(tester);
     await enterPin(tester, '1379');
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Mes activités'));
     await flush(tester);
     expect(find.text('Choisissez une activité'), findsOneWidget);
 
@@ -460,7 +460,7 @@ void main() {
     await flush(tester);
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Ma boutique'));
+    await tester.tap(find.byTooltip('Mes activités'));
     await flush(tester);
     expect(find.text('Choisissez une activité'), findsOneWidget);
   });
@@ -666,7 +666,7 @@ void main() {
       await enterPin(tester, '1379');
 
       expect(find.byKey(const Key('mara-header')), findsOneWidget);
-      await tester.tap(find.byTooltip('Ma boutique'));
+      await tester.tap(find.byTooltip('Ma ferme'));
       await flush(tester);
 
       expect(find.text('Récolte'), findsOneWidget,
@@ -687,7 +687,7 @@ void main() {
       await enterPin(tester, '1379');
 
       expect(find.byKey(const Key('mara-header')), findsOneWidget);
-      await tester.tap(find.byTooltip('Ma boutique'));
+      await tester.tap(find.byTooltip('Mes activités'));
       await flush(tester);
       expect(find.text('Choisissez une activité'), findsOneWidget);
     });
@@ -707,7 +707,7 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
-      await tester.tap(find.byTooltip('Ma boutique'));
+      await tester.tap(find.byTooltip('Mes activités'));
       await flush(tester);
       expect(find.text('Choisissez une activité'), findsOneWidget);
       await tester.tap(find.text('Ferme Ignace'));
@@ -750,7 +750,7 @@ void main() {
       await pumpApp(tester);
       await enterPin(tester, '1379');
 
-      await tester.tap(find.byTooltip('Ma boutique'));
+      await tester.tap(find.byTooltip('Mes activités'));
       await flush(tester);
       await tester.tap(find.text('Ferme Ignace'));
       await flush(tester);
@@ -777,7 +777,7 @@ void main() {
       ]);
       await pumpApp(tester);
       await enterPin(tester, '1379');
-      await tester.tap(find.byTooltip('Ma boutique'));
+      await tester.tap(find.byTooltip('Mon association'));
       await flush(tester, rounds: 12);
       expect(find.text('Recette'), findsOneWidget);
 

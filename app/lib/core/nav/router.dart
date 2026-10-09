@@ -20,6 +20,7 @@ import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
+import '../../features/notify/push_prompt.dart' show PushPromptQuiet;
 import '../notify/notifications_repository.dart' show NotifyScope;
 import '../../features/shopper/addresses_screen.dart';
 import '../../features/shopper/favourites_screen.dart';
@@ -769,7 +770,9 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, _) {
           final scope = AppScope.of(context);
           final session = scope.session;
-          return biz.CreateMyBusinessScreen(
+          // The creation is never interrupted by « Activer les
+          // notifications ? » (120): asked once it is done.
+          return PushPromptQuiet(child: biz.CreateMyBusinessScreen(
             api: SupabaseBusinessCreation(scope.auth.client),
             drafts: LocalDraftStore(scope.db, scope.auth.client?.auth.currentUser?.id),
             whatsApp: SupabaseWhatsAppPhone(scope.auth.client),
@@ -782,7 +785,7 @@ GoRouter buildRouter(SessionController session) {
               if (context.mounted) context.go(Routes.splash);
               return seen;
             },
-          );
+          ));
         },
       ),
 

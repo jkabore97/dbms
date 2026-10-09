@@ -595,6 +595,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           provedPhone: gate != null && gate.required ? gate.phone : null,
           addresses: _mine?.addresses ?? const [],
           preferredPayment: _mine?.payment ?? 'cash',
+          profile: _shop?.profile ?? 'retail',
           onSubmit: _send,
           quote: (lat, lng) =>
               widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
@@ -612,7 +613,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 ? context.tr(
                     'Demande envoyée. Vous recevrez la réponse ici, avec le rendez-vous.',
                   )
-                : context.tr('Commande envoyée. La boutique vous répondra ici.'),
+                : switch (_shop?.profile) {
+                    'farm' => context.tr('Commande envoyée. La ferme vous répondra ici.'),
+                    'association' || 'church' => context.tr('Commande envoyée. L\'association vous répondra ici.'),
+                    _ => context.tr('Commande envoyée. La boutique vous répondra ici.'),
+                  },
           ),
         ),
       );
@@ -1066,7 +1071,12 @@ class OrderSheet extends StatefulWidget {
     this.provedPhone,
     this.addresses = const [],
     this.preferredPayment = 'cash',
+    this.profile = 'retail',
   });
+
+  /// The seller's kind ('retail', 'farm', 'association'): who « la
+  /// boutique » is in the sheet's words (120).
+  final String profile;
 
   /// The number WhatsApp proved (109), when the platform asks for one: it
   /// is the order's number, said instead of the optional field.
@@ -1401,7 +1411,11 @@ class _OrderSheetState extends State<OrderSheet> {
       decoration: InputDecoration(
         labelText: booking
             ? context.tr('Date et heure souhaitées')
-            : context.tr('Un mot pour la boutique (facultatif)'),
+            : switch (widget.profile) {
+                'farm' => context.tr('Un mot pour la ferme (facultatif)'),
+                'association' || 'church' => context.tr('Un mot pour l\'association (facultatif)'),
+                _ => context.tr('Un mot pour la boutique (facultatif)'),
+              },
         hintText: booking
             ? context.tr('Samedi 10 h, ou dès que possible')
             : null,
@@ -1511,7 +1525,11 @@ class _OrderSheetState extends State<OrderSheet> {
                           : _tooFar
                           ? context.tr('trop loin')
                           : _fee == null
-                          ? context.tr('à discuter avec la boutique')
+                          ? switch (widget.profile) {
+                              'farm' => context.tr('à discuter avec la ferme'),
+                              'association' || 'church' => context.tr('à discuter avec l\'association'),
+                              _ => context.tr('à discuter avec la boutique'),
+                            }
                           : money.format(_fee!),
                       style: TextStyle(
                         fontSize: 14,
@@ -1873,7 +1891,9 @@ class _Window extends StatelessWidget {
             onChanged: onFilterChanged,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: context.tr('Chercher dans la boutique…'),
+              hintText: shop.profile == 'retail' || shop.profile == 'generic'
+                  ? context.tr('Chercher dans la boutique…')
+                  : context.tr('Chercher dans la vitrine…'),
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: filter.text.isEmpty
                   ? null

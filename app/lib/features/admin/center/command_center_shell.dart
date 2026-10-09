@@ -283,11 +283,19 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
       children: [
         _Header(wide: wide, onSearch: _openSearch, onLeave: () => AdminTrail.leave(context)),
         if (current.pages.length > 1) _PageTabs(section: current, path: path),
+        // The header took the status bar: the page must not pad for it
+        // again. Read from inside the Scaffold (the Builder), never from the
+        // shell's own context above it: there the keyboard is still in
+        // viewInsets, and handing that back to the page made its own
+        // Scaffold take the keyboard off a second time — a body of zero
+        // height, the page all white as soon as a field was touched (120).
         Expanded(
-          child: MediaQuery.removePadding(
-            context: context,
-            removeTop: true,
-            child: widget.child,
+          child: Builder(
+            builder: (inside) => MediaQuery.removePadding(
+              context: inside,
+              removeTop: true,
+              child: widget.child,
+            ),
           ),
         ),
       ],

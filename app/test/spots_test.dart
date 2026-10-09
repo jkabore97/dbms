@@ -217,7 +217,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Offert'), findsOneWidget);
 
-    await tester.tap(find.text('La boutique'));
+    await tester.tap(find.text('La vitrine'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('30 jours'));
     await tester.pumpAndSettle();

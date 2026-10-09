@@ -79,8 +79,8 @@ List<AssociationKind> associationKinds(BuildContext context) => [
       ),
       (
         key: 'eglise',
-        icon: Icons.church_outlined,
-        name: context.tr('Église'),
+        icon: Icons.self_improvement_outlined,
+        name: context.tr('Religieux'),
         line: context.tr('Ses membres, leurs cotisations et leurs dons.'),
       ),
       (
@@ -354,7 +354,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
   @override
   Widget build(BuildContext context) {
     if (_done) {
-      return SetupReady(org: widget.org, onDone: widget.onDone, association: true);
+      return SetupReady(org: widget.org, onDone: widget.onDone);
     }
     final theme = Theme.of(context);
     final all = [

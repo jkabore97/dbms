@@ -133,7 +133,10 @@ begin
             || jsonb_build_object('states ' || m.user_id || ' ' || m.org_id,
                                   feature_states(m.org_id) - 'hidden')
             -- The paywall's numbers, as each member's app reads them.
-            || jsonb_build_object('terms ' || m.user_id || ' ' || m.org_id, plan_terms())
+            -- (121's two new keys aside: the card's dollars, shown only
+            -- under the card button — added, not changed.)
+            || jsonb_build_object('terms ' || m.user_id || ' ' || m.org_id,
+                                  plan_terms() - 'stripe_usd_month' - 'stripe_usd_year')
             -- A member sees their own vitrine even below the minimum.
             || jsonb_build_object('own vitrine ' || m.user_id || ' ' || m.org_id,
                                   to_jsonb(storefront_open(m.slug)));

@@ -202,9 +202,11 @@ class _MaraVitrineEditorState extends State<MaraVitrineEditor> {
               ),
             ),
           ),
+          // Read from inside this Scaffold (the Builder): the editor's own
+          // Scaffold must not take the keyboard off a second time (120).
           Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
+            child: Builder(builder: (inside) => MediaQuery.removePadding(
+              context: inside,
               removeTop: true,
               child: wide
                   ? Row(
@@ -225,7 +227,7 @@ class _MaraVitrineEditorState extends State<MaraVitrineEditor> {
                       ],
                     )
                   : editor,
-            ),
+            )),
           ),
         ],
       ),

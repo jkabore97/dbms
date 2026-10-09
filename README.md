@@ -410,7 +410,8 @@ phones somebody reinstalled by hand. Two things close that gap:
 The APK is one per processor (`--split-per-abi`) and shrunk by R8, which is
 roughly half of what the single all-architectures package weighed; the
 run's summary prints the sizes. A manual run of "Build App" on a branch
-builds without publishing.
+builds without publishing; on main it publishes a new release, like a push
+— the way to remake the APK after adding a secret.
 
 ### Crash reporting
 
@@ -435,7 +436,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_119.sql`, below),
+older database, applied with `database/apply_006_to_121.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -474,10 +475,18 @@ One-time setup, in this order:
    → Service accounts → Generate new private key: put that JSON in the
    repository *secret* `FCM_SERVICE_ACCOUNT` and re-run "Deploy the push
    Worker" (without it the Worker skips phones and rings browsers).
+   **Then install an APK built after the secret was set**: a push to main,
+   or "Run workflow" on *Build App* from main, publishes a new release
+   (the build's summary says « google-services.json installed »). An APK
+   from before has no Firebase in it and never registers — the
+   diagnostics below then say « Firebase démarré : non ».
 7. **Check it**: Compte › Notifications › « M'envoyer une notification
    test » (anyone), or the command center's Réglages › « Tester la
    notification », which also says how many devices the account has and
-   whether the webhook of step 5 exists.
+   whether the webhook of step 5 exists. Under both, « Diagnostic de cet
+   appareil » shows each step on THIS device — Firebase started, the
+   permission, the token or the browser's subscription, saved on the
+   server — with « Réessayer l'enregistrement ».
 
 Until every step is done nothing rings with the app closed — and nothing
 breaks: the app offers no push without a `PUSH_URL` (or, on Android,
@@ -549,9 +558,15 @@ shortened. « Gérer la carte ou annuler » opens Stripe's own customer page.
 
 One-time setup (keys go only in GitHub's secrets page, never in chat):
 
-1. **Stripe account** for Kaj, activated for live payments. XOF is
-   supported as a zero-decimal currency; check that your account's country
-   can charge in it, and if not, set `pro_currency` to a currency it can.
+1. **Stripe account** for Kaj, activated for live payments. Since 121 the
+   card is **charged in US dollars** (Mara's account is in the US) while
+   every price the app shows stays in FCFA: the database converts the
+   FCFA price at Command center › Réglages › Mara Pro « Taux pour la
+   carte : FCFA pour 1 $ » (`stripe_xof_per_usd`, seeded 600; a whole
+   number above zero), rounded up to the cent. Stripe's page names the
+   FCFA price (« Mara Pro · Mensuel · 15 000 FCFA · <business> ») and the
+   app shows « ≈ $25.00 par mois, payé en dollars » under the button. A
+   new rate applies to new subscriptions, as a new price does.
 2. **Settings › Billing › Customer portal**: switch on cancelling and
    updating the payment method, then save. The « Gérer » button opens this
    page.
@@ -618,10 +633,10 @@ None is pasted anywhere but GitHub's secrets page.
    privacy policy URL — the site's `/confidentialite` page).
 3. **Alerts on a closed Android app** — create a Firebase project, add an
    Android app with the package name `bf.kaj.app`, and
-   send me `google-services.json` through a repository secret
-   (`GOOGLE_SERVICES_JSON`, base64) — not in chat. Wiring Firebase Cloud
-   Messaging into the app and the push Worker is then a code change on our
-   side; web push already works without it.
+   put `google-services.json` in the repository secret
+   `GOOGLE_SERVICES_JSON` — the file's raw content, pasted as it is (not
+   base64), and never in chat. Firebase Cloud Messaging is wired into the
+   app and the push Worker since 115 ("Push notifications", step 6).
 
 ### The live site
 
@@ -785,9 +800,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `119` up to date, paste
-`database/apply_006_to_119.sql` into the Supabase SQL editor and run it once.
-It is `006` through `119` concatenated (114 and 116 are unused numbers) inside one transaction, so it either
+To bring a database anywhere between `005` and `121` up to date, paste
+`database/apply_006_to_121.sql` into the Supabase SQL editor and run it once.
+It is `006` through `121` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

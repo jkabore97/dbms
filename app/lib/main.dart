@@ -33,6 +33,7 @@ import 'core/notify/alert_tone.dart';
 import 'core/notify/notifications_repository.dart';
 import 'core/notify/push_client.dart';
 import 'core/notify/push_setup.dart';
+import 'features/notify/push_prompt.dart';
 import 'core/observability/crash_reporting.dart';
 import 'core/production/production_repository.dart';
 import 'core/retail/retail_repository.dart';
@@ -304,7 +305,23 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       NotificationsRepository(widget.auth.client);
   StreamSubscription<String>? _pushTaps;
 
+  /// « Activer les notifications ? » at each opening (120), over the
+  /// router's own navigator.
+  late final PushPrompt _pushPrompt = PushPrompt(
+    device: AppPushDevice(_notify),
+    context: () => _router.routerDelegate.navigatorKey.currentContext,
+  );
+
+  /// Somebody is in, and no gate (the code, the second step) stands in
+  /// front: a shopper or a courier (noOrg) as much as a member.
+  bool get _signedIn =>
+      _session.phase == SessionPhase.noOrg ||
+      _session.phase == SessionPhase.picking ||
+      _session.phase == SessionPhase.ready;
+
   void _onSession() {
+    if (_session.phase == SessionPhase.signedOut) _pushPrompt.signedOut();
+    _pushPrompt.phase(signedIn: _signedIn);
     if (_session.phase != SessionPhase.ready || _deviceRegistered) return;
     _deviceRegistered = true;
     unawaited(() async {
@@ -376,7 +393,8 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       }
       unawaited(_session.refresh());
       unawaited(_update.check());
-      if (_session.phase == SessionPhase.ready) unawaited(PushSetup.ensure(_notify));
+      if (_signedIn) unawaited(PushSetup.ensure(_notify));
+      if (away != null) _pushPrompt.resumed(DateTime.now().difference(away));
       unawaited(() async {
         _security.setPolicy(await _securityApi.lockPolicy());
       }());
@@ -387,6 +405,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_pushTaps?.cancel());
+    _pushPrompt.dispose();
     _notify.bell.dispose();
     BackFirst.instance.detach(_router);
     _refreshTimer?.cancel();

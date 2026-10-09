@@ -20,6 +20,8 @@ class PlanTerms {
     this.waveName = '',
     this.deliverySharePct = 10,
     this.stripeOn = false,
+    this.stripeUsdMonthCents,
+    this.stripeUsdYearCents,
     this.kinds = const {},
   });
 
@@ -65,8 +67,18 @@ class PlanTerms {
   final int deliverySharePct;
 
   /// Kaj Pro by card, as a Stripe subscription (082): the platform's switch.
-  /// The price is [priceMonth] / [priceYear], the same wherever it is paid.
+  /// The price is [priceMonth] / [priceYear], the same wherever it is paid
+  /// (by card, in dollars at the platform's rate since 121).
   final bool stripeOn;
+
+  /// What the card is charged for [priceMonth] / [priceYear], in dollar
+  /// cents (121): Mara's Stripe account charges dollars, converted on the
+  /// server at the platform's rate (stripe_xof_per_usd), rounded up to the
+  /// cent — the same number stripe_begin() hands Stripe. Shown only as
+  /// « ≈ $25.00 par mois, payé en dollars » under the FCFA price; null on
+  /// a database before 121, or with no rate (the card is then refused).
+  final int? stripeUsdMonthCents;
+  final int? stripeUsdYearCents;
 
   bool get hasWave => wave.trim().isNotEmpty;
 
@@ -95,6 +107,8 @@ class PlanTerms {
       waveName: waveName,
       deliverySharePct: deliverySharePct,
       stripeOn: stripeOn,
+      stripeUsdMonthCents: stripeUsdMonthCents,
+      stripeUsdYearCents: stripeUsdYearCents,
       kinds: kinds,
     );
   }
@@ -108,6 +122,11 @@ class PlanTerms {
     }
 
     String s(String key) => (json[key] as String?) ?? '';
+
+    int? cents(String key) {
+      final v = json[key];
+      return v is num && v > 0 ? v.toInt() : null;
+    }
 
     final features = json['pro_features'];
     return PlanTerms(
@@ -126,6 +145,8 @@ class PlanTerms {
       waveName: s('platform_wave_name'),
       deliverySharePct: n('delivery_share_pct', 10),
       stripeOn: json['stripe_on'] == true,
+      stripeUsdMonthCents: cents('stripe_usd_month'),
+      stripeUsdYearCents: cents('stripe_usd_year'),
       kinds: {
         if (json['kinds'] is Map)
           for (final e in (json['kinds'] as Map).entries)

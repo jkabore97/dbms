@@ -47,6 +47,60 @@ class PushClient {
   /// The app's own address of each push the person taps (Android; a
   /// browser's tap is the service worker's to open). The router goes there.
   static Stream<String> get opened => PushPlatform.opened;
+
+  /// What the device's own setting says (120): may it still be asked, or
+  /// is it blocked so that only the phone's or the browser's settings can
+  /// turn it on.
+  static Future<PushPermission> permission() => PushPlatform.permission();
+
+  /// Opens this app's notification settings on the phone (120). False where
+  /// there are none to open (a browser: its settings are the person's).
+  static Future<bool> openSettings() => PushPlatform.openSettings();
+
+  /// Starts again what failed to start (Firebase on Android). Answers
+  /// whether push can now be offered.
+  static Future<bool> retry() async {
+    await PushPlatform.retry();
+    return available;
+  }
+
+  /// What this device says about itself, for the diagnostics panel (120).
+  static Future<PushDeviceFacts> facts() => PushPlatform.facts();
+}
+
+/// The device's own answer to « may the app notify? » (120).
+enum PushPermission {
+  /// Allowed.
+  granted,
+
+  /// Not yet, and the device's question can still be shown.
+  prompt,
+
+  /// Refused for good: only the device's settings can change it.
+  blocked,
+
+  /// This platform has no notifications to ask for.
+  unsupported,
+}
+
+/// What only the platform knows about this device's ring (120).
+class PushDeviceFacts {
+  const PushDeviceFacts({
+    required this.platform,
+    this.firebaseReady,
+    this.firebaseError,
+    this.workerActive,
+  });
+
+  /// « Android », « Navigateur (…) ».
+  final String platform;
+
+  /// Android only: whether Firebase started, and why not.
+  final bool? firebaseReady;
+  final String? firebaseError;
+
+  /// A browser only: whether a service worker holds the site.
+  final bool? workerActive;
 }
 
 /// One device's address: what save_push_subscription() (a browser) or

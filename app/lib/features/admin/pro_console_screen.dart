@@ -121,7 +121,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
   }
 
   /// Kaj Pro by card (082): Stripe charges the two prices above, monthly
-  /// or yearly. Saved at once — the comparison page reads it next time.
+  /// or yearly — in dollars, at Réglages' « Taux pour la carte » (121). Saved at once — the comparison page reads it next time.
   Future<void> _setStripe(bool on) async {
     setState(() {
       _stripeSaving = true;
