@@ -106,8 +106,13 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   text: _error!,
                   action: OutlinedButton(onPressed: _load, child: Text(context.tr('Réessayer'))),
                 ))
-          : ListView(
-              padding: EdgeInsets.zero,
+          : ShopScroll(
+              footer: ShopWidth(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: const ShopFooter(),
+                ),
+              ),
               children: [
                 ShopWidth(
                   child: ConstrainedBox(
@@ -169,7 +174,6 @@ class _AddressesScreenState extends State<AddressesScreen> {
                                 : context.tr('Ajouter une adresse')),
                             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                           ),
-                        const ShopFooter(),
                       ],
                     ),
                   ),

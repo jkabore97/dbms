@@ -755,6 +755,8 @@ declare
         'delivery_included_km', 'delivery_share_pct', 'own_courier_minutes', 'stuck_ready_minutes',
         -- 112: read by courier_rules(), which the courier's dossier asks.
         'courier_licence_required', 'courier_phone_verified',
+        -- 122: read by courier_near(), which the couriers' bell and board ask.
+        'courier_radius_km',
         'wave_checkout', 'wave_card', 'wave_commission_pct',
         'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',
         'cauris_expire_days', 'cauris_unlock_days', 'cauris_prize_1', 'cauris_prize_2',
@@ -766,7 +768,9 @@ declare
         -- 111: read by create_phone_required(), which create_my_business asks.
         'create_phone_verified',
         -- 113: read by support_whatsapp(), which the shopper's page asks.
-        'support_whatsapp'];
+        'support_whatsapp',
+        -- 122: read by app_store_links(), which the web's download pop-up asks.
+        'play_store_live', 'app_store_url'];
     v_dead text;
     v_missing text;
 begin

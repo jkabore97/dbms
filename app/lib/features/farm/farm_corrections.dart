@@ -204,7 +204,7 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
                     title: Text('${_label(row)} · '
                         '${qty.toStringAsFixed(0)}${unit == null ? '' : ' $unit'}'),
                     subtitle: Text([
-                      DateFormat('d MMM y', 'fr_FR').format(date),
+                      DateFormat('d MMM y', intlLocale()).format(date),
                       if (note != null && note.isNotEmpty) note,
                     ].join(' · ')),
                     trailing: widget.canWrite

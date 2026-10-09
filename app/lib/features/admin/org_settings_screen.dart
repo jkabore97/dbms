@@ -1566,7 +1566,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
           labelText: context.tr('Adresse'),
-          hintText: context.tr('Gounghin, près du marché'),
+          hintText: context.tr('Ex. : Gounghin près du marché, Le Plateau, Centre-ville'),
+          hintMaxLines: 2,
           prefixIcon: const Icon(Icons.home_work_outlined),
         ),
       ),
@@ -1580,6 +1581,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           key: const Key('vitrine-advanced'),
+          // Open (122): the vitrine's own look — cover, colour, tagline,
+          // hours — is what « my design » means to an owner; folded, it
+          // read as gone.
+          initiallyExpanded: true,
           tilePadding: EdgeInsets.zero,
           leading: const Icon(Icons.tune),
           title: Text(context.tr('Vitrine avancée'),
@@ -1876,7 +1881,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             _planUntil == null
                 ? context.tr('Payé jusqu\'au… (sans date = sans fin)')
                 : 'Payé jusqu\'au '
-                      '${DateFormat('d MMMM yyyy', 'fr_FR').format(_planUntil!)}',
+                      '${DateFormat('d MMMM yyyy', intlLocale()).format(_planUntil!)}',
           ),
         ),
       ],

@@ -52,7 +52,7 @@ enum Period {
   String describe() {
     final r = range;
     if (r.from == null) return 'Depuis le début';
-    final f = DateFormat('d MMM', 'fr_FR');
+    final f = DateFormat('d MMM', intlLocale());
     return '${f.format(r.from!)} — ${f.format(r.to!)}';
   }
 }

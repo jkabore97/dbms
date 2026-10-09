@@ -50,11 +50,15 @@ app.*.map.json
 # (build_runner 2.16.1 against analyzer 14.5.0) and stopped every web build.
 # CI runs the setup only when a file is missing.
 
-# Ship targets are web and Android. `flutter create` regenerates these four
-# every time a plugin with a desktop or iOS implementation is added, and
-# every one of those regenerations is a diff nobody reads about a platform
-# nobody builds. They were tracked once and are ignored now.
-/ios/
+# Ship targets are web, Android and (since batch 122, built on Codemagic)
+# iOS. `flutter create` regenerates the three desktop folders every time a
+# plugin with a desktop implementation is added, and every one of those
+# regenerations is a diff nobody reads about a platform nobody builds.
 /linux/
 /macos/
 /windows/
+# iOS is tracked (ios/.gitignore keeps out what Xcode and CocoaPods make);
+# the pods are resolved on each build, and Firebase's config is written at
+# build time from GOOGLE_SERVICE_INFO_PLIST (codemagic.yaml), never committed.
+/ios/Podfile.lock
+/ios/Runner/GoogleService-Info.plist

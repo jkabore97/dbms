@@ -222,7 +222,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  'Ouvert jusqu\'au ${DateFormat('d MMMM', 'fr_FR').format(_until!.toLocal())}. '
+                  'Ouvert jusqu\'au ${DateFormat('d MMMM', intlLocale()).format(_until!.toLocal())}. '
                   'Bravo, vous l\'avez gagné !',
                   style: theme.textTheme.bodyLarge?.copyWith(color: maraPaper),
                 ),

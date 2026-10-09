@@ -208,7 +208,7 @@ class _CourierScreenState extends State<CourierScreen>
               ('other', 'Autre raison'),
             ])
               ListTile(
-                title: Text(label),
+                title: Text(context.tr(label)),
                 onTap: () => Navigator.of(sheet).pop(key),
               ),
             Padding(
@@ -234,7 +234,7 @@ class _CourierScreenState extends State<CourierScreen>
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failed)));
+          .showSnackBar(SnackBar(content: Text(context.tr(failed))));
       await _load();
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -303,8 +303,7 @@ class _CourierScreenState extends State<CourierScreen>
                       children: [
                         _pushOffer(context),
                         ShopNotice(
-                          text: 'Votre inscription est à l\'étude. La plateforme '
-                              'vous préviendra dès qu\'elle est validée.',
+                          text: context.tr('Votre inscription est à l\'étude. La plateforme vous préviendra dès qu\'elle est validée.'),
                           action: OutlinedButton(
                             onPressed: () => context.go(Routes.becomeCourier),
                             child: Text(context.tr('Voir ma demande')),
@@ -312,9 +311,8 @@ class _CourierScreenState extends State<CourierScreen>
                         ),
                       ],
                     ),
-                  'suspended' => const ShopNotice(
-                      text: 'Votre accès livreur est suspendu. '
-                          'Contactez la plateforme.',
+                  'suspended' => ShopNotice(
+                      text: context.tr('Votre accès livreur est suspendu. Contactez la plateforme.'),
                     ),
                   _ => Column(
                         children: [
@@ -347,8 +345,7 @@ class _CourierScreenState extends State<CourierScreen>
                             child: TabBarView(controller: tabs, children: [
                               _JobList(
                                 jobs: _board,
-                                empty: 'Aucune livraison à prendre pour le '
-                                    'moment. Revenez un peu plus tard.',
+                                empty: context.tr('Aucune livraison à prendre pour le moment. Revenez un peu plus tard.'),
                                 busy: _busy,
                                 onOpen: _open,
                                 actionsFor: (job) => [
@@ -366,8 +363,7 @@ class _CourierScreenState extends State<CourierScreen>
                               ),
                               _JobList(
                                 jobs: _mine,
-                                empty: 'Aucune course. Prenez-en une dans '
-                                    'Disponibles.',
+                                empty: context.tr('Aucune course. Prenez-en une dans Disponibles.'),
                                 busy: _busy,
                                 onOpen: _open,
                                 actionsFor: (job) => switch (job.status) {
@@ -387,8 +383,7 @@ class _CourierScreenState extends State<CourierScreen>
                                             : () => _act(
                                                 () => widget.courier.mark(
                                                     job.orderId, 'in_transit'),
-                                                "Le retrait n'a pas pu être "
-                                                'enregistré.'),
+                                                "Le retrait n'a pas pu être enregistré."),
                                         child: Text(context.tr('Colis récupéré')),
                                       ),
                                       OutlinedButton(
@@ -397,8 +392,7 @@ class _CourierScreenState extends State<CourierScreen>
                                             : () => _act(
                                                 () => widget.courier
                                                     .release(job.orderId),
-                                                'Cette course ne peut plus '
-                                                'être remise.'),
+                                                'Cette course ne peut plus être remise.'),
                                         child: Text(context.tr('Remettre')),
                                       ),
                                     ],
@@ -611,7 +605,7 @@ class _JobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(job.currency);
-    final when = DateFormat('HH:mm', 'fr_FR').format(job.createdAt);
+    final when = DateFormat('HH:mm', intlLocale()).format(job.createdAt);
     final phone = (job.phone ?? '').trim();
     final done = job.status != null && !job.isRunning;
 
@@ -647,9 +641,9 @@ class _JobCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 [
-                  if (job.ownShop) 'Votre boutique',
+                  if (job.ownShop) context.tr('Votre boutique'),
                   if (job.toShopKm != null)
-                    'à ${job.toShopKm!.toStringAsFixed(1)} km de vous',
+                    context.tr('à {km} km de vous', {'km': job.toShopKm!.toStringAsFixed(1)}),
                 ].join(' · '),
                 style: TextStyle(
                     fontSize: 13,
@@ -728,13 +722,19 @@ class _JobCard extends StatelessWidget {
             Text(
                 job.isPaid
                     ? (job.deliveryFee == null
-                        ? 'Marchandise déjà payée (${paymentLabel(job.paymentMethod)}) '
-                            '— seule la course est à encaisser'
-                        : 'Marchandise déjà payée (${paymentLabel(job.paymentMethod)}) '
-                            '— à encaisser : ${money.format(job.deliveryFee!)} (course)')
-                    : 'À encaisser à la porte : '
-                        '${money.format(job.total + (job.deliveryFee ?? 0))}'
-                        '${job.deliveryFee == null ? '' : ' (dont course ${money.format(job.deliveryFee!)})'}',
+                        ? context.tr('Marchandise déjà payée ({how}) — seule la course est à encaisser',
+                            {'how': context.tr(paymentLabel(job.paymentMethod))})
+                        : context.tr('Marchandise déjà payée ({how}) — à encaisser : {fee} (course)', {
+                            'how': context.tr(paymentLabel(job.paymentMethod)),
+                            'fee': money.format(job.deliveryFee!),
+                          }))
+                    : job.deliveryFee == null
+                        ? context.tr('À encaisser à la porte : {amount}',
+                            {'amount': money.format(job.total)})
+                        : context.tr('À encaisser à la porte : {amount} (dont course {fee})', {
+                            'amount': money.format(job.total + job.deliveryFee!),
+                            'fee': money.format(job.deliveryFee!),
+                          }),
                 style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -907,7 +907,7 @@ class _CashStrip extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                    'À remettre aux boutiques : ${money.format(total)}',
+                    context.tr('À remettre aux boutiques : {amount}', {'amount': money.format(total)}),
                     style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

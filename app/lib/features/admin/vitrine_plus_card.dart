@@ -336,7 +336,8 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               labelText: context.tr('Phrase d\'accroche'),
-              hintText: context.tr('Pagnes et gâteaux depuis 1998'),
+              hintText: context.tr('Ex. : Pagnes et gâteaux depuis 1998, Le café du coin, Frais et local'),
+              hintMaxLines: 2,
             ),
           ),
           const SizedBox(height: 6),

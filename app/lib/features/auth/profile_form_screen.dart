@@ -7,6 +7,8 @@ import '../common/phone_field.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Who somebody is, asked once, right after they make an account.
 ///
@@ -184,8 +186,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(widget.title)),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(widget.title)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -227,7 +229,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   icon: const Icon(Icons.cake_outlined),
                   label: Text(_birth == null
                       ? context.tr('Date de naissance')
-                      : DateFormat('d MMMM y', 'fr_FR').format(_birth!)),
+                      : DateFormat('d MMMM y', intlLocale()).format(_birth!)),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -294,6 +296,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
               ],
             ),
-    );
+    ));
   }
 }

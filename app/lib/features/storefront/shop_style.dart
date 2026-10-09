@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
+import '../../core/theme/scroll_hint.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -203,6 +204,15 @@ class _ShopPageState extends State<ShopPage> {
   bool _onScroll(ScrollUpdateNotification n) {
     if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
     final delta = n.scrollDelta ?? 0;
+    // At the very end, the header sliding away makes the page taller and
+    // the list settles back by the header's height — an upward move nobody
+    // made. Bringing the header back for it pushed the end (the footer)
+    // off the screen again, and the « more below » arrow back on (122).
+    if (n.dragDetails == null &&
+        delta < 0 &&
+        n.metrics.pixels >= n.metrics.maxScrollExtent - 1) {
+      return false;
+    }
     // Near the top the header always shows: hiding it over the hero would
     // hide the only way back.
     final atTop = n.metrics.pixels < 80;
@@ -284,7 +294,8 @@ class _ShopPageState extends State<ShopPage> {
             Expanded(
               child: NotificationListener<ScrollUpdateNotification>(
                 onNotification: _onScroll,
-                child: widget.body,
+                // « The list continues » (122), on every street page.
+                child: ScrollHint(child: widget.body),
               ),
             ),
           ],
@@ -363,7 +374,7 @@ class _ShopAnnouncementState extends State<ShopAnnouncement> {
                 key: ValueKey(line),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  line,
+                  context.tr(line),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -541,6 +552,40 @@ class ShopFooter extends StatelessWidget {
   }
 }
 
+/// A street page's scroll with the footer at the foot (122). The owner:
+/// « The footer is really a footer at the bottom everywhere » — on « Mes
+/// commandes » and the street, a short page left the footer floating in
+/// the middle with the white under it. [children] scroll as before; the
+/// [footer] comes after them when they are long, and sits on the bottom
+/// edge of the page when they are short.
+class ShopScroll extends StatelessWidget {
+  const ShopScroll({super.key, required this.children, required this.footer});
+
+  final List<Widget> children;
+  final Widget footer;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverList(delegate: SliverChildListDelegate(children)),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          fillOverscroll: false,
+          // A column, not an Align: the footer is drawn at its own height
+          // (its ShopWidth would otherwise centre it in the room left) and
+          // pushed to the bottom edge.
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [footer],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// A page that has nothing to show yet, or could not: one line, one action.
 class ShopNotice extends StatelessWidget {
   const ShopNotice({super.key, required this.text, this.action});
@@ -589,7 +634,7 @@ Future<T?> showShopSheet<T>({
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Fermer',
+    barrierLabel: context.tr('Fermer'),
     barrierColor: const Color(0x66000000),
     transitionDuration: reduced ? Duration.zero : KajMotion.settle,
     pageBuilder: (dialog, _, _) => Align(

@@ -71,7 +71,7 @@ class _OrderTrackingPanelState extends State<OrderTrackingPanel> {
     ];
     final order = [for (final s in steps) s.$1];
     final at = order.indexOf(t.status);
-    final hour = DateFormat('HH:mm', 'fr_FR');
+    final hour = DateFormat('HH:mm', intlLocale());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

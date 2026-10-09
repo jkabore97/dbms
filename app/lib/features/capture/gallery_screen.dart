@@ -309,7 +309,7 @@ class _DocumentTile extends StatelessWidget {
         title: Text(document.title),
         subtitle: Text(
           [
-            if (when != null) DateFormat('d MMM y', 'fr_FR').format(when),
+            if (when != null) DateFormat('d MMM y', intlLocale()).format(when),
             if (document.kind != null) document.kind!,
             if (document.barcode != null) document.barcode!,
           ].join(' · '),
@@ -663,7 +663,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       Chip(
                         avatar: const Icon(Icons.event_outlined, size: 16),
                         label: Text('Péremption lue : '
-                            '${DateFormat('d MMM y', 'fr_FR').format(_suggestions.expiresOn!)}'),
+                            '${DateFormat('d MMM y', intlLocale()).format(_suggestions.expiresOn!)}'),
                       ),
                     if (_suggestions.barcode != null)
                       Chip(

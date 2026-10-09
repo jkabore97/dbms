@@ -638,15 +638,20 @@ class RetailRepository {
       final rows = await client.rpc('product_photo_keys', params: {
         'p_org_id': orgId,
       }) as List<dynamic>;
-      return {
+      return _photoKeysHeard[orgId] = {
         for (final r in rows)
           if (r is Map && r['product_id'] != null && r['photo_key'] != null)
             '${r['product_id']}': '${r['photo_key']}',
       };
     } catch (_) {
-      return const {};
+      // No signal (122): the keys last heard while the app is open, so the
+      // till and the list still find the pictures the phone holds.
+      return _photoKeysHeard[orgId] ?? const {};
     }
   }
+
+  /// [photoKeys]' last answer per business, for every repository of the app.
+  static final _photoKeysHeard = <String, Map<String, String>>{};
 
   /// The photographs of a product — the delivery note it arrived on, the
   /// picture of the thing itself. `documents.product_id` has existed since

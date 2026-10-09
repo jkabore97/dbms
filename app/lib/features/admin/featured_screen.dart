@@ -103,7 +103,7 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
 
   List<Widget> _askSection(ThemeData theme) {
     if (_asks.isEmpty) return const [];
-    final date = DateFormat('d MMM', 'fr_FR');
+    final date = DateFormat('d MMM', intlLocale());
     return [
       Text(context.tr('Mises en avant achetées'), style: theme.textTheme.titleMedium),
       const SizedBox(height: 4),

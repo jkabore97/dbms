@@ -20,6 +20,7 @@ import '../storefront/whatsapp_verify_screen.dart';
 import 'association_setup_screen.dart' show associationKinds;
 import '../../core/notify/bell_room.dart';
 import '../../core/nav/router.dart';
+import '../../core/nav/app_scope.dart';
 
 /// « Créer mon activité » (111): a person makes their business at once —
 /// no request, no wait. One question per screen, a bar that fills, Retour
@@ -551,9 +552,30 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         icon: Icons.lock_outline,
         title: context.tr('Une deuxième activité : avec Mara Pro'),
         line: context.tr('Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.'),
-        action: OutlinedButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          child: Text(context.tr('Retour')),
+        // Never a dead end (122): the way to Pro on the activity owned,
+        // beside the way back.
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_ownedOrgId() case final owned?) ...[
+              FilledButton.icon(
+                key: const Key('create-locked-pro'),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    backgroundColor: maraCaramel,
+                    foregroundColor: maraDeep),
+                onPressed: () => context.push(Routes.inside(owned, 'kaj-pro')),
+                icon: const Icon(Icons.workspace_premium),
+                label: Text(context.tr('Passer à Pro')),
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: Text(context.tr('Retour')),
+            ),
+          ],
         ),
       );
     } else {
@@ -591,6 +613,15 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         body: SafeArea(child: body),
       ),
     );
+  }
+
+  /// The live activity this person owns, whose Pro opens a second (099).
+  String? _ownedOrgId() {
+    final orgs = AppScope.maybeOf(context)?.session.orgs ?? const <OrgSummary>[];
+    for (final o in orgs) {
+      if (o.roles.contains('owner')) return o.id;
+    }
+    return null;
   }
 
   Widget _flow(ThemeData theme) {
@@ -851,8 +882,9 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         style: const TextStyle(fontSize: 20),
         onChanged: _onName,
         decoration: InputDecoration(
-          hintText: _ofKind(context.tr('Ex. : Chez Awa'), context.tr('Ex. : Ferme Wendkouni'),
-              context.tr('Ex. : Tontine des femmes de Dapoya')),
+          hintText: _ofKind(context.tr('Ex. : Chez Awa, Café Lumière, Green Market'), context.tr('Ex. : Ferme Wendkouni, Green Valley Farm, Rancho Sol'),
+              context.tr('Ex. : Tontine des femmes de Dapoya, Club des amis, Hope Foundation')),
+          hintMaxLines: 2,
           border: const OutlineInputBorder(),
         ),
       ),
@@ -937,9 +969,10 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         onChanged: (_) => _changed(),
         decoration: InputDecoration(
           labelText: context.tr('En une phrase (facultatif)'),
-          hintText: _ofKind(context.tr('Ex. : Riz, huile et savon au détail'),
-              context.tr('Ex. : Œufs frais et poulets de chair'),
+          hintText: _ofKind(context.tr('Ex. : Riz et savon au détail, café et pâtisseries, vêtements'),
+              context.tr('Ex. : Œufs frais, légumes bio, miel'),
               context.tr('Ex. : On cotise chaque semaine depuis 2019')),
+          hintMaxLines: 2,
           helperText: context.tr('Elle paraîtra sur votre vitrine.'),
           border: const OutlineInputBorder(),
         ),
@@ -965,7 +998,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final town in businessTowns)
+            for (final town in suggestedTowns(_draft.phoneIso))
               ChoiceChip(
                 label: Text(town),
                 showCheckmark: false,
@@ -987,7 +1020,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           onChanged: (_) => _changed(),
           decoration: InputDecoration(
             labelText: context.tr('Quartier (facultatif)'),
-            hintText: context.tr('Ex. : Dapoya, près du marché'),
+            hintText: context.tr('Ex. : Dapoya près du marché, Le Plateau, Centre-ville'),
+            hintMaxLines: 2,
             border: const OutlineInputBorder(),
           ),
         ),

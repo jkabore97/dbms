@@ -13,6 +13,7 @@ import 'package:kaj_app/core/security/security_settings.dart';
 import 'package:kaj_app/features/account/security_screen.dart';
 import 'package:kaj_app/features/auth/pin_screen.dart';
 import 'package:kaj_app/l10n/strings.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Compte › Sécurité (075).
@@ -60,6 +61,35 @@ class _Api extends SecurityRepository {
 
   @override
   Future<void> log(String kind, {String? detail}) async => logged.add(kind);
+}
+
+/// A phone's fingerprint reader: [enrolled] or not, and what its system
+/// prompt answers.
+class _Bio extends LocalAuthentication {
+  _Bio({this.hardware = true, this.enrolled = true, this.answer = true});
+  bool hardware;
+  bool enrolled;
+  bool answer;
+  int prompts = 0;
+
+  @override
+  Future<bool> get canCheckBiometrics async => hardware;
+
+  @override
+  Future<List<BiometricType>> getAvailableBiometrics() async =>
+      enrolled ? const [BiometricType.fingerprint] : const [];
+
+  @override
+  Future<bool> authenticate({
+    required String localizedReason,
+    Iterable<dynamic> authMessages = const [],
+    bool biometricOnly = false,
+    bool sensitiveTransaction = true,
+    bool persistAcrossBackgrounding = false,
+  }) async {
+    prompts++;
+    return answer;
+  }
 }
 
 void main() {
@@ -230,5 +260,74 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Déconnecter'));
     await tester.pumpAndSettle();
     expect(api.closedOthers, 1);
+  });
+
+  group('the fingerprint / Face ID (R1)', () {
+    Future<(SecuritySettings, _Bio)> page(WidgetTester tester, _Bio bio) async {
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final db = (await tester.runAsync(() => LocalDb.open(path: inMemoryDatabasePath)))!;
+      addTearDown(() => tester.runAsync(db.close));
+      final settings = SecuritySettings(db, biometrics: bio);
+      await tester.runAsync(settings.load);
+      await tester.runAsync(() => settings.setBiometric(false));
+      await tester.pumpWidget(MaterialApp(
+          home: SecurityScreen(settings: settings, api: _Api())));
+      await tester.pump();
+      await tester.pump();
+      return (settings, bio);
+    }
+
+    Finder bioSwitch() =>
+        find.widgetWithText(SwitchListTile, 'Déverrouiller avec l\'empreinte / Face ID');
+
+    testWidgets('switching it on asks the system once; only a yes turns it on',
+        (tester) async {
+      final (settings, bio) = await page(tester, _Bio(answer: false));
+      expect(bioSwitch(), findsOneWidget);
+      await tester.runAsync(() async {
+        await tester.tap(bioSwitch());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+      expect(bio.prompts, 1);
+      expect(settings.biometric, isFalse, reason: 'the prompt was closed');
+
+      bio.answer = true;
+      await tester.runAsync(() async {
+        await tester.tap(bioSwitch());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+      expect(bio.prompts, 2);
+      expect(settings.biometric, isTrue);
+      expect(tester.widget<SwitchListTile>(bioSwitch()).value, isTrue);
+
+      // Off needs no prompt.
+      await tester.runAsync(() async {
+        await tester.tap(bioSwitch());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+      expect(bio.prompts, 2);
+      expect(settings.biometric, isFalse);
+    });
+
+    testWidgets('nothing recorded on the phone: said plainly, switch greyed',
+        (tester) async {
+      final (settings, bio) = await page(tester, _Bio(enrolled: false));
+      expect(bioSwitch(), findsOneWidget);
+      expect(tester.widget<SwitchListTile>(bioSwitch()).onChanged, isNull);
+      expect(find.textContaining('Aucune empreinte ni visage'), findsOneWidget);
+      expect(await tester.runAsync(settings.turnOnBiometric),
+          BiometricOutcome.notEnrolled);
+      expect(bio.prompts, 0);
+    });
+
+    testWidgets('no reader at all: no switch', (tester) async {
+      await page(tester, _Bio(hardware: false, enrolled: false));
+      expect(bioSwitch(), findsNothing);
+    });
   });
 }

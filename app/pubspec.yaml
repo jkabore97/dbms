@@ -155,10 +155,7 @@ flutter:
     - assets/brand/mara_horizontal.webp
     - assets/brand/mara_horizontal_dark.webp
     - assets/brand/mara_stacked.webp
-    # The four alert tones (Compte › Préférences › Sons des notifications),
-    # synthesised by scripts/make-tones.py. WAV, so Android keeps them
-    # uncompressed in the APK and MainActivity can open them as files.
-    - assets/sounds/balafon.wav
+    # The app's own ring while it is open (a new order), synthesised by
+    # scripts/make-tones.py. WAV, so Android keeps it uncompressed in the
+    # APK and MainActivity can open it as a file.
     - assets/sounds/carillon.wav
-    - assets/sounds/clochette.wav
-    - assets/sounds/goutte.wav

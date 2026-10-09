@@ -448,6 +448,92 @@ run's summary prints the sizes. A manual run of "Build App" on a branch
 builds without publishing; on main it publishes a new release, like a push
 — the way to remake the APK after adding a secret.
 
+### Building for iPhone with Codemagic
+
+The iPhone app is the same Flutter app (`app/ios/`, bundle id `bf.kaj.app`,
+named « Mara », iOS 15.5 and later — the oldest the text-recognition plugin
+supports). It needs a Mac to build, which GitHub's Linux machines are not:
+[Codemagic](https://codemagic.io) builds it from `codemagic.yaml` at the
+root of the repository, signs it, and sends it to TestFlight. No secret is in
+the repository; each one is typed into Codemagic or Apple's sites by the
+owner. Step by step, once:
+
+1. **Apple Developer Program** — <https://developer.apple.com/programs/>,
+   enrol (99 $ a year; as an individual, or as the company with its D-U-N-S
+   number). Wait for the « Welcome » e-mail.
+2. **The app's identifier** — developer.apple.com › Certificates, IDs &
+   Profiles › Identifiers › « + » › App IDs › App: description « Mara »,
+   Bundle ID *explicit* `bf.kaj.app`. Leave the capabilities as they are
+   (push for iPhone is not switched on yet; see below).
+3. **The app in App Store Connect** — <https://appstoreconnect.apple.com> ›
+   Apps › « + » › New App: platform iOS, name « Mara » (or « Mara — votre
+   activité » if the name is taken), primary language French, bundle ID
+   `bf.kaj.app`, SKU `mara`. Note its **Apple ID** (a number, under App
+   Information) — the App Store link will be
+   `https://apps.apple.com/app/id<that number>`.
+4. **An API key for Codemagic** — App Store Connect › Users and Access ›
+   Integrations › App Store Connect API › Team Keys › « + »: name
+   « Codemagic », access **App Manager**. Download the `.p8` file (Apple
+   lets you download it once) and note the **Issuer ID** and the **Key ID**.
+5. **Codemagic** — sign up with GitHub, *Add application* › this repository
+   (`jkabore97/dbms`), project type **Flutter App (via codemagic.yaml)**.
+   - Team settings › Integrations › **Developer Portal** › Connect: name it
+     exactly `Mara App Store Connect` (the name `codemagic.yaml` uses), the
+     Issuer ID, the Key ID, and the `.p8` file.
+   - The application › Environment variables: group **`mara_app`** with
+     `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `UPLOADS_URL`,
+     `ACCOUNT_ADMIN_URL`, `SENTRY_DSN`, `PUSH_URL`, `PAY_URL` — the same
+     values as the GitHub repository secrets the Android build uses; tick
+     *Secure* on each. Group **`mara_firebase`**, optional for now:
+     `GOOGLE_SERVICE_INFO_PLIST`, the whole text of the
+     `GoogleService-Info.plist` Firebase gives for an iOS app `bf.kaj.app`
+     (Firebase console › Project settings › Add app › iOS). The build writes
+     it into the app; it is never committed.
+6. **Supabase** — Authentication › URL Configuration › Redirect URLs: the
+   Android entry `bf.kaj.app://login-callback` is the iPhone's too (the same
+   URL scheme is declared in `ios/Runner/Info.plist`). Nothing to add if it
+   is there.
+7. **The first build** — Codemagic › the application › *Start new build* ›
+   branch `main`, workflow **iPhone — TestFlight** (`ios-release`). About
+   20 minutes: Codemagic creates the distribution certificate and profile
+   itself (automatic code signing, from the API key), builds
+   `flutter build ipa` with the same `--dart-define`s as the Android build
+   plus `STORE=appstore` (an App Store build never shows the « Télécharger »
+   banner — the store brings its updates), and uploads the `.ipa`. The build
+   number is Codemagic's build counter, so each one is newer than the last.
+8. **TestFlight** — App Store Connect › the app › TestFlight: the build
+   appears after Apple's processing (10 to 30 minutes; the export
+   compliance question is already answered in `Info.plist`). Add yourself
+   under *Internal Testing*, install the **TestFlight** app on the iPhone
+   and open the invitation. Outside testers (*External Testing*) need
+   Apple's short beta review first.
+9. **The store** — when it is right: App Store Connect › the app › the
+   version page: screenshots (6.9-inch, 1320 × 2868 — the template is
+   `docs/brand/mara-neutre/brun/app-store/screenshot-template-1320x2868.png`),
+   description, privacy policy URL (`https://marakaj.com/confidentialite`),
+   *App Privacy* answers, then pick the TestFlight build and *Submit for
+   Review*. Once it is live, put its address in the command center ›
+   Réglages › Applications mobiles › « Adresse de Mara sur l'App Store »:
+   the web's pop-up then sends iPhones to the App Store instead of telling
+   them to add Mara to the home screen.
+
+What was checked here and what was not: the container has no Mac, so no
+iOS build ran. `flutter create --platforms=ios` generated `app/ios/` with
+this Flutter; the bundle id, the minimum iOS (from every plugin's podspec),
+the icons (from `docs/brand/mara-neutre/brun/app-store/app-icon-1024.png`),
+the launch screen (the Android one's seal on its ground), the usage
+strings (camera, photos, location while in use, Face ID — in French and
+English), the URL scheme and the Xcode project were written and parsed
+(the project with the `pbxproj` parser, the plists with `plistlib`), and
+`codemagic.yaml` parsed as YAML. The first Codemagic build is the real test.
+
+Not in this build yet: **notifications with the app closed on iPhone**.
+The app's push code runs on Android only (`push_client_stub.dart`); the
+iPhone app has the bell inside the app, live, as everywhere. Switching it
+on needs an APNs key uploaded to Firebase, the *Push Notifications*
+capability on the identifier, the `aps-environment` entitlement, and the
+app's push code opened to iOS.
+
 ### Crash reporting
 
 An error in production used to be invisible unless a user described it.
@@ -471,7 +557,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_121.sql`, below),
+older database, applied with `database/apply_006_to_122.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -835,9 +921,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `121` up to date, paste
-`database/apply_006_to_121.sql` into the Supabase SQL editor and run it once.
-It is `006` through `121` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
+To bring a database anywhere between `005` and `122` up to date, paste
+`database/apply_006_to_122.sql` into the Supabase SQL editor and run it once.
+It is `006` through `122` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

@@ -122,7 +122,7 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
 
                 Center(
                   child: Text(
-                    DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now()),
+                    DateFormat('EEEE d MMMM', intlLocale()).format(DateTime.now()),
                     style: theme.textTheme.titleMedium,
                   ),
                 ),

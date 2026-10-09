@@ -114,7 +114,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               Text(
-                context.tr('Ces couleurs sont celles de votre activité : toute votre équipe les verra.'),
+                context.tr('Ces couleurs sont celles de votre activité : toute votre équipe les verra, et votre vitrine aussi tant qu\'elle n\'a pas sa propre couleur.'),
                 style: previewTheme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 20),

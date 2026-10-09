@@ -195,7 +195,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: context.tr('Nom de l\'activité'),
-                hintText: context.tr('Association Bethel'),
+                hintText: context.tr('Ex. : Association Bethel, Café Lumière, Green Market'),
+                hintMaxLines: 2,
                 border: const OutlineInputBorder(),
               ),
             ),

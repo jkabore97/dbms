@@ -341,7 +341,7 @@ class _FarmAnalyticsScreenState extends State<FarmAnalyticsScreen> {
   }
 
   Widget _trend(BuildContext context, List<FarmDay> daily) {
-    final df = DateFormat('d MMM', 'fr_FR');
+    final df = DateFormat('d MMM', intlLocale());
     final muted = Theme.of(context)
         .textTheme
         .bodySmall

@@ -118,8 +118,13 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                   text: _error!,
                   action: OutlinedButton(onPressed: _load, child: Text(context.tr('Réessayer'))),
                 ))
-          : ListView(
-              padding: EdgeInsets.zero,
+          : ShopScroll(
+              footer: ShopWidth(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: const ShopFooter(),
+                ),
+              ),
               children: [
                 ShopWidth(
                   child: ConstrainedBox(
@@ -193,7 +198,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                               onUnfollow: () => _unfollow(f),
                             ),
                         ],
-                        const ShopFooter(),
                       ],
                     ),
                   ),

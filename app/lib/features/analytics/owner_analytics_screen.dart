@@ -258,7 +258,7 @@ class _OwnerAnalyticsScreenState extends State<OwnerAnalyticsScreen> {
     final values = [for (final d in daily) d.revenue];
     final total = values.fold<double>(0, (a, b) => a + b);
     final peak = daily.reduce((a, b) => a.revenue >= b.revenue ? a : b);
-    final df = DateFormat('d MMM', 'fr_FR');
+    final df = DateFormat('d MMM', intlLocale());
 
     return SectionCard(
       title: context.tr('Tendance'),

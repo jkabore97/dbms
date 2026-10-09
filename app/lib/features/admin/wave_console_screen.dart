@@ -80,7 +80,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = moneyFormat('XOF');
-    final when = DateFormat('d MMM, HH:mm', 'fr_FR');
+    final when = DateFormat('d MMM, HH:mm', intlLocale());
     final failed = _rows.where((r) => r.payoutStatus == 'failed').length;
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Paiements Wave'))),

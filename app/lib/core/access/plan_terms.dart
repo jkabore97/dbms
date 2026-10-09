@@ -1,3 +1,4 @@
+import 'package:kaj_app/core/l10n/tr.dart';
 /// The line between Kaj and Kaj Pro, as the platform draws it (066).
 ///
 /// Read once per session from `plan_terms()`. Nothing here is a secret: the
@@ -162,7 +163,7 @@ class PlanTerms {
   /// What a Pro tool is called on the paywall, in the words of the screens
   /// that carry it. An unknown key reads as itself rather than crashing a
   /// sheet because the platform added a tool the build does not know.
-  static String labelOf(String feature) => switch (feature) {
+  static String labelOf(String feature) => translate(trCurrent, switch (feature) {
         'payroll' => 'Pointages et paie du personnel',
         'team_access' => "Accès de l'équipe : qui voit quoi, qui modifie quoi",
         'analytics' => 'Analyses : ventes par heure, par jour, par article',
@@ -170,15 +171,14 @@ class PlanTerms {
         'currencies' => 'Devises : encaisser et compter en plusieurs monnaies',
         'tontines' => 'Tontines',
         'vitrine_plus' =>
-          'Vitrine personnalisée : photo de couverture, horaires, couleur, '
-              'articles épinglés',
+          'Vitrine personnalisée : photo de couverture, horaires, couleur, articles épinglés',
         'delivery' =>
           'Livraison depuis la vitrine : prix selon la distance, livreurs, suivi',
         'online_payment' =>
           'Paiement en ligne des commandes : Wave ou carte, versé sur votre numéro',
         'photo_slot' => 'Une place photo de plus, pour toujours',
         _ => feature,
-      };
+      });
 
   /// Whether a Pro tool means anything to a business of [profile] — what
   /// the cauris screens offer to open. The analyses are a shop's and a

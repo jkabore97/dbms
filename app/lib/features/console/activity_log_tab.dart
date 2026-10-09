@@ -330,7 +330,7 @@ class _EventTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${event.actorLabel} · '
-        '${DateFormat('d MMM y à HH:mm', 'fr_FR').format(event.at)}',
+        '${DateFormat('d MMM y, HH:mm', intlLocale()).format(event.at)}',
         style: theme.textTheme.bodySmall,
       ),
       children: [

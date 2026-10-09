@@ -264,7 +264,7 @@ class _AddCropFlowState extends State<_AddCropFlow> {
                   textCapitalization: TextCapitalization.sentences,
                   style: const TextStyle(fontSize: 20),
                   decoration: InputDecoration(
-                    hintText: context.tr('Derrière la maison, bas-fond 2…'),
+                    hintText: context.tr('Derrière la maison, bas-fond 2, serre nord…'),
                     border: const OutlineInputBorder(),
                   ),
                   onChanged: (_) => setState(() {}),

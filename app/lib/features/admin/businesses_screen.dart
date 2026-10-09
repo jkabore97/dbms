@@ -281,7 +281,7 @@ class _BusinessCard extends StatelessWidget {
             Text(
               '${org.memberCount} membre${org.memberCount > 1 ? 's' : ''} · '
               '${org.entryCount} écriture${org.entryCount > 1 ? 's' : ''}'
-              '${org.createdAt == null ? '' : ' · depuis ${DateFormat('MMMM y', 'fr_FR').format(org.createdAt!)}'}',
+              '${org.createdAt == null ? '' : ' · depuis ${DateFormat('MMMM y', intlLocale()).format(org.createdAt!)}'}',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),

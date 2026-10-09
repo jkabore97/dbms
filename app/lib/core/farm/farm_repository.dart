@@ -63,6 +63,30 @@ class FarmRepository {
         .toList();
   }
 
+  /// Of [flockIds], the ones with something written today — an event or
+  /// a count of eggs (122). The others are what the bar's « Bandes »
+  /// number counts (115's home_counts, the same two tables, the server's
+  /// day: UTC, Ouagadougou's).
+  Future<Set<String>> flocksWrittenToday(List<String> flockIds) async {
+    if (flockIds.isEmpty) return const {};
+    final client = _requireClient();
+    final today = _date(DateTime.now().toUtc());
+    final events = await client
+        .from('flock_events')
+        .select('flock_id')
+        .inFilter('flock_id', flockIds)
+        .gte('occurred_at', today);
+    final eggs = await client
+        .from('egg_production')
+        .select('flock_id')
+        .inFilter('flock_id', flockIds)
+        .eq('produced_on', today);
+    return {
+      for (final r in [...events, ...eggs])
+        if (r['flock_id'] != null) '${r['flock_id']}',
+    };
+  }
+
   Future<FarmDay> day(String orgId, {DateTime? on}) async {
     final client = _requireClient();
     final rows = await client.rpc('farm_daily_summary', params: {

@@ -3,11 +3,13 @@
          needs this. The photo button does not: image_picker hands off to the
          camera app through an intent, which carries its own permission. -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Unlock with a fingerprint instead of the code (Sécurité). -->
+    <!-- Unlock with a fingerprint or the face instead of the code
+         (Sécurité). USE_FINGERPRINT is the same right on Android 9 and
+         older phones, which do not know USE_BIOMETRIC. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <!-- The buzz of a new order (Compte › Préférences › Sons des
-         notifications, switchable off). A normal permission: granted at
-         install, never asked. -->
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" android:maxSdkVersion="28" />
+    <!-- The buzz of a new order while the app is open (alert_tone.dart).
+         A normal permission: granted at install, never asked. -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- The bell with the app closed (115, Firebase Cloud Messaging). On
          Android 13 and later it is asked from the « Activer » button of the

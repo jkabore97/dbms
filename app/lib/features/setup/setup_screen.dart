@@ -535,7 +535,8 @@ class _SetupScreenState extends State<SetupScreen> {
           maxLength: 80,
           decoration: InputDecoration(
             labelText: context.tr('En une phrase'),
-            hintText: context.tr('Ex. : Le riz et l\'huile du quartier'),
+            hintText: context.tr('Ex. : Le riz et l\'huile du quartier, café et pâtisseries, vêtements'),
+            hintMaxLines: 2,
             prefixIcon: const Icon(Icons.short_text),
             border: const OutlineInputBorder(),
           ),

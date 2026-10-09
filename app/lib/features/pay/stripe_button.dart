@@ -202,7 +202,7 @@ class _StripeManageState extends State<StripeManage> {
     final theme = Theme.of(context);
     final until = sub.until == null
         ? ''
-        : DateFormat('d MMMM yyyy', 'fr_FR').format(sub.until!.toLocal());
+        : DateFormat('d MMMM yyyy', intlLocale()).format(sub.until!.toLocal());
     final line = !sub.active
         ? context.tr('Abonnement par carte arrêté.')
         : sub.cancelAtEnd

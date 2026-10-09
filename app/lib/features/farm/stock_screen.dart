@@ -10,6 +10,7 @@ import '../church/entry_controls.dart' show promptForName;
 import '../../core/nav/app_scope.dart';
 import '../retail/article_flow.dart';
 import 'farm_flows.dart';
+import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -126,6 +127,11 @@ class _StockScreenState extends State<StockScreen> {
     }
   }
 
+  /// « Ajouter du stock » on a supply running out (122): « Réception »,
+  /// opened on it.
+  Future<void> _restock(StockItem item) => _record(
+      FarmStockFlow.receive(context, db: widget.db, org: widget.org, item: item.name));
+
   /// Réception, Perte (115): one entry at a time, on this phone first.
   Future<void> _record(Future<bool?> flow) async {
     if (await flow == true && mounted) await _load();
@@ -133,7 +139,6 @@ class _StockScreenState extends State<StockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final low = _items.where((i) => i.belowReorder).toList();
 
     return Scaffold(
@@ -179,31 +184,36 @@ class _StockScreenState extends State<StockScreen> {
             : context.tr('Aucun article pour le moment. Le premier est créé tout seul, à la première réception.'),
         child: ListView(
           children: [
+            // Why « Stock » has a red number (122): the supplies under
+            // their threshold, each with its « Réception ».
             if (low.isNotEmpty)
-              Container(
+              AttentionBanner(
+                key: const Key('stock-attention'),
+                icon: Icons.inventory_2_outlined,
                 margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber,
-                        color: theme.colorScheme.onErrorContainer),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        low.length == 1
-                            ? context.tr('Il reste peu de {name}.', {'name': low.first.name})
-                            : context.tr('{length} articles presque épuisés.', {'length': low.length}),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                        ),
-                      ),
+                title: low.length == 1
+                    ? context.tr('1 fourniture sous son seuil : {names}', {'names': low.first.name})
+                    : context.tr('{n} fournitures sous leur seuil : {names}', {
+                        'n': low.length,
+                        'names': attentionNames(context, [for (final i in low) i.name]),
+                      }),
+                stays: context.tr('Le chiffre rouge sur « Stock » reste tant que ces fournitures ne sont pas réapprovisionnées : ouvrir cette page ne l\'efface pas.'),
+                items: [
+                  for (final i in low)
+                    AttentionItem(
+                      id: i.id,
+                      label: i.name,
+                      chip: i.onHand <= 0 ? context.tr('Rupture') : context.tr('Bientôt épuisé'),
+                      chipSoft: i.onHand > 0,
+                      detail: context.tr('Reste {q} {unit} (seuil {low})', {
+                        'q': i.quantityLabel,
+                        'unit': i.unit,
+                        'low': trimQuantity(i.reorderLevel ?? 0),
+                      }),
+                      actionLabel: _canWrite ? context.tr('Ajouter du stock') : null,
+                      onAction: _canWrite ? () => _restock(i) : null,
                     ),
-                  ],
-                ),
+                ],
               ),
             const SizedBox(height: 8),
             for (final item in _items)
@@ -211,6 +221,7 @@ class _StockScreenState extends State<StockScreen> {
                 item: item,
                 canEdit: _canWrite,
                 onSetReorder: () => _setReorder(item),
+                onRestock: () => _restock(item),
               ),
             const SizedBox(height: 96),
           ],
@@ -225,11 +236,13 @@ class _ItemTile extends StatelessWidget {
     required this.item,
     required this.canEdit,
     required this.onSetReorder,
+    required this.onRestock,
   });
 
   final StockItem item;
   final bool canEdit;
   final VoidCallback onSetReorder;
+  final VoidCallback onRestock;
 
   @override
   Widget build(BuildContext context) {
@@ -248,16 +261,45 @@ class _ItemTile extends StatelessWidget {
               : theme.colorScheme.onSurfaceVariant,
         ),
       ),
-      title: Text(item.name),
-      subtitle: Text(
+      title: Wrap(
+        spacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(item.name),
+          // Counted on the bar (122): marked here too.
+          if (item.belowReorder)
+            AttentionChip(
+              key: Key('stock-chip-${item.id}'),
+              label: item.onHand <= 0 ? context.tr('Rupture') : context.tr('Bientôt épuisé'),
+              soft: item.onHand > 0,
+            ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
         [
           if (item.reorderLevel != null)
             'seuil ${trimQuantity(item.reorderLevel!)} ${item.unit}'
           else
             'aucun seuil',
           if (item.lastMovement != null)
-            'dernier mouvement ${DateFormat('d MMM', 'fr_FR').format(item.lastMovement!)}',
+            'dernier mouvement ${DateFormat('d MMM', intlLocale()).format(item.lastMovement!)}',
         ].join(' · '),
+          ),
+          if (item.belowReorder && canEdit)
+            TextButton.icon(
+              key: Key('stock-restock-${item.id}'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: onRestock,
+              icon: const Icon(Icons.add_box_outlined, size: 18),
+              label: Text(context.tr('Ajouter du stock')),
+            ),
+        ],
       ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,

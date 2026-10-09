@@ -145,7 +145,7 @@ class _SpotRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = DateFormat('d MMM', 'fr_FR');
+    final date = DateFormat('d MMM', intlLocale());
     final state = spot.stateLabel();
     final running = state == 'En cours' || state == 'Terminée';
     final dates = spot.startsAt == null

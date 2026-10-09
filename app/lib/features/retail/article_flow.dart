@@ -765,7 +765,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
             label: Text(_expiresOn == null
                 ? context.tr('Date d\'expiration (facultatif)')
                 : context.tr('Expire le {date}',
-                    {'date': DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)})),
+                    {'date': DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)})),
           ),
         ),
         const SizedBox(height: 16),

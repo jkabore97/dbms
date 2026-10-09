@@ -808,6 +808,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch121.sql
 
+      - name: Prove a delivery reaches the couriers around it — the platform's radius (1 to 100 km, journaled), the last known position before the declared city, the city when there is no position, the shop's own couriers always, 50 at most, the board as the bell; the store links of the web's download pop-up, readable by the street; the three kinds, the doors (122)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch122.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

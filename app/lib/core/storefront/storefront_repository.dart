@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../orders/orders.dart';
 import '../site/site.dart';
+import '../theme/kaj_theme.dart' show paletteNamed;
 import 'street_cache.dart';
 
 /// The shop window, read by anyone (052).
@@ -713,6 +714,12 @@ class PublicShop {
 
   /// Delivery is offered (081): the shop is Pro and on the map.
   bool get delivers => hasLocation && style.delivers;
+
+  /// The vitrine's colour: the one its owner chose for it (068/093), else
+  /// the colour the business chose for its own app (022, Paramètres ›
+  /// Couleurs) — the business's own design on its window too (122). Null
+  /// when it chose neither: the street's black, Mara's own look.
+  Color? get accent => style.accent ?? paletteNamed(theme)?.ink;
 
   factory PublicShop.fromRow(Map<String, dynamic> row) => PublicShop(
         orgId: row['org_id'] as String,

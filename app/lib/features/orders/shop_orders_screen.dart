@@ -22,6 +22,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import 'order_walkthrough.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import '../common/attention_banner.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -215,6 +216,51 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  /// Why « Commandes » (« Demandes ») has a red number (122): the orders
+  /// and bookings not answered yet, each with « Répondre ».
+  Widget? _waiting(BuildContext context, List<ShopOrder> open) {
+    final pending = [
+      for (final o in open)
+        if (o.status == 'pending') o,
+    ];
+    if (pending.isEmpty) return null;
+    final n = pending.length;
+    final bookings = pending.where((o) => o.isBooking).length;
+    final asked = widget.org.profile == 'association' ||
+        widget.org.profile == 'church' ||
+        (bookings > 0 && bookings < n);
+    final String title;
+    if (asked) {
+      title = n == 1
+          ? context.tr('1 demande attend votre réponse')
+          : context.tr('{n} demandes attendent votre réponse', {'n': n});
+    } else if (bookings == n) {
+      title = n == 1
+          ? context.tr('1 réservation attend votre réponse')
+          : context.tr('{n} réservations attendent votre réponse', {'n': n});
+    } else {
+      title = n == 1
+          ? context.tr('1 commande attend votre réponse')
+          : context.tr('{n} commandes attendent votre réponse', {'n': n});
+    }
+    return AttentionBanner(
+      key: const Key('orders-attention'),
+      icon: Icons.inbox_outlined,
+      title: title,
+      stays: context.tr('Le chiffre rouge reste tant que vous n\'avez pas accepté ou refusé : ouvrir cette page ne l\'efface pas.'),
+      items: [
+        for (final o in pending)
+          AttentionItem(
+            id: o.id,
+            label: o.customerName,
+            detail: moneyFormat(o.currency).format(o.total),
+            actionLabel: context.tr('Répondre'),
+            onAction: _busyId == null ? () => _walk(o) : null,
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final open = _orders.where((o) => o.isOpen).toList();
@@ -229,6 +275,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     final cash = _cash.isEmpty
         ? null
         : _CashBanner(cash: _cash, onTap: _showCash);
+    final waiting = _waiting(context, open);
+    final header = [?waiting, ?cash];
 
     return Scaffold(
         appBar: AppBar(
@@ -252,8 +300,8 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
             bellRoom,
           ],
           bottom: TabBar(controller: tabs, tabs: [
-            Tab(text: 'À traiter${open.isEmpty ? '' : ' (${open.length})'}'),
-            const Tab(text: 'Historique'),
+            Tab(text: '${context.tr('À traiter')}${open.isEmpty ? '' : ' (${open.length})'}'),
+            Tab(text: context.tr('Historique')),
           ]),
         ),
         body: _loading
@@ -277,8 +325,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                 : TabBarView(controller: tabs, children: [
                     _List(
                       orders: open,
-                      empty: 'Aucune commande à traiter. Les clients '
-                          'commandent depuis votre vitrine.',
+                      empty: context.tr('Aucune commande à traiter. Les clients commandent depuis votre vitrine.'),
                       busyId: _busyId,
                       onWalk: _walk,
                       onOpen: _open,
@@ -289,6 +336,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                ?waiting,
                                 KajCard(
                                   key: const Key('orders-closed-note'),
                                   margin: const EdgeInsets.only(bottom: 12),
@@ -301,13 +349,18 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                                 ?cash,
                               ],
                             )
-                          : cash,
+                          : header.isEmpty
+                              ? null
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: header,
+                                ),
                       // 101: the order books its own sale when it is done.
                       note: context.tr('La vente est enregistrée quand la commande est remise ou livrée — ne la passez pas à la caisse'),
                     ),
                     _List(
                       orders: past,
-                      empty: 'Aucune commande passée pour le moment.',
+                      empty: context.tr('Aucune commande passée pour le moment.'),
                       busyId: _busyId,
                       onWalk: _walk,
                       onOpen: _open,
@@ -422,7 +475,7 @@ class _OrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = moneyFormat(order.currency);
-    final when = DateFormat('EEE d MMM, HH:mm', 'fr_FR').format(order.createdAt);
+    final when = DateFormat('EEE d MMM, HH:mm', intlLocale()).format(order.createdAt);
     final phone = (order.phone ?? '').trim();
     final whatsapp = whatsappUrl(order.phone);
     final action = stageAction(order);
@@ -444,16 +497,23 @@ class _OrderCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w700)),
                 ),
-                Chip(
-                  label: Text(context.tr(
-                      orderStatusLabel(order.status, booking: order.isBooking))),
-                  visualDensity: VisualDensity.compact,
-                ),
+                // Waiting for an answer: red, as the bar's number that
+                // counts it (122).
+                if (order.status == 'pending')
+                  AttentionChip(
+                      key: Key('order-waiting-${order.id}'),
+                      label: context.tr('À répondre'))
+                else
+                  Chip(
+                    label: Text(context.tr(
+                        orderStatusLabel(order.status, booking: order.isBooking))),
+                    visualDensity: VisualDensity.compact,
+                  ),
               ],
             ),
             Text(
                 '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
-                '${paymentLabel(order.paymentMethod)}'
+                '${context.tr(paymentLabel(order.paymentMethod))}'
                 '${order.isPaid ? context.tr(' · payé') : ''}',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
@@ -468,7 +528,7 @@ class _OrderCard extends StatelessWidget {
                           ? theme.colorScheme.error
                           : theme.colorScheme.onSurfaceVariant)),
             if (!order.isOpen && (clock?.outcome ?? '').isNotEmpty)
-              Text('Livraison échouée : ${deliveryOutcomeLabel(clock!.outcome)}',
+              Text(context.tr('Livraison échouée : {why}', {'why': context.tr(deliveryOutcomeLabel(clock!.outcome))}),
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.error)),
@@ -485,11 +545,9 @@ class _OrderCard extends StatelessWidget {
                   children: [
                     Text(
                         switch (order.status) {
-                          'pending' => 'Le client attend votre réponse.',
-                          'ready' => "Aucun livreur ne l'a prise. Appelez un "
-                              'de vos livreurs, ou livrez-la vous-même.',
-                          _ => 'Cette livraison est en route depuis longtemps : '
-                              'appelez le livreur.',
+                          'pending' => context.tr('Le client attend votre réponse.'),
+                          'ready' => context.tr('Aucun livreur ne l\'a prise. Appelez un de vos livreurs, ou livrez-la vous-même.'),
+                          _ => context.tr('Cette livraison est en route depuis longtemps : appelez le livreur.'),
                         },
                         style: TextStyle(
                             color: theme.colorScheme.onErrorContainer)),
@@ -578,8 +636,8 @@ class _OrderCard extends StatelessWidget {
               Text(
                   order.deliveryFee == null
                       ? context.tr('Livraison : prix à convenir avec le livreur')
-                      : 'Livraison : ${money.format(order.deliveryFee!)} '
-                          'au livreur, à la porte',
+                      : context.tr('Livraison : {fee} au livreur, à la porte',
+                          {'fee': money.format(order.deliveryFee!)}),
                   style: theme.textTheme.bodySmall),
             if ((order.address ?? '').isNotEmpty) ...[
               const SizedBox(height: 6),
@@ -668,9 +726,11 @@ class _CashBanner extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.payments_outlined),
         title: Text(
-            'Argent chez les livreurs : ${moneyFormat(cash.first.currency).format(total)}'),
-        subtitle: Text('${cash.length} commande${cash.length > 1 ? 's' : ''} '
-            'payée${cash.length > 1 ? 's' : ''} en espèces à la porte'),
+            context.tr('Argent chez les livreurs : {amount}',
+                {'amount': moneyFormat(cash.first.currency).format(total)})),
+        subtitle: Text(cash.length > 1
+            ? context.tr('{n} commandes payées en espèces à la porte', {'n': cash.length})
+            : context.tr('{n} commande payée en espèces à la porte', {'n': cash.length})),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
@@ -713,7 +773,7 @@ class _CashSheetState extends State<_CashSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final day = DateFormat('d MMM, HH:mm', 'fr_FR');
+    final day = DateFormat('d MMM, HH:mm', intlLocale());
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {

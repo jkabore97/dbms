@@ -111,7 +111,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   bool _legacy = false;
 
   final _number = NumberFormat.decimalPattern('fr_FR');
-  final _date = DateFormat('d MMM y', 'fr_FR');
+  final _date = DateFormat('d MMM y', intlLocale());
 
   @override
   void initState() {

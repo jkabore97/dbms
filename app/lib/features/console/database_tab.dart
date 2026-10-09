@@ -189,7 +189,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
                         // this is often about to go and look at it directly.
                         table.name,
                         if (table.lastChange != null)
-                          'modifié le ${DateFormat('d MMM', 'fr_FR').format(table.lastChange!)}',
+                          'modifié le ${DateFormat('d MMM', intlLocale()).format(table.lastChange!)}',
                       ].join(' · '),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontFamily: 'monospace',

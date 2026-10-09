@@ -358,8 +358,13 @@ void main() {
       expect(find.text('La vente'), findsNothing);
       expect(engine.phonePops, 0, reason: 'the sheet closed, the app stayed');
 
-      // On the home with nothing open the back is the phone's again: out.
+      // On the home with nothing open (the only business): « Quitter
+      // Mara ? » first (122), then the phone's back, out.
       await _back(tester);
+      expect(engine.phonePops, 0);
+      expect(find.text('Quitter Mara ?'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('leave-quit')));
+      await _settle(tester);
       expect(engine.phonePops, 1);
     });
 

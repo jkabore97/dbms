@@ -8,6 +8,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
@@ -15,6 +16,7 @@ import '../../core/retail/stock_rule.dart';
 import '../capture/barcode_sheet.dart';
 import '../common/step_flow.dart';
 import '../common/keyboard_sheet.dart';
+import 'product_photo.dart';
 
 /// « Vente », one entry at a time (115) — the shop's till and the farm's,
 /// replacing the one-form sale sheet.
@@ -179,6 +181,10 @@ class _SaleFlowState extends State<SaleFlow> {
   /// What this phone's sales still waiting for the network will take.
   Map<String, double> _waiting = const {};
 
+  /// Each article's picture, product id → photo key (122): the Articles
+  /// list's own source (079), so the till shows the same photograph.
+  Map<String, String> _photos = const {};
+
   // What « C'est fait » says: pinned when saved.
   bool _queued = false;
   String? _sender;
@@ -232,6 +238,7 @@ class _SaleFlowState extends State<SaleFlow> {
     }
     _loadPaymentOptions();
     _loadWaiting();
+    _loadPhotos();
   }
 
   @override
@@ -245,6 +252,19 @@ class _SaleFlowState extends State<SaleFlow> {
     _customer.dispose();
     super.dispose();
   }
+
+  /// No signal: the keys last heard (RetailRepository.photoKeys), then the
+  /// pictures the phone still holds; the letter for the rest.
+  Future<void> _loadPhotos() async {
+    try {
+      final photos = await widget.retail.photoKeys(widget.orgId);
+      if (mounted && photos.isNotEmpty) setState(() => _photos = photos);
+    } catch (_) {}
+  }
+
+  /// Where the pictures are read: the till's own (with the scanner) or the
+  /// app's — a seller without the photos right still sees them.
+  CaptureRepository? get _pictures => widget.capture ?? AppScope.read(context)?.capture;
 
   Future<void> _loadWaiting() async {
     try {
@@ -890,6 +910,7 @@ class _SaleFlowState extends State<SaleFlow> {
     final picked = _inBasket(p);
     final left = _left(p);
     final empty = !p.isService && left <= 0;
+    final photo = _photos[p.id];
     return Material(
       color: picked
           ? theme.colorScheme.primaryContainer
@@ -913,6 +934,28 @@ class _SaleFlowState extends State<SaleFlow> {
             children: [
               Row(
                 children: [
+                  // The article's photograph when it has one (122), as on
+                  // the Articles list; the letter while it cannot be had.
+                  if (photo != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Opacity(
+                        opacity: empty ? 0.5 : 1,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox.square(
+                            key: ValueKey('sale-photo-${p.id}'),
+                            dimension: 44,
+                            child: ProductPhoto(
+                              name: p.name,
+                              photoKey: photo,
+                              capture: _pictures,
+                              letterSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (p.isService)
                     const Padding(
                       padding: EdgeInsets.only(right: 4),

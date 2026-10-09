@@ -584,8 +584,11 @@ class _Street extends StatelessWidget {
     final columns = ShopStyle.columnsFor(width);
     final located = here != null;
 
-    return ListView(
-      padding: EdgeInsets.zero,
+    return ShopScroll(
+      // « Devenir livreur » at the street's foot (112), and the footer on
+      // the page's bottom edge however few the shops (122).
+      footer: ShopWidth(
+          child: ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier))),
       children: [
         // The hero settles in as the page opens.
         Reveal(
@@ -706,7 +709,7 @@ class _Street extends StatelessWidget {
               // The paid spots, when there are any: a strip, not the page.
               if (featured.isNotEmpty) ...[
                 const SizedBox(height: 32),
-                const ShopSectionLabel('À la une', note: 'Sponsorisé'),
+                ShopSectionLabel(context.tr('À la une'), note: context.tr('Sponsorisé')),
                 const SizedBox(height: 14),
                 SizedBox(
                   height: 244,
@@ -773,8 +776,6 @@ class _Street extends StatelessWidget {
                     ),
                   ),
                 ),
-              // « Devenir livreur » at the street's foot (112).
-              ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
             ],
           ),
         ),
@@ -811,10 +812,12 @@ class _SearchResults extends StatelessWidget {
       children: [
         const SizedBox(height: 32),
         ShopSectionLabel(
-          'Résultats',
+          context.tr('Résultats'),
           note: hunting
               ? null
-              : '${hits.length} article${hits.length > 1 ? 's' : ''}',
+              : (hits.length > 1
+                  ? context.tr('{n} articles', {'n': hits.length})
+                  : context.tr('{n} article', {'n': hits.length})),
         ),
         const SizedBox(height: 18),
         if (hunting)
@@ -853,7 +856,6 @@ class _SearchResults extends StatelessWidget {
               ),
             ),
           ),
-        ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier)),
       ],
     );
   }
@@ -886,11 +888,11 @@ class _HitTile extends StatelessWidget {
       label: [
         hit.name,
         money.format(hit.price),
-        if (!hit.inStock) 'épuisé',
-        'chez ${hit.shopName}',
-        if (distance != null) 'à $distance',
+        if (!hit.inStock) context.tr('épuisé'),
+        context.tr('chez {shop}', {'shop': hit.shopName}),
+        if (distance != null) context.tr('à {distance}', {'distance': distance}),
       ].join(', '),
-      hint: 'Ouvrir la vitrine',
+      hint: context.tr('Ouvrir la vitrine'),
       onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
@@ -925,7 +927,7 @@ class _HitTile extends StatelessWidget {
             Text(
               hit.inStock
                   ? money.format(hit.price)
-                  : '${money.format(hit.price)} · Épuisé',
+                  : '${money.format(hit.price)} · ${context.tr('Épuisé')}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
             Text(shopLine,
@@ -965,11 +967,11 @@ class _FeaturedTile extends StatelessWidget {
         label: [
           item.name,
           money.format(item.price),
-          if (!item.inStock) 'épuisé',
-          'chez ${item.shopName}',
-          'à la une',
+          if (!item.inStock) context.tr('épuisé'),
+          context.tr('chez {shop}', {'shop': item.shopName}),
+          context.tr('à la une'),
         ].join(', '),
-        hint: 'Ouvrir la vitrine',
+        hint: context.tr('Ouvrir la vitrine'),
         onTap: onTap,
         excludeSemantics: true,
         child: InkWell(
@@ -1096,23 +1098,23 @@ class _ShopTile extends StatelessWidget {
         ? line
         : (located && !entry.hasLocation
             ? context.tr('Position non renseignée')
-            : _labelFor(entry.profile));
+            : context.tr(_labelFor(entry.profile)));
 
     final follows = this.follows;
     final tile = Semantics(
       button: true,
       label: [
         entry.name,
-        if (line.isNotEmpty) _labelFor(entry.profile),
+        if (line.isNotEmpty) context.tr(_labelFor(entry.profile)),
         second,
-        if (distance != null) 'à $distance',
-        if (sponsored) 'sponsorisé',
-        if (far) 'pas à proximité',
+        if (distance != null) context.tr('à {distance}', {'distance': distance}),
+        if (sponsored) context.tr('sponsorisé'),
+        if (far) context.tr('pas à proximité'),
         // What the square shows a sighted shopper (070), said too.
         if (previews.isNotEmpty)
-          'vend ${previews.map((p) => p.name).join(', ')}',
+          context.tr('vend {names}', {'names': previews.map((p) => p.name).join(', ')}),
       ].join(', '),
-      hint: 'Ouvrir la vitrine',
+      hint: context.tr('Ouvrir la vitrine'),
       onTap: onOpen,
       excludeSemantics: true,
       child: InkWell(

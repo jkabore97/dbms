@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../core/theme/scroll_hint.dart';
+
 /// One place a business's home screen leads to.
 class HomeDestination {
   const HomeDestination({
@@ -280,7 +282,9 @@ class HomeNav {
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(
-        child: ListView(
+        // The owner (122): « In the 3 dot list … an animated arrow showing
+        // the list continues at the bottom ».
+        child: ScrollHint(child: ListView(
           shrinkWrap: true,
           padding: const EdgeInsets.only(bottom: 8),
           children: [
@@ -296,7 +300,7 @@ class HomeNav {
                 },
               ),
           ],
-        ),
+        )),
       ),
     );
   }

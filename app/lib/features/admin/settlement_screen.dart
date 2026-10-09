@@ -107,7 +107,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final money = NumberFormat.decimalPattern('fr_FR');
-    final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(_month);
+    final monthLabel = DateFormat('MMMM yyyy', intlLocale()).format(_month);
     final owed = _rows.fold<double>(0, (sum, r) => sum + r.share);
     final now = DateTime.now();
     final isCurrent = _month.year == now.year && _month.month == now.month;

@@ -290,7 +290,7 @@ class _LivestockScreenState extends State<LivestockScreen>
                       [
                         cycle.plotName,
                         if (cycle.plantedOn != null)
-                          'semé le ${DateFormat('d MMM y', 'fr_FR').format(cycle.plantedOn!)}',
+                          'semé le ${DateFormat('d MMM y', intlLocale()).format(cycle.plantedOn!)}',
                       ].whereType<String>().join(' · '),
                       style: theme.textTheme.bodySmall,
                     ),

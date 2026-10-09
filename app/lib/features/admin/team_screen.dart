@@ -23,6 +23,7 @@ import 'member_edit_sheet.dart';
 import 'team_invite_flow.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import '../common/attention_banner.dart';
 
 /// « Équipe » (100): the one place for the business's people — who is in,
 /// adding somebody (the invitation, 017), replacing or removing them, the
@@ -687,6 +688,39 @@ class _TeamScreenState extends State<TeamScreen> {
     context.push(Routes.inside(widget.org.id, 'personnel'));
   }
 
+  /// The invitations the bar counts (115): not claimed, not expired —
+  /// each with « Renvoyer », the message it first went with.
+  Widget _waitingInvites(BuildContext context, List<TeamInvite> invitations) {
+    final now = DateTime.now();
+    final out = [
+      for (final i in invitations)
+        if (i.expiresAt == null || i.expiresAt!.isAfter(now)) i,
+    ];
+    if (out.isEmpty) return const SizedBox.shrink();
+    String who(TeamInvite i) => i.name ?? i.phone ?? context.tr('Invitation');
+    final n = out.length;
+    final names = attentionNames(context, [for (final i in out) who(i)]);
+    return AttentionBanner(
+      key: const Key('team-attention'),
+      icon: Icons.person_add_alt_1,
+      margin: const EdgeInsets.only(top: 4, bottom: 12),
+      title: n == 1
+          ? context.tr('1 invitation pas encore acceptée : {names}', {'names': names})
+          : context.tr('{n} invitations pas encore acceptées : {names}', {'n': n, 'names': names}),
+      stays: context.tr('Le chiffre rouge reste tant que la personne n\'a pas rejoint avec son code, ou que vous n\'avez pas annulé l\'invitation : ouvrir cette page ne l\'efface pas.'),
+      items: [
+        for (final i in out)
+          AttentionItem(
+            id: i.id,
+            label: who(i),
+            detail: context.tr('Code {code}', {'code': i.code}),
+            actionLabel: context.tr('Renvoyer'),
+            onAction: () => _share(i),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -703,6 +737,8 @@ class _TeamScreenState extends State<TeamScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
             if (_loading && team == null) const LinearProgressIndicator(),
+            // Why « Équipe » has a red number (122): the invitations out.
+            if (team != null) _waitingInvites(context, team.invitations),
             if (seats != null) ...[
               SeatCard(
                 seats: seats,

@@ -195,7 +195,7 @@ class _BusinessRow extends StatelessWidget {
         b.revenue == 0 ? 0 : (b.margin / b.revenue * 100).round();
     final last = b.lastSale == null
         ? context.tr('Aucune vente')
-        : 'Dernière : ${DateFormat('d MMM', 'fr_FR').format(b.lastSale!.toLocal())}';
+        : 'Dernière : ${DateFormat('d MMM', intlLocale()).format(b.lastSale!.toLocal())}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

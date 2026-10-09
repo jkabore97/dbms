@@ -10,6 +10,8 @@ import '../../core/security/security_repository.dart';
 import '../../core/security/security_settings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// Compte › Sécurité.
 ///
@@ -60,6 +62,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   void initState() {
     super.initState();
     _settings?.addListener(_changed);
+    _settings?.refreshBiometric();
     _load();
   }
 
@@ -107,6 +110,37 @@ class _SecurityScreenState extends State<SecurityScreen> {
     if (settings == null || !settings.allows(minutes)) return;
     await settings.setLockAfter(minutes);
     await _api?.log('lock_changed', detail: SecuritySettings.label(minutes));
+  }
+
+  /// On: the system prompt, once — the person's authorization. Off: no
+  /// prompt, the code alone.
+  Future<void> _setBiometric(bool on) async {
+    final settings = _settings;
+    if (settings == null) return;
+    if (!on) {
+      await settings.setBiometric(false);
+      return;
+    }
+    setState(() => _busy = 'bio');
+    final outcome = await settings.turnOnBiometric();
+    if (!mounted) return;
+    setState(() => _busy = null);
+    switch (outcome) {
+      case BiometricOutcome.on:
+        break;
+      case BiometricOutcome.refused:
+        await settings.setBiometric(false);
+      case BiometricOutcome.notEnrolled:
+        await settings.setBiometric(false);
+        if (mounted) {
+          _say(context.tr('Aucune empreinte ni visage n\'est enregistré sur ce téléphone. Ajoutez-en un dans les réglages du téléphone (Sécurité), puis revenez ici.'));
+        }
+      case BiometricOutcome.failed:
+        await settings.setBiometric(false);
+        if (mounted) {
+          _say(context.tr('Le téléphone n\'a pas pu vérifier l\'empreinte. Réessayez, ou gardez le code.'));
+        }
+    }
   }
 
   Future<void> _changeCode() async {
@@ -240,14 +274,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = _settings;
-    final when = DateFormat('d MMM, HH:mm', 'fr_FR');
+    final when = DateFormat('d MMM, HH:mm', intlLocale());
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
     final others = _sessions.where((s) => !s.current).length;
 
-    return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Sécurité'))),
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(context.tr('Sécurité'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -284,13 +318,21 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     ],
                   ),
                 ),
-                if (settings.biometricReady)
+                if (settings.biometricHardware)
                   SwitchListTile(
-                    value: settings.biometric,
-                    onChanged: settings.setBiometric,
+                    value: settings.biometric && settings.biometricReady,
+                    onChanged: settings.biometricReady && _busy != 'bio'
+                        ? _setBiometric
+                        : null,
                     secondary: const Icon(Icons.fingerprint),
-                    title: Text(context.tr('Déverrouiller avec l\'empreinte')),
-                    subtitle: Text(context.tr('Le code reste toujours possible.')),
+                    title: Text(
+                      context.tr('Déverrouiller avec l\'empreinte / Face ID'),
+                    ),
+                    subtitle: Text(
+                      settings.biometricReady
+                          ? context.tr('Le code reste toujours possible.')
+                          : context.tr('Aucune empreinte ni visage n\'est enregistré sur ce téléphone. Ajoutez-en un dans les réglages du téléphone (Sécurité), puis revenez ici.'),
+                    ),
                   ),
                 ListTile(
                   leading: const Icon(Icons.pin_outlined),
@@ -408,7 +450,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   static IconData _iconFor(String kind) => switch (kind) {

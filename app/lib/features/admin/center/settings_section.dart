@@ -99,6 +99,8 @@ const platformSettingDefs = <SettingDef>[
   // and a number proved on WhatsApp (off until 109's code is set up).
   SettingDef('courier_licence_required', 'delivery', SettingType.flag),
   SettingDef('courier_phone_verified', 'delivery', SettingType.flag),
+  // 122: how far from a shop a courier hears of and sees its delivery.
+  SettingDef('courier_radius_km', 'delivery', SettingType.km),
   SettingDef('wave_checkout', 'wave', SettingType.flag),
   SettingDef('wave_card', 'wave', SettingType.flag),
   SettingDef('wave_commission_pct', 'wave', SettingType.pct),
@@ -126,6 +128,10 @@ const platformSettingDefs = <SettingDef>[
   // 113: the help number of the shopper's « Écrire à Mara sur WhatsApp »;
   // empty, the row is not drawn.
   SettingDef('support_whatsapp', 'help', SettingType.text),
+  // 122: the web's « télécharger l'application » pop-up — Google Play once
+  // the listing is live (the APK until then), the App Store once set.
+  SettingDef('play_store_live', 'apps', SettingType.flag),
+  SettingDef('app_store_url', 'apps', SettingType.text),
 ];
 
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
@@ -139,6 +145,7 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'orders' => context.tr('Commandes de la rue'),
       'creation' => context.tr('Création d\'activité'),
       'help' => context.tr('Aide aux clients'),
+      'apps' => context.tr('Applications mobiles'),
       _ => group,
     };
 
@@ -177,6 +184,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'stuck_ready_minutes' => context.tr('Minutes avant de signaler une commande prête'),
       'courier_licence_required' => context.tr('Permis de conduire obligatoire pour livrer à moto ou en voiture'),
       'courier_phone_verified' => context.tr('Numéro WhatsApp vérifié pour devenir livreur'),
+      'courier_radius_km' => context.tr('Distance où les livreurs reçoivent une livraison (km, 1 à 100)'),
       'wave_checkout' => context.tr('Payer en ligne par Wave'),
       'wave_card' => context.tr('Carte bancaire sur la page Wave'),
       'wave_commission_pct' => context.tr('Commission de Mara sur une commande payée en ligne (%)'),
@@ -197,6 +205,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'order_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de commander'),
       'create_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de créer une activité'),
       'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
+      'play_store_live' => context.tr('Mara est publiée sur Google Play (sinon : le fichier APK)'),
+      'app_store_url' => context.tr('Adresse de Mara sur l\'App Store (vide : écran d\'accueil)'),
       _ => key,
     };
 
@@ -218,6 +228,10 @@ const settingMax = 1000000000;
 /// The numbers that are never zero: the card's rate divides every Pro
 /// price (121's platform_set_setting refuses 0) — said here first.
 const positiveSettings = {'stripe_xof_per_usd'};
+
+/// The numbers with a range of their own: the couriers' radius is 1 to
+/// 100 km (122's platform_set_setting refuses the rest) — said here first.
+const rangedSettings = {'courier_radius_km': (1, 100)};
 
 /// The value as a person reads it.
 String settingValueText(BuildContext context, SettingDef def, Object? v) {
@@ -507,6 +521,9 @@ class _EditDialogState extends State<_EditDialog> {
           problem = decimals
               ? context.tr('Un nombre, zéro ou plus.')
               : context.tr('Un nombre entier, zéro ou plus.');
+        } else if (rangedSettings[def.key] case (final lo, final hi)
+            when n < lo || n > hi) {
+          problem = context.tr('Un nombre de {lo} à {hi}.', {'lo': '$lo', 'hi': '$hi'});
         } else if (n > settingMax) {
           problem = context.tr('Un nombre d\'un milliard au plus.');
         } else {
@@ -530,6 +547,9 @@ class _EditDialogState extends State<_EditDialog> {
       case SettingType.text:
         if (raw.length > 200) {
           problem = context.tr('200 caractères au plus.');
+        } else if (def.key == 'app_store_url' && raw.isNotEmpty &&
+            !RegExp(r'^https://\S+$').hasMatch(raw)) {
+          problem = context.tr('Une adresse qui commence par https://, ou rien.');
         } else {
           value = raw;
         }

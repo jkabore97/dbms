@@ -13,6 +13,8 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
 import '../../core/retail/models.dart';
 import 'article_flow.dart';
+import 'stock_attention.dart';
+import '../common/attention_banner.dart';
 import 'convert_dialog.dart';
 import 'photo_quota.dart';
 import 'product_photo.dart';
@@ -243,7 +245,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         if (p.isIngredient) 'ingrédient',
         if (p.salePrice > 0) _money.format(p.salePrice),
         if (p.expiresOn != null)
-          'expire le ${DateFormat('d MMM', 'fr_FR').format(p.expiresOn!)}',
+          'expire le ${DateFormat('d MMM', intlLocale()).format(p.expiresOn!)}',
       ].join(' · ');
 
   /// The door to the vitrine, drawn on every article: the long press is a
@@ -263,11 +265,31 @@ class _ProductsScreenState extends State<ProductsScreen> {
         onPressed: widget.access.canEdit('products') ? () => _edit(p) : null,
       );
 
-  Widget _lowChip(ThemeData theme) => Chip(
-        label: const Text('bas'),
-        visualDensity: VisualDensity.compact,
-        backgroundColor: theme.colorScheme.errorContainer,
-      );
+  /// « Rupture » at zero, « Bientôt épuisé » under the alert level (122):
+  /// the rows the bar's red number counts.
+  Widget? _stockChip(Product p) {
+    final label = stockChip(context, p);
+    return label == null
+        ? null
+        : AttentionChip(
+            key: ValueKey('product-chip-${p.id}'),
+            label: label,
+            soft: p.quantity > 0);
+  }
+
+  /// « Ajouter du stock » on an article (122): the same entry as « Ajouter
+  /// un article », opened on it — its name is enough for the flow to know
+  /// it and add what arrived.
+  Future<void> _restock(Product p) async {
+    final added = await ArticleFlow.open(context,
+        org: widget.org,
+        retail: widget.retail,
+        capture: widget.capture,
+        initialName: p.name);
+    if (added == true) await _load();
+  }
+
+  bool get _canRestock => widget.access.canEdit('products');
 
   // Long press, not tap, on purpose: a thumb scrolling the shelves must not
   // fall into a sheet that changes prices. And only for those the owner lets
@@ -293,11 +315,29 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           title: Text(p.name),
-          subtitle: Text(_details(p)),
+          subtitle: p.quantity <= 0 && _canRestock
+              // At zero, its own way back on the shelf (122).
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_details(p)),
+                    TextButton.icon(
+                      key: ValueKey('product-restock-${p.id}'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => _restock(p),
+                      icon: const Icon(Icons.add_box_outlined, size: 18),
+                      label: Text(context.tr('Ajouter du stock')),
+                    ),
+                  ],
+                )
+              : Text(_details(p)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (p.isLow) _lowChip(theme),
+              ?_stockChip(p),
               _vitrineButton(p, theme),
             ],
           ),
@@ -325,8 +365,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       capture: widget.capture,
                       letterSize: 40,
                     ),
-                    if (p.isLow)
-                      Positioned(left: 6, top: 6, child: _lowChip(theme)),
+                    if (_stockChip(p) case final chip?)
+                      Positioned(left: 6, top: 6, child: chip),
                   ],
                 ),
               ),
@@ -357,6 +397,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                     ),
+                    if (p.quantity <= 0 && _canRestock)
+                      IconButton(
+                        key: ValueKey('product-restock-${p.id}'),
+                        tooltip: context.tr('Ajouter du stock'),
+                        onPressed: () => _restock(p),
+                        icon: const Icon(Icons.add_box_outlined),
+                      ),
                     _vitrineButton(p, theme),
                   ],
                 ),
@@ -427,6 +474,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Text(_error!,
                         style: TextStyle(color: theme.colorScheme.error)),
                   if (_products.isNotEmpty) ...[
+                    // Why « Articles » has a red number (122), on top.
+                    StockAttention(
+                      products: _products,
+                      place: context.tr('Articles'),
+                      onRestock: _canRestock ? _restock : null,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1004,7 +1057,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               label: Text(_expiresOn == null
                   ? context.tr('Date d\'expiration (facultatif)')
                   : 'Expire le '
-                      '${DateFormat('d MMMM y', 'fr_FR').format(_expiresOn!)}'),
+                      '${DateFormat('d MMMM y', intlLocale()).format(_expiresOn!)}'),
             ),
             const SizedBox(height: 4),
             // Production's own option: gone with production once Mara's

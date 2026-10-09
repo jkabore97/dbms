@@ -14,6 +14,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../common/step_flow.dart';
 import 'invoice_flow.dart';
+import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -56,7 +57,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   bool get _canWrite => !widget.org.isObserverOnly;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  final _date = DateFormat('d MMM y', 'fr_FR');
+  final _date = DateFormat('d MMM y', intlLocale());
 
   @override
   void initState() {
@@ -134,6 +135,47 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     if (changed == true && mounted) await _load();
   }
 
+  /// The invoices the bar counts (115's home_counts): not cancelled, still
+  /// owed, past their due date.
+  static bool isLate(InvoiceSummary i) =>
+      !i.cancelled && i.outstanding > 0 && i.isOverdue;
+
+  Widget _late(BuildContext context) {
+    final late = [
+      for (final i in _invoices)
+        if (isLate(i)) i,
+    ];
+    final n = late.length;
+    return AttentionBanner(
+      key: const Key('invoices-attention'),
+      icon: Icons.receipt_long_outlined,
+      margin: const EdgeInsets.only(bottom: 8),
+      title: n == 1
+          ? context.tr('1 facture en retard de paiement : {names}',
+              {'names': late.first.customerName})
+          : context.tr('{n} factures en retard de paiement : {names}', {
+              'n': n,
+              'names': attentionNames(context, [for (final i in late) i.customerName]),
+            }),
+      stays: context.tr('Le chiffre rouge reste tant que ces factures ne sont pas payées ou annulées : ouvrir cette page ne l\'efface pas.'),
+      items: [
+        for (final i in late)
+          AttentionItem(
+            id: i.id,
+            label: i.customerName,
+            chip: context.tr('En retard'),
+            detail: context.tr('{number} · reste {amount} · {days} j de retard', {
+              'number': i.number,
+              'amount': _money.format(i.outstanding),
+              'days': i.daysOverdue,
+            }),
+            actionLabel: context.tr('Voir'),
+            onAction: () => _openDocument(i.id),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -166,6 +208,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
                     children: [
+                      // Why « Factures » has a red number (122), on top:
+                      // the invoices past their date and not paid.
+                      _late(context),
                       // Said before the first invoice, not after it has been
                       // sent: a document with no address and no tax number is
                       // one the customer's accountant hands straight back.
@@ -287,12 +332,23 @@ class _InvoiceTile extends StatelessWidget {
           backgroundColor: colour.withValues(alpha: 0.15),
           child: Icon(Icons.receipt_long, color: colour, size: 20),
         ),
-        title: Text(
-          invoice.customerName,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            decoration: invoice.cancelled ? TextDecoration.lineThrough : null,
-          ),
+        title: Wrap(
+          spacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              invoice.customerName,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                decoration: invoice.cancelled ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            // Counted on the bar (122): marked here too.
+            if (_InvoicesScreenState.isLate(invoice))
+              AttentionChip(
+                  key: Key('invoice-late-${invoice.id}'),
+                  label: context.tr('En retard')),
+          ],
         ),
         subtitle: Text(
           '${invoice.number} · ${date.format(invoice.issuedOn)}\n$label',

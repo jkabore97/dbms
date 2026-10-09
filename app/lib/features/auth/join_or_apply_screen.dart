@@ -10,6 +10,8 @@ import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/nav/parent_route.dart';
+import '../../core/theme/scroll_hint.dart';
 
 /// What somebody sees when they have an account and belong to nothing.
 ///
@@ -134,8 +136,8 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
     final theme = Theme.of(context);
     final contact = widget.identity.phone ?? widget.identity.email;
 
-    return Scaffold(
-      appBar: AppBar(
+    return ScrollHint(child: Scaffold(
+      appBar: AppBar(leading: parentBack(context),
         title: Text(context.tr('Bienvenue sur Mara')),
         actions: [
           IconButton(
@@ -272,6 +274,6 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                 ],
               ),
             ),
-    );
+    ));
   }
 }

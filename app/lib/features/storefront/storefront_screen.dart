@@ -505,6 +505,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       context,
       booking: _booking,
       googleAvailable: widget.session.auth.googleAvailable,
+      accent: _shop?.accent,
     );
     if (choice == null || !mounted) return;
     try {
@@ -585,7 +586,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     final sent = await showShopSheet<bool>(
       context: context,
       builder: (sheet) => Theme(
-        data: ShopStyle.theme(sheet),
+        data: ShopStyle.theme(sheet, accent: _shop?.accent),
         child: OrderSheet(
           items: _items,
           basket: Map.of(_basket),
@@ -712,7 +713,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       },
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
-      accent: shop?.style.accent,
+      accent: shop?.accent,
       leading: IconButton(
         tooltip: context.tr('Toutes les vitrines'),
         icon: const Icon(Icons.arrow_back),
@@ -794,7 +795,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       context: context,
       showDragHandle: true,
       builder: (sheet) => Theme(
-        data: ShopStyle.theme(sheet, accent: shop.style.accent),
+        data: ShopStyle.theme(sheet, accent: shop.accent),
         child: StatefulBuilder(
           builder: (sheet, setSheet) => _OrdersClosed(
             closed: shop.style.ordersClosed,
@@ -1385,7 +1386,7 @@ class _OrderSheetState extends State<OrderSheet> {
         : ' (${_distanceKm!.toStringAsFixed(1)} km';
     final max = _maxKm == null
         ? (km.isEmpty ? '' : ')')
-        : '${km.isEmpty ? ' (' : ', '}livraison jusqu\'à ${_maxKm!.toStringAsFixed(0)} km)';
+        : '${km.isEmpty ? ' (' : ', '}${context.tr('livraison jusqu\'à {km} km', {'km': _maxKm!.toStringAsFixed(0)})})';
     return context.tr(
       'Cette boutique ne livre pas aussi loin{km}{max}. Choisissez le retrait en boutique.',
       {'km': km, 'max': max},
@@ -1925,14 +1926,16 @@ class _Window extends StatelessWidget {
     final noMatch = Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Text(
-        'Aucun article ne répond à « ${filter.text.trim()} » '
-        'dans cette boutique.',
+        context.tr('Aucun article ne répond à « {q} » dans cette boutique.',
+            {'q': filter.text.trim()}),
         style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
       ),
     );
 
-    return ListView(
-      padding: EdgeInsets.zero,
+    return ShopScroll(
+      // The way back to the street and the footer, on the page's bottom
+      // edge when the window is short (122).
+      footer: ShopWidth(child: ShopFooter(onDirectory: onDirectory)),
       children: [
         // A Pro shop's cover (068): one of its own photographs, wide and
         // quiet, over the band. The band itself does not change.
@@ -2011,7 +2014,7 @@ class _Window extends StatelessWidget {
                         fontSize: wide ? 20 : 17,
                         height: 1.3,
                         fontWeight: FontWeight.w600,
-                        color: style.accent ?? ShopStyle.ink,
+                        color: shop.accent ?? ShopStyle.ink,
                       ),
                     ),
                   ],
@@ -2231,11 +2234,13 @@ class _Window extends StatelessWidget {
               ...filterBox,
               if (showGoods) ...[
                 ShopSectionLabel(
-                  'Les articles',
+                  context.tr('Les articles'),
                   note: goodsTotal == 0
                       ? null
                       : goods.length == goodsTotal
-                      ? '$goodsTotal article${goodsTotal > 1 ? 's' : ''}'
+                      ? (goodsTotal > 1
+                          ? context.tr('{n} articles', {'n': goodsTotal})
+                          : context.tr('{n} article', {'n': goodsTotal}))
                       : context.tr('{length} sur {totalCount}', {
                           'length': goods.length,
                           'totalCount': goodsTotal,
@@ -2312,7 +2317,6 @@ class _Window extends StatelessWidget {
                 const SizedBox(height: 32),
                 basketCard!,
               ],
-              ShopFooter(onDirectory: onDirectory),
             ],
           ),
         ),
@@ -2346,7 +2350,7 @@ extension on _Window {
             money: money,
             capture: capture,
             quantity: basket[list[i].id] ?? 0,
-            accent: shop.style.accent,
+            accent: shop.accent,
             onAdd: () => onAdd(list[i]),
             onRemove: () => onRemove(list[i]),
             onOpen: () => onDetails(list[i]),
@@ -2403,7 +2407,7 @@ extension on _Window {
                 money: money,
                 capture: capture,
                 quantity: basket[list[i].id] ?? 0,
-                accent: shop.style.accent,
+                accent: shop.accent,
                 onAdd: () => onAdd(list[i]),
                 onRemove: () => onRemove(list[i]),
                 onOpen: () => onDetails(list[i]),
@@ -2498,10 +2502,10 @@ class _ItemRow extends StatelessWidget {
       label: [
         item.name,
         priceOf(money, item, context.trLanguage),
-        if (!item.inStock) 'épuisé',
-        if (count > 0) '$count dans le panier',
+        if (!item.inStock) context.tr('épuisé'),
+        if (count > 0) context.tr('{count} dans le panier', {'count': count}),
       ].join(', '),
-      hint: "Voir l'article",
+      hint: context.tr('Voir l\'article'),
       onTap: onOpen,
       child: InkWell(
         onTap: onOpen,
@@ -2641,8 +2645,8 @@ String priceOf(NumberFormat money, PublicItem item, [String lang = 'fr']) {
 
 /// « Disponible à partir du 15/11 » — a batch or a harvest still to come,
 /// orderable now (083).
-String preorderLine(PublicItem item) =>
-    'Disponible à partir du ${DateFormat('dd/MM').format(item.availableFrom!)}';
+String preorderLine(PublicItem item) => translate(trCurrent, 'Disponible à partir du {date}',
+    {'date': DateFormat.MMMd(intlLocale()).format(item.availableFrom!)});
 
 /// What kind of place this is, in the word a shopper uses.
 String _kindOf(String profile) => switch (profile) {
@@ -2702,8 +2706,8 @@ class _ItemTile extends StatelessWidget {
       priceOf(money, item, context.trLanguage),
       if (item.isPreorder) preorderLine(item),
       if (item.hasDescription) item.description!,
-      if (!item.inStock) 'épuisé',
-      if (count > 0) '$count dans le panier',
+      if (!item.inStock) context.tr('épuisé'),
+      if (count > 0) context.tr('{count} dans le panier', {'count': count}),
     ].join(', ');
     return _HoverScope(
       child: Semantics(
@@ -3143,8 +3147,8 @@ class ArticleSheet extends StatelessWidget {
     final count = quantity.round();
     final ask = whatsappUrl(
       phone,
-      text:
-          'Bonjour $shopName, une question sur « ${item.name} » vu sur votre vitrine Mara.',
+      text: context.tr('Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Mara.',
+          {'shop': shopName, 'item': item.name}),
     );
     final accent = Theme.of(context).colorScheme.primary;
     return SafeArea(

@@ -15,6 +15,8 @@ import '../capture/capture_action.dart';
 import '../retail/article_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
+import '../retail/stock_attention.dart';
+import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
@@ -102,6 +104,18 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     if (saved == true) await _load();
   }
 
+  /// « Ajouter du stock » on an article (122): the same flow, on it — its
+  /// name is enough for the flow to add what is ready.
+  Future<void> _restock(Product p) async {
+    final saved = await ArticleFlow.open(context,
+        org: widget.org,
+        retail: widget.retail,
+        capture: widget.capture,
+        forSale: true,
+        initialName: p.name);
+    if (saved == true) await _load();
+  }
+
   /// What is already for sale: its price, its count, its photo, its words.
   Future<void> _open(Product product) async {
     final saved = await showModalBottomSheet<bool>(
@@ -152,6 +166,13 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
           children: [
+            // Why « À vendre » has a red number (122), on top.
+            if (!_loading && _error == null)
+              StockAttention(
+                products: _items,
+                place: context.tr('À vendre'),
+                onRestock: _canWrite ? _restock : null,
+              ),
             if (_offVitrine)
               KajCard(
                 key: const Key('for-sale-off-vitrine'),
@@ -218,10 +239,36 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                     ),
                     title: Text(p.name,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(_line(p, money)),
-                    trailing: _offVitrine
-                        ? null
-                        : Icon(
+                    subtitle: p.quantity <= 0 && _canWrite
+                        // At zero, its own way back (122).
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_line(p, money)),
+                              TextButton.icon(
+                                key: ValueKey('product-restock-${p.id}'),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                onPressed: () => _restock(p),
+                                icon: const Icon(Icons.add_box_outlined, size: 18),
+                                label: Text(context.tr('Ajouter du stock')),
+                              ),
+                            ],
+                          )
+                        : Text(_line(p, money)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (stockChip(context, p) case final chip?)
+                          AttentionChip(
+                              key: ValueKey('product-chip-${p.id}'),
+                              label: chip,
+                              soft: p.quantity > 0),
+                        if (!_offVitrine) ...[
+                          const SizedBox(width: 6),
+                          Icon(
                       p.isPublished
                           ? Icons.storefront
                           : Icons.visibility_off_outlined,
@@ -230,6 +277,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                           : theme.colorScheme.onSurfaceVariant,
                       semanticLabel:
                           p.isPublished ? context.tr('Sur la vitrine') : context.tr('Pas sur la vitrine'),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),

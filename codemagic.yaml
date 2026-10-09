@@ -1,0 +1,79 @@
+# Codemagic: Mara for iPhone (batch 122). The Android app and the web are
+# built by GitHub Actions (.github/workflows/build.yml); the iPhone build
+# needs a Mac, which Codemagic lends. README.md, « Building for iPhone with
+# Codemagic », is the owner's step-by-step.
+#
+# No secret is written here. Codemagic holds them:
+#   * Team › Integrations › Developer Portal: an App Store Connect API key,
+#     saved under the name used in `integrations` below — it signs the app
+#     (automatic code signing) and sends it to TestFlight.
+#   * App › Environment variables, group `mara_app` (the same values as the
+#     GitHub repository secrets the Android build reads):
+#       SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, UPLOADS_URL,
+#       ACCOUNT_ADMIN_URL, SENTRY_DSN, PUSH_URL, PAY_URL
+#   * group `mara_firebase` (optional): GOOGLE_SERVICE_INFO_PLIST — the whole
+#     text of Firebase's GoogleService-Info.plist for the iOS app bf.kaj.app,
+#     written into the build here and never committed.
+workflows:
+  ios-release:
+    name: iPhone — TestFlight
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Mara App Store Connect
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - mara_app
+        - mara_firebase
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: bf.kaj.app
+    scripts:
+      - name: Firebase's config, when there is one
+        script: |
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > app/ios/Runner/GoogleService-Info.plist
+            echo "GoogleService-Info.plist written."
+          else
+            echo "No GOOGLE_SERVICE_INFO_PLIST: built without Firebase's config."
+          fi
+      - name: Packages
+        script: |
+          cd app
+          flutter pub get
+      - name: Pods
+        script: |
+          cd app/ios
+          pod install --repo-update
+      - name: Signing profiles
+        script: |
+          xcode-project use-profiles
+      # The same --dart-define list as the Android build (build.yml), plus
+      # STORE=appstore: the App Store updates its own copy, so this build
+      # never shows the « Télécharger » banner pointing at the Android APK
+      # (core/update/update_check.dart).
+      - name: Build the ipa
+        script: |
+          cd app
+          flutter build ipa --release \
+            --build-number="$BUILD_NUMBER" \
+            --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=STORE=appstore \
+            --dart-define=BUILD_SHA="$CM_COMMIT" \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=PUSH_URL="$PUSH_URL" \
+            --dart-define=PAY_URL="$PAY_URL"
+    artifacts:
+      - app/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

@@ -148,7 +148,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         _ => m,
       };
 
-  String _when(DateTime d) => DateFormat('d MMM y', 'fr_FR').format(d);
+  String _when(DateTime d) => DateFormat('d MMM y', intlLocale()).format(d);
 
   @override
   Widget build(BuildContext context) {

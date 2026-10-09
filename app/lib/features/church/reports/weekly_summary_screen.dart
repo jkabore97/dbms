@@ -265,7 +265,7 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(currency);
-    final dates = DateFormat('d MMM', 'fr_FR');
+    final dates = DateFormat('d MMM', intlLocale());
 
     return Container(
       width: 360,
@@ -368,7 +368,7 @@ class SummaryCard extends StatelessWidget {
 
           const SizedBox(height: 20),
           Text(
-            'Mara · ${DateFormat('d MMMM yyyy', 'fr_FR').format(DateTime.now())}',
+            'Mara · ${DateFormat('d MMMM yyyy', intlLocale()).format(DateTime.now())}',
             style: const TextStyle(fontSize: 11, color: _muted),
           ),
         ],
@@ -487,7 +487,7 @@ class _WeekPicker extends StatelessWidget {
         Text(
           isThisWeek
               ? context.tr('Cette semaine')
-              : 'Semaine au ${DateFormat('d MMMM', 'fr_FR').format(weekEnding)}',
+              : 'Semaine au ${DateFormat('d MMMM', intlLocale()).format(weekEnding)}',
           style: theme.textTheme.titleSmall,
         ),
         IconButton(

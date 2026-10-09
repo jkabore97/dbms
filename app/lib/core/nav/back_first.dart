@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
+import '../l10n/tr.dart';
+import 'parent_route.dart';
 
 /// Back closes what is open first (114): a dialog, a sheet, a menu, a date
 /// picker, the Plus sheet, a snackbar with an action — and only then leaves
@@ -27,6 +32,13 @@ import 'package:go_router/go_router.dart';
 ///  * **A snackbar** is not a route: back went past it. One with an action
 ///    (« Annuler », « Réessayer ») is closed by back when nothing covers the
 ///    page.
+///  * **A page with nothing under it** (122) — opened with `go`, by the
+///    bar, a link or a ring: Android's back left the app from it. Now it
+///    goes to the page's logical parent ([parentRoute]: a tool → its
+///    business's home, the home → the picker for someone with several
+///    businesses, a vitrine → the street); from a root (the street, the
+///    only business's home) it asks « Quitter Mara ? » once instead of
+///    closing without a word.
 ///
 /// What is open is read off every navigator of the router ([watch] on the
 /// router's observers: go_router 18 tells them of the frame's and the
@@ -53,6 +65,14 @@ class BackFirst with WidgetsBindingObserver {
   GoRouter? _router;
   bool _listening = false;
 
+  /// How many businesses the person can open: the home's parent is the
+  /// picker for more than one.
+  int Function() _businesses = () => 0;
+
+  /// « Quitter Mara ? » is on screen: a second back answers it (closes it),
+  /// it is never asked twice over itself.
+  bool _asking = false;
+
   /// An observer for one router's root navigator (a fresh one per router:
   /// an observer serves one navigator at a time).
   NavigatorObserver watch() => _Watch(this);
@@ -66,8 +86,9 @@ class BackFirst with WidgetsBindingObserver {
 
   /// Takes the back and the browser's history for [router]. Called before
   /// the router is first drawn, so the app hears them before the router does.
-  void attach(GoRouter router) {
+  void attach(GoRouter router, {int Function()? businesses}) {
     _router = router;
+    _businesses = businesses ?? () => 0;
     if (!_listening) {
       WidgetsBinding.instance.addObserver(this);
       _listening = true;
@@ -82,6 +103,7 @@ class BackFirst with WidgetsBindingObserver {
     _listening = false;
     _router = null;
     _open.clear();
+    _asking = false;
   }
 
   /// MaterialApp.onNavigationNotification: whatever a navigator says, the
@@ -102,11 +124,59 @@ class BackFirst with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) => _takeBack();
 
   /// Android's back: something open is the router's to close; a snackbar
-  /// with an action is closed here.
+  /// with an action is closed here; then the page — popped by the router
+  /// when there is one under it (a PopScope still heard), else its parent,
+  /// else the question.
   @override
   Future<bool> didPopRoute() async {
     if (popupOpen) return false;
-    return _closeSnackBar();
+    if (_closeSnackBar()) return true;
+    final router = _router;
+    // No router drawn (a router left behind by a newer one): not ours.
+    if (router == null || router.routerDelegate.navigatorKey.currentState == null) return false;
+    if (await router.routerDelegate.popRoute()) return true;
+    final here = router.routerDelegate.currentConfiguration.uri.path;
+    final parent = parentIn(router, here, businesses: _businesses());
+    if (parent != null) {
+      router.go(parent);
+      return true;
+    }
+    final context = router.routerDelegate.navigatorKey.currentContext;
+    if (context == null || !context.mounted) return false;
+    if (!_asking) unawaited(_askToLeave(context));
+    return true;
+  }
+
+  /// « Quitter Mara ? » — « Rester » keeps the page, « Quitter » hands the
+  /// back to the phone, which closes the app as before. Not awaited by the
+  /// back that asked it: the next back closes the question like any dialog.
+  Future<void> _askToLeave(BuildContext context) async {
+    _asking = true;
+    final bool? leave;
+    try {
+      leave = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          key: const Key('leave-mara'),
+          title: Text(dialog.tr('Quitter Mara ?')),
+          actions: [
+            TextButton(
+              key: const Key('leave-stay'),
+              onPressed: () => Navigator.of(dialog).pop(false),
+              child: Text(dialog.tr('Rester')),
+            ),
+            FilledButton(
+              key: const Key('leave-quit'),
+              onPressed: () => Navigator.of(dialog).pop(true),
+              child: Text(dialog.tr('Quitter')),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      _asking = false;
+    }
+    if (leave == true) await SystemNavigator.pop();
   }
 
   /// The browser's back (or forward) while something is open: closed, and

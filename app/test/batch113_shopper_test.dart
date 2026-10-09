@@ -497,10 +497,12 @@ void main() {
       await profilePage(tester, await shopper(tester), me);
       await tester.tap(find.byKey(const Key('shopper-city')));
       await settle(tester);
-      await tester.tap(find.text('Bobo-Dioulasso'));
+      // The chips follow the person's country (122); Abidjan is offered
+      // to every country but Côte d'Ivoire (where it is the first own town).
+      await tester.tap(find.text('Abidjan'));
       await settle(tester);
-      expect(me.settings.last['city'], 'Bobo-Dioulasso');
-      expect(find.text('Bobo-Dioulasso'), findsOneWidget);
+      expect(me.settings.last['city'], 'Abidjan');
+      expect(find.text('Abidjan'), findsOneWidget);
     });
 
     testWidgets('« Signaler un problème »: too short is said; sent with its topic', (tester) async {

@@ -6,6 +6,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/business_cover.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/kaj_theme.dart';
+import '../../core/theme/scroll_hint.dart';
 import 'home_nav.dart';
 
 /// The business's frame (108): its bar at the foot — or its rail down the
@@ -317,7 +318,9 @@ class BusinessPage extends StatelessWidget {
                       .toDouble(),
                 ),
               ),
-        child: child,
+        // « The list continues » (122) on every page of a business — its
+        // lists, its forms, the settings, Compte — above the bar.
+        child: ScrollHint(child: child),
       ),
     );
   }

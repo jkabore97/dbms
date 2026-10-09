@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/scroll_hint.dart';
+
 /// A bottom sheet that holds text (batch 115): what is typed is never under
 /// the keyboard, and neither is the button that saves it.
 ///
@@ -40,7 +42,8 @@ class KeyboardSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Flexible(
-              child: FocusedFieldInView(
+              // More fields under the edge: the arrow says so (122).
+              child: ScrollHint(child: FocusedFieldInView(
                 child: SingleChildScrollView(
                   key: const Key('keyboard-sheet-scroll'),
                   padding: padding,
@@ -49,7 +52,7 @@ class KeyboardSheet extends StatelessWidget {
                     children: children,
                   ),
                 ),
-              ),
+              )),
             ),
             if (footer != null)
               Padding(

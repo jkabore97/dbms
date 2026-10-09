@@ -1,13 +1,21 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/notifications_repository.dart';
+import '../../core/notify/push_client.dart';
 import '../../core/notify/push_setup.dart';
 import 'push_diagnostics.dart';
 
 /// « Notifications » (115): this device's ring with the app closed, the
 /// person's switches per type, and « M'envoyer une notification test ».
+///
+/// The ring itself is one switch, « Notifications sur ce téléphone » (122):
+/// on asks the phone and registers it, off withdraws it. It says what the
+/// phone's own permission says, and points to the phone's settings when
+/// they block it. No tone or vibration choice of the app's own: a
+/// notification rings with the phone's sound, set in the phone.
 /// Opened from the bell's list, the shopper's profile, the courier's space
 /// and Compte; the platform's « Tester la notification » is in the command
 /// center's Réglages.
@@ -20,9 +28,13 @@ class NotificationSettingsSheet extends StatefulWidget {
     super.key,
     required this.notify,
     required this.audiences,
+    this.device = const PushDevice(),
   });
 
   final NotificationsRepository notify;
+
+  /// This phone's ring; a test gives its own.
+  final PushDevice device;
 
   /// Whose switches are shown: 'customer', 'courier', 'shop'.
   final Set<String> audiences;
@@ -44,10 +56,12 @@ class NotificationSettingsSheet extends StatefulWidget {
   State<NotificationSettingsSheet> createState() => _NotificationSettingsSheetState();
 }
 
-class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
+class _NotificationSettingsSheetState extends State<NotificationSettingsSheet>
+    with WidgetsBindingObserver {
   List<NotificationPref>? _prefs;
   bool? _pushable;
   bool? _pushOn;
+  PushPermission _permission = PushPermission.prompt;
   String? _busy;
   String? _said;
   String? _error;
@@ -55,22 +69,49 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Back from the phone's settings: the switch says what they now say.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _lookAtDevice();
   }
 
   Future<void> _load() async {
     try {
       final prefs = await widget.notify.prefs();
-      final pushable = await PushSetup.available();
-      final on = pushable && await PushSetup.ensure(widget.notify);
       if (!mounted) return;
-      setState(() {
-        _prefs = [for (final p in prefs) if (widget.audiences.contains(p.audience)) p];
-        _pushable = pushable;
-        _pushOn = on;
-      });
+      setState(() =>
+          _prefs = [for (final p in prefs) if (widget.audiences.contains(p.audience)) p]);
     } catch (e) {
       if (mounted) setState(() => _error = describeError(e));
+    }
+    await _lookAtDevice();
+  }
+
+  Future<void> _lookAtDevice() async {
+    try {
+      final device = widget.device;
+      final pushable = await device.available();
+      final on = pushable && await device.ensure(widget.notify);
+      final permission =
+          pushable ? await device.permission() : PushPermission.unsupported;
+      if (!mounted) return;
+      setState(() {
+        _pushable = pushable;
+        _pushOn = on;
+        _permission = permission;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _pushable = false);
     }
   }
 
@@ -94,18 +135,37 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     }
   }
 
-  Future<void> _enablePush() async {
-    setState(() => _busy = 'push');
-    final on = await PushSetup.enable(widget.notify);
-    if (!mounted) return;
+  /// « Notifications sur ce téléphone »: on asks the phone (from this very
+  /// tap — a browser asks only from a gesture) and registers it; off takes
+  /// this phone out of the person's book.
+  Future<void> _setPush(bool on) async {
     setState(() {
-      _busy = null;
-      _pushOn = on;
-      if (!on) {
-        _said = context.tr('Les notifications sont refusées sur cet appareil. Elles s\'activent dans ses paramètres.');
-      }
+      _busy = 'push';
+      _said = null;
     });
+    if (on) {
+      final now = await widget.device.enable(widget.notify);
+      final permission = await widget.device.permission();
+      if (!mounted) return;
+      setState(() {
+        _busy = null;
+        _pushOn = now;
+        _permission = permission;
+        if (!now) {
+          _said = context.tr('Les notifications sont refusées sur cet appareil. Elles s\'activent dans ses paramètres.');
+        }
+      });
+    } else {
+      await widget.device.disable(widget.notify);
+      if (!mounted) return;
+      setState(() {
+        _busy = null;
+        _pushOn = false;
+      });
+    }
   }
+
+  bool get _blocked => _permission == PushPermission.blocked;
 
   Future<void> _test() async {
     setState(() {
@@ -140,24 +200,40 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
           children: [
             Text(context.tr('Notifications'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 12),
-            if (_pushable == true)
-              ListTile(
+            if (_pushable == true) ...[
+              SwitchListTile(
+                key: const Key('settings-push-switch'),
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(_pushOn == true
+                secondary: Icon(_pushOn == true
                     ? Icons.notifications_active_outlined
                     : Icons.notifications_off_outlined),
-                title: Text(_pushOn == true
-                    ? context.tr('Cet appareil sonne même l\'application fermée')
-                    : context.tr('Cet appareil ne sonne que l\'application ouverte')),
-                trailing: _pushOn == true
-                    ? null
-                    : FilledButton.tonal(
-                        key: const Key('settings-push-enable'),
-                        onPressed: _busy == null ? _enablePush : null,
-                        child: Text(context.tr('Activer')),
-                      ),
-              )
-            else if (_pushable == false)
+                title: Text(context.tr('Notifications sur ce téléphone')),
+                subtitle: Text(_pushOn == true
+                    ? context.tr('Elles sonnent avec le son et la vibration du téléphone, même l\'application fermée.')
+                    : _blocked
+                        ? context.tr('Bloquées dans les réglages du téléphone : c\'est là qu\'elles se rallument.')
+                        : context.tr('Éteint : ce téléphone ne sonne pas. La cloche de l\'application garde tout.')),
+                value: _pushOn == true,
+                onChanged: _busy == null && (_pushOn == true || !_blocked)
+                    ? _setPush
+                    : null,
+              ),
+              if (_blocked && _pushOn != true)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: kIsWeb
+                      ? Text(
+                          context.tr('Dans le navigateur : le cadenas à côté de l\'adresse, puis Notifications.'),
+                          style: theme.textTheme.bodySmall,
+                        )
+                      : OutlinedButton.icon(
+                          key: const Key('settings-push-open-settings'),
+                          onPressed: widget.device.openSettings,
+                          icon: const Icon(Icons.settings_outlined),
+                          label: Text(context.tr('Ouvrir les réglages du téléphone')),
+                        ),
+                ),
+            ] else if (_pushable == false)
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.notifications_none),
@@ -207,6 +283,19 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
       ),
     );
   }
+}
+
+/// What the switch needs of this phone: [PushSetup] and [PushClient]; a
+/// test gives its own.
+class PushDevice {
+  const PushDevice();
+
+  Future<bool> available() => PushSetup.available();
+  Future<bool> ensure(NotificationsRepository notify) => PushSetup.ensure(notify);
+  Future<PushPermission> permission() => PushClient.permission();
+  Future<bool> enable(NotificationsRepository notify) => PushSetup.enable(notify);
+  Future<void> disable(NotificationsRepository notify) => PushSetup.disable(notify);
+  Future<bool> openSettings() => PushClient.openSettings();
 }
 
 /// What a test answered, in words: where it went, and — to the platform —
