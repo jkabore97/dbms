@@ -2,9 +2,13 @@
 //
 // Stripe is for the subscription only — an order is paid by Wave. The
 // price is the platform's (pro_price_month / pro_price_year, set from the
-// console), sent to Stripe as the line's own price on each new checkout, so
-// there is no product to keep in step on Stripe's dashboard. XOF is one of
-// Stripe's zero-decimal currencies: 3000 F is unit_amount 3000.
+// console, in FCFA), sent to Stripe as the line's own price on each new
+// checkout, so there is no product to keep in step on Stripe's dashboard.
+// Since 121 Mara's Stripe account charges dollars: stripe_begin() converts
+// the FCFA price at the platform's rate (stripe_xof_per_usd) and answers
+// the cents and 'usd' — the Worker sends them as they are and never
+// converts — and the FCFA price, which the line's name says
+// (« Mara Pro · Mensuel · 15 000 FCFA · <business> »).
 
 import { constantTimeEqual, hmacHex } from "./wave.js";
 
@@ -12,7 +16,8 @@ const STRIPE = "https://api.stripe.com";
 
 /// A Checkout Session in subscription mode. Returns { id, url, ... }.
 export async function createCheckout(env, args, fetchImpl = fetch) {
-  const label = args.period === "year" ? "annuel" : "mensuel";
+  const label = args.period === "year" ? "Annuel" : "Mensuel";
+  const price = priceLabel(args.price, args.priceCurrency);
   const params = {
     mode: "subscription",
     locale: "fr",
@@ -23,7 +28,8 @@ export async function createCheckout(env, args, fetchImpl = fetch) {
     "line_items[0][price_data][currency]": String(args.currency || "xof").toLowerCase(),
     "line_items[0][price_data][unit_amount]": String(Math.round(Number(args.amount))),
     "line_items[0][price_data][recurring][interval]": args.period === "year" ? "year" : "month",
-    "line_items[0][price_data][product_data][name]": `Mara Pro · ${label} · ${args.orgName || ""}`.trim(),
+    "line_items[0][price_data][product_data][name]":
+      ["Mara Pro", label, price, args.orgName].filter(Boolean).join(" · "),
     "metadata[org_id]": args.orgId,
     "metadata[period]": args.period,
     "subscription_data[metadata][org_id]": args.orgId,
@@ -32,6 +38,17 @@ export async function createCheckout(env, args, fetchImpl = fetch) {
   if (args.customerId) params.customer = args.customerId;
   else if (args.email) params.customer_email = args.email;
   return stripeCall(env, "POST", "/v1/checkout/sessions", params, fetchImpl);
+}
+
+/// The price as the app shows it: « 15 000 FCFA ». Nothing without one
+/// (a database before 121 sends none).
+export function priceLabel(amount, currency) {
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  const code = String(currency || "").toUpperCase();
+  const unit = code === "XOF" || code === "XAF" ? "FCFA" : code;
+  const digits = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${digits} ${unit}`.trim();
 }
 
 /// Stripe's own page where the owner changes the card or cancels.

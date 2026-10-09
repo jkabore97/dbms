@@ -66,6 +66,8 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('platform_wave', 'pro', SettingType.text),
   SettingDef('platform_wave_name', 'pro', SettingType.text),
   SettingDef('stripe_on', 'pro', SettingType.flag),
+  // 121: the card is charged in dollars — the FCFA price at this rate.
+  SettingDef('stripe_xof_per_usd', 'pro', SettingType.count),
   SettingDef('pro_features', 'pro', SettingType.list, options: [
     'payroll', 'team_access', 'analytics', 'accounting', 'currencies', 'tontines',
     'vitrine_plus', 'delivery', 'online_payment',
@@ -147,6 +149,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'platform_wave' => context.tr('Numéro Wave qui reçoit les paiements Pro'),
       'platform_wave_name' => context.tr('Nom du compte Wave de Mara'),
       'stripe_on' => context.tr('Abonnement par carte (Stripe)'),
+      'stripe_xof_per_usd' => context.tr('Taux pour la carte : FCFA pour 1 \$'),
       'pro_features' => context.tr('Outils réservés à Mara Pro'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),
@@ -211,6 +214,10 @@ const decimalSettings = {
 
 /// The largest number any setting takes (105's platform_set_setting).
 const settingMax = 1000000000;
+
+/// The numbers that are never zero: the card's rate divides every Pro
+/// price (121's platform_set_setting refuses 0) — said here first.
+const positiveSettings = {'stripe_xof_per_usd'};
 
 /// The value as a person reads it.
 String settingValueText(BuildContext context, SettingDef def, Object? v) {
@@ -493,7 +500,10 @@ class _EditDialogState extends State<_EditDialog> {
       case SettingType.count:
       case SettingType.km:
         final n = parseAmount(raw);
-        if (n == null || n < 0 || (!decimals && n != n.roundToDouble())) {
+        if (positiveSettings.contains(def.key) &&
+            (n == null || n <= 0 || n != n.roundToDouble())) {
+          problem = context.tr('Un nombre entier plus grand que zéro.');
+        } else if (n == null || n < 0 || (!decimals && n != n.roundToDouble())) {
           problem = decimals
               ? context.tr('Un nombre, zéro ou plus.')
               : context.tr('Un nombre entier, zéro ou plus.');

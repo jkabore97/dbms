@@ -558,9 +558,15 @@ shortened. « Gérer la carte ou annuler » opens Stripe's own customer page.
 
 One-time setup (keys go only in GitHub's secrets page, never in chat):
 
-1. **Stripe account** for Kaj, activated for live payments. XOF is
-   supported as a zero-decimal currency; check that your account's country
-   can charge in it, and if not, set `pro_currency` to a currency it can.
+1. **Stripe account** for Kaj, activated for live payments. Since 121 the
+   card is **charged in US dollars** (Mara's account is in the US) while
+   every price the app shows stays in FCFA: the database converts the
+   FCFA price at Command center › Réglages › Mara Pro « Taux pour la
+   carte : FCFA pour 1 $ » (`stripe_xof_per_usd`, seeded 600; a whole
+   number above zero), rounded up to the cent. Stripe's page names the
+   FCFA price (« Mara Pro · Mensuel · 15 000 FCFA · <business> ») and the
+   app shows « ≈ $25.00 par mois, payé en dollars » under the button. A
+   new rate applies to new subscriptions, as a new price does.
 2. **Settings › Billing › Customer portal**: switch on cancelling and
    updating the payment method, then save. The « Gérer » button opens this
    page.

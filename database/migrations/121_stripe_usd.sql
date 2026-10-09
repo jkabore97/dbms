@@ -249,17 +249,26 @@ end;
 $$;
 
 
--- Grants: create or replace kept stripe_begin's, plan_terms' and
--- platform_set_setting's. The new helper is only ever called inside them
--- (security definer, as their owner): closed to everyone else.
-revoke execute on function stripe_usd_cents(numeric) from public;
+-- The doors, said again as 082 and 105 left them: stripe_begin a signed-in
+-- owner's, never the street's; plan_terms and platform_set_setting a
+-- signed-in caller's (each checks who). The new helper is only ever
+-- called inside them (security definer, as their owner): no one's else.
+revoke execute on function stripe_usd_cents(numeric)        from public;
+revoke execute on function stripe_begin(uuid, text)         from public;
+revoke execute on function plan_terms()                     from public;
+revoke execute on function platform_set_setting(text, jsonb) from public;
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
-        revoke execute on function stripe_usd_cents(numeric) from anon;
+        revoke execute on function stripe_usd_cents(numeric)         from anon;
+        revoke execute on function stripe_begin(uuid, text)          from anon;
+        revoke execute on function platform_set_setting(text, jsonb) from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
-        revoke execute on function stripe_usd_cents(numeric) from authenticated;
+        revoke execute on function stripe_usd_cents(numeric)         from authenticated;
+        grant execute on function stripe_begin(uuid, text)           to authenticated;
+        grant execute on function plan_terms()                       to authenticated;
+        grant execute on function platform_set_setting(text, jsonb)  to authenticated;
     end if;
 end $$;
 

@@ -4753,4 +4753,14 @@ const enStrings = <String, String>{
       'to be agreed with the farm',
   'Ce son retentit quand l\'application est ouverte. Application fermée, la notification sonne avec le son du téléphone.':
       'This sound plays while the app is open. With the app closed, the notification rings with the phone\'s sound.',
+  'Mes activités':
+      'My businesses',
+  '≈ {usd} par mois, payé en dollars':
+      '≈ {usd} a month, paid in dollars',
+  '≈ {usd} par an, payé en dollars':
+      '≈ {usd} a year, paid in dollars',
+  'Taux pour la carte : FCFA pour 1 \$':
+      'Card rate: FCFA for \$1',
+  'Un nombre entier plus grand que zéro.':
+      'A whole number above zero.',
 };

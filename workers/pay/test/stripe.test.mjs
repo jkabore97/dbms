@@ -11,7 +11,7 @@ import { test } from "node:test";
 
 import worker, { onStripeEvent, stripeCheckout, stripePortal } from "../src/index.js";
 import { hmacHex } from "../src/wave.js";
-import { readSubscription, subscriptionOf, verifyStripeSignature } from "../src/stripe.js";
+import { priceLabel, readSubscription, subscriptionOf, verifyStripeSignature } from "../src/stripe.js";
 
 const env = {
   SUPABASE_URL: "https://db.example",
@@ -71,10 +71,13 @@ test("Stripe's signature is over '<t>.<body>', and goes stale", async () => {
   assert.equal(await verifyStripeSignature(null, body, "whsec_kaj", t), false);
 });
 
-test("the checkout is the database's price, as a monthly or yearly subscription", async () => {
+test("the checkout is the database's price, in dollars, as a monthly or yearly subscription", async () => {
+  // 121: stripe_begin converts 30 000 FCFA at the platform's rate (600)
+  // and answers the cents; the Worker sends them as they are.
   const { fetchImpl, calls } = fakeFetch([
     ["/rpc/stripe_begin", { org_id: ORG, org_name: "Boutique Carte", period: "year",
-      amount: 30000, currency: "xof", customer_id: null, email: "awa@example.com" }],
+      amount: 5000, currency: "usd", price: 30000, price_currency: "XOF",
+      customer_id: null, email: "awa@example.com" }],
     ["/v1/checkout/sessions", { id: "cs_1", url: "https://checkout.stripe.com/c/cs_1" }],
   ]);
   const out = await stripeCheckout({ org_id: ORG, period: "year", amount: 1 }, "user.jwt", env,
@@ -89,8 +92,10 @@ test("the checkout is the database's price, as a monthly or yearly subscription"
   assert.equal(session.headers.Authorization, "Bearer sk_test_kaj");
   const p = session.body;
   assert.equal(p.mode, "subscription");
-  assert.equal(p["line_items[0][price_data][unit_amount]"], "30000", "XOF is zero-decimal");
-  assert.equal(p["line_items[0][price_data][currency]"], "xof");
+  assert.equal(p["line_items[0][price_data][unit_amount]"], "5000", "the database's cents, never converted here");
+  assert.equal(p["line_items[0][price_data][currency]"], "usd");
+  assert.equal(p["line_items[0][price_data][product_data][name]"],
+    "Mara Pro · Annuel · 30 000 FCFA · Boutique Carte", "the customer sees the FCFA price too");
   assert.equal(p["line_items[0][price_data][recurring][interval]"], "year");
   assert.equal(p["subscription_data[metadata][org_id]"], ORG);
   assert.equal(p.client_reference_id, ORG);
@@ -102,14 +107,41 @@ test("the checkout is the database's price, as a monthly or yearly subscription"
 
 test("a returning business keeps its Stripe customer", async () => {
   const { fetchImpl, calls } = fakeFetch([
-    ["/rpc/stripe_begin", { org_id: ORG, org_name: "B", period: "month", amount: 3000,
-      currency: "xof", customer_id: "cus_1", email: "awa@example.com" }],
+    ["/rpc/stripe_begin", { org_id: ORG, org_name: "B", period: "month", amount: 2500,
+      currency: "usd", price: 15000, price_currency: "XOF", customer_id: "cus_1",
+      email: "awa@example.com" }],
     ["/v1/checkout/sessions", { id: "cs_2", url: "https://checkout.stripe.com/c/cs_2" }],
   ]);
   await stripeCheckout({ org_id: ORG, period: "month" }, "t", env, { fetch: fetchImpl });
   assert.equal(calls[1].body.customer, "cus_1");
   assert.equal(calls[1].body.customer_email, undefined);
   assert.equal(calls[1].body["line_items[0][price_data][recurring][interval]"], "month");
+  assert.equal(calls[1].body["line_items[0][price_data][unit_amount]"], "2500");
+  assert.equal(calls[1].body["line_items[0][price_data][product_data][name]"],
+    "Mara Pro · Mensuel · 15 000 FCFA · B");
+});
+
+test("a database before 121 (no FCFA price beside the amount) still checks out as it answers", async () => {
+  const { fetchImpl, calls } = fakeFetch([
+    ["/rpc/stripe_begin", { org_id: ORG, org_name: "B", period: "month", amount: 3000,
+      currency: "xof", customer_id: null, email: null }],
+    ["/v1/checkout/sessions", { id: "cs_3", url: "https://checkout.stripe.com/c/cs_3" }],
+  ]);
+  await stripeCheckout({ org_id: ORG, period: "month" }, "t", env, { fetch: fetchImpl });
+  const p = calls[1].body;
+  assert.equal(p["line_items[0][price_data][currency]"], "xof");
+  assert.equal(p["line_items[0][price_data][unit_amount]"], "3000");
+  assert.equal(p["line_items[0][price_data][product_data][name]"], "Mara Pro · Mensuel · B");
+});
+
+test("the FCFA price reads as the app shows it", () => {
+  assert.equal(priceLabel(15000, "XOF"), "15 000 FCFA");
+  assert.equal(priceLabel(150000, "xaf"), "150 000 FCFA");
+  assert.equal(priceLabel(2900, "XOF"), "2 900 FCFA");
+  assert.equal(priceLabel(1234567, "XOF"), "1 234 567 FCFA");
+  assert.equal(priceLabel(25, "USD"), "25 USD");
+  assert.equal(priceLabel(null, "XOF"), "");
+  assert.equal(priceLabel(0, "XOF"), "");
 });
 
 test("the database's refusal reaches the owner, and nothing is created at Stripe", async () => {

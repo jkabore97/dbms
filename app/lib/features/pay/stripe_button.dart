@@ -14,8 +14,10 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// Drawn only when the app was built with the Worker (PAY_URL) and the
 /// platform has switched the card on (plan_terms().stripe_on). The price on
-/// the button is the platform's; the Worker charges the same, read from the
-/// database. Stripe's page opens in this tab on the web and comes back to
+/// the button is the platform's, in FCFA; Stripe charges it in dollars
+/// (121), converted by the database at the platform's rate — the line under
+/// the button says the same cents, read from plan_terms(), never computed
+/// here. Stripe's page opens in this tab on the web and comes back to
 /// `/o/<id>/kaj-pro?stripe=ok`.
 class StripeCardButton extends StatefulWidget {
   const StripeCardButton({
@@ -79,6 +81,11 @@ class _StripeCardButtonState extends State<StripeCardButton> {
     final year = widget.period == 'year';
     final price = NumberFormat.decimalPattern('fr_FR')
         .format(year ? widget.terms.priceYear : widget.terms.priceMonth);
+    final cents = year ? widget.terms.stripeUsdYearCents : widget.terms.stripeUsdMonthCents;
+    final usd = cents == null
+        ? null
+        : NumberFormat.currency(locale: 'en_US', symbol: r'$', decimalDigits: 2)
+            .format(cents / 100);
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -106,6 +113,17 @@ class _StripeCardButtonState extends State<StripeCardButton> {
             ),
           ),
         ),
+        if (usd != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            year
+                ? context.tr('≈ {usd} par an, payé en dollars', {'usd': usd})
+                : context.tr('≈ {usd} par mois, payé en dollars', {'usd': usd}),
+            key: const Key('stripe-usd'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
         const SizedBox(height: 6),
         Text(
           'Visa, Mastercard. Renouvelé chaque ${year ? context.tr('année') : 'mois'}, '

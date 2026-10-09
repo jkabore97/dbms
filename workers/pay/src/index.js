@@ -190,6 +190,8 @@ export async function stripeCheckout(body, userToken, env, io = { fetch }) {
     period: begun.period,
     amount: begun.amount,
     currency: begun.currency,
+    price: begun.price,
+    priceCurrency: begun.price_currency,
     customerId: begun.customer_id || null,
     email: begun.email || null,
     successUrl: `${back}?stripe=ok`,
