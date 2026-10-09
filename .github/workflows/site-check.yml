@@ -1,0 +1,59 @@
+name: Site check (temporary)
+
+# A one-off look at marakaj.com from outside: what each file answers, and
+# what a real browser logs while the app starts. Removed once read.
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: ['.github/workflows/site-check.yml']
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Files
+        run: |
+          for u in / /version.json /mara_sw.js /manifest.json; do
+            echo "$u $(curl -s -o /dev/null -w '%{http_code} %{size_download}B %{time_total}s' --max-time 30 https://marakaj.com$u)"
+          done
+          curl -s --max-time 30 https://marakaj.com/version.json; echo
+          curl -s --max-time 30 https://marakaj.com/ > index.html
+          grep -o 'PATHS = [^;]*' index.html | head -1
+          grep -o 'VERSION = [^;]*' index.html | head -1
+          for p in $(grep -oE '/(app|ck|a)/[A-Za-z0-9._-]+/' index.html | sort -u); do
+            echo "folder $p"
+          done
+          app=$(grep -oE '/app/[A-Za-z0-9._-]+/' index.html | head -1)
+          ck=$(grep -oE '/ck/[A-Za-z0-9._-]+/' index.html | head -1)
+          for f in ${app}main.dart.js ${ck}canvaskit.js ${ck}canvaskit.wasm ${ck}chromium/canvaskit.js ${ck}chromium/canvaskit.wasm; do
+            echo "$f $(curl -s -o /dev/null -w '%{http_code} %{size_download}B %{time_total}s' --max-time 60 https://marakaj.com$f)"
+          done
+      - name: Browser
+        run: |
+          npx -y playwright@1.47.2 install chromium >/dev/null 2>&1
+          cat > look.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          const b = await chromium.launch();
+          for (const vp of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+            const p = await b.newPage({ viewport: vp });
+            p.on('console', m => console.log(`[${vp.width}] console.${m.type()}: ${m.text()}`));
+            p.on('pageerror', e => console.log(`[${vp.width}] pageerror: ${e.message}`));
+            p.on('requestfailed', r => console.log(`[${vp.width}] failed: ${r.url()} ${r.failure()?.errorText}`));
+            p.on('response', r => { if (r.status() >= 400) console.log(`[${vp.width}] ${r.status()} ${r.url()}`); });
+            await p.goto('https://marakaj.com/', { waitUntil: 'load', timeout: 60000 });
+            await p.waitForTimeout(25000);
+            const fail = await p.evaluate(() => { const f = document.getElementById('mara-fail'); return f && !f.hidden ? document.getElementById('mara-fail-text').textContent : 'no failure box'; });
+            const splash = await p.evaluate(() => { const s = document.getElementById('mara-splash'); return s ? (s.hidden ? 'splash gone (app painted)' : 'splash still up') : 'no splash'; });
+            console.log(`[${vp.width}] result: ${fail} / ${splash}`);
+            await p.screenshot({ path: `shot-${vp.width}.png` });
+          }
+          await b.close();
+          EOF
+          npm init -y >/dev/null && npm i playwright@1.47.2 >/dev/null 2>&1
+          node look.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-check
+          path: shot-*.png
