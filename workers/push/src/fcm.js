@@ -65,6 +65,11 @@ export async function signedAssertion(sa, now = Math.floor(Date.now() / 1000)) {
 
 let cached = null; // { token, until, email }
 
+/// The token endpoint refused or failed: every other phone of the same
+/// deliver() would ask it again for the same answer, so deliver() stops
+/// asking for the rest of that call (index.js).
+export class FcmTokenError extends Error {}
+
 /// Forgets the access token (tests; a 401 from FCM).
 export function forgetAccessToken() {
   cached = null;
@@ -73,17 +78,22 @@ export function forgetAccessToken() {
 async function accessToken(sa, fetchImpl) {
   const now = Math.floor(Date.now() / 1000);
   if (cached && cached.email === sa.clientEmail && cached.until > now + 60) return cached.token;
-  const response = await fetchImpl(sa.tokenUri, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: await signedAssertion(sa, now),
-    }).toString(),
-  });
-  if (!response.ok) throw new Error(`token endpoint answered ${response.status}`);
-  const body = await response.json();
-  if (!body.access_token) throw new Error("token endpoint gave no token");
+  let response;
+  try {
+    response = await fetchImpl(sa.tokenUri, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: await signedAssertion(sa, now),
+      }).toString(),
+    });
+  } catch (e) {
+    throw new FcmTokenError(`token endpoint unreachable: ${e && e.name}`);
+  }
+  if (!response.ok) throw new FcmTokenError(`token endpoint answered ${response.status}`);
+  const body = await response.json().catch(() => ({}));
+  if (!body.access_token) throw new FcmTokenError("token endpoint gave no token");
   cached = { token: body.access_token, until: now + (body.expires_in || 3600), email: sa.clientEmail };
   return cached.token;
 }

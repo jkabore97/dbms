@@ -185,6 +185,17 @@ class _SaleFlowState extends State<SaleFlow> {
 
   bool get _credit => _method == 'credit';
 
+  /// Opened from the carnet (« Nouveau crédit »): a credit for the customer
+  /// it names — Crédit is the only method, the draft its own
+  /// (`sale-credit:<org>`, never the till's), the name the carnet's.
+  bool get _fromCarnet => widget.initialMethod == 'credit' && widget.canCredit;
+
+  /// The carnet's customer, when it named one.
+  String? get _passedCustomer {
+    final n = widget.customerName?.trim() ?? '';
+    return n.isEmpty ? null : n;
+  }
+
   /// The shelf without the kitchen: production ingredients stay out of the
   /// picker so a thumb cannot sell the flour at 0 F. Typing the name still
   /// works — the flag is a signpost, not a rule.
@@ -307,8 +318,12 @@ class _SaleFlowState extends State<SaleFlow> {
           ? a['named'] as bool
           : widget.initialMethod == 'credit' ||
               (widget.customerName?.trim().isNotEmpty ?? false);
-      _customer.text =
-          (a['customer'] as String?) ?? widget.customerName?.trim() ?? '';
+      // The carnet's customer stays the carnet's: a kept draft never puts
+      // another name on this credit.
+      _customer.text = (_fromCarnet ? _passedCustomer : null) ??
+          (a['customer'] as String?) ??
+          widget.customerName?.trim() ??
+          '';
       final method = a['method'];
       _method = method is String && _methods.contains(method)
           ? method
@@ -465,13 +480,15 @@ class _SaleFlowState extends State<SaleFlow> {
   // Payment
   // ----------------------------------------------------------------
 
-  List<String> get _methods => [
-        'cash',
-        // RULE M (111): mobile money only where Mara allows it.
-        if (widget.allowWave) 'mobile_money',
-        if (widget.allowWave && _waveMerchant != null) 'wave',
-        if (widget.canCredit) 'credit',
-      ];
+  List<String> get _methods => _fromCarnet
+      ? const ['credit']
+      : [
+          'cash',
+          // RULE M (111): mobile money only where Mara allows it.
+          if (widget.allowWave) 'mobile_money',
+          if (widget.allowWave && _waveMerchant != null) 'wave',
+          if (widget.canCredit) 'credit',
+        ];
 
   String _methodLabel(String m) => switch (m) {
         'mobile_money' => context.tr('Mobile'),
@@ -593,7 +610,8 @@ class _SaleFlowState extends State<SaleFlow> {
   void _pin(double total) {
     _savedTotal = total;
     _receipt = _receiptText(total);
-    widget.onSaved?.call(_clientUuid);
+    // The carnet dates a debt with it: only a real credit has one.
+    if (_credit) widget.onSaved?.call(_clientUuid);
   }
 
   String _stamp() {
@@ -653,8 +671,9 @@ class _SaleFlowState extends State<SaleFlow> {
           ? 'credit'
           : 'cash';
       _named = widget.initialMethod == 'credit';
-      _customer.clear();
-      // A new customer, a new basket: the carnet's name was for the first.
+      // From the carnet the next sale is still that customer's credit;
+      // at the till a new customer, a new basket.
+      _customer.text = _fromCarnet ? (_passedCustomer ?? '') : '';
       _tender = null;
       _queued = false;
       _sender = null;
@@ -676,7 +695,10 @@ class _SaleFlowState extends State<SaleFlow> {
       title: context.tr('Vente'),
       controller: _flow,
       store: widget.store,
-      draft: FlowDraft(key: 'sale:${widget.orgId}', save: _save, restore: _restore),
+      draft: FlowDraft(
+          key: _fromCarnet ? 'sale-credit:${widget.orgId}' : 'sale:${widget.orgId}',
+          save: _save,
+          restore: _restore),
       saveLabel: _method == 'wave'
           ? context.tr('Payer avec Wave')
           : context.tr('Enregistrer la vente'),

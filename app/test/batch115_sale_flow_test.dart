@@ -627,6 +627,101 @@ void main() {
     expect(store.values.containsKey('step_flow:sale:o1'), isFalse);
   });
 
+  group('A1 — the carnet\'s credit sale is its own', () {
+    const products = [Product(id: 'p1', name: 'Savon', salePrice: 450, quantity: 9)];
+
+    testWidgets('the till\'s draft never appears in the carnet, nor the carnet\'s at the till',
+        (tester) async {
+      await _phone(tester);
+      final store = MemoryFlowStore();
+      final till = _Till();
+      Widget atTill() => _app(SaleFlow(
+          orgId: 'o1', retail: till, store: store, products: products));
+      Widget fromCarnet() => _app(SaleFlow(
+          orgId: 'o1', retail: till, store: store, products: products,
+          initialMethod: 'credit', customerName: 'Awa'));
+
+      // A basket left at the till.
+      await tester.pumpWidget(atTill());
+      await tester.pumpAndSettle();
+      await _sell(tester, 'p1', '3');
+      await _next(tester);
+      expect(store.values['step_flow:sale:o1'], contains('"q":"3"'));
+
+      // The carnet opens fresh: not the till's basket.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(fromCarnet());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flow-resumed')), findsNothing);
+      expect(find.text('Quels articles ?'), findsOneWidget);
+      await _sell(tester, 'p1', '2');
+      await _next(tester);
+      expect(store.values['step_flow:sale-credit:o1'], contains('"q":"2"'));
+      expect(store.values['step_flow:sale:o1'], contains('"q":"3"'),
+          reason: 'the till\'s draft untouched');
+
+      // Back at the till: its own basket of 3, not the carnet's 2.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(atTill());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flow-resumed')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('flow-back')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('sale-qty-p1'))).controller!.text, '3');
+    });
+
+    testWidgets('from the carnet: Crédit only, the carnet\'s customer kept, onSaved for the credit',
+        (tester) async {
+      await _phone(tester);
+      final store = MemoryFlowStore();
+      // A credit draft that named somebody else: the carnet's name wins.
+      store.values['step_flow:sale-credit:o1'] =
+          '{"step":"customer","phase":"steps","answers":{"uuid":"u-kept","lines":[{"id":"p1","name":"Savon","q":"1","p":"450"}],'
+          '"named":true,"customer":"Quelqu\'un d\'autre","method":"credit"}}';
+      final till = _Till(merchant: 'M-1');
+      final saved = <String>[];
+      await tester.pumpWidget(_app(SaleFlow(
+          orgId: 'o1', retail: till, store: store, products: products,
+          allowWave: true, initialMethod: 'credit', customerName: 'Awa',
+          onSaved: saved.add)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flow-resumed')), findsOneWidget);
+      expect(find.text('Pour quel client ?'), findsOneWidget);
+      expect(find.text('Client de passage'), findsNothing);
+      expect(tester.widget<TextField>(find.byKey(const Key('sale-customer'))).controller!.text, 'Awa');
+      await _next(tester);
+      expect(find.text('Comment le client paie ?'), findsOneWidget);
+      expect(find.text('Crédit'), findsOneWidget);
+      expect(find.text('Espèces'), findsNothing);
+      expect(find.text('Mobile'), findsNothing);
+      expect(find.text('Wave'), findsNothing);
+      await _next(tester);
+      await tester.tap(find.byKey(const Key('flow-save')));
+      await tester.pumpAndSettle();
+      expect(till.calls.single['method'], 'credit');
+      expect(till.calls.single['customer'], 'Awa');
+      expect(saved, [till.calls.single['uuid']]);
+    });
+
+    testWidgets('a sale at the till that is not a credit never calls onSaved', (tester) async {
+      await _phone(tester);
+      final till = _Till();
+      final saved = <String>[];
+      await tester.pumpWidget(_app(SaleFlow(
+          orgId: 'o1', retail: till, store: MemoryFlowStore(), products: products,
+          onSaved: saved.add)));
+      await tester.pumpAndSettle();
+      await _sell(tester, 'p1', '1');
+      await _next(tester);
+      await _next(tester);
+      await _next(tester); // Espèces
+      await tester.tap(find.byKey(const Key('flow-save')));
+      await tester.pumpAndSettle();
+      expect(till.calls.single['method'], 'cash');
+      expect(saved, isEmpty, reason: 'set_debt_due only for a real credit');
+    });
+  });
+
   testWidgets('English', (tester) async {
     await _phone(tester);
     await tester.pumpWidget(MaterialApp(

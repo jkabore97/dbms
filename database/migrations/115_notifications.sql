@@ -599,10 +599,12 @@ create trigger notify_courier_received
 after update of status, sent_at on courier_applications
 for each row execute function trg_notify_courier_received();
 
--- Who is told about a delivery waiting: the approved couriers « near » the
--- shop — the same city as the shop when both are known (112's application
--- city, 086's orgs.city), everybody when either is not — never the
--- customer, never one already told.
+-- Who is told about a delivery waiting: the shop's own approved couriers;
+-- the street's approved couriers only when they are « near » — the shop's
+-- city (086's orgs.city) and the courier's (112's application city) both
+-- known and the same; nobody of the street when either is not (no fan-out
+-- to every courier). Never the customer, never one already told, at most
+-- 50 at a time, the shop's own first.
 alter table orders add column if not exists couriers_told_at timestamptz;
 
 comment on column orders.couriers_told_at is
@@ -641,11 +643,13 @@ begin
                                where oc.org_id = v.org_id and oc.user_id = c.user_id)
                  else not exists (select 1 from org_couriers oc
                                    where oc.org_id = v.org_id and oc.user_id = c.user_id)
-                      and (v_city is null
-                           or coalesce((select nullif(lower(btrim(coalesce(a.city, ''))), '')
-                                          from courier_applications a
-                                         where a.user_id = c.user_id), v_city) = v_city)
-            end);
+                      and v_city is not null
+                      and (select nullif(lower(btrim(coalesce(a.city, ''))), '')
+                             from courier_applications a
+                            where a.user_id = c.user_id) = v_city
+            end)
+     order by c.decided_at desc nulls last, c.user_id
+     limit 50;
     get diagnostics v_n = row_count;
     if not p_own_only then
         update orders set couriers_told_at = now() where id = p_order_id;
@@ -657,6 +661,8 @@ $$;
 -- A delivery becomes ready with nobody carrying it: the shop's own couriers
 -- hear it at once; the street's couriers too when the shop has none —
 -- otherwise after the shop's own minutes (073), by deliveries_waiting().
+-- « Has own couriers » is 073's courier_may_take rule: any org_couriers row,
+-- approved or not — the street may not take it before the minutes either.
 create or replace function trg_notify_delivery_ready()
 returns trigger
 language plpgsql
@@ -670,7 +676,6 @@ begin
        and new.fulfilment = 'delivery' and new.courier_id is null
        and not coalesce(new.self_delivered, false) then
         v_has_own := exists (select 1 from org_couriers oc
-                              join couriers c on c.user_id = oc.user_id and c.status = 'approved'
                              where oc.org_id = new.org_id);
         if v_has_own then
             perform tell_couriers(new.id, true);
@@ -690,6 +695,9 @@ after update of status on orders
 for each row execute function trg_notify_delivery_ready();
 
 -- The shop's own minutes are over and nobody took it: the street hears.
+-- The minutes are counted as 073's courier_may_take counts them — from
+-- order_status_since(), with plan_limit('own_courier_minutes', 10) — so the
+-- street is told exactly when it may take the delivery.
 -- Called by pg_cron every five minutes where it exists.
 create or replace function deliveries_waiting()
 returns integer
@@ -700,16 +708,15 @@ as $$
 declare
     v_id  uuid;
     v_n   integer := 0;
-    v_min integer := coalesce((select (value #>> '{}')::int from platform_settings
-                                where key = 'own_courier_minutes'), 10);
+    v_min integer := plan_limit('own_courier_minutes', 10);
 begin
     for v_id in
         select o.id from orders o
          where o.status = 'ready' and o.fulfilment = 'delivery'
            and o.courier_id is null and not coalesce(o.self_delivered, false)
            and o.couriers_told_at is null
-           and o.updated_at < now() - make_interval(mins => v_min)
-           and o.updated_at > now() - interval '1 day'
+           and order_status_since(o.id) < now() - make_interval(mins => v_min)
+           and order_status_since(o.id) > now() - interval '1 day'
     loop
         begin
             v_n := v_n + tell_couriers(v_id, false);

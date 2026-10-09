@@ -303,6 +303,56 @@ rollback;
 select pg_temp.as118(null);
 
 \echo ''
+\echo '--- TEST 5b: never one''s own salary (103) — the inviter claiming, or a member already in ---'
+begin;
+do $$
+declare v_inv pending_invitations;
+begin
+    -- Shop: a non-owner admin invites their own number, says 900 000, claims it.
+    v_inv := pg_temp.invite118('11811811-0000-0000-0000-000000000004',
+        '11800000-0000-0000-0000-000000000001', 'employee', 'Admin 118', null);
+    perform set_invitation_salary(v_inv.id, 900000, 'month');
+    perform claim_invitation(v_inv.code);
+    if exists (select 1 from employees
+                where org_id = '11800000-0000-0000-0000-000000000001'
+                  and (user_id = '11811811-0000-0000-0000-000000000004' or salary = 900000)) then
+        raise exception 'FAIL: shop — an admin wrote their own salary through an invitation';
+    end if;
+    raise notice 'PASS: shop — an admin who invites themself and says 900 000 gets no payroll row';
+
+    -- Farm: the owner writes an invitation, says a salary and claims it as themself.
+    v_inv := pg_temp.invite118('11811811-0000-0000-0000-000000000002',
+        '11800000-0000-0000-0000-000000000002', 'employee', 'Fermier 118', null);
+    perform set_invitation_salary(v_inv.id, 50000, 'month');
+    perform claim_invitation(v_inv.code);
+    if exists (select 1 from employees
+                where org_id = '11800000-0000-0000-0000-000000000002'
+                  and user_id = '11811811-0000-0000-0000-000000000002') then
+        raise exception 'FAIL: farm — the inviter claiming wrote a salary';
+    end if;
+    raise notice 'PASS: farm — an invitation claimed by the one who wrote it carries no salary';
+
+    -- Association: Fatou is already in (since yesterday); the owner invites
+    -- her again with a salary; her claim writes none.
+    insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility, created_at)
+    values ('11800000-0000-0000-0000-000000000003', '11811811-0000-0000-0000-000000000008',
+            'employee', 'org', '11800000-0000-0000-0000-000000000003', 'full', now() - interval '1 day');
+    v_inv := pg_temp.invite118('11811811-0000-0000-0000-000000000003',
+        '11800000-0000-0000-0000-000000000003', 'admin', 'Fatou 118', null);
+    perform set_invitation_salary(v_inv.id, 40000, 'month');
+    perform pg_temp.as118('11811811-0000-0000-0000-000000000008');
+    perform claim_invitation(v_inv.code);
+    if exists (select 1 from employees
+                where org_id = '11800000-0000-0000-0000-000000000003'
+                  and user_id = '11811811-0000-0000-0000-000000000008') then
+        raise exception 'FAIL: association — a member already in got a salary through an invitation';
+    end if;
+    raise notice 'PASS: association — a member already in before the claim gets no salary from it';
+end $$;
+rollback;
+select pg_temp.as118(null);
+
+\echo ''
 \echo '--- TEST 6: the doors ---'
 do $$
 begin

@@ -845,6 +845,7 @@ jobs:
       - run: node --check workers/tenant-router/src/index.js
       - run: node --check workers/push/src/index.js
       - run: node --check workers/push/src/webpush.js
+      - run: node --check workers/push/src/fcm.js
       # The push Worker's crypto has a real test: it plays the browser and
       # decrypts what the Worker encrypted, and the push service that checks
       # the VAPID signature. Node's WebCrypto is the Worker's WebCrypto.

@@ -186,6 +186,7 @@ declare
         $r$select jsonb_build_object(
                'order', (select to_jsonb(o) - 'id' - 'created_at' - 'updated_at' - 'handover_code'
                                 - 'customer_id' - 'number' - 'ref'
+                                - 'refusal_reason' - 'couriers_told_at'
                            from orders o where o.id = $1::uuid),
                'lines', (select jsonb_agg(to_jsonb(l) - 'id' - 'order_id' order by l.name)
                            from order_lines l where l.order_id = $1::uuid))$r$;

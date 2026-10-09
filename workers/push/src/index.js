@@ -31,7 +31,7 @@
 //                               HTTP v1 (src/fcm.js). Absent, the phones'
 //                               rows are skipped and browsers ring as before.
 
-import { readServiceAccount, sendFcm } from "./fcm.js";
+import { FcmTokenError, readServiceAccount, sendFcm } from "./fcm.js";
 import { importVapidPrivateKey, sendPush } from "./webpush.js";
 
 export default {
@@ -96,13 +96,21 @@ export async function deliver(row, env, io = { sendPush, sendFcm, fetch }) {
   const payload = payloadFor(row, env);
 
   let sent = 0, dropped = 0, failed = 0;
+  // Google's token endpoint said no once: the other phones of this call
+  // are counted failed without asking it again (it would say the same).
+  let tokenFailed = false;
   for (const target of [...browsers, ...(account ? phones : [])]) {
     let status;
+    if (target.platform === "android" && tokenFailed) {
+      failed++;
+      continue;
+    }
     try {
       status = target.platform === "android"
         ? await (io.sendFcm || sendFcm)(target.fcm_token, payload, account, io.fetch)
         : await io.sendPush(target, payload, vapid);
-    } catch {
+    } catch (e) {
+      if (e instanceof FcmTokenError) tokenFailed = true;
       status = 0;
     }
     if (status === 201 || status === 200) {

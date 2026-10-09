@@ -25,6 +25,9 @@
 --      the same name, else a new permanent row), written as the inviter.
 --      A row paid by the hour is left as it is. It never stands in the way
 --      of the claim: a failure leaves the salary unwritten, the person in.
+--      Never one's own salary (103): nothing is written when the claimer
+--      wrote the invitation, or was already in the business before the
+--      claim.
 --
 -- No app path changes for anybody who does not use the new flow.
 -- ============================================================
@@ -100,6 +103,18 @@ declare
     v_name  text;
     v_phone text;
 begin
+    -- 103 forbids saying one's own salary. An invitation one wrote oneself,
+    -- or one claimed by somebody already in the business before this claim
+    -- (an admin who put their own number on it), carries none: the salary
+    -- of a member is said in Équipe, by someone above them.
+    if new.claimed_by is not distinct from new.created_by
+       or exists (select 1 from memberships m
+                   where m.org_id = new.org_id
+                     and m.user_id = new.claimed_by
+                     and m.created_at < transaction_timestamp()) then
+        return new;
+    end if;
+
     begin
         select person_name(new.claimed_by), phone into v_name, v_phone
           from profiles where id = new.claimed_by;

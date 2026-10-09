@@ -305,3 +305,29 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
   // The key and the token never travel anywhere but Google.
   assert.ok(calls.filter((c) => c.url.startsWith("https://x.supabase.co")).every((c) => !c.init.body.includes("ya29")));
 });
+
+test("a token endpoint that fails is asked once per deliver, not once per phone", async () => {
+  forgetAccessToken();
+  const { json } = await serviceAccount();
+  const devices = [1, 2, 3].map((i) => ({ endpoint: `fcm:tok-${i}`, platform: "android",
+    p256dh: null, auth: null, fcm_token: `tok-${i}` }));
+  const calls = [];
+  const fetchStub = async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith("/push_devices")) return new Response(JSON.stringify(devices), { status: 200 });
+    if (url === "https://oauth2.example/token") return new Response("{}", { status: 500 });
+    return new Response("{}", { status: 200 });
+  };
+  const env = { SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "service",
+    FCM_SERVICE_ACCOUNT: json };
+  const row = { id: "n2", recipient_id: "u1", kind: "order_ready", org_id: "o1", message: "Prête",
+    params: { to: "customer" } };
+  let result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
+  assert.deepEqual(result, { sent: 0, dropped: 0, failed: 3 });
+  assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 1);
+  assert.ok(!calls.some((c) => c.url.includes("messages:send")));
+  assert.ok(!calls.some((c) => c.url.endsWith("/remove_push_target")));
+  // The next deliver asks again (a failure is remembered for one call only).
+  result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
+  assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 2);
+});

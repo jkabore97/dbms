@@ -434,7 +434,8 @@ the app and a one-minute poll), and with this set up it also reaches a
 **closed** app: in a browser by Web Push (Chrome and Firefox on Android and
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
-and 115 (the address book, `push_subscriptions`, browsers and phones),
+and 115 (the address book, `push_subscriptions`, browsers and phones — on an
+older database, applied with `database/apply_006_to_119.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -784,9 +785,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `113` up to date, paste
-`database/apply_006_to_113.sql` into the Supabase SQL editor and run it once.
-It is `006` through `113` concatenated inside one transaction, so it either
+To bring a database anywhere between `005` and `119` up to date, paste
+`database/apply_006_to_119.sql` into the Supabase SQL editor and run it once.
+It is `006` through `119` concatenated (114 and 116 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -796,7 +797,7 @@ answering from a stale cache.
 Regenerate it after adding a migration, rather than editing it:
 
 ```
-scripts/build-migration-bundle.sh 006 113
+scripts/build-migration-bundle.sh 006 119
 ```
 
 Verified by building a database at `005`, running the bundle, and re-running

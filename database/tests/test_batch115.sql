@@ -17,7 +17,8 @@
 --   * « M'envoyer une notification test » rings the caller alone, says
 --     their devices, and the webhook's state to the platform only;
 --   * the shopper hears their phone verified; the courier their dossier
---     received, a delivery near them (own couriers first, then the city),
+--     received, a delivery near them (own couriers first, then the city —
+--     only when both cities are known and the same, 50 at most),
 --     a shop adding them, the cash confirmed, and the nudge only when
 --     asked;
 --   * home_counts: what asks for action, per kind, null for a stranger;
@@ -444,8 +445,8 @@ begin
                                           and recipient_id = '11511511-0000-0000-0000-000000000005') <> 'courier' then
         raise exception 'FAIL: the dossier received was not said';
     end if;
-    -- A shop in Ouagadougou with no couriers of its own: the city's (and
-    -- the ones with no city) at once, never Bobo's.
+    -- A shop in Ouagadougou with no couriers of its own: the city's at
+    -- once — never Bobo's, never the ones with no city (no fan-out).
     v_order := pg_temp.order115(v_shop, false, 'delivery');
     perform pg_temp.as115('11511511-0000-0000-0000-000000000002');
     perform decide_order(v_order, 'accepted');
@@ -454,7 +455,7 @@ begin
       from notifications n join profiles p on p.id = n.recipient_id
      where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text
        and n.recipient_id::text like '11511511-%';
-    if v_told <> 'Livreur Maison, Livreur Ouaga, Livreur Partout'
+    if v_told is distinct from 'Livreur Ouaga'
        or (select couriers_told_at from orders where id = v_order) is null then
         raise exception 'FAIL: the street told %', v_told;
     end if;
@@ -477,15 +478,22 @@ begin
                                              and params ->> 'order_id' = v_order::text) <> 1 then
         raise exception 'FAIL: the street heard before the minutes';
     end if;
+    -- The minutes counted from the status (order_status_since), as 073's
+    -- courier_may_take counts them: an updated_at moved alone changes nothing.
     update orders set updated_at = now() - interval '11 minutes' where id = v_order;
+    perform deliveries_waiting();
+    if (select couriers_told_at from orders where id = v_order) is not null then
+        raise exception 'FAIL: the street was told by updated_at, not by the status''s own time';
+    end if;
+    update order_events set at = now() - interval '11 minutes'
+     where order_id = v_order and status = 'ready';
     perform deliveries_waiting();
     perform deliveries_waiting();
     if (select count(*) from notifications where kind = 'delivery_available'
                                              and params ->> 'order_id' = v_order::text
-                                             and recipient_id::text like '11511511-%'
-                                             and not (params ->> 'own')::boolean) <> 3
+                                             and not (params ->> 'own')::boolean) <> 0
        or (select couriers_told_at from orders where id = v_order) is null then
-        raise exception 'FAIL: after the minutes the street (all three: the farm has no city) heard not once';
+        raise exception 'FAIL: after the minutes a farm with no city told the street (or was asked again)';
     end if;
     -- The cash handed over.
     update orders set status = 'delivered', courier_id = '11511511-0000-0000-0000-000000000007',
@@ -507,7 +515,61 @@ begin
     if courier_idle_nudge() <> 1 or courier_idle_nudge() <> 0 then
         raise exception 'FAIL: the nudge is not once, for Bobo alone';
     end if;
-    raise notice 'PASS: received; near me by city (own couriers first, the street after the minutes); added; cash; the nudge when asked';
+    raise notice 'PASS: received; near me only when both cities known and equal (own couriers first, the street after the status''s minutes); added; cash; the nudge when asked';
+end $$;
+rollback;
+
+\echo '--- TEST 8b: own couriers not approved yet (073''s rule), and 50 at most ---'
+begin;
+do $$
+declare v_shop uuid := '11500000-0000-0000-0000-000000000001';
+        v_order uuid; i int; v_u uuid;
+begin
+    -- The shop's only own courier is not approved: like courier_may_take,
+    -- the shop « has own couriers » — nobody of the street hears at ready
+    -- (they could not take it), they hear when the minutes are over.
+    insert into auth.users (id, phone, raw_user_meta_data)
+    values ('11511511-0000-0000-0000-0000000000c1', '+22611501099', '{"full_name": "Livreur Pas Encore"}');
+    insert into couriers (user_id, phone, status) values ('11511511-0000-0000-0000-0000000000c1', '+22611501099', 'pending');
+    insert into org_couriers (org_id, user_id) values (v_shop, '11511511-0000-0000-0000-0000000000c1');
+    v_order := pg_temp.order115(v_shop, false, 'delivery');
+    perform pg_temp.as115('11511511-0000-0000-0000-000000000002');
+    perform decide_order(v_order, 'accepted');
+    perform decide_order(v_order, 'ready');
+    if exists (select 1 from notifications where kind = 'delivery_available'
+                                             and params ->> 'order_id' = v_order::text)
+       or (select couriers_told_at from orders where id = v_order) is not null then
+        raise exception 'FAIL: the street (or an unapproved courier) heard before the minutes';
+    end if;
+    if courier_may_take(v_order, '11511511-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: the board and the bell disagree';
+    end if;
+    update order_events set at = now() - interval '11 minutes'
+     where order_id = v_order and status = 'ready';
+    perform deliveries_waiting();
+    if (select string_agg(p.full_name, ', ') from notifications n join profiles p on p.id = n.recipient_id
+         where n.kind = 'delivery_available' and n.params ->> 'order_id' = v_order::text) is distinct from 'Livreur Ouaga'
+       or not courier_may_take(v_order, '11511511-0000-0000-0000-000000000007') then
+        raise exception 'FAIL: after the minutes the city was not told as it may take it';
+    end if;
+
+    -- Sixty approved couriers in Ouagadougou: 50 told, no more.
+    delete from org_couriers where org_id = v_shop;
+    for i in 1..60 loop
+        v_u := ('11511599-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid;
+        insert into auth.users (id, phone, raw_user_meta_data)
+        values (v_u, '+2261159' || lpad(i::text, 4, '0'), '{"full_name": "Livreur Foule"}');
+        insert into couriers (user_id, phone, status, decided_at) values (v_u, '+2261159' || lpad(i::text, 4, '0'), 'approved', now());
+        insert into courier_applications (user_id, status, city) values (v_u, 'approved', 'Ouagadougou');
+    end loop;
+    v_order := pg_temp.order115(v_shop, false, 'delivery');
+    perform decide_order(v_order, 'accepted');
+    perform decide_order(v_order, 'ready');
+    if (select count(*) from notifications where kind = 'delivery_available'
+                                             and params ->> 'order_id' = v_order::text) <> 50 then
+        raise exception 'FAIL: the street heard % times, not 50', (select count(*) from notifications where kind = 'delivery_available' and params ->> 'order_id' = v_order::text);
+    end if;
+    raise notice 'PASS: a shop whose own courier is not approved yet keeps the street waiting the minutes (as courier_may_take), then the city hears; 50 at most';
 end $$;
 rollback;
 
