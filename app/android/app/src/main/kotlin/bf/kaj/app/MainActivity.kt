@@ -62,7 +62,7 @@ class MainActivity : FlutterFragmentActivity() {
         const val ALERTS_CHANNEL = "mara_alerts"
         const val POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
         const val NOTIFY_PREFS = "mara_notify"
-        const val ASKED = "asked"
+        const val REFUSED = "refused"
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -89,9 +89,8 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "permission" -> result.success(notificationPermission())
-                    "asked" -> {
-                        getSharedPreferences(NOTIFY_PREFS, Context.MODE_PRIVATE)
-                            .edit().putBoolean(ASKED, true).apply()
+                    "answered" -> {
+                        noteAnswer()
                         result.success(null)
                     }
                     "openSettings" -> result.success(openNotificationSettings())
@@ -114,13 +113,31 @@ class MainActivity : FlutterFragmentActivity() {
             PackageManager.PERMISSION_GRANTED
         if (allowed) return if (enabled) "granted" else "blocked"
         // Refused twice (or « ne plus demander »): the system no longer
-        // shows its question, and no longer wants a reason shown either.
-        val asked = getSharedPreferences(NOTIFY_PREFS, Context.MODE_PRIVATE)
-            .getBoolean(ASKED, false)
-        return if (asked && !shouldShowRequestPermissionRationale(POST_NOTIFICATIONS)) {
+        // shows its question, and no longer wants a reason shown either —
+        // as before any answer, hence the refusal noted by noteAnswer().
+        val refused = getSharedPreferences(NOTIFY_PREFS, Context.MODE_PRIVATE)
+            .getBoolean(REFUSED, false)
+        return if (refused && !shouldShowRequestPermissionRationale(POST_NOTIFICATIONS)) {
             "blocked"
         } else {
             "prompt"
+        }
+    }
+
+    // After the system's question has returned (push_client_stub.dart's
+    // ask): a real refusal is the only answer after which the system wants
+    // a reason shown. A dialog dismissed without an answer (back, a tap
+    // beside it) leaves no reason to show, and is not noted: the phone can
+    // still be asked, never « blocked » for it.
+    private fun noteAnswer() {
+        if (Build.VERSION.SDK_INT < 33) return
+        try {
+            if (shouldShowRequestPermissionRationale(POST_NOTIFICATIONS)) {
+                getSharedPreferences(NOTIFY_PREFS, Context.MODE_PRIVATE)
+                    .edit().putBoolean(REFUSED, true).apply()
+            }
+        } catch (e: Exception) {
+            // Not noted: at worst « prompt » for a phone that would not ask.
         }
     }
 

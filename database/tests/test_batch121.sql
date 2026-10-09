@@ -16,7 +16,7 @@
 --     dollars, or under Stripe's 50 cents: no card, said in French, and
 --     plan_terms says null; a price already in dollars is charged as is;
 --   * stripe_settle still makes the business Pro (it reads no amount);
---   * the doors: the helper is no one's to call, stripe_begin is a
+--   * the doors: the two helpers are no one's to call, stripe_begin is a
 --     signed-in owner's, never the street's.
 -- Kinds: Mara Pro is the same for a shop, a farm and an association —
 -- one of each subscribes here.
@@ -220,7 +220,46 @@ begin
     begin perform stripe_begin('12100000-0000-0000-0000-000000000001', 'month');
           raise exception 'FAIL: a 1-cent checkout';
     exception when others then
-        if sqlerrm not like 'Le prix en dollars est trop petit%' then raise; end if; end;
+        if sqlerrm <> 'Le prix en dollars est trop petit pour la carte (0,50 $ au moins)' then raise; end if; end;
+    t := plan_terms();
+    if t -> 'stripe_usd_month' <> 'null'::jsonb or t -> 'stripe_usd_year' <> 'null'::jsonb then
+        raise exception 'FAIL: plan_terms says a « ≈ » under Stripe''s 50 cents: %', t;
+    end if;
+
+    -- Above Stripe's 8-digit unit_amount, and past an int: a rate of 1 on a
+    -- 30 000 000 F year is 3 000 000 000 cents.
+    execute 'reset role';
+    update platform_settings set value = '1' where key = 'stripe_xof_per_usd';
+    update platform_settings set value = '30000000' where key = 'pro_price_year';
+    execute 'set local role authenticated';
+    t := plan_terms();
+    if t -> 'stripe_usd_year' <> 'null'::jsonb or (t ->> 'pro_price_year')::int <> 30000000
+       or (t ->> 'stripe_usd_month')::int <> 1500000 then
+        raise exception 'FAIL: plan_terms past Stripe''s 99 999 999 cents: %', t;
+    end if;
+    begin perform stripe_begin('12100000-0000-0000-0000-000000000001', 'year');
+          raise exception 'FAIL: a $30 000 000 checkout';
+    exception when others then
+        if sqlerrm <> 'Le prix en dollars est trop grand pour la carte (999 999,99 $ au plus)' then raise; end if; end;
+    -- 99 999 999 cents exactly is still Stripe's; one cent more is not.
+    execute 'reset role';
+    update platform_settings set value = '100' where key = 'stripe_xof_per_usd';
+    update platform_settings set value = '99999999' where key = 'pro_price_year';
+    execute 'set local role authenticated';
+    if (stripe_begin('12100000-0000-0000-0000-000000000001', 'year') ->> 'amount')::int <> 99999999
+       or (plan_terms() ->> 'stripe_usd_year')::int <> 99999999 then
+        raise exception 'FAIL: 99 999 999 F at 100 is not 99 999 999 cents';
+    end if;
+    execute 'reset role';
+    update platform_settings set value = '100000000' where key = 'pro_price_year';
+    execute 'set local role authenticated';
+    if plan_terms() -> 'stripe_usd_year' <> 'null'::jsonb then
+        raise exception 'FAIL: 100 000 000 cents still says a « ≈ »';
+    end if;
+    execute 'reset role';
+    update platform_settings set value = '150000' where key = 'pro_price_year';
+    update platform_settings set value = '600' where key = 'stripe_xof_per_usd';
+    execute 'set local role authenticated';
 
     -- A currency that is neither FCFA nor dollars.
     execute 'reset role';
@@ -240,7 +279,7 @@ begin
         raise exception 'FAIL: $25 is not 2 500 cents';
     end if;
     execute 'reset role';
-    raise notice 'PASS: a word or no rate, euros, 1 cent: refused in French, plan_terms null; $25 is 2 500 cents';
+    raise notice 'PASS: a word or no rate, euros, 1 cent, 3 000 000 000 and 100 000 000 cents: refused in French, plan_terms null (never an int overflow); 99 999 999 cents and $25 taken';
 end $$;
 rollback;
 
@@ -263,10 +302,13 @@ rollback;
 \echo ''
 \echo '--- TEST 7: the doors ---'
 do $$ begin
-    if has_function_privilege('anon', 'stripe_usd_cents(numeric)', 'execute')
+    if has_function_privilege('anon', 'stripe_usd_raw_cents(numeric)', 'execute')
+       or has_function_privilege('authenticated', 'stripe_usd_raw_cents(numeric)', 'execute')
+       or has_function_privilege('public', 'stripe_usd_raw_cents(numeric)', 'execute')
+       or has_function_privilege('anon', 'stripe_usd_cents(numeric)', 'execute')
        or has_function_privilege('authenticated', 'stripe_usd_cents(numeric)', 'execute')
        or has_function_privilege('public', 'stripe_usd_cents(numeric)', 'execute') then
-        raise exception 'FAIL: the helper is callable on its own';
+        raise exception 'FAIL: a helper is callable on its own';
     end if;
     if has_function_privilege('anon', 'stripe_begin(uuid, text)', 'execute') then
         raise exception 'FAIL: the street may start a checkout';
@@ -276,7 +318,7 @@ do $$ begin
        or not has_function_privilege('authenticated', 'platform_set_setting(text, jsonb)', 'execute') then
         raise exception 'FAIL: an owner cannot start or read the terms, or the platform cannot set';
     end if;
-    raise notice 'PASS: the helper is no one''s; stripe_begin and plan_terms a signed-in caller''s';
+    raise notice 'PASS: the two helpers are no one''s; stripe_begin and plan_terms a signed-in caller''s';
 end $$;
 
 -- Leave the settings as the suites before this one left them.

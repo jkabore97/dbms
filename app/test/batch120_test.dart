@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kaj_app/core/auth/models.dart';
@@ -6,6 +10,7 @@ import 'package:kaj_app/core/console/command_center.dart';
 import 'package:kaj_app/core/nav/router.dart';
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/core/notify/push_client.dart';
+import 'package:kaj_app/core/notify/push_client_stub.dart';
 import 'package:kaj_app/core/notify/push_setup.dart';
 import 'package:kaj_app/core/onboarding/application_form.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
@@ -155,8 +160,9 @@ void main() {
       expect(find.byKey(const Key('push-prompt')), findsOneWidget);
     });
 
-    testWidgets('already on, or nothing to ring with: nothing shown', (tester) async {
-      for (final standing in [PushStanding.on, PushStanding.unavailable]) {
+    testWidgets('already on, allowed but not written now, or nothing to ring with: nothing shown',
+        (tester) async {
+      for (final standing in [PushStanding.on, PushStanding.later, PushStanding.unavailable]) {
         device = _Device(standing);
         await app(tester);
         prompt.phase(signedIn: true);
@@ -203,6 +209,112 @@ void main() {
       await _settle(tester);
       expect(PushPrompt.quiet.value, 0);
       expect(find.byKey(const Key('push-prompt')), findsOneWidget);
+    });
+
+    testWidgets('allowed but offline: quiet now, looked at again at the next opening',
+        (tester) async {
+      device = _Device(PushStanding.later);
+      await app(tester);
+      prompt.phase(signedIn: true);
+      prompt.resumed(const Duration(minutes: 5));
+      await _settle(tester);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(device.looks, 1, reason: 'not again in the same opening');
+      device.answer = PushStanding.askable;
+      prompt.resumed(const Duration(hours: 2));
+      await _settle(tester);
+      expect(device.looks, 2);
+      expect(find.byKey(const Key('push-prompt')), findsOneWidget);
+    });
+
+    testWidgets('the root navigator not built yet: asked a frame later', (tester) async {
+      device = _Device(PushStanding.askable);
+      nav = GlobalKey<NavigatorState>();
+      var calls = 0;
+      prompt = PushPrompt(device: device, context: () => ++calls < 3 ? null : nav.currentContext);
+      addTearDown(prompt.dispose);
+      await tester.pumpWidget(MaterialApp(navigatorKey: nav, home: const Scaffold(body: Text('la rue'))));
+      prompt.phase(signedIn: true);
+      await _settle(tester);
+      expect(calls, 3);
+      expect(find.byKey(const Key('push-prompt')), findsOneWidget);
+    });
+
+    testWidgets('no navigator at all: a bounded wait, then asked at the next chance',
+        (tester) async {
+      device = _Device(PushStanding.askable);
+      nav = GlobalKey<NavigatorState>();
+      var built = false;
+      var calls = 0;
+      prompt = PushPrompt(device: device, context: () {
+        calls++;
+        return built ? nav.currentContext : null;
+      });
+      addTearDown(prompt.dispose);
+      await tester.pumpWidget(MaterialApp(navigatorKey: nav, home: const Scaffold(body: Text('la rue'))));
+      prompt.phase(signedIn: true);
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(calls, PushPrompt.frameTries, reason: 'never a wait without end');
+      expect(find.byType(AlertDialog), findsNothing);
+      built = true;
+      prompt.phase(signedIn: true);
+      await _settle(tester);
+      expect(find.byKey(const Key('push-prompt')), findsOneWidget, reason: 'still pending');
+    });
+
+    test('where the device stands: allowed but not written is never « askable »', () {
+      PushStanding of(bool on, bool available, PushPermission p) =>
+          PushSetup.standingOf(on: on, available: available, permission: p);
+      expect(of(true, true, PushPermission.granted), PushStanding.on);
+      expect(of(false, true, PushPermission.granted), PushStanding.later,
+          reason: 'already granted, ensure() failed (offline): quiet');
+      expect(of(false, true, PushPermission.prompt), PushStanding.askable);
+      expect(of(false, true, PushPermission.blocked), PushStanding.blocked);
+      expect(of(false, true, PushPermission.unsupported), PushStanding.unavailable);
+      expect(of(false, false, PushPermission.prompt), PushStanding.unavailable);
+    });
+
+    group('Android\'s question, then the word to MainActivity', () {
+      const channel = MethodChannel('bf.kaj.app/notify');
+      late List<String> log;
+      setUp(() {
+        log = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+          log.add(call.method);
+          return null;
+        });
+      });
+      tearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null));
+
+      test('noted only once the system has answered — a dismissed dialog is never « blocked »',
+          () async {
+        final answer = Completer<AuthorizationStatus>();
+        final asking = PushPlatform.ask(() {
+          log.add('request');
+          return answer.future;
+        });
+        await Future<void>.delayed(Duration.zero);
+        expect(log, ['request'], reason: 'nothing noted while the question is up');
+        answer.complete(AuthorizationStatus.denied);
+        expect(await asking, isFalse);
+        expect(log, ['request', 'answered']);
+      });
+
+      test('allowed: answered, and true', () async {
+        expect(await PushPlatform.ask(() async => AuthorizationStatus.authorized), isTrue);
+        expect(await PushPlatform.ask(() async => AuthorizationStatus.provisional), isTrue);
+        expect(log, ['answered', 'answered']);
+      });
+
+      test('a question that never returned an answer notes nothing', () async {
+        await expectLater(PushPlatform.ask(() async => throw StateError('activity gone')),
+            throwsStateError);
+        expect(log, isEmpty);
+      });
     });
 
     test('the device itself: signed out, or a platform with no push, offers nothing', () async {

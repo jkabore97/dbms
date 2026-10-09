@@ -39,6 +39,9 @@ class PushPrompt {
   /// How long away counts as opening the app again.
   final Duration longAway;
 
+  /// How many frames the pop-up waits for the root navigator.
+  static const frameTries = 10;
+
   /// How many screens that must not be interrupted are drawn now (a first
   /// setup, the creation of a business). See [PushPromptQuiet].
   static final quiet = ValueNotifier<int>(0);
@@ -92,15 +95,20 @@ class PushPrompt {
     _looking = true;
     try {
       final standing = await device.standing();
-      if (standing == PushStanding.on || standing == PushStanding.unavailable) {
+      if (standing != PushStanding.askable && standing != PushStanding.blocked) {
         _pending = false;
         return;
       }
       // The address the phase change leads to is drawn first: a pop-up over
-      // a page the router then replaces would go with it.
-      await WidgetsBinding.instance.endOfFrame;
-      if (_blockedNow || !_pending) return;
-      final ctx = context();
+      // a page the router then replaces would go with it. The root
+      // navigator may not be built yet (a cold start): a few frames more,
+      // then left pending for the next phase, return or quiet screen.
+      BuildContext? ctx;
+      for (var frame = 0; frame < frameTries && ctx == null; frame++) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (_blockedNow || !_pending) return;
+        ctx = context();
+      }
       if (ctx == null || !ctx.mounted) return;
       _asked = true;
       _pending = false;

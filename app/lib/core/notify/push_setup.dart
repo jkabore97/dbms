@@ -71,21 +71,40 @@ class PushSetup {
 
   /// Where this device stands, for the pop-up at the app's opening (120):
   /// already on (written back silently if it was only missing from the
-  /// book), to be asked, blocked in the device's settings, or with nothing
-  /// to offer (a build or a platform without push, nobody signed in).
+  /// book), allowed but not written now, to be asked, blocked in the
+  /// device's settings, or with nothing to offer (a build or a platform
+  /// without push, nobody signed in).
   static Future<PushStanding> standing(NotificationsRepository notify) async {
     try {
       if (!notify.isConfigured || notify.me == null) return PushStanding.unavailable;
-      if (await ensure(notify)) return PushStanding.on;
-      if (!PushClient.available) return PushStanding.unavailable;
-      return switch (await PushClient.permission()) {
-        PushPermission.blocked => PushStanding.blocked,
-        PushPermission.unsupported => PushStanding.unavailable,
-        _ => PushStanding.askable,
-      };
+      final on = await ensure(notify);
+      return standingOf(
+        on: on,
+        available: PushClient.available,
+        permission: on ? PushPermission.granted : await PushClient.permission(),
+      );
     } catch (_) {
       return PushStanding.unavailable;
     }
+  }
+
+  /// [standing]'s answer from what [ensure] did and what the device says.
+  /// Allowed but not written ([ensure] failed: offline, the server away)
+  /// is [PushStanding.later] — nothing to ask of a person who already said
+  /// yes; the next opening tries again.
+  static PushStanding standingOf({
+    required bool on,
+    required bool available,
+    required PushPermission permission,
+  }) {
+    if (on) return PushStanding.on;
+    if (!available) return PushStanding.unavailable;
+    return switch (permission) {
+      PushPermission.granted => PushStanding.later,
+      PushPermission.blocked => PushStanding.blocked,
+      PushPermission.unsupported => PushStanding.unavailable,
+      PushPermission.prompt => PushStanding.askable,
+    };
   }
 
   /// Everything between this device and a ring, step by step (120): what
@@ -138,8 +157,9 @@ class PushSetup {
   }
 }
 
-/// See [PushSetup.standing].
-enum PushStanding { on, askable, blocked, unavailable }
+/// See [PushSetup.standing]. [later]: allowed, but this device's address
+/// could not be written just now — nothing is asked until the next opening.
+enum PushStanding { on, later, askable, blocked, unavailable }
 
 /// See [PushSetup.diagnose].
 class PushDiagnosis {

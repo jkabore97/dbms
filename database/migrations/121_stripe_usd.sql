@@ -8,18 +8,24 @@
 --      (seeded 600), changed from the command center's Réglages like
 --      every other number — a whole number, and never zero (the one
 --      line added to 105's platform_set_setting).
---   2. stripe_usd_cents(amount): a Pro price, in pro_currency, as the
---      dollar cents the card is charged — ceil(amount × 100 / rate), so
---      rounded up to the cent. FCFA (XOF, or XAF at the same parity) is
---      converted; a price already in USD is charged as it is; any other
---      currency, or no rate the server can read (061's older
+--   2. stripe_usd_raw_cents(amount): a Pro price, in pro_currency, as
+--      dollar cents — ceil(amount × 100 / rate), so rounded up to the
+--      cent, computed in numeric (a rate of 1 on a 30 000 000 F year is
+--      3 000 000 000 cents, past an int). FCFA (XOF, or XAF at the same
+--      parity) is converted; a price already in USD is charged as it is;
+--      any other currency, or no rate the server can read (061's older
 --      set_platform_setting checks nothing), is null: no card.
+--      stripe_usd_cents(amount): the same cents as Stripe takes them, an
+--      int — null as well under Stripe's 50-cent minimum and above its
+--      8-digit unit_amount (99 999 999 cents), so plan_terms never says
+--      a « ≈ » the card would refuse, and never fails on a big number.
 --   3. stripe_begin (082's, the Worker's only source of the amount):
 --      'amount' is now the dollar cents and 'currency' 'usd' — what Stripe
 --      charges, computed here, never by the app or the Worker; 'price'
 --      and 'price_currency' are the Pro price as the app shows it, for the
 --      line's name on Stripe's page (« Mara Pro · Mensuel · 15 000 FCFA »).
---      Refused in French with no rate, or under Stripe's 50-cent minimum.
+--      Refused in French with no rate, under Stripe's 50-cent minimum or
+--      above its 99 999 999 cents.
 --      An older Worker reads 'amount' and 'currency' as before and
 --      charges the same dollars.
 --   4. plan_terms (107's): two more keys, stripe_usd_month and
@@ -39,8 +45,8 @@ on conflict (key) do nothing;
 -- ------------------------------------------------------------
 -- 2. A price, as dollar cents
 -- ------------------------------------------------------------
-create or replace function stripe_usd_cents(p_amount numeric)
-returns int
+create or replace function stripe_usd_raw_cents(p_amount numeric)
+returns numeric
 language plpgsql
 stable
 set search_path = public
@@ -54,7 +60,7 @@ begin
         return null;
     end if;
     if v_cur = 'USD' then
-        return ceil(p_amount * 100)::int;
+        return ceil(p_amount * 100);
     end if;
     if v_cur not in ('XOF', 'XAF') then
         return null;
@@ -65,8 +71,19 @@ begin
     if v_rate is null or v_rate <= 0 then
         return null;
     end if;
-    return ceil(p_amount * 100 / v_rate)::int;
+    return ceil(p_amount * 100 / v_rate);
 end;
+$$;
+
+-- Stripe's bounds: 50 cents at least, an 8-digit unit_amount at most.
+create or replace function stripe_usd_cents(p_amount numeric)
+returns int
+language sql
+stable
+set search_path = public
+as $$
+    select case when c between 50 and 99999999 then c::int end
+      from (select stripe_usd_raw_cents(p_amount) as c) r;
 $$;
 
 -- ------------------------------------------------------------
@@ -82,7 +99,7 @@ declare
     v_terms jsonb := plan_terms();
     v_org   orgs%rowtype;
     v_amount numeric;
-    v_cents  int;
+    v_cents  numeric;
 begin
     if auth.uid() is null then
         raise exception 'stripe_begin() needs a signed-in caller';
@@ -102,18 +119,21 @@ begin
     if coalesce(v_amount, 0) <= 0 then
         raise exception 'Le prix de Kaj Pro n''est pas fixé';
     end if;
-    v_cents := stripe_usd_cents(v_amount);
+    v_cents := stripe_usd_raw_cents(v_amount);
     if v_cents is null then
         raise exception 'Le taux de la carte (FCFA pour 1 $) n''est pas fixé';
     end if;
     if v_cents < 50 then
         raise exception 'Le prix en dollars est trop petit pour la carte (0,50 $ au moins)';
     end if;
+    if v_cents > 99999999 then
+        raise exception 'Le prix en dollars est trop grand pour la carte (999 999,99 $ au plus)';
+    end if;
     return jsonb_build_object(
         'org_id',         v_org.id,
         'org_name',       v_org.name,
         'period',         p_period,
-        'amount',         v_cents,
+        'amount',         v_cents::int,
         'currency',       'usd',
         'price',          v_amount,
         'price_currency', upper(v_terms ->> 'pro_currency'),
@@ -251,8 +271,9 @@ $$;
 
 -- The doors, said again as 082 and 105 left them: stripe_begin a signed-in
 -- owner's, never the street's; plan_terms and platform_set_setting a
--- signed-in caller's (each checks who). The new helper is only ever
--- called inside them (security definer, as their owner): no one's else.
+-- signed-in caller's (each checks who). The two new helpers are only
+-- ever called inside them (security definer, as their owner): no one's else.
+revoke execute on function stripe_usd_raw_cents(numeric)    from public;
 revoke execute on function stripe_usd_cents(numeric)        from public;
 revoke execute on function stripe_begin(uuid, text)         from public;
 revoke execute on function plan_terms()                     from public;
@@ -260,11 +281,13 @@ revoke execute on function platform_set_setting(text, jsonb) from public;
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function stripe_usd_raw_cents(numeric)     from anon;
         revoke execute on function stripe_usd_cents(numeric)         from anon;
         revoke execute on function stripe_begin(uuid, text)          from anon;
         revoke execute on function platform_set_setting(text, jsonb) from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke execute on function stripe_usd_raw_cents(numeric)     from authenticated;
         revoke execute on function stripe_usd_cents(numeric)         from authenticated;
         grant execute on function stripe_begin(uuid, text)           to authenticated;
         grant execute on function plan_terms()                       to authenticated;

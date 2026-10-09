@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 
 import 'push_client.dart';
@@ -86,20 +87,29 @@ class PushPlatform {
   static Future<PushSubscriptionInfo?> subscribe(String pushUrl) async {
     if (!_ready) return null;
     try {
-      // Remembered by the phone: after a refusal, the system stops showing
-      // its question, and [permission] can then tell « blocked ».
-      try {
-        await _channel.invokeMethod<void>('asked');
-      } catch (_) {}
-      final s = await FirebaseMessaging.instance.requestPermission();
-      if (s.authorizationStatus != AuthorizationStatus.authorized &&
-          s.authorizationStatus != AuthorizationStatus.provisional) {
-        return null;
-      }
+      final allowed = await ask(() async =>
+          (await FirebaseMessaging.instance.requestPermission()).authorizationStatus);
+      if (!allowed) return null;
       return await current();
     } catch (_) {
       return null;
     }
+  }
+
+  /// The system's question, then — only once it has answered — a word to
+  /// MainActivity, which notes a real refusal (the system then offers a
+  /// reason to show): after a second one it stops asking, and [permission]
+  /// can tell « blocked ». Noted before the question, a dialog dismissed
+  /// without an answer (back, a tap beside it) marked the phone « blocked »
+  /// though the system would still ask. Answers whether it is allowed.
+  @visibleForTesting
+  static Future<bool> ask(Future<AuthorizationStatus> Function() request) async {
+    final status = await request();
+    try {
+      await _channel.invokeMethod<void>('answered');
+    } catch (_) {}
+    return status == AuthorizationStatus.authorized ||
+        status == AuthorizationStatus.provisional;
   }
 
   static Future<PushSubscriptionInfo?> current() async {
