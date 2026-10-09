@@ -323,7 +323,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                   // The ring with the app closed (115), until this device rings.
                   if (widget.org.isAdmin)
                     PushOfferCard(
-                      notify: AppScope.of(context).notify,
+                      notify: AppScope.maybeOf(context)?.notify,
                       doorbell: true,
                       message: context.tr('Soyez prévenu des commandes et du stock, même l\'application fermée.'),
                     ),

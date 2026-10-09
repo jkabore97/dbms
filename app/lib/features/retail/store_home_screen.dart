@@ -551,7 +551,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             // and the tab's doorbell for whoever answers the orders.
             if (widget.org.isAdmin || widget.access.canSee('orders'))
               PushOfferCard(
-                notify: AppScope.of(context).notify,
+                notify: AppScope.maybeOf(context)?.notify,
                 doorbell: widget.retail != null && widget.access.canSee('orders'),
                 message: context.tr('Soyez prévenu à chaque commande de la vitrine.'),
               ),

@@ -329,7 +329,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                   // The ring with the app closed (115), until this device rings.
                   if (widget.org?.isAdmin ?? false)
                     PushOfferCard(
-                      notify: AppScope.of(context).notify,
+                      notify: AppScope.maybeOf(context)?.notify,
                       message: context.tr('Soyez prévenu des réservations et de votre équipe, même l\'application fermée.'),
                     ),
                   _TodayCard(

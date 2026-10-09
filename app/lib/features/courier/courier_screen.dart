@@ -242,7 +242,7 @@ class _CourierScreenState extends State<CourierScreen>
   }
 
   Widget _pushOffer(BuildContext context) => PushOfferCard(
-        notify: AppScope.of(context).notify,
+        notify: AppScope.maybeOf(context)?.notify,
         message: context.tr('Recevez les nouvelles livraisons même l\'application fermée.'),
       );
 
@@ -269,8 +269,9 @@ class _CourierScreenState extends State<CourierScreen>
               children: [
                 // The courier's own bell (115): the dossier, the board's new
                 // jobs, a course cancelled, the cash confirmed.
+                if (AppScope.maybeOf(context) case final app?)
                 NotificationBell(
-                  notify: AppScope.of(context).notify,
+                  notify: app.notify,
                   scope: NotifyScope.courier,
                   listRoute: Routes.courierNotifications,
                 ),

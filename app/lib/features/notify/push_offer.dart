@@ -25,7 +25,8 @@ class PushOfferCard extends StatefulWidget {
     this.onChanged,
   });
 
-  final NotificationsRepository notify;
+  /// Null in a tree with no app around it (a test): nothing is drawn.
+  final NotificationsRepository? notify;
 
   /// What the ring is for, in a few words (« Soyez prévenu à chaque
   /// commande de la vitrine. »).
@@ -54,9 +55,11 @@ class _PushOfferCardState extends State<PushOfferCard> {
       widget.doorbell && OrderAlert.supported && !OrderAlert.granted;
 
   Future<void> _look() async {
+    final notify = widget.notify;
+    if (notify == null || !notify.isConfigured) return;
     final pushable = await PushSetup.available();
     var on = false;
-    if (pushable) on = await PushSetup.ensure(widget.notify);
+    if (pushable) on = await PushSetup.ensure(notify);
     if (!mounted) return;
     setState(() => _shown = (pushable && !on) || _bellWanted);
   }
@@ -68,7 +71,7 @@ class _PushOfferCardState extends State<PushOfferCard> {
     // subscription, which then asks nothing more.
     var bell = false;
     if (widget.doorbell && OrderAlert.supported) bell = await OrderAlert.request();
-    final on = await PushSetup.enable(widget.notify);
+    final on = await PushSetup.enable(widget.notify!);
     if (!mounted) return;
     setState(() {
       _busy = false;
