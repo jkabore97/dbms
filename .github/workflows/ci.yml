@@ -818,6 +818,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch123.sql
 
+      - name: Prove the welcome e-mail is asked for once per person — Google at sign-up, a password account on confirmation, a phone account on its first confirmed address; never an account made before 124 (no backfill), never twice, never with the switch off (Réglages, journaled); a failing ask never stops a sign-up; the three kinds, the doors (124)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch124.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

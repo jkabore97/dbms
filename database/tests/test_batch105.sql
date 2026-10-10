@@ -770,7 +770,9 @@ declare
         -- 113: read by support_whatsapp(), which the shopper's page asks.
         'support_whatsapp',
         -- 122: read by app_store_links(), which the web's download pop-up asks.
-        'play_store_live', 'app_store_url'];
+        'play_store_live', 'app_store_url',
+        -- 124: read by trg_welcome_email_request() and welcome_email_claim().
+        'welcome_email_on'];
     v_dead text;
     v_missing text;
 begin

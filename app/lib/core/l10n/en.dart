@@ -6079,4 +6079,9 @@ const enStrings = <String, String>{
       '{names} and 1 more',
   '{names} et {n} autres':
       '{names} and {n} more',
+  // 124: the welcome e-mail's switch in Réglages.
+  'Nouveaux comptes':
+      'New accounts',
+  'E-mail de bienvenue aux nouveaux comptes':
+      'Welcome e-mail to new accounts',
 };
