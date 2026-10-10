@@ -510,6 +510,21 @@ class SessionController extends ChangeNotifier {
     }
   }
 
+  /// « Continuer avec Apple » (125), on the sign-in screen and the
+  /// vitrine's sheet, iPhone only. Apple's sheet is native: the session is
+  /// in hand when it closes, so nothing waits for a return trip and no note
+  /// is left on the device — the person goes the very path a password or
+  /// Google takes ([handleSignedIn]: the identity, the code for somebody
+  /// with a business, then the businesses). The auth event Supabase raises
+  /// meanwhile finds no Google note and is ignored. Closing Apple's sheet
+  /// does nothing (false); any other failure throws, for the screen to say.
+  Future<bool> signInWithApple() async {
+    final user = await auth.signInWithApple();
+    if (user == null) return false;
+    await handleSignedIn(user);
+    return true;
+  }
+
   /// What went wrong on the way back from Google, for the sign-in screen
   /// to say once. Taken, not read.
   String? _signInProblem;

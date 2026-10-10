@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'dart:math';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:crypto/crypto.dart' show sha256;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models.dart';
@@ -16,13 +20,30 @@ import '../errors.dart' as errors;
 /// The client is nullable. A build made with no `--dart-define` values has no
 /// backend at all, and the app is still expected to run against the local
 /// database; every method here fails politely rather than throwing a null.
+/// Apple's native sheet (sign_in_with_apple): asks for [scopes] and seals
+/// [nonce] — the SHA-256 of the raw nonce — into the identity token. A
+/// parameter so a test can stand in for Apple.
+typedef AppleCredentialRequest = Future<AuthorizationCredentialAppleID>
+    Function({
+  required List<AppleIDAuthorizationScopes> scopes,
+  required String nonce,
+});
+
+/// Where « Continuer avec Apple » may be drawn: the iPhone app only (125).
+/// On Android and the web, Apple's sign-in would be a web page of its own,
+/// and App Review's rule (4.8) is about the iPhone app beside Google.
+bool get appleSignInPlatform =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
 class AuthRepository {
   AuthRepository(
     this._client, {
     this.authUrl,
     this.apiKey,
     http.Client? httpClient,
-  }) : _http = httpClient;
+    AppleCredentialRequest? appleCredential,
+  })  : _http = httpClient,
+        _appleCredential = appleCredential ?? _askApple;
 
   final SupabaseClient? _client;
 
@@ -100,30 +121,44 @@ class AuthRepository {
   /// it for a session. Must be in the project's Redirect URLs.
   static const androidCallback = 'bf.kaj.app://login-callback';
 
-  bool? _googleOn;
+  /// The project's `external` providers, asked once per launch and shared
+  /// by Google's question and Apple's: one request, even when both are
+  /// asked at the same moment. Forgotten when it could not be asked.
+  Future<Map<dynamic, dynamic>?>? _external;
 
   /// Whether the project has Google switched on (Supabase dashboard ›
   /// Authentication › Providers). Asked once: a button for a provider that is
   /// off would send people to an error page at Google's door.
-  Future<bool> googleAvailable() async {
-    final known = _googleOn;
-    if (known != null) return known;
+  Future<bool> googleAvailable() => _providerOn('google');
+
+  /// Whether the project has Apple switched on, read the same way as
+  /// Google (`external.apple`) and kept the same way: once known, for the
+  /// launch; false while offline, and asked again next time.
+  Future<bool> appleAvailable() => _providerOn('apple');
+
+  Future<bool> _providerOn(String provider) async {
+    final external = await (_external ??= _readExternal());
+    if (external == null) _external = null; // Offline: asked again next time.
+    return external?[provider] == true;
+  }
+
+  /// `external` from `/auth/v1/settings`; null when it could not be asked
+  /// (no server, offline, refused).
+  Future<Map<dynamic, dynamic>?> _readExternal() async {
     final url = authUrl, key = apiKey;
-    if (!isConfigured || url == null || key == null) return false;
+    if (!isConfigured || url == null || key == null) return null;
     try {
       final client = _http ?? http.Client();
       final r = await client
           .get(Uri.parse('$url/settings'), headers: {'apikey': key})
           .timeout(const Duration(seconds: 8));
-      if (r.statusCode != 200) return false;
+      if (r.statusCode != 200) return null;
       final body = jsonDecode(r.body);
-      final on =
-          body is Map &&
-          body['external'] is Map &&
-          (body['external'] as Map)['google'] == true;
-      return _googleOn = on;
+      return body is Map && body['external'] is Map
+          ? body['external'] as Map
+          : const {};
     } catch (_) {
-      return false; // Offline: asked again next time.
+      return null;
     }
   }
 
@@ -143,6 +178,99 @@ class AuthRepository {
     );
     if (!launched) {
       throw StateError("La page de connexion Google n'a pas pu s'ouvrir.");
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Apple — the iPhone app only (125)
+  // ----------------------------------------------------------------
+
+  final AppleCredentialRequest _appleCredential;
+
+  static Future<AuthorizationCredentialAppleID> _askApple({
+    required List<AppleIDAuthorizationScopes> scopes,
+    required String nonce,
+  }) =>
+      SignInWithApple.getAppleIDCredential(scopes: scopes, nonce: nonce);
+
+  /// A fresh random nonce for one sign-in: 32 characters from a secure
+  /// source. Apple is handed its SHA-256; Supabase the raw one, and checks
+  /// that its hash is the one sealed in Apple's token — so a token caught
+  /// on its way cannot be replayed.
+  static String newNonce([Random? random]) {
+    const chars =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
+    final r = random ?? Random.secure();
+    return List.generate(32, (_) => chars[r.nextInt(chars.length)]).join();
+  }
+
+  /// Signs in with Apple's own sheet, natively: no browser, no redirect.
+  /// Apple's identity token goes to Supabase, which creates the account
+  /// the first time and finds it every time after; the session is in hand
+  /// when this returns. Null when the person closed Apple's sheet — nothing
+  /// to say about that. Any other failure throws, for the screen to say.
+  ///
+  /// Apple gives the name only the very first time somebody signs in to
+  /// the app. When it does and the profile has no name yet, it is written
+  /// the same way as at sign-up ([saveMyName]); the e-mail may be a private
+  /// relay address Apple makes, and is kept as Apple gives it.
+  Future<User?> signInWithApple() async {
+    final client = _requireClient();
+    final rawNonce = newNonce();
+    final AuthorizationCredentialAppleID credential;
+    try {
+      credential = await _appleCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: sha256.convert(utf8.encode(rawNonce)).toString(),
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return null;
+      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+    } on SignInWithAppleException {
+      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+    }
+    final idToken = credential.identityToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+    }
+    final response = await client.auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: idToken,
+      nonce: rawNonce,
+    );
+    final user = response.user;
+    if (user == null) {
+      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+    }
+    final name = [credential.givenName, credential.familyName]
+        .map((p) => p?.trim() ?? '')
+        .where((p) => p.isNotEmpty)
+        .join(' ');
+    if (name.isNotEmpty && !await _profileHasName(user.id)) {
+      await saveMyName(name);
+    }
+    return client.auth.currentUser ?? user;
+  }
+
+  /// Whether the signed-in person's profile already carries a name. When it
+  /// cannot be read, it is taken as named: a name Apple gives once is only
+  /// written where nothing would be overwritten.
+  Future<bool> _profileHasName(String userId) async {
+    final client = _client;
+    if (client == null) return true;
+    try {
+      final row = await client
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .maybeSingle();
+      final name = (row?['full_name'] as String?)?.trim() ?? '';
+      return name.isNotEmpty;
+    } catch (_) {
+      return true;
     }
   }
 

@@ -511,6 +511,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       context,
       booking: _booking,
       googleAvailable: widget.session.auth.googleAvailable,
+      // iPhone only, and only with Apple on (125).
+      appleAvailable: widget.session.auth.appleAvailable,
       accent: _shop?.accent,
     );
     if (choice == null || !mounted) return;
@@ -523,6 +525,21 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (!mounted) return;
     widget.session.stashReturnTo(Routes.storefront(widget.slug));
     switch (choice) {
+      // Apple's sheet is native (125): the person is in when it closes,
+      // and the vitrine takes the order up again as after Google on a
+      // phone (_resumeOrder). Closed without signing in: nothing to say,
+      // and nothing left waiting.
+      case OrderSignIn.apple:
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          if (!await widget.session.signInWithApple()) {
+            // Closed: the vitrine is not waiting for anybody any more.
+            widget.session.takeReturnTo();
+            await widget.session.db.writePref(_resumeKey, null);
+          }
+        } catch (error) {
+          messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+        }
       case OrderSignIn.google:
         final messenger = ScaffoldMessenger.of(context);
         try {

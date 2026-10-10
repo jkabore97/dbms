@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/auth/whatsapp_phone.dart';
 import '../../core/errors.dart';
@@ -551,14 +552,18 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         key: const Key('create-locked'),
         icon: Icons.lock_outline,
         title: context.tr('Une deuxième activité : avec Mara Pro'),
-        line: context.tr('Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.'),
+        // The iPhone app sells no Pro (125): what a second activity needs,
+        // said plainly, with no way to buy it.
+        line: sellsDigitalInApp
+            ? context.tr('Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.')
+            : context.tr('Vous avez déjà une activité sur Mara. Une deuxième activité fait partie de Mara Pro.'),
         // Never a dead end (122): the way to Pro on the activity owned,
         // beside the way back.
         action: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_ownedOrgId() case final owned?) ...[
+            if (_ownedOrgId() case final owned? when sellsDigitalInApp) ...[
               FilledButton.icon(
                 key: const Key('create-locked-pro'),
                 style: FilledButton.styleFrom(

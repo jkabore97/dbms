@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart'
+    show SignInWithAppleButton;
 
+import '../../core/auth/auth_repository.dart' show appleSignInPlatform;
 import '../../core/l10n/tr.dart';
 import 'shop_style.dart';
 
 /// What the shopper chose on [OrderSignInSheet].
-enum OrderSignIn { google, otherWay, newAccount }
+enum OrderSignIn { apple, google, otherWay, newAccount }
 
 /// « Connectez-vous pour commander » (F1): a stranger browsed the street,
 /// filled a basket, and only now — at « Commander » or « Réserver » — is
@@ -16,10 +19,15 @@ enum OrderSignIn { google, otherWay, newAccount }
 /// [googleAvailable] is the project's answer (Google switched on in
 /// Supabase): while it is asked the button waits; off, it is not drawn and
 /// the two others carry the sheet.
+///
+/// On an iPhone, « Continuer avec Apple » above Google, as big (125: App
+/// Review's 4.8), when [appleAvailable] says the project has Apple on.
+/// Android and the web never draw it.
 Future<OrderSignIn?> showOrderSignInSheet(
   BuildContext context, {
   required bool booking,
   required Future<bool> Function() googleAvailable,
+  Future<bool> Function()? appleAvailable,
   Color? accent,
 }) {
   return showModalBottomSheet<OrderSignIn>(
@@ -31,7 +39,11 @@ Future<OrderSignIn?> showOrderSignInSheet(
     builder: (sheet) => Theme(
       // The vitrine's own colour on its sheet (122).
       data: ShopStyle.theme(sheet, accent: accent),
-      child: OrderSignInSheet(booking: booking, googleAvailable: googleAvailable),
+      child: OrderSignInSheet(
+        booking: booking,
+        googleAvailable: googleAvailable,
+        appleAvailable: appleAvailable,
+      ),
     ),
   );
 }
@@ -41,10 +53,14 @@ class OrderSignInSheet extends StatefulWidget {
     super.key,
     required this.booking,
     required this.googleAvailable,
+    this.appleAvailable,
   });
 
   final bool booking;
   final Future<bool> Function() googleAvailable;
+
+  /// The project's Apple switch; asked on an iPhone only. Null: no Apple.
+  final Future<bool> Function()? appleAvailable;
 
   @override
   State<OrderSignInSheet> createState() => _OrderSignInSheetState();
@@ -54,9 +70,21 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
   /// Null while the project is asked.
   bool? _google;
 
+  /// Drawn once the project says Apple is on — on an iPhone only.
+  bool _apple = false;
+
   @override
   void initState() {
     super.initState();
+    final apple = widget.appleAvailable;
+    if (apple != null && appleSignInPlatform) {
+      apple().then(
+        (on) {
+          if (mounted && on) setState(() => _apple = true);
+        },
+        onError: (Object _) {},
+      );
+    }
     widget.googleAvailable().then(
       (on) {
         if (mounted) setState(() => _google = on);
@@ -99,6 +127,17 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
               style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
             ),
             const SizedBox(height: 24),
+            if (_apple) ...[
+              // Apple's own button, as tall as Google's, above it.
+              SignInWithAppleButton(
+                key: const Key('order-sign-in-apple'),
+                text: context.tr('Continuer avec Apple'),
+                height: 58,
+                borderRadius: const BorderRadius.all(Radius.circular(29)),
+                onPressed: () => _choose(OrderSignIn.apple),
+              ),
+              SizedBox(height: google == false ? 28 : 12),
+            ],
             if (google != false) ...[
               SizedBox(
                 height: 58,

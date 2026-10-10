@@ -44,7 +44,8 @@ dependencies:
   uuid: ^4.4.0
 
   # Hashing for the device PIN that guards offline re-entry. The PIN itself is
-  # never stored — see core/auth/pin_codec.dart.
+  # never stored — see core/auth/pin_codec.dart. Also the SHA-256 of Sign in
+  # with Apple's nonce (core/auth/auth_repository.dart).
   crypto: ^3.0.3
 
   # Backend (Postgres + auth). Only touched by SyncService.
@@ -130,6 +131,15 @@ dependencies:
   # it and the app offers no Android push); the browser keeps Web Push.
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
+
+  # Sign in with Apple, the iPhone app only (125): App Review's 4.8 asks
+  # for it beside Google. The native sheet hands back an identity token,
+  # which Supabase turns into a session (AuthRepository.signInWithApple).
+  # 8.2.0, the latest stable: it needs Flutter >= 3.44 (this tree is on
+  # 3.47; Codemagic builds with stable) and supports both CocoaPods and
+  # Swift Package Manager. Nothing else in the app reaches it, so Android
+  # and the web never draw it.
+  sign_in_with_apple: ^8.2.0
 
 dev_dependencies:
   flutter_test:

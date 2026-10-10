@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
@@ -110,6 +111,11 @@ class _WaveButtonsState extends State<WaveButtons> {
 
   @override
   Widget build(BuildContext context) {
+    // Mara Pro and a spot are digital goods: not sold in the iPhone app
+    // (125). An order — a shop's goods, its delivery — is paid as ever.
+    if (widget.kind != 'order' && !sellsDigitalInApp) {
+      return const SizedBox.shrink();
+    }
     if (_terms == null) return const SizedBox.shrink();
     if (!_offered) return widget.onUnavailable ?? const SizedBox.shrink();
     final theme = Theme.of(context);

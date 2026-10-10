@@ -5,6 +5,7 @@ import '../../core/theme/mara_mark.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/kaj_theme.dart';
@@ -24,8 +25,11 @@ class ProStrip extends StatelessWidget {
   final OrgSummary org;
   final Widget child;
 
-  /// Whether this person, in this business, is shown the strip.
-  static bool shownFor(OrgSummary org) => org.isAdmin && !org.isPro;
+  /// Whether this person, in this business, is shown the strip. Never in
+  /// the iPhone app: an invitation to upgrade where nothing is sold is the
+  /// steering Apple refuses (125).
+  static bool shownFor(OrgSummary org) =>
+      sellsDigitalInApp && org.isAdmin && !org.isPro;
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/cauris/feature_states.dart';
@@ -99,6 +100,12 @@ class UnlockSheet extends StatefulWidget {
     if (!context.mounted) return;
     final door = states;
     if (scope == null || door == null || noDoor(door)) {
+      // The iPhone app sells no Pro (125): the tool says what it is part
+      // of, and nothing more.
+      if (!sellsDigitalInApp) {
+        await ProOnlySheet.open(context, feature: feature);
+        return;
+      }
       await router.push(Routes.inside(org.id, 'kaj-pro'));
       return;
     }
@@ -332,15 +339,77 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   },
                   child: Text(context.tr('Comment gagner des cauris')),
                 ),
-              TextButton(
-                key: const Key('unlock-pro'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.push(Routes.inside(widget.org.id, 'kaj-pro'));
-                },
-                child: Text(context.tr('Ou passer à Mara Pro')),
-              ),
+              // Not in the iPhone app, which sells no Pro (125).
+              if (sellsDigitalInApp)
+                TextButton(
+                  key: const Key('unlock-pro'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push(Routes.inside(widget.org.id, 'kaj-pro'));
+                  },
+                  child: Text(context.tr('Ou passer à Mara Pro')),
+                ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A Pro tool, in the iPhone app (125), when no cauris open it: what it is
+/// part of, said plainly, and nothing to do but close. No price, no way to
+/// pay, no word about where Pro is sold — the App Store's rule
+/// ([sellsDigitalInApp]).
+class ProOnlySheet extends StatelessWidget {
+  const ProOnlySheet({super.key, this.feature});
+
+  /// The tool tapped, named on the sheet; null names none.
+  final String? feature;
+
+  static Future<void> open(BuildContext context, {String? feature}) =>
+      showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        useSafeArea: true,
+        builder: (_) => ProOnlySheet(feature: feature),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final f = feature;
+    return SafeArea(
+      child: Padding(
+        key: const Key('pro-only'),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const ProCostBadge(),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    f == null || f == 'pro_all'
+                        ? context.tr('Mara Pro')
+                        : PlanTerms.labelOf(f),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(context.tr('Cette fonction fait partie de Mara Pro.'),
+                style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 18),
+            FilledButton(
+              key: const Key('pro-only-close'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.tr('Fermer')),
+            ),
           ],
         ),
       ),

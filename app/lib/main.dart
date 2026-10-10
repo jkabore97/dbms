@@ -74,8 +74,9 @@ const uploadsUrl = String.fromEnvironment('UPLOADS_URL');
 const accountAdminUrl = String.fromEnvironment('ACCOUNT_ADMIN_URL');
 
 /// The app's own version, for the crash reporter's release tag. Kept in one
-/// place next to pubspec's `version:` — bump both together.
-const appVersion = '0.1.0';
+/// place next to pubspec's `version:` — bump both together
+/// (test/batch125_test.dart fails when they differ).
+const appVersion = '1.0.0';
 
 Future<void> main() => CrashReporting.run(_boot, version: appVersion);
 

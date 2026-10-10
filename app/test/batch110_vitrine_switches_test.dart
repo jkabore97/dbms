@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/access/org_access.dart';
 import 'package:kaj_app/core/access/plan_terms.dart';
+import 'package:kaj_app/core/access/store_rules.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/analytics/analytics_repository.dart';
@@ -378,6 +379,18 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('wave-handle')), findsOneWidget);
       expect(find.text('Recevoir les paiements des clients'), findsNothing);
+    });
+
+    // 125: the iPhone app sells no spot — the « Mettre en avant » entry is
+    // not drawn there, with no rule at all.
+    testWidgets('the App Store build: no « Mettre en avant »', (tester) async {
+      debugSellsDigitalInApp = false;
+      addTearDown(() => debugSellsDigitalInApp = null);
+      await openSettings(tester, const {});
+      await tester.tap(find.text('Vitrine'));
+      await settle(tester);
+      expect(find.byKey(const Key('vitrine-spots')), findsNothing);
+      expect(find.text('Mettre en avant'), findsNothing);
     });
 
     testWidgets('a hidden Livraison asked by its address opens the index', (tester) async {

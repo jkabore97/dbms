@@ -452,7 +452,10 @@ builds without publishing; on main it publishes a new release, like a push
 
 The iPhone app is the same Flutter app (`app/ios/`, bundle id `bf.kaj.app`,
 named « Mara », iOS 15.5 and later — the oldest the text-recognition plugin
-supports). It needs a Mac to build, which GitHub's Linux machines are not:
+supports). iPhone only (125: `TARGETED_DEVICE_FAMILY = 1`), so App Store
+Connect asks for no iPad screenshots and App Review tests on no iPad. It
+sells no digital goods: Mara Pro and the paid spots are not offered in it
+(« What the iPhone app does not sell » below). It needs a Mac to build, which GitHub's Linux machines are not:
 [Codemagic](https://codemagic.io) builds it from `codemagic.yaml` at the
 root of the repository, signs it, and sends it to TestFlight. No secret is in
 the repository; each one is typed into Codemagic or Apple's sites by the
@@ -463,8 +466,10 @@ owner. Step by step, once:
    number). Wait for the « Welcome » e-mail.
 2. **The app's identifier** — developer.apple.com › Certificates, IDs &
    Profiles › Identifiers › « + » › App IDs › App: description « Mara »,
-   Bundle ID *explicit* `bf.kaj.app`. Leave the capabilities as they are
-   (push for iPhone is not switched on yet; see below).
+   Bundle ID *explicit* `bf.kaj.app`. Tick **Sign in with Apple** (the app
+   offers it beside Google, 125 — « Sign in with Apple (iPhone) » below);
+   leave the other capabilities as they are (push for iPhone is not
+   switched on yet; see below).
 3. **The app in App Store Connect** — <https://appstoreconnect.apple.com> ›
    Apps › « + » › New App: platform iOS, name « Mara » (or « Mara — votre
    activité » if the name is taken), primary language French, bundle ID
@@ -825,6 +830,81 @@ To switch it on (owner, once — no secret goes in the repository or in chat):
    intent filter in `AndroidManifest.xml` catches it).
 5. Open the live site signed out: the button is there. On Android, Google
    opens in the browser and hands back to the app.
+
+### Sign in with Apple (iPhone)
+
+App Review's guideline 4.8: an iPhone app that offers Google sign-in must
+offer Sign in with Apple too. Since 125 the iPhone app draws « Continuer
+avec Apple », black with Apple's logo, above « Continuer avec Google » —
+on the sign-in screen and on a vitrine's « Connectez-vous pour commander »
+sheet — once the project has Apple switched on (`/auth/v1/settings`, read
+like Google's). Android and the web never draw it. It is Apple's native
+sheet: its identity token goes to Supabase (`signInWithIdToken`, with a
+nonce), the account is created on the first visit and found every time
+after, and the person goes on exactly as after Google (the device code for
+somebody with a business, then the businesses). Apple gives the name only
+the first time; it is written on the profile when the profile has none.
+The e-mail may be a private relay address Apple makes
+(`…@privaterelay.appleid.com`): it is kept as given.
+
+To switch it on (owner, once — no secret goes in the repository or in chat):
+
+1. **Apple Developer** — developer.apple.com › Certificates, IDs &
+   Profiles › Identifiers › `bf.kaj.app` › tick **Sign in with Apple**
+   (« Enable as a primary App ID ») › Save. The app's
+   `ios/Runner/Runner.entitlements` already asks for it.
+2. **A new provisioning profile** — changing a capability invalidates the
+   App Store profile made in « Building for iPhone with Codemagic », step 6.
+   Make it again: developer.apple.com › Profiles › « Mara App Store » ›
+   Edit › Save (or « + » › App Store Connect › `bf.kaj.app` › the
+   certificate › Generate). Then Codemagic › Team settings ›
+   codemagic.yaml settings › Code signing identities › *iOS provisioning
+   profiles* › **Fetch profiles**, tick the new one (reference
+   `mara_app_store`), Save. A build with the old profile stops with a
+   signing error naming `com.apple.developer.applesignin`.
+3. **Supabase** — Authentication › Providers › **Apple**: on; *Client IDs*
+   `bf.kaj.app`. Nothing else: the native flow needs no secret key, no
+   Services ID and no redirect URL (those are for Apple's web sign-in,
+   which Mara does not use). Save.
+4. **Build** — Codemagic › *Start new build* › `ios-release`. In
+   TestFlight, the sign-in screen shows « Continuer avec Apple » above
+   Google.
+
+**Not done yet, and owed to Apple: revoking the token when an account
+made with Apple is deleted.** Apple's rule (5.1.1(v)) is that deleting an
+account created with Sign in with Apple also revokes the person's Apple
+token (`POST https://appleid.apple.com/auth/revoke`). That call needs a
+*Sign in with Apple* key (a `.p8` from developer.apple.com › Keys, its Key
+ID and the Team ID) to sign a client secret, and the `authorization_code`
+Apple gives at sign-in — so it is a server's job, not the app's. The
+follow-up: keep the code at sign-in (the app has it in
+`AuthorizationCredentialAppleID.authorizationCode`), exchange it once for
+Apple's refresh token in the account Worker (`workers/account-admin`), store
+that token server-side only, and have the account deletion (the
+Worker's `POST /v1/me/delete`, after `delete_my_account_check()`) call
+`auth/revoke` with it before the account is removed. That is a migration
+(a private table for the token) and a Worker change, for a later batch. Until then, the deletion still removes the
+account and its data in Mara; the person can also stop using Apple ID with
+Mara from their iPhone (Settings › their name › Sign in with Apple).
+
+### What the iPhone app does not sell
+
+App Review's guideline 3.1.1: an iPhone app sells digital goods only
+through Apple's in-app purchase, and may not send people to buy them
+elsewhere. Mara Pro (the subscription) and the paid spots (« Mettre en
+avant ») are sold by card (Stripe) and Wave, so the App Store build
+(`--dart-define=STORE=appstore`, `codemagic.yaml`) offers neither — one
+rule, `sellsDigitalInApp` in `app/lib/core/access/store_rules.dart`, read
+by every screen concerned. In the iPhone app: no Pro or spot price, no
+pay, « Bientôt disponible » or « Passer à Pro » button, no « PRO » strip,
+no Stripe page, no « Mettre en avant » entry; what Pro includes is still
+described, a locked tool says « Cette fonction fait partie de Mara Pro. »
+with only « Fermer », a business already on Pro shows « Active » with every
+tool open, and cauris unlocks (earned, never bought) work as everywhere. A
+spot bought elsewhere still shows as sponsored in the street. Shoppers
+paying shops for orders and delivery (Wave, cash, card) are untouched:
+those are physical goods and services, which Apple lets be paid outside.
+Android and the web are unchanged.
 
 ### What only the owner can switch on
 

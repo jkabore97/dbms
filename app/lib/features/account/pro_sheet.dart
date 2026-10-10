@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
@@ -34,7 +35,9 @@ class ProSheet {
 }
 
 /// How to pay for Mara Pro: by card through Stripe (082), and only that way
-/// — « Bientôt disponible » until the platform opens it. With [period] given, the page above chose month or year and this
+/// — « Bientôt disponible » until the platform opens it. In the iPhone app
+/// ([sellsDigitalInApp] false) only what Pro includes: no price, no way to
+/// pay, no « Bientôt ». With [period] given, the page above chose month or year and this
 /// panel draws no choice of its own; with [showFeatures] false, the page
 /// above already listed what Pro adds.
 class ProPayPanel extends StatefulWidget {
@@ -144,7 +147,9 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 ),
               ),
               ],
-              if (!widget.org.isPro) ...[
+              // The iPhone app sells no Pro (125): the description above,
+              // and nothing about a price or a way to pay.
+              if (!widget.org.isPro && sellsDigitalInApp) ...[
                 if (widget.showFeatures) ...[
                 const SizedBox(height: 16),
                 Text(

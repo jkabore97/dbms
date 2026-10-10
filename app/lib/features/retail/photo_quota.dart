@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart';
 import '../../core/cauris/feature_states.dart';
 import '../../core/errors.dart';
@@ -259,14 +260,16 @@ class _PhotoSlotSheetState extends State<PhotoSlotSheet> {
                       style: const TextStyle(fontSize: 16)),
                 ),
               ),
-            TextButton(
-              key: const Key('photo-slot-pro'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-                context.push(Routes.inside(widget.org.id, 'kaj-pro'));
-              },
-              child: Text(context.tr('Ou passer à Mara Pro : photos sans limite')),
-            ),
+            // Not in the iPhone app, which sells no Pro (125).
+            if (sellsDigitalInApp)
+              TextButton(
+                key: const Key('photo-slot-pro'),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                  context.push(Routes.inside(widget.org.id, 'kaj-pro'));
+                },
+                child: Text(context.tr('Ou passer à Mara Pro : photos sans limite')),
+              ),
           ],
         ),
       ),

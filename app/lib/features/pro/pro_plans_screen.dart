@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/theme/kaj_card.dart';
@@ -24,7 +25,8 @@ import '../../core/notify/bell_room.dart';
 /// gives, row by row — what is free for everyone, what Pro adds, and the
 /// limits Pro lifts — read from the platform's own terms (066), so the page
 /// says exactly what the database will enforce. The foot is how to pay
-/// (ProPayPanel): by card, by Wave, or by hand.
+/// (ProPayPanel): by card, by Wave, or by hand — except in the iPhone app,
+/// which describes Pro and sells nothing ([sellsDigitalInApp]).
 class ProPlansScreen extends StatefulWidget {
   const ProPlansScreen({
     super.key,
@@ -136,6 +138,10 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final wide = MediaQuery.sizeOf(context).width >= 720;
     final price = _period == 'year' ? t.priceYear : t.priceMonth;
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
+    // The iPhone app sells no Pro (125): the comparison stays — what each
+    // plan gives — with no period to choose, no price, no way to pay and
+    // no Stripe page.
+    final sells = sellsDigitalInApp;
 
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Mara Pro'))),
@@ -177,7 +183,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       ],
                     ),
                   ),
-                  if (!org.isPro) ...[
+                  if (!org.isPro && sells) ...[
                     const SizedBox(height: 22),
                     Center(
                       child: SegmentedButton<String>(
@@ -199,7 +205,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   ],
                   const SizedBox(height: 22),
                   _Header(
-                    proPrice: org.isPro
+                    proPrice: org.isPro || !sells
                         ? null
                         : '${_money(price)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
                   ),
@@ -235,8 +241,8 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                     _EarnIt(org: org, cost: _costs['pro_all']!),
                     const SizedBox(height: 20),
                   ],
-                  if (org.isPro && widget.cardManage != null) widget.cardManage!,
-                  if (!org.isPro)
+                  if (org.isPro && sells && widget.cardManage != null) widget.cardManage!,
+                  if (!org.isPro && sells)
                     ProPayPanel(
                       org: org,
                       terms: t,

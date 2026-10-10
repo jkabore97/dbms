@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/mara_mark.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart'
+    show SignInWithAppleButton;
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import 'package:intl/intl.dart';
@@ -52,6 +54,7 @@ class LoginScreen extends StatefulWidget {
     required this.onSignedIn,
     this.onboarding,
     this.onGoogle,
+    this.onApple,
     this.initialError,
     this.startWithSignUp = false,
   });
@@ -66,6 +69,13 @@ class LoginScreen extends StatefulWidget {
   /// screen never sees the user. Null hides the button; so does a project
   /// with Google switched off.
   final Future<void> Function()? onGoogle;
+
+  /// Signs in with Apple's own sheet (SessionController.signInWithApple),
+  /// the iPhone app only (125): App Review asks for it beside Google. The
+  /// session is in hand when it returns and the controller has already
+  /// taken it, as after Google. Null hides the button; so do Android, the
+  /// web and a project with Apple switched off.
+  final Future<void> Function()? onApple;
 
   /// A problem from the way back from Google, said once.
   final String? initialError;
@@ -139,6 +149,10 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Whether to draw « Continuer avec Google »: the project has it on.
   bool _google = false;
 
+  /// Whether to draw « Continuer avec Apple »: an iPhone, and the project
+  /// has it on.
+  bool _apple = false;
+
   @override
   void initState() {
     super.initState();
@@ -148,10 +162,19 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted && on) setState(() => _google = true);
       });
     }
+    if (widget.onApple != null && appleSignInPlatform) {
+      widget.auth.appleAvailable().then((on) {
+        if (mounted && on) setState(() => _apple = true);
+      });
+    }
   }
 
   Future<void> _continueWithGoogle() => _run(() async {
         await widget.onGoogle!();
+      });
+
+  Future<void> _continueWithApple() => _run(() async {
+        await widget.onApple!();
       });
 
   @override
@@ -529,12 +552,27 @@ class _LoginScreenState extends State<LoginScreen> {
     ];
   }
 
-  /// One tap, for sign-in and sign-up alike: Google says who this is, and
-  /// the device code is chosen right after, as with a password.
+  /// One tap, for sign-in and sign-up alike: Apple or Google says who this
+  /// is, and the device code is chosen right after, as with a password.
+  /// Apple first, black, as tall as Google's (App Review, 4.8: at least as
+  /// prominent), on an iPhone only.
   List<Widget> _googleStep(ThemeData theme) {
-    if (!_google || widget.onGoogle == null) return const [];
+    final apple = _apple && widget.onApple != null;
+    final google = _google && widget.onGoogle != null;
+    if (!apple && !google) return const [];
     return [
-      SizedBox(
+      if (apple) ...[
+        // Apple's own button (its logo, its black), with Mara's words.
+        SignInWithAppleButton(
+          key: const Key('apple-sign-in'),
+          text: context.tr('Continuer avec Apple'),
+          height: 52,
+          borderRadius: const BorderRadius.all(Radius.circular(26)),
+          onPressed: _busy ? null : _continueWithApple,
+        ),
+        if (google) const SizedBox(height: 12),
+      ],
+      if (google) SizedBox(
         width: double.infinity,
         height: 52,
         child: OutlinedButton(
