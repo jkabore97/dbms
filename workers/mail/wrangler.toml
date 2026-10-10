@@ -1,0 +1,20 @@
+# Sends Mara's welcome e-mail through Resend, once per person. See
+# src/index.js for its one door and why it holds the service-role key.
+#
+# Deployed by workflows/deploy-mail.yml, which writes the [vars] below from
+# repository variables and sets the secrets with `wrangler secret put`:
+#
+#   secrets   SUPABASE_SERVICE_ROLE_KEY   MAIL_WEBHOOK_SECRET   RESEND_API_KEY
+#   vars      SUPABASE_URL  MAIL_FROM  MAIL_REPLY_TO
+
+name = "kaj-mail"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Gives kaj-mail.<subdomain>.workers.dev, which the database webhook posts to.
+workers_dev = true
+
+[vars]
+SUPABASE_URL = ""
+MAIL_FROM = "Mara <bienvenue@marakaj.com>"
+MAIL_REPLY_TO = "hello@kaj-consulting.com"

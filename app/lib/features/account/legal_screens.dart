@@ -91,6 +91,7 @@ class PrivacyScreen extends StatelessWidget {
             'paiement par carte de Mara Pro (Mara ne voit jamais le numéro '
             'de la carte) ; Sentry pour les rapports d\'erreur de '
             'l\'application (sans nom, numéro ni contenu de vos livres) ; '
+            'Resend pour envoyer l\'e-mail de bienvenue ; '
             'et, quand ils sont ouverts, Wave pour le paiement par mobile '
             'money et WhatsApp (Meta) pour envoyer le code de vérification '
             'du numéro. Aucun ne reçoit vos données pour de la publicité.',

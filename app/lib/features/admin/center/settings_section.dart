@@ -132,6 +132,8 @@ const platformSettingDefs = <SettingDef>[
   // the listing is live (the APK until then), the App Store once set.
   SettingDef('play_store_live', 'apps', SettingType.flag),
   SettingDef('app_store_url', 'apps', SettingType.text),
+  // 124: the welcome e-mail a new account receives once (workers/mail).
+  SettingDef('welcome_email_on', 'accounts', SettingType.flag),
 ];
 
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
@@ -146,6 +148,7 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'creation' => context.tr('Création d\'activité'),
       'help' => context.tr('Aide aux clients'),
       'apps' => context.tr('Applications mobiles'),
+      'accounts' => context.tr('Nouveaux comptes'),
       _ => group,
     };
 
@@ -207,6 +210,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
       'play_store_live' => context.tr('Mara est publiée sur Google Play (sinon : le fichier APK)'),
       'app_store_url' => context.tr('Adresse de Mara sur l\'App Store (vide : écran d\'accueil)'),
+      'welcome_email_on' => context.tr('E-mail de bienvenue aux nouveaux comptes'),
       _ => key,
     };
 

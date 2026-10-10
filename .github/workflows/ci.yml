@@ -818,6 +818,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch123.sql
 
+      - name: Prove the welcome e-mail is asked for once per person — Google at sign-up, a password account on confirmation, a phone account on its first confirmed address; never an account made before 124 (no backfill), never twice, never with the switch off (Réglages, journaled); a failing ask never stops a sign-up; the three kinds, the doors (124)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch124.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,
@@ -865,6 +870,14 @@ jobs:
       # decrypts what the Worker encrypted, and the push service that checks
       # the VAPID signature. Node's WebCrypto is the Worker's WebCrypto.
       - run: node --test workers/push/test/*.test.mjs
+      # The welcome e-mail Worker (124): the webhook's secret, a row claimed
+      # before Resend is called and never sent twice, no key no send, the
+      # outcome written back, the e-mail's words and links in French and
+      # English — against a fake PostgREST and a fake Resend, no network.
+      - run: node --check workers/mail/src/index.js
+      - run: node --check workers/mail/src/welcome.js
+      - run: node --check workers/mail/scripts/preview.mjs
+      - run: node --test workers/mail/test/*.test.mjs
       # The Wave Worker: the webhook signature, a session begun under the
       # person's own token, settle → payout with the payment id as the
       # idempotency key, a failed payout retried.

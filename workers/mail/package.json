@@ -1,0 +1,10 @@
+{
+  "name": "kaj-mail",
+  "private": true,
+  "type": "module",
+  "description": "Mara's welcome e-mail: Supabase welcome_emails insert -> Resend, once per person.",
+  "scripts": {
+    "test": "node --test test",
+    "preview": "node scripts/preview.mjs"
+  }
+}

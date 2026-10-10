@@ -13,7 +13,10 @@ create table auth.users (
     -- only those). Null, as Supabase leaves an account nobody proved: a
     -- test that needs a proved one says so.
     phone_confirmed_at timestamptz,
-    email_confirmed_at timestamptz
+    email_confirmed_at timestamptz,
+    -- When the account was made, as Supabase keeps it (124: a welcome
+    -- e-mail is for an account made after it, never before).
+    created_at         timestamptz default now()
 );
 
 -- Supabase resolves the current user from the JWT it puts on the request.

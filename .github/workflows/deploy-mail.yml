@@ -1,0 +1,118 @@
+name: Deploy the mail Worker
+
+# Publishes workers/mail (kaj-mail) — the Worker that turns a welcome_emails
+# row (124) into Mara's welcome e-mail through Resend. See README « Welcome
+# e-mail (Resend) » for the one-time setup: the Resend domain, the key, the
+# webhook secret, and the database webhook.
+#
+# Kept apart from "Deploy to Cloudflare" like the push Worker is: this one
+# holds the service-role key as a Worker secret, and a mistake in its setup
+# must not be able to stop the app itself going out.
+#
+# Until the owner sets RESEND_API_KEY this run says so in its summary and
+# stops, green: nothing is deployed and nothing is sent.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/mail/**'
+      - '.github/workflows/deploy-mail.yml'
+
+concurrency:
+  group: cloudflare-mail
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      # Secrets: the three things that must never be in a browser or a log.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MAIL_WEBHOOK_SECRET: ${{ secrets.MAIL_WEBHOOK_SECRET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      # Variables: public by nature.
+      MAIL_FROM: ${{ vars.MAIL_FROM || 'Mara <bienvenue@marakaj.com>' }}
+      MAIL_REPLY_TO: ${{ vars.MAIL_REPLY_TO || 'hello@kaj-consulting.com' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The Worker's own tests
+        run: node --test workers/mail/test/*.test.mjs
+
+      - name: Is Resend set up yet?
+        id: resend
+        run: |
+          if [ -z "$RESEND_API_KEY" ]; then
+            echo "on=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Mail Worker not deployed: RESEND_API_KEY is empty"
+              echo
+              echo "Nothing was deployed and no e-mail is sent. New accounts' welcome rows wait as *pending* (they are not sent later: the welcome is for the moment of sign-up)."
+              echo
+              echo "To switch it on: README, section « Welcome e-mail (Resend) » — the Resend account, the marakaj.com domain, then the repository secret \`RESEND_API_KEY\`, and re-run this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "RESEND_API_KEY is empty: skipping the deploy (see the run summary)."
+          else
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check what this needs is present
+        if: steps.resend.outputs.on == 'true'
+        run: |
+          missing=""
+          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] || missing="$missing SUPABASE_SERVICE_ROLE_KEY(secret)"
+          [ -n "$MAIL_WEBHOOK_SECRET" ] || missing="$missing MAIL_WEBHOOK_SECRET(secret)"
+          if [ -n "$missing" ]; then
+            echo "Empty at deploy time:$missing" >&2
+            echo "README, section 'Welcome e-mail (Resend)', lists how to make each one." >&2
+            exit 1
+          fi
+
+      - name: Check the Cloudflare token is one Cloudflare accepts
+        if: steps.resend.outputs.on == 'true'
+        run: |
+          body=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify) || true
+          case "$body" in
+            *'"success":true'*) echo "Token accepted by Cloudflare." ;;
+            *) echo "Cloudflare rejected CLOUDFLARE_API_TOKEN." >&2; echo "$body" >&2; exit 1 ;;
+          esac
+
+      - name: Deploy
+        if: steps.resend.outputs.on == 'true'
+        run: |
+          npx --yes wrangler@4 deploy \
+            --config workers/mail/wrangler.toml \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "MAIL_FROM:$MAIL_FROM" \
+            --var "MAIL_REPLY_TO:$MAIL_REPLY_TO"
+
+      # Secrets go in after the script exists, through wrangler's secret
+      # store — never as --var, which would print them in the deploy log.
+      - name: Install the secrets
+        if: steps.resend.outputs.on == 'true'
+        run: |
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/mail/wrangler.toml
+          printf '%s' "$MAIL_WEBHOOK_SECRET"       | npx --yes wrangler@4 secret put MAIL_WEBHOOK_SECRET       --config workers/mail/wrangler.toml
+          printf '%s' "$RESEND_API_KEY"            | npx --yes wrangler@4 secret put RESEND_API_KEY            --config workers/mail/wrangler.toml
+
+      - name: Say what is left to do
+        if: steps.resend.outputs.on == 'true'
+        run: |
+          {
+            echo "### Mail Worker deployed"
+            echo
+            echo "1. Migration 124 applied live (\`database/apply_006_to_124.sql\`)?"
+            echo "2. In Supabase: Database → Webhooks → Create: table \`welcome_emails\`, event INSERT, HTTP POST to \`<kaj-mail origin above>/v1/welcome\`, header \`Authorization: Bearer <MAIL_WEBHOOK_SECRET>\`."
+            echo "3. Resend: the domain \`marakaj.com\` verified (README, « Welcome e-mail (Resend) »)."
+            echo
+            echo "Then make a new account with a Google address: the welcome arrives once. Switch: Réglages › Nouveaux comptes."
+          } >> "$GITHUB_STEP_SUMMARY"
