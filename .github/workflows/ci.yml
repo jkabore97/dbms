@@ -870,6 +870,14 @@ jobs:
       # decrypts what the Worker encrypted, and the push service that checks
       # the VAPID signature. Node's WebCrypto is the Worker's WebCrypto.
       - run: node --test workers/push/test/*.test.mjs
+      # The welcome e-mail Worker (124): the webhook's secret, a row claimed
+      # before Resend is called and never sent twice, no key no send, the
+      # outcome written back, the e-mail's words and links in French and
+      # English — against a fake PostgREST and a fake Resend, no network.
+      - run: node --check workers/mail/src/index.js
+      - run: node --check workers/mail/src/welcome.js
+      - run: node --check workers/mail/scripts/preview.mjs
+      - run: node --test workers/mail/test/*.test.mjs
       # The Wave Worker: the webhook signature, a session begun under the
       # person's own token, settle → payout with the payment id as the
       # idempotency key, a failed payout retried.

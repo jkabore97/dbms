@@ -183,7 +183,7 @@ function html(c, name, english, htmlLang) {
           <td align="center" style="padding:20px 32px 28px 32px;${font}font-size:13px;line-height:20px;color:${b.muted};">
             ${escapeHtml(c.question)}<br>
             <a href="${LINKS.privacy}" style="color:${b.muted};text-decoration:underline;">${escapeHtml(c.privacy)}</a><br>
-            ${escapeHtml(c.signature)}
+            ${escapeHtml(c.signature).replace("KAJ Consulting LLC", "KAJ&nbsp;Consulting&nbsp;LLC")}
           </td>
         </tr>
       </table>

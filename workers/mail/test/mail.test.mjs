@@ -184,7 +184,7 @@ test("the e-mail, in French: the words, the three steps, the links, the colours,
                    "Faites votre première vente", "Ouvrir Mara",
                    "Une question ? Répondez simplement à cet e-mail.",
                    "Mara — Au Service du Peuple · KAJ Consulting LLC"]) {
-    assert.ok(m.html.includes(s), s);
+    assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
     assert.ok(m.text.includes(s), `text: ${s}`);
   }
   for (const href of [LINKS.app, LINKS.play, LINKS.privacy]) {
@@ -207,7 +207,7 @@ test("the e-mail, in English, equivalent", () => {
   for (const s of ["Welcome to Mara, John!", "Add your items", "Open your shop window",
                    "Make your first sale", "Open Mara", "A question? Just reply to this e-mail.",
                    "Mara — Au Service du Peuple · KAJ Consulting LLC"]) {
-    assert.ok(m.html.includes(s), s);
+    assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
   }
   assert.match(m.html, /<html lang="en"/);
   assert.match(m.text, /Open Mara: https:\/\/marakaj\.com/);

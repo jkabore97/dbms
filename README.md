@@ -578,7 +578,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_123.sql`, below),
+older database, applied with `database/apply_006_to_124.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -634,6 +634,76 @@ Until every step is done nothing rings with the app closed — and nothing
 breaks: the app offers no push without a `PUSH_URL` (or, on Android,
 without Firebase), the Worker answers a wrong secret with 401, and the bell
 inside the app works throughout.
+
+### Welcome e-mail (Resend)
+
+A new account receives one e-mail, once: « Bienvenue sur Mara, {prénom} ! »
+from `Mara <bienvenue@marakaj.com>`, replies going to
+`hello@kaj-consulting.com` — the logo, three steps (« Ajoutez vos
+articles », « Ouvrez votre vitrine », « Faites votre première vente »), the
+« Ouvrir Mara » button, the Google Play line, the privacy link. French; in
+English when the account's sign-in says so; and since the app keeps the
+language on the phone, not on the server, a French e-mail with one English
+line otherwise. It is per person — the same for whoever later runs a shop,
+a farm or an association, or none.
+
+Wired exactly as push is: migration 124 writes a row in `welcome_emails`
+the first time a **new** account has a confirmed address (Google sign-in:
+at once; e-mail and password: when the link is clicked; a phone account:
+when it first adds a confirmed address); a Supabase database webhook on
+that table posts it to the `kaj-mail` Worker (`workers/mail`), which claims
+the row, sends through Resend and writes back « sent » or « failed ».
+
+- **Never twice**: one row per person ever, and only a *pending* row is
+  claimed; a second webhook or a retry sends nothing.
+- **No backfill**: accounts made before 124 was applied are never
+  e-mailed — not when it is applied, not if they later change or confirm
+  their address. Nothing is sent to anybody already signed up.
+- **Never in the way**: if anything fails (no webhook, Worker down, Resend
+  refusing), the sign-up goes through as before.
+
+One-time setup, in this order:
+
+1. **Resend**: create an account at resend.com. Domains → Add domain →
+   `marakaj.com`. Resend shows a few DNS records (an MX and a TXT for the
+   `send` subdomain, the DKIM TXT `resend._domainkey`, and an optional
+   DMARC TXT). In Cloudflare → marakaj.com → DNS, add each one exactly
+   as shown, **DNS only** (grey cloud, not proxied). Back in Resend, Verify;
+   wait for « Verified ». Nothing changes for the site or for
+   hello@kaj-consulting.com.
+2. **The key**: Resend → API Keys → Create, permission « Sending access »,
+   domain `marakaj.com`. Put it in the repository *secret*
+   `RESEND_API_KEY` (GitHub → Settings → Secrets and variables → Actions)
+   — nowhere else, never in chat.
+3. **The webhook secret**: the repository *secret* `MAIL_WEBHOOK_SECRET`,
+   any long random string (`openssl rand -hex 32`) — its own, not push's.
+   `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` and `CLOUDFLARE_API_TOKEN`
+   are the ones push already uses.
+4. **The database**: apply 124 (`database/apply_006_to_124.sql`, below).
+5. **Deploy the Worker**: the "Deploy the mail Worker" workflow (it runs
+   on its own on a push to main that touches `workers/mail`). Without
+   `RESEND_API_KEY` it deploys nothing and says so in its summary. Its
+   summary prints the Worker's origin (`https://kaj-mail.<subdomain>.workers.dev`).
+6. **The webhook.** Supabase → Database → Webhooks → Create: table
+   `welcome_emails`, event `INSERT`, HTTP `POST` to
+   `<kaj-mail origin>/v1/welcome`, HTTP header
+   `Authorization: Bearer <MAIL_WEBHOOK_SECRET>`.
+7. **Test it**: sign up with a Google address that has never used Mara (or
+   an e-mail and password, then click the confirmation link). The e-mail
+   arrives within a minute; replying lands in hello@kaj-consulting.com.
+   In Supabase → SQL: `select status, sent_at, error from welcome_emails
+   order by requested_at desc limit 5;` — `sent`, or `failed` with
+   Resend's words (an unverified domain, most often). Resend → Emails shows
+   each one sent.
+
+**Switching it off**: the command center's Réglages › Nouveaux comptes ›
+« E-mail de bienvenue aux nouveaux comptes » (on by default, journaled like
+every setting). Off, new accounts are not asked for; one asked a moment
+before is marked « off » and not sent.
+
+Until steps 1–6 are done nothing is sent — and nothing breaks: rows wait as
+*pending* (they are not sent later), the Worker answers a wrong secret
+with 401 and, without its key, sends nothing.
 
 ### Wave checkout
 
@@ -758,7 +828,7 @@ To switch it on (owner, once — no secret goes in the repository or in chat):
 
 ### What only the owner can switch on
 
-Three things the code is ready for and that need the owner's own accounts.
+Four things the code is ready for and that need the owner's own accounts.
 None is pasted anywhere but GitHub's secrets page.
 
 1. **Crash reports** — create a Sentry project (Flutter), copy its DSN into
@@ -779,6 +849,11 @@ None is pasted anywhere but GitHub's secrets page.
    `GOOGLE_SERVICES_JSON` — the file's raw content, pasted as it is (not
    base64), and never in chat. Firebase Cloud Messaging is wired into the
    app and the push Worker since 115 ("Push notifications", step 6).
+4. **The welcome e-mail** — a Resend account with the domain `marakaj.com`
+   verified (DNS records in Cloudflare), its key in the repository secret
+   `RESEND_API_KEY`, a random `MAIL_WEBHOOK_SECRET`, then the "Deploy the
+   mail Worker" workflow and one database webhook ("Welcome e-mail
+   (Resend)" above). Only accounts made after 124 are e-mailed.
 
 ### The live site
 
@@ -942,9 +1017,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `123` up to date, paste
-`database/apply_006_to_123.sql` into the Supabase SQL editor and run it once.
-It is `006` through `123` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
+To bring a database anywhere between `005` and `124` up to date, paste
+`database/apply_006_to_124.sql` into the Supabase SQL editor and run it once.
+It is `006` through `124` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
