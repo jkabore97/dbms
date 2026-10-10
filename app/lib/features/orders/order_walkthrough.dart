@@ -134,10 +134,10 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
     if (widget.order.hasSlot) _readHours();
   }
 
-  /// The vitrine's hours, for the times « Proposer une autre heure » offers.
+  /// The business's booking hours (125's booking_hours), for the times
+  /// « Proposer une autre heure » offers — the ones the server checks.
   Future<void> _readHours() async {
-    final slug = widget.org.slug;
-    final hours = slug == null ? null : await widget.retail.vitrineHours(slug);
+    final hours = await widget.retail.bookingHours(widget.org.id);
     if (mounted) {
       setState(() {
         _hours = hours;

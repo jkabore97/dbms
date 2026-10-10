@@ -56,8 +56,7 @@ Future<void> reorderInto(
         quantity: line.value.round().clamp(1, 20),
       ).toJson()),
     );
-    await db.writePref(
-        streetResumeKey, '${basket.slug}|${DateTime.now().toIso8601String()}');
+    await db.writePref(streetResumeKey, streetResumeNote(basket.slug, booking: true));
     if (!context.mounted) return;
     context.go(Routes.storefront(basket.slug));
     say(context.tr('Choisissez un jour et une heure.'));

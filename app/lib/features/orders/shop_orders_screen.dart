@@ -144,6 +144,24 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
 
   bool _focusOpened = false;
 
+  /// Another notification opened while Commandes is already on screen (the
+  /// router keeps this page and hands it the new `?commande=`): that order
+  /// opens in its turn — read again first when the list does not have it.
+  @override
+  void didUpdateWidget(covariant ShopOrdersScreen old) {
+    super.didUpdateWidget(old);
+    if (old.focusId == widget.focusId) return;
+    _focusOpened = false;
+    if (_loading || widget.focusId == null) return;
+    _openFocus();
+    if (!_focusOpened) {
+      // Not inside the frame being built: the re-read sets state.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(silent: true);
+      });
+    }
+  }
+
   /// Once: the order the notification was about, at its step.
   void _openFocus() {
     if (_focusOpened || widget.focusId == null) return;
@@ -536,8 +554,8 @@ class _OrderCard extends StatelessWidget {
                       label: context.tr('À répondre'))
                 else
                   Chip(
-                    label: Text(context.tr(
-                        orderStatusLabel(order.status, booking: order.isBooking))),
+                    key: Key('order-status-${order.id}'),
+                    label: Text(shopOrderStatusWord(context, order)),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -568,7 +586,7 @@ class _OrderCard extends StatelessWidget {
             // The state's clock (073): "Prête depuis 25 min".
             if (order.isOpen && clock?.since != null)
               Text(
-                  '${context.tr(orderStatusLabel(order.status, booking: order.isBooking))} ${clock!.sinceLabel()}'
+                  '${shopOrderStatusWord(context, order)} ${clock!.sinceLabel()}'
                   '${clock!.selfDelivered ? context.tr(' · vous livrez') : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,

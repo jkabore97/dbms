@@ -41,8 +41,12 @@
 --      migration is run again, as 115 says): a line that is a service
 --      carries its slot (« booked_for ») and, for a service by the person
 --      or by the hour, how many (1 to 20; any other service is 1). A
---      service is booked alone: with goods, or with another service, it is
---      refused in French. An order of goods is exactly what 109 made it.
+--      booking is one service alone: with goods, or with another service,
+--      it is refused in French. A call with no slot is exactly 109's — an
+--      order of goods, and the app installed before 125 still sending a
+--      basket of services with its day in the note (« sur rendez-vous »,
+--      the note required, goods beside a service allowed as 109 allowed
+--      them): its booked_for stays null, and the new app shows it as before.
 --   4. book_service(slug, product, booked_for, quantity, note, phone): the
 --      app's door for « Réserver » — the line written for place_order, and
 --      place_order's every rule. Its absence (PGRST202) tells an app on an
@@ -53,8 +57,11 @@
 --      bells now saying « Votre rendez-vous … est confirmé : mardi 14
 --      oct., 10:00 » (booking_confirmed) and booking_declined; « Proposer
 --      une autre heure » is propose_booking_time(order, at), the same slot
---      rules, bell booking_proposed. Confirming while a proposal waits for
---      the customer is refused; so is confirming a time already past.
+--      rules, bell booking_proposed; booking_hours(org) hands the business
+--      the very hours those rules read, even while its vitrine is closed.
+--      Confirming while a proposal waits for the customer is refused; so is
+--      confirming a time already past. decide_order now holds the order row
+--      (for update) as propose and accept do.
 --   6. The customer answers: accept_booking_time(order) — the proposal
 --      becomes the slot and the booking is confirmed, the business hears
 --      booking_accepted; or cancel_order (099), unchanged.
@@ -210,8 +217,10 @@ begin
     end if;
     v_sched := booking_schedule(p_org);
     if not vitrine_open_at(v_sched, v_local) then
-        if not exists (select 1 from generate_series(0, 47) g
-                        where vitrine_open_at(v_sched, v_local::date + g * interval '30 minutes')) then
+        -- A day the vitrine does not open is said as such — even the day
+        -- after an open night, whose first hours (the night's) are taken
+        -- above and whose others are not that day's.
+        if not ((v_sched -> 'days') @> to_jsonb(extract(isodow from v_local)::int)) then
             raise exception 'Fermé ce jour-là : choisissez un autre jour';
         end if;
         raise exception 'Fermé à cette heure : choisissez une heure d''ouverture';
@@ -257,7 +266,8 @@ declare
     -- 109: the switch, and the number it asks for.
     v_gate     boolean := order_phone_required();
     v_proved   text;
-    -- 125: a booking's one line, its slot, its unit.
+    -- 125: a booking (a slot given), its one line, its slot, its unit.
+    v_booking  boolean;
     v_svc      int;
     v_booked   timestamptz;
     v_unit     text;
@@ -285,16 +295,45 @@ begin
         raise exception 'An order needs at least one article';
     end if;
 
-    -- 125: a service is booked alone — never beside goods, never two at
-    -- once. Said before the delivery rules, so the customer hears the
+    -- 125: a line that carries a slot (« booked_for », even empty — the
+    -- key is what book_service always writes) is a booking, held to every
+    -- rule below. A call with no slot is 109's, word for word: the app
+    -- installed before 125 (an Android or iPhone build not yet updated)
+    -- still sends a basket of services with its day in the note, and it
+    -- must keep working — booked_for stays null on it, and the new app
+    -- shows it as it always did.
+    v_booking := exists (select 1 from jsonb_array_elements(p_lines) l
+                          where jsonb_typeof(l) = 'object' and l ? 'booked_for');
+    if not v_booking then
+        -- 109: services only is an appointment, not a parcel.
+        select coalesce(bool_and(coalesce(p.is_service, false)), false)
+          into v_services
+          from jsonb_array_elements(p_lines) l
+          left join products p
+            on p.id = nullif(l ->> 'product_id', '')::uuid and p.org_id = v_org;
+        if v_services then
+            if p_fulfilment <> 'pickup' then
+                raise exception 'Un service se réserve sur rendez-vous : pas de livraison';
+            end if;
+            if v_note is null then
+                raise exception 'Indiquez la date et l''heure souhaitées';
+            end if;
+        end if;
+    end if;
+
+    -- 125: a booking is one service alone — never beside goods, never two
+    -- at once. Said before the delivery rules, so the customer hears the
     -- reason that applies.
-    select count(*) into v_svc
-      from jsonb_array_elements(p_lines) l
-      join products p
-        on p.id = nullif(l ->> 'product_id', '')::uuid and p.org_id = v_org
-     where p.is_service;
-    v_services := v_svc > 0;
-    if v_services then
+    if v_booking then
+        select count(*) into v_svc
+          from jsonb_array_elements(p_lines) l
+          join products p
+            on p.id = nullif(l ->> 'product_id', '')::uuid and p.org_id = v_org
+         where p.is_service;
+        if v_svc = 0 then
+            raise exception 'Seul un service se réserve à une heure';
+        end if;
+        v_services := true;
         if jsonb_array_length(p_lines) > v_svc then
             raise exception 'Un service se réserve seul : il ne se mélange pas aux articles d''un panier';
         end if;
@@ -416,10 +455,12 @@ begin
     begin
         perform notify_org_admins(
             v_org, 'new_order',
-            -- 125: a booking says its slot, as Commandes shows it.
-            case when v_services
+            -- 125: a booking says its slot, as Commandes shows it; a basket
+            -- of services with no slot (an older app) is 109's « demande ».
+            case when v_booking
                  then 'Rendez-vous demandé par ' || v_name || ' — ' || booking_when_fr(v_booked)
                       || ' : '
+                 when v_services then 'Nouvelle demande de ' || v_name || ' : '
                  else 'Nouvelle commande de ' || v_name || ' : ' end
             || to_char(v_total, 'FM999G999G999D00') || ' '
             || coalesce(v_currency, 'XOF')
@@ -430,7 +471,7 @@ begin
                                'name', v_name, 'total', v_total,
                                'currency', coalesce(v_currency, 'XOF'),
                                'wave', p_payment = 'wave', 'fee', v_fee)
-            || case when v_services then jsonb_build_object('at', v_booked)
+            || case when v_booking then jsonb_build_object('at', v_booked)
                     else '{}'::jsonb end);
     exception when others then
         null;
@@ -491,7 +532,9 @@ declare
     v_booking boolean;
     v_reason  text;
 begin
-    select * into v_order from orders where id = p_order_id;
+    -- 125: held while it is answered, as propose/accept hold it — a
+    -- confirmation and a proposal crossing cannot both land.
+    select * into v_order from orders where id = p_order_id for update;
     if not found then
         raise exception 'No such order';
     end if;
@@ -637,6 +680,25 @@ begin
     exception when others then
         null;
     end;
+end;
+$$;
+
+-- The hours « Proposer une autre heure » offers: exactly the ones
+-- booking_check_slot holds the proposal to (booking_schedule), for the
+-- business's own people — even while its vitrine is closed to the street,
+-- when storefront() says nothing.
+create or replace function booking_hours(p_org_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not can_write_org(p_org_id) then
+        raise exception 'Only the shop can answer its orders';
+    end if;
+    return booking_schedule(p_org_id);
 end;
 $$;
 
@@ -933,6 +995,7 @@ revoke execute on function booking_when_fr(timestamptz)                 from pub
 revoke execute on function booking_check_slot(uuid, timestamptz)        from public;
 revoke execute on function book_service(text, uuid, timestamptz, integer, text, text) from public;
 revoke execute on function propose_booking_time(uuid, timestamptz)      from public;
+revoke execute on function booking_hours(uuid)                          from public;
 revoke execute on function accept_booking_time(uuid)                    from public;
 do $$
 begin
@@ -944,6 +1007,7 @@ begin
         revoke execute on function booking_check_slot(uuid, timestamptz) from anon;
         revoke execute on function book_service(text, uuid, timestamptz, integer, text, text) from anon;
         revoke execute on function propose_booking_time(uuid, timestamptz) from anon;
+        revoke execute on function booking_hours(uuid)                   from anon;
         revoke execute on function accept_booking_time(uuid)             from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
@@ -954,9 +1018,11 @@ begin
         revoke execute on function booking_when_fr(timestamptz)          from authenticated;
         revoke execute on function booking_check_slot(uuid, timestamptz) from authenticated;
         -- The doors: a signed-in shopper booking and answering a proposal;
-        -- a business member proposing (can_write_org() decides inside).
+        -- a business member proposing and reading the hours it may propose
+        -- (can_write_org() decides inside).
         grant execute on function book_service(text, uuid, timestamptz, integer, text, text) to authenticated;
         grant execute on function propose_booking_time(uuid, timestamptz) to authenticated;
+        grant execute on function booking_hours(uuid)                    to authenticated;
         grant execute on function accept_booking_time(uuid)             to authenticated;
     end if;
 end $$;

@@ -88,9 +88,10 @@ class _Phone implements WhatsAppPhone {
 /// The street: a vitrine of three services and an article, its [style],
 /// answering « Réserver ».
 class _Window extends StorefrontRepository {
-  _Window({this.profile = 'retail', this.style}) : super(null);
+  _Window({this.profile = 'retail', this.style, this.phone}) : super(null);
   final String profile;
   final Map<String, dynamic>? style;
+  final String? phone;
   final booked = <Map<String, Object?>>[];
   int orders = 0;
   Object? refuse;
@@ -108,6 +109,7 @@ class _Window extends StorefrontRepository {
         'slug': slug,
         'profile': profile,
         'style': ?style,
+        'phone': ?phone,
       });
   @override
   Future<List<PublicItem>> items(String slug) async => const [_coupe, _visite, _cours, _savon];
@@ -163,8 +165,15 @@ class _Retail extends RetailRepository {
   @override
   Future<void> proposeBookingTime(String orderId, DateTime at) async =>
       moves.add('$orderId:propose:${at.toUtc().toIso8601String()}');
+  /// The business's booking hours (125's booking_hours); null as when they
+  /// cannot be read.
+  VitrineSchedule? hours;
+  final hoursAsked = <String>[];
   @override
-  Future<VitrineSchedule?> vitrineHours(String slug) async => null;
+  Future<VitrineSchedule?> bookingHours(String orgId) async {
+    hoursAsked.add(orgId);
+    return hours;
+  }
 }
 
 const _awa = User(
@@ -451,7 +460,7 @@ void main() {
         {'product': 's1', 'at': _tomorrow(10), 'quantity': 1, 'note': 'Tresses courtes'},
       ]);
       expect(find.byKey(const Key('booking-sent')), findsOneWidget);
-      expect(find.text('Demande envoyée'), findsOneWidget);
+      expect(find.text('Demande de rendez-vous envoyée'), findsOneWidget);
       expect(find.text(bookingWhen(_tomorrow(10), 'fr')), findsOneWidget);
       // Never the basket.
       await tester.tap(find.text('Fermer'));
@@ -522,7 +531,8 @@ void main() {
       final raw = await tester.runAsync<String?>(() => db.readPref(pendingBookingKey(_slug)));
       final kept = BookingChoice.fromJson(jsonDecode(raw!));
       expect(kept!.at, _tomorrow(11));
-      expect(await tester.runAsync(() => db.readPref(streetResumeKey)), startsWith('$_slug|'));
+      // The note says what asked for the sign-in: this booking.
+      expect(await tester.runAsync(() => db.readPref(streetResumeKey)), allOf(startsWith('$_slug|'), endsWith('|booking')));
 
       // Back signed in (Google's reload): the sheet opens by itself, chosen.
       await tester.pumpWidget(const SizedBox());
@@ -537,8 +547,56 @@ void main() {
       expect(window.booked, [
         {'product': 's1', 'at': _tomorrow(11), 'quantity': 1, 'note': 'Première fois'},
       ]);
-      expect(find.text('Demande envoyée'), findsOneWidget);
+      expect(find.text('Demande de rendez-vous envoyée'), findsOneWidget);
       expect(await tester.runAsync(() => db.readPref(streetResumeKey)), isNull);
+      expect(await tester.runAsync(() => db.readPref(pendingBookingKey(_slug))), isNull);
+    });
+
+    testWidgets('a booking left on the device never takes an order\'s place after a sign-in',
+        (tester) async {
+      // A sign-in abandoned for a booking: the booking still on the device,
+      // and a basket of goods besides.
+      await tester.runAsync(() async {
+        await db.writePref(pendingBookingKey(_slug),
+            jsonEncode(BookingChoice(productId: 's1', at: _tomorrow(10)).toJson()));
+        await db.writePref('street_basket_$_slug', jsonEncode({'g1': 2}));
+      });
+      final window = _Window();
+      await open(tester, await stranger(tester), window);
+      // « Commander » the basket, signed out: the order's sign-in.
+      final bar = find.byKey(const Key('basket-inline'));
+      await tester.ensureVisible(bar);
+      await tester.tap(find.descendant(of: bar, matching: find.text('Commander')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('order-sign-in-google')));
+      await settle(tester);
+      expect(await tester.runAsync(() => db.readPref(streetResumeKey)), endsWith('|order'));
+      expect(await tester.runAsync(() => db.readPref(pendingBookingKey(_slug))), isNull,
+          reason: '« Commander » lets the forgotten booking go');
+
+      // Back signed in: the order's sheet, not the booking's.
+      await tester.pumpWidget(const SizedBox());
+      final inSession = await shopper(tester);
+      inSession.stashReturnTo(Routes.storefront(_slug));
+      await open(tester, inSession, window);
+      expect(find.text('Votre commande'), findsOneWidget);
+      expect(find.text('2 × Savon'), findsOneWidget);
+      expect(find.byKey(const Key('booking-send')), findsNothing);
+    });
+
+    testWidgets('a booking still on the device, an order\'s note: only the order opens again', (tester) async {
+      // The booking kept from earlier; the sign-in was the basket's.
+      await tester.runAsync(() async {
+        await db.writePref(pendingBookingKey(_slug),
+            jsonEncode(BookingChoice(productId: 's1', at: _tomorrow(10)).toJson()));
+        await db.writePref('street_basket_$_slug', jsonEncode({'g1': 1}));
+        await db.writePref(streetResumeKey, streetResumeNote(_slug, booking: false));
+      });
+      final inSession = await shopper(tester);
+      inSession.stashReturnTo(Routes.storefront(_slug));
+      await open(tester, inSession, _Window());
+      expect(find.text('Votre commande'), findsOneWidget);
+      expect(find.byKey(const Key('booking-send')), findsNothing);
       expect(await tester.runAsync(() => db.readPref(pendingBookingKey(_slug))), isNull);
     });
 
@@ -560,7 +618,7 @@ void main() {
 
     testWidgets('without 125: « Réservation indisponible pour le moment », and the goods ordered as ever',
         (tester) async {
-      final window = _Window()..before125 = true;
+      final window = _Window(phone: '+226 70 12 34 56')..before125 = true;
       await open(tester, await shopper(tester), window);
       await tapBook(tester, 'Coupe');
       await chooseTomorrow(tester, '10:00');
@@ -568,7 +626,13 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('booking-unavailable')), findsOneWidget);
       expect(find.text('Réservation indisponible pour le moment'), findsOneWidget);
-      await tester.tap(find.text('Compris'));
+      // The shop's own doors, in the dialog.
+      final dialog = find.byKey(const Key('booking-unavailable'));
+      expect(find.descendant(of: dialog, matching: find.byKey(const Key('booking-unavailable-call'))), findsOneWidget);
+      expect(find.descendant(of: dialog, matching: find.byKey(const Key('booking-unavailable-whatsapp'))), findsOneWidget);
+      expect(find.descendant(of: dialog, matching: find.text('Appeler')), findsOneWidget);
+      expect(find.descendant(of: dialog, matching: find.text('Écrire sur WhatsApp')), findsOneWidget);
+      await tester.tap(find.descendant(of: dialog, matching: find.text('Compris')));
       await settle(tester);
       expect(await tester.runAsync(() => db.readPref(pendingBookingKey(_slug))), isNull);
       // The goods: « + », « Commander », sent.
@@ -680,7 +744,9 @@ void main() {
 
     testWidgets('« Proposer une autre heure »: the same picker, the time sent, the customer told', (tester) async {
       await big(tester);
-      final retail = _Retail();
+      // The business's own booking hours (booking_hours): every day to 15:00.
+      final retail = _Retail()
+        ..hours = const VitrineSchedule(days: [1, 2, 3, 4, 5, 6, 7], open: '08:00', close: '15:00');
       await tester.pumpWidget(_app(Builder(
         builder: (context) => TextButton(
           onPressed: () => OrderWalkthrough.open(context,
@@ -699,6 +765,9 @@ void main() {
       await tester.tap(find.byKey(Key(_dayKey(_tomorrow(0)))));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('booking-time-10:00')), findsNothing, reason: 'the time asked is not another');
+      expect(retail.hoursAsked, ['o2'], reason: 'the business\'s own hours, not the street\'s');
+      expect(find.byKey(const Key('booking-time-14:30')), findsOneWidget);
+      expect(find.byKey(const Key('booking-time-15:00')), findsNothing, reason: 'closed from 15:00');
       await tester.tap(find.byKey(const Key('booking-time-14:30')));
       await tester.pumpAndSettle();
       await next(tester);
@@ -740,8 +809,15 @@ void main() {
       final retail = _Retail(orders: [waiting, _booking('accepted', id: 'b3')]);
       await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail)));
       await tester.pumpAndSettle();
-      expect(find.text('Autre heure proposée — mercredi 14 oct., 11:00 (en attente du client)'), findsOneWidget);
+      // The headline says the time; the chip says whose turn it is.
+      expect(find.text('Autre heure proposée — mercredi 14 oct., 11:00'), findsOneWidget);
+      expect(find.textContaining('(en attente du client)'), findsNothing);
       expect(find.byKey(const Key('order-awaits-b2')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('order-awaits-b2')), matching: find.text('En attente du client')),
+          findsOneWidget);
+      // A confirmed booking's chip: « Confirmé », not the goods' « Acceptée ».
+      expect(find.descendant(of: find.byKey(const Key('order-status-b3')), matching: find.text('Confirmé')),
+          findsOneWidget);
       expect(find.byKey(const Key('order-waiting-b2')), findsNothing);
       expect(find.byKey(const Key('orders-attention')), findsNothing);
       expect(find.text('Rendez-vous confirmé — mardi 13 oct., 10:00'), findsOneWidget);
@@ -758,6 +834,52 @@ void main() {
       await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail, focusId: 'b9')));
       await tester.pumpAndSettle();
       expect(find.text('Fati demande un rendez-vous'), findsOneWidget);
+    });
+
+    testWidgets('another notification while Commandes is open: its order opens too (read again when new)',
+        (tester) async {
+      await big(tester);
+      final retail = _Retail(orders: [_booking('pending', id: 'b9')]);
+      await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail)));
+      await tester.pumpAndSettle();
+      expect(find.text('Fati demande un rendez-vous'), findsNothing);
+      // The router hands the same page a new `?commande=`: an order the list
+      // does not have yet — read again, then opened.
+      retail.orders = [_booking('pending', id: 'b7'), _booking('pending', id: 'b9')];
+      await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail, focusId: 'b7')));
+      await tester.pumpAndSettle();
+      expect(find.text('Fati demande un rendez-vous'), findsOneWidget);
+    });
+
+    testWidgets('a booking an older app made (no slot, its day in the note): Commandes as before 125',
+        (tester) async {
+      await big(tester);
+      ShopOrder old(String status, String id) => ShopOrder.fromRow({
+            'id': id,
+            'customer_name': 'Moussa',
+            'status': status,
+            'fulfilment': 'pickup',
+            'note': 'Samedi 10 h',
+            'total': 3000,
+            'currency': 'XOF',
+            'created_at': '2026-10-10T09:00:00Z',
+            'payment_method': 'cash',
+            'lines': [
+              {'name': 'Coupe', 'unit_price': 3000, 'quantity': 1, 'is_service': true},
+            ],
+          });
+      final retail = _Retail(orders: [old('pending', 'L1'), old('accepted', 'L2')]);
+      await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('order-slot-L1')), findsNothing, reason: 'no booking headline');
+      expect(find.text('Note : Samedi 10 h'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('order-status-L2')), matching: find.text('Acceptée')),
+          findsOneWidget);
+      await tester.tap(find.byKey(const Key('order-walk-L1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Accepter le rendez-vous'), findsOneWidget);
+      expect(find.byKey(const Key('flow-option-propose')), findsNothing, reason: 'no other time to propose');
+      expect(retail.hoursAsked, isEmpty);
     });
   });
 
@@ -817,6 +939,34 @@ void main() {
       await tester.tap(find.byKey(const Key('order-cancel-yes')));
       await tester.pumpAndSettle();
       expect(window.cancelled, ['b1']);
+    });
+
+    testWidgets('a booking an older app made (no slot): shown as before 125 — no day line, nothing to accept',
+        (tester) async {
+      await big(tester);
+      final window = _Window()
+        ..mine = [
+          CustomerOrder.fromRow({
+            'id': 'L1',
+            'shop_name': 'Salon Awa',
+            'shop_slug': _slug,
+            'status': 'pending',
+            'fulfilment': 'pickup',
+            'note': 'Samedi 10 h',
+            'total': 3000,
+            'currency': 'XOF',
+            'created_at': '2026-10-10T09:00:00Z',
+            'lines': [
+              {'name': 'Coupe', 'unit_price': 3000, 'quantity': 1, 'is_service': true},
+            ],
+          }),
+        ];
+      await tester.pumpWidget(_app(MyOrdersScreen(storefront: window)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('accept-time-L1')), findsNothing);
+      expect(find.text('Annuler le rendez-vous'), findsNothing);
+      expect(find.text('Annuler la commande'), findsOneWidget);
+      expect(find.textContaining('octobre, '), findsNothing, reason: 'no slot to say');
     });
 
     testWidgets('requested and confirmed, in English', (tester) async {

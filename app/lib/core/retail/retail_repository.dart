@@ -98,17 +98,19 @@ class RetailRepository {
     });
   }
 
-  /// The vitrine's opening hours as the street reads them (093), for the
-  /// times a booking may move to. Null when it has none (or no vitrine
-  /// open): the sheet then offers 125's every day, 08:00–20:00.
-  Future<VitrineSchedule?> vitrineHours(String slug) async {
+  /// The hours « Proposer une autre heure » may move a booking to (125's
+  /// booking_hours): the very ones the server holds the proposal to — the
+  /// business's own, even while its vitrine is closed to the street (when
+  /// storefront() says nothing), 08:00–20:00 every day when none are set.
+  /// Null only when they cannot be read (no network): the sheet then offers
+  /// 125's default, and a time outside the real hours is refused by the
+  /// server in its own words, shown on the step.
+  Future<VitrineSchedule?> bookingHours(String orgId) async {
     final client = _client;
     if (client == null) return null;
     try {
-      final rows = await client.rpc('storefront', params: {'p_slug': slug}) as List<dynamic>;
-      if (rows.isEmpty) return null;
-      final style = (rows.first as Map)['style'];
-      return style is Map ? VitrineSchedule.fromJson(style['schedule']) : null;
+      final hours = await client.rpc('booking_hours', params: {'p_org_id': orgId});
+      return VitrineSchedule.fromJson(hours);
     } catch (_) {
       return null;
     }

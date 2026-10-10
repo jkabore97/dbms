@@ -16,7 +16,8 @@ String bookingStateWord(BuildContext context, BookingState state) => switch (sta
 
 /// The business's line for a booking (125), in Commandes: « Rendez-vous
 /// demandé — mardi 14 oct., 10:00 », « Rendez-vous confirmé — … »,
-/// « Autre heure proposée — … (en attente du client) ».
+/// « Autre heure proposée — … » (the card's chip says « En attente du
+/// client »).
 String shopBookingHeadline(BuildContext context, ShopOrder order) {
   final lang = context.trLanguage;
   final asked = bookingWhen(order.bookedFor!, lang, short: true);
@@ -24,7 +25,7 @@ String shopBookingHeadline(BuildContext context, ShopOrder order) {
   return switch (state) {
     BookingState.requested =>
       context.tr('Rendez-vous demandé — {when}', {'when': asked}),
-    BookingState.proposed => context.tr('Autre heure proposée — {when} (en attente du client)',
+    BookingState.proposed => context.tr('Autre heure proposée — {when}',
         {'when': bookingWhen(order.proposedFor!, lang, short: true)}),
     BookingState.confirmed =>
       context.tr('Rendez-vous confirmé — {when}', {'when': asked}),
@@ -33,3 +34,11 @@ String shopBookingHeadline(BuildContext context, ShopOrder order) {
     BookingState.cancelled => context.tr('Rendez-vous annulé — {when}', {'when': asked}),
   };
 }
+
+/// The word on a Commandes card's chip (125): a booking with its slot, once
+/// confirmed, reads « Confirmé » — not the goods' « Acceptée »; every other
+/// order (and a booking made before 125) as [orderStatusLabel] says.
+String shopOrderStatusWord(BuildContext context, ShopOrder order) =>
+    order.hasSlot && order.status == 'accepted'
+        ? context.tr('Confirmé')
+        : context.tr(orderStatusLabel(order.status, booking: order.isBooking));

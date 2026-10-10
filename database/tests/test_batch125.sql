@@ -21,8 +21,13 @@
 --     the street (anon) calls none of the doors; the helpers are nobody's;
 --   * the lists say the slot; the red number leaves out a booking waiting
 --     for the customer;
---   * P1: an order of goods is exactly what 109 and 115 made it — the
---     order, its lines, its bells, each answer.
+--   * an app installed before 125 still books as 109 let it: a basket of
+--     services with no slot, its day in the note — booked_for null, 109's
+--     rules, bells and answers;
+--   * booking_hours hands the business the hours its proposals are held to;
+--   * P1: an order of goods, and that slot-less basket of services, are
+--     exactly what 109 and 115 made them — the order, its lines, its bells,
+--     each answer, each refusal.
 -- ============================================================
 \set ON_ERROR_STOP on
 
@@ -164,11 +169,15 @@ begin
         ('missing',         format('select book_service(%L, %L::uuid, null)', 'boutique-125',
                                    '125aaaaa-0000-0000-0000-000000000002'),
                             'Choisissez le jour et l''heure du rendez-vous'),
-        ('missing, as an old app sends it',
+        ('missing, through place_order',
                             format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
-                                   '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]',
+                                   '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1, "booked_for": null}]',
                                    'pickup', 'Samedi 10 h'),
                             'Choisissez le jour et l''heure du rendez-vous'),
+        ('a slot on goods', format('select place_order(%L, %L::jsonb)', 'boutique-125',
+                                   jsonb_build_array(jsonb_build_object('product_id', '125aaaaa-0000-0000-0000-000000000001',
+                                                                        'quantity', 1, 'booked_for', v_tue))),
+                            'Seul un service se réserve à une heure'),
         ('unreadable',      format('select place_order(%L, %L::jsonb)', 'boutique-125',
                                    '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1, "booked_for": "demain"}]'),
                             'L''heure du rendez-vous est illisible')
@@ -197,14 +206,19 @@ begin
         raise exception 'FAIL: a vitrine with no hours is not every day 08:00–20:00';
     end if;
     -- A night (the association, Friday 20:00–02:00): Saturday 01:30 is
-    -- Friday's; Saturday 02:00 and Friday 19:30 are not; Thursday is closed.
+    -- Friday's; Friday 19:30 is not yet open; Saturday from 02:00 is a day
+    -- the vitrine does not open, said as such (the night before is no
+    -- reason to say « à cette heure »); Thursday is closed.
     if pg_temp.try125(v_buyer, pg_temp.book125('entraide-125', '125aaaaa-0000-0000-0000-000000000006',
                                                pg_temp.slot(2, 6, '01:30'))) <> '(went through)'
        or pg_temp.try125(v_buyer, pg_temp.book125('entraide-125', '125aaaaa-0000-0000-0000-000000000006',
                                                   pg_temp.slot(2, 5, '23:30'))) <> '(went through)'
        or pg_temp.try125(v_buyer, pg_temp.book125('entraide-125', '125aaaaa-0000-0000-0000-000000000006',
                                                   pg_temp.slot(2, 6, '02:00')))
-          <> 'Fermé à cette heure : choisissez une heure d''ouverture'
+          <> 'Fermé ce jour-là : choisissez un autre jour'
+       or pg_temp.try125(v_buyer, pg_temp.book125('entraide-125', '125aaaaa-0000-0000-0000-000000000006',
+                                                  pg_temp.slot(2, 6, '10:00')))
+          <> 'Fermé ce jour-là : choisissez un autre jour'
        or pg_temp.try125(v_buyer, pg_temp.book125('entraide-125', '125aaaaa-0000-0000-0000-000000000006',
                                                   pg_temp.slot(2, 5, '19:30')))
           <> 'Fermé à cette heure : choisissez une heure d''ouverture'
@@ -213,7 +227,7 @@ begin
           <> 'Fermé ce jour-là : choisissez un autre jour' then
         raise exception 'FAIL: a night shop''s hours';
     end if;
-    raise notice 'PASS: the slot — past, beyond 14 days, a closed day, outside the hours, not on :00/:30, missing, unreadable — each refused in French; inside the hours taken; no hours = every day 08:00–20:00; a night''s hours after midnight are the day before''s (shop, farm, association)';
+    raise notice 'PASS: the slot — past, beyond 14 days, a closed day (also the day after an open night), outside the hours, not on :00/:30, missing, unreadable, on goods — each refused in French; inside the hours taken; no hours = every day 08:00–20:00; a night''s hours after midnight are the day before''s (shop, farm, association)';
 end $$;
 
 \echo ''
@@ -597,6 +611,99 @@ begin
 end $$;
 
 \echo ''
+\echo '--- TEST 10b: an app installed before 125 — a basket of services with no slot is 109''s « sur rendez-vous » ---'
+do $$
+declare
+    v_buyer constant uuid := '12512512-0000-0000-0000-000000000004';
+    v_id    uuid;
+    v       text;
+    o       orders;
+    n       notifications;
+    l       jsonb;
+begin
+    -- The old app's call: the service in the basket, its day in the note.
+    v_id := pg_temp.do125(v_buyer, format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+                '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]', 'pickup', 'Samedi 10 h'))::uuid;
+    select * into o from orders where id = v_id;
+    select * into n from notifications where kind = 'new_order' and (params ->> 'order_id')::uuid = v_id;
+    if o.booked_for is not null or o.proposed_for is not null or o.status <> 'pending'
+       or o.note <> 'Samedi 10 h' or o.total <> 3000
+       or n.message <> 'Nouvelle demande de Cliente Cent-Vingt-Cinq : ' || to_char(3000::numeric, 'FM999G999G999D00') || ' XOF'
+       or (n.params ->> 'booking')::boolean is not true or n.params ? 'at' then
+        raise exception 'FAIL: the old app''s booking was % and %', to_jsonb(o), to_jsonb(n);
+    end if;
+    -- Its rules are 109's: the day in the note, never delivered; how many
+    -- as the old basket said; goods beside it and two services, as 109 let them.
+    if pg_temp.try125(v_buyer, format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+              '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]', 'pickup', '  '))
+          <> 'Indiquez la date et l''heure souhaitées'
+       or pg_temp.try125(v_buyer, format('select place_order(%L, %L::jsonb, %L, %L, %L)', 'boutique-125',
+              '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]', 'delivery', 'Samedi', 'Gounghin'))
+          <> 'Un service se réserve sur rendez-vous : pas de livraison'
+       or pg_temp.try125(v_buyer, format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+              '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 2}]', 'pickup', 'Samedi'))
+          <> '(went through)'
+       or pg_temp.try125(v_buyer, format('select place_order(%L, %L::jsonb)', 'boutique-125',
+              '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}, {"product_id": "125aaaaa-0000-0000-0000-000000000001", "quantity": 1}]'))
+          <> '(went through)'
+       or pg_temp.try125(v_buyer, format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+              '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}, {"product_id": "125aaaaa-0000-0000-0000-000000000003", "quantity": 3}]',
+              'pickup', 'Samedi'))
+          <> '(went through)' then
+        raise exception 'FAIL: the old app''s rules are not 109''s';
+    end if;
+    -- The lists carry no slot on it; the business answers it as before 125
+    -- (« acceptée », no booking_* bell), and cannot propose another time.
+    perform set_config('request.jwt.claim.sub', v_buyer::text, true);
+    select lines into l from my_orders() where id = v_id;
+    if l -> 0 ? 'booked_for' then
+        raise exception 'FAIL: an old booking''s line carries a slot: %', l;
+    end if;
+    if pg_temp.try125('12512512-0000-0000-0000-000000000001',
+            format('select propose_booking_time(%L, %L)', v_id, pg_temp.slot(2, 2, '11:00')))
+       <> 'Seul un rendez-vous peut changer d''heure' then
+        raise exception 'FAIL: another time proposed on an old booking';
+    end if;
+    perform pg_temp.do125('12512512-0000-0000-0000-000000000001',
+                          format('select decide_order(%L, %L)::text', v_id, 'accepted'));
+    if not exists (select 1 from notifications where kind = 'order_accepted' and (params ->> 'order_id')::uuid = v_id
+                      and message = 'Votre réservation chez Boutique Cent-Vingt-Cinq : acceptée')
+       or exists (select 1 from notifications where kind like 'booking\_%' and (params ->> 'order_id')::uuid = v_id) then
+        raise exception 'FAIL: an old booking was answered as a new one';
+    end if;
+    raise notice 'PASS: the app installed before 125 still books as 109 let it (note required, no delivery, goods beside it, two services); booked_for stays null, its bells and answers are 109''s/115''s';
+end $$;
+
+\echo ''
+\echo '--- TEST 10c: the hours « Proposer une autre heure » offers — the business''s own, even with the vitrine closed ---'
+do $$
+declare
+    v text;
+begin
+    update orgs set storefront_enabled = false where id = '12500000-0000-0000-0000-000000000001';
+    if pg_temp.do125('12512512-0000-0000-0000-000000000001',
+            $q$select booking_hours('12500000-0000-0000-0000-000000000001')::text$q$)::jsonb
+       <> '{"days": [1, 2, 3, 4, 5, 6], "open": "08:00", "close": "18:00"}'::jsonb
+       or pg_temp.do125('12512512-0000-0000-0000-000000000002',
+            $q$select booking_hours('12500000-0000-0000-0000-000000000002')::text$q$)::jsonb
+       <> '{"days": [1, 2, 3, 4, 5, 6, 7], "open": "08:00", "close": "20:00"}'::jsonb then
+        raise exception 'FAIL: booking_hours did not hand the hours the slot rules read';
+    end if;
+    update orgs set storefront_enabled = true where id = '12500000-0000-0000-0000-000000000001';
+    v := pg_temp.try125('12512512-0000-0000-0000-000000000004',
+            $q$select booking_hours('12500000-0000-0000-0000-000000000001')$q$);
+    if v <> 'Only the shop can answer its orders' then
+        raise exception 'FAIL: a customer read the hours: « % »', v;
+    end if;
+    if has_function_privilege('anon', 'booking_hours(uuid)', 'execute')
+       or has_function_privilege('public', 'booking_hours(uuid)', 'execute')
+       or not has_function_privilege('authenticated', 'booking_hours(uuid)', 'execute') then
+        raise exception 'FAIL: booking_hours'' doors';
+    end if;
+    raise notice 'PASS: booking_hours hands the business the hours its proposal is held to (closed vitrine too; none set = every day 08:00–20:00); nobody else; not the street';
+end $$;
+
+\echo ''
 \echo '--- TEST 11: a showcase refuses a booking as it refuses an order ---'
 do $$
 declare
@@ -613,7 +720,7 @@ begin
 end $$;
 
 \echo ''
-\echo '--- TEST 12: P1 — an order of goods is what 109 and 115 made it: the order, its lines, its bells, each answer ---'
+\echo '--- TEST 12: P1 — an order of goods, and an older app''s slot-less basket of services, are what 109 and 115 made them: the order, its lines, its bells, each answer, each refusal ---'
 begin;
 create or replace function pg_temp.goods125()
 returns jsonb
@@ -623,6 +730,13 @@ declare
     v_a  uuid;
     v_b  uuid;
     v_c  uuid;
+    -- An older app's bookings (no slot): a service alone, goods beside a
+    -- service, two services, the farm's visit for three.
+    v_l1 uuid;
+    v_l2 uuid;
+    v_l3 uuid;
+    v_l4 uuid;
+    v_refused jsonb;
     v_out jsonb;
 begin
     begin
@@ -641,18 +755,50 @@ begin
         perform pg_temp.do125('12512512-0000-0000-0000-000000000001', format('select decide_order(%L, %L)::text', v_a, 'picked_up'));
         perform pg_temp.do125('12512512-0000-0000-0000-000000000002', format('select decide_order(%L, %L)::text', v_b, 'accepted'));
         perform pg_temp.do125('12512512-0000-0000-0000-000000000001', format('select refuse_order(%L, %L)::text', v_c, 'Plus en stock'));
+        v_l1 := pg_temp.do125('12512512-0000-0000-0000-000000000004',
+                 format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+                        '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]',
+                        'pickup', 'Samedi 10 h'))::uuid;
+        v_l2 := pg_temp.do125('12512512-0000-0000-0000-000000000004',
+                 format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+                        '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}, {"product_id": "125aaaaa-0000-0000-0000-000000000001", "quantity": 1}]',
+                        'pickup', 'Avec le savon'))::uuid;
+        v_l3 := pg_temp.do125('12512512-0000-0000-0000-000000000004',
+                 format('select place_order(%L, %L::jsonb, %L, %L)', 'boutique-125',
+                        '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}, {"product_id": "125aaaaa-0000-0000-0000-000000000003", "quantity": 2}]',
+                        'pickup', 'Deux services'))::uuid;
+        v_l4 := pg_temp.do125('12512512-0000-0000-0000-000000000004',
+                 format('select place_order(%L, %L::jsonb, %L, %L)', 'ferme-125',
+                        '[{"product_id": "125aaaaa-0000-0000-0000-000000000005", "quantity": 3}]',
+                        'pickup', 'Dimanche matin'))::uuid;
+        perform pg_temp.do125('12512512-0000-0000-0000-000000000001', format('select decide_order(%L, %L)::text', v_l1, 'accepted'));
+        perform pg_temp.do125('12512512-0000-0000-0000-000000000001', format('select decide_order(%L, %L)::text', v_l1, 'picked_up'));
+        perform pg_temp.do125('12512512-0000-0000-0000-000000000001', format('select decide_order(%L, %L)::text', v_l2, 'accepted'));
+        perform pg_temp.do125('12512512-0000-0000-0000-000000000002', format('select refuse_order(%L, %L)::text', v_l4, 'Complet'));
+        v_refused := jsonb_build_object(
+            'no note', pg_temp.try125('12512512-0000-0000-0000-000000000004',
+                format('select place_order(%L, %L::jsonb)', 'boutique-125',
+                       '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]')),
+            'delivered', pg_temp.try125('12512512-0000-0000-0000-000000000004',
+                format('select place_order(%L, %L::jsonb, %L, %L, %L)', 'boutique-125',
+                       '[{"product_id": "125aaaaa-0000-0000-0000-000000000002", "quantity": 1}]', 'delivery', 'Samedi', 'Gounghin')),
+            'too many soaps', pg_temp.try125('12512512-0000-0000-0000-000000000004',
+                format('select place_order(%L, %L::jsonb)', 'boutique-125',
+                       '[{"product_id": "125aaaaa-0000-0000-0000-000000000001", "quantity": 50}]')));
         select jsonb_build_object(
                    'orders', (select jsonb_agg(to_jsonb(o) - 'id' - 'created_at' - 'updated_at' - 'decided_at'
                                                 - 'handover_code' - 'customer_id' - 'number' - 'ref'
-                                                order by o.total, o.org_id)
-                                from orders o where o.id in (v_a, v_b, v_c)),
+                                                order by o.total, o.org_id, o.note)
+                                from orders o where o.id in (v_a, v_b, v_c, v_l1, v_l2, v_l3, v_l4)),
                    'lines', (select jsonb_agg(to_jsonb(l) - 'id' - 'order_id' order by l.name, l.quantity)
-                               from order_lines l where l.order_id in (v_a, v_b, v_c)),
+                               from order_lines l where l.order_id in (v_a, v_b, v_c, v_l1, v_l2, v_l3, v_l4)),
                    'bells', (select jsonb_agg(jsonb_build_object('to', n.recipient_id, 'kind', n.kind,
                                                                  'message', n.message,
                                                                  'params', n.params - 'order_id')
-                                              order by n.kind, n.message)
-                               from notifications n where (n.params ->> 'order_id')::uuid in (v_a, v_b, v_c)))
+                                              order by n.kind, n.message, (n.params - 'order_id')::text)
+                               from notifications n
+                              where (n.params ->> 'order_id')::uuid in (v_a, v_b, v_c, v_l1, v_l2, v_l3, v_l4)),
+                   'refused', v_refused)
           into v_out;
         raise exception using errcode = 'P0125', message = 'taken back';
     exception when sqlstate 'P0125' then
@@ -671,16 +817,18 @@ declare
     a jsonb := (select v from t125_p1 where version = '125');
     b jsonb := (select v from t125_p1 where version = 'before');
 begin
-    if a is null or jsonb_array_length(a -> 'orders') <> 3 or jsonb_array_length(a -> 'bells') < 5 then
+    if a is null or jsonb_array_length(a -> 'orders') <> 7 or jsonb_array_length(a -> 'bells') < 12
+       or a -> 'refused' ->> 'no note' <> 'Indiquez la date et l''heure souhaitées'
+       or a -> 'refused' ->> 'delivered' <> 'Un service se réserve sur rendez-vous : pas de livraison' then
         raise exception 'FAIL: the P1 orders were not all written: %', a;
     end if;
     if a is distinct from b then
         raise exception 'FAIL: an order of goods differs from 109/115: % instead of %', a, b;
     end if;
     if exists (select 1 from jsonb_array_elements(a -> 'orders') o where o ->> 'booked_for' is not null) then
-        raise exception 'FAIL: an order of goods has a slot';
+        raise exception 'FAIL: an order of goods, or an older app''s booking, has a slot';
     end if;
-    raise notice 'PASS: P1 — three orders of goods (shop and farm: placed, accepted, ready, picked up, refused with a reason), their lines and their % bells, identical to 109''s and 115''s', jsonb_array_length(a -> 'bells');
+    raise notice 'PASS: P1 — three orders of goods (shop and farm: placed, accepted, ready, picked up, refused with a reason) and four slot-less bookings from an older app (a service alone, beside goods, two services, the farm''s visit for three: accepted, done, refused), their lines, their % bells and three refusals, identical to 109''s and 115''s', jsonb_array_length(a -> 'bells');
 end $$;
 rollback;
 

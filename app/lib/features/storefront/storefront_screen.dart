@@ -474,9 +474,13 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         raw = await db.readPref(_resumeKey);
       } catch (_) {}
       if (raw == null || !mounted) return;
-      final cut = raw.indexOf('|');
-      final slug = cut < 0 ? raw : raw.substring(0, cut);
-      final at = cut < 0 ? null : DateTime.tryParse(raw.substring(cut + 1));
+      // `slug|when|what` (streetResumeNote): what asked for the sign-in —
+      // 'booking' or 'order'. A note without it (an older build's) was an
+      // order's.
+      final parts = raw.split('|');
+      final slug = parts.first;
+      final at = parts.length > 1 ? DateTime.tryParse(parts[1]) : null;
+      final forBooking = parts.length > 2 && parts[2] == 'booking';
       if (slug != widget.slug) return;
       if (at == null || DateTime.now().difference(at) > _resumeFresh) {
         await db.writePref(_resumeKey, null);
@@ -498,19 +502,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         }
       }
       if (!mounted) return;
-      // A booking chosen before the sign-in (125): its sheet again, with
-      // the day, the time and the words chosen, « Réserver » under the
-      // thumb. Its service gone from the shelf: forgotten.
-      final pending = _pendingBooking;
-      if (pending != null) {
+      // Only what the sign-in interrupted opens again. A booking (125): its
+      // sheet, with the day, the time and the words chosen, « Réserver »
+      // under the thumb — its service gone from the shelf, forgotten. The
+      // basket's order: its sheet, never a booking left on the device.
+      if (forBooking) {
+        final pending = _pendingBooking;
+        if (pending == null) return;
         final item = _items.where((i) => i.id == pending.productId && i.isService).firstOrNull;
         if (item != null) {
           await _book(item, draft: pending);
-          return;
+        } else {
+          await _forgetBooking();
         }
-        await _forgetBooking();
-        if (_basket.isEmpty) return;
+        return;
       }
+      if (_basket.isEmpty) return;
       // Inside: the order sheet. At a gate still (the code to choose or to
       // type): the gate, then back here.
       await _order();
@@ -535,7 +542,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     try {
       await widget.session.db.writePref(
         _resumeKey,
-        '${widget.slug}|${DateTime.now().toIso8601String()}',
+        streetResumeNote(widget.slug, booking: booking),
       );
     } catch (_) {}
     if (!mounted) return;
@@ -640,6 +647,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   Future<void> _order() async {
     if (_showcase) return _farAway();
+    // The basket is what the shopper chose now: a booking left waiting on
+    // the device (a sign-in abandoned) is let go, so it never opens in
+    // the order's place after a later sign-in.
+    if (_pendingBooking != null) await _forgetBooking();
+    if (!mounted) return;
     if (!await _passDoors() || !mounted) return;
     final gate = _gate;
 
@@ -760,7 +772,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// « Réserver » on a service (125): its sheet — the day, the time, how
   /// many when it is by the person or the hour, a word —, then the doors
   /// (the sign-in sheet, the PIN, WhatsApp), then the booking sent and
-  /// « Demande envoyée » with its day and time. Never the basket.
+  /// « Demande de rendez-vous envoyée » with its day and time. Never the
+  /// basket.
   Future<void> _book(PublicItem item, {BookingChoice? draft, String? error}) async {
     final shop = _shop;
     if (shop == null || shop.style.ordersClosed) return;
@@ -829,21 +842,51 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // are ordered as ever.
       await _forgetBooking();
       if (!mounted) return;
+      // The shop's own doors, as its header has them: the call and
+      // WhatsApp, the service named in the message.
+      final phone = (_shop?.phone ?? '').trim();
       await showDialog<void>(
         context: context,
-        builder: (dialog) => AlertDialog(
-          key: const Key('booking-unavailable'),
-          icon: const Icon(Icons.event_busy_outlined),
-          title: Text(dialog.tr('Réservation indisponible pour le moment')),
-          content: Text(dialog.tr(
-              'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.')),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(dialog),
-              child: Text(dialog.tr('Compris')),
-            ),
-          ],
-        ),
+        builder: (dialog) {
+          final whatsapp = whatsappUrl(
+            _shop?.phone,
+            text: dialog.tr('Bonjour {shop}, je voudrais prendre rendez-vous pour « {item} ».',
+                {'shop': _shop?.name ?? '', 'item': item.name}),
+          );
+          return AlertDialog(
+            key: const Key('booking-unavailable'),
+            icon: const Icon(Icons.event_busy_outlined),
+            title: Text(dialog.tr('Réservation indisponible pour le moment')),
+            content: Text(dialog.tr(
+                'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.')),
+            actions: [
+              if (phone.isNotEmpty)
+                OutlinedButton.icon(
+                  key: const Key('booking-unavailable-call'),
+                  onPressed: () {
+                    Navigator.pop(dialog);
+                    unawaited(_open('tel:$phone'));
+                  },
+                  icon: const Icon(Icons.call_outlined, size: 18),
+                  label: Text(dialog.tr('Appeler')),
+                ),
+              if (whatsapp != null)
+                OutlinedButton.icon(
+                  key: const Key('booking-unavailable-whatsapp'),
+                  onPressed: () {
+                    Navigator.pop(dialog);
+                    unawaited(_open(whatsapp));
+                  },
+                  icon: const Icon(Icons.chat_outlined, size: 18),
+                  label: Text(dialog.tr('Écrire sur WhatsApp')),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog),
+                child: Text(dialog.tr('Compris')),
+              ),
+            ],
+          );
+        },
       );
       return;
     }
@@ -858,7 +901,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       builder: (dialog) => AlertDialog(
         key: const Key('booking-sent'),
         icon: const Icon(Icons.event_available_outlined),
-        title: Text(dialog.tr('Demande envoyée')),
+        title: Text(dialog.tr('Demande de rendez-vous envoyée')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

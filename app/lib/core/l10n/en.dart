@@ -3976,8 +3976,8 @@ const enStrings = <String, String>{
   'Ven': 'Fri',
   'Sam': 'Sat',
   'Dim': 'Sun',
-  'Demande envoyée': 'Request sent',
-  'Demande renvoyée': 'Request sent again',
+  'Demande envoyée': 'Application sent',
+  'Demande renvoyée': 'Application sent again',
   'À corriger : {reason}': 'To fix: {reason}',
   'Approuvée : vous êtes livreur': 'Approved: you are a courier',
   'De nouveau en cours d\'examen': 'Under review again',
@@ -6122,8 +6122,12 @@ const enStrings = <String, String>{
       'You will get the answer here: the time confirmed, or another one offered.',
   'La réservation n\'a pas pu être envoyée. Vérifiez le réseau.':
       'The booking could not be sent. Check the network.',
+  'Demande de rendez-vous envoyée':
+      'Booking request sent',
   'Réservation indisponible pour le moment':
       'Booking unavailable for now',
+  'Bonjour {shop}, je voudrais prendre rendez-vous pour « {item} ».':
+      'Hello {shop}, I would like to book « {item} ».',
   'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.':
       'Call or write on WhatsApp to make an appointment. Items can be ordered as usual.',
   'Demandé':
@@ -6136,8 +6140,8 @@ const enStrings = <String, String>{
       'Cancelled',
   'Rendez-vous demandé — {when}':
       'Appointment requested — {when}',
-  'Autre heure proposée — {when} (en attente du client)':
-      'Another time offered — {when} (waiting for the customer)',
+  'Autre heure proposée — {when}':
+      'Another time offered — {when}',
   'Rendez-vous confirmé — {when}':
       'Appointment confirmed — {when}',
   'Rendez-vous terminé — {when}':
@@ -6213,6 +6217,8 @@ const enStrings = <String, String>{
       'A service is booked on its own: it does not mix with the items of a basket',
   'Une réservation porte sur un seul service':
       'A booking is for one service only',
+  'Seul un service se réserve à une heure':
+      'Only a service is booked for a time',
   'Ce service n\'est pas sur cette vitrine':
       'This service is not in this vitrine',
   'Une autre heure est proposée : attendez la réponse du client':
