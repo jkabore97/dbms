@@ -71,7 +71,10 @@ export function userIdOf(body) {
 }
 
 /// One person's welcome: claim, send, write the outcome back.
-export async function welcome(userId, env, io = { fetch, log: console.log }) {
+// `fetch` is wrapped, never stored bare: called as `io.fetch(...)` it would
+// run with `this` = io, and the Workers runtime refuses that (« Illegal
+// invocation ») — which is how the first live welcome failed.
+export async function welcome(userId, env, io = { fetch: (url, init) => fetch(url, init), log: console.log }) {
   const log = io.log || console.log;
   if (!env.RESEND_API_KEY) {
     log(`kaj-mail: RESEND_API_KEY is not set — the welcome for ${userId} is not sent (its row stays pending). README « Welcome e-mail (Resend) ».`);

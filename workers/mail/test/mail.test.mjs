@@ -177,6 +177,28 @@ test("the whole door, end to end", async () => {
   }
 });
 
+test("the real door calls fetch unbound, as the Workers runtime demands", async () => {
+  // Workers' fetch throws « Illegal invocation » when called as a method of
+  // another object; this stand-in does the same, so the default io is tried
+  // exactly as production runs it.
+  const f = fakes();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = function (url, init) {
+    if (this !== undefined && this !== globalThis) {
+      throw new TypeError("Illegal invocation: function called with incorrect `this` reference.");
+    }
+    return f.io.fetch(url, init);
+  };
+  try {
+    const res = await worker.fetch(post(hook({ user_id: ID, status: "pending" })), ENV);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { sent: true, id: "re_123" });
+    assert.equal(f.calls.filter((c) => c.url.includes("resend")).length, 1);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
 test("the e-mail, in French: the words, the three steps, the links, the colours, the logo", () => {
   const m = welcomeEmail({ firstName: "Awa", lang: "fr" });
   assert.equal(m.subject, "Bienvenue sur Mara, Awa !");
