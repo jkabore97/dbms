@@ -432,8 +432,6 @@ const enStrings = <String, String>{
       'Console',
   'Consommation':
       'Consumption',
-  'Contacter le support':
-      'Contact support',
   'Continuer':
       'Continue',
   'Continuer vers le paiement':
@@ -1602,8 +1600,6 @@ const enStrings = <String, String>{
       'Delete {label}\'s account?',
   'Supprimer…':
       'Delete…',
-  'Sur WhatsApp':
-      'On WhatsApp',
   'Sur la vitrine':
       'On the vitrine',
   'Sur la vitrine — modifier':
@@ -2770,10 +2766,7 @@ const enStrings = <String, String>{
   'Ce que vous faites, avec son prix, sur votre vitrine. Les clients réservent, vous fixez le rendez-vous.': 'What you do, with its price, on your vitrine. Customers book, you set the appointment.',
   'Ce que vous proposez': 'What you offer',
   'Coupe homme, cours de maths…': 'Men\'s haircut, maths lesson…',
-  'Date et heure souhaitées': 'Preferred date and time',
-  'Dites quel jour et à quelle heure vous souhaitez venir.': 'Say which day and at what time you would like to come.',
   'Durée, ce qui est compris, où.': 'How long, what is included, where.',
-  'Envoyer la réservation': 'Send the booking',
   'Le prix de départ : le client sait que cela peut coûter plus.': 'The starting price: the customer knows it may cost more.',
   'Ma vitrine et mes services': 'My vitrine and my services',
   'Mes services': 'My services',
@@ -2788,7 +2781,6 @@ const enStrings = <String, String>{
   'Réserver': 'Book',
   'Réserver {name}': 'Book {name}',
   'Réservez en ligne, sur rendez-vous': 'Book online, by appointment',
-  'Samedi 10 h, ou dès que possible': 'Saturday 10 am, or as soon as possible',
   'Service': 'Service',
   'Services': 'Services',
   'Sur rendez-vous': 'By appointment',
@@ -2797,7 +2789,6 @@ const enStrings = <String, String>{
   'Une association de chez vous, tenue par ses membres': 'An association near you, run by its members',
   'Une page publique de l\'association, avec les services que vous proposez et leur prix, à partager sur WhatsApp. On vous réserve depuis la vitrine ; vous fixez le rendez-vous.': 'A public page for the association, with the services you offer and their price, to share on WhatsApp. People book from the vitrine; you set the appointment.',
   'Vos services, sur votre vitrine. On réserve en ligne, on règle sur place.': 'Your services, on your vitrine. People book online and pay on site.',
-  'Votre réservation': 'Your booking',
   'heure, séance…': 'hour, session…',
   'service en ligne. Il en faut un pour que le public voie votre vitrine.': 'services online. One is enough for the public to see your vitrine.',
   'services en ligne : la vitrine est visible du public.': 'services online: the vitrine is visible to the public.',
@@ -2825,7 +2816,6 @@ const enStrings = <String, String>{
   'Retirer ce service ?': 'Remove this service?',
   '« {name} » quitte la vitrine et la caisse. Les commandes et les ventes passées le gardent.': '“{name}” leaves the vitrine and the till. Past orders and sales keep it.',
   '{n} article': '{n} item',
-  'Demande envoyée. Vous recevrez la réponse ici, avec le rendez-vous.': 'Request sent. You will get the answer here, with the appointment.',
   'service en ligne : la vitrine est visible du public.': 'service online: the vitrine is visible to the public.',
   'En attente': 'Pending',
   'Acceptée': 'Accepted',
@@ -3759,6 +3749,19 @@ const enStrings = <String, String>{
   'Remboursé par la boutique, merci !': 'Refunded by the shop, thank you!',
   'Aide aux clients': 'Customer help',
   'Numéro WhatsApp de l\'aide Mara (vide : caché)': 'Mara\'s WhatsApp help number (empty: hidden)',
+  // 126: « Aide Mara ».
+  'E-mail de l\'aide Mara': 'Mara\'s help e-mail',
+  'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)': 'Mara\'s help hours (for example 24 h/24, 7 j/7)',
+  'L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.':
+      'The help e-mail: an address such as hello@kaj-consulting.com.',
+  'Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).':
+      'The help hours: a few words, 60 characters at most (for example 24 h/24, 7 j/7).',
+  'Aide Mara': 'Mara Help',
+  'Une question, un souci ? Nous répondons {hours}.': 'A question, a problem? We answer {hours}.',
+  '24 h/24, 7 j/7': '24/7',
+  'E-mail': 'E-mail',
+  'Bonjour, j\'ai besoin d\'aide avec Mara.': 'Hello, I need help with Mara.',
+  'Aucune application d\'e-mail : écrivez à {email}.': 'No e-mail app here: write to {email}.',
   'Prix en baisse chez {shop} : {name} à {price}': 'Price down at {shop}: {name} at {price}',
   'Nouveau chez {shop} : {name}': 'New at {shop}: {name}',
   '{n} nouveautés chez {shop} : {names}': '{n} new at {shop}: {names}',
@@ -3794,8 +3797,6 @@ const enStrings = <String, String>{
   'Une boutique, une ferme ou une association': 'A shop, a farm or an association',
   'Parrainer un ami': 'Invite a friend',
   'Envoyez-lui Mara sur WhatsApp': 'Send them Mara on WhatsApp',
-  'Écrire à Mara sur WhatsApp': 'Write to Mara on WhatsApp',
-  'Bonjour Mara, j\'ai besoin d\'aide.': 'Hello Mara, I need help.',
   'Signaler un problème': 'Report a problem',
   'Une commande, une vitrine, l\'application': 'An order, a vitrine, the app',
   'Mes données': 'My data',
@@ -6057,8 +6058,8 @@ const enStrings = <String, String>{
       'Sign in again with your password to set a new code.',
   '# Comment contacter quelqu\'un ?':
       '# How do I reach someone?',
-  'Depuis Compte › Aide › Contacter le support, sur WhatsApp.':
-      'From Account › Help › Contact support, on WhatsApp.',
+  'Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.':
+      'From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
   'Mara vous le confirme sous 30 jours':
@@ -6105,4 +6106,144 @@ const enStrings = <String, String>{
       'Install Google Authenticator or Microsoft Authenticator (App Store).',
   'Votre mise en avant est programmée.':
       'Your promotion is scheduled.',
+  // 125: booking a service — the sheet, the answers, the bells.
+  'Aucun créneau dans les 14 prochains jours.':
+      'No time free in the next 14 days.',
+  'Quel jour ?':
+      'Which day?',
+  'À quelle heure ?':
+      'At what time?',
+  'Choisissez un jour et une heure.':
+      'Choose a day and a time.',
+  'Réserver · {when}':
+      'Book · {when}',
+  'Horaires non précisés : tous les jours, de 8 h à 20 h.':
+      'No opening hours given: every day, 8:00 to 20:00.',
+  'Pour combien de personnes ?':
+      'For how many people?',
+  'Combien d\'heures ?':
+      'How many hours?',
+  'Moins':
+      'Fewer',
+  'Vous recevrez la réponse ici : l\'heure confirmée, ou une autre proposée.':
+      'You will get the answer here: the time confirmed, or another one offered.',
+  'La réservation n\'a pas pu être envoyée. Vérifiez le réseau.':
+      'The booking could not be sent. Check the network.',
+  'Demande de rendez-vous envoyée':
+      'Booking request sent',
+  'Réservation indisponible pour le moment':
+      'Booking unavailable for now',
+  'Bonjour {shop}, je voudrais prendre rendez-vous pour « {item} ».':
+      'Hello {shop}, I would like to book « {item} ».',
+  'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.':
+      'Call or write on WhatsApp to make an appointment. Items can be ordered as usual.',
+  'Demandé':
+      'Requested',
+  'Autre heure proposée':
+      'Another time offered',
+  'Confirmé':
+      'Confirmed',
+  'Annulé':
+      'Cancelled',
+  'Rendez-vous demandé — {when}':
+      'Appointment requested — {when}',
+  'Autre heure proposée — {when}':
+      'Another time offered — {when}',
+  'Rendez-vous confirmé — {when}':
+      'Appointment confirmed — {when}',
+  'Rendez-vous terminé — {when}':
+      'Appointment done — {when}',
+  'Rendez-vous refusé — {when}':
+      'Appointment declined — {when}',
+  'Rendez-vous annulé — {when}':
+      'Appointment cancelled — {when}',
+  'Rendez-vous confirmé : {when}':
+      'Appointment confirmed: {when}',
+  'Annuler ce rendez-vous ?':
+      'Cancel this appointment?',
+  '{shopName} en sera prévenu.':
+      '{shopName} will be told.',
+  'Annuler le rendez-vous':
+      'Cancel the appointment',
+  'Rendez-vous':
+      'Appointment',
+  '{shop} propose une autre heure :':
+      '{shop} offers another time:',
+  'Accepter {time}':
+      'Accept {time}',
+  'En attente de la réponse de {shop}':
+      'Waiting for {shop}\'s answer',
+  'En attente du client':
+      'Waiting for the customer',
+  'Proposer cette heure':
+      'Offer this time',
+  'Autre heure proposée. {name} est prévenu.':
+      'Another time offered. {name} has been told.',
+  '{name} l\'accepte ou annule dans Mes commandes.':
+      '{name} accepts it or cancels in My orders.',
+  'Proposer une autre heure':
+      'Offer another time',
+  'Quelle autre heure ?':
+      'Which other time?',
+  '{name} l\'accepte ou annule.':
+      '{name} accepts it or cancels.',
+  'Nouvelle heure':
+      'New time',
+  'Rendez-vous demandé par {name} — {when} : {total}':
+      'Appointment requested by {name} — {when}: {total}',
+  'Votre rendez-vous chez {shop} est confirmé : {when}':
+      'Your appointment at {shop} is confirmed: {when}',
+  'Votre demande de rendez-vous chez {shop} est refusée':
+      'Your appointment request at {shop} was declined',
+  '{shop} propose une autre heure pour votre rendez-vous : {when}. Acceptez-la dans Mes commandes.':
+      '{shop} offers another time for your appointment: {when}. Accept it in My orders.',
+  '{name} accepte le rendez-vous : {when}':
+      '{name} accepts the appointment: {when}',
+  // 125: the server's refusals of a booking, said in English.
+  'Choisissez le jour et l\'heure du rendez-vous':
+      'Choose the day and time of the appointment',
+  'Cette heure est déjà passée : choisissez-en une autre':
+      'That time has already passed: choose another',
+  'Un rendez-vous se prend dans les 14 prochains jours':
+      'An appointment is booked within the next 14 days',
+  'Un rendez-vous commence à l\'heure pile ou à la demie':
+      'An appointment starts on the hour or the half hour',
+  'Fermé ce jour-là : choisissez un autre jour':
+      'Closed that day: choose another day',
+  'Fermé à cette heure : choisissez une heure d\'ouverture':
+      'Closed at that time: choose a time when it is open',
+  'L\'heure du rendez-vous est illisible':
+      'The appointment\'s time cannot be read',
+  'De 1 à 20 personnes':
+      'From 1 to 20 people',
+  'De 1 à 20 heures':
+      'From 1 to 20 hours',
+  'Ce service se réserve une fois : pas de quantité à choisir':
+      'This service is booked once: no quantity to choose',
+  'Un service se réserve seul : il ne se mélange pas aux articles d\'un panier':
+      'A service is booked on its own: it does not mix with the items of a basket',
+  'Une réservation porte sur un seul service':
+      'A booking is for one service only',
+  'Seul un service se réserve à une heure':
+      'Only a service is booked for a time',
+  'Ce service n\'est pas sur cette vitrine':
+      'This service is not in this vitrine',
+  'Une autre heure est proposée : attendez la réponse du client':
+      'Another time has been offered: wait for the customer\'s answer',
+  'Cette heure est passée : proposez-en une autre':
+      'That time has passed: offer another one',
+  'Seul un rendez-vous peut changer d\'heure':
+      'Only an appointment can change its time',
+  'Ce rendez-vous a déjà une réponse':
+      'This appointment already has an answer',
+  'C\'est l\'heure demandée : confirmez-la plutôt':
+      'That is the time asked for: confirm it instead',
+  'Rendez-vous introuvable':
+      'Appointment not found',
+  'Aucune autre heure n\'est proposée pour ce rendez-vous':
+      'No other time is offered for this appointment',
+  'Cette heure est passée : demandez-en une autre':
+      'That time has passed: ask for another one',
+  'Votre réservation est gardée : vous revenez ici juste après.':
+      'Your booking is kept: you come back here right after.',
 };

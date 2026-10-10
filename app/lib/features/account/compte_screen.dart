@@ -134,8 +134,6 @@ class CompteScreen extends StatelessWidget {
     final platform = session.isPlatformAdmin && live;
     final access = session.accessFor(org.id);
     final identity = session.identity;
-    // The platform's help number (113), asked before « Contacter le support ».
-    if (live) Support.warm(scope.auth.client);
 
     String inside(String rest) => Routes.inside(org.id, rest);
     final tools = toolsFor(org, access, admin: admin);
@@ -465,12 +463,10 @@ class CompteScreen extends StatelessWidget {
           _Group(
             title: context.tr('Aide'),
             children: [
-              _Tile(
-                icon: Icons.support_agent_outlined,
-                title: context.tr('Contacter le support'),
-                subtitle: context.tr('Sur WhatsApp'),
-                onTap: () => Support.openWhatsApp(context),
-              ),
+              // « Aide Mara » (126): the hours, WhatsApp once the platform
+              // set a number, the e-mail always — the same for a shop, a
+              // farm and an association.
+              const SupportCard(framed: false),
               _Tile(
                 icon: Icons.help_outline,
                 title: context.tr('Questions fréquentes'),

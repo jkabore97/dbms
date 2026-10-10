@@ -508,6 +508,8 @@ GoRouter buildRouter(SessionController session) {
         builder: (context, state) => MyOrdersScreen(
           storefront: StorefrontRepository(AppScope.of(context).auth.client),
           shopper: ShopperRepository(AppScope.of(context).auth.client),
+          // The order a notification opened (125).
+          focusId: state.uri.queryParameters['commande'],
         ),
       ),
 
@@ -1152,7 +1154,11 @@ GoRouter buildRouter(SessionController session) {
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.ShopOrdersScreen(org: org, retail: scope.retail),
+              (scope, org) => biz.ShopOrdersScreen(
+                  org: org,
+                  retail: scope.retail,
+                  // The order a notification opened (125).
+                  focusId: state.uri.queryParameters['commande']),
             ),
           ),
           GoRoute(

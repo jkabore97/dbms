@@ -113,6 +113,8 @@ begin
                              'app_store_links',
                              -- 123: a vitrine's visitors, counted signed out.
                              'record_vitrine_visit',
+                             -- 126: « Aide Mara », the signed-out page /aide.
+                             'support_contacts',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

@@ -187,6 +187,7 @@ declare
                'order', (select to_jsonb(o) - 'id' - 'created_at' - 'updated_at' - 'handover_code'
                                 - 'customer_id' - 'number' - 'ref'
                                 - 'refusal_reason' - 'couriers_told_at'
+                                - 'booked_for' - 'proposed_for'
                            from orders o where o.id = $1::uuid),
                'lines', (select jsonb_agg(to_jsonb(l) - 'id' - 'order_id' order by l.name)
                            from order_lines l where l.order_id = $1::uuid))$r$;
@@ -271,7 +272,10 @@ begin
         || jsonb_build_object('order wave', p110_knock(v_shop, 'authenticated',
                $q$select place_order('pro-p110', '[{"product_id": "11100000-0000-0000-00a0-000000000005", "quantity": 1}]'::jsonb,
                                      'pickup', null, null, null, 'wave')$q$, v_order))
-        -- A booking (a service alone), at the Pro shop and at the association.
+        -- A booking (a service alone), at the Pro shop and at the association,
+        -- as the app sent it before 125 (the day in the note, no slot): 125
+        -- keeps that call exactly as 109 took it, for the phones not yet
+        -- updated.
         || jsonb_build_object('booking shop', p110_knock(v_shop, 'authenticated',
                $q$select place_order('pro-p110', '[{"product_id": "11100000-0000-0000-00a0-000000000009", "quantity": 1}]'::jsonb,
                                      'pickup', 'Samedi 10 h')$q$, v_order))

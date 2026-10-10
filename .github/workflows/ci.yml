@@ -823,6 +823,16 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch124.sql
 
+      - name: Prove a service is booked, not basketed — a slot in the future, within 14 days, on :00 or :30, inside the vitrine's hours (none set = every day 08:00–20:00, a night's hours the day before's), each refusal in French; one service alone, never with goods; how many only by the person or the hour; confirm, propose another time, accept, refuse, cancel, each rung to the other side; only the business answers, only the customer accepts, the street calls no door; a showcase takes none; P1 an order of goods unchanged; the three kinds (125)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch125.sql
+
+      - name: Prove « Aide Mara » — the support e-mail (hello@kaj-consulting.com) and hours (24 h/24, 7 j/7) as installed, no WhatsApp number; a bad e-mail and hours too long refused in French, a number pasted from WhatsApp taken; support_contacts() read by a stranger and the app, nothing written by a stranger; the platform alone sets both, journaled; P1 nothing else changes, the three kinds (126)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch126.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

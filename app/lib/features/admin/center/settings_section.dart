@@ -8,6 +8,7 @@ import '../../../core/format/money.dart' show parseAmount;
 import '../../../core/l10n/tr.dart';
 import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
+import '../../account/support.dart' show Support;
 import '../../notify/push_check.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
@@ -125,9 +126,12 @@ const platformSettingDefs = <SettingDef>[
   // 111: a number proved on WhatsApp before a business is created — off,
   // as 109's, until the same Worker and hook are set up.
   SettingDef('create_phone_verified', 'creation', SettingType.flag),
-  // 113: the help number of the shopper's « Écrire à Mara sur WhatsApp »;
-  // empty, the row is not drawn.
+  // 113: the help number of « Aide Mara »'s WhatsApp button; empty, the
+  // button is not drawn. 126: the help e-mail and the hours it answers —
+  // the app's « Aide » and the site's /aide read the three.
   SettingDef('support_whatsapp', 'help', SettingType.text),
+  SettingDef('support_email', 'help', SettingType.text),
+  SettingDef('support_hours', 'help', SettingType.text),
   // 122: the web's « télécharger l'application » pop-up — Google Play once
   // the listing is live (the APK until then), the App Store once set.
   SettingDef('play_store_live', 'apps', SettingType.flag),
@@ -208,6 +212,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'order_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de commander'),
       'create_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de créer une activité'),
       'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
+      'support_email' => context.tr('E-mail de l\'aide Mara'),
+      'support_hours' => context.tr('Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)'),
       'play_store_live' => context.tr('Mara est publiée sur Google Play (sinon : le fichier APK)'),
       'app_store_url' => context.tr('Adresse de Mara sur l\'App Store (vide : écran d\'accueil)'),
       'welcome_email_on' => context.tr('E-mail de bienvenue aux nouveaux comptes'),
@@ -236,6 +242,17 @@ const positiveSettings = {'stripe_xof_per_usd'};
 /// The numbers with a range of their own: the couriers' radius is 1 to
 /// 100 km (122's platform_set_setting refuses the rest) — said here first.
 const rangedSettings = {'courier_radius_km': (1, 100)};
+
+/// A help number as typed or pasted, letters and digits only (126): the
+/// spaces, « + », brackets, dashes of every kind and the invisible
+/// direction marks a copied number carries (U+202A…U+202C) go.
+String supportNumberDigits(String raw) =>
+    raw.replaceAll(RegExp(r'[^\p{L}\p{N}]', unicode: true), '');
+
+/// « ; », « , » or « / » between digits reads as two numbers (« 226 70 00
+/// 00 00 / 226 76 00 00 00 »): refused, as 126's trigger refuses it, rather
+/// than run together into one wrong number.
+bool supportNumberHasTwo(String raw) => RegExp(r'[;,/]').hasMatch(raw);
 
 /// The value as a person reads it.
 String settingValueText(BuildContext context, SettingDef def, Object? v) {
@@ -291,7 +308,11 @@ class _SettingsSectionState extends State<SettingsSection> {
     }
   }
 
-  Future<void> _save(SettingDef def, Object value) async {
+  /// Writes [value]; null when it went through, else the server's refusal
+  /// — said in a snackbar, or handed back to the dialog that asked
+  /// ([sayRefusal] false), which keeps it under the field with what was
+  /// typed (or, gone by then, says it in a snackbar itself).
+  Future<String?> _save(SettingDef def, Object value, {bool sayRefusal = true}) async {
     final messenger = ScaffoldMessenger.of(context);
     final saved = context.tr('{name} : enregistré.', {'name': settingLabel(context, def.key)});
     final undoLabel = context.tr('Annuler');
@@ -315,19 +336,32 @@ class _SettingsSectionState extends State<SettingsSection> {
                 },
               ),
       ));
+      return null;
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(describeError(e))));
+      final refusal = describeError(e);
+      if (sayRefusal) messenger.showSnackBar(SnackBar(content: Text(refusal)));
+      return refusal;
     } finally {
       if (mounted) setState(() => _busy = null);
     }
   }
 
+  /// The dialog stays open until the server has answered: a refusal is
+  /// shown under the field, and nothing typed is lost (126 — the owner's
+  /// help number was refused after the dialog had closed, and only a
+  /// passing snackbar said why).
   Future<void> _edit(SettingDef def, Object? current) async {
-    final value = await showDialog<Object>(
+    await showDialog<void>(
       context: context,
-      builder: (_) => _EditDialog(def: def, current: current),
+      // Closed by « Annuler » only — and not while the server is asked
+      // (the dialog's PopScope): a write is never left without its answer.
+      barrierDismissible: false,
+      builder: (_) => _EditDialog(
+        def: def,
+        current: current,
+        save: (value) => _save(def, value, sayRefusal: false),
+      ),
     );
-    if (value != null && mounted) await _save(def, value);
   }
 
   @override
@@ -484,10 +518,13 @@ class _SettingsSectionState extends State<SettingsSection> {
 
 /// One setting, typed in its own way.
 class _EditDialog extends StatefulWidget {
-  const _EditDialog({required this.def, required this.current});
+  const _EditDialog({required this.def, required this.current, required this.save});
 
   final SettingDef def;
   final Object? current;
+
+  /// Writes the value: null once it went through, else why not.
+  final Future<String?> Function(Object value) save;
 
   @override
   State<_EditDialog> createState() => _EditDialogState();
@@ -500,6 +537,7 @@ class _EditDialogState extends State<_EditDialog> {
     if (widget.current is List) for (final e in widget.current as List) '$e',
   };
   String? _error;
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -507,7 +545,8 @@ class _EditDialogState extends State<_EditDialog> {
     super.dispose();
   }
 
-  void _ok() {
+  Future<void> _ok() async {
+    if (_saving) return;
     final def = widget.def;
     final raw = _text.text.trim();
     Object? value;
@@ -549,11 +588,29 @@ class _EditDialogState extends State<_EditDialog> {
           value = raw.toUpperCase();
         }
       case SettingType.text:
-        if (raw.length > 200) {
+        // Counted as Postgres's char_length counts: one per character,
+        // an emoji or an accented letter typed as two code units alike.
+        if (raw.runes.length > 200) {
           problem = context.tr('200 caractères au plus.');
         } else if (def.key == 'app_store_url' && raw.isNotEmpty &&
             !RegExp(r'^https://\S+$').hasMatch(raw)) {
           problem = context.tr('Une adresse qui commence par https://, ou rien.');
+        } else if (def.key == 'support_whatsapp') {
+          // Digits only (126): a number pasted from WhatsApp or a phone's
+          // contacts carries invisible direction marks and non-breaking
+          // hyphens; spaces, « + » and brackets go too. Letters stay, so
+          // a word is still refused.
+          final digits = supportNumberDigits(raw);
+          if (supportNumberHasTwo(raw) ||
+              (digits.isNotEmpty && !RegExp(r'^[0-9]{8,15}$').hasMatch(digits))) {
+            problem = context.tr('Le numéro WhatsApp de l\'aide : l\'indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).');
+          } else {
+            value = digits;
+          }
+        } else if (def.key == 'support_email' && !Support.isEmail(raw)) {
+          problem = context.tr('L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.');
+        } else if (def.key == 'support_hours' && (raw.isEmpty || raw.runes.length > 60)) {
+          problem = context.tr('Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).');
         } else {
           value = raw;
         }
@@ -563,11 +620,30 @@ class _EditDialogState extends State<_EditDialog> {
       case SettingType.flag01:
         value = null;
     }
-    if (problem != null) {
+    if (problem != null || value == null) {
       setState(() => _error = problem);
       return;
     }
-    Navigator.of(context).pop(value);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    // Taken now: should the dialog be gone when the answer comes, a
+    // refusal is still said.
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final refusal = await widget.save(value);
+    if (!mounted) {
+      if (refusal != null) messenger?.showSnackBar(SnackBar(content: Text(refusal)));
+      return;
+    }
+    if (refusal != null) {
+      setState(() {
+        _saving = false;
+        _error = refusal;
+      });
+      return;
+    }
+    Navigator.of(context).pop();
   }
 
   @override
@@ -577,56 +653,68 @@ class _EditDialogState extends State<_EditDialog> {
         def.type == SettingType.count ||
         def.type == SettingType.km ||
         def.type == SettingType.pct;
-    return AlertDialog(
-      // The keyboard up on a small phone: the dialog scrolls (A6).
-      scrollable: true,
-      title: Text(settingLabel(context, def.key)),
-      content: SizedBox(
-        width: 420,
-        child: def.type == SettingType.list
-            ? Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final o in def.options)
-                    FilterChip(
-                      label: Text(featureName(context, o)),
-                      selected: _picked.contains(o),
-                      onSelected: (on) => setState(() => on ? _picked.add(o) : _picked.remove(o)),
-                    ),
-                ],
-              )
-            : TextField(
-                key: const Key('setting-field'),
-                controller: _text,
-                autofocus: true,
-                keyboardType: numeric
-                    ? TextInputType.numberWithOptions(
-                        decimal: decimalSettings.contains(def.key))
-                    : TextInputType.text,
-                onSubmitted: (_) => _ok(),
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  errorText: _error,
-                  suffixText: def.type == SettingType.pct
-                      ? '%'
-                      : def.type == SettingType.km
-                          ? 'km'
-                          : null,
+    // While the server is asked: no back gesture, no « Annuler » — the
+    // answer comes back here, under the field.
+    return PopScope(
+      canPop: !_saving,
+      child: AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
+        title: Text(settingLabel(context, def.key)),
+        content: SizedBox(
+          width: 420,
+          child: def.type == SettingType.list
+              ? Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final o in def.options)
+                      FilterChip(
+                        label: Text(featureName(context, o)),
+                        selected: _picked.contains(o),
+                        onSelected: (on) => setState(() => on ? _picked.add(o) : _picked.remove(o)),
+                      ),
+                  ],
+                )
+              : TextField(
+                  key: const Key('setting-field'),
+                  controller: _text,
+                  autofocus: true,
+                  keyboardType: numeric
+                      ? TextInputType.numberWithOptions(
+                          decimal: decimalSettings.contains(def.key))
+                      : TextInputType.text,
+                  enabled: !_saving,
+                  onSubmitted: (_) => _ok(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    errorText: _error,
+                    // A refusal is a sentence: said whole, never cut (126).
+                    errorMaxLines: 4,
+                    suffixText: def.type == SettingType.pct
+                        ? '%'
+                        : def.type == SettingType.km
+                            ? 'km'
+                            : null,
+                  ),
                 ),
-              ),
+        ),
+        actions: [
+          TextButton(
+            key: const Key('setting-cancel'),
+            onPressed: _saving ? null : () => Navigator.of(context).pop(),
+            child: Text(context.tr('Annuler')),
+          ),
+          FilledButton(
+            key: const Key('setting-save'),
+            onPressed: _saving ? null : _ok,
+            child: _saving
+                ? const SizedBox(
+                    width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(context.tr('Enregistrer')),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.tr('Annuler')),
-        ),
-        FilledButton(
-          key: const Key('setting-save'),
-          onPressed: _ok,
-          child: Text(context.tr('Enregistrer')),
-        ),
-      ],
     );
   }
 }

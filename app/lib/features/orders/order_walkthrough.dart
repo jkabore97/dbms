@@ -6,15 +6,20 @@ import '../../core/auth/models.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/orders/booking.dart';
 import '../../core/orders/orders.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappUrl, directionsUrl;
 import '../../core/theme/mara_mark.dart';
 import '../common/step_flow.dart';
+import '../storefront/booking_sheet.dart' show BookingSlotPicker;
+import '../../core/storefront/storefront_repository.dart' show VitrineSchedule;
+import 'booking_words.dart';
 
 /// Where an order is in the walkthrough, from its status.
 enum OrderStage {
-  /// pending: see it, accept or refuse (with a reason).
+  /// pending: see it, accept or refuse (with a reason) — a booking (125):
+  /// confirm, propose another time, or refuse.
   answer,
 
   /// accepted goods: tick each article, then « Prête ».
@@ -103,7 +108,7 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
   late OrderStage _stage = stageOf(widget.order);
 
   // answer
-  String? _decision; // 'accepted' | 'refused'
+  String? _decision; // 'accepted' | 'refused' | 'propose' (a booking, 125)
   String? _reason; // one of the reasons, or 'other'
   final _otherReason = TextEditingController();
 
@@ -117,6 +122,30 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
   /// The payment could not be noted after the order was done.
   bool _paidFailed = false;
 
+  // propose (125): the other time, among the vitrine's hours.
+  DateTime? _proposeDay;
+  DateTime? _proposed;
+  VitrineSchedule? _hours;
+  bool _hoursRead = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.order.hasSlot) _readHours();
+  }
+
+  /// The business's booking hours (125's booking_hours), for the times
+  /// « Proposer une autre heure » offers — the ones the server checks.
+  Future<void> _readHours() async {
+    final hours = await widget.retail.bookingHours(widget.org.id);
+    if (mounted) {
+      setState(() {
+        _hours = hours;
+        _hoursRead = true;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _otherReason.dispose();
@@ -124,6 +153,16 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
   }
 
   bool get _booking => _order.isBooking;
+
+  /// A booking with its day and time (125): confirm, propose, refuse.
+  bool get _slot => _order.hasSlot;
+
+  /// The answer's verb on the save button.
+  String _answerLabel(BuildContext context) => switch (_decision) {
+        'propose' => context.tr('Proposer cette heure'),
+        'refused' => context.tr('Refuser'),
+        _ => _slot ? context.tr('Confirmer') : context.tr(orderActionLabel('accepted')),
+      };
   String get _name => _order.customerName;
 
   List<int> get _goods => [
@@ -174,6 +213,8 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
       _reason = null;
       _otherReason.clear();
       _ticked.clear();
+      _proposeDay = null;
+      _proposed = null;
       _handover = null;
       _paid = null;
       _paidFailed = false;
@@ -189,6 +230,11 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
         if (_decision == 'refused') {
           await widget.retail.refuseOrder(_order.id, _reasonText ?? '');
           _order = _with('refused');
+        } else if (_decision == 'propose') {
+          final at = _proposed;
+          if (at == null) return false;
+          await widget.retail.proposeBookingTime(_order.id, at);
+          _order = _with('pending', proposed: at);
         } else {
           await widget.retail.decideOrder(_order.id, 'accepted');
           _order = _with('accepted');
@@ -225,6 +271,12 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
   /// « C'est fait »'s line and the one under it, from where the order is now.
   (String, String?) _done(BuildContext context) {
     final n = {'name': _name};
+    if (_order.awaitsCustomer) {
+      return (
+        context.tr('Autre heure proposée. {name} est prévenu.', n),
+        context.tr('{name} l\'accepte ou annule dans Mes commandes.', n)
+      );
+    }
     return switch (_order.status) {
       'refused' => (
           _booking
@@ -259,7 +311,7 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
     };
   }
 
-  ShopOrder _with(String status, {bool self = false}) {
+  ShopOrder _with(String status, {bool self = false, DateTime? proposed}) {
     _selfDelivering = self;
     return ShopOrder(
         id: _order.id,
@@ -279,6 +331,8 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
         dropLat: _order.dropLat,
         dropLng: _order.dropLng,
         deliveryFee: _order.deliveryFee,
+        bookedFor: _order.bookedFor,
+        proposedFor: proposed,
       );
   }
 
@@ -341,8 +395,7 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
               )
             : null,
         saveLabel: switch (_stage) {
-          OrderStage.answer =>
-            context.tr(orderActionLabel(_decision ?? 'accepted')),
+          OrderStage.answer => _answerLabel(context),
           OrderStage.prepare => context.tr('Prête'),
           OrderStage.finish => context.tr('Enregistrer'),
           OrderStage.none => null,
@@ -362,11 +415,19 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
                     const SizedBox(height: 20),
                     FlowChoice<String>(
                       options: [
-                        FlowOption('accepted',
-                            _booking
-                                ? context.tr('Accepter le rendez-vous')
-                                : context.tr('Accepter la commande'),
-                            icon: Icons.check),
+                        // While another time waits for the customer, the
+                        // one asked is no longer to confirm (125).
+                        if (!_order.awaitsCustomer)
+                          FlowOption('accepted',
+                              _slot
+                                  ? context.tr('Confirmer')
+                                  : _booking
+                                      ? context.tr('Accepter le rendez-vous')
+                                      : context.tr('Accepter la commande'),
+                              icon: Icons.check),
+                        if (_slot)
+                          FlowOption('propose', context.tr('Proposer une autre heure'),
+                              icon: Icons.schedule),
                         FlowOption('refused', context.tr('Refuser'),
                             icon: Icons.close),
                       ],
@@ -375,6 +436,31 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
                     ),
                   ],
                 ),
+              ),
+              FlowStep(
+                id: 'when',
+                title: context.tr('Quelle autre heure ?'),
+                help: context.tr('{name} l\'accepte ou annule.', {'name': _name}),
+                shown: () => _decision == 'propose',
+                isValid: () => _proposed != null,
+                builder: (_) => !_hoursRead
+                    ? const Center(child: CircularProgressIndicator())
+                    : BookingSlotPicker(
+                        days: [
+                          for (final d in bookingDays(_hours, now: DateTime.now()))
+                            BookingDay(d.date, [
+                              for (final at in d.slots)
+                                if (at != _order.bookedFor) at,
+                            ]),
+                        ].where((d) => d.slots.isNotEmpty).toList(),
+                        day: _proposeDay,
+                        slot: _proposed,
+                        onDay: (d) => setState(() {
+                          _proposeDay = d;
+                          _proposed = null;
+                        }),
+                        onSlot: (at) => setState(() => _proposed = at),
+                      ),
               ),
               FlowStep(
                 id: 'reason',
@@ -528,11 +614,20 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
                 FlowSummaryRow(context.tr('Client'), _name),
                 FlowSummaryRow(context.tr('Total'),
                     money.format(_order.total)),
+                if (_slot)
+                  FlowSummaryRow(context.tr('Rendez-vous'),
+                      bookingWhen(_order.bookedFor!, context.trLanguage, short: true)),
                 FlowSummaryRow(
                     context.tr('Réponse'),
-                    context.tr(orderActionLabel(_decision ?? 'accepted')),
+                    _decision == 'propose'
+                        ? context.tr('Proposer une autre heure')
+                        : _answerLabel(context),
                     step: 'see',
                     bold: true),
+                if (_decision == 'propose' && _proposed != null)
+                  FlowSummaryRow(context.tr('Nouvelle heure'),
+                      bookingWhen(_proposed!, context.trLanguage, short: true),
+                      step: 'when'),
                 if (_decision == 'refused')
                   FlowSummaryRow(context.tr('Raison'), _reasonText ?? '',
                       step: 'reason'),
@@ -591,7 +686,7 @@ class _OrderWalkthroughState extends State<OrderWalkthrough> {
                   ],
                 ),
           actions: [
-            if (stageOf(_order) != OrderStage.none)
+            if (stageOf(_order) != OrderStage.none && !_order.awaitsCustomer)
               FlowAction(
                 key: const Key('order-next-stage'),
                 primary: true,
@@ -636,6 +731,13 @@ class _OrderSummaryCard extends StatelessWidget {
               '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
               '${paymentLabel(order.paymentMethod)}',
               style: theme.textTheme.bodySmall),
+          // « Rendez-vous demandé — mardi 14 oct., 10:00 » (125).
+          if (order.hasSlot) ...[
+            const SizedBox(height: 6),
+            Text(shopBookingHeadline(context, order),
+                key: const Key('walk-slot'),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          ],
           if (phone.isNotEmpty)
             Row(
               children: [

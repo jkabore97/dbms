@@ -19,6 +19,8 @@ import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_skeleton.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../../core/orders/booking.dart';
+import 'booking_words.dart';
 import 'order_walkthrough.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
@@ -33,10 +35,14 @@ import '../common/attention_banner.dart';
 /// over or delivered, the order records its own sale on the server — the
 /// till must not ring it again, and the list says so.
 class ShopOrdersScreen extends StatefulWidget {
-  const ShopOrdersScreen({super.key, required this.org, required this.retail});
+  const ShopOrdersScreen({super.key, required this.org, required this.retail, this.focusId});
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// The order a notification opened (125: `?commande=<id>`): its next
+  /// step opens by itself once the list is read.
+  final String? focusId;
 
   @override
   State<ShopOrdersScreen> createState() => _ShopOrdersScreenState();
@@ -125,6 +131,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
         _cash = results[2] as List<CashOwed>;
         _loading = false;
       });
+      _openFocus();
     } catch (error) {
       if (!mounted) return;
       if (silent) return;
@@ -133,6 +140,38 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
         _loading = false;
       });
     }
+  }
+
+  bool _focusOpened = false;
+
+  /// Another notification opened while Commandes is already on screen (the
+  /// router keeps this page and hands it the new `?commande=`): that order
+  /// opens in its turn — read again first when the list does not have it.
+  @override
+  void didUpdateWidget(covariant ShopOrdersScreen old) {
+    super.didUpdateWidget(old);
+    if (old.focusId == widget.focusId) return;
+    _focusOpened = false;
+    if (_loading || widget.focusId == null) return;
+    _openFocus();
+    if (!_focusOpened) {
+      // Not inside the frame being built: the re-read sets state.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(silent: true);
+      });
+    }
+  }
+
+  /// Once: the order the notification was about, at its step.
+  void _openFocus() {
+    if (_focusOpened || widget.focusId == null) return;
+    final order = _orders.where((o) => o.id == widget.focusId).firstOrNull;
+    if (order == null) return;
+    _focusOpened = true;
+    if (stageAction(order).isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _busyId == null) _walk(order);
+    });
   }
 
   Future<void> _setPaid(ShopOrder order, bool paid) async {
@@ -219,9 +258,10 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   /// Why « Commandes » (« Demandes ») has a red number (122): the orders
   /// and bookings not answered yet, each with « Répondre ».
   Widget? _waiting(BuildContext context, List<ShopOrder> open) {
+    // A booking whose other time waits for the customer (125) is answered.
     final pending = [
       for (final o in open)
-        if (o.status == 'pending') o,
+        if (o.status == 'pending' && !o.awaitsCustomer) o,
     ];
     if (pending.isEmpty) return null;
     final n = pending.length;
@@ -253,7 +293,9 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
           AttentionItem(
             id: o.id,
             label: o.customerName,
-            detail: moneyFormat(o.currency).format(o.total),
+            detail: o.hasSlot
+                ? bookingWhen(o.bookedFor!, context.trLanguage, short: true)
+                : moneyFormat(o.currency).format(o.total),
             actionLabel: context.tr('Répondre'),
             onAction: _busyId == null ? () => _walk(o) : null,
           ),
@@ -498,15 +540,22 @@ class _OrderCard extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w700)),
                 ),
                 // Waiting for an answer: red, as the bar's number that
-                // counts it (122).
-                if (order.status == 'pending')
+                // counts it (122). Another time proposed (125): the
+                // customer's turn.
+                if (order.awaitsCustomer)
+                  Chip(
+                    key: Key('order-awaits-${order.id}'),
+                    label: Text(context.tr('En attente du client')),
+                    visualDensity: VisualDensity.compact,
+                  )
+                else if (order.status == 'pending')
                   AttentionChip(
                       key: Key('order-waiting-${order.id}'),
                       label: context.tr('À répondre'))
                 else
                   Chip(
-                    label: Text(context.tr(
-                        orderStatusLabel(order.status, booking: order.isBooking))),
+                    key: Key('order-status-${order.id}'),
+                    label: Text(shopOrderStatusWord(context, order)),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -517,10 +566,27 @@ class _OrderCard extends StatelessWidget {
                 '${order.isPaid ? context.tr(' · payé') : ''}',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            // « Rendez-vous demandé — mardi 14 oct., 10:00 » (125).
+            if (order.hasSlot)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.event_outlined, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(shopBookingHeadline(context, order),
+                          key: Key('order-slot-${order.id}'),
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
             // The state's clock (073): "Prête depuis 25 min".
             if (order.isOpen && clock?.since != null)
               Text(
-                  '${context.tr(orderStatusLabel(order.status, booking: order.isBooking))} ${clock!.sinceLabel()}'
+                  '${shopOrderStatusWord(context, order)} ${clock!.sinceLabel()}'
                   '${clock!.selfDelivered ? context.tr(' · vous livrez') : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -532,7 +598,7 @@ class _OrderCard extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.error)),
-            if (clock?.stuck == true) ...[
+            if (clock?.stuck == true && !order.awaitsCustomer) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),

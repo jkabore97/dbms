@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
+import '../storefront/storefront_repository.dart' show VitrineSchedule;
 import '../db/local_db.dart';
 import 'models.dart';
 
@@ -85,6 +86,33 @@ class RetailRepository {
     } on PostgrestException catch (e) {
       if (e.code != 'PGRST202' && e.code != '42883') rethrow;
       await decideOrder(orderId, 'refused');
+    }
+  }
+
+  /// « Proposer une autre heure » for a booking (125): the same slot rules
+  /// as asking; the customer accepts it or cancels.
+  Future<void> proposeBookingTime(String orderId, DateTime at) async {
+    await _requireClient().rpc('propose_booking_time', params: {
+      'p_order_id': orderId,
+      'p_at': at.toUtc().toIso8601String(),
+    });
+  }
+
+  /// The hours « Proposer une autre heure » may move a booking to (125's
+  /// booking_hours): the very ones the server holds the proposal to — the
+  /// business's own, even while its vitrine is closed to the street (when
+  /// storefront() says nothing), 08:00–20:00 every day when none are set.
+  /// Null only when they cannot be read (no network): the sheet then offers
+  /// 125's default, and a time outside the real hours is refused by the
+  /// server in its own words, shown on the step.
+  Future<VitrineSchedule?> bookingHours(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final hours = await client.rpc('booking_hours', params: {'p_org_id': orgId});
+      return VitrineSchedule.fromJson(hours);
+    } catch (_) {
+      return null;
     }
   }
 

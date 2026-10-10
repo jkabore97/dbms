@@ -122,7 +122,10 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              context.tr('Votre panier est gardé : vous revenez ici juste après.'),
+              // A booking (125) is kept as the basket is, with its day and time.
+              widget.booking
+                  ? context.tr('Votre réservation est gardée : vous revenez ici juste après.')
+                  : context.tr('Votre panier est gardé : vous revenez ici juste après.'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15, color: ShopStyle.mist),
             ),

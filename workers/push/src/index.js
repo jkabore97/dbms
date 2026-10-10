@@ -155,6 +155,14 @@ export function payloadFor(row, env) {
   else if (kind.startsWith("spot_") && !row.org_id) path = "/console/a-la-une";
   else if (kind === "new_device") path = "/securite";
   else if (kind.startsWith("courier_") || kind === "delivery_available") path = "/livreur";
+  // 125: a booking's answers and its request open that booking — the
+  // customer's own card, the business's next step — never the business's
+  // home for a customer, who cannot open it.
+  else if (kind.startsWith("booking_") && to === "customer") path = withOrder("/mes-commandes", row);
+  else if (row.org_id && (kind.startsWith("booking_") ||
+      (kind === "new_order" && row.params?.booking === true && row.params?.at))) {
+    path = withOrder(`/o/${row.org_id}/commandes`, row);
+  }
   // A customer's order or booking (to: customer, 099) opens their own
   // orders — never the shop's, which they cannot open.
   else if (to === "customer" && (kind.startsWith("order") || kind.startsWith("delivery"))) {
@@ -175,6 +183,12 @@ export function payloadFor(row, env) {
     path,
     tag: row.id ? `kaj-${row.id}` : undefined,
   };
+}
+
+/// `?commande=<id>` when the row names its order (125): the app opens it.
+function withOrder(path, row) {
+  const id = row.params && typeof row.params.order_id === "string" ? row.params.order_id : "";
+  return /^[0-9a-f-]{36}$/i.test(id) ? `${path}?commande=${id}` : path;
 }
 
 async function rpc(env, fn, args, fetchImpl = fetch) {
