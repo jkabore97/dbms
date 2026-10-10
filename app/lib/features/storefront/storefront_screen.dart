@@ -534,10 +534,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         try {
           if (!await widget.session.signInWithApple()) {
             // Closed: the vitrine is not waiting for anybody any more.
-            widget.session.takeReturnTo();
-            await widget.session.db.writePref(_resumeKey, null);
+            await _forgetResume();
           }
         } catch (error) {
+          // Failed: nobody signed in either, so nothing is left waiting.
+          await _forgetResume();
           messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
         }
       case OrderSignIn.google:
@@ -552,6 +553,15 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       case OrderSignIn.newAccount:
         context.go('${Routes.signIn}?compte=nouveau');
     }
+  }
+
+  /// An Apple sign-in that did not happen: no page to return to, no order
+  /// to take up again.
+  Future<void> _forgetResume() async {
+    widget.session.takeReturnTo();
+    try {
+      await widget.session.db.writePref(_resumeKey, null);
+    } catch (_) {}
   }
 
   Future<void> _order() async {

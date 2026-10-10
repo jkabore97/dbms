@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -33,7 +34,7 @@ import 'package:kaj_app/main.dart' show appVersion;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
-    show AuthClientOptions, SupabaseClient, User;
+    show AuthChangeEvent, AuthClientOptions, AuthState, SupabaseClient, User;
 
 /// Batch 125: the iPhone app, ready for App Review — the crash reporter's
 /// version, Sign in with Apple (4.8) and no sale of digital goods in the
@@ -139,10 +140,11 @@ void main() {
   // 1. The crash reporter's version
   // ------------------------------------------------------------------
 
-  test('appVersion is pubspec\'s version, before the +', () {
+  test('appVersion is pubspec\'s version, before any +', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    final m = RegExp(r'^version:\s*([^\s+]+)\+', multiLine: true).firstMatch(pubspec);
-    expect(m, isNotNull, reason: 'pubspec.yaml has a version: x.y.z+n line');
+    final m = RegExp(r'^version:\s*([^\s+]+)(\+\d+)?\s*$', multiLine: true)
+        .firstMatch(pubspec);
+    expect(m, isNotNull, reason: 'pubspec.yaml has a version: x.y.z[+n] line');
     expect(appVersion, m!.group(1),
         reason: 'lib/main.dart appVersion and pubspec.yaml version must move together');
   });
@@ -378,6 +380,27 @@ void main() {
       expect(session.phase, SessionPhase.noOrg);
     });
 
+    test('a Google attempt left pending: the Apple session is handled once, '
+        'with Apple\'s name', () async {
+      // Google was tapped and its page closed: the device still holds the
+      // note (and a page to come back to). Supabase raises its signed-in
+      // event while Apple's token is exchanged, before the name is saved.
+      await db.writePref('google_pending', DateTime.now().toIso8601String());
+      await db.writePref('google_return_to', '/rue/elsewhere');
+      final server = _EventServer();
+      final session = sessionOn(server);
+      expect(await session.signInWithApple(), isTrue);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(server.orgsAsked, 1, reason: 'handled once, not again as Google');
+      expect(session.identity?.displayName, 'Ali Traoré',
+          reason: 'the name Apple gave, not the nameless user of the event');
+      expect(await db.loadIdentity().then((i) => i?.displayName), 'Ali Traoré');
+      expect(await db.readPref('google_pending'), isNull);
+      expect(await db.readPref('google_return_to'), isNull);
+      expect(await session.adoptGoogleSession(), isFalse);
+      await server.close();
+    });
+
     test('closed: nothing happens, nothing is kept', () async {
       final server = _Server();
       final session = sessionOn(server);
@@ -448,15 +471,13 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     });
 
-    test('the web never offers it (kIsWeb is part of the rule)', () {
-      // A VM test cannot be the web; what it can check is that the rule
-      // is iOS-and-not-web, so a browser on an iPhone gets no button.
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      expect(appleSignInPlatform, !kIsWeb);
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      expect(appleSignInPlatform, isFalse);
-      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-      expect(appleSignInPlatform, isFalse);
+    test('only iOS offers it', () {
+      // The web half of the rule (kIsWeb) cannot be run from a VM test; the
+      // platform half can: every platform but iOS is refused.
+      for (final p in TargetPlatform.values) {
+        debugDefaultTargetPlatformOverride = p;
+        expect(appleSignInPlatform, p == TargetPlatform.iOS, reason: '$p');
+      }
       debugDefaultTargetPlatformOverride = null;
     });
 
@@ -481,6 +502,9 @@ void main() {
           db: db!, auth: server, admin: _Admin(), accounting: AccountingRepository(null));
       await pump(tester, server, onApple: session.signInWithApple);
       await tester.tap(apple);
+      await tester.pump();
+      // The session clears any Google note on the device first: real IO.
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
       await tester.pumpAndSettle();
       expect(server.appleAsked, 1);
       expect(find.byType(LoginScreen), findsOneWidget);
@@ -682,6 +706,12 @@ void main() {
       expect(find.byKey(const Key('card-button')), findsOneWidget);
     });
 
+    test('with no override, the build decides: a test build sells', () {
+      debugSellsDigitalInApp = null;
+      expect(sellsDigitalInApp, isTrue,
+          reason: 'only --dart-define=STORE=appstore turns sales off');
+    });
+
     test('no « PRO » strip inviting to upgrade', () {
       debugSellsDigitalInApp = false;
       expect(ProStrip.shownFor(_free), isFalse);
@@ -804,4 +834,43 @@ class _Probe extends AuthRepository {
 
   @override
   bool get isConfigured => true;
+}
+
+/// A server that, like Supabase, raises its signed-in event while Apple's
+/// token is exchanged — the user then has no name yet — and only then
+/// hands back the user Apple named.
+class _EventServer extends _Server {
+  final _events = StreamController<AuthState>.broadcast();
+  int orgsAsked = 0;
+
+  static const _named = User(
+    id: 'ali-1',
+    appMetadata: {'provider': 'apple'},
+    userMetadata: {'full_name': 'Ali Traoré'},
+    aud: 'authenticated',
+    email: 'x7k2@privaterelay.appleid.com',
+    createdAt: '2026-10-10T00:00:00Z',
+  );
+
+  @override
+  Stream<AuthState>? get onAuthStateChange => _events.stream;
+
+  @override
+  Future<User?> signInWithApple() async {
+    appleAsked++;
+    user = _ali;
+    live = true;
+    _events.add(const AuthState(AuthChangeEvent.signedIn, null));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    user = _named;
+    return _named;
+  }
+
+  @override
+  Future<List<OrgSummary>> fetchOrgs() async {
+    orgsAsked++;
+    return orgs;
+  }
+
+  Future<void> close() => _events.close();
 }

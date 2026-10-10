@@ -11,15 +11,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models.dart';
 import '../errors.dart' as errors;
 
-/// Everything the app does with Supabase auth, behind one door.
-///
-/// Phone + OTP is the primary route on purpose: most of the people this app is
-/// for have a phone number and no email address. Email and password exist for
-/// the accountant on a laptop and for anyone whose SMS never arrives.
-///
-/// The client is nullable. A build made with no `--dart-define` values has no
-/// backend at all, and the app is still expected to run against the local
-/// database; every method here fails politely rather than throwing a null.
 /// Apple's native sheet (sign_in_with_apple): asks for [scopes] and seals
 /// [nonce] — the SHA-256 of the raw nonce — into the identity token. A
 /// parameter so a test can stand in for Apple.
@@ -35,6 +26,15 @@ typedef AppleCredentialRequest = Future<AuthorizationCredentialAppleID>
 bool get appleSignInPlatform =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
+/// Everything the app does with Supabase auth, behind one door.
+///
+/// Phone + OTP is the primary route on purpose: most of the people this app is
+/// for have a phone number and no email address. Email and password exist for
+/// the accountant on a laptop and for anyone whose SMS never arrives.
+///
+/// The client is nullable. A build made with no `--dart-define` values has no
+/// backend at all, and the app is still expected to run against the local
+/// database; every method here fails politely rather than throwing a null.
 class AuthRepository {
   AuthRepository(
     this._client, {
@@ -187,6 +187,11 @@ class AuthRepository {
 
   final AppleCredentialRequest _appleCredential;
 
+  /// What every Apple failure but a closed sheet says (a key of en.dart,
+  /// translated by describeError).
+  static const appleFailed =
+      "La connexion avec Apple n'a pas abouti. Réessayez.";
+
   static Future<AuthorizationCredentialAppleID> _askApple({
     required List<AppleIDAuthorizationScopes> scopes,
     required String nonce,
@@ -197,10 +202,10 @@ class AuthRepository {
   /// source. Apple is handed its SHA-256; Supabase the raw one, and checks
   /// that its hash is the one sealed in Apple's token — so a token caught
   /// on its way cannot be replayed.
-  static String newNonce([Random? random]) {
+  static String newNonce() {
     const chars =
         '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
-    final r = random ?? Random.secure();
+    final r = Random.secure();
     return List.generate(32, (_) => chars[r.nextInt(chars.length)]).join();
   }
 
@@ -228,13 +233,13 @@ class AuthRepository {
       );
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return null;
-      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+      throw StateError(appleFailed);
     } on SignInWithAppleException {
-      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+      throw StateError(appleFailed);
     }
     final idToken = credential.identityToken;
     if (idToken == null || idToken.isEmpty) {
-      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+      throw StateError(appleFailed);
     }
     final response = await client.auth.signInWithIdToken(
       provider: OAuthProvider.apple,
@@ -243,7 +248,7 @@ class AuthRepository {
     );
     final user = response.user;
     if (user == null) {
-      throw StateError("La connexion avec Apple n'a pas abouti. Réessayez.");
+      throw StateError(appleFailed);
     }
     final name = [credential.givenName, credential.familyName]
         .map((p) => p?.trim() ?? '')

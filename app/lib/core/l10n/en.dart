@@ -6098,4 +6098,11 @@ const enStrings = <String, String>{
       'Your vitrine offers pickup at the shop. Delivery, priced by distance, is part of Mara Pro.',
   'Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.':
       'Your vitrine offers pickup at the farm. Delivery, priced by distance, is part of Mara Pro.',
+  // 125: the iPhone app's words with no way of paying in them.
+  'Gagnez Mara Pro':
+      'Earn Mara Pro',
+  'Installez Google Authenticator ou Microsoft Authenticator (App Store).':
+      'Install Google Authenticator or Microsoft Authenticator (App Store).',
+  'Votre mise en avant est programmée.':
+      'Your promotion is scheduled.',
 };

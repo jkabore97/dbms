@@ -8,6 +8,7 @@ import '../../core/auth/two_step.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/update/update_check.dart' show installStore;
 
 /// The platform admin's second step (077).
 ///
@@ -252,7 +253,10 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
     return [
       step(
         '1',
-        'Installez Google Authenticator ou Microsoft Authenticator (Play Store).',
+        // The iPhone app names Apple's store, not Google's (125).
+        installStore == 'appstore'
+            ? 'Installez Google Authenticator ou Microsoft Authenticator (App Store).'
+            : 'Installez Google Authenticator ou Microsoft Authenticator (Play Store).',
       ),
       step(
         '2',

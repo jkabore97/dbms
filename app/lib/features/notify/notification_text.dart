@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart' show sellsDigitalInApp;
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
@@ -155,7 +156,10 @@ String notificationLine(BuildContext context, NotificationRow n) {
           : context.tr('Votre paiement chez {shop} est confirmé', {'shop': s('shop')});
     case 'spot_approved':
       if (yes('wave')) {
-        return context.tr('Mise en avant payée par Wave : elle est programmée.');
+        // The iPhone app names no way of paying for a spot (125).
+        return sellsDigitalInApp
+            ? context.tr('Mise en avant payée par Wave : elle est programmée.')
+            : context.tr('Votre mise en avant est programmée.');
       }
       final start = DateTime.tryParse(s('starts_at'))?.toLocal();
       return context.tr('Votre mise en avant est validée : elle commence le {date}.', {
@@ -168,7 +172,8 @@ String notificationLine(BuildContext context, NotificationRow n) {
           'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.',
           {'device': s('device')});
     case 'pro_active':
-      return yes('card')
+      // The iPhone app names no way of paying for Pro (125).
+      return yes('card') && sellsDigitalInApp
           ? context.tr('Mara Pro est actif, payé par carte, jusqu\'au {date}.', {'date': date('until')})
           : context.tr('Mara Pro est actif jusqu\'au {date}.', {'date': date('until')});
     case 'cauris_board':

@@ -516,9 +516,16 @@ class SessionController extends ChangeNotifier {
   /// is left on the device — the person goes the very path a password or
   /// Google takes ([handleSignedIn]: the identity, the code for somebody
   /// with a business, then the businesses). The auth event Supabase raises
-  /// meanwhile finds no Google note and is ignored. Closing Apple's sheet
-  /// does nothing (false); any other failure throws, for the screen to say.
+  /// meanwhile finds no Google note and is ignored — which is why a note a
+  /// cancelled Google attempt left behind is cleared first: the Apple
+  /// session would otherwise be taken for Google's and handled twice.
+  /// Closing Apple's sheet does nothing (false); any other failure throws,
+  /// for the screen to say.
   Future<bool> signInWithApple() async {
+    try {
+      await db.writePref(_googleKey, null);
+      await db.writePref(_googleReturnKey, null);
+    } catch (_) {}
     final user = await auth.signInWithApple();
     if (user == null) return false;
     await handleSignedIn(user);

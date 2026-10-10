@@ -453,7 +453,12 @@ builds without publishing; on main it publishes a new release, like a push
 The iPhone app is the same Flutter app (`app/ios/`, bundle id `bf.kaj.app`,
 named « Mara », iOS 15.5 and later — the oldest the text-recognition plugin
 supports). iPhone only (125: `TARGETED_DEVICE_FAMILY = 1`), so App Store
-Connect asks for no iPad screenshots and App Review tests on no iPad. It
+Connect asks for no iPad screenshots and App Review tests on no iPad.
+That choice is only free before release: once a version that runs on iPad
+has been on the App Store, Apple does not let a later one drop iPad (people
+who installed it there would lose updates). Until 125 the app had been
+sent to TestFlight only, never released, so dropping it now is fine; the
+day iPad is wanted, it can be added, but not taken away again. It
 sells no digital goods: Mara Pro and the paid spots are not offered in it
 (« What the iPhone app does not sell » below). It needs a Mac to build, which GitHub's Linux machines are not:
 [Codemagic](https://codemagic.io) builds it from `codemagic.yaml` at the
@@ -859,9 +864,12 @@ To switch it on (owner, once — no secret goes in the repository or in chat):
    Edit › Save (or « + » › App Store Connect › `bf.kaj.app` › the
    certificate › Generate). Then Codemagic › Team settings ›
    codemagic.yaml settings › Code signing identities › *iOS provisioning
-   profiles* › **Fetch profiles**, tick the new one (reference
-   `mara_app_store`), Save. A build with the old profile stops with a
-   signing error naming `com.apple.developer.applesignin`.
+   profiles*: **delete the old profile** whose reference name is
+   `mara_app_store` first (a reference name can be used once, and
+   `codemagic.yaml` asks for the profile by it), then **Fetch profiles**,
+   tick the new one and give it the reference `mara_app_store` again,
+   Save. A build that still gets the old profile stops with a signing
+   error naming `com.apple.developer.applesignin`.
 3. **Supabase** — Authentication › Providers › **Apple**: on; *Client IDs*
    `bf.kaj.app`. Nothing else: the native flow needs no secret key, no
    Services ID and no redirect URL (those are for Apple's web sign-in,

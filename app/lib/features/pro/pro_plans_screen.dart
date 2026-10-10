@@ -238,7 +238,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   const SizedBox(height: 28),
                   // Mara Pro complet, earned rather than paid (085).
                   if (!org.isPro && _costs['pro_all'] != null) ...[
-                    _EarnIt(org: org, cost: _costs['pro_all']!),
+                    _EarnIt(org: org, cost: _costs['pro_all']!, sells: sells),
                     const SizedBox(height: 20),
                   ],
                   if (org.isPro && sells && widget.cardManage != null) widget.cardManage!,
@@ -308,12 +308,14 @@ class _Returned extends StatelessWidget {
 }
 
 /// « Ou gagnez-le » (085): everything for 30 days, for cauris earned by
-/// doing well.
+/// doing well. « Ou » only where Pro is also sold ([sells]); the iPhone
+/// app offers nothing to choose it against (125).
 class _EarnIt extends StatelessWidget {
-  const _EarnIt({required this.org, required this.cost});
+  const _EarnIt({required this.org, required this.cost, required this.sells});
 
   final OrgSummary org;
   final int cost;
+  final bool sells;
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +335,8 @@ class _EarnIt extends StatelessWidget {
               const CauriIcon(size: 26),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(context.tr('Ou gagnez Mara Pro'),
+                child: Text(
+                    context.tr(sells ? 'Ou gagnez Mara Pro' : 'Gagnez Mara Pro'),
                     style: theme.textTheme.titleMedium?.copyWith(
                         color: maraPaper, fontWeight: FontWeight.w700)),
               ),
