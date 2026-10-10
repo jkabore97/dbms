@@ -33,6 +33,7 @@ void main() {
               itemCount: 40,
               itemBuilder: (context, i) => LazyPhoto(
                 key: ValueKey(i),
+                id: '$i',
                 load: (w) async {
                   asked.add(i);
                   widths.add(w);
@@ -110,6 +111,40 @@ void main() {
       expect((await capture.publicObjectBytes(key, width: 150)).length, 900);
       expect(asked, hasLength(2));
     });
+  });
+
+  testWidgets('a tile handed another picture shows that one, not the one it held',
+      (tester) async {
+    // The street reorders once distances arrive: the first card's place
+    // now holds another shop, and must show its photo.
+    final asked = <String>[];
+    Widget tile(String id) => MaterialApp(
+          home: LazyPhoto(
+            id: id,
+            load: (w) async {
+              asked.add(id);
+              return Uint8List.fromList(id.codeUnits);
+            },
+            placeholder: const Text('…'),
+            builder: (context, bytes, w) => Text(String.fromCharCodes(bytes)),
+          ),
+        );
+    await tester.pumpWidget(tile('velos'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('velos'), findsOneWidget);
+
+    await tester.pumpWidget(tile('pizzas'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('pizzas'), findsOneWidget);
+    expect(find.text('velos'), findsNothing);
+    expect(asked, ['velos', 'pizzas']);
+
+    // The same picture again: held, not asked twice.
+    await tester.pumpWidget(tile('pizzas'));
+    await tester.pump();
+    expect(asked, ['velos', 'pizzas']);
   });
 
   test('thumbnail widths: the smallest that covers, the original past 800', () {

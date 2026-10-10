@@ -14,14 +14,23 @@ import 'package:flutter/widgets.dart';
 /// (`?w=`, workers/uploads) instead of the 2000 px original.
 ///
 /// Once started, the download is held for the life of the tile — a rebuild
-/// must not refetch a picture on a slow link.
+/// must not refetch a picture on a slow link — unless the tile is handed a
+/// different picture ([id]): a list that reorders (the street once its
+/// distances or its sponsored shops arrive) keeps a tile's state at its
+/// place, and that place now shows another shop. Held, the old picture
+/// stayed: bicycles on the pizzeria's card.
 class LazyPhoto extends StatefulWidget {
   const LazyPhoto({
     super.key,
+    required this.id,
     required this.load,
     required this.builder,
     required this.placeholder,
   });
+
+  /// Which picture this is (the photo's key): when it changes, the held
+  /// download is dropped and the new one asked for.
+  final String id;
 
   /// Fetches the picture for a tile [pixelWidth] device pixels wide.
   final Future<Uint8List> Function(int pixelWidth) load;
@@ -50,6 +59,15 @@ class _LazyPhotoState extends State<LazyPhoto> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void didUpdateWidget(LazyPhoto oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id == widget.id) return;
+    _unwatch();
+    _bytes = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => _check());
   }
 

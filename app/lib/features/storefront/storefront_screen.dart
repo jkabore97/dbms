@@ -3382,6 +3382,7 @@ class _PhotoState extends State<_Photo> {
     // Asked for once near the screen, at the size it is drawn (lazy_photo):
     // a tile gets the Worker's small copy, not the 2000 px photograph.
     return LazyPhoto(
+      id: key,
       load: (width) => widget.capture.publicObjectBytes(key, width: width),
       placeholder: placeholder,
       builder: (context, bytes, width) {

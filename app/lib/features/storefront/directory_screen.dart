@@ -1042,6 +1042,7 @@ class _PhotoState extends State<_Photo> {
     if (key == null) return placeholder;
     // Asked for once near the screen, at the size it is drawn (lazy_photo).
     return LazyPhoto(
+      id: key,
       load: (width) => widget.capture.publicObjectBytes(key, width: width),
       placeholder: placeholder,
       builder: (context, bytes, width) => ClipRect(
