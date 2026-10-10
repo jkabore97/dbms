@@ -4,4 +4,5 @@
 "NSPhotoLibraryUsageDescription" = "Mara ouvre vos photos pour y choisir celle d'un article, de votre logo ou d'un reçu.";
 "NSPhotoLibraryAddUsageDescription" = "Mara enregistre dans vos photos l'image d'une facture ou d'un résumé que vous partagez.";
 "NSLocationWhenInUseUsageDescription" = "Mara utilise votre position pour montrer les boutiques et les livraisons près de vous.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Mara utilise votre position, seulement quand l'application est ouverte, pour montrer les boutiques et les livraisons près de vous.";
 "NSFaceIDUsageDescription" = "Mara utilise Face ID pour se déverrouiller à la place du code de l'appareil.";
