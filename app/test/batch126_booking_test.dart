@@ -872,7 +872,8 @@ void main() {
       await tester.pumpWidget(_app(ShopOrdersScreen(org: shop, retail: retail)));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('order-slot-L1')), findsNothing, reason: 'no booking headline');
-      expect(find.text('Note : Samedi 10 h'), findsOneWidget);
+      expect(find.byKey(const Key('order-slot-L2')), findsNothing);
+      expect(find.text('Note : Samedi 10 h'), findsNWidgets(2));
       expect(find.descendant(of: find.byKey(const Key('order-status-L2')), matching: find.text('Acceptée')),
           findsOneWidget);
       await tester.tap(find.byKey(const Key('order-walk-L1')));

@@ -464,17 +464,17 @@ class StorefrontRepository {
   }
 }
 
-/// One shop's window: who they are and how to reach them.
-/// The Pro dressing of a window (068): what a paying shop may change
-/// within the street's one design. Read from `storefront()`, which sends
-/// `{}` for a Free or lapsed business, and written through
-/// `set_storefront_style()`, which validates every key.
 /// The server has no booking yet (a database before 125): « Réservation
 /// indisponible pour le moment », and the goods are ordered as ever.
 class BookingUnavailable implements Exception {
   const BookingUnavailable();
 }
 
+/// One shop's window: who they are and how to reach them.
+/// The Pro dressing of a window (068): what a paying shop may change
+/// within the street's one design. Read from `storefront()`, which sends
+/// `{}` for a Free or lapsed business, and written through
+/// `set_storefront_style()`, which validates every key.
 class StorefrontStyle {
   const StorefrontStyle({
     this.tagline,
