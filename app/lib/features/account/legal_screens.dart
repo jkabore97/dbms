@@ -73,6 +73,12 @@ class PrivacyScreen extends StatelessWidget {
             'uniquement à vous identifier et à afficher votre nom dans '
             'l\'application. Nous ne lisons rien d\'autre de votre compte Google '
             'et ne transmettons ces informations à personne.',
+        '# Connexion avec Apple',
+        'Si vous vous connectez avec Apple (sur iPhone), nous recevons '
+            'd\'Apple une adresse e-mail — la vôtre, ou une adresse relais '
+            'privée qu\'Apple crée pour vous — et, la première fois '
+            'seulement, votre nom. Ils servent uniquement à vous identifier. '
+            'Nous ne transmettons ces informations à personne.',
         '# Comment elles sont utilisées',
         'Uniquement pour vous fournir le service : afficher vos livres, vos '
             'rapports et vos stocks à vous et aux personnes que vous autorisez. '
@@ -87,7 +93,8 @@ class PrivacyScreen extends StatelessWidget {
             'ce qui le concerne : Supabase (la base de données et les '
             'comptes) et Cloudflare (le site, les photos) hébergent les '
             'données ; Google pour la connexion avec Google et l\'envoi des '
-            'notifications sur le téléphone (Firebase) ; Stripe pour le '
+            'notifications sur le téléphone (Firebase) ; Apple pour la '
+            'connexion avec Apple ; Stripe pour le '
             'paiement par carte de Mara Pro (Mara ne voit jamais le numéro '
             'de la carte) ; Sentry pour les rapports d\'erreur de '
             'l\'application (sans nom, numéro ni contenu de vos livres) ; '

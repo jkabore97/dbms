@@ -21,6 +21,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Politique de confidentialité'), findsOneWidget);
       expect(find.text('Ce que nous collectons'), findsOneWidget);
+      // Further down since « Connexion avec Apple » (125): the list builds
+      // what is near the screen.
+      await tester.scrollUntilVisible(find.text('Où elles sont stockées'), 200);
       expect(find.text('Où elles sont stockées'), findsOneWidget);
     });
 

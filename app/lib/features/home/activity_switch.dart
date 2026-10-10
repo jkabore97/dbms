@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
@@ -155,20 +156,24 @@ class ActivitySwitchSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 52,
-                child: FilledButton.icon(
-                  key: const Key('activity-go-pro'),
-                  style: FilledButton.styleFrom(
-                      backgroundColor: maraCaramel, foregroundColor: maraDeep),
-                  onPressed: () => Navigator.of(context)
-                      .pop(Routes.inside(org.id, 'kaj-pro')),
-                  icon: const Icon(Icons.workspace_premium),
-                  label: Text(context.tr('Passer à Pro'),
-                      style: const TextStyle(fontSize: 16)),
+              // The way to Pro — not in the iPhone app, which sells no
+              // Pro (125): the card above says what a second needs.
+              if (sellsDigitalInApp) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    key: const Key('activity-go-pro'),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: maraCaramel, foregroundColor: maraDeep),
+                    onPressed: () => Navigator.of(context)
+                        .pop(Routes.inside(org.id, 'kaj-pro')),
+                    icon: const Icon(Icons.workspace_premium),
+                    label: Text(context.tr('Passer à Pro'),
+                        style: const TextStyle(fontSize: 16)),
+                  ),
                 ),
-              ),
+              ],
             ],
           ],
         ),

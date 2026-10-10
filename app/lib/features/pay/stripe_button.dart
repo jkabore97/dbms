@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/pay/wave_pay.dart';
@@ -75,7 +76,11 @@ class _StripeCardButtonState extends State<StripeCardButton> {
   @override
   Widget build(BuildContext context) {
     final pay = _pay;
-    if (pay == null || !pay.compiledIn || !widget.terms.stripeOn) {
+    // Never in the iPhone app, which sells no Pro (125).
+    if (!sellsDigitalInApp ||
+        pay == null ||
+        !pay.compiledIn ||
+        !widget.terms.stripeOn) {
       return const SizedBox.shrink();
     }
     final year = widget.period == 'year';
@@ -199,7 +204,8 @@ class _StripeManageState extends State<StripeManage> {
   Widget build(BuildContext context) {
     final sub = _sub;
     final pay = _pay;
-    if (sub == null || pay == null || !pay.compiledIn) {
+    // Stripe's page is a way to pay: not in the iPhone app (125).
+    if (!sellsDigitalInApp || sub == null || pay == null || !pay.compiledIn) {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);

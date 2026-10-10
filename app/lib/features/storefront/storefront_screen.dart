@@ -511,6 +511,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       context,
       booking: _booking,
       googleAvailable: widget.session.auth.googleAvailable,
+      // iPhone only, and only with Apple on (125).
+      appleAvailable: widget.session.auth.appleAvailable,
       accent: _shop?.accent,
     );
     if (choice == null || !mounted) return;
@@ -523,6 +525,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (!mounted) return;
     widget.session.stashReturnTo(Routes.storefront(widget.slug));
     switch (choice) {
+      // Apple's sheet is native (125): the person is in when it closes,
+      // and the vitrine takes the order up again as after Google on a
+      // phone (_resumeOrder). Closed without signing in: nothing to say,
+      // and nothing left waiting.
+      case OrderSignIn.apple:
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          if (!await widget.session.signInWithApple()) {
+            // Closed: the vitrine is not waiting for anybody any more.
+            await _forgetResume();
+          }
+        } catch (error) {
+          // Failed: nobody signed in either, so nothing is left waiting.
+          await _forgetResume();
+          messenger.showSnackBar(SnackBar(content: Text(describeError(error))));
+        }
       case OrderSignIn.google:
         final messenger = ScaffoldMessenger.of(context);
         try {
@@ -535,6 +553,15 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       case OrderSignIn.newAccount:
         context.go('${Routes.signIn}?compte=nouveau');
     }
+  }
+
+  /// An Apple sign-in that did not happen: no page to return to, no order
+  /// to take up again.
+  Future<void> _forgetResume() async {
+    widget.session.takeReturnTo();
+    try {
+      await widget.session.db.writePref(_resumeKey, null);
+    } catch (_) {}
   }
 
   Future<void> _order() async {

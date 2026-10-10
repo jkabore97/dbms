@@ -613,6 +613,9 @@ GoRouter buildRouter(SessionController session) {
             onboarding: scope.onboarding,
             onSignedIn: scope.session.handleSignedIn,
             onGoogle: scope.session.signInWithGoogle,
+            // The iPhone app's « Continuer avec Apple » (125); the screen
+            // draws it only there, and only when the project has Apple on.
+            onApple: scope.session.signInWithApple,
             initialError: scope.session.takeSignInProblem(),
           );
         },

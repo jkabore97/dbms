@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
 import '../../core/theme/kaj_card.dart';
@@ -24,7 +25,8 @@ import '../../core/notify/bell_room.dart';
 /// gives, row by row — what is free for everyone, what Pro adds, and the
 /// limits Pro lifts — read from the platform's own terms (066), so the page
 /// says exactly what the database will enforce. The foot is how to pay
-/// (ProPayPanel): by card, by Wave, or by hand.
+/// (ProPayPanel): by card, by Wave, or by hand — except in the iPhone app,
+/// which describes Pro and sells nothing ([sellsDigitalInApp]).
 class ProPlansScreen extends StatefulWidget {
   const ProPlansScreen({
     super.key,
@@ -136,6 +138,10 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final wide = MediaQuery.sizeOf(context).width >= 720;
     final price = _period == 'year' ? t.priceYear : t.priceMonth;
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
+    // The iPhone app sells no Pro (125): the comparison stays — what each
+    // plan gives — with no period to choose, no price, no way to pay and
+    // no Stripe page.
+    final sells = sellsDigitalInApp;
 
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Mara Pro'))),
@@ -177,7 +183,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       ],
                     ),
                   ),
-                  if (!org.isPro) ...[
+                  if (!org.isPro && sells) ...[
                     const SizedBox(height: 22),
                     Center(
                       child: SegmentedButton<String>(
@@ -199,7 +205,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   ],
                   const SizedBox(height: 22),
                   _Header(
-                    proPrice: org.isPro
+                    proPrice: org.isPro || !sells
                         ? null
                         : '${_money(price)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
                   ),
@@ -232,11 +238,11 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   const SizedBox(height: 28),
                   // Mara Pro complet, earned rather than paid (085).
                   if (!org.isPro && _costs['pro_all'] != null) ...[
-                    _EarnIt(org: org, cost: _costs['pro_all']!),
+                    _EarnIt(org: org, cost: _costs['pro_all']!, sells: sells),
                     const SizedBox(height: 20),
                   ],
-                  if (org.isPro && widget.cardManage != null) widget.cardManage!,
-                  if (!org.isPro)
+                  if (org.isPro && sells && widget.cardManage != null) widget.cardManage!,
+                  if (!org.isPro && sells)
                     ProPayPanel(
                       org: org,
                       terms: t,
@@ -302,12 +308,14 @@ class _Returned extends StatelessWidget {
 }
 
 /// « Ou gagnez-le » (085): everything for 30 days, for cauris earned by
-/// doing well.
+/// doing well. « Ou » only where Pro is also sold ([sells]); the iPhone
+/// app offers nothing to choose it against (125).
 class _EarnIt extends StatelessWidget {
-  const _EarnIt({required this.org, required this.cost});
+  const _EarnIt({required this.org, required this.cost, required this.sells});
 
   final OrgSummary org;
   final int cost;
+  final bool sells;
 
   @override
   Widget build(BuildContext context) {
@@ -327,7 +335,8 @@ class _EarnIt extends StatelessWidget {
               const CauriIcon(size: 26),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(context.tr('Ou gagnez Mara Pro'),
+                child: Text(
+                    context.tr(sells ? 'Ou gagnez Mara Pro' : 'Gagnez Mara Pro'),
                     style: theme.textTheme.titleMedium?.copyWith(
                         color: maraPaper, fontWeight: FontWeight.w700)),
               ),

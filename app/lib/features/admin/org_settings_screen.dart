@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../account/pro_sheet.dart';
 import '../../core/auth/auth_repository.dart';
@@ -1606,8 +1607,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       // The spots for sale (071), folded on their own. An association
       // buys the whole-vitrine spot only — an article in « À la une »
       // needs stock — and sees here the spots it already asked or paid.
-      // Not drawn when Mara's switchboard hid « Mettre en avant » (110).
-      if (!_hidden('spots'))
+      // Not drawn when Mara's switchboard hid « Mettre en avant » (110),
+      // nor in the iPhone app, which sells no spot (125).
+      if (!_hidden('spots') && sellsDigitalInApp)
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -1640,7 +1642,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         child: ListTile(
           leading: const Icon(Icons.workspace_premium_outlined),
           title: Text(context.tr('La livraison fait partie de Mara Pro')),
-          subtitle: Text(_profile == 'farm'
+          // The iPhone app invites to no purchase (125): what delivery
+          // is part of, not a call to upgrade.
+          subtitle: Text(!sellsDigitalInApp
+              ? (_profile == 'farm'
+                  ? context.tr('Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.')
+                  : context.tr('Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.'))
+              : _profile == 'farm'
               ? context.tr('Votre vitrine propose le retrait à la ferme. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')
               : context.tr('Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
           trailing: const Icon(Icons.chevron_right),

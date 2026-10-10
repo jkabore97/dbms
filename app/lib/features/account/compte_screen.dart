@@ -5,6 +5,7 @@ import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/access/org_access.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/security/security_settings.dart';
@@ -360,7 +361,11 @@ class CompteScreen extends StatelessWidget {
                   ),
                 _Tile(
                   icon: Icons.workspace_premium_outlined,
-                  title: org.isPro ? context.tr('Mara Pro') : context.tr('Passer à Mara Pro'),
+                  // The iPhone app invites to no purchase (125): the plan's
+                  // name, and the page that says what it includes.
+                  title: org.isPro || !sellsDigitalInApp
+                      ? context.tr('Mara Pro')
+                      : context.tr('Passer à Mara Pro'),
                   subtitle: org.isPro
                       ? context.tr('Formule active')
                       : context.tr('Paie, analyses, comptabilité, équipe sans limite…'),

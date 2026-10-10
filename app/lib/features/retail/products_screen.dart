@@ -8,6 +8,7 @@ import '../../core/format/money.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/org_access.dart';
+import '../../core/access/store_rules.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/retail/bulk_add.dart';
@@ -1150,7 +1151,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             ),
             // A spot on the street for this article (071), for the person
             // who pays for it; the sheet checks photo, price and stock.
-            if (widget.org.isAdmin &&
+            // Not in the iPhone app, which sells no spot (125).
+            if (sellsDigitalInApp &&
+                widget.org.isAdmin &&
                 widget.product.isPublished &&
                 AppScope.maybeOf(context) != null)
               Align(

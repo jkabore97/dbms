@@ -3,6 +3,7 @@ import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
@@ -123,12 +124,16 @@ class _SpotsCardState extends State<SpotsCard> {
               for (final s in _spots.take(5))
                 _SpotRow(spot: s, onPay: () => _claim(s)),
             ],
-            const SizedBox(height: 10),
-            FilledButton.tonalIcon(
-              onPressed: _buy,
-              icon: const Icon(Icons.add),
-              label: Text(context.tr('Mettre en avant')),
-            ),
+            // The iPhone app sells no spot (125): the card is not drawn
+            // there (OrgSettingsScreen), and never offers one if it were.
+            if (sellsDigitalInApp) ...[
+              const SizedBox(height: 10),
+              FilledButton.tonalIcon(
+                onPressed: _buy,
+                icon: const Icon(Icons.add),
+                label: Text(context.tr('Mettre en avant')),
+              ),
+            ],
           ],
         ),
       ),
@@ -187,7 +192,7 @@ class _SpotRow extends StatelessWidget {
                     ?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
-            if (spot.status == 'requested')
+            if (spot.status == 'requested' && sellsDigitalInApp)
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(

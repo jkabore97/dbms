@@ -6084,4 +6084,25 @@ const enStrings = <String, String>{
       'New accounts',
   'E-mail de bienvenue aux nouveaux comptes':
       'Welcome e-mail to new accounts',
+  // 125: Sign in with Apple, the iPhone app.
+  'Continuer avec Apple':
+      'Continue with Apple',
+  'La connexion avec Apple n\'a pas abouti. Réessayez.':
+      'Signing in with Apple did not go through. Try again.',
+  // 125: the iPhone app sells no digital goods (store_rules.dart).
+  'Cette fonction fait partie de Mara Pro.':
+      'This feature is part of Mara Pro.',
+  'Vous avez déjà une activité sur Mara. Une deuxième activité fait partie de Mara Pro.':
+      'You already have a business on Mara. A second business is part of Mara Pro.',
+  'Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.':
+      'Your vitrine offers pickup at the shop. Delivery, priced by distance, is part of Mara Pro.',
+  'Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.':
+      'Your vitrine offers pickup at the farm. Delivery, priced by distance, is part of Mara Pro.',
+  // 125: the iPhone app's words with no way of paying in them.
+  'Gagnez Mara Pro':
+      'Earn Mara Pro',
+  'Installez Google Authenticator ou Microsoft Authenticator (App Store).':
+      'Install Google Authenticator or Microsoft Authenticator (App Store).',
+  'Votre mise en avant est programmée.':
+      'Your promotion is scheduled.',
 };
