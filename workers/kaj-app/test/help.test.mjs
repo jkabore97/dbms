@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 
 import site from "../src/index.js";
-import { FAQ, forgetSupportContacts, supportContacts } from "../src/help.js";
+import { FAQ, contactsFrom, forgetSupportContacts, supportContacts } from "../src/help.js";
 
 const PAGE = "<!DOCTYPE html><html><head><title>Mara</title></head><body></body></html>";
 const env = {
@@ -49,7 +49,9 @@ test("with a number: WhatsApp with the greeting, the e-mail, the hours, the FAQ,
   const html = await r.text();
   assert.match(html, /<title>Aide Mara · Mara<\/title>/);
   assert.match(html, /<h1>Aide Mara<\/h1>/);
-  assert.match(html, /Une question, un souci \? Nous répondons 24 h\/24, 7 j\/7\./);
+  // The installed hours drawn with non-breaking spaces: never « 24 » / « h ».
+  assert.ok(html.includes("Une question, un souci ? Nous répondons 24\u00A0h/24, 7\u00A0j/7."));
+  assert.doesNotMatch(html, /24 h\/24/);
   assert.match(html, /We answer 24\/7\./);
   assert.ok(html.includes(
     `href="https://wa.me/18623354492?text=${encodeURIComponent("Bonjour, j'ai besoin d'aide avec Mara.")}"`));
@@ -81,7 +83,8 @@ test("without a number: no WhatsApp button; the hours the platform set", async (
   assert.doesNotMatch(html, /WhatsApp<\/a>/);
   assert.ok(html.includes('href="mailto:aide@marakaj.com"'));
   assert.match(html, /Nous répondons du lundi au samedi, 8 h – 20 h\./);
-  assert.match(html, /We answer du lundi au samedi, 8 h – 20 h\./);
+  // Typed hours are French: no English line repeating them in French.
+  assert.doesNotMatch(html, /We answer/);
   assert.match(html, /Write to us by e-mail\./);
 });
 
@@ -93,7 +96,7 @@ test("the RPC failing: the e-mail and hours as installed, no WhatsApp — never 
     assert.equal(r.status, 200, String(failure));
     const html = await r.text();
     assert.ok(html.includes('href="mailto:hello@kaj-consulting.com"'), String(failure));
-    assert.match(html, /Nous répondons 24 h\/24, 7 j\/7\./);
+    assert.ok(html.includes("Nous répondons 24\u00A0h/24, 7\u00A0j/7."), String(failure));
     assert.doesNotMatch(html, /wa\.me/, String(failure));
   }
   // No Supabase configured at all: the same.
@@ -106,7 +109,7 @@ test("a wrong value is never drawn: a number that is not digits, an address that
   const html = await (await get("/aide")).text();
   assert.doesNotMatch(html, /wa\.me/);
   assert.ok(html.includes('href="mailto:hello@kaj-consulting.com"'));
-  assert.match(html, /Nous répondons 24 h\/24, 7 j\/7\./);
+  assert.ok(html.includes("Nous répondons 24\u00A0h/24, 7\u00A0j/7."));
 });
 
 test("the values are written as text, never as HTML", async () => {
@@ -114,8 +117,51 @@ test("the values are written as text, never as HTML", async () => {
   const html = await (await get("/aide")).text();
   assert.doesNotMatch(html, /<script>alert/);
   assert.ok(html.includes("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; co"));
-  assert.ok(html.includes('href="mailto:a&quot;b@x.io"'));
-  assert.doesNotMatch(html, /href="mailto:a"b/);
+  // An address with a quote is no address (126's check): the default.
+  assert.ok(html.includes('href="mailto:hello@kaj-consulting.com"'));
+  assert.doesNotMatch(html, /mailto:a/);
+});
+
+test("an e-mail as 126 checks it: nothing that breaks a mailto: link or an attribute", () => {
+  for (const bad of ["a<b@x.io", "a>b@x.io", 'a"b@x.io', "a'b@x.io", "a b@x.io", "a@x.io?cc=y@z.io",
+    "a&b@x.io", "a,b@x.io", "a;b@x.io", "a@x;y.io", "a@x,y.io", "a@x.i<o", "a@x.io&body=1",
+    "hello", "hello@kaj", "a@b@c.io", `${"a".repeat(116)}@x.io`]) {
+    assert.equal(contactsFrom({ email: bad }).email, "hello@kaj-consulting.com", bad);
+  }
+  for (const good of ["hello@kaj-consulting.com", "aide+mara@marakaj.com", " aide@marakaj.com ",
+    `${"a".repeat(115)}@x.io`, "élodie@marakaj.bf"]) {
+    assert.equal(contactsFrom({ email: good }).email, good.trim(), good);
+  }
+});
+
+test("the hours counted as Postgres's char_length counts them: by character", () => {
+  // 60 emoji are 120 UTF-16 units, and 60 characters: kept, as 126 keeps them.
+  assert.equal(contactsFrom({ hours: "🕘".repeat(60) }).hours, "🕘".repeat(60));
+  assert.equal(contactsFrom({ hours: "🕘".repeat(61) }).hours, "24 h/24, 7 j/7");
+  assert.equal(contactsFrom({ hours: "é".repeat(60) }).hours, "é".repeat(60));
+  assert.equal(contactsFrom({ email: `${"😀".repeat(115)}@x.io` }).email, `${"😀".repeat(115)}@x.io`);
+  assert.equal(contactsFrom({ email: `${"😀".repeat(116)}@x.io` }).email, "hello@kaj-consulting.com");
+});
+
+test("Supabase down: the failure kept 15 s too — one 3 s wait per burst, not per visit", async () => {
+  supabase(new Error("connect ETIMEDOUT"));
+  const t0 = 2_000_000;
+  assert.equal((await supportContacts(env, t0)).email, "hello@kaj-consulting.com");
+  assert.equal((await supportContacts(env, t0 + 5_000)).whatsapp, null);
+  assert.equal((await supportContacts(env, t0 + 14_000)).hours, "24 h/24, 7 j/7");
+  assert.equal(asked.length, 1, "asked once in 15 s");
+  supabase({ email: "hello@kaj-consulting.com", whatsapp: "18623354492", hours: "24 h/24, 7 j/7" });
+  assert.equal((await supportContacts(env, t0 + 16_000)).whatsapp, "18623354492", "asked again after");
+  assert.equal(asked.length, 2);
+  // Back: kept the minute, not 15 s.
+  await supportContacts(env, t0 + 16_000 + 40_000);
+  assert.equal(asked.length, 2);
+  // An error status is a failure kept the same.
+  forgetSupportContacts();
+  supabase(503);
+  await supportContacts(env, t0);
+  await supportContacts(env, t0 + 10_000);
+  assert.equal(asked.length, 3);
 });
 
 test("kept a minute: a burst of visits asks Supabase once, then again after", async () => {

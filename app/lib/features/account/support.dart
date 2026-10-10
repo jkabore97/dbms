@@ -24,9 +24,9 @@ class SupportContacts {
     final email = '${j['email'] ?? ''}'.trim();
     final hours = '${j['hours'] ?? ''}'.trim();
     return SupportContacts(
-      email: RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s.]+$').hasMatch(email) ? email : Support.defaultEmail,
+      email: Support.isEmail(email) ? email : Support.defaultEmail,
       whatsapp: Support.digits(j['whatsapp']),
-      hours: hours.isEmpty || hours.length > 60 ? Support.defaultHours : hours,
+      hours: hours.isEmpty || hours.runes.length > 60 ? Support.defaultHours : hours,
     );
   }
 
@@ -52,6 +52,14 @@ class Support {
   /// The number as wa.me wants it, or null.
   static String? digits(Object? v) =>
       v is String && RegExp(r'^\d{8,15}$').hasMatch(v) ? v : null;
+
+  /// An address someone can write to, as 126's trigger and the site's
+  /// /aide check it: one « @ », a dot after it, at most 120 characters
+  /// (counted as Postgres counts them), and nothing that would break out
+  /// of a mailto: link or an HTML attribute — no space, < > " ' ? & , ;.
+  static bool isEmail(String v) =>
+      v.runes.length <= 120 &&
+      RegExp(r'''^[^@\s<>"'?&,;]+@[^@\s<>"'?&,;]+\.[^@\s<>"'?&,;.]+$''').hasMatch(v);
 
   /// Asks the platform once, ahead of the tap: a browser opens a chat only
   /// straight from the gesture, never after a wait. A database before 126
@@ -89,8 +97,18 @@ class Support {
 
   /// The hours as this reader reads them: the installed words in their
   /// language, anything the platform typed as typed.
-  static String hoursText(BuildContext context, String hours) =>
-      hours == defaultHours ? context.tr('24 h/24, 7 j/7') : hours;
+  /// The installed French is drawn with non-breaking spaces (« 24 h/24,
+  /// 7 j/7 » never breaks between 24 and h); it is stored with plain ones,
+  /// as an admin types it in Réglages.
+  static String hoursText(BuildContext context, String hours) {
+    if (hours != defaultHours) return hours;
+    final t = context.tr('24 h/24, 7 j/7');
+    return t == defaultHours ? defaultHoursShown : t;
+  }
+
+  /// [defaultHours] as drawn: non-breaking spaces inside « 24 h/24 » and
+  /// « 7 j/7 ».
+  static const defaultHoursShown = '24\u00A0h/24, 7\u00A0j/7';
 
   /// Opens the chat in WhatsApp (or a browser tab on the web) — only when
   /// the platform set a number; callers draw no button without one.

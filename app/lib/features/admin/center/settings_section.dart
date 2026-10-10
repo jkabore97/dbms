@@ -8,6 +8,7 @@ import '../../../core/format/money.dart' show parseAmount;
 import '../../../core/l10n/tr.dart';
 import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
+import '../../account/support.dart' show Support;
 import '../../notify/push_check.dart';
 import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
@@ -248,6 +249,11 @@ const rangedSettings = {'courier_radius_km': (1, 100)};
 String supportNumberDigits(String raw) =>
     raw.replaceAll(RegExp(r'[^\p{L}\p{N}]', unicode: true), '');
 
+/// « ; », « , » or « / » between digits reads as two numbers (« 226 70 00
+/// 00 00 / 226 76 00 00 00 »): refused, as 126's trigger refuses it, rather
+/// than run together into one wrong number.
+bool supportNumberHasTwo(String raw) => RegExp(r'[;,/]').hasMatch(raw);
+
 /// The value as a person reads it.
 String settingValueText(BuildContext context, SettingDef def, Object? v) {
   num? n = v is num ? v : num.tryParse('${v ?? ''}');
@@ -305,7 +311,7 @@ class _SettingsSectionState extends State<SettingsSection> {
   /// Writes [value]; null when it went through, else the server's refusal
   /// — said in a snackbar, or handed back to the dialog that asked
   /// ([sayRefusal] false), which keeps it under the field with what was
-  /// typed.
+  /// typed (or, gone by then, says it in a snackbar itself).
   Future<String?> _save(SettingDef def, Object value, {bool sayRefusal = true}) async {
     final messenger = ScaffoldMessenger.of(context);
     final saved = context.tr('{name} : enregistré.', {'name': settingLabel(context, def.key)});
@@ -347,6 +353,9 @@ class _SettingsSectionState extends State<SettingsSection> {
   Future<void> _edit(SettingDef def, Object? current) async {
     await showDialog<void>(
       context: context,
+      // Closed by « Annuler » only — and not while the server is asked
+      // (the dialog's PopScope): a write is never left without its answer.
+      barrierDismissible: false,
       builder: (_) => _EditDialog(
         def: def,
         current: current,
@@ -579,7 +588,9 @@ class _EditDialogState extends State<_EditDialog> {
           value = raw.toUpperCase();
         }
       case SettingType.text:
-        if (raw.length > 200) {
+        // Counted as Postgres's char_length counts: one per character,
+        // an emoji or an accented letter typed as two code units alike.
+        if (raw.runes.length > 200) {
           problem = context.tr('200 caractères au plus.');
         } else if (def.key == 'app_store_url' && raw.isNotEmpty &&
             !RegExp(r'^https://\S+$').hasMatch(raw)) {
@@ -590,15 +601,15 @@ class _EditDialogState extends State<_EditDialog> {
           // hyphens; spaces, « + » and brackets go too. Letters stay, so
           // a word is still refused.
           final digits = supportNumberDigits(raw);
-          if (digits.isNotEmpty && !RegExp(r'^[0-9]{8,15}$').hasMatch(digits)) {
+          if (supportNumberHasTwo(raw) ||
+              (digits.isNotEmpty && !RegExp(r'^[0-9]{8,15}$').hasMatch(digits))) {
             problem = context.tr('Le numéro WhatsApp de l\'aide : l\'indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).');
           } else {
             value = digits;
           }
-        } else if (def.key == 'support_email' &&
-            (raw.length > 120 || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s.]+$').hasMatch(raw))) {
+        } else if (def.key == 'support_email' && !Support.isEmail(raw)) {
           problem = context.tr('L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.');
-        } else if (def.key == 'support_hours' && (raw.isEmpty || raw.length > 60)) {
+        } else if (def.key == 'support_hours' && (raw.isEmpty || raw.runes.length > 60)) {
           problem = context.tr('Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).');
         } else {
           value = raw;
@@ -617,8 +628,14 @@ class _EditDialogState extends State<_EditDialog> {
       _saving = true;
       _error = null;
     });
+    // Taken now: should the dialog be gone when the answer comes, a
+    // refusal is still said.
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final refusal = await widget.save(value);
-    if (!mounted) return;
+    if (!mounted) {
+      if (refusal != null) messenger?.showSnackBar(SnackBar(content: Text(refusal)));
+      return;
+    }
     if (refusal != null) {
       setState(() {
         _saving = false;
@@ -636,62 +653,68 @@ class _EditDialogState extends State<_EditDialog> {
         def.type == SettingType.count ||
         def.type == SettingType.km ||
         def.type == SettingType.pct;
-    return AlertDialog(
-      // The keyboard up on a small phone: the dialog scrolls (A6).
-      scrollable: true,
-      title: Text(settingLabel(context, def.key)),
-      content: SizedBox(
-        width: 420,
-        child: def.type == SettingType.list
-            ? Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final o in def.options)
-                    FilterChip(
-                      label: Text(featureName(context, o)),
-                      selected: _picked.contains(o),
-                      onSelected: (on) => setState(() => on ? _picked.add(o) : _picked.remove(o)),
-                    ),
-                ],
-              )
-            : TextField(
-                key: const Key('setting-field'),
-                controller: _text,
-                autofocus: true,
-                keyboardType: numeric
-                    ? TextInputType.numberWithOptions(
-                        decimal: decimalSettings.contains(def.key))
-                    : TextInputType.text,
-                enabled: !_saving,
-                onSubmitted: (_) => _ok(),
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  errorText: _error,
-                  // A refusal is a sentence: said whole, never cut (126).
-                  errorMaxLines: 4,
-                  suffixText: def.type == SettingType.pct
-                      ? '%'
-                      : def.type == SettingType.km
-                          ? 'km'
-                          : null,
+    // While the server is asked: no back gesture, no « Annuler » — the
+    // answer comes back here, under the field.
+    return PopScope(
+      canPop: !_saving,
+      child: AlertDialog(
+        // The keyboard up on a small phone: the dialog scrolls (A6).
+        scrollable: true,
+        title: Text(settingLabel(context, def.key)),
+        content: SizedBox(
+          width: 420,
+          child: def.type == SettingType.list
+              ? Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final o in def.options)
+                      FilterChip(
+                        label: Text(featureName(context, o)),
+                        selected: _picked.contains(o),
+                        onSelected: (on) => setState(() => on ? _picked.add(o) : _picked.remove(o)),
+                      ),
+                  ],
+                )
+              : TextField(
+                  key: const Key('setting-field'),
+                  controller: _text,
+                  autofocus: true,
+                  keyboardType: numeric
+                      ? TextInputType.numberWithOptions(
+                          decimal: decimalSettings.contains(def.key))
+                      : TextInputType.text,
+                  enabled: !_saving,
+                  onSubmitted: (_) => _ok(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    errorText: _error,
+                    // A refusal is a sentence: said whole, never cut (126).
+                    errorMaxLines: 4,
+                    suffixText: def.type == SettingType.pct
+                        ? '%'
+                        : def.type == SettingType.km
+                            ? 'km'
+                            : null,
+                  ),
                 ),
-              ),
+        ),
+        actions: [
+          TextButton(
+            key: const Key('setting-cancel'),
+            onPressed: _saving ? null : () => Navigator.of(context).pop(),
+            child: Text(context.tr('Annuler')),
+          ),
+          FilledButton(
+            key: const Key('setting-save'),
+            onPressed: _saving ? null : _ok,
+            child: _saving
+                ? const SizedBox(
+                    width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(context.tr('Enregistrer')),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.tr('Annuler')),
-        ),
-        FilledButton(
-          key: const Key('setting-save'),
-          onPressed: _saving ? null : _ok,
-          child: _saving
-              ? const SizedBox(
-                  width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(context.tr('Enregistrer')),
-        ),
-      ],
     );
   }
 }

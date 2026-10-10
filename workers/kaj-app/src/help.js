@@ -63,21 +63,35 @@ export const FAQ = [
 
 const GREETING = "Bonjour, j'ai besoin d'aide avec Mara.";
 
+// The installed hours as drawn: non-breaking spaces, so « 24 h/24 » never
+// breaks between 24 and h. Stored with plain ones (126), as typed in Réglages.
+const DEFAULT_HOURS_SHOWN = "24\u00A0h/24, 7\u00A0j/7";
+
+// An address as 126's trigger checks it, and nothing that would break out
+// of a mailto: link or an attribute: no space, < > " ' ? & , ;.
+const EMAIL = /^[^@\s<>"'?&,;]+@[^@\s<>"'?&,;]+\.[^@\s<>"'?&,;.]+$/;
+
+/** Characters as Postgres's char_length counts them (code points). */
+const chars = (s) => [...s].length;
+
 /** What support_contacts() said, each value checked; the defaults for the rest. */
 export function contactsFrom(value) {
   const v = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const email = typeof v.email === "string" && /^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(v.email.trim())
-    ? v.email.trim() : DEFAULT_CONTACTS.email;
+  const e = typeof v.email === "string" ? v.email.trim() : "";
+  const email = EMAIL.test(e) && chars(e) <= 120 ? e : DEFAULT_CONTACTS.email;
   const whatsapp = typeof v.whatsapp === "string" && /^\d{8,15}$/.test(v.whatsapp) ? v.whatsapp : null;
-  const hours = typeof v.hours === "string" && v.hours.trim() !== "" && v.hours.length <= 60
-    ? v.hours.trim() : DEFAULT_CONTACTS.hours;
+  const h = typeof v.hours === "string" ? v.hours.trim() : "";
+  const hours = h !== "" && chars(h) <= 60 ? h : DEFAULT_CONTACTS.hours;
   return { email, whatsapp, hours };
 }
 
 /** The page, for these contacts. */
 export function helpHtml(contacts) {
-  const { email, whatsapp, hours } = contactsFrom(contacts);
-  const hoursEn = hours === DEFAULT_CONTACTS.hours ? "24/7" : hours;
+  const { email, whatsapp, hours: typed } = contactsFrom(contacts);
+  // The installed hours have their English; typed ones are the platform's
+  // French, which the English line would only repeat — it goes.
+  const installed = typed === DEFAULT_CONTACTS.hours;
+  const hours = installed ? DEFAULT_HOURS_SHOWN : typed;
   const wa = whatsapp
     ? `<a class="button wa" href="https://wa.me/${whatsapp}?text=${encodeURIComponent(GREETING)}" rel="noopener">Écrire sur WhatsApp</a>\n`
     : "";
@@ -86,8 +100,7 @@ export function helpHtml(contacts) {
 <p class="en" lang="en"><b>${escape(qEn)}</b> ${escape(aEn)}</p>`).join("\n");
   const main = `<h1>Aide Mara</h1>
 <p class="lead">Une question, un souci ? Nous répondons ${escape(hours)}.</p>
-<p class="en" lang="en">A question, a problem? We answer ${escape(hoursEn)}.</p>
-<div class="contact">
+${installed ? `<p class="en" lang="en">A question, a problem? We answer 24/7.</p>\n` : ""}<div class="contact">
 ${wa}<a class="button mail" href="mailto:${escape(email)}">Écrire à ${escape(email)}</a>
 </div>
 <p class="en" lang="en">${whatsapp ? "Write to us on WhatsApp or by e-mail." : "Write to us by e-mail."}</p>
@@ -133,7 +146,10 @@ export function helpPage(contacts) {
   });
 }
 
-// support_contacts(), kept a minute.
+// support_contacts(), kept a minute — and a failure kept 15 s, so Supabase
+// down costs one visit in a burst its 3 s wait, not every one.
+const KEPT_MS = 60_000;
+const FAILURE_KEPT_MS = 15_000;
 let memo = null;
 
 /** Forgets what was kept (tests). */
@@ -143,8 +159,12 @@ export function forgetSupportContacts() {
 
 /** The contacts, live, else the defaults — never throws. */
 export async function supportContacts(env, now = Date.now()) {
-  if (memo && now - memo.at < 60_000) return memo.value;
+  if (memo && now - memo.at < memo.kept) return memo.value;
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return DEFAULT_CONTACTS;
+  const failed = () => {
+    memo = { at: now, kept: FAILURE_KEPT_MS, value: DEFAULT_CONTACTS };
+    return DEFAULT_CONTACTS;
+  };
   try {
     const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/support_contacts`, {
       method: "POST",
@@ -156,11 +176,11 @@ export async function supportContacts(env, now = Date.now()) {
       body: "{}",
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return DEFAULT_CONTACTS;
+    if (!response.ok) return failed();
     const value = contactsFrom(await response.json());
-    memo = { at: now, value };
+    memo = { at: now, kept: KEPT_MS, value };
     return value;
   } catch (_) {
-    return DEFAULT_CONTACTS;
+    return failed();
   }
 }

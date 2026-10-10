@@ -49724,7 +49724,9 @@ insert into platform_settings (key, value) values
     ('support_hours', '"24 h/24, 7 j/7"')
 on conflict (key) do nothing;
 
--- An address someone can write to: one « @ », no space, a dot after it.
+-- An address someone can write to: one « @ », a dot after it, and nothing
+-- that would break out of the page's mailto: link or an HTML attribute —
+-- no space, no < > " ' ? & , ; (the app and the site check the same).
 create or replace function trg_support_email()
 returns trigger
 language plpgsql
@@ -49732,7 +49734,7 @@ set search_path = public
 as $$
 begin
     if jsonb_typeof(new.value) <> 'string'
-       or (new.value #>> '{}') !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:].]+$'
+       or (new.value #>> '{}') !~ '^[^@[:space:]<>"''?&,;]+@[^@[:space:]<>"''?&,;]+\.[^@[:space:]<>"''?&,;.]+$'
        or char_length(new.value #>> '{}') > 120 then
         raise exception 'L''e-mail de l''aide : une adresse comme hello@kaj-consulting.com.';
     end if;
@@ -49774,7 +49776,9 @@ execute function trg_support_hours();
 -- Letters stay, so a word is still refused (« le support »); everything
 -- else — spaces, « + », brackets, any dash, the invisible direction marks
 -- a copied number carries — is taken out before the 8 to 15 digits are
--- counted. The value is kept as typed (« Annuler » puts back exactly what
+-- counted. « ; », « , » or « / » reads as two numbers (« 226 70 00 00 00 /
+-- 226 76 00 00 00 »): refused, never run together into one wrong number.
+-- The value is kept as typed (« Annuler » puts back exactly what
 -- was there); support_whatsapp() reads its digits.
 create or replace function trg_support_whatsapp()
 returns trigger
@@ -49784,7 +49788,9 @@ as $$
 declare
     v text := regexp_replace(coalesce(new.value #>> '{}', ''), '[^[:alnum:]]', '', 'g');
 begin
-    if jsonb_typeof(new.value) <> 'string' or (v <> '' and v !~ '^[0-9]{8,15}$') then
+    if jsonb_typeof(new.value) <> 'string'
+       or (new.value #>> '{}') ~ '[;,/]'
+       or (v <> '' and v !~ '^[0-9]{8,15}$') then
         raise exception 'Le numéro WhatsApp de l''aide : l''indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).';
     end if;
     return new;

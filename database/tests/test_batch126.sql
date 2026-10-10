@@ -124,7 +124,11 @@ declare
 begin
     foreach v_bad in array array['', 'hello', 'hello@', '@kaj-consulting.com', 'hello@kaj',
                                  'hello @kaj-consulting.com', 'hello@kaj-consulting.com ',
-                                 'a@b@c.com', 'hello@kaj-consulting.', repeat('a', 110) || '@example.org'] loop
+                                 'a@b@c.com', 'hello@kaj-consulting.', repeat('a', 110) || '@example.org',
+                                 -- Nothing that breaks the page's mailto: link or an attribute.
+                                 'a<b@x.io', 'a>b@x.io', 'a"b@x.io', 'a''b@x.io', 'a@x.io?cc=y@z.io',
+                                 'a&b@x.io', 'a,b@x.io', 'a;b@x.io', 'a@x;y.io', 'a@x,y.io', 'a@x.i<o',
+                                 'a@x.io&body=1', E'a\tb@x.io'] loop
         v_r := pg_temp.refused126(format($q$update platform_settings set value = %L where key = 'support_email'$q$,
                                          to_jsonb(v_bad)));
         if v_r is distinct from v_msg_mail then
@@ -135,6 +139,9 @@ begin
     if v_r is distinct from v_msg_mail then
         raise exception 'FAIL: a number for the e-mail gave « % »', v_r;
     end if;
+    -- 120 characters, counted as characters (« é » is two bytes): taken.
+    update platform_settings set value = to_jsonb(repeat('é', 115) || '@x.io') where key = 'support_email';
+    update platform_settings set value = '"aide+mara@marakaj.com"' where key = 'support_email';
     update platform_settings set value = '"aide@marakaj.co.uk"' where key = 'support_email';
 
     foreach v_bad in array array['', '   ', repeat('x', 61)] loop
@@ -145,6 +152,14 @@ begin
         end if;
     end loop;
     update platform_settings set value = to_jsonb(repeat('x', 60)) where key = 'support_hours';
+    -- 60 emoji: 60 characters (240 bytes, 120 UTF-16 units) — taken, as
+    -- the app and the site count them.
+    update platform_settings set value = to_jsonb(repeat(E'\U0001F558', 60)) where key = 'support_hours';
+    v_r := pg_temp.refused126(format($q$update platform_settings set value = %L where key = 'support_hours'$q$,
+                                     to_jsonb(repeat(E'\U0001F558', 61))));
+    if v_r is distinct from v_msg_hours then
+        raise exception 'FAIL: 61 emoji for the hours gave « % »', v_r;
+    end if;
     update platform_settings set value = '"du lundi au samedi, 8 h – 20 h"' where key = 'support_hours';
 
     -- A number copied from WhatsApp: direction marks around it, a
@@ -153,7 +168,10 @@ begin
     if support_whatsapp() is distinct from '18623354492' then
         raise exception 'FAIL: the pasted number reads %', support_whatsapp();
     end if;
-    foreach v_bad in array array['le support', '7000', E'\u202A7000\u202C', '+1 862 335 4492 poste 3'] loop
+    foreach v_bad in array array['le support', '7000', E'\u202A7000\u202C', '+1 862 335 4492 poste 3',
+                                 -- Two numbers, never run together into one.
+                                 '22670000 / 22676000', '22670000;22676000', '22670000, 22676000',
+                                 '226/70000000', '+226 70 00 00 00 ; +226 76 00 00 00'] loop
         v_r := pg_temp.refused126(format($q$update platform_settings set value = %L where key = 'support_whatsapp'$q$,
                                          to_jsonb(v_bad)));
         if v_r is distinct from v_msg_wa then
@@ -164,7 +182,7 @@ begin
        '{"email": "aide@marakaj.co.uk", "whatsapp": "18623354492", "hours": "du lundi au samedi, 8 h – 20 h"}'::jsonb then
         raise exception 'FAIL: support_contacts() gave %', support_contacts();
     end if;
-    raise notice 'PASS: ten bad e-mails and a number refused, 61 characters or nothing for the hours refused, 60 taken; a pasted « +1 (862) 335-4492 » wrapped in direction marks reads 18623354492, a word or 4 digits still refused; support_contacts() follows';
+    raise notice 'PASS: twenty-three bad e-mails (< > " '' ? & , ; a space or a tab among them) and a number refused, 120 « é » characters taken; 61 characters (or 61 emoji) or nothing for the hours refused, 60 (or 60 emoji) taken; two numbers joined by / ; or , refused; a pasted « +1 (862) 335-4492 » wrapped in direction marks reads 18623354492, a word or 4 digits still refused; support_contacts() follows';
 end $$;
 rollback;
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -23,7 +24,8 @@ import 'package:kaj_app/l10n/strings.dart';
 
 /// A Supabase that answers each function as [answer] says: a value, an
 /// error status with PostgREST's body, or a dropped connection.
-SupabaseClient _client(List<String> asked, Object? Function(String fn, Map<String, dynamic> body) answer) =>
+SupabaseClient _client(List<String> asked, Object? Function(String fn, Map<String, dynamic> body) answer,
+        {Future<void>? Function(String fn)? wait}) =>
     SupabaseClient(
       'http://db.test',
       'anon',
@@ -32,6 +34,7 @@ SupabaseClient _client(List<String> asked, Object? Function(String fn, Map<Strin
         final fn = r.url.pathSegments.last;
         final body = r.body.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(jsonDecode(r.body) as Map? ?? {});
         asked.add('$fn ${r.body}');
+        await wait?.call(fn);
         final a = answer(fn, body);
         if (a is http.ClientException) throw a;
         if (a is _Refusal) {
@@ -85,7 +88,8 @@ class _Server {
               'Le numéro WhatsApp de l\'aide : l\'indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).');
         }
       }
-      if (key == 'support_email' && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s.]+$').hasMatch(v)) {
+      if (key == 'support_email' &&
+          !RegExp(r'''^[^@\s<>"'?&,;]+@[^@\s<>"'?&,;]+\.[^@\s<>"'?&,;.]+$''').hasMatch(v)) {
         return const _Refusal(400, 'P0001', 'L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.');
       }
       values[key] = v;
@@ -254,6 +258,116 @@ void main() {
       });
     });
 
+    testWidgets('while the server is asked the dialog cannot be closed — no « Annuler », no barrier, no back',
+        (tester) async {
+      final answer = Completer<void>();
+      final server = _Server();
+      final center = CommandCenterRepository(_client(server.asked, server.answer,
+          wait: (fn) => fn == 'platform_set_setting' ? answer.future : null));
+      await _reglages(tester, center);
+      await _open(tester, 'support_hours');
+      await tester.enterText(find.byKey(const Key('setting-field')), 'du lundi au samedi');
+      await tester.tap(find.byKey(const Key('setting-save')));
+      await tester.pump();
+      expect(tester.widget<TextButton>(find.byKey(const Key('setting-cancel'))).onPressed, isNull,
+          reason: '« Annuler » off while saving');
+      expect(tester.widget<FilledButton>(find.byKey(const Key('setting-save'))).onPressed, isNull);
+      await tester.tapAt(const Offset(4, 4)); // the barrier
+      await tester.pump();
+      expect(find.byKey(const Key('setting-field')), findsOneWidget, reason: 'the barrier does not close it');
+      await tester.binding.handlePopRoute(); // Android's back
+      await tester.pump();
+      expect(find.byKey(const Key('setting-field')), findsOneWidget, reason: 'back does not close it');
+      final dialogNavigator = Navigator.of(tester.element(find.byKey(const Key('setting-field'))));
+      expect(await dialogNavigator.maybePop(), isTrue, reason: 'the pop is handled — by the PopScope');
+      await tester.pump();
+      expect(find.byKey(const Key('setting-field')), findsOneWidget, reason: 'a back gesture does not close it');
+      answer.complete();
+      await tester.pumpAndSettle();
+      expect(server.written, {'support_hours': 'du lundi au samedi'});
+      expect(find.byKey(const Key('setting-field')), findsNothing, reason: 'closed once the server said yes');
+    });
+
+    testWidgets('not saving: the barrier leaves it open, « Annuler » closes it', (tester) async {
+      final server = _Server();
+      await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)));
+      await _open(tester, 'support_hours');
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('setting-field')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('setting-cancel')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('setting-field')), findsNothing);
+      expect(server.written, isEmpty);
+    });
+
+    testWidgets('the dialog gone before a refusal comes: the refusal still said, in a snackbar', (tester) async {
+      final answer = Completer<void>();
+      final asked = <String>[];
+      final center = CommandCenterRepository(
+          _client(asked, (fn, body) => fn == 'platform_settings_board'
+              ? {'support_hours': {'value': '24 h/24, 7 j/7', 'updated_at': null, 'changed_by': null}}
+              : const _Refusal(400, 'P0001', 'Réservé à la plateforme'),
+              wait: (fn) => fn == 'platform_set_setting' ? answer.future : null));
+      await _reglages(tester, center);
+      await _open(tester, 'support_hours');
+      await tester.enterText(find.byKey(const Key('setting-field')), 'du lundi au samedi');
+      await tester.tap(find.byKey(const Key('setting-save')));
+      await tester.pump();
+      // Somehow gone (a pop no PopScope stops: a route replaced, a sign-out).
+      Navigator.of(tester.element(find.byKey(const Key('setting-field')))).pop();
+      await tester.pump(const Duration(milliseconds: 500)); // the row still busy: no settling
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const Key('setting-field')), findsNothing);
+      answer.complete();
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(SnackBar, 'Réservé à la plateforme'), findsOneWidget);
+    });
+
+    testWidgets('an e-mail with < > " \' ? & , ; or a space: refused in Réglages, nothing sent', (tester) async {
+      final server = _Server();
+      await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)));
+      await _open(tester, 'support_email');
+      for (final bad in ['a<b@x.io', 'a>b@x.io', 'a"b@x.io', 'a\'b@x.io', 'a@x.io?cc=y@z.io', 'a&b@x.io',
+          'a,b@x.io', 'a;b@x.io', 'a@x;y.io', 'a@x.i<o', 'a\tb@x.io', '${'a' * 116}@x.io']) {
+        await _type(tester, bad);
+        expect(find.text('L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.'), findsOneWidget,
+            reason: bad);
+      }
+      expect(server.asked.where((a) => a.startsWith('platform_set_setting')), isEmpty);
+      // 116 characters « 😀 » (232 UTF-16 units) and « @x.io »: too long.
+      await _type(tester, '${'😀' * 116}@x.io');
+      expect(find.text('L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.'), findsOneWidget);
+      expect(server.asked.where((a) => a.startsWith('platform_set_setting')), isEmpty);
+      await _type(tester, '${'😀' * 115}@x.io');
+      expect(server.written, {'support_email': '${'😀' * 115}@x.io'}, reason: '120 characters, counted as Postgres');
+    });
+
+    testWidgets('two numbers (« / », « ; », « , ») refused, never run together', (tester) async {
+      final server = _Server();
+      await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)));
+      await _open(tester, 'support_whatsapp');
+      for (final bad in ['22670000 / 22676000', '22670000;22676000', '22670000, 22676000', '226/70000000',
+          '+226 70 00 00 00 ; +226 76 00 00 00']) {
+        await _type(tester, bad);
+        expect(find.text('Le numéro WhatsApp de l\'aide : l\'indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).'),
+            findsOneWidget, reason: bad);
+      }
+      expect(server.asked.where((a) => a.startsWith('platform_set_setting')), isEmpty);
+      expect(supportNumberHasTwo('+1 (862) 335-4492'), isFalse);
+    });
+
+    testWidgets('the hours counted by character, as Postgres: 60 emoji taken, 61 refused', (tester) async {
+      final server = _Server();
+      await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)));
+      await _open(tester, 'support_hours');
+      await _type(tester, '🕘' * 61);
+      expect(find.text('Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).'),
+          findsOneWidget);
+      await _type(tester, '🕘' * 60);
+      expect(server.written, {'support_hours': '🕘' * 60});
+    });
+
     test('the help group lists the three; in English', () {
       expect([for (final d in platformSettingDefs) if (d.group == 'help') d.key],
           ['support_whatsapp', 'support_email', 'support_hours']);
@@ -273,7 +387,8 @@ void main() {
       await tester.pumpWidget(_host(const SupportCard()));
       await tester.pumpAndSettle();
       expect(find.text('Aide Mara'), findsOneWidget);
-      expect(find.text('Une question, un souci ? Nous répondons 24 h/24, 7 j/7.'), findsOneWidget);
+      // The installed hours drawn with non-breaking spaces (stored plain).
+      expect(find.text('Une question, un souci ? Nous répondons 24\u00A0h/24, 7\u00A0j/7.'), findsOneWidget);
       expect(find.text('hello@kaj-consulting.com'), findsOneWidget);
       await tester.tap(find.byKey(const Key('support-whatsapp')));
       await tester.pumpAndSettle();
@@ -371,6 +486,19 @@ void main() {
       expect(asked.length, 2);
     });
 
+    test('an address is checked as 126 checks it; the hours counted by character', () {
+      for (final bad in ['a<b@x.io', 'a"b@x.io', 'a\'b@x.io', 'a b@x.io', 'a@x.io?cc=y@z.io', 'a&b@x.io',
+          'a,b@x.io', 'a;b@x.io', 'a@x>y.io', '${'a' * 116}@x.io', 'hello@kaj', 'a@b@c.io']) {
+        expect(Support.isEmail(bad), isFalse, reason: bad);
+        expect(SupportContacts.fromJson({'email': bad}).email, 'hello@kaj-consulting.com', reason: bad);
+      }
+      for (final good in ['hello@kaj-consulting.com', 'aide+mara@marakaj.com', '${'é' * 115}@x.io', '${'😀' * 115}@x.io']) {
+        expect(Support.isEmail(good), isTrue, reason: good);
+      }
+      expect(SupportContacts.fromJson({'hours': '🕘' * 60}).hours, '🕘' * 60);
+      expect(SupportContacts.fromJson({'hours': '🕘' * 61}).hours, '24 h/24, 7 j/7');
+    });
+
     test('a wrong answer is never drawn', () {
       final c = SupportContacts.fromJson({'email': 'pas une adresse', 'whatsapp': '+226 70', 'hours': 'x' * 61});
       expect(c.email, 'hello@kaj-consulting.com');
@@ -394,6 +522,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(FaqScreen), findsOneWidget);
       expect(find.byKey(const Key('support-card')), findsOneWidget);
+    });
+
+    testWidgets('a target a finger can hit: 48 wide, 24 high at least; the band still small', (tester) async {
+      for (final width in [320.0, 390.0, 1280.0]) {
+        tester.view.physicalSize = Size(width, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpWidget(_host(const ShopFooter()));
+        await tester.pumpAndSettle();
+        final target = tester.getSize(find.byKey(const Key('footer-help')));
+        expect(target.width, greaterThanOrEqualTo(48), reason: '$width');
+        expect(target.height, greaterThanOrEqualTo(24), reason: '$width');
+      }
+      tester.view.reset();
     });
 
     testWidgets('with no router: the site\'s /aide', (tester) async {
