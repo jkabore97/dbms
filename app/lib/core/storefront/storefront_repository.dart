@@ -187,6 +187,41 @@ class StorefrontRepository {
     return id as String;
   }
 
+  /// « Réserver » (125): one service, its day and time (Ouagadougou's
+  /// clock, sent as UTC), how many when it is by the person or the hour,
+  /// and the customer's words. Returns the booking's order id. A database
+  /// before 125 has no such door: [BookingUnavailable].
+  Future<String> bookService(
+    String slug, {
+    required String productId,
+    required DateTime at,
+    int quantity = 1,
+    String? note,
+    String? phone,
+  }) async {
+    try {
+      final id = await _requireClient().rpc('book_service', params: {
+        'p_slug': slug,
+        'p_product_id': productId,
+        'p_booked_for': at.toUtc().toIso8601String(),
+        'p_quantity': quantity,
+        'p_note': note,
+        'p_phone': phone,
+      });
+      return id as String;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') throw const BookingUnavailable();
+      rethrow;
+    }
+  }
+
+  /// The business proposed another time (125): the customer takes it, and
+  /// the booking is confirmed at it.
+  Future<void> acceptBookingTime(String orderId) async {
+    await _requireClient()
+        .rpc('accept_booking_time', params: {'p_order_id': orderId});
+  }
+
   /// This customer's orders, newest first.
   Future<List<CustomerOrder>> myOrders() async {
     final rows = await _requireClient().rpc('my_orders') as List<dynamic>;
@@ -434,6 +469,12 @@ class StorefrontRepository {
 /// within the street's one design. Read from `storefront()`, which sends
 /// `{}` for a Free or lapsed business, and written through
 /// `set_storefront_style()`, which validates every key.
+/// The server has no booking yet (a database before 125): « Réservation
+/// indisponible pour le moment », and the goods are ordered as ever.
+class BookingUnavailable implements Exception {
+  const BookingUnavailable();
+}
+
 class StorefrontStyle {
   const StorefrontStyle({
     this.tagline,

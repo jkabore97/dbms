@@ -187,6 +187,7 @@ declare
                'order', (select to_jsonb(o) - 'id' - 'created_at' - 'updated_at' - 'handover_code'
                                 - 'customer_id' - 'number' - 'ref'
                                 - 'refusal_reason' - 'couriers_told_at'
+                                - 'booked_for' - 'proposed_for'
                            from orders o where o.id = $1::uuid),
                'lines', (select jsonb_agg(to_jsonb(l) - 'id' - 'order_id' order by l.name)
                            from order_lines l where l.order_id = $1::uuid))$r$;
@@ -272,25 +273,33 @@ begin
                $q$select place_order('pro-p110', '[{"product_id": "11100000-0000-0000-00a0-000000000005", "quantity": 1}]'::jsonb,
                                      'pickup', null, null, null, 'wave')$q$, v_order))
         -- A booking (a service alone), at the Pro shop and at the association.
+        -- Since 125 a booking carries its slot (tomorrow 10:00, inside the
+        -- default hours) and is booked once unless by the person or the hour;
+        -- before 125 the slot is an extra key nobody reads.
         || jsonb_build_object('booking shop', p110_knock(v_shop, 'authenticated',
-               $q$select place_order('pro-p110', '[{"product_id": "11100000-0000-0000-00a0-000000000009", "quantity": 1}]'::jsonb,
+               $q$select place_order('pro-p110', jsonb_build_array(jsonb_build_object('product_id', '11100000-0000-0000-00a0-000000000009', 'quantity', 1,
+                                                       'booked_for', (((now() at time zone 'Africa/Ouagadougou')::date + 1 + time '10:00') at time zone 'Africa/Ouagadougou'))),
                                      'pickup', 'Samedi 10 h')$q$, v_order))
         || jsonb_build_object('booking association', p110_knock(v_shop, 'authenticated',
-               $q$select place_order('entraide-p110', '[{"product_id": "11100000-0000-0000-00c0-000000000001", "quantity": 2}]'::jsonb,
+               $q$select place_order('entraide-p110', jsonb_build_array(jsonb_build_object('product_id', '11100000-0000-0000-00c0-000000000001', 'quantity', 1,
+                                                       'booked_for', (((now() at time zone 'Africa/Ouagadougou')::date + 1 + time '10:00') at time zone 'Africa/Ouagadougou'))),
                                      'pickup', 'Le 20, pour un mariage')$q$, v_order))
         || jsonb_build_object('booking church', p110_knock(v_shop, 'authenticated',
-               $q$select place_order('chapelle-p110', '[{"product_id": "11100000-0000-0000-00d0-000000000001", "quantity": 1}]'::jsonb,
+               $q$select place_order('chapelle-p110', jsonb_build_array(jsonb_build_object('product_id', '11100000-0000-0000-00d0-000000000001', 'quantity', 1,
+                                                       'booked_for', (((now() at time zone 'Africa/Ouagadougou')::date + 1 + time '10:00') at time zone 'Africa/Ouagadougou'))),
                                      'pickup', 'Lundi soir')$q$, v_order))
         -- Wave at the association.
         || jsonb_build_object('association wave', p110_knock(v_shop, 'authenticated',
-               $q$select place_order('entraide-p110', '[{"product_id": "11100000-0000-0000-00c0-000000000002", "quantity": 1}]'::jsonb,
+               $q$select place_order('entraide-p110', jsonb_build_array(jsonb_build_object('product_id', '11100000-0000-0000-00c0-000000000002', 'quantity', 1,
+                                                       'booked_for', (((now() at time zone 'Africa/Ouagadougou')::date + 1 + time '10:00') at time zone 'Africa/Ouagadougou'))),
                                      'pickup', 'Mardi', null, null, 'wave')$q$, v_order))
         -- The farm's trays, one still growing (a pre-order), and its service.
         || jsonb_build_object('order farm', p110_knock(v_shop, 'authenticated',
                $q$select place_order('ferme-p110', '[{"product_id": "11100000-0000-0000-00f0-000000000001", "quantity": 3},
                                                     {"product_id": "11100000-0000-0000-00f0-000000000008", "quantity": 1}]'::jsonb)$q$, v_order))
         || jsonb_build_object('booking farm', p110_knock(v_shop, 'authenticated',
-               $q$select place_order('ferme-p110', '[{"product_id": "11100000-0000-0000-00f0-000000000009", "quantity": 1}]'::jsonb,
+               $q$select place_order('ferme-p110', jsonb_build_array(jsonb_build_object('product_id', '11100000-0000-0000-00f0-000000000009', 'quantity', 1,
+                                                       'booked_for', (((now() at time zone 'Africa/Ouagadougou')::date + 1 + time '10:00') at time zone 'Africa/Ouagadougou'))),
                                      'pickup', 'Après la pluie')$q$, v_order))
         -- Delivery at the Basic shop (Mara's gift), and at the farm (none).
         || jsonb_build_object('order delivery basic', p110_knock(v_shop, 'authenticated',

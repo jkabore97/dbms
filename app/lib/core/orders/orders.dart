@@ -114,6 +114,8 @@ class CustomerOrder {
     this.shopWave,
     this.deliveryFee,
     this.orgId,
+    this.bookedFor,
+    this.proposedFor,
   });
 
   final String id;
@@ -146,9 +148,21 @@ class CustomerOrder {
   /// could be computed — the app then says "à discuter".
   final double? deliveryFee;
 
+  /// A booking's slot (125): the time asked for, then the time agreed; and
+  /// the business's other time while it waits for the customer. Null on an
+  /// order of goods, and on a booking made before 125 (its day in the note).
+  final DateTime? bookedFor;
+  final DateTime? proposedFor;
+
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
   bool get isBooking => isAppointment(fulfilment, lines);
+
+  /// A booking with its day and time (125).
+  bool get hasSlot => bookedFor != null;
+
+  /// The business proposed another time: the customer accepts or cancels.
+  bool get awaitsCustomer => status == 'pending' && proposedFor != null;
 
   /// Goods plus the delivery, which is what changes hands.
   double get grandTotal => total + (deliveryFee ?? 0);
@@ -192,6 +206,8 @@ class CustomerOrder {
         deliveryFee: _num(row['delivery_fee']),
         orgId: row['org_id'] as String?,
         lines: _lines(row['lines']),
+        bookedFor: _slot(row['lines'], 'booked_for'),
+        proposedFor: _slot(row['lines'], 'proposed_for'),
       );
 }
 
@@ -215,6 +231,8 @@ class ShopOrder {
     this.dropLat,
     this.dropLng,
     this.deliveryFee,
+    this.bookedFor,
+    this.proposedFor,
   });
 
   final String id;
@@ -243,10 +261,21 @@ class ShopOrder {
   /// The delivery's price (061), fixed at order time; null on a pickup.
   final double? deliveryFee;
 
+  /// A booking's slot and the business's other time (125), as on
+  /// [CustomerOrder].
+  final DateTime? bookedFor;
+  final DateTime? proposedFor;
+
   bool get isOpen => orderIsOpen(status);
   bool get isPaid => paidAt != null;
   bool get isBooking => isAppointment(fulfilment, lines);
   bool get hasDropPin => dropLat != null && dropLng != null;
+
+  /// A booking with its day and time (125).
+  bool get hasSlot => bookedFor != null;
+
+  /// Another time proposed: the business waits for the customer's answer.
+  bool get awaitsCustomer => status == 'pending' && proposedFor != null;
 
   /// What the shop may do next, in the order the buttons are shown.
   List<String> get nextStatuses => switch (status) {
@@ -283,6 +312,8 @@ class ShopOrder {
         dropLng: _num(row['drop_lng']),
         deliveryFee: _num(row['delivery_fee']),
         lines: _lines(row['lines']),
+        bookedFor: _slot(row['lines'], 'booked_for'),
+        proposedFor: _slot(row['lines'], 'proposed_for'),
       );
 }
 
@@ -312,6 +343,14 @@ List<OrderLine> _lines(Object? raw) {
 
 double? _num(Object? v) =>
     v == null ? null : (v is num ? v.toDouble() : double.tryParse('$v'));
+
+/// A booking's time, said on its line by my_orders() / shop_orders() (125):
+/// the lists keep their columns, so the slot travels with the service.
+DateTime? _slot(Object? lines, String key) {
+  if (lines is! List || lines.isEmpty || lines.first is! Map) return null;
+  final v = (lines.first as Map)[key];
+  return v == null ? null : DateTime.tryParse('$v')?.toUtc();
+}
 
 DateTime? _when(Object? v) =>
     v == null ? null : DateTime.tryParse('$v')?.toLocal();

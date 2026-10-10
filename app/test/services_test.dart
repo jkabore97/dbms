@@ -377,17 +377,12 @@ void main() {
         expect(find.text('Réserver'), findsNWidgets(2));
         expect(find.text('Épuisé'), findsNothing);
 
-        // « Réserver » puts the service in the basket, as « + » does goods.
+        // « Réserver » opens the service's booking sheet (125) — never the
+        // basket.
         await tester.tap(find.text('Réserver').first);
-        await tester.pump();
-        expect(
-          find.descendant(
-            of: find.byKey(const Key('shelf-service-rows')),
-            matching: find.text('Réserver'),
-          ),
-          findsOneWidget,
-        );
-        expect(find.byKey(const Key('basket-bar')), findsWidgets);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('booking-send')), findsOneWidget);
+        expect(find.byKey(const Key('basket-bar')), findsNothing);
         await closeWindow(tester);
       },
     );
@@ -429,26 +424,18 @@ void main() {
       await closeWindow(tester);
     });
 
-    testWidgets('a basket of services says « 1 service » and « Réserver »', (
+    testWidgets('a service never enters the basket: no « 1 service », no stepper (125)', (
       tester,
     ) async {
       await openWindow(tester, _Window('association', const [_lesson, _haircut]));
       await tester.tap(find.text('Réserver').first);
-      await tester.pump();
-      final bar = find.byKey(const Key('basket-bar'));
-      expect(bar, findsOneWidget);
-      expect(
-        find.descendant(of: bar, matching: find.text('1 service')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: bar, matching: find.text('Réserver')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: bar, matching: find.text('Commander')),
-        findsNothing,
-      );
+      await tester.pumpAndSettle();
+      // The booking sheet, closed without booking: nothing was basketed.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('basket-bar')), findsNothing);
+      expect(find.text('1 service'), findsNothing);
+      expect(find.text('Réserver'), findsNWidgets(2));
       await closeWindow(tester);
     });
 
@@ -515,47 +502,13 @@ void main() {
       return sent;
     }
 
-    testWidgets('services alone: no delivery, the day and hour required', (
+    testWidgets('a basket of goods chooses as before, the note optional', (
       tester,
     ) async {
-      final sent = await openSheet(tester, const [_haircut, _lesson]);
-      expect(find.text('Votre réservation'), findsOneWidget);
-      expect(find.byKey(const Key('order-appointment')), findsOneWidget);
-      expect(
-        find.byType(SegmentedButton<String>),
-        findsNothing,
-        reason: 'nothing travels, so no delivery is offered',
-      );
-      expect(find.text('Livraison'), findsNothing);
-      expect(find.text('Date et heure souhaitées'), findsOneWidget);
-
-      await tester.tap(find.text('Envoyer la réservation'));
-      await tester.pumpAndSettle();
-      expect(sent, isEmpty);
-      expect(
-        find.text('Dites quel jour et à quelle heure vous souhaitez venir.'),
-        findsOneWidget,
-      );
-
-      await tester.enterText(
-        find.byKey(const Key('order-note')),
-        'Samedi 10 h',
-      );
-      await tester.tap(find.text('Envoyer la réservation'));
-      await tester.pumpAndSettle();
-      expect(sent, [
-        {'fulfilment': 'pickup', 'note': 'Samedi 10 h'},
-      ]);
-    });
-
-    testWidgets('a mixed basket chooses as before, the note optional', (
-      tester,
-    ) async {
-      final sent = await openSheet(tester, const [_shampoo, _haircut]);
+      final sent = await openSheet(tester, const [_shampoo]);
       expect(find.text('Votre commande'), findsOneWidget);
       expect(find.byType(SegmentedButton<String>), findsOneWidget);
       expect(find.text('Livraison'), findsOneWidget);
-      expect(find.byKey(const Key('order-appointment')), findsNothing);
       await tester.tap(find.text('Envoyer la commande'));
       await tester.pumpAndSettle();
       expect(sent, [

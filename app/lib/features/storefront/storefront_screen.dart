@@ -24,6 +24,8 @@ import '../../core/theme/mara_mark.dart';
 import '../common/owned_controller.dart';
 import '../shopper/follow_heart.dart';
 import '../shopper/shopper_profile_screen.dart' show addressName;
+import '../../core/orders/booking.dart';
+import 'booking_sheet.dart';
 import 'lazy_photo.dart';
 import 'open_badge.dart';
 import 'order_sign_in_sheet.dart';
@@ -135,6 +137,9 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           final cap = item?.stockLeft;
           if (cap != null && q > cap) q = cap.floorToDouble();
           if (item != null && !item.inStock) q = 0;
+          // A service is booked, never basketed (125): an older basket's
+          // service is left out.
+          if (item != null && item.isService) q = 0;
           if (q > 0 && item != null) _basket[e.key] = q;
         }
       });
@@ -266,6 +271,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         unawaited(_countVisitor());
       }
       await _restoreBasket(items);
+      await _readPendingBooking();
       unawaited(_resumeOrder());
     } catch (error) {
       if (!mounted) return;
@@ -337,6 +343,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
 
   void _add(PublicItem item) {
     if (_shop?.style.ordersClosed ?? false) return;
+    // « Réserver » (125): a day and a time, not the basket.
+    if (item.isService) {
+      unawaited(_book(item));
+      return;
+    }
     // No more than is left on the shelf (101): the stepper stops there. The
     // window says how many only when few are left (« Plus que 3 »); with
     // more, the count stays the shop's and the stepper just stops.
@@ -376,15 +387,6 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       _items.fold(0, (sum, i) => sum + (_basket[i.id] ?? 0) * i.price);
 
   int get _count => _basket.values.fold(0, (sum, q) => sum + q.round());
-
-  /// Only services in the basket (098): a booking, said as one.
-  bool get _booking {
-    final picked = [
-      for (final i in _items)
-        if ((_basket[i.id] ?? 0) > 0) i,
-    ];
-    return picked.isNotEmpty && picked.every((i) => i.isService);
-  }
 
   /// "Commander": the one act that needs a name. A stranger is sent through
   /// sign-in and brought back to this very vitrine — and the basket now
@@ -443,7 +445,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// (on the web, Google comes back as a reload): `slug|when`. Back
   /// signed in within half an hour, on this vitrine with its basket, the
   /// order opens again by itself.
-  static const _resumeKey = 'street_order_after_sign_in';
+  static const _resumeKey = streetResumeKey;
   static const _resumeFresh = Duration(minutes: 30);
   bool _resuming = false;
 
@@ -454,7 +456,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   }
 
   Future<void> _resumeOrder() async {
-    if (_resuming || _loading || _shop == null || _basket.isEmpty || _showcase) {
+    if (_resuming || _loading || _shop == null || _showcase ||
+        (_basket.isEmpty && _pendingBooking == null)) {
       return;
     }
     final phase = widget.session.phase;
@@ -495,6 +498,19 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         }
       }
       if (!mounted) return;
+      // A booking chosen before the sign-in (125): its sheet again, with
+      // the day, the time and the words chosen, « Réserver » under the
+      // thumb. Its service gone from the shelf: forgotten.
+      final pending = _pendingBooking;
+      if (pending != null) {
+        final item = _items.where((i) => i.id == pending.productId && i.isService).firstOrNull;
+        if (item != null) {
+          await _book(item, draft: pending);
+          return;
+        }
+        await _forgetBooking();
+        if (_basket.isEmpty) return;
+      }
       // Inside: the order sheet. At a gate still (the code to choose or to
       // type): the gate, then back here.
       await _order();
@@ -506,10 +522,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// « Commander » signed out (F1): Google first, the two other doors at
   /// the bottom. The basket is already on the device; the way back is this
   /// vitrine, and the order opens again once they are in (_resumeOrder).
-  Future<void> _askSignIn() async {
+  Future<void> _askSignIn({bool booking = false}) async {
     final choice = await showOrderSignInSheet(
       context,
-      booking: _booking,
+      booking: booking,
       googleAvailable: widget.session.auth.googleAvailable,
       // iPhone only, and only with Apple on (125).
       appleAvailable: widget.session.auth.appleAvailable,
@@ -564,23 +580,27 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     } catch (_) {}
   }
 
-  Future<void> _order() async {
-    if (_showcase) return _farAway();
+  /// The doors before an order or a booking: signed in (the sign-in sheet
+  /// otherwise), past the PIN and the two steps, and — when the platform
+  /// asks (109) — a number proved on WhatsApp. True once through them all;
+  /// false when the shopper was sent to one, and the vitrine waits.
+  Future<bool> _passDoors({bool booking = false}) async {
     switch (widget.session.phase) {
       case SessionPhase.signedOut:
-        return _askSignIn();
+        await _askSignIn(booking: booking);
+        return false;
       case SessionPhase.locked:
       case SessionPhase.choosingPin:
         widget.session.stashReturnTo(Routes.storefront(widget.slug));
         context.go(Routes.pin);
-        return;
+        return false;
       case SessionPhase.twoStep:
         widget.session.stashReturnTo(Routes.storefront(widget.slug));
         context.go(Routes.twoStep);
-        return;
+        return false;
       case SessionPhase.booting:
       case SessionPhase.resolving:
-        return;
+        return false;
       case SessionPhase.noOrg:
       case SessionPhase.picking:
       case SessionPhase.ready:
@@ -595,7 +615,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     // button turning while it is; a refusal at the order asks again.
     var gate = _gate;
     if (gate == null) {
-      if (_sending) return;
+      if (_sending) return false;
       setState(() => _sending = true);
       try {
         // The shopper's addresses and payment (113), asked beside the gate:
@@ -606,15 +626,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       } finally {
         if (mounted) setState(() => _sending = false);
       }
-      if (!mounted) return;
+      if (!mounted) return false;
       _gate = gate;
     }
     if (gate != null && gate.mustVerify) {
+      if (!mounted) return false;
       final proved = await Navigator.of(context).push(WhatsAppVerifyScreen.route(_phone));
-      if (proved == null || !mounted) return;
-      gate = _gate = OrderPhoneGate(required: true, verified: true, phone: proved);
+      if (proved == null || !mounted) return false;
+      _gate = OrderPhoneGate(required: true, verified: true, phone: proved);
     }
-    if (!mounted) return;
+    return mounted;
+  }
+
+  Future<void> _order() async {
+    if (_showcase) return _farAway();
+    if (!await _passDoors() || !mounted) return;
+    final gate = _gate;
 
     final sent = await showShopSheet<bool>(
       context: context,
@@ -637,21 +664,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       ),
     );
     if (sent == true && mounted) {
-      final booking = _booking;
       setState(_basket.clear);
       _keepBasket(); // The promise is kept; the device forgets it.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            booking
-                ? context.tr(
-                    'Demande envoyée. Vous recevrez la réponse ici, avec le rendez-vous.',
-                  )
-                : switch (_shop?.profile) {
-                    'farm' => context.tr('Commande envoyée. La ferme vous répondra ici.'),
-                    'association' || 'church' => context.tr('Commande envoyée. L\'association vous répondra ici.'),
-                    _ => context.tr('Commande envoyée. La boutique vous répondra ici.'),
-                  },
+            switch (_shop?.profile) {
+              'farm' => context.tr('Commande envoyée. La ferme vous répondra ici.'),
+              'association' || 'church' => context.tr('Commande envoyée. L\'association vous répondra ici.'),
+              _ => context.tr('Commande envoyée. La boutique vous répondra ici.'),
+            },
           ),
         ),
       );
@@ -707,6 +729,167 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     }
   }
 
+  /// A booking chosen and not yet sent (125), kept on the device through a
+  /// sign-in as the basket is; read with the shelf.
+  BookingChoice? _pendingBooking;
+
+  Future<void> _readPendingBooking() async {
+    try {
+      final raw = await widget.session.db.readPref(pendingBookingKey(widget.slug));
+      if (raw != null) _pendingBooking = BookingChoice.fromJson(jsonDecode(raw));
+    } catch (_) {
+      // A booking that cannot be read is no booking, not an error.
+    }
+  }
+
+  Future<void> _keepBooking(BookingChoice choice) async {
+    _pendingBooking = choice;
+    try {
+      await widget.session.db
+          .writePref(pendingBookingKey(widget.slug), jsonEncode(choice.toJson()));
+    } catch (_) {}
+  }
+
+  Future<void> _forgetBooking() async {
+    _pendingBooking = null;
+    try {
+      await widget.session.db.writePref(pendingBookingKey(widget.slug), null);
+    } catch (_) {}
+  }
+
+  /// « Réserver » on a service (125): its sheet — the day, the time, how
+  /// many when it is by the person or the hour, a word —, then the doors
+  /// (the sign-in sheet, the PIN, WhatsApp), then the booking sent and
+  /// « Demande envoyée » with its day and time. Never the basket.
+  Future<void> _book(PublicItem item, {BookingChoice? draft, String? error}) async {
+    final shop = _shop;
+    if (shop == null || shop.style.ordersClosed) return;
+    // A vitrine d'exemple (094): refused here as an order is, before any
+    // sign-in, and by the server too.
+    if (_showcase) return _farAway();
+    final kept = _pendingBooking;
+    final gate = _gate;
+    final choice = await showShopSheet<BookingChoice>(
+      context: context,
+      builder: (sheet) => Theme(
+        data: ShopStyle.theme(sheet, accent: shop.accent),
+        child: BookingSheet(
+          item: item,
+          currency: shop.currency,
+          hours: shop.style.schedule,
+          profile: shop.profile,
+          initial: draft ?? (kept?.productId == item.id ? kept : null),
+          error: error,
+          provedPhone: gate != null && gate.required ? gate.phone : null,
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    await _keepBooking(choice);
+    if (!mounted || !await _passDoors(booking: true) || !mounted) return;
+    await _sendBooking(item, choice);
+  }
+
+  Future<void> _sendBooking(PublicItem item, BookingChoice choice) async {
+    final at = choice.at;
+    if (at == null) return;
+    setState(() => _sending = true);
+    String? refused;
+    var unavailable = false;
+    try {
+      await widget.storefront.bookService(
+        widget.slug,
+        productId: choice.productId,
+        at: at,
+        quantity: choice.quantity,
+        note: choice.note,
+        phone: choice.phone,
+      );
+    } on BookingUnavailable {
+      unavailable = true;
+    } on PostgrestException catch (e) {
+      // 109's refusal: the switch was turned on since the answer was read.
+      if (e.message == 'Vérifiez d\'abord votre numéro WhatsApp') _gate = null;
+      // The slot's rules (125), the showcase's (094): the server's words.
+      refused = mounted
+          ? (e.code == 'P0001'
+              ? context.tr(e.message)
+              : context.tr('La réservation n\'a pas pu être envoyée. Vérifiez le réseau.'))
+          : null;
+    } catch (_) {
+      refused = mounted
+          ? context.tr('La réservation n\'a pas pu être envoyée. Vérifiez le réseau.')
+          : null;
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+    if (!mounted) return;
+    if (unavailable) {
+      // A database before 125: the booking cannot be taken yet; the goods
+      // are ordered as ever.
+      await _forgetBooking();
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          key: const Key('booking-unavailable'),
+          icon: const Icon(Icons.event_busy_outlined),
+          title: Text(dialog.tr('Réservation indisponible pour le moment')),
+          content: Text(dialog.tr(
+              'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.')),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialog),
+              child: Text(dialog.tr('Compris')),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    if (refused != null) {
+      // The sheet again, with what was chosen and why it was refused.
+      return _book(item, draft: choice, error: refused);
+    }
+    await _forgetBooking();
+    if (!mounted) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        key: const Key('booking-sent'),
+        icon: const Icon(Icons.event_available_outlined),
+        title: Text(dialog.tr('Demande envoyée')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              bookingWhen(at, dialog.trLanguage),
+              key: const Key('booking-sent-when'),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(item.name),
+            const SizedBox(height: 12),
+            Text(dialog.tr(
+                'Vous recevrez la réponse ici : l\'heure confirmée, ou une autre proposée.')),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(dialog.tr('Fermer')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(dialog.tr('Mes commandes')),
+          ),
+        ],
+      ),
+    );
+    if (go == true && mounted) context.go(Routes.myOrders);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Measured after this frame: has the basket's place in the page come
@@ -720,7 +903,6 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       ],
       capture: widget.capture,
       count: _count,
-      booking: _booking,
       total: moneyFormat(_shop?.currency ?? 'XOF').format(_total),
       sending: _sending,
       onOrder: _order,
@@ -841,8 +1023,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
             capture: widget.capture,
             quantity: _basket[item.id] ?? 0,
             onAdd: () {
+              // « Réserver » (125): the article steps aside for the booking.
+              if (item.isService) Navigator.of(sheet).pop();
               _add(item);
-              setSheet(() {});
+              if (!item.isService) setSheet(() {});
             },
             onRemove: () {
               _remove(item);
@@ -864,7 +1048,6 @@ class _BasketBar extends StatelessWidget {
     required this.picked,
     required this.capture,
     required this.count,
-    this.booking = false,
     required this.total,
     required this.sending,
     required this.onOrder,
@@ -877,9 +1060,6 @@ class _BasketBar extends StatelessWidget {
   final List<(PublicItem, int)> picked;
   final CaptureRepository capture;
   final int count;
-
-  /// Only services picked (098): « 2 services », « Réserver ».
-  final bool booking;
   final String total;
   final bool sending;
   final VoidCallback onOrder;
@@ -944,15 +1124,10 @@ class _BasketBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        booking
-                            ? context.tr(
-                                count > 1 ? '{n} services' : '{n} service',
-                                {'n': count},
-                              )
-                            : context.tr(
-                                count > 1 ? '{n} articles' : '{n} article',
-                                {'n': count},
-                              ),
+                        context.tr(
+                          count > 1 ? '{n} articles' : '{n} article',
+                          {'n': count},
+                        ),
                         style: const TextStyle(
                           fontSize: 13,
                           color: ShopStyle.mist,
@@ -980,11 +1155,7 @@ class _BasketBar extends StatelessWidget {
                             color: ShopStyle.paper,
                           ),
                         )
-                      : Text(
-                          booking
-                              ? context.tr('Réserver')
-                              : context.tr('Commander'),
-                        ),
+                      : Text(context.tr('Commander')),
                 ),
               ],
             ),
@@ -1359,25 +1530,7 @@ class _OrderSheetState extends State<OrderSheet> {
     await _refreshQuote();
   }
 
-  /// Only services in the basket (098): a booking. Nothing travels, so no
-  /// delivery is offered; the day and time wanted are what the shop needs.
-  bool get _booking {
-    final picked = [
-      for (final item in widget.items)
-        if ((widget.basket[item.id] ?? 0) > 0) item,
-    ];
-    return picked.isNotEmpty && picked.every((i) => i.isService);
-  }
-
   Future<void> _submit() async {
-    if (_booking && _note.text.trim().isEmpty) {
-      setState(
-        () => _error = context.tr(
-          'Dites quel jour et à quelle heure vous souhaitez venir.',
-        ),
-      );
-      return;
-    }
     if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
       setState(() => _error = context.tr('Indiquez où livrer.'));
       return;
@@ -1438,22 +1591,16 @@ class _OrderSheetState extends State<OrderSheet> {
       0,
       (sum, i) => sum + widget.basket[i.id]! * i.price,
     );
-    final booking = _booking;
     final note = TextField(
       key: const Key('order-note'),
       controller: _note,
       maxLines: 2,
       decoration: InputDecoration(
-        labelText: booking
-            ? context.tr('Date et heure souhaitées')
-            : switch (widget.profile) {
-                'farm' => context.tr('Un mot pour la ferme (facultatif)'),
-                'association' || 'church' => context.tr('Un mot pour l\'association (facultatif)'),
-                _ => context.tr('Un mot pour la boutique (facultatif)'),
-              },
-        hintText: booking
-            ? context.tr('Samedi 10 h, ou dès que possible')
-            : null,
+        labelText: switch (widget.profile) {
+          'farm' => context.tr('Un mot pour la ferme (facultatif)'),
+          'association' || 'church' => context.tr('Un mot pour l\'association (facultatif)'),
+          _ => context.tr('Un mot pour la boutique (facultatif)'),
+        },
       ),
     );
 
@@ -1486,20 +1633,14 @@ class _OrderSheetState extends State<OrderSheet> {
                           color: ShopStyle.paper,
                         ),
                       )
-                    : Text(
-                        booking
-                            ? context.tr('Envoyer la réservation')
-                            : context.tr('Envoyer la commande'),
-                      ),
+                    : Text(context.tr('Envoyer la commande')),
               ),
             ),
         ],
       ),
       children: [
             Text(
-              booking
-                  ? context.tr('Votre réservation')
-                  : context.tr('Votre commande'),
+              context.tr('Votre commande'),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -1620,31 +1761,7 @@ class _OrderSheetState extends State<OrderSheet> {
               ],
             ),
             const SizedBox(height: 18),
-            // A booking (098): « Sur rendez-vous », said where the way the
-            // goods travel would be chosen.
-            if (booking)
-              Row(
-                key: const Key('order-appointment'),
-                children: [
-                  const Icon(
-                    Icons.event_available_outlined,
-                    size: 22,
-                    color: ShopStyle.ink,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.tr('Sur rendez-vous'),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: ShopStyle.ink,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else if (widget.delivers)
+            if (widget.delivers)
               SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
@@ -1787,8 +1904,6 @@ class _OrderSheetState extends State<OrderSheet> {
                   ],
                 ),
             ],
-            // A booking asks first for the day and the hour (098).
-            if (booking) ...[const SizedBox(height: 12), note],
             const SizedBox(height: 12),
             if (widget.provedPhone != null)
               Row(
@@ -1815,14 +1930,11 @@ class _OrderSheetState extends State<OrderSheet> {
                   hintText: '+226 70 00 00 00',
                 ),
               ),
-            if (!booking) ...[const SizedBox(height: 12), note],
+            const SizedBox(height: 12),
+            note,
             const SizedBox(height: 6),
             Text(
-              booking && _payment != 'wave'
-                  ? context.tr(
-                      'Rien à payer maintenant : vous payez sur place, au rendez-vous.',
-                    )
-                  : _payment == 'wave'
+              _payment == 'wave'
                   ? context.tr(
                       'Rien à payer maintenant : dès que la boutique accepte, un bouton Wave apparaît dans Mes commandes.',
                     )

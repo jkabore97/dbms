@@ -6,15 +6,18 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/orders/booking.dart';
 import '../../core/orders/orders.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../shopper/reorder.dart';
 import '../storefront/shop_skeleton.dart';
 import '../pay/wave_buttons.dart';
+import 'booking_words.dart';
 import 'order_tracking_panel.dart';
 import '../storefront/shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -27,9 +30,14 @@ class MyOrdersScreen extends StatefulWidget {
     required this.storefront,
     this.shopper,
     this.bookingsOnly = false,
+    this.focusId,
   });
 
   final StorefrontRepository storefront;
+
+  /// The order a notification opened (125: `?commande=<id>`): brought into
+  /// view and outlined once the list is read.
+  final String? focusId;
 
   /// « Recommander » (113) on a finished order. Null: not offered.
   final ShopperRepository? shopper;
@@ -107,6 +115,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         _loading = false;
         _tick++;
       });
+      if (!silent) _bringFocusIntoView();
     } catch (_) {
       if (!mounted) return;
       if (silent) return;
@@ -114,6 +123,39 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         _error = context.tr('Vos commandes n\'ont pas pu être chargées. Vérifiez le réseau.');
         _loading = false;
       });
+    }
+  }
+
+  final _focusKey = GlobalKey();
+
+  void _bringFocusIntoView() {
+    if (widget.focusId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final at = _focusKey.currentContext;
+      if (at != null && at.mounted) {
+        Scrollable.ensureVisible(at, duration: KajMotion.quick, alignment: 0.1);
+      }
+    });
+  }
+
+  /// « Accepter 11:00 » (125): the business's other time becomes the
+  /// booking's, confirmed.
+  Future<void> _acceptTime(CustomerOrder order) async {
+    setState(() => _busyId = order.id);
+    try {
+      await widget.storefront.acceptBookingTime(order.id);
+      await _load(silent: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.tr('Rendez-vous confirmé : {when}',
+              {'when': bookingWhen(order.proposedFor!, context.trLanguage)}))));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(error))));
+      await _load(silent: true);
+    } finally {
+      if (mounted) setState(() => _busyId = null);
     }
   }
 
@@ -145,18 +187,26 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   Future<void> _cancel(CustomerOrder order) async {
+    final booking = order.hasSlot;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.tr('Annuler cette commande ?')),
-        content: Text(context.tr('{shopName} ne la verra plus.', {'shopName': order.shopName})),
+        title: Text(booking
+            ? context.tr('Annuler ce rendez-vous ?')
+            : context.tr('Annuler cette commande ?')),
+        content: Text(booking
+            ? context.tr('{shopName} en sera prévenu.', {'shopName': order.shopName})
+            : context.tr('{shopName} ne la verra plus.', {'shopName': order.shopName})),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(context.tr('Garder'))),
           FilledButton(
+              key: const Key('order-cancel-yes'),
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(context.tr('Annuler la commande'))),
+              child: Text(booking
+                  ? context.tr('Annuler le rendez-vous')
+                  : context.tr('Annuler la commande'))),
         ],
       ),
     );
@@ -183,7 +233,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     if (shopper == null || db == null) return;
     setState(() => _busyId = order.id);
     try {
-      await reorderInto(context, shopper: shopper, db: db, orderId: order.id);
+      await reorderInto(context,
+          shopper: shopper, db: db, orderId: order.id, booking: order.isBooking);
     } finally {
       if (mounted) setState(() => _busyId = null);
     }
@@ -242,10 +293,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                   ScrollReveal(
                                   delay: KajMotion.stagger(i),
                                   child: _OrderCard(
+                                    key: o.id == widget.focusId ? _focusKey : null,
+                                    focused: o.id == widget.focusId,
                                     order: o,
                                     busy: _busyId == o.id,
                                     onCancel: o.status == 'pending'
                                         ? () => _cancel(o)
+                                        : null,
+                                    onAcceptTime: o.awaitsCustomer
+                                        ? () => _acceptTime(o)
                                         : null,
                                     onPay: o.canPayNow
                                         ? () => _payWithWave(o)
@@ -279,6 +335,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                   ScrollReveal(
                                     delay: KajMotion.stagger(i),
                                     child: _OrderCard(
+                                      key: o.id == widget.focusId ? _focusKey : null,
+                                      focused: o.id == widget.focusId,
                                       order: o,
                                       busy: _busyId == o.id,
                                       onAgain: again ? () => _again(o) : null,
@@ -296,8 +354,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
 class _OrderCard extends StatelessWidget {
   const _OrderCard({
+    super.key,
     required this.order,
     required this.busy,
+    this.focused = false,
+    this.onAcceptTime,
     this.onCancel,
     this.onPay,
     this.tracking,
@@ -315,6 +376,12 @@ class _OrderCard extends StatelessWidget {
   final CustomerOrder order;
   final bool busy;
 
+  /// The order a notification opened: outlined.
+  final bool focused;
+
+  /// « Accepter 11:00 »: the business proposed another time (125).
+  final VoidCallback? onAcceptTime;
+
   /// The open order's timeline (073).
   final Widget? tracking;
   final VoidCallback? onCancel;
@@ -329,7 +396,8 @@ class _OrderCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        border: Border.all(color: ShopStyle.line),
+        border: Border.all(
+            color: focused ? ShopStyle.ink : ShopStyle.line, width: focused ? 2 : 1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -347,7 +415,15 @@ class _OrderCard extends StatelessWidget {
                           color: ShopStyle.ink)),
                 ),
               ),
-              _StatusChip(status: order.status, booking: order.isBooking),
+              _StatusChip(
+                status: order.status,
+                booking: order.isBooking,
+                // A booking with its slot (125): where it stands, in its words.
+                label: order.hasSlot
+                    ? bookingStateWord(context,
+                        bookingStateOf(order.status, proposedFor: order.proposedFor))
+                    : null,
+              ),
             ],
           ),
           const SizedBox(height: 2),
@@ -355,6 +431,10 @@ class _OrderCard extends StatelessWidget {
               '$when · ${context.tr(fulfilmentLabel(order.fulfilment, appointment: order.isBooking))} · '
               '${order.isPaid ? context.tr('Payé') : context.tr(paymentLabel(order.paymentMethod))}',
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+          if (order.hasSlot) ...[
+            const SizedBox(height: 12),
+            _Appointment(order: order, busy: busy, onAccept: onAcceptTime, onCancel: onCancel),
+          ],
           const SizedBox(height: 12),
           for (final l in order.lines)
             Padding(
@@ -454,16 +534,20 @@ class _OrderCard extends StatelessWidget {
                   : context.tr('Recommander')),
             ),
           ],
-          if (onCancel != null) ...[
+          // A proposal is answered in its own box (« Accepter » / « Annuler »).
+          if (onCancel != null && onAcceptTime == null) ...[
             const SizedBox(height: 12),
             OutlinedButton(
+              key: Key('order-cancel-${order.id}'),
               onPressed: busy ? null : onCancel,
               child: busy
                   ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(context.tr('Annuler la commande')),
+                  : Text(order.hasSlot
+                      ? context.tr('Annuler le rendez-vous')
+                      : context.tr('Annuler la commande')),
             ),
           ],
         ],
@@ -476,9 +560,12 @@ class _OrderCard extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status, this.booking = false});
+  const _StatusChip({required this.status, this.booking = false, this.label});
 
   final String status;
+
+  /// Said instead of the status's word (a booking's state, 125).
+  final String? label;
 
   /// A booking of services (098): « Terminée », not « Récupérée ».
   final bool booking;
@@ -492,7 +579,7 @@ class _StatusChip extends StatelessWidget {
         color: open ? ShopStyle.ink : ShopStyle.stone,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(context.tr(orderStatusLabel(status, booking: booking)),
+      child: Text(label ?? context.tr(orderStatusLabel(status, booking: booking)),
           style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -501,6 +588,98 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
+
+/// « Rendez-vous » (125): the day and the time, and — when the business
+/// proposed another — that time with « Accepter 11:00 » / « Annuler ».
+class _Appointment extends StatelessWidget {
+  const _Appointment({
+    required this.order,
+    required this.busy,
+    this.onAccept,
+    this.onCancel,
+  });
+
+  final CustomerOrder order;
+  final bool busy;
+  final VoidCallback? onAccept;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.trLanguage;
+    final proposed = order.awaitsCustomer ? order.proposedFor : null;
+    final state = bookingStateOf(order.status, proposedFor: order.proposedFor);
+    final over = state == BookingState.declined || state == BookingState.cancelled;
+    return Container(
+      key: Key('appointment-${order.id}'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ShopStyle.stone,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.event_outlined, size: 18, color: ShopStyle.ink),
+              const SizedBox(width: 8),
+              Text(context.tr('Rendez-vous'),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700, color: ShopStyle.mist)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            bookingWhen(order.bookedFor!, lang),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: proposed != null || over ? ShopStyle.mist : ShopStyle.ink,
+              decoration: proposed != null ? TextDecoration.lineThrough : null,
+            ),
+          ),
+          if (proposed != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              context.tr('{shop} propose une autre heure :', {'shop': order.shopName}),
+              style: const TextStyle(fontSize: 14, color: ShopStyle.ink),
+            ),
+            Text(
+              bookingWhen(proposed, lang),
+              key: Key('appointment-proposed-${order.id}'),
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w700, color: ShopStyle.ink),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                FilledButton(
+                  key: Key('accept-time-${order.id}'),
+                  onPressed: busy ? null : onAccept,
+                  child: Text(context.tr('Accepter {time}', {'time': bookingTimeLabel(proposed)})),
+                ),
+                OutlinedButton(
+                  key: Key('refuse-time-${order.id}'),
+                  onPressed: busy ? null : onCancel,
+                  child: Text(context.tr('Annuler')),
+                ),
+              ],
+            ),
+          ] else if (state == BookingState.requested) ...[
+            const SizedBox(height: 4),
+            Text(
+              context.tr('En attente de la réponse de {shop}', {'shop': order.shopName}),
+              style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 /// Kaj's Wave checkout when it is offered, else the shop's own link.
 class _PayArea extends StatelessWidget {

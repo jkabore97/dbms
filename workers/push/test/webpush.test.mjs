@@ -332,3 +332,28 @@ test("a token endpoint that fails is asked once per deliver, not once per phone"
   result = await deliver(row, env, { sendPush: async () => 201, fetch: fetchStub });
   assert.equal(calls.filter((c) => c.url === "https://oauth2.example/token").length, 2);
 });
+
+// ------------------------------------------------------------------ 125
+
+test("a booking's ring opens that booking: the customer's card, the business's step", () => {
+  const env = { APP_ORIGIN: "https://app.example" };
+  const id = "12500000-aaaa-0000-0000-000000000001";
+  for (const kind of ["booking_confirmed", "booking_proposed", "booking_declined"]) {
+    assert.equal(payloadFor({ kind, org_id: "o1", message: "m",
+      params: { to: "customer", order_id: id, booking: true } }, env).path, `/mes-commandes?commande=${id}`);
+  }
+  assert.equal(payloadFor({ kind: "booking_accepted", org_id: "o1", message: "m",
+    params: { to: "shop", order_id: id, booking: true } }, env).url,
+    `https://app.example/o/o1/commandes?commande=${id}`);
+  assert.equal(payloadFor({ kind: "new_order", org_id: "o1", message: "m",
+    params: { to: "shop", order_id: id, booking: true, at: "2026-10-13T10:00:00+00:00" } }, env).path,
+    `/o/o1/commandes?commande=${id}`);
+  // An order of goods, and an older booking without its slot: as before.
+  assert.equal(payloadFor({ kind: "new_order", org_id: "o1", message: "m",
+    params: { to: "shop", order_id: id, booking: false } }, env).path, "/o/o1/commandes");
+  assert.equal(payloadFor({ kind: "order_accepted", org_id: "o1", message: "m",
+    params: { to: "customer", order_id: id, booking: true } }, env).path, "/mon-compte/reservations");
+  // An order id that is not one is never written into the address.
+  assert.equal(payloadFor({ kind: "booking_confirmed", org_id: "o1", message: "m",
+    params: { to: "customer", order_id: "../x" } }, env).path, "/mes-commandes");
+});

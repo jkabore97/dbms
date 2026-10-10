@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../errors.dart';
 import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
+import '../storefront/storefront_repository.dart' show VitrineSchedule;
 import '../db/local_db.dart';
 import 'models.dart';
 
@@ -85,6 +86,31 @@ class RetailRepository {
     } on PostgrestException catch (e) {
       if (e.code != 'PGRST202' && e.code != '42883') rethrow;
       await decideOrder(orderId, 'refused');
+    }
+  }
+
+  /// « Proposer une autre heure » for a booking (125): the same slot rules
+  /// as asking; the customer accepts it or cancels.
+  Future<void> proposeBookingTime(String orderId, DateTime at) async {
+    await _requireClient().rpc('propose_booking_time', params: {
+      'p_order_id': orderId,
+      'p_at': at.toUtc().toIso8601String(),
+    });
+  }
+
+  /// The vitrine's opening hours as the street reads them (093), for the
+  /// times a booking may move to. Null when it has none (or no vitrine
+  /// open): the sheet then offers 125's every day, 08:00–20:00.
+  Future<VitrineSchedule?> vitrineHours(String slug) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final rows = await client.rpc('storefront', params: {'p_slug': slug}) as List<dynamic>;
+      if (rows.isEmpty) return null;
+      final style = (rows.first as Map)['style'];
+      return style is Map ? VitrineSchedule.fromJson(style['schedule']) : null;
+    } catch (_) {
+      return null;
     }
   }
 

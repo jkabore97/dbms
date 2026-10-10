@@ -6,6 +6,7 @@ import '../../core/access/store_rules.dart' show sellsDigitalInApp;
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
+import '../../core/orders/booking.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../courier/courier_words.dart' show courierReasonLabel;
 
@@ -39,6 +40,12 @@ String notificationLine(BuildContext context, NotificationRow n) {
   }
 
   final toShop = s('to') == 'shop';
+  // A booking's slot (125), on Ouagadougou's clock.
+  String when(String key) {
+    final d = DateTime.tryParse(s(key));
+    return d == null ? '' : bookingWhen(d, 'en', short: true);
+  }
+
   switch (n.kind) {
     case 'low_stock':
       return context.tr('Stock bas : {name} ({n} restant)',
@@ -58,6 +65,11 @@ String notificationLine(BuildContext context, NotificationRow n) {
         if (number('fee') != null)
           context.tr(' + livraison {fee}', {'fee': money('fee')}),
       ].join();
+      // 125: a booking says its day and time.
+      if (yes('booking') && s('at').isNotEmpty) {
+        return context.tr('Rendez-vous demandé par {name} — {when} : {total}',
+            {'name': s('name'), 'when': when('at'), 'total': total});
+      }
       return yes('booking')
           ? context.tr('Nouvelle demande de {name} : {total}', {'name': s('name'), 'total': total})
           : context.tr('Nouvelle commande de {name} : {total}', {'name': s('name'), 'total': total});
@@ -79,6 +91,18 @@ String notificationLine(BuildContext context, NotificationRow n) {
           : context.tr('Votre commande chez {shop} : {status}', {'shop': s('shop'), 'status': status});
       // The shop's own words on a refusal (115), as it typed them.
       return s('reason').isEmpty ? line : '$line — ${s('reason')}';
+    // 125: a booking's answers, each way.
+    case 'booking_confirmed':
+      return context.tr('Votre rendez-vous chez {shop} est confirmé : {when}',
+          {'shop': s('shop'), 'when': when('at')});
+    case 'booking_declined':
+      final line = context.tr('Votre demande de rendez-vous chez {shop} est refusée', {'shop': s('shop')});
+      return s('reason').isEmpty ? line : '$line — ${s('reason')}';
+    case 'booking_proposed':
+      return context.tr('{shop} propose une autre heure pour votre rendez-vous : {when}. Acceptez-la dans Mes commandes.',
+          {'shop': s('shop'), 'when': when('at')});
+    case 'booking_accepted':
+      return context.tr('{name} accepte le rendez-vous : {when}', {'name': s('name'), 'when': when('at')});
     case 'delivery_cancelled':
       return context.tr('La livraison pour {name} a été annulée par la boutique', {'name': s('name')});
     case 'courier_approved':
@@ -406,6 +430,15 @@ String? notificationTarget(
       return slug is String && slug.isNotEmpty ? Routes.storefront(slug) : null;
   }
   if (org == null) return null;
+  // The booking itself (125): its card in « Mes commandes », or its next
+  // step in Commandes.
+  final order = p['order_id'];
+  final booking = n.kind.startsWith('booking_') ||
+      (n.kind == 'new_order' && p['booking'] == true && p['at'] != null);
+  if (booking && order is String && order.isNotEmpty) {
+    final q = Uri.encodeQueryComponent(order);
+    return forShop() ? '${inside('commandes')}?commande=$q' : '${Routes.myOrders}?commande=$q';
+  }
   switch (n.kind) {
     case 'new_order' || 'order_withdrawn' || 'delivery_taken':
       return inside('commandes');
