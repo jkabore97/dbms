@@ -144,7 +144,6 @@ class ShopperProfile {
     this.waveAllowed = false,
     this.payment = 'cash',
     this.news = true,
-    this.supportWhatsApp,
     this.courier,
     this.member = false,
     this.addresses = const [],
@@ -174,9 +173,6 @@ class ShopperProfile {
   /// The news of every followed vitrine, on or off.
   final bool news;
 
-  /// Mara's help number, digits only; null until the platform sets it.
-  final String? supportWhatsApp;
-
   /// The courier file's status (056), when there is one.
   final String? courier;
 
@@ -195,7 +191,6 @@ class ShopperProfile {
         waveAllowed: j['wave'] == true,
         payment: j['wave'] == true && j['payment'] == 'wave' ? 'wave' : 'cash',
         news: j['news'] != false,
-        supportWhatsApp: _text(j['support_whatsapp']),
         courier: _text(j['courier']),
         member: j['member'] == true,
         addresses: [

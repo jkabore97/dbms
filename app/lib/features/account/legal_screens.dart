@@ -3,6 +3,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/nav/parent_route.dart';
 import '../../core/theme/scroll_hint.dart';
+import 'support.dart';
 
 /// The three static pages the app must carry to be publishable: a privacy
 /// policy, terms of use, and a short FAQ. They ship inside the app rather than
@@ -21,9 +22,12 @@ import '../../core/theme/scroll_hint.dart';
 /// test/legal_pages_test.dart keeps the two copies saying the same thing.
 
 class _DocScaffold extends StatelessWidget {
-  const _DocScaffold({required this.title, required this.blocks});
+  const _DocScaffold({required this.title, required this.blocks, this.header});
 
   final String title;
+
+  /// Drawn above the text (the FAQ's « Aide Mara » card).
+  final Widget? header;
 
   /// Alternating (heading, body) is not assumed; each entry is a paragraph, and
   /// a heading is just a paragraph rendered bold via the leading '#'.
@@ -37,6 +41,7 @@ class _DocScaffold extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
+          if (header case final header?) ...[header, const SizedBox(height: 20)],
           for (final b in blocks)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -193,6 +198,8 @@ class FaqScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DocScaffold(
       title: context.tr('Questions fréquentes'),
+      // How to reach Mara first (126): the site's /aide says the same.
+      header: const SupportCard(),
       blocks: [
         context.tr('# L\'application fonctionne-t-elle sans internet ?'),
         context.tr('Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; elles sont envoyées au serveur dès que la connexion revient. Certains écrans (rapports, historique) ont besoin de la connexion.'),
@@ -211,7 +218,7 @@ class FaqScreen extends StatelessWidget {
         context.tr('# J\'ai oublié mon code (PIN).'),
         context.tr('Reconnectez-vous avec votre mot de passe pour définir un nouveau code.'),
         context.tr('# Comment contacter quelqu\'un ?'),
-        context.tr('Depuis Compte › Aide › Contacter le support, sur WhatsApp.'),
+        context.tr('Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.'),
       ],
     );
   }

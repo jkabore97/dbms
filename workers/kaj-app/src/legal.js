@@ -88,14 +88,33 @@ export function legalPage(pathname) {
   const body = doc.blocks
     .map((b) => (b.startsWith("# ") ? `<h2>${escape(b.slice(2))}</h2>` : `<p>${escape(b)}</p>`))
     .join("\n");
-  const html = `<!doctype html>
+  const html = sitePage({
+    title: doc.title,
+    description: `${doc.title} de Mara — Au Service du Peuple.`,
+    main: `<h1>${escape(doc.title)}</h1>\n${body}`,
+  });
+  return new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
+
+/**
+ * One plain page of the site (the legal pages, /aide): Mara's band at the
+ * top, [main] in the middle, the links every page carries at the foot.
+ * [head] is more tags for the <head> (already escaped).
+ */
+export function sitePage({ title, description, main, head = "", style = "" }) {
+  return `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escape(doc.title)} · Mara</title>
-<meta name="description" content="${escape(doc.title)} de Mara — Au Service du Peuple.">
-<link rel="icon" type="image/png" href="/favicon.png">
+<title>${escape(title)} · Mara</title>
+<meta name="description" content="${escape(description)}">
+${head}<link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root { color-scheme: light; }
   body { margin: 0; background: #F4F2EE; color: #0E0D0C; font: 16px/1.6 system-ui, sans-serif; }
@@ -106,27 +125,20 @@ export function legalPage(pathname) {
   h2 { font-size: 18px; margin: 24px 0 6px; }
   footer { max-width: 720px; margin: 0 auto; padding: 0 20px 32px; color: #6B6660; font-size: 14px; }
   footer a { color: #8B5A3C; }
-</style>
+${style}</style>
 </head>
 <body>
 <header><a href="/">Mara — Au Service du Peuple</a></header>
 <main>
-<h1>${escape(doc.title)}</h1>
-${body}
+${main}
 </main>
 <footer>
-<a href="/">Ouvrir Mara</a> · <a href="/confidentialite">Politique de confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/supprimer-mon-compte">Supprimer votre compte</a>
+<a href="/">Ouvrir Mara</a> · <a href="/aide">Aide</a> · <a href="/confidentialite">Politique de confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/supprimer-mon-compte">Supprimer votre compte</a>
 </footer>
 </body>
 </html>`;
-  return new Response(html, {
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
-    },
-  });
 }
 
-function escape(text) {
+export function escape(text) {
   return String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }

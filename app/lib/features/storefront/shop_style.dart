@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/nav/router.dart' show Routes;
+import '../../core/site/site.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/scroll_hint.dart';
@@ -445,8 +449,9 @@ class ShopSectionLabel extends StatelessWidget {
 
 /// The bottom of every street page. First the way to the rest of the street
 /// (« Toutes les vitrines »), on the page itself; then the footer proper: one
-/// centred band of cream, with Mara and its slogan, and under it « POWERED BY
-/// KAJ », KAJ in bold.
+/// centred band of cream, with Mara, its slogan and « Aide » (126: the
+/// help page, inside the app when there is a router, the site's /aide
+/// otherwise), and under it « POWERED BY KAJ », KAJ in bold.
 class ShopFooter extends StatelessWidget {
   const ShopFooter({super.key, this.onDirectory, this.onBecomeCourier});
 
@@ -512,6 +517,22 @@ class ShopFooter extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style:
                           const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+                  // On the slogan's line: the footer stays small.
+                  // A plain link on the slogan's line: the band stays small.
+                  Semantics(
+                    link: true,
+                    child: InkWell(
+                      key: const Key('footer-help'),
+                      onTap: () => openHelp(context),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Text(context.tr('Aide'),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: ShopStyle.ink,
+                              decoration: TextDecoration.underline)),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -550,6 +571,17 @@ class ShopFooter extends StatelessWidget {
       ],
     );
   }
+}
+
+/// « Aide Mara »: the app's own page (/aide, the FAQ with the support
+/// card), or the site's when no router is drawn.
+void openHelp(BuildContext context) {
+  final router = GoRouter.maybeOf(context);
+  if (router != null) {
+    router.push(Routes.faq);
+    return;
+  }
+  launchUrl(Uri.parse('$siteOrigin/aide'), mode: LaunchMode.externalApplication);
 }
 
 /// A street page's scroll with the footer at the foot (122). The owner:

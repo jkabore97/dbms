@@ -62,9 +62,14 @@ const STATIC = 'mara-static';
 const META = 'mara-meta';
 const FINGERPRINTED = /^\/(app|ck|a)\/[0-9a-f]{12}\/(.+)$/;
 const BUILD_FILES = new Set(BUILD ? BUILD.files : []);
-// Plain pages the site Worker writes (workers/kaj-app/src/legal.js): read
-// from the network when there is one; the app's own copy otherwise.
-const LEGAL = new Set(['/confidentialite', '/conditions', '/supprimer-mon-compte']);
+// Plain pages the site Worker writes (workers/kaj-app/src/legal.js and
+// help.js): read from the network when there is one; the app's own copy
+// otherwise. Every other navigation is answered with the app's page from
+// the shell, so « Aide Mara » (/aide, the App Store's Support URL, with the
+// support contacts read live) and /support's redirect to it are listed
+// here, or a browser that once opened Mara would get the app instead.
+const LEGAL = new Set(['/confidentialite', '/conditions', '/supprimer-mon-compte',
+  '/aide', '/support']);
 // Never kept: how the app and the browser learn a new build exists.
 const PASS = new Set(['/mara_sw.js', '/push_sw.js', '/push_handlers.js',
   '/flutter_service_worker.js', '/version.json']);

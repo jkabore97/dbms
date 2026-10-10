@@ -36,6 +36,7 @@ import 'package:kaj_app/core/shopper/shopper_repository.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/core/tontine/tontine_repository.dart';
 import 'package:kaj_app/features/account/compte_screen.dart';
+import 'package:kaj_app/features/account/support.dart';
 import 'package:kaj_app/features/admin/center/settings_section.dart';
 import 'package:kaj_app/features/admin/center/todo_section.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
@@ -132,7 +133,6 @@ class _Shopper extends ShopperRepository {
       waveAllowed: me.waveAllowed,
       payment: payment ?? me.payment,
       news: news ?? me.news,
-      supportWhatsApp: me.supportWhatsApp,
       courier: me.courier,
       member: me.member,
       addresses: me.addresses,
@@ -290,7 +290,6 @@ ShopperProfile _profile({
   String payment = 'cash',
   String? verified = '+22670113005',
   bool verifyOn = false,
-  String? support,
   String? courier,
   bool member = false,
   List<SavedAddress> addresses = const [],
@@ -302,7 +301,6 @@ ShopperProfile _profile({
       verifyOn: verifyOn,
       waveAllowed: wave,
       payment: wave ? payment : 'cash',
-      supportWhatsApp: support,
       courier: courier,
       member: member,
       addresses: addresses,
@@ -439,14 +437,19 @@ void main() {
       expect(find.byKey(const Key('shopper-payment')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('shopper-report')));
       await tester.pump();
-      expect(find.byKey(const Key('shopper-support')), findsNothing);
+      // No number set (126's support_contacts): no WhatsApp, the e-mail.
+      expect(find.byKey(const Key('support-whatsapp')), findsNothing);
+      expect(find.byKey(const Key('support-email')), findsOneWidget);
       expect(find.text('Devenir livreur'), findsOneWidget);
       expect(find.text('Créer mon activité'), findsOneWidget);
     });
 
     testWidgets('Wave allowed: chosen and saved; the help number and the verify link appear once set',
         (tester) async {
-      final me = _Shopper(_profile(wave: true, verified: null, verifyOn: true, support: '22670113000'));
+      Support.reset(const SupportContacts(
+          email: Support.defaultEmail, whatsapp: '22670113000', hours: Support.defaultHours));
+      addTearDown(Support.reset);
+      final me = _Shopper(_profile(wave: true, verified: null, verifyOn: true));
       await profilePage(tester, await shopper(tester), me);
       expect(find.byKey(const Key('shopper-verify')), findsOneWidget);
       expect(find.text('+22670113005'), findsOneWidget, reason: 'the typed number, not said proved');
@@ -455,9 +458,9 @@ void main() {
       await tester.tap(find.text('Wave'));
       await settle(tester);
       expect(me.settings.last['payment'], 'wave');
-      await tester.ensureVisible(find.byKey(const Key('shopper-support')));
+      await tester.ensureVisible(find.byKey(const Key('support-whatsapp')));
       await tester.pump();
-      expect(find.text('Écrire à Mara sur WhatsApp'), findsOneWidget);
+      expect(find.text('WhatsApp'), findsOneWidget);
     });
 
     testWidgets('each row opens its page; a courier reads « Espace livreur »; a member is not offered « Créer mon activité »',
@@ -889,6 +892,31 @@ void main() {
         await tester.tap(find.byKey(const Key('compte-favourites')));
         await settle(tester);
         expect(find.text('page ${Routes.favourites}'), findsOneWidget);
+      });
+    }
+
+    // « Aide Mara » (126): the same card in a shop's, a farm's and an
+    // association's Compte — WhatsApp only once the platform set a number.
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('Compte of a $profile: « Aide » holds the support card', (tester) async {
+        final session = await shopper(tester);
+        final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        await pump(tester, session, at: '/compte', routes: [
+          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org)),
+        ]);
+        await tester.scrollUntilVisible(find.byKey(const Key('group-Aide')), 300,
+            scrollable: find.byType(Scrollable).first);
+        await tester.tap(find.byKey(const Key('group-Aide')));
+        await settle(tester);
+        expect(find.byKey(const Key('support-card')), findsOneWidget);
+        expect(find.byKey(const Key('support-email')), findsOneWidget);
+        expect(find.byKey(const Key('support-whatsapp')), findsNothing, reason: 'no number set');
+        Support.reset(const SupportContacts(
+            email: Support.defaultEmail, whatsapp: '18623354492', hours: Support.defaultHours));
+        addTearDown(Support.reset);
+        await settle(tester);
+        expect(find.byKey(const Key('support-whatsapp')), findsOneWidget);
+        expect(find.text('Questions fréquentes'), findsOneWidget);
       });
     }
 

@@ -13,9 +13,10 @@ import '../../core/nav/router.dart';
 import '../../core/onboarding/business_creation.dart' show suggestedTowns, townCountry;
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/site/site.dart';
-import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl, whatsappUrl;
+import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../l10n/strings.dart';
+import '../account/support.dart';
 import '../storefront/shop_style.dart';
 import '../storefront/whatsapp_verify_screen.dart';
 import 'report_sheet.dart';
@@ -341,14 +342,8 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
         ),
       ]),
       _Section(context.tr('Aide'), [
-        if (p.supportWhatsApp != null)
-          _Row(
-            key: const Key('shopper-support'),
-            icon: Icons.support_agent_outlined,
-            title: context.tr('Écrire à Mara sur WhatsApp'),
-            onTap: () => _open(whatsappUrl(p.supportWhatsApp,
-                text: context.tr('Bonjour Mara, j\'ai besoin d\'aide.'))!),
-          ),
+        // « Aide Mara » (126): the same card as a business's Compte.
+        const SupportCard(framed: false),
         _Row(
           key: const Key('shopper-report'),
           icon: Icons.flag_outlined,

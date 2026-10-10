@@ -432,8 +432,6 @@ const enStrings = <String, String>{
       'Console',
   'Consommation':
       'Consumption',
-  'Contacter le support':
-      'Contact support',
   'Continuer':
       'Continue',
   'Continuer vers le paiement':
@@ -1602,8 +1600,6 @@ const enStrings = <String, String>{
       'Delete {label}\'s account?',
   'Supprimer…':
       'Delete…',
-  'Sur WhatsApp':
-      'On WhatsApp',
   'Sur la vitrine':
       'On the vitrine',
   'Sur la vitrine — modifier':
@@ -3753,6 +3749,19 @@ const enStrings = <String, String>{
   'Remboursé par la boutique, merci !': 'Refunded by the shop, thank you!',
   'Aide aux clients': 'Customer help',
   'Numéro WhatsApp de l\'aide Mara (vide : caché)': 'Mara\'s WhatsApp help number (empty: hidden)',
+  // 126: « Aide Mara ».
+  'E-mail de l\'aide Mara': 'Mara\'s help e-mail',
+  'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)': 'Mara\'s help hours (for example 24 h/24, 7 j/7)',
+  'L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.':
+      'The help e-mail: an address such as hello@kaj-consulting.com.',
+  'Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).':
+      'The help hours: a few words, 60 characters at most (for example 24 h/24, 7 j/7).',
+  'Aide Mara': 'Mara Help',
+  'Une question, un souci ? Nous répondons {hours}.': 'A question, a problem? We answer {hours}.',
+  '24 h/24, 7 j/7': '24/7',
+  'E-mail': 'E-mail',
+  'Bonjour, j\'ai besoin d\'aide avec Mara.': 'Hello, I need help with Mara.',
+  'Aucune application d\'e-mail : écrivez à {email}.': 'No e-mail app here: write to {email}.',
   'Prix en baisse chez {shop} : {name} à {price}': 'Price down at {shop}: {name} at {price}',
   'Nouveau chez {shop} : {name}': 'New at {shop}: {name}',
   '{n} nouveautés chez {shop} : {names}': '{n} new at {shop}: {names}',
@@ -3788,8 +3797,6 @@ const enStrings = <String, String>{
   'Une boutique, une ferme ou une association': 'A shop, a farm or an association',
   'Parrainer un ami': 'Invite a friend',
   'Envoyez-lui Mara sur WhatsApp': 'Send them Mara on WhatsApp',
-  'Écrire à Mara sur WhatsApp': 'Write to Mara on WhatsApp',
-  'Bonjour Mara, j\'ai besoin d\'aide.': 'Hello Mara, I need help.',
   'Signaler un problème': 'Report a problem',
   'Une commande, une vitrine, l\'application': 'An order, a vitrine, the app',
   'Mes données': 'My data',
@@ -6051,8 +6058,8 @@ const enStrings = <String, String>{
       'Sign in again with your password to set a new code.',
   '# Comment contacter quelqu\'un ?':
       '# How do I reach someone?',
-  'Depuis Compte › Aide › Contacter le support, sur WhatsApp.':
-      'From Account › Help › Contact support, on WhatsApp.',
+  'Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.':
+      'From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
   'Mara vous le confirme sous 30 jours':

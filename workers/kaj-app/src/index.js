@@ -18,6 +18,11 @@
 //     with no JavaScript — what Google's verification of the sign-in screen
 //     reads.
 //
+//  3b. /aide is « Aide Mara » (help.js), the App Store's Support URL: the
+//     support e-mail, WhatsApp number and hours read live (126's
+//     support_contacts), the defaults when Supabase does not answer.
+//     /support and /aide/ are sent there for good.
+//
 //  4. How long a phone may keep each file (cacheFor, below). Set here, not
 //     only in _headers: with run_worker_first, Cloudflare applies _headers
 //     to nothing this Worker returns. The deploy moves every file that
@@ -32,6 +37,7 @@
 // ships to every browser.
 
 import { legalPage } from "./legal.js";
+import { helpPage, supportContacts } from "./help.js";
 
 const SITE = "https://marakaj.com";
 
@@ -83,6 +89,14 @@ async function serve(request, env) {
     if (request.method === "GET") {
       const legal = legalPage(url.pathname);
       if (legal) return legal;
+    }
+
+    // « Aide Mara » (help.js), and the addresses that lead to it.
+    if (request.method === "GET" || request.method === "HEAD") {
+      if (url.pathname === "/support" || url.pathname === "/support/" || url.pathname === "/aide/") {
+        return Response.redirect(`${url.origin}/aide${url.search}`, 301);
+      }
+      if (url.pathname === "/aide") return helpPage(await supportContacts(env));
     }
 
     const shop = url.pathname.match(/^\/s\/([a-z0-9-]+)\/?$/);
