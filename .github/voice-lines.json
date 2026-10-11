@@ -1,0 +1,334 @@
+[
+ {
+  "file": "f1_01_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f1_01_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_01_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 0.78,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "f1_01_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 0.8,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "f1_02_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f1_02_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_02_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 0.78,
+  "markup": "Mettez tout [pause short] dans votre vitrine Mara."
+ },
+ {
+  "file": "f1_02_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 0.8,
+  "markup": "Mettez tout [pause short] dans votre vitrine Mara."
+ },
+ {
+  "file": "f1_03_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f1_03_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_03_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 0.78,
+  "markup": "Partagez-la [pause short] en statut WhatsApp."
+ },
+ {
+  "file": "f1_03_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 0.8,
+  "markup": "Partagez-la [pause short] en statut WhatsApp."
+ },
+ {
+  "file": "f1_06_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f1_06_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_06_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.78,
+  "markup": "Les commandes [pause short] et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "f1_06_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.8,
+  "markup": "Les commandes [pause short] et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "f2_01_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f2_01_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_01_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.78,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "f2_01_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "f2_04_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f2_04_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_04_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 0.78,
+  "markup": "La commande [pause short] arrive dans Mara."
+ },
+ {
+  "file": "f2_04_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 0.8,
+  "markup": "La commande [pause short] arrive dans Mara."
+ },
+ {
+  "file": "f2_05_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f2_05_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_05_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 0.78,
+  "markup": "Pertes, [pause short] mortalité, [pause short] stock : tout est noté."
+ },
+ {
+  "file": "f2_05_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 0.8,
+  "markup": "Pertes, [pause short] mortalité, [pause short] stock : tout est noté."
+ },
+ {
+  "file": "f2_06_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Même sans réseau.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f2_06_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Même sans réseau.",
+  "speakingRate": 0.79
+ },
+ {
+  "file": "f2_06_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Même sans réseau.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_07_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Votre travail, vu.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f2_07_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Votre travail, vu.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_07_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Votre travail, vu.",
+  "speakingRate": 0.78,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "f2_07_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Votre travail, vu.",
+  "speakingRate": 0.8,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "f3_03_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f3_03_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 0.79
+ },
+ {
+  "file": "f3_03_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f3_04_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f3_04_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 0.79
+ },
+ {
+  "file": "f3_04_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f3_05_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f3_05_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f3_05_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 0.78,
+  "markup": "Tout le monde [pause short] voit les mêmes chiffres."
+ },
+ {
+  "file": "f3_05_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 0.8,
+  "markup": "Tout le monde [pause short] voit les mêmes chiffres."
+ },
+ {
+  "file": "f3_06_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f3_06_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f3_06_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 0.78,
+  "markup": "La confiance [pause short] se lit dans vos comptes."
+ },
+ {
+  "file": "f3_06_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 0.8,
+  "markup": "La confiance [pause short] se lit dans vos comptes."
+ },
+ {
+  "file": "f3_07_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La tête haute.",
+  "speakingRate": 0.78
+ },
+ {
+  "file": "f3_07_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La tête haute.",
+  "speakingRate": 0.79
+ },
+ {
+  "file": "f3_07_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La tête haute.",
+  "speakingRate": 0.8
+ }
+]
