@@ -960,14 +960,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           context.tr('Commandes fermées pour le moment'),
           context.tr('Regardez la vitrine, appelez ou écrivez sur WhatsApp'),
         ],
-        'farm' => ShopPage.farm,
+        'farm' => ShopPage.farm(delivers: shop?.delivers ?? false),
         // An association's window (098): its services, booked.
         'association' || 'church' => [
           context.tr('Réservez en ligne, sur rendez-vous'),
           context.tr('Une association de chez vous, tenue par ses membres'),
           context.tr('Rien à payer en ligne : vous réglez sur place'),
         ],
-        _ => ShopPage.street,
+        _ => ShopPage.shop(delivers: shop?.delivers ?? false),
       },
       // A Pro shop's button colour (068) — the order bar, WhatsApp, the
       // stepper — decided by the shop, read by the street.
