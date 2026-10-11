@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:url_launcher/url_launcher.dart' show closeInAppWebView;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models.dart';
@@ -42,8 +43,13 @@ class AuthRepository {
     this.apiKey,
     http.Client? httpClient,
     AppleCredentialRequest? appleCredential,
+    Future<void> Function()? closeSheet,
   })  : _http = httpClient,
-        _appleCredential = appleCredential ?? _askApple;
+        _appleCredential = appleCredential ?? _askApple,
+        _closeSheet = closeSheet ?? closeInAppWebView;
+
+  /// url_launcher's closeInAppWebView, or a test's stand-in.
+  final Future<void> Function() _closeSheet;
 
   final SupabaseClient? _client;
 
@@ -175,10 +181,34 @@ class AuthRepository {
       redirectTo: kIsWeb ? '${Uri.base.origin}/connexion' : androidCallback,
       // Several Google accounts on one phone are common: let them choose.
       queryParams: const {'prompt': 'select_account'},
+      // On an iPhone, in the in-app Safari sheet (SFSafariViewController),
+      // which [closeSignInSheet] can close; Android has its own browser
+      // (supabase_flutter forces it for Google).
+      authScreenLaunchMode: _ios ? LaunchMode.inAppBrowserView : LaunchMode.platformDefault,
     );
     if (!launched) {
       throw StateError("La page de connexion Google n'a pas pu s'ouvrir.");
     }
+  }
+
+  static bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// Closes the in-app Safari sheet Google's page opened in (130).
+  ///
+  /// Why it stayed open: on an iPhone the page runs in SFSafariViewController
+  /// over the app. Google's answer comes back to Supabase, which redirects
+  /// to bf.kaj.app://login-callback; iOS hands that address to the app
+  /// (CFBundleURLSchemes), supabase_flutter turns the code into a session
+  /// and raises signedIn — but nothing ever dismissed the sheet, so the
+  /// person was left on a blank Safari page over a signed-in app.
+  /// SFSafariViewController never closes itself on a redirect to the app:
+  /// the app has to (url_launcher's closeInAppWebView). The session calls
+  /// this on every signedIn; elsewhere than an iPhone it does nothing.
+  Future<void> closeSignInSheet() async {
+    if (!_ios) return;
+    try {
+      await _closeSheet();
+    } catch (_) {}
   }
 
   // ----------------------------------------------------------------
@@ -258,6 +288,36 @@ class AuthRepository {
       await saveMyName(name);
     }
     return client.auth.currentUser ?? user;
+  }
+
+  /// Whether the signed-in person signed in with Apple at least once (130):
+  /// their account deletion must revoke Apple's token.
+  bool get signedInWithApple {
+    final user = _client?.auth.currentUser;
+    final providers = user?.appMetadata['providers'];
+    return (providers is List && providers.contains('apple')) ||
+        (user?.identities?.any((i) => i.provider == 'apple') ?? false);
+  }
+
+  /// Apple's sheet once more, at « Supprimer mon compte » (130): a fresh
+  /// authorization code, which the account Worker trades with Apple for a
+  /// token and revokes (App Review 5.1.1(v)). Null when this is not the
+  /// iPhone app, the person did not sign in with Apple, or closed the
+  /// sheet — the deletion then goes on and the Worker logs it.
+  Future<String?> appleReauthorizationCode() async {
+    if (!appleSignInPlatform || !signedInWithApple) return null;
+    try {
+      final credential = await _appleCredential(
+        scopes: const [],
+        nonce: sha256.convert(utf8.encode(newNonce())).toString(),
+      );
+      final code = credential.authorizationCode;
+      return code.isEmpty ? null : code;
+    } on SignInWithAppleException {
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Whether the signed-in person's profile already carries a name. When it

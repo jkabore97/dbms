@@ -2230,8 +2230,6 @@ const enStrings = <String, String>{
       'Business switched to Mara Pro.',
   'Entreprise repassée sur Mara (gratuit).':
       'Business back on Mara (free).',
-  'Envoyer la demande':
-      'Send the request',
   'Faites grandir {name}':
       'Grow {name}',
   'Fermée':
@@ -6074,12 +6072,6 @@ const enStrings = <String, String>{
       'From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
-  'Mara vous le confirme sous 30 jours':
-      'Mara confirms within 30 days',
-  'Votre compte est lié à {names} : vos ventes, votre stock et votre équipe y portent votre nom. Mara reçoit votre demande, vous contacte si une activité doit être transmise ou fermée, puis supprime votre compte et vos données personnelles sous 30 jours.':
-      'Your account is linked to {names}: your sales, stock and team carry your name there. Mara receives your request, contacts you if a business must be handed over or closed, then deletes your account and your personal data within 30 days.',
-  'Demande envoyée : Mara supprime votre compte et vous prévient.':
-      'Request sent: Mara deletes your account and lets you know.',
   '1 vitrine sur la carte':
       '1 storefront on the map',
   '{n} vitrines sur la carte':
@@ -6332,4 +6324,44 @@ const enStrings = <String, String>{
       '{price} a month',
   'S\'abonner':
       'Subscribe',
+  // 130: « Supprimer mon compte » for every account (account_deletion.dart) and the server's new refusals.
+  'Votre compte, et les activités dont vous êtes le seul propriétaire':
+      'Your account, and the businesses you alone own',
+  'La suppression n\'a pas pu être préparée : vérifiez la connexion et réessayez.':
+      'The deletion could not be prepared: check the connection and try again.',
+  'Pas encore possible':
+      'Not possible yet',
+  'Votre compte et vos données personnelles seront effacés pour toujours. Vous quittez les activités dont vous faites partie ; ce que vous y avez inscrit leur reste, sans votre nom.':
+      'Your account and your personal data will be erased for good. You leave the businesses you belong to; what you recorded there stays theirs, without your name.',
+  'Votre compte et vos données personnelles seront effacés pour toujours, et avec eux ces activités :':
+      'Your account and your personal data will be erased for good, and with them these businesses:',
+  '1 membre redevient simple client':
+      '1 member becomes a plain shopper',
+  '{n} membres redeviennent simples clients':
+      '{n} members become plain shoppers',
+  '1 commande en cours annulée, le client prévenu':
+      '1 open order cancelled, the customer told',
+  '{n} commandes en cours annulées, les clients prévenus':
+      '{n} open orders cancelled, the customers told',
+  'l\'abonnement Google Play arrêté':
+      'the Google Play subscription stopped',
+  'l\'abonnement par carte arrêté':
+      'the card subscription stopped',
+  'Leurs ventes, leur stock, leurs comptes et leur vitrine disparaissent aussi : c\'est définitif.':
+      'Their sales, stock, books and shop window go too: this is final.',
+  'Votre abonnement Mara Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Mara Pro. Mara ne peut pas l\'annuler pour vous.':
+      'Your App Store Mara Pro subscription keeps being charged by Apple until you cancel it: Settings › your name › Subscriptions › Mara Pro. Mara cannot cancel it for you.',
+  'Vous quittez aussi : {names}.':
+      'You also leave: {names}.',
+  'Une livraison est en cours : terminez-la, puis supprimez votre compte.':
+      'A delivery is under way: finish it, then delete your account.',
+  'Mettez Mara à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.':
+      'Update Mara: deleting an account that runs a business is confirmed in the latest version of the app.',
+  'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.':
+      'The list of your businesses has changed: read it again before deleting your account.',
+  '« {shop} » a fermé sur Mara : vous n\'en faites plus partie. Votre compte reste le vôtre.':
+      '“{shop}” closed on Mara: you are no longer part of it. Your account stays yours.',
+  // 130: the date of birth and the number, optional at sign-up.
+  'Numéro de téléphone (facultatif)':
+      'Phone number (optional)',
 };

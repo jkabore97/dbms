@@ -455,11 +455,12 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('on an iPhone with Apple off: no Apple', (tester) async {
+    // 130: on an iPhone, Google is never drawn alone (App Review 4.8).
+    testWidgets('on an iPhone with Apple off: no Apple, and no Google alone', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       await pump(tester, _Server()..apple = false);
       expect(apple, findsNothing);
-      expect(google, findsOneWidget);
+      expect(google, findsNothing);
       debugDefaultTargetPlatformOverride = null;
     });
 
@@ -555,11 +556,12 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('Apple off, or Android: only Google', (tester) async {
+    // 130: on an iPhone, Google is never drawn alone (App Review 4.8).
+    testWidgets('Apple off on an iPhone: no Google alone either', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       await pumpSheet(tester, apple: false);
       expect(find.byKey(const Key('order-sign-in-apple')), findsNothing);
-      expect(find.byKey(const Key('order-sign-in-google')), findsOneWidget);
+      expect(find.byKey(const Key('order-sign-in-google')), findsNothing);
       debugDefaultTargetPlatformOverride = null;
     });
 

@@ -201,6 +201,9 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr(
           'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.',
           {'device': s('device')});
+    case 'org_closed':
+      // 128: its owner deleted their account, and the business with it.
+      return context.tr('« {shop} » a fermé sur Mara : vous n\'en faites plus partie. Votre compte reste le vôtre.', {'shop': s('shop')});
     case 'pro_active':
       // 128: bought in the App Store or on Google Play — the store's own
       // name, which every build may say.

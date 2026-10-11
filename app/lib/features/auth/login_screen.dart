@@ -241,8 +241,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   /// Everything the sign-up form insists on. Deliberately short: a first
-  /// name, a family name, a date of birth and a number that was typed twice.
-  /// The middle name and the job title are useful and not worth a wall.
+  /// name and a family name. The date of birth and the number are asked
+  /// and never required (130: optional, never blocking — the business
+  /// that hires somebody asks again when a contract needs them); a number
+  /// given is typed twice, and the two must agree. The middle name and the
+  /// job title are useful and not worth a wall.
   String? get _signUpProblem {
     if (!_isSignUp) return null;
     if (_firstNameController.text.trim().isEmpty) {
@@ -251,9 +254,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_lastNameController.text.trim().isEmpty) {
       return Strings.of(context).enterLastName;
     }
-    if (_birthDate == null) return Strings.of(context).enterBirthDate;
-    if (_phoneController.text.trim().isEmpty) {
-      return Strings.of(context).enterPhone;
+    if (_phoneController.text.trim().isNotEmpty &&
+        _phoneConfirmController.text.trim().isEmpty) {
+      return Strings.of(context).phonesDiffer;
     }
     if (_phoneMismatch != null) return _phoneMismatch;
     return null;
@@ -347,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
             middleName: _middleNameController.text.trim(),
             dateOfBirth: _birthDate,
             title: _titleController.text.trim(),
-            phone: _e164,
+            phone: _phoneController.text.trim().isEmpty ? null : _e164,
           );
         } catch (_) {
           // A database that has not run 017 yet. The account is real and the
@@ -493,15 +496,16 @@ class _LoginScreenState extends State<LoginScreen> {
       const SizedBox(height: 12),
 
       // A contract needs one, and a date picker is the only way to get one
-      // that is not a typo.
+      // that is not a typo. Optional (130).
       SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
+          key: const Key('sign-up-birth-date'),
           onPressed: _busy ? null : _pickBirthDate,
           icon: const Icon(Icons.cake_outlined),
           label: Text(
             _birthDate == null
-                ? Strings.of(context).birthDate
+                ? context.tr('Date de naissance (facultatif)')
                 : DateFormat.yMMMMd(
                         Localizations.localeOf(context).toString())
                     .format(_birthDate!),
@@ -556,9 +560,13 @@ class _LoginScreenState extends State<LoginScreen> {
   /// is, and the device code is chosen right after, as with a password.
   /// Apple first, black, as tall as Google's (App Review, 4.8: at least as
   /// prominent), on an iPhone only.
+  ///
+  /// On an iPhone Google is never drawn alone (130): wherever Google shows,
+  /// Apple shows above it — so with Apple off in the project (or not yet
+  /// answered), neither does Google, and the phone and the e-mail remain.
   List<Widget> _googleStep(ThemeData theme) {
     final apple = _apple && widget.onApple != null;
-    final google = _google && widget.onGoogle != null;
+    final google = _google && widget.onGoogle != null && (apple || !appleSignInPlatform);
     if (!apple && !google) return const [];
     return [
       if (apple) ...[
@@ -652,10 +660,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (_isSignUp) ...[
         const SizedBox(height: 12),
         PhoneField(
+          key: const Key('sign-up-phone'),
           controller: _phoneController,
           country: _country,
           onCountry: (c) => setState(() => _country = c),
-          labelText: Strings.of(context).phoneNumber,
+          labelText: context.tr('Numéro de téléphone (facultatif)'),
           hintText: '70 12 34 56',
           enabled: !_busy,
           large: true,

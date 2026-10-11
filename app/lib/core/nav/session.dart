@@ -70,7 +70,12 @@ class SessionController extends ChangeNotifier {
     // the browser returns to the app — so the controller listens for it
     // rather than waiting on the button that started it.
     _authEvents = auth.onAuthStateChange?.listen((AuthState s) {
-      if (s.event == AuthChangeEvent.signedIn) unawaited(adoptGoogleSession());
+      if (s.event == AuthChangeEvent.signedIn) {
+        // On an iPhone, Google's page is still up in the Safari sheet over
+        // the app: closed now that the app has the session (130).
+        unawaited(auth.closeSignInSheet());
+        unawaited(adoptGoogleSession());
+      }
     }, onError: (_) {});
   }
 

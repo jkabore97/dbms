@@ -87,7 +87,7 @@ class _Admin extends AdminRepository {
   @override
   Future<PlanTerms> planTerms() async => PlanTerms.defaults;
   @override
-  Future<void> deleteMyAccount() async {
+  Future<void> deleteMyAccount({List<String>? confirmedOrgs, String? appleAuthorizationCode}) async {
     final r = refuse;
     if (r != null) throw r;
     deleted++;
@@ -920,16 +920,31 @@ void main() {
       });
     }
 
-    // Google Play: every account asks for its deletion from inside the
-    // app. A member's goes to Mara as a request (113 never deletes a
-    // member's account on the spot): the word first, then the report.
+    // Google Play and the App Store: every account is deleted from inside
+    // the app (130) — an owner's with the businesses only they own, named
+    // in the confirmation; nothing goes before the word, and the list sent
+    // back is the one shown.
     for (final profile in ['retail', 'farm', 'association']) {
-      testWidgets('Compte of a $profile: « Supprimer mon compte » sends the request to Mara', (tester) async {
+      testWidgets('Compte of a $profile: « Supprimer mon compte » names what goes, then deletes', (tester) async {
         final session = await shopper(tester);
-        final me = _Shopper(_profile());
         final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        final sent = <List<String>>[];
         await pump(tester, session, at: '/compte', routes: [
-          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org, shopper: me)),
+          GoRoute(
+            path: '/compte',
+            builder: (_, _) => CompteScreen(
+              org: org,
+              deletionPlan: () async => AccountDeletionPlan.fromJson({
+                'businesses': [
+                  {'id': 'o1', 'name': 'Awa', 'profile': profile, 'members': 2, 'orders': 1, 'store': []},
+                ],
+                'leaves': [
+                  {'id': 'o2', 'name': 'Chez Ali'},
+                ],
+              }),
+              deleteAccount: (orgs) async => sent.add(orgs),
+            ),
+          ),
         ]);
         await tester.scrollUntilVisible(find.byKey(const Key('group-Mes données')), 300,
             scrollable: find.byType(Scrollable).first);
@@ -938,18 +953,21 @@ void main() {
         await tester.ensureVisible(find.byKey(const Key('compte-delete-account')));
         await tester.tap(find.byKey(const Key('compte-delete-account')));
         await settle(tester);
+        expect(find.byKey(const Key('deletion-summary')), findsOneWidget);
+        expect(find.textContaining('2 membres redeviennent simples clients'), findsOneWidget);
+        expect(find.textContaining('1 commande en cours annulée'), findsOneWidget);
+        expect(find.text('Vous quittez aussi : Chez Ali.'), findsOneWidget);
         // Nothing is sent before the word.
         await tester.tap(find.byKey(const Key('delete-confirm')));
         await settle(tester);
-        expect(me.reports, isEmpty);
+        expect(sent, isEmpty);
         await tester.enterText(find.byKey(const Key('delete-word')), 'supprimer');
         await settle(tester);
         await tester.tap(find.byKey(const Key('delete-confirm')));
         await settle(tester);
-        expect(me.reports, hasLength(1));
-        expect(me.reports.single['topic'], 'other');
-        expect(me.reports.single['message'], contains('suppression de compte'));
-        expect(find.text('Demande envoyée : Mara supprime votre compte et vous prévient.'), findsOneWidget);
+        expect(sent, [
+          ['o1']
+        ]);
       });
     }
 

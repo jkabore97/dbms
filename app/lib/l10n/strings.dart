@@ -233,18 +233,6 @@ abstract class Strings {
   /// **'Entrez votre nom de famille.'**
   String get enterLastName;
 
-  /// No description provided for @enterBirthDate.
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez votre date de naissance.'**
-  String get enterBirthDate;
-
-  /// No description provided for @enterPhone.
-  ///
-  /// In fr, this message translates to:
-  /// **'Entrez votre numéro de téléphone.'**
-  String get enterPhone;
-
   /// No description provided for @phonesDiffer.
   ///
   /// In fr, this message translates to:

@@ -28,8 +28,6 @@
   "passwordMin": "Au moins 6 caractères",
   "enterFirstName": "Entrez votre prénom.",
   "enterLastName": "Entrez votre nom de famille.",
-  "enterBirthDate": "Indiquez votre date de naissance.",
-  "enterPhone": "Entrez votre numéro de téléphone.",
   "phonesDiffer": "Les deux numéros ne sont pas identiques.",
   "enterValidEmail": "Entrez une adresse e-mail valide.",
   "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",

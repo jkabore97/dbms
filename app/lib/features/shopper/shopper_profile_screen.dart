@@ -158,7 +158,10 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
             throw StateError(
                 'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
           }
-          await scope.admin.deleteMyAccount();
+          // An Apple account, on the iPhone: Apple's sheet once more, for
+          // the code that revokes Apple's token (130).
+          final code = await scope.auth.appleReauthorizationCode();
+          await scope.admin.deleteMyAccount(appleAuthorizationCode: code);
         },
       ),
     );
@@ -733,15 +736,24 @@ class _CityDialogState extends State<_CityDialog> {
 }
 
 /// « Supprimer mon compte »: said plainly, confirmed by typing a word.
-/// Also the business Compte's (for a member, [delete] sends the request to
-/// Mara and [message] says so).
+/// Also the business Compte's (130: [message] and [details] say which
+/// businesses go with the account).
 class DeleteAccountDialog extends StatefulWidget {
-  const DeleteAccountDialog({super.key, required this.delete, this.message, this.confirmLabel});
+  const DeleteAccountDialog({
+    super.key,
+    required this.delete,
+    this.message,
+    this.details,
+    this.confirmLabel,
+  });
 
   final Future<void> Function() delete;
 
   /// What happens, in place of the shopper's sentence.
   final String? message;
+
+  /// Drawn under [message]: what disappears, business by business.
+  final Widget? details;
 
   /// The red button, in place of « Supprimer ».
   final String? confirmLabel;
@@ -799,6 +811,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.message ?? context.tr('Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.')),
+            ?widget.details,
             const SizedBox(height: 14),
             Text(context.tr('Pour confirmer, tapez {word} :', {'word': word}),
                 style: const TextStyle(fontWeight: FontWeight.w600)),

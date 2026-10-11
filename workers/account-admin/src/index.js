@@ -278,12 +278,13 @@ async function deleteMe(request, env) {
     if (!appleSignin) notes.push("apple_signin");
   }
 
-  const soft = done.mode === "soft";
-  let res = await admin(env, "DELETE", userId, soft ? { should_soft_delete: true } : null);
-  if (!soft && res.status >= 500) {
+  let mode = done.mode === "soft" ? "soft" : "hard";
+  let res = await admin(env, "DELETE", userId, mode === "soft" ? { should_soft_delete: true } : null);
+  if (mode === "hard" && res.status >= 500) {
     // A key delete_my_account did not know of: the account kept as a
     // shell rather than not deleted.
     console.error("gotrue delete self, retried soft", res.status, await res.text());
+    mode = "soft";
     res = await admin(env, "DELETE", userId, { should_soft_delete: true });
   }
   if (!res.ok && res.status !== 404) {
@@ -295,7 +296,7 @@ async function deleteMe(request, env) {
   }
   return json({
     ok: true,
-    mode: soft || res.status >= 500 ? "soft" : done.mode || "hard",
+    mode,
     businesses: Array.isArray(done.businesses) ? done.businesses : [],
     stopped,
     apple_store_to_cancel: Number(done.apple_store || 0),

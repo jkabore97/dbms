@@ -108,11 +108,12 @@ void main() {
     expect(find.widgetWithText(TextField, 'Nom de famille'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Fonction (facultatif)'),
         findsOneWidget);
-    expect(find.text('Date de naissance'), findsOneWidget);
+    // Both optional since 130: asked, never required.
+    expect(find.text('Date de naissance (facultatif)'), findsOneWidget);
 
     // Twice, for the keyboard rather than the server: this is the number a
     // manager sends an invitation to.
-    expect(find.widgetWithText(TextField, 'Numéro de téléphone'),
+    expect(find.widgetWithText(TextField, 'Numéro de téléphone (facultatif)'),
         findsOneWidget);
     expect(find.widgetWithText(TextField, 'Confirmez le numéro'),
         findsOneWidget);
@@ -159,12 +160,12 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Prénom'), 'Israel');
     await tester.enterText(
         find.widgetWithText(TextField, 'Nom de famille'), 'SAWADOGO');
-    await tester.tap(find.text('Date de naissance'));
+    await tester.tap(find.text('Date de naissance (facultatif)'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
     await tester.enterText(
-        find.widgetWithText(TextField, 'Numéro de téléphone'), '70123456');
+        find.widgetWithText(TextField, 'Numéro de téléphone (facultatif)'), '70123456');
     await tester.enterText(
         find.widgetWithText(TextField, 'Confirmez le numéro'), '70123456');
     await tester.pump();

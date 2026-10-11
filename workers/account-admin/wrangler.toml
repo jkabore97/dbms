@@ -25,6 +25,14 @@ workers_dev = true
 SUPABASE_URL = ""
 SUPABASE_PUBLISHABLE_KEY = ""
 
+# Sign in with Apple (130): the team and the client the iPhone app signs in
+# as, for revoking an Apple user's token when they delete their account.
+# The key itself (APPLE_SIGNIN_KEY_ID, APPLE_SIGNIN_PRIVATE_KEY) is a secret,
+# set by deploy-account-admin.yml, like PLAY_SERVICE_ACCOUNT_JSON and
+# STRIPE_SECRET_KEY (a deleted business's subscriptions, stopped).
+APPLE_TEAM_ID = "9K236BL7SX"
+APPLE_SIGNIN_CLIENT_ID = "bf.kaj.app"
+
 # Who may call this from a browser. Not a wildcard: the endpoint acts on behalf
 # of whoever is signed in when a page calls it.
 ALLOWED_ORIGINS = "https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"

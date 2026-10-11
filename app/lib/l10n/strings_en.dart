@@ -76,12 +76,6 @@ class StringsEn extends Strings {
   String get enterLastName => 'Enter your family name.';
 
   @override
-  String get enterBirthDate => 'Enter your date of birth.';
-
-  @override
-  String get enterPhone => 'Enter your phone number.';
-
-  @override
   String get phonesDiffer => 'The two numbers are not the same.';
 
   @override

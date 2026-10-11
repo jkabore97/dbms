@@ -33,7 +33,10 @@ do $$ begin
     end if;
 end $$;
 grant usage on schema public to anon, authenticated;
-grant select on orgs, memberships, profiles to authenticated;
+-- Supabase gives the app's role every table; RLS, the triggers and 128's
+-- own revokes (applied right after) are the gates these claims are about.
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage on all sequences in schema public to authenticated;
 \i database/migrations/128_store_billing.sql
 
 \set mara    '''12812812-0000-0000-0000-000000000001'''
