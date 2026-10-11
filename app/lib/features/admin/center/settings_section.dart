@@ -69,6 +69,9 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('stripe_on', 'pro', SettingType.flag),
   // 121: the card is charged in dollars — the FCFA price at this rate.
   SettingDef('stripe_xof_per_usd', 'pro', SettingType.count),
+  // 128: Mara Pro sold through the App Store and Google Play in the store
+  // apps — off until both stores answer the payments Worker.
+  SettingDef('store_billing_on', 'pro', SettingType.flag),
   SettingDef('pro_features', 'pro', SettingType.list, options: [
     'payroll', 'team_access', 'analytics', 'accounting', 'currencies', 'tontines',
     'vitrine_plus', 'delivery', 'online_payment',
@@ -164,6 +167,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'platform_wave_name' => context.tr('Nom du compte Wave de Mara'),
       'stripe_on' => context.tr('Abonnement par carte (Stripe)'),
       'stripe_xof_per_usd' => context.tr('Taux pour la carte : FCFA pour 1 \$'),
+      'store_billing_on' =>
+        context.tr('Abonnement dans les applications (App Store, Google Play)'),
       'pro_features' => context.tr('Outils réservés à Mara Pro'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),
