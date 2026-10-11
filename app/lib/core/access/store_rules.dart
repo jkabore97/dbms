@@ -28,6 +28,11 @@ import '../update/update_check.dart' show installStore;
 ///
 /// Every screen asks here, never `installStore` itself, so the rule has
 /// one place to change.
+///
+/// Since 130 the stores may sell Mara Pro themselves: once the platform
+/// turns `store_billing_on` on, [sellsProThroughStore] — App Store In-App
+/// Purchase in the iPhone app, Google Play Billing in the Play app — and
+/// every « Passer à Pro » asks [sellsProInApp]. The spots stay as above.
 bool get sellsDigitalInApp =>
     debugSellsDigitalInApp ?? installStore != 'appstore';
 

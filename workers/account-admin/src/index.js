@@ -22,6 +22,18 @@
 //   SUPABASE_PUBLISHABLE_KEY    the anon key — public, it is in the app too
 //   SUPABASE_SERVICE_ROLE_KEY   the secret; unset means the Worker is dormant
 //   ALLOWED_ORIGINS             comma-separated, the sites that may call this
+//   And for « Supprimer mon compte » (130), each optional — without one,
+//   that step is logged and the rest done:
+//   PLAY_SERVICE_ACCOUNT_JSON   revokes a deleted business's Google Play
+//                               subscription (workers/pay/src/google.js)
+//   STRIPE_SECRET_KEY           cancels its card subscription
+//   APPLE_SIGNIN_KEY_ID, APPLE_SIGNIN_PRIVATE_KEY
+//                               the Sign in with Apple key, to revoke the
+//                               person's Apple token (team APPLE_TEAM_ID,
+//                               client APPLE_SIGNIN_CLIENT_ID)
+
+import { googleRevoke } from "../../pay/src/google.js";
+import { signEs256 } from "../../pay/src/jwt.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MIN_PASSWORD = 8;
@@ -158,23 +170,63 @@ async function deleteUser(request, env, userId) {
 }
 
 // ------------------------------------------------------------
-// Delete one's own account (« Supprimer mon compte », 113)
+// Delete one's own account (« Supprimer mon compte », 113, for real 130)
 // ------------------------------------------------------------
 
-// Google Play asks that a person can delete their account from the app.
-// The same rule as above: Postgres decides, as the caller. 113's
-// delete_my_account_check() answers the caller's OWN id — read from the
-// token by Postgres, never from the request — or refuses in French (a
-// business they belong to, a courier's file, an order still open, a
-// platform account, a former employee's work that still names them).
-// Only that id is deleted; nothing in the request names anybody. Their
-// finished orders stay with the shops, under « Client supprimé » (113).
+// Google Play and the App Store ask that a person can delete their account
+// from the app — every account (130): a shopper, a courier, a member of a
+// business, its owner. The same rule as above: Postgres decides and does,
+// as the caller. 128's delete_my_account() reads the caller's OWN id from
+// the token, refuses in French (a platform account, an order still open,
+// a delivery on the road, a business's order paid online…), and otherwise
+// does the database's part in one transaction: the businesses the person
+// alone owns archived and purged (their members become plain shoppers,
+// their customers told), the person's own rows gone, their name off what
+// they wrote. It answers what is left for this Worker:
+//
+//   * mode — « hard »: GoTrue deletes the auth user; « soft »: a
+//     business's books still name the person (kept for the law, as the
+//     business's), so GoTrue soft-deletes it (should_soft_delete: e-mail,
+//     phone, password, identities and metadata wiped, never a sign-in
+//     again). A hard delete GoTrue refuses is retried soft.
+//   * the subscriptions to stop outside, those businesses being gone:
+//     Google Play's revoked (PLAY_SERVICE_ACCOUNT_JSON), Stripe's
+//     cancelled (STRIPE_SECRET_KEY); the App Store's Mara cannot touch —
+//     the app told the owner to cancel it in their Apple settings, and the
+//     answer counts them;
+//   * Sign in with Apple: a person who signed in with Apple has Apple's
+//     token revoked (POST appleid.apple.com/auth/revoke, with a client
+//     secret signed by the Sign in with Apple key APPLE_SIGNIN_KEY_ID +
+//     APPLE_SIGNIN_PRIVATE_KEY, team 9K236BL7SX, client bf.kaj.app),
+//     from the fresh authorization code the iPhone app sends
+//     (apple_authorization_code). No key, or no code: everything else is
+//     done and it is logged.
+//
+// Body: { confirmed_orgs: [uuid] — the businesses the confirmation
+// showed, apple_authorization_code?: string }. Nothing in it names a
+// person. Before any of it, the platform-account lock, read with the key.
 async function deleteMe(request, env) {
   const token = bearer(request);
   if (!token) return problem(401, "Sign in first.");
   if (!env.SUPABASE_SERVICE_ROLE_KEY) return problem(501, "Not configured.");
 
-  const answer = await rpcAsCaller(env, token, "delete_my_account_check", {});
+  let body = {};
+  try {
+    body = (await request.json()) || {};
+  } catch {
+    body = {};
+  }
+
+  const me = await whoAmI(env, token);
+  if (!me) return problem(401, "Sign in first.");
+  if (await isPlatformAdmin(env, me.id)) {
+    return problem(403, "Ce compte ne peut pas être supprimé.");
+  }
+
+  const confirmed = Array.isArray(body.confirmed_orgs)
+    ? body.confirmed_orgs.filter((id) => typeof id === "string" && UUID.test(id))
+    : null;
+  const answer = await rpcAsCaller(env, token, "delete_my_account", { p_confirmed_orgs: confirmed });
   if (answer.status === 401) return problem(401, "Sign in first.");
   if (!answer.ok) {
     // The database's own sentence, for the person to act on (409: not
@@ -182,28 +234,132 @@ async function deleteMe(request, env) {
     if (answer.code === "P0001" && answer.message) return problem(409, answer.message);
     return problem(502, "La vérification du compte a échoué.");
   }
-  const userId = answer.value;
-  if (typeof userId !== "string" || !UUID.test(userId)) {
-    return problem(403, "Ce compte ne peut pas être supprimé.");
-  }
-  // The second lock, as for an admin's deletion: never a platform account.
-  if (await isPlatformAdmin(env, userId)) {
+  const done = answer.value || {};
+  const userId = done.user_id;
+  if (typeof userId !== "string" || !UUID.test(userId) || userId !== me.id) {
     return problem(403, "Ce compte ne peut pas être supprimé.");
   }
 
-  const res = await admin(env, "DELETE", userId, null);
+  const notes = [];
+  const stopped = { google: 0, stripe: 0 };
+  for (const sub of Array.isArray(done.google) ? done.google : []) {
+    try {
+      if (!env.PLAY_SERVICE_ACCOUNT_JSON) throw new Error("PLAY_SERVICE_ACCOUNT_JSON not set");
+      await googleRevoke(env, sub.token, { fetch: (...a) => fetch(...a) });
+      stopped.google++;
+    } catch (err) {
+      console.error("account deletion: Google Play subscription not revoked", sub.org, String(err?.message || err));
+      notes.push("google");
+    }
+  }
+  for (const id of Array.isArray(done.stripe) ? done.stripe : []) {
+    try {
+      if (!env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY not set");
+      const res = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      if (!res.ok && res.status !== 404) throw new Error(`Stripe answered ${res.status}`);
+      stopped.stripe++;
+    } catch (err) {
+      console.error("account deletion: Stripe subscription not cancelled", id, String(err?.message || err));
+      notes.push("stripe");
+    }
+  }
+
+  let appleSignin = null;
+  if (signedInWithApple(me)) {
+    appleSignin = false;
+    try {
+      appleSignin = await revokeAppleSignIn(env, body.apple_authorization_code);
+    } catch (err) {
+      console.error("account deletion: Sign in with Apple token not revoked", String(err?.message || err));
+    }
+    if (!appleSignin) notes.push("apple_signin");
+  }
+
+  const soft = done.mode === "soft";
+  let res = await admin(env, "DELETE", userId, soft ? { should_soft_delete: true } : null);
+  if (!soft && res.status >= 500) {
+    // A key delete_my_account did not know of: the account kept as a
+    // shell rather than not deleted.
+    console.error("gotrue delete self, retried soft", res.status, await res.text());
+    res = await admin(env, "DELETE", userId, { should_soft_delete: true });
+  }
   if (!res.ok && res.status !== 404) {
     console.error("gotrue delete self", res.status, await res.text());
-    // A 500 from GoTrue is Postgres refusing the delete — a row somewhere
-    // still names the person that delete_my_account_check did not know
-    // of. Nothing was deleted; the person can only ask Mara (409: said in
-    // these words, not the generic « réessayez », which would fail again).
     if (res.status >= 500) {
       return problem(409, "La suppression n'a pas pu se faire — écrivez à Mara.");
     }
     return problem(502, "La suppression du compte a échoué.");
   }
-  return json({ ok: true });
+  return json({
+    ok: true,
+    mode: soft || res.status >= 500 ? "soft" : done.mode || "hard",
+    businesses: Array.isArray(done.businesses) ? done.businesses : [],
+    stopped,
+    apple_store_to_cancel: Number(done.apple_store || 0),
+    apple_signin_revoked: appleSignin,
+    not_done: notes,
+  });
+}
+
+// The caller, as GoTrue knows them from their own token.
+async function whoAmI(env, token) {
+  const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  const user = await res.json().catch(() => null);
+  return user && typeof user.id === "string" && UUID.test(user.id) ? user : null;
+}
+
+function signedInWithApple(user) {
+  const providers = user?.app_metadata?.providers;
+  return (Array.isArray(providers) && providers.includes("apple"))
+    || (Array.isArray(user?.identities) && user.identities.some((i) => i?.provider === "apple"));
+}
+
+// Sign in with Apple's REST API: the authorization code the app just got
+// traded for a refresh token, which is then revoked. True when Apple said
+// so; false when the key or the code is missing (logged by the caller).
+async function revokeAppleSignIn(env, code, fetchImpl = fetch) {
+  if (!env.APPLE_SIGNIN_KEY_ID || !env.APPLE_SIGNIN_PRIVATE_KEY) {
+    console.error("account deletion: no Sign in with Apple key (APPLE_SIGNIN_KEY_ID / APPLE_SIGNIN_PRIVATE_KEY)");
+    return false;
+  }
+  if (typeof code !== "string" || !code) {
+    console.error("account deletion: no Apple authorization code from the app");
+    return false;
+  }
+  const clientId = env.APPLE_SIGNIN_CLIENT_ID || "bf.kaj.app";
+  const iat = Math.floor(Date.now() / 1000);
+  const secret = await signEs256({ kid: env.APPLE_SIGNIN_KEY_ID }, {
+    iss: env.APPLE_TEAM_ID || "9K236BL7SX",
+    iat,
+    exp: iat + 300,
+    aud: "https://appleid.apple.com",
+    sub: clientId,
+  }, env.APPLE_SIGNIN_PRIVATE_KEY);
+  const form = (fields) => ({
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(fields).toString(),
+  });
+  const tokenRes = await fetchImpl("https://appleid.apple.com/auth/token", form({
+    client_id: clientId, client_secret: secret, code, grant_type: "authorization_code",
+  }));
+  const tokens = await tokenRes.json().catch(() => ({}));
+  const refresh = tokens.refresh_token || tokens.access_token;
+  if (!tokenRes.ok || !refresh) throw new Error(`Apple token answered ${tokenRes.status}`);
+  const revokeRes = await fetchImpl("https://appleid.apple.com/auth/revoke", form({
+    client_id: clientId,
+    client_secret: secret,
+    token: refresh,
+    token_type_hint: tokens.refresh_token ? "refresh_token" : "access_token",
+  }));
+  if (!revokeRes.ok) throw new Error(`Apple revoke answered ${revokeRes.status}`);
+  return true;
 }
 
 // ------------------------------------------------------------

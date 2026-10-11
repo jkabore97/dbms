@@ -61,7 +61,70 @@
 --      store_org_of() (a notification names a token or a transaction, the
 --      Worker finds its business, service role).
 --
--- B. ACCOUNT DELETION — further below.
+-- B. ACCOUNT DELETION FOR REAL (« Supprimer mon compte », every account)
+--
+--   The owner: « if business owner ask for account deletion, Business
+--   desapear and member become simple shoppers ». Until now (113) only a
+--   shopper with nothing on any business's books could go; a member's
+--   request went to Mara by hand. Now every account goes, from the app:
+--
+--   6. purge_org(): 014's delete_org body, moved out so that the
+--      platform's « Supprimer » and an owner's account deletion are ONE
+--      path (the leaf-first destruction, the tombstone in deleted_orgs,
+--      the audit sweep). delete_org() keeps every one of its fences and
+--      calls it. A bug found on the way and fixed there: the leaf list had
+--      never been given the credit book, the tontines' contributions,
+--      production or the delivery receipts, so a business holding any of
+--      them could not be deleted at all (a foreign-key error). A business an owner's deletion takes is
+--      archived first (archived_at, as 014's lifecycle always does), then
+--      purged in the same transaction.
+--   7. delete_my_account_plan(): what a deletion would do, read by the
+--      app's confirmation (delete_my_account_preview) and by the deletion
+--      itself — the businesses that disappear (those the person is the
+--      only owner of: a business another owner holds stays, the person
+--      just leaves it), how many members each has (they become plain
+--      shoppers: their membership goes with the business), the open
+--      orders that will be cancelled, the store or card subscription
+--      that must be stopped; the businesses the person merely leaves; and
+--      what refuses it:
+--        * a platform account (as in 113);
+--        * the person's own open order as a customer (113);
+--        * a delivery the person is carrying (in transit);
+--        * one of the doomed businesses' orders in transit (goods on the
+--          road, a courier paid on delivery) or paid online and not yet
+--          handed over (money Mara cannot give back by itself): the owner
+--          finishes or refunds it first. Every other open order (pending,
+--          accepted, ready — nothing paid, nothing moving) is cancelled,
+--          each customer told on their own bell (org_id null: the notice
+--          outlives the business), with no charge to anybody.
+--   8. delete_my_account(p_confirmed_orgs): the deletion, as the caller,
+--      for the account Worker (POST /v1/me/delete) — SECURITY DEFINER for
+--      the reason 014 gives delete_org (it destroys rows RLS rightly
+--      refuses to anyone, an owner included) and because it must act on
+--      rows of businesses the caller only belongs to. The Worker never
+--      names anybody: the id is auth.uid(). An owner's businesses go only
+--      if the list the app showed (p_confirmed_orgs) is the list that
+--      would go — a business created since, or an older app that showed
+--      none, is refused. Then, for the person, exactly what GoTrue's
+--      delete cascades (and as GoTrue does it, with no caller), done here
+--      first so that it holds even when the account must be kept as a
+--      shell: rows that cascade are deleted, keys that let go are
+--      cleared, nullable keys that would hold the account are cleared
+--      too (a sale, a product, a run no longer names the person), the
+--      orders the person placed read « Client supprimé » (113), the
+--      profile is emptied. What still names the person after that (a
+--      NOT NULL « written by » on a business's books, kept for the law,
+--      which belongs to the business) makes the answer mode « soft »:
+--      the Worker then soft-deletes the auth user (GoTrue's
+--      should_soft_delete: e-mail, phone, password, identities and
+--      metadata wiped, no sign-in ever again) instead of deleting the
+--      row. Otherwise « hard ». The answer also names what the Worker
+--      must stop outside: Google Play subscriptions (revoked), Stripe
+--      subscriptions (cancelled), and how many App Store subscriptions
+--      the owner must cancel themselves (Mara cannot).
+--   113's delete_my_account_check() stays for the Worker deployed today,
+--   until this batch's account Worker replaces it (BUILD_PLAN: dropped in
+--   129).
 -- ============================================================
 
 insert into platform_settings (key, value) values ('store_billing_on', 'false')
@@ -425,6 +488,9 @@ begin
         revoke execute on function store_org_of(text, text)  from anon;
         revoke execute on function store_due()               from anon;
         revoke execute on function my_store_subscription(uuid) from anon;
+        -- The terms are the signed-in app's (born closed since 063; said
+        -- again now that they carry the store switch).
+        revoke execute on function plan_terms()              from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         -- Read inside org_plan() / feature_paid() / plan_terms(), as their
@@ -445,6 +511,467 @@ begin
         grant execute on function store_org_of(text, text)   to service_role;
         grant execute on function store_due()                to service_role;
         grant select on store_subscriptions to service_role;
+    end if;
+end $$;
+
+-- ============================================================
+-- B. ACCOUNT DELETION
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 6. One path to destroy a business: 014's, moved out unchanged
+-- ------------------------------------------------------------
+create or replace function purge_org(p_org_id uuid, p_actor uuid, p_label text)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_org     orgs%rowtype;
+    v_entries int;
+    v_members int;
+begin
+    select * into v_org from orgs where id = p_org_id;
+    if not found then
+        return;
+    end if;
+    select count(*) into v_entries from journal_entries where org_id = p_org_id;
+    select count(*) into v_members from memberships    where org_id = p_org_id;
+
+    -- Written before the delete, and outside the org's own scope, because
+    -- audit_log.org_id cascades and would take this record with it.
+    insert into deleted_orgs (
+        id, name, slug, profile, deleted_by, deleted_label,
+        entry_count, member_count, created_at
+    )
+    values (
+        v_org.id, v_org.name, v_org.slug, v_org.profile, p_actor, p_label,
+        v_entries, v_members, v_org.created_at
+    )
+    on conflict (id) do nothing;
+
+    -- Every audited child table fires AFTER DELETE during the cascade below
+    -- and writes an audit_log row pointing at an org that no longer exists.
+    -- Deferring the key lets the cascade finish; the sweep afterwards removes
+    -- those rows, so the check at commit finds nothing dangling. See the note
+    -- beside the constraint above for why this is here rather than inside
+    -- audit_row().
+    set constraints audit_log_org_id_fkey deferred;
+
+    -- Leaf-first, by hand, and this is not paranoia. Most org-scoped tables
+    -- cascade from `orgs`, but plenty of the references *between* them are
+    -- NO ACTION — journal_lines.account_id, sales.entry_id,
+    -- staff_payments.employee_id, invoices.customer_id — and a cascade does
+    -- not order itself by dependency, so it aborts halfway with a foreign key
+    -- error and the business survives its own deletion.
+    --
+    -- The tempting fix is to make those keys cascade too. That would mean
+    -- deleting an account silently destroys every ledger line posted to it,
+    -- which is the guard those keys exist to provide and is worth far more
+    -- than the convenience here. So the destruction is spelled out instead.
+    --
+    -- A new module with a new table belongs on this list. `test_org_lifecycle`
+    -- deletes a business holding one of everything, so forgetting shows up as
+    -- a failing suite rather than as a platform admin who cannot delete.
+    delete from journal_lines jl using journal_entries je
+        where jl.journal_entry_id = je.id and je.org_id = p_org_id;
+    delete from contribution_attributions ca using journal_entries je
+        where ca.journal_entry_id = je.id and je.org_id = p_org_id;
+    delete from sale_lines sl using sales s
+        where sl.sale_id = s.id and s.org_id = p_org_id;
+
+    -- 128: the modules since 014 whose keys between them hold, and that
+    -- were never put on this list — the credit book (024: a debt names its
+    -- customer, its sale and its entry), the tontines (a contribution
+    -- names its member), production (a run and its inputs name products)
+    -- and the delivery receipts (an entry). Until now any business with
+    -- one of them survived its own deletion with a foreign-key error —
+    -- the platform's « Supprimer » included. test_batch128 deletes a shop,
+    -- a farm and an association with books, a credit sale and its payment.
+    delete from debt_payments         where org_id = p_org_id;
+    delete from debts                 where org_id = p_org_id;
+    delete from tontine_contributions where org_id = p_org_id;
+    delete from production_inputs pi using production_runs pr
+        where pi.run_id = pr.id and pr.org_id = p_org_id;
+    delete from production_runs       where org_id = p_org_id;
+    delete from stock_receipts        where org_id = p_org_id;
+
+    delete from staff_payments  where org_id = p_org_id;
+    delete from shifts          where org_id = p_org_id;
+    delete from employees       where org_id = p_org_id;
+
+    -- invoice_payments, invoice_lines, flock_events and sale_lines carry no
+    -- org_id of their own: they are reached through their parent, which is
+    -- how they were written and is not worth changing here.
+    delete from invoice_payments ip using invoices i
+        where ip.invoice_id = i.id and i.org_id = p_org_id;
+    delete from invoice_lines il using invoices i
+        where il.invoice_id = i.id and i.org_id = p_org_id;
+    delete from invoices        where org_id = p_org_id;
+    delete from customers       where org_id = p_org_id;
+
+    delete from egg_production  where org_id = p_org_id;
+    delete from flock_events fe using flocks f
+        where fe.flock_id = f.id and f.org_id = p_org_id;
+    delete from flocks          where org_id = p_org_id;
+    delete from stock_movements where org_id = p_org_id;
+    delete from items           where org_id = p_org_id;
+
+    delete from documents       where org_id = p_org_id;
+
+    -- Self-referencing: a return points at the sale it reverses, and a
+    -- reversing entry at the entry it reverses. Broken before the rows go,
+    -- because a delete cannot order a table against itself either.
+    update sales set reverses_id = null where org_id = p_org_id;
+    delete from sales           where org_id = p_org_id;
+    delete from products        where org_id = p_org_id;
+
+    update journal_entries set reverses_entry_id = null where org_id = p_org_id;
+    delete from journal_entries where org_id = p_org_id;
+    delete from accounts        where org_id = p_org_id;
+    delete from church_members  where org_id = p_org_id;
+
+    -- What is left cascades cleanly: memberships, entities, departments,
+    -- pending_invitations, audit_log.
+    delete from orgs where id = p_org_id;
+
+    -- The org's own audit trail was already cascaded away by the same
+    -- statement; this clears what the cascade's own triggers wrote on the way
+    -- out. Both are gone either way — which is the argument for the tombstone
+    -- and not a shortcut around it.
+    delete from audit_log where org_id = p_org_id;
+
+end;
+$$;
+
+-- 014's delete_org: every fence as it was, then the one path.
+create or replace function delete_org(
+    p_org_id       uuid,
+    p_confirm_name text,
+    p_force        boolean default false
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor   uuid := auth.uid();
+    v_org     orgs%rowtype;
+    v_label   text;
+    v_entries int;
+begin
+    if v_actor is null then
+        raise exception 'delete_org() needs a signed-in caller';
+    end if;
+
+    if not exists (select 1 from profiles where id = v_actor and is_platform_admin) then
+        raise exception 'Only a platform admin can delete a business';
+    end if;
+
+    select * into v_org from orgs where id = p_org_id;
+    if not found then
+        raise exception 'No such business';
+    end if;
+
+    -- Never the first thing that happens to a business. Archiving is
+    -- reversible and takes it off everyone's screen already, so anyone who
+    -- reaches here has had a chance to change their mind.
+    if v_org.archived_at is null then
+        raise exception
+            'Archive % first. Deleting is permanent and archiving is not.',
+            v_org.name;
+    end if;
+
+    -- The name, typed back. A uuid in a confirmation dialog is not read by
+    -- anybody; a name that has to be copied out is.
+    if lower(btrim(coalesce(p_confirm_name, ''))) <> lower(btrim(v_org.name)) then
+        raise exception
+            'Type the name exactly to confirm: %', v_org.name;
+    end if;
+
+    select count(*) into v_entries from journal_entries where org_id = p_org_id;
+
+    -- A business nobody ever recorded anything in is a mistake to be swept
+    -- up. A business with books is somebody's history, and destroying it
+    -- takes a second, explicit act rather than the same click.
+    if v_entries > 0 and not coalesce(p_force, false) then
+        raise exception
+            '% has % entries in its books. Deleting destroys them permanently.',
+            v_org.name, v_entries;
+    end if;
+
+    select full_name into v_label from profiles where id = v_actor;
+    perform purge_org(p_org_id, v_actor, v_label);
+    return p_org_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. What a deletion would do
+-- ------------------------------------------------------------
+create or replace function delete_my_account_plan(p_me uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_blocked    text;
+    v_businesses jsonb;
+    v_leaves     jsonb;
+    v_name       text;
+begin
+    if p_me is null then
+        return jsonb_build_object('blocked', 'Connectez-vous d''abord');
+    end if;
+
+    -- The businesses that disappear: those the person is the only owner of.
+    select coalesce(jsonb_agg(jsonb_build_object(
+               'id', o.id, 'name', o.name, 'profile', o.profile,
+               'members', (select count(*) from memberships x
+                            where x.org_id = o.id and x.user_id <> p_me),
+               'orders', (select count(*) from orders d
+                           where d.org_id = o.id and d.status in ('pending', 'accepted', 'ready')),
+               'store', coalesce((select jsonb_agg(jsonb_build_object('platform', s.platform,
+                                     'state', s.state, 'auto_renew', s.auto_renew,
+                                     'expires_at', s.expires_at))
+                           from store_subscriptions s
+                          where s.org_id = o.id
+                            and s.state in ('active', 'grace', 'cancelled', 'on_hold', 'paused', 'pending')
+                            and (s.expires_at is null or s.expires_at > now())), '[]'::jsonb),
+               'stripe', exists (select 1 from stripe_subscriptions t
+                                  where t.org_id = o.id and t.subscription_id is not null
+                                    and t.status in ('active', 'trialing', 'past_due', 'unpaid', 'incomplete')))
+               order by o.name), '[]'::jsonb)
+      into v_businesses
+      from orgs o
+     where exists (select 1 from memberships m
+                    where m.org_id = o.id and m.user_id = p_me and m.role = 'owner')
+       and not exists (select 1 from memberships m
+                        where m.org_id = o.id and m.user_id <> p_me and m.role = 'owner');
+
+    -- The businesses the person only leaves.
+    select coalesce(jsonb_agg(jsonb_build_object('id', o.id, 'name', o.name) order by o.name), '[]'::jsonb)
+      into v_leaves
+      from orgs o
+     where exists (select 1 from memberships m where m.org_id = o.id and m.user_id = p_me)
+       and o.id not in (select (b ->> 'id')::uuid from jsonb_array_elements(v_businesses) b);
+
+    if exists (select 1 from profiles where id = p_me and is_platform_admin) then
+        v_blocked := 'Un compte de la plateforme ne se supprime pas ici.';
+    elsif exists (select 1 from orders where customer_id = p_me
+                    and status in ('pending', 'accepted', 'ready', 'in_transit')) then
+        v_blocked := 'Une commande est en cours : attendez qu''elle soit terminée, ou annulez-la, puis supprimez votre compte.';
+    elsif exists (select 1 from orders where courier_id = p_me and status in ('ready', 'in_transit')) then
+        v_blocked := 'Une livraison est en cours : terminez-la, puis supprimez votre compte.';
+    else
+        select o.name into v_name
+          from orders d join orgs o on o.id = d.org_id
+         where d.org_id in (select (b ->> 'id')::uuid from jsonb_array_elements(v_businesses) b)
+           and (d.status = 'in_transit'
+                or (d.status in ('pending', 'accepted', 'ready')
+                    and d.payment_method = 'wave' and d.paid_at is not null))
+         limit 1;
+        if v_name is not null then
+            v_blocked := format('Une commande de « %s » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', v_name);
+        end if;
+    end if;
+
+    return jsonb_build_object(
+        'blocked',    v_blocked,
+        'businesses', v_businesses,
+        'leaves',     v_leaves,
+        'courier',    exists (select 1 from couriers where user_id = p_me),
+        'apple_store', (select count(*) from jsonb_array_elements(v_businesses) b,
+                               jsonb_array_elements(b -> 'store') s
+                         where s ->> 'platform' = 'apple' and (s ->> 'auto_renew')::boolean));
+end;
+$$;
+
+-- The app's confirmation: the same plan, for the caller.
+create or replace function delete_my_account_preview()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select case when auth.uid() is null then null
+                else delete_my_account_plan(auth.uid()) end;
+$$;
+
+-- ------------------------------------------------------------
+-- 8. The deletion
+-- ------------------------------------------------------------
+create or replace function delete_my_account(p_confirmed_orgs uuid[] default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_me      uuid := auth.uid();
+    v_plan    jsonb;
+    v_doomed  uuid[];
+    v_google  jsonb;
+    v_stripe  jsonb;
+    v_names   text[];
+    v_mode    text := 'hard';
+    v_held    boolean;
+    r         record;
+    v_o       record;
+begin
+    if v_me is null then
+        raise exception 'Connectez-vous d''abord';
+    end if;
+    v_plan := delete_my_account_plan(v_me);
+    if v_plan ->> 'blocked' is not null then
+        raise exception '%', v_plan ->> 'blocked';
+    end if;
+    select coalesce(array_agg((b ->> 'id')::uuid order by (b ->> 'id')), '{}'),
+           coalesce(array_agg(b ->> 'name' order by b ->> 'name'), '{}')
+      into v_doomed, v_names
+      from jsonb_array_elements(v_plan -> 'businesses') b;
+    if cardinality(v_doomed) > 0 then
+        if p_confirmed_orgs is null then
+            raise exception 'Mettez Mara à jour : la suppression d''un compte qui tient une activité se confirme dans la dernière version de l''application.';
+        end if;
+        if (select coalesce(array_agg(distinct x order by x), '{}') from unnest(p_confirmed_orgs) x)
+           is distinct from v_doomed then
+            raise exception 'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.';
+        end if;
+    end if;
+
+    -- What the Worker must stop outside, read before the rows go.
+    select coalesce(jsonb_agg(jsonb_build_object('token', s.original_id, 'org', o.name)), '[]'::jsonb)
+      into v_google
+      from store_subscriptions s join orgs o on o.id = s.org_id
+     where s.org_id = any (v_doomed) and s.platform = 'google'
+       and s.state in ('active', 'grace', 'cancelled', 'on_hold', 'paused', 'pending');
+    select coalesce(jsonb_agg(t.subscription_id), '[]'::jsonb)
+      into v_stripe
+      from stripe_subscriptions t
+     where t.org_id = any (v_doomed) and t.subscription_id is not null
+       and t.status in ('active', 'trialing', 'past_due', 'unpaid', 'incomplete');
+
+    -- Each business the person alone owns: its customers and members told
+    -- on their own bell (no business: the notice outlives it), then
+    -- archived and purged — 014's lifecycle, in one transaction.
+    for v_o in select * from orgs where id = any (v_doomed) loop
+        insert into notifications (recipient_id, org_id, kind, message, params)
+        select distinct d.customer_id, null::uuid, 'order_cancelled',
+               format('Votre commande chez %s est annulée : l''activité a fermé sur Mara.', v_o.name),
+               jsonb_build_object('to', 'customer', 'status', 'cancelled', 'shop', v_o.name,
+                                  'booking', d.booked_for is not null)
+          from orders d
+         where d.org_id = v_o.id and d.status in ('pending', 'accepted', 'ready')
+           and d.customer_id is not null and d.customer_id <> v_me;
+        insert into notifications (recipient_id, org_id, kind, message, params)
+        select distinct m.user_id, null::uuid, 'org_closed',
+               format('« %s » a fermé sur Mara : vous n''en faites plus partie. Votre compte reste le vôtre.', v_o.name),
+               jsonb_build_object('to', 'me', 'shop', v_o.name)
+          from memberships m
+         where m.org_id = v_o.id and m.user_id <> v_me;
+        update orgs set archived_at = coalesce(archived_at, now()),
+                        archived_by = coalesce(archived_by, v_me)
+         where id = v_o.id;
+        perform purge_org(v_o.id, v_me, 'Compte du propriétaire supprimé');
+    end loop;
+
+    -- The person: what GoTrue's delete cascades, done as it does it — with
+    -- no caller (the triggers that guard a member's removal by somebody
+    -- else stand aside, as for GoTrue).
+    perform set_config('request.jwt.claim.sub', '', true);
+    perform set_config('request.jwt.claims', '{}', true);
+
+    update orders
+       set customer_name = 'Client supprimé', phone = null, address = null,
+           drop_lat = null, drop_lng = null
+     where customer_id = v_me;
+
+    for r in
+        select c.conrelid::regclass as tbl, a.attname as col, c.confdeltype as act,
+               not a.attnotnull as nullable
+          from pg_constraint c
+          join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+         where c.contype = 'f'
+           and c.confrelid = 'public.profiles'::regclass
+           and cardinality(c.conkey) = 1
+         order by 1, 2
+    loop
+        begin
+            if r.act = 'c' then
+                execute format('delete from %s where %I = $1', r.tbl, r.col) using v_me;
+            elsif r.act = 'n' or (r.act in ('a', 'r') and r.nullable) then
+                execute format('update %s set %I = null where %I = $1', r.tbl, r.col, r.col) using v_me;
+            end if;
+        exception when others then
+            -- Left as it is: the row then holds the account (soft below).
+            raise notice 'delete_my_account: %.% kept (%)', r.tbl, r.col, sqlerrm;
+        end;
+    end loop;
+
+    update profiles
+       set full_name = 'Compte supprimé', first_name = null, middle_name = null,
+           last_name = null, phone = null, date_of_birth = null, title = null,
+           profile_completed_at = null, preferred_locale = 'fr'
+     where id = v_me;
+
+    -- Whatever still names the person is the businesses' books (NOT NULL
+    -- « written by »): the account stays as an empty shell.
+    for r in
+        select c.conrelid::regclass as tbl, a.attname as col
+          from pg_constraint c
+          join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+         where c.contype = 'f'
+           and c.confrelid = 'public.profiles'::regclass
+           and c.confdeltype in ('a', 'r')
+           and cardinality(c.conkey) = 1
+    loop
+        execute format('select exists (select 1 from %s where %I = $1)', r.tbl, r.col)
+           into v_held using v_me;
+        if v_held then
+            v_mode := 'soft';
+            exit;
+        end if;
+    end loop;
+
+    return jsonb_build_object(
+        'user_id',     v_me,
+        'mode',        v_mode,
+        'businesses',  to_jsonb(v_names),
+        'google',      v_google,
+        'stripe',      v_stripe,
+        'apple_store', coalesce((v_plan ->> 'apple_store')::int, 0));
+end;
+$$;
+
+revoke execute on function purge_org(uuid, uuid, text)        from public;
+revoke execute on function delete_org(uuid, text, boolean)    from public;
+revoke execute on function delete_my_account_plan(uuid)       from public;
+revoke execute on function delete_my_account_preview()        from public;
+revoke execute on function delete_my_account(uuid[])         from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function purge_org(uuid, uuid, text)     from anon;
+        revoke execute on function delete_org(uuid, text, boolean) from anon;
+        revoke execute on function delete_my_account_plan(uuid)    from anon;
+        revoke execute on function delete_my_account_preview()     from anon;
+        revoke execute on function delete_my_account(uuid[])      from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- Internal: called by delete_org and delete_my_account as their owner.
+        revoke execute on function purge_org(uuid, uuid, text)     from authenticated;
+        revoke execute on function delete_my_account_plan(uuid)    from authenticated;
+        -- The doors, each about the caller (delete_org: the platform's).
+        grant execute on function delete_org(uuid, text, boolean)  to authenticated;
+        grant execute on function delete_my_account_preview()      to authenticated;
+        grant execute on function delete_my_account(uuid[])       to authenticated;
     end if;
 end $$;
 

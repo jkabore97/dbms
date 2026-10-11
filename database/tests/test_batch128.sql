@@ -440,4 +440,357 @@ begin
 end $$;
 rollback;
 
+
+-- ============================================================
+-- Account deletion (128 B)
+-- ============================================================
+\set downer  '''12812812-0000-0000-0000-000000000011'''
+\set coowner '''12812812-0000-0000-0000-000000000012'''
+\set member  '''12812812-0000-0000-0000-000000000013'''
+\set yowner  '''12812812-0000-0000-0000-000000000014'''
+\set buyer   '''12812812-0000-0000-0000-000000000015'''
+\set courier '''12812812-0000-0000-0000-000000000016'''
+\set carrier '''12812812-0000-0000-0000-000000000017'''
+\set dshop   '''12800000-0000-0000-0000-000000000011'''
+\set dfarm   '''12800000-0000-0000-0000-000000000012'''
+\set dassoc  '''12800000-0000-0000-0000-000000000013'''
+\set shared  '''12800000-0000-0000-0000-000000000014'''
+\set yfarm   '''12800000-0000-0000-0000-000000000015'''
+
+insert into auth.users (id, phone, email, email_confirmed_at, raw_user_meta_data) values
+    (:downer,  '+22612801011', 'patron-fin@example.org',   now(), '{"full_name": "Patron Fin"}'),
+    (:coowner, '+22612801012', 'associe-fin@example.org',  now(), '{"full_name": "Associé Fin"}'),
+    (:member,  '+22612801013', 'vendeuse-fin@example.org', now(), '{"full_name": "Vendeuse Fin"}'),
+    (:yowner,  '+22612801014', 'fermier-y@example.org',    now(), '{"full_name": "Fermier Y"}'),
+    (:buyer,   '+22612801015', 'cliente-fin@example.org',  now(), '{"full_name": "Cliente Fin"}'),
+    (:courier, '+22612801016', 'livreur-fin@example.org',  now(), '{"full_name": "Livreur Fin"}'),
+    (:carrier, '+22612801017', 'en-route@example.org',     now(), '{"full_name": "Livreur En Route"}');
+update profiles set date_of_birth = '1990-05-01' where id = :downer;
+insert into orgs (id, name, slug, profile, default_currency, storefront_enabled, setup_done_at) values
+    (:dshop,  'Boutique Fin', 'boutique-fin', 'retail',      'XOF', true, now()),
+    (:dfarm,  'Ferme Fin',    'ferme-fin',    'farm',        'XOF', true, now()),
+    (:dassoc, 'Entraide Fin', 'entraide-fin', 'association', 'XOF', true, now()),
+    (:shared, 'À Deux',       'a-deux',       'retail',      'XOF', true, now()),
+    (:yfarm,  'Ferme Y',      'ferme-y',      'farm',        'XOF', true, now());
+update orgs set plan = 'pro' where id in (:dshop, :dfarm, :dassoc, :shared, :yfarm);
+insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
+    (:dshop,  :downer,  'owner',    'org', :dshop,  'full'),
+    (:dfarm,  :downer,  'owner',    'org', :dfarm,  'full'),
+    (:dassoc, :downer,  'owner',    'org', :dassoc, 'full'),
+    (:shared, :downer,  'owner',    'org', :shared, 'full'),
+    (:shared, :coowner, 'owner',    'org', :shared, 'full'),
+    (:dshop,  :member,  'employee', 'org', :dshop,  'full'),
+    (:yfarm,  :yowner,  'owner',    'org', :yfarm,  'full'),
+    (:yfarm,  :member,  'employee', 'org', :yfarm,  'full');
+select seed_retail_accounts(:dshop);
+select seed_farm_accounts(:dfarm);
+select seed_church_accounts(:dassoc);
+select seed_retail_accounts(:shared);
+select seed_farm_accounts(:yfarm);
+insert into couriers (user_id, phone, status) values
+    (:courier, '+22612801016', 'approved'),
+    (:carrier, '+22612801017', 'approved');
+insert into orders (id, org_id, customer_id, customer_name, phone, status, fulfilment, address, total, currency) values
+    ('128aaaaa-0000-0000-0000-000000000001', :dshop, :buyer, 'Cliente Fin', '+22612801015', 'pending', 'pickup', null, 2500, 'XOF'),
+    ('128aaaaa-0000-0000-0000-000000000002', :yfarm, :buyer, 'Cliente Fin', '+22612801015', 'pending', 'delivery', 'Pissy', 3000, 'XOF'),
+    ('128aaaaa-0000-0000-0000-000000000003', :yfarm, :yowner, 'Fermier Y', null, 'pending', 'delivery', 'Gounghin', 1000, 'XOF');
+-- One carried and delivered by the courier, one on the road with the other.
+update orders set status = 'accepted' where id in ('128aaaaa-0000-0000-0000-000000000002', '128aaaaa-0000-0000-0000-000000000003');
+update orders set status = 'ready' where id in ('128aaaaa-0000-0000-0000-000000000002', '128aaaaa-0000-0000-0000-000000000003');
+update orders set courier_id = :courier, status = 'in_transit' where id = '128aaaaa-0000-0000-0000-000000000002';
+update orders set status = 'delivered' where id = '128aaaaa-0000-0000-0000-000000000002';
+update orders set courier_id = :carrier, status = 'in_transit' where id = '128aaaaa-0000-0000-0000-000000000003';
+
+-- Each of the owner's businesses with real books: the shop's sale, its
+-- reversal, its invoice and a photo; the farm's market day, a receipt, a
+-- credit sale and its payment; the association's contribution and
+-- expense — and the member's sale in the shop and entry at Ferme Y.
+do $$
+declare
+    v_shop  uuid := '12800000-0000-0000-0000-000000000011';
+    v_farm  uuid := '12800000-0000-0000-0000-000000000012';
+    v_assoc uuid := '12800000-0000-0000-0000-000000000013';
+    v_owner uuid := '12812812-0000-0000-0000-000000000011';
+    v_p uuid; v_e uuid; v_debt uuid;
+begin
+    perform pg_temp.as128(v_owner);
+    execute 'set local role authenticated';
+    v_p := ensure_product(v_shop, 'Savon Fin', 500, 300);
+    perform record_document(v_shop, 'org/12800000-0000-0000-0000-000000000011/fin/savon.jpg', 'product_photo',
+                            null, 'image/jpeg', 100, null, null, null, null, v_p);
+    v_e := record_entry(v_shop, 4000, 'out', 'Loyer Fin');
+    perform reverse_entry(v_e, v_owner, 'erreur');
+    perform create_invoice(v_shop, 'Client Fin', '[{"description": "Savon", "quantity": 2, "unit_price": 500}]'::jsonb);
+    execute 'reset role';
+    update products set quantity = 30 where id = v_p;
+    perform pg_temp.as128(v_owner);
+    execute 'set local role authenticated';
+    perform record_sale(v_shop, jsonb_build_array(jsonb_build_object('product_id', v_p, 'quantity', 2)));
+    v_e := record_entry(v_farm, 6000, 'in', 'Marché Fin');
+    perform record_document(v_farm, 'org/12800000-0000-0000-0000-000000000012/fin/recu.jpg', 'receipt',
+                            null, 'image/jpeg', 100, null, null, null, v_e);
+    perform record_credit_sale(v_farm, 'Voisin Fin', 2500, 'Œufs à crédit');
+    select id into v_debt from debts where org_id = v_farm limit 1;
+    perform record_debt_payment(v_debt, 1000);
+    perform record_contribution(v_assoc, 5000, 'offering', v_owner);
+    perform record_expense(v_assoc, 1200, '5000', v_owner);
+    execute 'reset role';
+    perform pg_temp.as128('12812812-0000-0000-0000-000000000013');
+    execute 'set local role authenticated';
+    perform record_sale(v_shop, jsonb_build_array(jsonb_build_object('product_id', v_p, 'quantity', 1)));
+    perform record_entry('12800000-0000-0000-0000-000000000015', 900, 'in', 'Vente du jour Y');
+    execute 'reset role';
+    perform pg_temp.as128(null);
+end $$;
+-- What the owner pays outside: Google Play for the shop, Stripe for the
+-- farm, the App Store for the association.
+select store_settle('google', :dshop, 'mara_pro:monthly', 'fin-google-token', 'active',
+                    now() + interval '20 days', true, 'production');
+select store_settle('apple', :dassoc, 'bf.kaj.app.pro.yearly', 'fin-apple-1', 'active',
+                    now() + interval '200 days', true, 'production');
+insert into stripe_subscriptions (org_id, customer_id, subscription_id, status, period, current_period_end)
+values (:dfarm, 'cus_fin', 'sub_fin', 'active', 'month', now() + interval '10 days');
+
+\echo ''
+\echo '--- TEST 7: the confirmation says what disappears ---'
+do $$
+declare v jsonb; v_text text;
+begin
+    v := delete_my_account_plan('12812812-0000-0000-0000-000000000011');
+    if v ->> 'blocked' is not null then raise exception 'FAIL: the owner is blocked: %', v ->> 'blocked'; end if;
+    if (select jsonb_agg(b ->> 'name') from jsonb_array_elements(v -> 'businesses') b)
+       <> '["Boutique Fin", "Entraide Fin", "Ferme Fin"]'::jsonb then
+        raise exception 'FAIL: the businesses: %', v -> 'businesses';
+    end if;
+    if (select (b ->> 'members')::int from jsonb_array_elements(v -> 'businesses') b where b ->> 'name' = 'Boutique Fin') <> 1
+       or (select (b ->> 'orders')::int from jsonb_array_elements(v -> 'businesses') b where b ->> 'name' = 'Boutique Fin') <> 1
+       or (select (b ->> 'stripe')::boolean from jsonb_array_elements(v -> 'businesses') b where b ->> 'name' = 'Ferme Fin') is not true
+       or (select b -> 'store' -> 0 ->> 'platform' from jsonb_array_elements(v -> 'businesses') b where b ->> 'name' = 'Entraide Fin') <> 'apple'
+       or (v ->> 'apple_store')::int <> 1 then
+        raise exception 'FAIL: the detail: %', v;
+    end if;
+    if v -> 'leaves' <> '[{"id": "12800000-0000-0000-0000-000000000014", "name": "À Deux"}]'::jsonb then
+        raise exception 'FAIL: the co-owned business: %', v -> 'leaves';
+    end if;
+    -- The app's door, as the owner; nobody else's plan.
+    v_text := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select jsonb_array_length(delete_my_account_preview() -> 'businesses')::text$q$);
+    if v_text <> '3' then raise exception 'FAIL: the preview: %', v_text; end if;
+    v_text := pg_temp.try128('12812812-0000-0000-0000-000000000013',
+        $q$select delete_my_account_preview()::text$q$);
+    if v_text not like '%"businesses": []%' or v_text not like '%Boutique Fin%' then
+        raise exception 'FAIL: the member''s preview: %', v_text;
+    end if;
+    raise notice 'PASS: the owner''s confirmation lists Boutique Fin (1 member, 1 open order, Google Play), Entraide Fin (App Store: 1 to cancel by hand), Ferme Fin (Stripe); « À Deux », co-owned, is only left; the member''s lists none to delete';
+end $$;
+
+\echo ''
+\echo '--- TEST 8: what refuses a deletion ---'
+do $$
+declare v text;
+begin
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011', $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Mettez Mara à jour%' then raise exception 'FAIL: an old app''s call: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012']::uuid[])::text$q$);
+    if v not like 'ERR: La liste de vos activités a changé%' then raise exception 'FAIL: a list short of one: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000014']::uuid[])::text$q$);
+    if v not like 'ERR: La liste de vos activités a changé%' then raise exception 'FAIL: a list with the co-owned one: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Une commande est en cours%' then raise exception 'FAIL: the buyer with an open order: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000017', $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Une livraison est en cours%' then raise exception 'FAIL: the courier on the road: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000001', $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Un compte de la plateforme%' then raise exception 'FAIL: the platform: %', v; end if;
+    v := pg_temp.try128(null, $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Connectez-vous%' then raise exception 'FAIL: nobody: %', v; end if;
+    -- An order paid online and not yet handed over, or on the road: the
+    -- owner finishes or refunds it first.
+    update orders set payment_method = 'wave', paid_at = now()
+     where id = '128aaaaa-0000-0000-0000-000000000001';
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[])::text$q$);
+    update orders set payment_method = 'cash', paid_at = null
+     where id = '128aaaaa-0000-0000-0000-000000000001';
+    if v not like 'ERR: Une commande de « Boutique Fin » est en route ou déjà payée en ligne%' then
+        raise exception 'FAIL: a paid order: %', v;
+    end if;
+    if not exists (select 1 from orgs where id = '12800000-0000-0000-0000-000000000011') then
+        raise exception 'FAIL: a refusal deleted something';
+    end if;
+    raise notice 'PASS: refused — an old app''s call for an owner, a list that is not the one shown (short, or with the co-owned business), the buyer''s open order, a delivery on the road, a business''s order paid online, the platform, nobody; nothing deleted';
+end $$;
+
+\echo ''
+\echo '--- TEST 9: an owner deleted — the shop, the farm and the association gone, the members shoppers ---'
+begin;
+do $$
+declare v text; r jsonb; n int;
+begin
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000011']::uuid[])::text$q$);
+    if v like 'ERR:%' then raise exception 'FAIL: the owner''s deletion: %', v; end if;
+    r := v::jsonb;
+    if r ->> 'user_id' <> '12812812-0000-0000-0000-000000000011' or r ->> 'mode' <> 'hard'
+       or r -> 'businesses' <> '["Boutique Fin", "Entraide Fin", "Ferme Fin"]'::jsonb
+       or r -> 'google' -> 0 ->> 'token' <> 'fin-google-token'
+       or r -> 'stripe' <> '["sub_fin"]'::jsonb
+       or (r ->> 'apple_store')::int <> 1 then
+        raise exception 'FAIL: the answer: %', r;
+    end if;
+    -- The three businesses are gone, books and all, each with a tombstone.
+    if exists (select 1 from orgs where id in ('12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013'))
+       or exists (select 1 from journal_entries where org_id in ('12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013'))
+       or exists (select 1 from store_subscriptions where original_id in ('fin-google-token', 'fin-apple-1'))
+       or exists (select 1 from stripe_subscriptions where subscription_id = 'sub_fin') then
+        raise exception 'FAIL: a business, its books or its subscription survived';
+    end if;
+    select count(*) into n from deleted_orgs
+     where id in ('12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013')
+       and deleted_label = 'Compte du propriétaire supprimé' and entry_count > 0;
+    if n <> 3 then raise exception 'FAIL: % tombstones', n; end if;
+    -- Off the street: nothing of them is read by the public.
+    if exists (select 1 from orgs where slug in ('boutique-fin', 'ferme-fin', 'entraide-fin')) then
+        raise exception 'FAIL: a vitrine is still in the street';
+    end if;
+    -- The member is a shopper of the shop no more, still of Ferme Y; told.
+    if exists (select 1 from memberships where user_id = '12812812-0000-0000-0000-000000000013' and org_id = '12800000-0000-0000-0000-000000000011')
+       or not exists (select 1 from memberships where user_id = '12812812-0000-0000-0000-000000000013' and org_id = '12800000-0000-0000-0000-000000000015')
+       or not exists (select 1 from notifications where recipient_id = '12812812-0000-0000-0000-000000000013'
+                        and kind = 'org_closed' and org_id is null and params ->> 'shop' = 'Boutique Fin') then
+        raise exception 'FAIL: the member';
+    end if;
+    -- The buyer's open order is cancelled, and the notice outlives the shop.
+    if not exists (select 1 from notifications where recipient_id = '12812812-0000-0000-0000-000000000015'
+                     and kind = 'order_cancelled' and org_id is null and params ->> 'shop' = 'Boutique Fin'
+                     and message like '%l''activité a fermé sur Mara%') then
+        raise exception 'FAIL: the buyer was not told';
+    end if;
+    if exists (select 1 from orders where id = '128aaaaa-0000-0000-0000-000000000001') then
+        raise exception 'FAIL: the order survived its shop';
+    end if;
+    -- The co-owned business stays with its other owner.
+    if not exists (select 1 from memberships where org_id = '12800000-0000-0000-0000-000000000014' and user_id = '12812812-0000-0000-0000-000000000012' and role = 'owner')
+       or exists (select 1 from memberships where org_id = '12800000-0000-0000-0000-000000000014' and user_id = '12812812-0000-0000-0000-000000000011') then
+        raise exception 'FAIL: « À Deux »';
+    end if;
+    -- The person: nothing personal left, and GoTrue's delete goes through.
+    if exists (select 1 from profiles where id = '12812812-0000-0000-0000-000000000011'
+                 and (full_name <> 'Compte supprimé' or phone is not null or date_of_birth is not null)) then
+        raise exception 'FAIL: the profile still says who';
+    end if;
+    delete from auth.users where id = '12812812-0000-0000-0000-000000000011';
+    if exists (select 1 from profiles where id = '12812812-0000-0000-0000-000000000011') then
+        raise exception 'FAIL: the profile survived the auth user';
+    end if;
+    -- Other businesses' books untouched.
+    if (select count(*) from journal_entries where org_id = '12800000-0000-0000-0000-000000000015') < 1 then
+        raise exception 'FAIL: Ferme Y lost its books';
+    end if;
+    raise notice 'PASS: the owner of a shop, a farm and an association — all three archived and purged (books, photos, invoices, debts, the subscription rows; three tombstones), off the street; the employee is the shop''s no more (told, still at Ferme Y); the buyer''s order cancelled and told; « À Deux » kept by its other owner; Google token and Stripe subscription handed to the Worker, one App Store subscription to cancel by hand; profile emptied; the auth user deleted outright (hard)';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 10: a member, a shopper and a courier ---'
+begin;
+do $$
+declare v text; r jsonb; v_entries int;
+begin
+    select count(*) into v_entries from journal_entries where org_id = '12800000-0000-0000-0000-000000000015';
+    -- The member's name is on Ferme Y's books (a NOT NULL « written by »):
+    -- the account is kept as an empty shell (soft).
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000013', $q$select delete_my_account()::text$q$);
+    if v like 'ERR:%' then raise exception 'FAIL: the member''s deletion: %', v; end if;
+    r := v::jsonb;
+    if r ->> 'mode' <> 'soft' or jsonb_array_length(r -> 'businesses') <> 0 then
+        raise exception 'FAIL: the member''s answer: %', r;
+    end if;
+    if exists (select 1 from memberships where user_id = '12812812-0000-0000-0000-000000000013')
+       or exists (select 1 from notifications where recipient_id = '12812812-0000-0000-0000-000000000013')
+       or exists (select 1 from sales where recorded_by = '12812812-0000-0000-0000-000000000013')
+       or exists (select 1 from profiles where id = '12812812-0000-0000-0000-000000000013'
+                    and (full_name <> 'Compte supprimé' or phone is not null)) then
+        raise exception 'FAIL: the member left something personal';
+    end if;
+    if (select count(*) from journal_entries where org_id = '12800000-0000-0000-0000-000000000015') <> v_entries
+       or (select count(*) from sales where org_id = '12800000-0000-0000-0000-000000000011') < 2 then
+        raise exception 'FAIL: a business lost its books to a member''s deletion';
+    end if;
+    begin
+        delete from auth.users where id = '12812812-0000-0000-0000-000000000013';
+        raise exception 'FAIL: a hard delete went through for a shell';
+    exception when foreign_key_violation then null;
+    end;
+
+    -- The buyer, once Ferme Y's order is delivered: hard.
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    if v not like 'ERR: Une commande est en cours%' then raise exception 'FAIL: the buyer: %', v; end if;
+    delete from orders where id = '128aaaaa-0000-0000-0000-000000000001';
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    if v like 'ERR:%' or (v::jsonb) ->> 'mode' <> 'hard' then raise exception 'FAIL: the buyer: %', v; end if;
+    if (select customer_name from orders where id = '128aaaaa-0000-0000-0000-000000000002') <> 'Client supprimé'
+       or (select phone from orders where id = '128aaaaa-0000-0000-0000-000000000002') is not null
+       or (select customer_id from orders where id = '128aaaaa-0000-0000-0000-000000000002') is not null then
+        raise exception 'FAIL: the buyer''s past order still says who';
+    end if;
+    delete from auth.users where id = '12812812-0000-0000-0000-000000000015';
+
+    -- The courier with a delivery done: hard, the delivery kept unnamed.
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000016', $q$select delete_my_account()::text$q$);
+    if v like 'ERR:%' or (v::jsonb) ->> 'mode' <> 'hard' then raise exception 'FAIL: the courier: %', v; end if;
+    if exists (select 1 from couriers where user_id = '12812812-0000-0000-0000-000000000016')
+       or (select courier_id from orders where id = '128aaaaa-0000-0000-0000-000000000002') is not null
+       or (select status from orders where id = '128aaaaa-0000-0000-0000-000000000002') <> 'delivered' then
+        raise exception 'FAIL: the courier';
+    end if;
+    delete from auth.users where id = '12812812-0000-0000-0000-000000000016';
+    raise notice 'PASS: the member — memberships, notices, name on sales gone, Ferme Y''s and the shop''s books whole, kept as an empty shell (soft: a hard delete is refused by the books); the buyer — refused while an order is open, then hard, past order « Client supprimé »; the courier — hard, the delivery kept, unnamed';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 11: the doors ---'
+do $$
+declare v text; f text;
+begin
+    foreach f in array array['purge_org(uuid, uuid, text)', 'delete_my_account_plan(uuid)'] loop
+        if has_function_privilege('authenticated', f, 'execute') or has_function_privilege('anon', f, 'execute') then
+            raise exception 'FAIL: % is the app''s', f;
+        end if;
+    end loop;
+    foreach f in array array['delete_my_account(uuid[])', 'delete_my_account_preview()'] loop
+        if has_function_privilege('anon', f, 'execute') then raise exception 'FAIL: anon may run %', f; end if;
+        if not has_function_privilege('authenticated', f, 'execute') then raise exception 'FAIL: the app may not run %', f; end if;
+    end loop;
+    v := pg_temp.try128(null, $q$select delete_my_account()::text$q$, 'anon');
+    if v not like 'ERR: permission denied%' then raise exception 'FAIL: anon: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select purge_org('12800000-0000-0000-0000-000000000015', null, 'x')::text$q$);
+    if v not like 'ERR: permission denied%' then raise exception 'FAIL: an owner purged: %', v; end if;
+    -- delete_org keeps its fences, and the platform's path still works.
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000014',
+        $q$select delete_org('12800000-0000-0000-0000-000000000015', 'Ferme Y', true)::text$q$);
+    if v not like 'ERR: Only a platform admin%' then raise exception 'FAIL: an owner''s delete_org: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000001',
+        $q$select delete_org('12800000-0000-0000-0000-000000000015', 'Ferme Y', true)::text$q$);
+    if v not like 'ERR: Archive Ferme Y first%' then raise exception 'FAIL: unarchived: %', v; end if;
+    raise notice 'PASS: purge_org and the plan are nobody''s; delete_my_account and its preview the signed-in caller''s, not anon''s; an owner purges nothing; delete_org keeps its platform-only and archive-first fences';
+end $$;
+begin;
+select pg_temp.as128(:mara);
+update orgs set archived_at = now() where id = :yfarm;
+set local role authenticated;
+select delete_org(:yfarm, 'Ferme Y', true) = :yfarm as platform_deleted;
+reset role;
+do $$ begin
+    if exists (select 1 from orgs where id = '12800000-0000-0000-0000-000000000015')
+       or not exists (select 1 from deleted_orgs where id = '12800000-0000-0000-0000-000000000015' and deleted_label = 'Mara 128') then
+        raise exception 'FAIL: the platform''s delete_org';
+    end if;
+    raise notice 'PASS: the platform''s delete_org, through purge_org, deletes an archived farm with books and leaves its tombstone';
+end $$;
+rollback;
+
 \echo '=== test_batch128.sql: all claims hold ==='

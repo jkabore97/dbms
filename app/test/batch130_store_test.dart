@@ -173,7 +173,7 @@ void main() {
         expect(find.byKey(const Key('pro-period')), findsNothing);
         expect(find.byKey(const Key('pro-price')), findsNothing);
         expect(find.byKey(const Key('pro-soon')), findsNothing);
-        expect(find.textContaining('Wave'), findsNothing);
+        expect(find.textContaining('par carte'), findsNothing);
 
         // « Gérer » opens the store's page; the links open the app's pages.
         await tester.tap(find.byKey(const Key('store-terms')));
@@ -226,6 +226,7 @@ void main() {
         StorePurchase(status: StorePurchaseStatus.pending, productId: 'bf.kaj.app.pro.monthly'),
       ]);
       await tester.pump();
+      await tester.pump();
       expect(find.textContaining('Achat en attente : App Store doit encore le confirmer'), findsOneWidget);
       expect(sent, isEmpty, reason: 'nothing is verified while pending');
 
@@ -275,16 +276,19 @@ void main() {
       await page(tester, org: _assoc, store: fake);
       fake.controller.add(const [StorePurchase(status: StorePurchaseStatus.canceled, productId: 'mara_pro')]);
       await tester.pump();
+      await tester.pump();
       expect(find.text('Achat annulé : rien n\'a été prélevé.'), findsOneWidget);
       fake.controller.add(const [
         StorePurchase(status: StorePurchaseStatus.error, productId: 'mara_pro',
             errorCode: 'purchase_error', errorMessage: 'BillingResponse.itemAlreadyOwned'),
       ]);
       await tester.pump();
+      await tester.pump();
       expect(find.textContaining('Ce compte Google Play paie déjà Mara Pro'), findsOneWidget);
       fake.controller.add(const [
         StorePurchase(status: StorePurchaseStatus.error, productId: 'mara_pro', errorCode: 'network'),
       ]);
+      await tester.pump();
       await tester.pump();
       expect(find.textContaining('L\'achat n\'a pas pu se faire : Google Play n\'a rien prélevé'), findsOneWidget);
     });
