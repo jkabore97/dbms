@@ -260,8 +260,9 @@ class _PhotoSlotSheetState extends State<PhotoSlotSheet> {
                       style: const TextStyle(fontSize: 16)),
                 ),
               ),
-            // Not in the iPhone app, which sells no Pro (125).
-            if (sellsDigitalInApp)
+            // Not in the iPhone app, which sells no Pro (125) — unless
+            // the App Store sells it (130).
+            if (sellsProInApp)
               TextButton(
                 key: const Key('photo-slot-pro'),
                 onPressed: () {

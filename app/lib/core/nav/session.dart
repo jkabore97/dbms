@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 
 import '../access/org_access.dart';
 import '../access/plan_terms.dart';
+import '../access/store_rules.dart' show storeBillingOn;
 import '../cauris/feature_states.dart';
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
@@ -258,6 +259,8 @@ class SessionController extends ChangeNotifier {
       if (t is PlanTerms) {
         _terms = t;
         _termsLoaded = true;
+        // 130: whether the store apps sell Pro through the store.
+        storeBillingOn = t.storeBillingOn;
       }
     }
     // What the device last heard of the platform's hidden list, read beside

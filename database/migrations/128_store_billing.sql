@@ -332,8 +332,11 @@ begin
         begin
             perform notify_org_admins(p_org_id, 'pro_active',
                 case when p_platform = 'apple'
-                     then 'Mara Pro est actif, payé sur l''App Store.'
-                     else 'Mara Pro est actif, payé sur Google Play.' end);
+                     then 'Mara Pro est actif, payé sur l''App Store, jusqu''au '
+                     else 'Mara Pro est actif, payé sur Google Play, jusqu''au ' end
+                || to_char((p_expires_at at time zone 'Africa/Ouagadougou')::date, 'DD/MM/YYYY') || '.',
+                jsonb_build_object('to', 'shop', 'store', p_platform,
+                                   'until', (p_expires_at at time zone 'Africa/Ouagadougou')::date));
         exception when others then null;
         end;
     end if;

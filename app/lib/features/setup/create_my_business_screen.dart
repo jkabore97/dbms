@@ -554,7 +554,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         title: context.tr('Une deuxième activité : avec Mara Pro'),
         // The iPhone app sells no Pro (125): what a second activity needs,
         // said plainly, with no way to buy it.
-        line: sellsDigitalInApp
+        line: sellsProInApp
             ? context.tr('Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.')
             : context.tr('Vous avez déjà une activité sur Mara. Une deuxième activité fait partie de Mara Pro.'),
         // Never a dead end (122): the way to Pro on the activity owned,
@@ -563,7 +563,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_ownedOrgId() case final owned? when sellsDigitalInApp) ...[
+            if (_ownedOrgId() case final owned? when sellsProInApp) ...[
               FilledButton.icon(
                 key: const Key('create-locked-pro'),
                 style: FilledButton.styleFrom(

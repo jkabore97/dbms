@@ -158,7 +158,7 @@ class ActivitySwitchSheet extends StatelessWidget {
               ),
               // The way to Pro — not in the iPhone app, which sells no
               // Pro (125): the card above says what a second needs.
-              if (sellsDigitalInApp) ...[
+              if (sellsProInApp) ...[
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 52,

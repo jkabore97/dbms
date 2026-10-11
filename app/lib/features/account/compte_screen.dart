@@ -361,7 +361,7 @@ class CompteScreen extends StatelessWidget {
                   icon: Icons.workspace_premium_outlined,
                   // The iPhone app invites to no purchase (125): the plan's
                   // name, and the page that says what it includes.
-                  title: org.isPro || !sellsDigitalInApp
+                  title: org.isPro || !sellsProInApp
                       ? context.tr('Mara Pro')
                       : context.tr('Passer à Mara Pro'),
                   subtitle: org.isPro

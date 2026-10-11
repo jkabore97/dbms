@@ -202,6 +202,14 @@ String notificationLine(BuildContext context, NotificationRow n) {
           'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.',
           {'device': s('device')});
     case 'pro_active':
+      // 128: bought in the App Store or on Google Play — the store's own
+      // name, which every build may say.
+      if (s('store') == 'apple') {
+        return context.tr('Mara Pro est actif, payé sur l\'App Store, jusqu\'au {date}.', {'date': date('until')});
+      }
+      if (s('store') == 'google') {
+        return context.tr('Mara Pro est actif, payé sur Google Play, jusqu\'au {date}.', {'date': date('until')});
+      }
       // The iPhone app names no way of paying for Pro (125).
       return yes('card') && sellsDigitalInApp
           ? context.tr('Mara Pro est actif, payé par carte, jusqu\'au {date}.', {'date': date('until')})

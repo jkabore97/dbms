@@ -26,10 +26,11 @@ class ProStrip extends StatelessWidget {
   final Widget child;
 
   /// Whether this person, in this business, is shown the strip. Never in
-  /// the iPhone app: an invitation to upgrade where nothing is sold is the
-  /// steering Apple refuses (125).
+  /// the iPhone app while it sells nothing: an invitation to upgrade where
+  /// nothing is sold is the steering Apple refuses (125); once the App
+  /// Store sells Pro itself (130, [sellsProThroughStore]) it is shown.
   static bool shownFor(OrgSummary org) =>
-      sellsDigitalInApp && org.isAdmin && !org.isPro;
+      sellsProInApp && org.isAdmin && !org.isPro;
 
   @override
   Widget build(BuildContext context) {

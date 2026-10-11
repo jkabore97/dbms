@@ -24,6 +24,7 @@ class PlanTerms {
     this.stripeUsdMonthCents,
     this.stripeUsdYearCents,
     this.kinds = const {},
+    this.storeBillingOn = false,
   });
 
   /// What 066 seeds, so a build ahead of its database badges the same tools.
@@ -81,6 +82,10 @@ class PlanTerms {
   final int? stripeUsdMonthCents;
   final int? stripeUsdYearCents;
 
+  /// Mara Pro sold through the App Store and Google Play in the store apps
+  /// (128): the platform's switch, off until both stores answer.
+  final bool storeBillingOn;
+
   bool get hasWave => wave.trim().isNotEmpty;
 
   /// A kind's own free numbers, set by Mara (107's kind_settings), keyed
@@ -111,6 +116,7 @@ class PlanTerms {
       stripeUsdMonthCents: stripeUsdMonthCents,
       stripeUsdYearCents: stripeUsdYearCents,
       kinds: kinds,
+      storeBillingOn: storeBillingOn,
     );
   }
 
@@ -148,6 +154,7 @@ class PlanTerms {
       stripeOn: json['stripe_on'] == true,
       stripeUsdMonthCents: cents('stripe_usd_month'),
       stripeUsdYearCents: cents('stripe_usd_year'),
+      storeBillingOn: json['store_billing_on'] == true,
       kinds: {
         if (json['kinds'] is Map)
           for (final e in (json['kinds'] as Map).entries)

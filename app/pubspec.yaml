@@ -150,6 +150,11 @@ dependencies:
   # the web and the GitHub APK never call it. Its receipts are checked by
   # workers/pay (/store/verify) with Apple and Google, never trusted here.
   in_app_purchase: 3.3.1
+  # Its two halves, named because store_billing.dart reads their own types
+  # (StoreKit 2's purchase option, Play's base plans): the versions
+  # in_app_purchase 3.3.1 resolves, pinned with it.
+  in_app_purchase_android: 0.5.3
+  in_app_purchase_storekit: 0.4.13+1
 
 dev_dependencies:
   flutter_test:

@@ -606,7 +606,7 @@ packages:
     source: hosted
     version: "3.3.1"
   in_app_purchase_android:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: in_app_purchase_android
       sha256: f7327b5fd70d8dc1b419fb4cd5c17520175c4059441afd985e8a9c3fa2cefed9
@@ -622,7 +622,7 @@ packages:
     source: hosted
     version: "1.4.1"
   in_app_purchase_storekit:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: in_app_purchase_storekit
       sha256: "8e4c0523b5bbac99e87a2d4cd9ece58958166e3ef5fa5b2ed96b2de936d89c71"

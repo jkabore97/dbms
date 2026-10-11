@@ -102,7 +102,7 @@ class UnlockSheet extends StatefulWidget {
     if (scope == null || door == null || noDoor(door)) {
       // The iPhone app sells no Pro (125): the tool says what it is part
       // of, and nothing more.
-      if (!sellsDigitalInApp) {
+      if (!sellsProInApp) {
         await ProOnlySheet.open(context, feature: feature);
         return;
       }
@@ -339,8 +339,9 @@ class _UnlockSheetState extends State<UnlockSheet> {
                   },
                   child: Text(context.tr('Comment gagner des cauris')),
                 ),
-              // Not in the iPhone app, which sells no Pro (125).
-              if (sellsDigitalInApp)
+              // Not in the iPhone app, which sells no Pro (125) — unless
+              // the App Store sells it (130).
+              if (sellsProInApp)
                 TextButton(
                   key: const Key('unlock-pro'),
                   onPressed: () {
