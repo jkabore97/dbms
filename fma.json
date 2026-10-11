@@ -1,0 +1,2278 @@
+[
+ {
+  "id": "209757",
+  "title": "Confidence",
+  "artist": "1st Contact",
+  "stream": "https://freemusicarchive.org/track/confidence/stream/",
+  "url": "https://freemusicarchive.org/music/1st-contact/single/confidence/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International Soundtrack Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_209757.mp3"
+ },
+ {
+  "id": "225967",
+  "title": "Odd Times Jam",
+  "artist": "Tommaso Croce",
+  "stream": "https://freemusicarchive.org/track/odd-times-jam/stream/",
+  "url": "https://freemusicarchive.org/music/Dilating_Times/single/odd-times-jam/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Psych-Rock Afrobeat Improv",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_225967.mp3"
+ },
+ {
+  "id": "71382",
+  "title": "African Skies",
+  "artist": "Joel Holmes",
+  "stream": "https://freemusicarchive.org/track/01_-_Joel_Holmes_-_African_Skies/stream/",
+  "url": "https://freemusicarchive.org/music/Joel_Holmes/single/01_-_Joel_Holmes_-_African_Skies/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "194623",
+  "title": "Afro Sax Freakout",
+  "artist": "John Bartmann",
+  "stream": "https://freemusicarchive.org/track/afro-sax-freakout/stream/",
+  "url": "https://freemusicarchive.org/music/John_Bartmann/single/afro-sax-freakout/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_194623.mp3"
+ },
+ {
+  "id": "220592",
+  "title": "BAW TECH - FT JAYKWENDO _  LOVE YAKO.mp3",
+  "artist": "Baw Tech",
+  "stream": "https://freemusicarchive.org/track/baw-tech-ft-jaykwendo-love-yakomp3/stream/",
+  "url": "https://freemusicarchive.org/music/baw-tech/single/baw-tech-ft-jaykwendo-love-yakomp3/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248256",
+  "title": "Amapholas in Me 2 (Bass Play Feel)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/amapholas-in-me-2-bass-play-feel/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/amapholas-in-me-2-bass-play-feel/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248255",
+  "title": "BBS Musika - June (Simple Music)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/bbs-musika-june-simple-music/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/bbs-musika-june-simple-music/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248260",
+  "title": "Birthday Tune (main Mix)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/birthday-tune-main-mix/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/birthday-tune-main-mix/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "222891",
+  "title": "Desparate Moments (Urban Mix)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/desparate-moments-urban-mix/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/desparate-moments-urban-mix/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248258",
+  "title": "Holdings (Back To Basics)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/holdings-back-to-basics/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/holdings-back-to-basics/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248257",
+  "title": "House Victimz (Club Feel Tribute)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/house-victimz-club-feel-tribute/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/house-victimz-club-feel-tribute/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "222326",
+  "title": "Mode Of Steel Drums (Spritiual Groove Mix)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/mode-of-steel-drums-spritiual-groove-mix/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/mode-of-steel-drums-spritiual-groove-mix/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "234212",
+  "title": "Mona Lisa (Club Feel)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/mona-lisa-club-feel/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/mona-lisa-club-feel/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "223195",
+  "title": "Mphorable (Main Mix)[feat. Burunator]",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/mphorable-main-mixfeat-burunator/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/mphorable-main-mixfeat-burunator/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "222681",
+  "title": "My Ancestors (Spiritual Mix)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/my-ancestors-spiritual-mix/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/my-ancestors-spiritual-mix/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "222144",
+  "title": "Spiritual Base (Intro Component)[feat. Burunator]",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/spiritual-base-intro-componentfeat-burunator/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/spiritual-base-intro-componentfeat-burunator/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "248259",
+  "title": "Wave Candy (Back To Basics)",
+  "artist": "BBS Musika",
+  "stream": "https://freemusicarchive.org/track/wave-candy-back-to-basics/stream/",
+  "url": "https://freemusicarchive.org/music/bbs-musika/single/wave-candy-back-to-basics/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat House",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "268536",
+  "title": "Creepzz Feat Kosi-Free At Last",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-feat-kosi-free-at-last/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-feat-kosi-free-at-last/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268536.mp3"
+ },
+ {
+  "id": "268239",
+  "title": "Creepzz X Kosi Sia Feat Skidx-Overdose",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-kosi-sia-feat-skidx-overdose/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-kosi-sia-feat-skidx-overdose/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat Rap Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268239.mp3"
+ },
+ {
+  "id": "268649",
+  "title": "Creepzz X Kosi Sia- Feat Skidx-Tonight",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-kosi-sia-feat-skidx-tonight/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-kosi-sia-feat-skidx-tonight/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268649.mp3"
+ },
+ {
+  "id": "268537",
+  "title": "Creepzz X Kosi Sia-My Type.",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-kosi-sia-my-type/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-kosi-sia-my-type/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268537.mp3"
+ },
+ {
+  "id": "268238",
+  "title": "Creepzz X Kosi Sia-Vibe And Bubble",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-kosi-sia-vibe-and-bubble/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-kosi-sia-vibe-and-bubble/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat Rap Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268238.mp3"
+ },
+ {
+  "id": "268570",
+  "title": "Creepzz X Nes Mburu Feat Kosi Sia-On My Mind (Club Mix)",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-nes-mburu-feat-kosi-sia-on-my-mind-club-mix/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-nes-mburu-feat-kosi-sia-on-my-mind-club-mix/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic African Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268570.mp3"
+ },
+ {
+  "id": "268541",
+  "title": "Creepzz X Nes Mburu Feat Kosi Sia-On My Mind",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/creepzz-x-nes-mburu-feat-kosi-sia-on-my-mind/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/creepzz-x-nes-mburu-feat-kosi-sia-on-my-mind/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African hiphop",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_268541.mp3"
+ },
+ {
+  "id": "277199",
+  "title": "Great Things Start Small (Clean)",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/great-things-start-small-clean/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/great-things-start-small-clean/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_277199.mp3"
+ },
+ {
+  "id": "277194",
+  "title": "Island Vibe (Clean)",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/island-vibe-clean/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/island-vibe-clean/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Afrobeat Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_277194.mp3"
+ },
+ {
+  "id": "277197",
+  "title": "Me & You",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/me-you/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/me-you/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Afrobeat Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_277197.mp3"
+ },
+ {
+  "id": "279027",
+  "title": "Say My Name",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/say-my-name/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/say-my-name/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Afrobeat Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_279027.mp3"
+ },
+ {
+  "id": "277195",
+  "title": "Summer Vibe (Clean)",
+  "artist": "Creepzz",
+  "stream": "https://freemusicarchive.org/track/summer-vibe-clean/stream/",
+  "url": "https://freemusicarchive.org/music/creepzz/single/summer-vibe-clean/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Afrobeat Rap",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_277195.mp3"
+ },
+ {
+  "id": "226437",
+  "title": "I gat you",
+  "artist": "Dasnaty",
+  "stream": "https://freemusicarchive.org/track/i-gat-you/stream/",
+  "url": "https://freemusicarchive.org/music/dasnaty/single/i-gat-you/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Soul-RnB Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_226437.mp3"
+ },
+ {
+  "id": "246255",
+  "title": "Aning'yekeleni (Feat.Da Lungstar Madness)",
+  "artist": "Lxdge_SA",
+  "stream": "https://freemusicarchive.org/track/aningyekeleni-featda-lungstar-madness/stream/",
+  "url": "https://freemusicarchive.org/music/datboy-lxdge/single/aningyekeleni-featda-lungstar-madness/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat House Dance",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "235625",
+  "title": "Imizamo Feat.Tj Palmtrees",
+  "artist": "Lxdge_SA",
+  "stream": "https://freemusicarchive.org/track/imizamo-feattj-palmtrees/stream/",
+  "url": "https://freemusicarchive.org/music/datboy-lxdge/single/imizamo-feattj-palmtrees/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat Dance Piano",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_235625.mp3"
+ },
+ {
+  "id": "240767",
+  "title": "Indoda engenamali (Feat.Masandy, it's Dynamo & DLM)",
+  "artist": "Lxdge_SA",
+  "stream": "https://freemusicarchive.org/track/indoda-engenamali-featmasandy-its-dynamo-dlm/stream/",
+  "url": "https://freemusicarchive.org/music/datboy-lxdge/single/indoda-engenamali-featmasandy-its-dynamo-dlm/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat Dance",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "224185",
+  "title": "African way",
+  "artist": "DJ Messagroove",
+  "stream": "https://freemusicarchive.org/track/african-way/stream/",
+  "url": "https://freemusicarchive.org/music/dj-messagroove/single/african-way/",
+  "licences": [
+   "creativecommons.org/licenses/by-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Soul-RnB Funk Deep Funk",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "265691",
+  "title": "AfroHouse",
+  "artist": "Elijah_K",
+  "stream": "https://freemusicarchive.org/track/afrohouse/stream/",
+  "url": "https://freemusicarchive.org/music/elijah-k/single/afrohouse/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "African House North African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_265691.mp3"
+ },
+ {
+  "id": "265362",
+  "title": "Amapiano",
+  "artist": "Elijah_K",
+  "stream": "https://freemusicarchive.org/track/amapiano/stream/",
+  "url": "https://freemusicarchive.org/music/elijah-k/single/amapiano/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African North African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_265362.mp3"
+ },
+ {
+  "id": "242316",
+  "title": "Dance",
+  "artist": "Emmadbest",
+  "stream": "https://freemusicarchive.org/track/dance-12/stream/",
+  "url": "https://freemusicarchive.org/music/emmadbest/single/dance-12/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "230239",
+  "title": "Melanin",
+  "artist": "Emmadbest",
+  "stream": "https://freemusicarchive.org/track/melanin/stream/",
+  "url": "https://freemusicarchive.org/music/emmadbest/single/melanin/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "242317",
+  "title": "No Fear (with Madiq Empire)",
+  "artist": "Emmadbest",
+  "stream": "https://freemusicarchive.org/track/no-fear-with-madiq-empire/stream/",
+  "url": "https://freemusicarchive.org/music/emmadbest/single/no-fear-with-madiq-empire/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "251675",
+  "title": "Downpour",
+  "artist": "Gagmesharkoff",
+  "stream": "https://freemusicarchive.org/track/downpour/stream/",
+  "url": "https://freemusicarchive.org/music/gagmesharkoff/single/downpour/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Soundtrack Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_251675.mp3"
+ },
+ {
+  "id": "266919",
+  "title": "Radio Sounds Better in a Moving Truck",
+  "artist": "Gagmesharkoff",
+  "stream": "https://freemusicarchive.org/track/radio-sounds-better-in-a-moving-truck/stream/",
+  "url": "https://freemusicarchive.org/music/gagmesharkoff/single/radio-sounds-better-in-a-moving-truck/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat Modern Jazz",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_266919.mp3"
+ },
+ {
+  "id": "216367",
+  "title": "MILES' MeChanical MORNING",
+  "artist": "GOOD GUY",
+  "stream": "https://freemusicarchive.org/track/miles-mechanical-morning/stream/",
+  "url": "https://freemusicarchive.org/music/good-guy/single/miles-mechanical-morning/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Pop Experimental Experimental Pop Afrobeat Alternative Hip-Hop Europe Techno House Drum & Bass Bigbeat Breakbeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_216367.mp3"
+ },
+ {
+  "id": "243379",
+  "title": "Kay Smark - DOWN 4U (feat. Lordmoon)",
+  "artist": "Kay Smark",
+  "stream": "https://freemusicarchive.org/track/kay-smark-down-4u-feat-lordmoon/stream/",
+  "url": "https://freemusicarchive.org/music/kay-smark/single/kay-smark-down-4u-feat-lordmoon/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "226436",
+  "title": "Kay Wizzie_All I Want",
+  "artist": "Kay Wizzie",
+  "stream": "https://freemusicarchive.org/track/kay-wizzie-all-i-want/stream/",
+  "url": "https://freemusicarchive.org/music/kay-wizzie-1/single/kay-wizzie-all-i-want/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_226436.mp3"
+ },
+ {
+  "id": "226435",
+  "title": "Kay Wizzie_Jezimi",
+  "artist": "Kay Wizzie",
+  "stream": "https://freemusicarchive.org/track/kay-wizzie-jezimi/stream/",
+  "url": "https://freemusicarchive.org/music/kay-wizzie-1/single/kay-wizzie-jezimi/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_226435.mp3"
+ },
+ {
+  "id": "212564",
+  "title": "Dis Moi Tout",
+  "artist": "King B",
+  "stream": "https://freemusicarchive.org/track/dis-moi-tout/stream/",
+  "url": "https://freemusicarchive.org/music/king-b/single/dis-moi-tout/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "250057",
+  "title": "Afro Winner",
+  "artist": "Kreyol Mizik",
+  "stream": "https://freemusicarchive.org/track/afro-winner/stream/",
+  "url": "https://freemusicarchive.org/music/kreyol-mizik/single/afro-winner/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "250012",
+  "title": "Raboday Ba yo Zoklo",
+  "artist": "Kreyol Mizik",
+  "stream": "https://freemusicarchive.org/track/raboday-ba-yo-zoklo/stream/",
+  "url": "https://freemusicarchive.org/music/kreyol-mizik/single/raboday-ba-yo-zoklo/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electroacoustic Ambient Electronic Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "244976",
+  "title": "Amazing Vibes.mp3",
+  "artist": "LastKnownGood",
+  "stream": "https://freemusicarchive.org/track/amazing-vibesmp3/stream/",
+  "url": "https://freemusicarchive.org/music/lastknowngood/single/amazing-vibesmp3/",
+  "licences": [
+   "creativecommons.org/licenses/by-nd/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218911",
+  "title": "Abracadabra",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/abracadabra/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/abracadabra/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218584",
+  "title": "Ashawo Like Me",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/ashawo-like-me/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/ashawo-like-me/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "260759",
+  "title": "Balance",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/balance-3/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/balance-3/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "269484",
+  "title": "Balance Remix",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/balance-remix/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/balance-remix/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_269484.mp3"
+ },
+ {
+  "id": "247058",
+  "title": "Bro (with Ahnie)",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/bro-with-ahnie/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/bro-with-ahnie/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_247058.mp3"
+ },
+ {
+  "id": "221110",
+  "title": "Choice",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/choice/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/choice/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218581",
+  "title": "Fine (2023 Edition)",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/fine-2023-edition/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/fine-2023-edition/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "226037",
+  "title": "Flex (Urgent 2k)",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/flex-urgent-2k/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/flex-urgent-2k/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218582",
+  "title": "I no know",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/i-no-know/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/i-no-know/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "219772",
+  "title": "New Sign",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/new-sign/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/new-sign/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "233952",
+  "title": "No Strength",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/no-strength/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/no-strength/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_233952.mp3"
+ },
+ {
+  "id": "221107",
+  "title": "Okay",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/okay/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/okay/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218583",
+  "title": "Resolution",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/resolution-1/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/resolution-1/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "224042",
+  "title": "Why",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/why-2/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/why-2/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "250875",
+  "title": "Woman",
+  "artist": "Lordmoon",
+  "stream": "https://freemusicarchive.org/track/woman/stream/",
+  "url": "https://freemusicarchive.org/music/lordmoon/single/woman/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_250875.mp3"
+ },
+ {
+  "id": "220951",
+  "title": "PaulB_PhoneCall_PreMix_19April2019[1].mp3",
+  "artist": "Lukhanyo Klaas",
+  "stream": "https://freemusicarchive.org/track/paulb-phonecall-premix-19april20191mp3/stream/",
+  "url": "https://freemusicarchive.org/music/lukhanyo-klaas/single/paulb-phonecall-premix-19april20191mp3/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Soul-RnB Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_220951.mp3"
+ },
+ {
+  "id": "270487",
+  "title": "Amani",
+  "artist": "MARSANARYAS",
+  "stream": "https://freemusicarchive.org/track/amani/stream/",
+  "url": "https://freemusicarchive.org/music/marsanaryas/single/amani/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "Yes",
+  "genre": "Electronic African",
+  "content_id": false,
+  "commercial_ok": true
+ },
+ {
+  "id": "270458",
+  "title": "Aurora",
+  "artist": "MARSANARYAS",
+  "stream": "https://freemusicarchive.org/track/aurora-4/stream/",
+  "url": "https://freemusicarchive.org/music/marsanaryas/single/aurora-4/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "Yes",
+  "genre": "African",
+  "content_id": false,
+  "commercial_ok": true
+ },
+ {
+  "id": "277683",
+  "title": "First Queen in Africa",
+  "artist": "MARSANARYAS",
+  "stream": "https://freemusicarchive.org/track/first-queen-in-africa/stream/",
+  "url": "https://freemusicarchive.org/music/marsanaryas/single/first-queen-in-africa/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "Yes",
+  "genre": "Electronic African",
+  "content_id": false,
+  "commercial_ok": true
+ },
+ {
+  "id": "211084",
+  "title": "Alhamdulillah",
+  "artist": "Nexto",
+  "stream": "https://freemusicarchive.org/track/alhamdulillah/stream/",
+  "url": "https://freemusicarchive.org/music/nexto-2/single/alhamdulillah/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_211084.mp3"
+ },
+ {
+  "id": "244074",
+  "title": "Clearing Skies",
+  "artist": "Noisy Oyster",
+  "stream": "https://freemusicarchive.org/track/clearing-skies/stream/",
+  "url": "https://freemusicarchive.org/music/noisy-oyster/single/clearing-skies/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electroacoustic African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_244074.mp3"
+ },
+ {
+  "id": "268909",
+  "title": "Desert Call",
+  "artist": "Noisy Oyster",
+  "stream": "https://freemusicarchive.org/track/desert-call/stream/",
+  "url": "https://freemusicarchive.org/music/noisy-oyster/single/desert-call/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Soundtrack North African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "266734",
+  "title": "High Life Chant.mp3",
+  "artist": "NotDedYet",
+  "stream": "https://freemusicarchive.org/track/high-life-chantmp3/stream/",
+  "url": "https://freemusicarchive.org/music/notdedyet/single/high-life-chantmp3/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat Cumbia",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_266734.mp3"
+ },
+ {
+  "id": "271769",
+  "title": "nyeka - run!",
+  "artist": "nyeka",
+  "stream": "https://freemusicarchive.org/track/nyeka-run/stream/",
+  "url": "https://freemusicarchive.org/music/nyeka/single/nyeka-run/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "275817",
+  "title": "Affection Afrobeat Pop",
+  "artist": "OiBeats",
+  "stream": "https://freemusicarchive.org/track/affection-afrobeat-pop/stream/",
+  "url": "https://freemusicarchive.org/music/oibeats/single/affection-afrobeat-pop/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-sa/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "201002",
+  "title": "Caldera",
+  "artist": "Patrick Steel",
+  "stream": "https://freemusicarchive.org/track/caldera/stream/",
+  "url": "https://freemusicarchive.org/music/patrick-steel/single/caldera/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_201002.mp3"
+ },
+ {
+  "id": "242091",
+  "title": "African House Music",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/african-house-music/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/african-house-music/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242091.mp3"
+ },
+ {
+  "id": "270949",
+  "title": "Afro House Is A Vibe",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/afro-house-is-a-vibe/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/afro-house-is-a-vibe/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic House Dance",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_270949.mp3"
+ },
+ {
+  "id": "230635",
+  "title": "Afro Time",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/afro-time/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/afro-time/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic House Minimal Electronic",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_230635.mp3"
+ },
+ {
+  "id": "242081",
+  "title": "Alone",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/alone-8/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/alone-8/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242081.mp3"
+ },
+ {
+  "id": "242083",
+  "title": "Cool Cat",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/cool-cat/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/cool-cat/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242083.mp3"
+ },
+ {
+  "id": "242087",
+  "title": "Deep House Soul",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/deep-house-soul/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/deep-house-soul/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242087.mp3"
+ },
+ {
+  "id": "242090",
+  "title": "Dive In",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/dive-in-1/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/dive-in-1/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242090.mp3"
+ },
+ {
+  "id": "242088",
+  "title": "Forever Trance",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/forever-trance/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/forever-trance/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242088.mp3"
+ },
+ {
+  "id": "242089",
+  "title": "Hard Techno Nation",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/hard-techno-nation/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/hard-techno-nation/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242089.mp3"
+ },
+ {
+  "id": "242086",
+  "title": "Madness",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/madness-1/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/madness-1/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242086.mp3"
+ },
+ {
+  "id": "242092",
+  "title": "Messy",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/messy-1/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/messy-1/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242092.mp3"
+ },
+ {
+  "id": "242093",
+  "title": "Mezoued",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/mezoued/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/mezoued/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242093.mp3"
+ },
+ {
+  "id": "270933",
+  "title": "Mistakes (Afro House Original Mix)",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/mistakes-afro-house-original-mix/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/mistakes-afro-house-original-mix/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic House Dance",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_270933.mp3"
+ },
+ {
+  "id": "242082",
+  "title": "Misunderstood Genius",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/misunderstood-genius/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/misunderstood-genius/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242082.mp3"
+ },
+ {
+  "id": "242084",
+  "title": "Never forget my name",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/never-forget-my-name/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/never-forget-my-name/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242084.mp3"
+ },
+ {
+  "id": "243406",
+  "title": "Play House - FREE",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/play-house-free/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/play-house-free/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_243406.mp3"
+ },
+ {
+  "id": "271281",
+  "title": "Play House - On My Mind (Ala Bali).mp3",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/play-house-on-my-mind-ala-balimp3/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/play-house-on-my-mind-ala-balimp3/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African House",
+  "content_id": true,
+  "commercial_ok": true,
+  "file": "audio/fma_271281.mp3"
+ },
+ {
+  "id": "243405",
+  "title": "Play House - WE",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/play-house-we/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/play-house-we/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_243405.mp3"
+ },
+ {
+  "id": "242085",
+  "title": "Sunrise Drive",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/sunrise-drive/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/sunrise-drive/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Afrobeat House",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_242085.mp3"
+ },
+ {
+  "id": "270934",
+  "title": "Take It Easy (Afro House Remix)",
+  "artist": "Play House",
+  "stream": "https://freemusicarchive.org/track/take-it-easy-afro-house-remix/stream/",
+  "url": "https://freemusicarchive.org/music/play-house/single/take-it-easy-afro-house-remix/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic House Dance",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_270934.mp3"
+ },
+ {
+  "id": "239876",
+  "title": "Drum Story (Preview – Full Length Download in Description)",
+  "artist": "Pufino",
+  "stream": "https://freemusicarchive.org/track/drum-story-preview-full-length-download-in-description/stream/",
+  "url": "https://freemusicarchive.org/music/pufino/single/drum-story-preview-full-length-download-in-description/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_239876.mp3"
+ },
+ {
+  "id": "239878",
+  "title": "Tariro (Preview – Full Length Download in Description)",
+  "artist": "Pufino",
+  "stream": "https://freemusicarchive.org/track/tariro-preview-full-length-download-in-description/stream/",
+  "url": "https://freemusicarchive.org/music/pufino/single/tariro-preview-full-length-download-in-description/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat Dance Latin",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_239878.mp3"
+ },
+ {
+  "id": "237514",
+  "title": "Abena",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/abena/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/abena/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "240269",
+  "title": "AFRICA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/africa/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/africa/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "240271",
+  "title": "Alger",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/alger/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/alger/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Hip-Hop African North African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "244536",
+  "title": "An Ka Fo",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/an-ka-fo/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/an-ka-fo/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "243830",
+  "title": "Bantu",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/bantu/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/bantu/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "260536",
+  "title": "DAKPA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/dakpa/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/dakpa/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Folk African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "215244",
+  "title": "Dupe",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/dupe/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/dupe/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "232240",
+  "title": "ETHIOPIA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/ethiopia/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/ethiopia/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Historic African hiphop",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "215245",
+  "title": "Exotic",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/exotic/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/exotic/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "221935",
+  "title": "FATOU",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/fatou/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/fatou/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African Mbalax",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "273877",
+  "title": "Galam",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/galam/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/galam/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African North African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "273874",
+  "title": "HAUSA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/hausa/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/hausa/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "216690",
+  "title": "Helawsho",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/helawsho/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/helawsho/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Afrobeat African Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "218001",
+  "title": "Jere",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/jere/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/jere/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "216691",
+  "title": "Kagera",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/kagera/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/kagera/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "273875",
+  "title": "KARABA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/karaba-1/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/karaba-1/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "240270",
+  "title": "Luanda",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/luanda/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/luanda/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Hip-Hop African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "237515",
+  "title": "Mali",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/mali/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/mali/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "254714",
+  "title": "Mufasa",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/mufasa/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/mufasa/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "237516",
+  "title": "Muntu",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/muntu/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/muntu/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "211242",
+  "title": "Nganga",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/nganga/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/nganga/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International Afrobeat African Rap hiphop",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "234324",
+  "title": "NOOR",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/noor/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/noor/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Folk Hip-Hop North African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "213571",
+  "title": "Olubu",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/olubu/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/olubu/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International Afrobeat African North African Rap Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "241707",
+  "title": "PYGMY",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/pygmy/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/pygmy/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Hip-Hop African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "216179",
+  "title": "Rumba Congolaise",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/rumba-congolaise/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/rumba-congolaise/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African Salsa",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "211377",
+  "title": "Shaka",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/shaka/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/shaka/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "213905",
+  "title": "Soldat",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/soldat/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/soldat/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International Electronic Hip-Hop Afrobeat African Rap",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "237513",
+  "title": "TANZANIA",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/tanzania-1/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/tanzania-1/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "211379",
+  "title": "Tribe",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/tribe-1/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/tribe-1/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Historic Electronic Afrobeat African North African Reggae - Dancehall",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "273873",
+  "title": "TUMBU",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/tumbu/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/tumbu/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "International African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "273878",
+  "title": "Yaoundé",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/yaounde/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/yaounde/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "260537",
+  "title": "Yoruba",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/yoruba/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/yoruba/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "217763",
+  "title": "Zaza",
+  "artist": "Sneaky Club",
+  "stream": "https://freemusicarchive.org/track/zaza/stream/",
+  "url": "https://freemusicarchive.org/music/sneaky-club/single/zaza/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Afrobeat African",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "236604",
+  "title": "Stella Jacobs - Inkabikazi (ft. DJ Citie).mp3",
+  "artist": "Stella Jacobs",
+  "stream": "https://freemusicarchive.org/track/stella-jacobs-inkabikazi-ft-dj-citiemp3/stream/",
+  "url": "https://freemusicarchive.org/music/stella-jacobs/single/stella-jacobs-inkabikazi-ft-dj-citiemp3/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Hip-Hop African Hip-Hop Beats",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_236604.mp3"
+ },
+ {
+  "id": "236605",
+  "title": "Stella Jacobs - Ng'yahamba (ft. DJ Citie).mp3",
+  "artist": "Stella Jacobs",
+  "stream": "https://freemusicarchive.org/track/stella-jacobs-ngyahamba-ft-dj-citiemp3/stream/",
+  "url": "https://freemusicarchive.org/music/stella-jacobs/single/stella-jacobs-ngyahamba-ft-dj-citiemp3/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "International Pop African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_236605.mp3"
+ },
+ {
+  "id": "230261",
+  "title": "Tiga Maine - Tonight.mp3",
+  "artist": "Tiga Maine",
+  "stream": "https://freemusicarchive.org/track/tiga-maine-tonightmp3/stream/",
+  "url": "https://freemusicarchive.org/music/tiga-maine/single/tiga-maine-tonightmp3/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat African North African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_230261.mp3"
+ },
+ {
+  "id": "246768",
+  "title": "Tiga Maine - Uthando",
+  "artist": "Tiga Maine",
+  "stream": "https://freemusicarchive.org/track/tiga-maine-uthando/stream/",
+  "url": "https://freemusicarchive.org/music/tiga-maine/single/tiga-maine-uthando/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Pop Hip-Hop African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_246768.mp3"
+ },
+ {
+  "id": "244389",
+  "title": "Tiga Maine - Where Are You Now (ft. Dosline & Mshizil SA).mp3",
+  "artist": "Tiga Maine",
+  "stream": "https://freemusicarchive.org/track/tiga-maine-where-are-you-now-ft-dosline-mshizil-samp3/stream/",
+  "url": "https://freemusicarchive.org/music/tiga-maine/single/tiga-maine-where-are-you-now-ft-dosline-mshizil-samp3/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat Dance",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_244389.mp3"
+ },
+ {
+  "id": "250231",
+  "title": "African (Drum Percussion Background Music)",
+  "artist": "TolsetMusic",
+  "stream": "https://freemusicarchive.org/track/african-drum-percussion-background-music/stream/",
+  "url": "https://freemusicarchive.org/music/tolsetmusic/single/african-drum-percussion-background-music/",
+  "licences": [
+   "creativecommons.org/licenses/by-nc-nd/4.0"
+  ],
+  "instr": "Yes",
+  "ai": "No",
+  "genre": "Instrumental",
+  "content_id": false,
+  "commercial_ok": false
+ },
+ {
+  "id": "208094",
+  "title": "T-Star - Bad guy riddim",
+  "artist": "Tstar",
+  "stream": "https://freemusicarchive.org/track/t-star-bad-guy-riddim-1/stream/",
+  "url": "https://freemusicarchive.org/music/tstar/single/t-star-bad-guy-riddim-1/",
+  "licences": [
+   "creativecommons.org/publicdomain/zero/1.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Afrobeat",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_208094.mp3"
+ },
+ {
+  "id": "231703",
+  "title": "Ejighim Mmadu Anisi",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/ejighim-mmadu-anisi/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/ejighim-mmadu-anisi/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231703.mp3"
+ },
+ {
+  "id": "231704",
+  "title": "Eze Gakwu Ugwo",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/eze-gakwu-ugwo-1/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/eze-gakwu-ugwo-1/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231704.mp3"
+ },
+ {
+  "id": "230293",
+  "title": "Igaghi Anwu",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/igaghi-anwu/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/igaghi-anwu/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_230293.mp3"
+ },
+ {
+  "id": "231920",
+  "title": "Ndi Nne",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/ndi-nne/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/ndi-nne/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231920.mp3"
+ },
+ {
+  "id": "230851",
+  "title": "Ofu Iko Mmanya",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/ofu-iko-mmanya/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/ofu-iko-mmanya/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_230851.mp3"
+ },
+ {
+  "id": "231515",
+  "title": "Wait",
+  "artist": "Ugo Mbaise",
+  "stream": "https://freemusicarchive.org/track/wait-2/stream/",
+  "url": "https://freemusicarchive.org/music/ugo-mbaise/single/wait-2/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Country Afrobeat African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231515.mp3"
+ },
+ {
+  "id": "251620",
+  "title": "Bass Ritual",
+  "artist": "VADE",
+  "stream": "https://freemusicarchive.org/track/bass-ritual/stream/",
+  "url": "https://freemusicarchive.org/music/vade/single/bass-ritual/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic African Techno",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_251620.mp3"
+ },
+ {
+  "id": "251200",
+  "title": "Breathless Party - 10/4/25, 5.24 AM",
+  "artist": "VADE",
+  "stream": "https://freemusicarchive.org/track/breathless-party-10425-524-am/stream/",
+  "url": "https://freemusicarchive.org/music/vade/single/breathless-party-10425-524-am/",
+  "licences": [
+   "creativecommons.org/licenses/by/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "Electronic Experimental African",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_251200.mp3"
+ },
+ {
+  "id": "231153",
+  "title": "Zeena - afro 2024-04-14 19_53_17.mp3",
+  "artist": "Zeena",
+  "stream": "https://freemusicarchive.org/track/zeena-afro-2024-04-14-19-53-17mp3-1/stream/",
+  "url": "https://freemusicarchive.org/music/zeena/single/zeena-afro-2024-04-14-19-53-17mp3-1/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231153.mp3"
+ },
+ {
+  "id": "231152",
+  "title": "Zeena - afro 2024-04-14 19_53_17.mp3",
+  "artist": "Zeena",
+  "stream": "https://freemusicarchive.org/track/zeena-afro-2024-04-14-19-53-17mp3/stream/",
+  "url": "https://freemusicarchive.org/music/zeena/single/zeena-afro-2024-04-14-19-53-17mp3/",
+  "licences": [
+   "creativecommons.org/licenses/by-sa/4.0"
+  ],
+  "instr": "No",
+  "ai": "No",
+  "genre": "",
+  "content_id": false,
+  "commercial_ok": true,
+  "file": "audio/fma_231152.mp3"
+ }
+]
