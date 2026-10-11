@@ -184,7 +184,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
               )
             else
             Text(
-              context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent, viennent le chercher à la ferme ou se le font livrer.'),
+              context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.'),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),

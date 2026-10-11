@@ -75,12 +75,14 @@ String orderStatusLabel(String status, {bool booking = false}) =>
       _ => status,
     };
 
+/// « Retrait sur place »: the order screens don't know the kind of
+/// business, and a farm or an association is no « boutique ».
 String fulfilmentLabel(String fulfilment, {bool appointment = false}) =>
     fulfilment == 'delivery'
         ? 'Livraison'
         : appointment
             ? 'Sur rendez-vous'
-            : 'Retrait en boutique';
+            : 'Retrait sur place';
 
 /// Only services, collected nowhere (098): the order is a booking, « sur
 /// rendez-vous », with the day and time the customer asked for in its note.

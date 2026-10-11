@@ -2277,6 +2277,9 @@ class _Window extends StatelessWidget {
                           ? context.tr('Retrait ou livraison')
                           : shop.profile == 'farm'
                           ? context.tr('Retrait à la ferme')
+                          : shop.profile == 'association' ||
+                                shop.profile == 'church'
+                          ? context.tr('Retrait sur place')
                           : context.tr('Retrait en boutique'),
                     ].join(' · '),
                     style: const TextStyle(fontSize: 14, color: ShopStyle.mist),

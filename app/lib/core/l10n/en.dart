@@ -1924,8 +1924,8 @@ const enStrings = <String, String>{
       'to settle',
   'Œufs frais, poulets de chair…':
       'Fresh eggs, broilers…',
-  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent, viennent le chercher à la ferme ou se le font livrer.':
-      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order, collect it at the farm or have it delivered.',
+  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.':
+      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order and collect it at the farm; delivery comes with Mara Pro.',
   '— fin —':
       '— end —',
   'Ajoutez au moins un article.':
@@ -2374,6 +2374,8 @@ const enStrings = <String, String>{
       'Pickup at the shop',
   'Retrait ou livraison':
       'Pickup or delivery',
+  'Retrait sur place':
+      'Pickup on site',
   'Retrait à la ferme':
       'Pickup at the farm',
   'Rien de refusé. Ce qui reste partira dès que le réseau reviendra.':
