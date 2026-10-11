@@ -11,6 +11,7 @@ import 'package:kaj_app/core/retail/models.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/features/farm/for_sale_screen.dart';
+import 'package:kaj_app/features/storefront/shop_style.dart';
 import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -220,9 +221,11 @@ void main() {
     await tester.pump();
     // The strip cross-fades from the street's line to the farm's.
     await tester.pump(const Duration(seconds: 1));
-    expect(find.textContaining('Retrait à la ferme'), findsWidgets);
-    expect(find.text('Retrait à la ferme, ou livraison dans le quartier'),
+    expect(find.textContaining('retirez à la ferme'), findsWidgets);
+    expect(find.text('Commandez en ligne, retirez à la ferme'),
         findsOneWidget, reason: 'the strip speaks of the farm, not a shop');
+    // A farm that does not deliver (no Mara Pro) is never said to (081).
+    expect(find.textContaining('livraison'), findsNothing);
     expect(find.textContaining('Retrait en boutique'), findsNothing);
     expect(find.textContaining('/ plateau'), findsWidgets);
     expect(find.textContaining('/ tête'), findsWidgets);
@@ -231,5 +234,15 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 6));
     await tester.runAsync(() => db.close());
+  });
+
+  test('the vitrine strip speaks of delivery only when the business delivers', () {
+    for (final lines in [ShopPage.shop(delivers: false), ShopPage.farm(delivers: false), ShopPage.street]) {
+      expect(lines.any((l) => l.contains('livraison')), isFalse, reason: '$lines');
+    }
+    expect(ShopPage.shop(delivers: true).first, 'Retrait en boutique, ou livraison dans le quartier');
+    expect(ShopPage.farm(delivers: true).first, 'Retrait à la ferme, ou livraison dans le quartier');
+    expect([...ShopPage.farm(delivers: true), ...ShopPage.farm(delivers: false)]
+        .any((l) => l.contains('intermédiaire')), isFalse);
   });
 }

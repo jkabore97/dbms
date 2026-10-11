@@ -181,19 +181,36 @@ class ShopPage extends StatefulWidget {
   /// no strip (the courier's pages, which are work, not a shop).
   final List<String> announcements;
 
-  /// What the street says about itself, true of every shop on it.
+  /// What the street says about itself, true of every shop on it — so it
+  /// never promises delivery: only a Pro shop delivers (081), and its own
+  /// page says so ([shop]).
   static const street = [
-    'Retrait en boutique, ou livraison dans le quartier',
     'Des boutiques de chez vous, tenues par leurs commerçants',
-    'Commandez en ligne, payez au retrait ou à la livraison',
+    'Commandez en ligne, retirez sur place',
+    'Les vitrines qui livrent le disent sur leur page',
   ];
 
-  /// The same strip over a farm's vitrine (083).
-  static const farm = [
-    'Retrait à la ferme, ou livraison dans le quartier',
-    'Tout droit de la ferme, sans intermédiaire',
-    'Commandez à l\'avance la prochaine bande ou la récolte',
-  ];
+  /// The strip over one shop's vitrine: delivery spoken of only when this
+  /// shop delivers (Mara Pro and pinned on the map, 081).
+  static List<String> shop({required bool delivers}) => [
+        delivers
+            ? 'Retrait en boutique, ou livraison dans le quartier'
+            : 'Commandez en ligne, retirez en boutique',
+        'Des boutiques de chez vous, tenues par leurs commerçants',
+        delivers
+            ? 'Commandez en ligne, payez au retrait ou à la livraison'
+            : 'Vous payez au retrait',
+      ];
+
+  /// The same strip over a farm's vitrine (083), on the same rule. It no
+  /// longer says « sans intermédiaire »: Mara cannot know who sells on.
+  static List<String> farm({required bool delivers}) => [
+        delivers
+            ? 'Retrait à la ferme, ou livraison dans le quartier'
+            : 'Commandez en ligne, retirez à la ferme',
+        'Les produits de la ferme, vendus par la ferme',
+        'Commandez à l\'avance la prochaine bande ou la récolte',
+      ];
 
   @override
   State<ShopPage> createState() => _ShopPageState();

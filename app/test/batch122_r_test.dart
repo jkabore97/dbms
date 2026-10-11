@@ -284,7 +284,7 @@ void main() {
           ),
           lang: 'en'));
       await tester.pump();
-      expect(find.text('Pick up at the shop, or delivery in the neighbourhood'), findsOneWidget);
+      expect(find.text('Shops from your area, run by their owners'), findsOneWidget);
       expect(find.text('PAST'), findsOneWidget);
       expect(find.text('PASSÉES'), findsNothing);
     });

@@ -4938,8 +4938,6 @@ const enStrings = <String, String>{
       'Order online, pay at pick-up or on delivery',
   'Retrait à la ferme, ou livraison dans le quartier':
       'Pick up at the farm, or delivery in the neighbourhood',
-  'Tout droit de la ferme, sans intermédiaire':
-      'Straight from the farm, no middleman',
   'Commandez à l\'avance la prochaine bande ou la récolte':
       'Order the next batch or the harvest in advance',
   'Résultats':
@@ -6246,4 +6244,17 @@ const enStrings = <String, String>{
       'That time has passed: ask for another one',
   'Votre réservation est gardée : vous revenez ici juste après.':
       'Your booking is kept: you come back here right after.',
+  // 127b: the vitrine strip only speaks of delivery when the shop delivers.
+  'Commandez en ligne, retirez sur place':
+      'Order online, pick up in person',
+  'Les vitrines qui livrent le disent sur leur page':
+      'Shops that deliver say so on their page',
+  'Commandez en ligne, retirez en boutique':
+      'Order online, pick up at the shop',
+  'Vous payez au retrait':
+      'You pay at pick-up',
+  'Commandez en ligne, retirez à la ferme':
+      'Order online, pick up at the farm',
+  'Les produits de la ferme, vendus par la ferme':
+      'The farm\'s produce, sold by the farm',
 };
