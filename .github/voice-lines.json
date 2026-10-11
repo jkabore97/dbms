@@ -1,0 +1,4146 @@
+[
+ {
+  "file": "Achird__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Achird__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Achird__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Achird__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Achird__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Achird__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Achird__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Achird__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Achird__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Achird__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Achird__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Achird",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Algenib__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Algenib__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Algenib__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Algenib__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Algenib__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Algenib__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Algenib__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Algenib__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Algenib__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Algenib__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algenib__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Algieba__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Algieba__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Algieba__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Algieba__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Algieba__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Algieba__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Algieba__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Algieba__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Algieba__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Algieba__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Algieba__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Algieba",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Alnilam__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Alnilam__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Alnilam__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Alnilam__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Alnilam__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Alnilam__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Alnilam__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Alnilam__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Alnilam__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Alnilam__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Alnilam__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Alnilam",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Charon__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Charon__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Charon__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Charon__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Charon__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Charon__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Charon__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Charon__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Charon__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Charon__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Charon__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Enceladus__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Enceladus__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Enceladus__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Enceladus__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Enceladus__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Enceladus__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Enceladus__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Enceladus__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Enceladus__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Enceladus__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Enceladus__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Enceladus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Fenrir__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Fenrir__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Fenrir__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Fenrir__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Fenrir__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Fenrir__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Fenrir__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Fenrir__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Fenrir__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Fenrir__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Fenrir__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Fenrir",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Iapetus__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Iapetus__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Iapetus__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Iapetus__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Iapetus__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Iapetus__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Iapetus__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Iapetus__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Iapetus__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Iapetus__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Orus__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Orus__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Orus__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Orus__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Orus__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Orus__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Orus__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Orus__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Orus__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Orus__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Orus__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Puck__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Puck__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Puck__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Puck__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Puck__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Puck__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Puck__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Puck__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Puck__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Puck__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Puck__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Puck",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Rasalgethi__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Rasalgethi__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Rasalgethi__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Rasalgethi__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Rasalgethi__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Rasalgethi__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Rasalgethi__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Rasalgethi__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Rasalgethi__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Rasalgethi__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Rasalgethi__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Rasalgethi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Sadaltager__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Sadaltager__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Sadaltager__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Sadaltager__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Sadaltager__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Sadaltager__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Sadaltager__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Sadaltager__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Sadaltager__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Sadaltager__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Sadaltager__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadaltager",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Schedar__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Schedar__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Schedar__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Schedar__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Schedar__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Schedar__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Schedar__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Schedar__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Schedar__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Schedar__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Schedar__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Schedar",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Umbriel__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Umbriel__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Umbriel__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Umbriel__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Umbriel__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Umbriel__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Umbriel__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Umbriel__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Umbriel__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Umbriel__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Umbriel__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Umbriel",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "Zubenelgenubi__f1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0,
+  "markup": "Vos photos [pause short] se perdent dans les discussions ?"
+ },
+ {
+  "file": "Zubenelgenubi__f1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0,
+  "markup": "Et vous voyez [pause short] combien de personnes sont passées."
+ },
+ {
+  "file": "Zubenelgenubi__f1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0,
+  "markup": "Les commandes et les rendez-vous [pause short] arrivent dans Mara."
+ },
+ {
+  "file": "Zubenelgenubi__f1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre nom, [pause short] enfin vu."
+ },
+ {
+  "file": "Zubenelgenubi__f1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f1_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Zubenelgenubi__f2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0,
+  "markup": "Vos plateaux sont prêts. [pause short] Mais qui le sait ?"
+ },
+ {
+  "file": "Zubenelgenubi__f2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_02_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0,
+  "markup": "Mettez-les en vente, [pause short] à votre prix."
+ },
+ {
+  "file": "Zubenelgenubi__f2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0,
+  "markup": "Partagez votre vitrine. [pause short] On vous trouve."
+ },
+ {
+  "file": "Zubenelgenubi__f2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_05_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0,
+  "markup": "Pertes, mortalité, stock : [pause short] tout est noté."
+ },
+ {
+  "file": "Zubenelgenubi__f2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zubenelgenubi__f2_07_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zubenelgenubi",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0,
+  "markup": "Votre travail, [pause short] vu."
+ },
+ {
+  "file": "ChirpHD-D__f1_01_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_01_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Vos photos se perdent dans les discussions ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_02_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_02_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mettez tout dans votre vitrine Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_03_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_03_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Partagez-la en statut WhatsApp.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_04_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_04_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "On vous trouve sur la carte.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_05_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_05_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Et vous voyez combien de personnes sont passées.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_06_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_06_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_07_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_07_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_08_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f1_08_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_01_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_01_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_02_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_02_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Mettez-les en vente, à votre prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_03_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_03_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Partagez votre vitrine. On vous trouve.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_04_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_04_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "La commande arrive dans Mara.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_05_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_05_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Pertes, mortalité, stock : tout est noté.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_06_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_06_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Même sans réseau.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_07_a.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "ChirpHD-D__f2_07_b.wav",
+  "voice": "fr-FR-Chirp-HD-D",
+  "text": "Votre travail, vu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et l'argent… il est où ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et l'argent… il est où ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_01_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et l'argent… il est où ?",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_01_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et l'argent… il est où ?",
+  "speakingRate": 1.0,
+  "markup": "Et l'argent… [pause short] il est où ?"
+ },
+ {
+  "file": "Zephyr__f3_01_n.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et l'argent… il est où ?",
+  "speakingRate": 1.03,
+  "markup": "Et l'argent… [pause short] il est où ?"
+ },
+ {
+  "file": "Zephyr__f3_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque cotisation est notée.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque cotisation est notée.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_02_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque cotisation est notée.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_03_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_03_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 1.0,
+  "markup": "Chaque dépense, [pause short] avec son reçu en photo."
+ },
+ {
+  "file": "Zephyr__f3_03_n.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque dépense, avec son reçu en photo.",
+  "speakingRate": 1.03,
+  "markup": "Chaque dépense, [pause short] avec son reçu en photo."
+ },
+ {
+  "file": "Zephyr__f3_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_04_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_04_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 1.0,
+  "markup": "Chaque semaine, [pause short] envoyez le résumé au groupe."
+ },
+ {
+  "file": "Zephyr__f3_04_n.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Chaque semaine, envoyez le résumé au groupe.",
+  "speakingRate": 1.03,
+  "markup": "Chaque semaine, [pause short] envoyez le résumé au groupe."
+ },
+ {
+  "file": "Zephyr__f3_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_05_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout le monde voit les mêmes chiffres.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_06_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_06_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 1.0,
+  "markup": "La confiance [pause short] se lit dans vos comptes."
+ },
+ {
+  "file": "Zephyr__f3_06_n.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "La confiance se lit dans vos comptes.",
+  "speakingRate": 1.03,
+  "markup": "La confiance [pause short] se lit dans vos comptes."
+ },
+ {
+  "file": "Zephyr__f3_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Gardez la tête haute.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Gardez la tête haute.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_07_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Gardez la tête haute.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__f3_08_c.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.05
+ },
+ {
+  "file": "Zephyr__f3_08_m.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ },
+ {
+  "file": "Zephyr__f3_08_n.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mara. Gratuit pour commencer.",
+  "speakingRate": 1.03,
+  "markup": "Mara. [pause short] Gratuit pour commencer."
+ }
+]
