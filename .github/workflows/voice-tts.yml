@@ -16,6 +16,7 @@ jobs:
           KEY: ${{ secrets.GCP_TTS_API_KEY }}
         run: |
           set -eu
+          [ -n "$KEY" ] || { echo "GCP_TTS_API_KEY is not set"; exit 1; }
           mkdir out
           curl -sS -H "X-Goog-Api-Key: $KEY" \
             "https://texttospeech.googleapis.com/v1/voices?languageCode=fr-FR" > voices.json
