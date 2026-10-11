@@ -795,7 +795,7 @@ begin
                    'bells', (select jsonb_agg(jsonb_build_object('to', n.recipient_id, 'kind', n.kind,
                                                                  'message', n.message,
                                                                  'params', n.params - 'order_id')
-                                              order by n.kind, n.message, (n.params - 'order_id')::text)
+                                              order by n.kind, n.message, (n.params - 'order_id')::text, n.recipient_id)
                                from notifications n
                               where (n.params ->> 'order_id')::uuid in (v_a, v_b, v_c, v_l1, v_l2, v_l3, v_l4)),
                    'refused', v_refused)

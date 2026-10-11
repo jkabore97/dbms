@@ -58,8 +58,12 @@ declare
     v_org uuid := 'e3e3e3e3-0000-0000-0000-000000000001';
     v_row record;
 begin
+    -- 127: no app door writes a membership (a claimed invitation does, as
+    -- a definer): written here as the owner, past RLS, as that one would.
+    execute 'reset role';
     insert into memberships (org_id, user_id, role, scope_kind, scope_id)
     values (v_org, 'd3d3d3d3-0000-0000-0000-000000000002', 'employee', 'org', v_org);
+    execute 'set local role authenticated';
 
     select * into v_row
       from audit_log_page(v_org, 10)
@@ -200,7 +204,7 @@ rollback;
 \echo '--- TEST 6: an employee cannot read the log at all ---'
 begin;
 set local "request.jwt.claim.sub" = 'd3d3d3d3-0000-0000-0000-000000000001';
-set local role authenticated;
+-- 127: the grant past RLS, as a claimed invitation writes it.
 insert into memberships (org_id, user_id, role, scope_kind, scope_id)
 values (
     'e3e3e3e3-0000-0000-0000-000000000001',

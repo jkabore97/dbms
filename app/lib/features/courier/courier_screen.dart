@@ -261,7 +261,8 @@ class _CourierScreenState extends State<CourierScreen>
     );
     if (code == null) return;
     await _act(() => widget.courier.deliver(job.orderId, code),
-        "Code refusé : demandez au client les 4 chiffres affichés dans sa commande.");
+        "Code refusé : demandez au client les 4 chiffres affichés dans sa commande.",
+        say: (error) => error is HandoverRefused ? handoverRefusalLine(context, error) : null);
   }
 
   /// "Échec" (073): why the door did not open.
@@ -303,15 +304,16 @@ class _CourierScreenState extends State<CourierScreen>
         "L'échec n'a pas pu être enregistré.");
   }
 
-  Future<void> _act(Future<void> Function() call, String failed) async {
+  Future<void> _act(Future<void> Function() call, String failed,
+      {String? Function(Object error)? say}) async {
     setState(() => _busy = true);
     try {
       await call();
       await _load();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr(failed))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(say?.call(error) ?? context.tr(failed))));
       await _load();
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1001,4 +1003,21 @@ class _CashStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What the courier reads when the door refuses the code (127).
+String handoverRefusalLine(BuildContext context, HandoverRefused refused) {
+  if (refused.blocked) {
+    return context.tr('Trop de codes faux : cette livraison est bloquée. Appelez la boutique.');
+  }
+  if (refused.locked) {
+    return context.tr(
+        'Trop de codes faux : cette livraison est bloquée {n} min. La boutique est prévenue.',
+        {'n': refused.minutes ?? 15});
+  }
+  final left = refused.left ?? 0;
+  return left == 1
+      ? context.tr('Code incorrect : demandez au client les 4 chiffres de sa commande (1 essai avant blocage).')
+      : context.tr('Code incorrect : demandez au client les 4 chiffres de sa commande ({n} essais avant blocage).',
+          {'n': left});
 }

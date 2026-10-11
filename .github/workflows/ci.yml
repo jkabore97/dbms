@@ -833,6 +833,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch126.sql
 
+      - name: Prove the security audit's fixes — no business admin writes or moves a membership for somebody else, pre-claims an invitation or scopes one to another business, and manages (resets) nobody who belongs to a business they do not run, the invitation claimed still making a member; no document, logo or cover names another business's key, a forged older row serving nothing; no line joins a posted entry or names another business's account, no posted line or entry changes, every child → parent reference stays inside its business (one generic query); five wrong delivery codes lock the order 15 minutes and tell the shop; security_log no app door; P1 the ordinary flows of the three kinds unchanged (127)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch127.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

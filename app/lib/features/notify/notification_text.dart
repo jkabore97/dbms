@@ -150,6 +150,12 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('Un livreur prend la commande de {name}', {'name': s('name')});
     case 'order_courier':
       return context.tr('Un livreur s\'occupe de votre commande chez {shop}', {'shop': s('shop')});
+    case 'delivery_code_blocked':
+      return context.tr('Livraison de {name} : bloquée — appelez le livreur. Le code ne la fermera plus.',
+          {'name': s('name')});
+    case 'delivery_code_locked':
+      return context.tr('Livraison de {name} : 5 codes faux, bloquée 15 min. Appelez le livreur ou le client.',
+          {'name': s('name')});
     case 'order_delivered':
       return toShop
           ? context.tr('La commande de {name} est livrée', {'name': s('name')})

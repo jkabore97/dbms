@@ -36,9 +36,9 @@ insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility
     (:shop, :clerk, 'employee', 'org', :shop, 'full'),
     (:far,  :other, 'owner',    'org', :far,  'full');
 insert into documents (org_id, r2_key, kind, uploaded_by, content_type) values
-    (:shop, 'org/50/logo.png', 'logo',    :owner, 'image/png'),
-    (:shop, 'org/50/note.pdf', 'invoice', :owner, 'application/pdf'),
-    (:far,  'org/50/far.png',  'logo',    :other, 'image/png');
+    (:shop, 'org/50000000-0000-0000-0000-000000000001/logo.png', 'logo',    :owner, 'image/png'),
+    (:shop, 'org/50000000-0000-0000-0000-000000000001/note.pdf', 'invoice', :owner, 'application/pdf'),
+    (:far,  'org/50000000-0000-0000-0000-000000000002/far.png',  'logo',    :other, 'image/png');
 
 \echo ''
 \echo '--- TEST 1: an administrator, one of the shop''s own pictures ---'
@@ -46,7 +46,7 @@ begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '50505050-0000-0000-0000-000000000002';
 do $$ begin
-    perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50/logo.png');
+    perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50000000-0000-0000-0000-000000000001/logo.png');
     raise exception 'FAIL: an employee set the logo';
 exception when others then
     if sqlerrm not like 'Seul un administrateur%' then raise; end if;
@@ -54,18 +54,18 @@ end $$;
 set local "request.jwt.claim.sub" = '50505050-0000-0000-0000-000000000001';
 do $$ begin
     begin
-        perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50/far.png');
+        perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50000000-0000-0000-0000-000000000002/far.png');
         raise exception 'FAIL: another shop''s picture became the logo';
     exception when others then
         if sqlerrm not like 'Le logo doit être une photo%' then raise; end if;
     end;
     begin
-        perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50/note.pdf');
+        perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50000000-0000-0000-0000-000000000001/note.pdf');
         raise exception 'FAIL: a PDF became the logo';
     exception when others then
         if sqlerrm not like 'Le logo doit être une photo%' then raise; end if;
     end;
-    perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50/logo.png');
+    perform set_org_logo('50000000-0000-0000-0000-000000000001', 'org/50000000-0000-0000-0000-000000000001/logo.png');
     raise notice 'PASS: the clerk refused, a stranger''s picture and a PDF refused';
 end $$;
 commit;
@@ -76,17 +76,17 @@ do $$
 declare st jsonb;
 begin
     select style into st from storefront('style-50');
-    if st - 'delivers' <> '{"logo_key": "org/50/logo.png"}'::jsonb then
+    if st - 'delivers' <> '{"logo_key": "org/50000000-0000-0000-0000-000000000001/logo.png"}'::jsonb then
         raise exception 'FAIL: a Free shop''s window style is %', st;
     end if;
-    if not storefront_photo_allowed('org/50/logo.png') then
+    if not storefront_photo_allowed('org/50000000-0000-0000-0000-000000000001/logo.png') then
         raise exception 'FAIL: the street may not see an open vitrine''s logo';
     end if;
-    if storefront_photo_allowed('org/50/note.pdf') then
+    if storefront_photo_allowed('org/50000000-0000-0000-0000-000000000001/note.pdf') then
         raise exception 'FAIL: a document that is no logo is served';
     end if;
     update orgs set storefront_enabled = false where id = '50000000-0000-0000-0000-000000000001';
-    if storefront_photo_allowed('org/50/logo.png') then
+    if storefront_photo_allowed('org/50000000-0000-0000-0000-000000000001/logo.png') then
         raise exception 'FAIL: a closed vitrine''s logo is still served';
     end if;
     update orgs set storefront_enabled = true where id = '50000000-0000-0000-0000-000000000001';

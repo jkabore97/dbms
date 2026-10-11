@@ -51,8 +51,8 @@ insert into products (id, org_id, name, sale_price, cost_price, quantity, is_act
     (:p_pro1, :shop_p, 'Pagne', 6000, 4000, 9, true, true, :owner_p),
     (:p_pro2, :shop_p, 'Gâteau', 2500, 1200, 0, true, true, :owner_p);
 insert into documents (org_id, r2_key, kind, uploaded_by) values
-    (:shop_p, 'org/40p/devanture.jpg', 'photo', :owner_p),
-    (:shop_f, 'org/40f/devanture.jpg', 'photo', :owner_f);
+    (:shop_p, 'org/40000000-0000-0000-0000-000000000002/devanture.jpg', 'photo', :owner_p),
+    (:shop_f, 'org/40000000-0000-0000-0000-000000000001/devanture.jpg', 'photo', :owner_f);
 
 
 \echo ''
@@ -94,7 +94,7 @@ select set_storefront_style('40000000-0000-0000-0000-000000000002', '{
     "tagline": "  Pagnes et gâteaux depuis 1998  ",
     "hours": "Lun–Sam 8h–19h",
     "accent": "#b1541a",
-    "cover_key": "org/40p/devanture.jpg",
+    "cover_key": "org/40000000-0000-0000-0000-000000000002/devanture.jpg",
     "pinned": ["40aaaaaa-0000-0000-0000-000000000003", "40aaaaaa-0000-0000-0000-000000000002"],
     "hide_out_of_stock": true,
     "font": "comic sans",
@@ -108,7 +108,7 @@ begin
     if v ->> 'tagline' <> 'Pagnes et gâteaux depuis 1998'
        or v ->> 'hours' <> 'Lun–Sam 8h–19h'
        or v ->> 'accent' <> '#B1541A'
-       or v ->> 'cover_key' <> 'org/40p/devanture.jpg'
+       or v ->> 'cover_key' <> 'org/40000000-0000-0000-0000-000000000002/devanture.jpg'
        or v -> 'pinned' <> '["40aaaaaa-0000-0000-0000-000000000003", "40aaaaaa-0000-0000-0000-000000000002"]'::jsonb
        or (v -> 'hide_out_of_stock') <> 'true'::jsonb then
         raise exception 'FAIL: the street reads %', v;
@@ -116,7 +116,7 @@ begin
     if v ? 'font' or v ? 'evil' then
         raise exception 'FAIL: an unknown key was kept: %', v;
     end if;
-    if not storefront_photo_allowed('org/40p/devanture.jpg') then
+    if not storefront_photo_allowed('org/40000000-0000-0000-0000-000000000002/devanture.jpg') then
         raise exception 'FAIL: the cover cannot be served to the street';
     end if;
     raise notice 'PASS: tagline trimmed, hours, colour upper-cased, cover, pins, switch; unknown keys dropped; cover servable';
@@ -130,7 +130,7 @@ set local role authenticated;
 set local "request.jwt.claim.sub" = '40404040-0000-0000-0000-000000000003';
 do $$
 declare v_cases text[] := array[
-    '{"cover_key": "org/40f/devanture.jpg"}',
+    '{"cover_key": "org/40000000-0000-0000-0000-000000000001/devanture.jpg"}',
     '{"pinned": ["40aaaaaa-0000-0000-0000-000000000001"]}',
     '{"pinned": ["40aaaaaa-0000-0000-0000-000000000002", "40aaaaaa-0000-0000-0000-000000000002"]}',
     '{"pinned": ["a","b","c","d","e","f","g"]}',
@@ -170,7 +170,7 @@ begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '40404040-0000-0000-0000-000000000003';
 select set_storefront_style('40000000-0000-0000-0000-000000000002',
-    '{"tagline": "Depuis 1998", "cover_key": "org/40p/devanture.jpg"}');
+    '{"tagline": "Depuis 1998", "cover_key": "org/40000000-0000-0000-0000-000000000002/devanture.jpg"}');
 set local "request.jwt.claim.sub" = '40404040-0000-0000-0000-000000000001';
 select set_org_plan('40000000-0000-0000-0000-000000000002', 'pro', current_date - 1, 'échu');
 set local "request.jwt.claim.sub" = '';
@@ -186,7 +186,7 @@ begin
     if v_kept ->> 'tagline' <> 'Depuis 1998' then
         raise exception 'FAIL: lapsing lost what was written: %', v_kept;
     end if;
-    if storefront_photo_allowed('org/40p/devanture.jpg') then
+    if storefront_photo_allowed('org/40000000-0000-0000-0000-000000000002/devanture.jpg') then
         raise exception 'FAIL: a lapsed Pro''s cover is still served';
     end if;
     raise notice 'PASS: the street reads {}, the words are kept, the cover is no longer served';

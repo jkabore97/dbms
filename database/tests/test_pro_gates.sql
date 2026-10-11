@@ -149,7 +149,8 @@ rollback;
 \echo ''
 \echo '--- TEST 3: the fourth staff account is refused on Free, accepted on Pro ---'
 begin;
-set local role authenticated;
+-- 127: no app door writes a membership (a claimed invitation does, as a
+-- definer, past RLS): the cap is the trigger's, met here the same way.
 set local "request.jwt.claim.sub" = '38383838-0000-0000-0000-000000000002';
 do $$
 begin
