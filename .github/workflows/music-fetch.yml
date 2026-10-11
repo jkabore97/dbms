@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Fetch
         run: |
-          set -u
+          set +e
           mkdir -p out/pages out/audio
           cat > pages.txt <<'EOF'
           mixkit_license https://mixkit.co/license/
@@ -52,7 +52,7 @@ jobs:
             echo "$code $(wc -c < out/pages/$name.html) $name $url" | tee -a out/pages/index.txt
           done
           # every audio link found in the pages
-          grep -ohE 'https?:[^"'"'"' <>]+\.mp3[^"'"'"' <>]*' out/pages/*.html | sed 's/\\u002F/\//g; s/\\\//\//g; s/&amp;/\&/g' | sort -u > out/audio_links.txt
+          grep -ohE 'https?:[^"'"'"' <>]+\.mp3[^"'"'"' <>]*' out/pages/*.html | sed 's/\\u002F/\//g; s/\\\//\//g; s/&amp;/\&/g' | sort -u > out/audio_links.txt || true
           wc -l out/audio_links.txt
           head -n 120 out/audio_links.txt | while read -r u; do
             fn=$(echo "$u" | sed 's/[?#].*//' | awk -F/ '{print $NF}')
@@ -61,6 +61,7 @@ jobs:
           done
           ls -la out/audio | head -50
       - name: Keep them on the music-samples branch
+        if: always()
         run: |
           set -eu
           cd out
