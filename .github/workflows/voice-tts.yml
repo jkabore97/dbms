@@ -34,13 +34,13 @@ jobs:
           voice=$(jq -r .voice <<<"$item")
           rate=$(jq -r '.speakingRate // 1.0' <<<"$item")
           call() {  # $1 = request file
-            for try in 1 2 3; do
+            for try in 1 2 3 4; do
               curl -sS -H "X-Goog-Api-Key: $KEY" -H "Content-Type: application/json" -d @"$1" \
                 https://texttospeech.googleapis.com/v1/text:synthesize > "req/$i.res"
               if jq -e '.audioContent' "req/$i.res" >/dev/null 2>&1; then
                 jq -r '.audioContent' "req/$i.res" | base64 -d > "out/$file"; return 0
               fi
-              sleep $((try * 3))
+              sleep $((try * 12))
             done
             return 1
           }
@@ -56,7 +56,7 @@ jobs:
           SH
           chmod +x synth.sh
           export KEY
-          seq 0 $((n - 1)) | xargs -P 6 -I{} ./synth.sh {} | tee log.txt
+          seq 0 $((n - 1)) | xargs -P 3 -I{} ./synth.sh {} | tee log.txt
           cp .github/voice-lines.json out/lines.json
           cp log.txt out/log.txt
           ok=$(ls out/*.wav | wc -l)
@@ -70,5 +70,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -qm "Narration lines (Chirp 3 HD, v6 audition)"
+          git commit -qm "Narration lines (Chirp 3 HD, v6 top-up)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" voice-samples
