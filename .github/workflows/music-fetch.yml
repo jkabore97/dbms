@@ -1,0 +1,72 @@
+# Temporary: fetches candidate royalty-free music for the promo films (listing pages,
+# licence pages and the audio they link to) and force-pushes them to the
+# music-samples branch. Removed once the films are done.
+name: Music samples
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/music-fetch.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  music:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        run: |
+          set -u
+          mkdir -p out/pages out/audio
+          cat > pages.txt <<'EOF'
+          mixkit_license https://mixkit.co/license/
+          mixkit_terms https://mixkit.co/terms/
+          mixkit_music https://mixkit.co/free-stock-music/
+          mixkit_afro https://mixkit.co/free-stock-music/tag/afro/
+          mixkit_african https://mixkit.co/free-stock-music/tag/african/
+          mixkit_afrobeat https://mixkit.co/free-stock-music/tag/afrobeat/
+          mixkit_world https://mixkit.co/free-stock-music/world/
+          mixkit_dance https://mixkit.co/free-stock-music/dance/
+          mixkit_hiphop https://mixkit.co/free-stock-music/hip-hop/
+          mixkit_happy https://mixkit.co/free-stock-music/mood/happy/
+          mixkit_upbeat https://mixkit.co/free-stock-music/tag/upbeat/
+          mixkit_tropical https://mixkit.co/free-stock-music/tag/tropical/
+          pixabay_license https://pixabay.com/service/license-summary/
+          pixabay_terms https://pixabay.com/service/terms/
+          pixabay_afrobeat https://pixabay.com/music/search/afrobeat/
+          pixabay_amapiano https://pixabay.com/music/search/amapiano/
+          pixabay_afropop https://pixabay.com/music/search/afro%20pop/
+          pixabay_afrobeats https://pixabay.com/music/search/afrobeats/
+          fma_afrobeat https://freemusicarchive.org/search?quicksearch=afrobeat
+          fma_amapiano https://freemusicarchive.org/search?quicksearch=amapiano
+          fma_genre https://freemusicarchive.org/genre/Afrobeat/
+          ia_afrobeat https://archive.org/advancedsearch.php?q=%28afrobeat+OR+amapiano+OR+afrobeats+OR+afropop%29+AND+mediatype%3Aaudio&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=subject&rows=300&output=json
+          ccm_afrobeat https://ccmixter.org/api/query?tags=afrobeat&f=json&limit=60
+          ccm_african https://ccmixter.org/api/query?tags=african&f=json&limit=60
+          ccm_afro https://ccmixter.org/api/query?tags=afro&f=json&limit=60
+          ytlib https://www.youtube.com/audiolibrary
+          EOF
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          sed 's/^ *//' pages.txt | while read -r name url; do
+            [ -n "$name" ] || continue
+            code=$(curl -sL -m 40 -A "$UA" -H "Accept-Language: en-US,en;q=0.9" -o "out/pages/$name.html" -w '%{http_code}' "$url")
+            echo "$code $(wc -c < out/pages/$name.html) $name $url" | tee -a out/pages/index.txt
+          done
+          # every audio link found in the pages
+          grep -ohE 'https?:[^"'"'"' <>]+\.mp3[^"'"'"' <>]*' out/pages/*.html | sed 's/\\u002F/\//g; s/\\\//\//g; s/&amp;/\&/g' | sort -u > out/audio_links.txt
+          wc -l out/audio_links.txt
+          head -n 120 out/audio_links.txt | while read -r u; do
+            fn=$(echo "$u" | sed 's/[?#].*//' | awk -F/ '{print $NF}')
+            code=$(curl -sL -m 60 -A "$UA" -o "out/audio/$fn" -w '%{http_code}' "$u")
+            echo "$code $(wc -c < "out/audio/$fn") $fn $u" | tee -a out/audio/index.txt
+          done
+          ls -la out/audio | head -50
+      - name: Keep them on the music-samples branch
+        run: |
+          set -eu
+          cd out
+          git init -q -b music-samples
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Candidate music (discovery)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" music-samples
