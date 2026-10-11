@@ -1,11 +1,12 @@
-# Temporary: renders the promo test lines with every Google Chirp 3 HD
-# French voice (project ccelim, key GCP_TTS_API_KEY) and keeps them as an
-# artifact. Removed once the voices are chosen.
+# Temporary: renders the promo narration lines listed in .github/voice-lines.json
+# ({file, voice, text, speakingRate, markup?}) with Google Cloud Text-to-Speech
+# (key GCP_TTS_API_KEY), one LINEAR16 48 kHz WAV per line, and force-pushes them
+# to the voice-samples branch. Removed once the films are done.
 name: Voice samples
 on:
   push:
     branches: [claude/dbms-login-page-ef71ta]
-    paths: [.github/workflows/voice-tts.yml]
+    paths: [.github/workflows/voice-tts.yml, .github/voice-lines.json]
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +14,9 @@ jobs:
   voices:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
       - name: Render
         env:
           KEY: ${{ secrets.GCP_TTS_API_KEY }}
@@ -20,24 +24,39 @@ jobs:
           set -eu
           [ -n "$KEY" ] || { echo "GCP_TTS_API_KEY is not set"; exit 1; }
           mkdir out
-          curl -sS -H "X-Goog-Api-Key: $KEY" \
-            "https://texttospeech.googleapis.com/v1/voices?languageCode=fr-FR" > voices.json
-          jq -r '.error.message // empty' voices.json
-          jq -r '.voices[] | select(.name | test("Chirp3-HD|Chirp-HD")) | "\(.name) \(.ssmlGender)"' voices.json | tee list.txt
-          TEXT="Vos photos se perdent dans les discussions ? Avec Mara, votre vitrine est en ligne. Mettez vos œufs en vente, à votre prix. La commande arrive dans Mara. Chaque dépense, avec son reçu en photo. La confiance se lit dans vos comptes."
-          while read -r name gender; do
-            jq -n --arg t "$TEXT" --arg v "$name" \
-              '{input:{text:$t}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000}}' > req.json
+          n=$(jq length .github/voice-lines.json)
+          fails=0
+          synth() {  # $1 = request file, $2 = output wav; prints the error message on failure
             curl -sS -H "X-Goog-Api-Key: $KEY" -H "Content-Type: application/json" \
-              -d @req.json https://texttospeech.googleapis.com/v1/text:synthesize > res.json
+              -d @"$1" https://texttospeech.googleapis.com/v1/text:synthesize > res.json
             if jq -e '.audioContent' res.json >/dev/null; then
-              jq -r '.audioContent' res.json | base64 -d > "out/${gender}_${name}.wav"
-              echo "ok $name"
-            else
-              echo "fail $name: $(jq -r '.error.message' res.json)"
+              jq -r '.audioContent' res.json | base64 -d > "$2"; return 0
             fi
-          done < list.txt
+            jq -r '.error.message // "no audio"' res.json; return 1
+          }
+          for i in $(seq 0 $((n - 1))); do
+            item=$(jq -c ".[$i]" .github/voice-lines.json)
+            file=$(jq -r .file <<<"$item")
+            voice=$(jq -r .voice <<<"$item")
+            rate=$(jq -r '.speakingRate // 1.0' <<<"$item")
+            if jq -e '.markup' <<<"$item" >/dev/null; then
+              jq -n --argjson it "$item" --arg v "$voice" --argjson r "$rate" \
+                '{input:{markup:$it.markup}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000, speakingRate:$r}}' > req.json
+              if msg=$(synth req.json "out/$file"); then echo "ok $file (markup)"; continue; fi
+              echo "markup refused for $file: $msg; falling back to text"
+            fi
+            jq -n --argjson it "$item" --arg v "$voice" --argjson r "$rate" \
+              '{input:{text:$it.text}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000, speakingRate:$r}}' > req.json
+            if msg=$(synth req.json "out/$file"); then
+              echo "ok $file"
+            else
+              echo "fail $file: $msg"; fails=$((fails + 1))
+            fi
+          done
+          cp .github/voice-lines.json out/lines.json
           ls -la out
+          echo "failures: $fails"
+          [ "$fails" -lt "$n" ]
       - name: Keep them on the voice-samples branch
         run: |
           set -eu
@@ -46,5 +65,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -qm "Chirp 3 HD French samples"
+          git commit -qm "Narration lines (Chirp 3 HD)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" voice-samples
