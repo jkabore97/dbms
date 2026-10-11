@@ -1,0 +1,89 @@
+# Temporary: creates the Mara Pro subscription on Google Play (two base
+# plans, left inactive) with PLAY_SERVICE_ACCOUNT_JSON. Removed once it has run.
+name: Play subscriptions
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/play-subs.yml]
+jobs:
+  subs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create
+        env:
+          SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -eu
+          pip install -q google-auth requests
+          python3 - <<'EOF'
+          import json, os, requests
+          from google.oauth2 import service_account
+          from google.auth.transport.requests import Request
+          c = service_account.Credentials.from_service_account_info(
+              json.loads(os.environ["SA"]),
+              scopes=["https://www.googleapis.com/auth/androidpublisher"])
+          c.refresh(Request())
+          h = {"Authorization": "Bearer " + c.token}
+          pkg = "bf.kaj.app"
+          base = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{pkg}"
+
+          def show(r, what):
+              print(what, r.status_code, "" if r.ok else r.text[:800])
+              return r
+
+          existing = requests.get(base + "/subscriptions", headers=h)
+          show(existing, "list")
+          have = [s["productId"] for s in existing.json().get("subscriptions", [])] if existing.ok else []
+          print("existing:", have)
+
+          def regional(units, nanos):
+              r = show(requests.post(base + "/pricing:convertRegionPrices", headers=h,
+                       json={"price": {"currencyCode": "USD", "units": str(units), "nanos": nanos}}),
+                       f"convert {units}.{nanos}")
+              d = r.json()
+              cfg = [{"regionCode": k, "price": v["price"], "newSubscriberAvailability": True}
+                     for k, v in d["convertedRegionPrices"].items()]
+              other = d.get("convertedOtherRegionsPrice")
+              return cfg, other, d["regionVersion"]["version"]
+
+          m_cfg, m_other, ver = regional(4, 990000000)
+          y_cfg, y_other, _ = regional(49, 990000000)
+          for code in ("BF", "CI", "SN", "ML", "US", "FR"):
+              mm = next((x["price"] for x in m_cfg if x["regionCode"] == code), None)
+              yy = next((x["price"] for x in y_cfg if x["regionCode"] == code), None)
+              print("price", code, mm, yy)
+
+          def plan(pid, period, cfg, other):
+              p = {"basePlanId": pid,
+                   "autoRenewingBasePlanType": {"billingPeriodDuration": period,
+                                                "resubscribeState": "RESUBSCRIBE_STATE_ACTIVE"},
+                   "regionalConfigs": cfg}
+              if other:
+                  p["otherRegionsConfig"] = {"usdPrice": other["usdPrice"], "eurPrice": other["eurPrice"],
+                                             "newSubscriberAvailability": True}
+              return p
+
+          body = {
+              "packageName": pkg, "productId": "mara_pro",
+              "listings": [
+                  {"languageCode": "fr-FR", "title": "Mara Pro",
+                   "benefits": ["Équipe et accès", "Comptabilité", "Livraison", "Vitrine avancée"],
+                   "description": "Équipe, comptes, livraison et vitrine avancée."},
+                  {"languageCode": "en-US", "title": "Mara Pro",
+                   "benefits": ["Team access", "Accounting", "Delivery", "Advanced vitrine"],
+                   "description": "Team, accounting, delivery and advanced vitrine."},
+              ],
+              "basePlans": [plan("monthly", "P1M", m_cfg, m_other),
+                            plan("yearly", "P1Y", y_cfg, y_other)],
+          }
+          if "mara_pro" not in have:
+              r = show(requests.post(base + "/subscriptions", headers=h,
+                       params={"productId": "mara_pro", "regionsVersion.version": ver}, json=body),
+                       "create")
+          s = show(requests.get(base + "/subscriptions/mara_pro", headers=h), "get")
+          if s.ok:
+              for bp in s.json().get("basePlans", []):
+                  print("base plan", bp["basePlanId"], bp.get("state"),
+                        bp["autoRenewingBasePlanType"]["billingPeriodDuration"],
+                        len(bp.get("regionalConfigs", [])), "regions")
+          EOF
