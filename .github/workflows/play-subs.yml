@@ -43,8 +43,11 @@ jobs:
                       print(bp["basePlanId"], rc["regionCode"], rc["price"], "->", new)
                       if new:
                           rc["price"] = new
+          ver = requests.post("https://androidpublisher.googleapis.com/androidpublisher/v3/applications/bf.kaj.app/pricing:convertRegionPrices",
+                              headers=h, json={"price": {"currencyCode": "USD", "units": "4", "nanos": 990000000}}).json()["regionVersion"]["version"]
+          print("regions version", ver)
           r = requests.patch(url, headers=h, json=sub,
-                             params={"updateMask": "basePlans", "regionsVersion.version": "2022/02"})
+                             params={"updateMask": "basePlans", "regionsVersion.version": ver})
           print("patch", r.status_code, "" if r.ok else r.text[:800])
           after = requests.get(url, headers=h).json()
           for bp in after["basePlans"]:
