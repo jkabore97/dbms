@@ -6271,4 +6271,65 @@ const enStrings = <String, String>{
       'Order online, pick up at the farm',
   'Les produits de la ferme, vendus par la ferme':
       'The farm\'s produce, sold by the farm',
+  // 130: Mara Pro in the store apps (store_panel.dart), its notice and its switch.
+  'Abonnement dans les applications (App Store, Google Play)':
+      'Subscription in the apps (App Store, Google Play)',
+  'Mara Pro est actif, payé sur l\'App Store, jusqu\'au {date}.':
+      'Mara Pro is on, paid on the App Store, until {date}.',
+  'Mara Pro est actif, payé sur Google Play, jusqu\'au {date}.':
+      'Mara Pro is on, paid on Google Play, until {date}.',
+  'Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.':
+      'Purchase pending: {store} still has to confirm it (parental approval, payment in progress). Mara Pro turns on as soon as it is confirmed.',
+  'Achat annulé : rien n\'a été prélevé.':
+      'Purchase cancelled: nothing was charged.',
+  'Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.':
+      'This {store} account already pays for Mara Pro, probably for another of your businesses: one subscription covers one business.',
+  'L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.':
+      'The purchase did not go through: {store} charged nothing. Try again in a moment.',
+  'Vérification de l\'achat auprès de {store}…':
+      'Checking the purchase with {store}…',
+  'Cet abonnement est terminé : il ne donne plus Mara Pro.':
+      'This subscription has ended: it no longer gives Mara Pro.',
+  'Cet abonnement a été remboursé : il ne donne plus Mara Pro.':
+      'This subscription was refunded: it no longer gives Mara Pro.',
+  'Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.':
+      'The payment for this subscription is on hold at {store}: update your payment method in {store}.',
+  'Cet achat ne donne pas Mara Pro à cette entreprise.':
+      'This purchase does not give this business Mara Pro.',
+  'Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Mara could not check it yet. Stay connected and tap “Restore purchases”: nothing will be charged twice.',
+  'Recherche de vos achats sur {store}…':
+      'Looking for your purchases on {store}…',
+  'Aucun abonnement Mara Pro à restaurer sur ce compte {store}.':
+      'No Mara Pro subscription to restore on this {store} account.',
+  '{store} n\'a pas répondu. Réessayez dans un moment.':
+      '{store} did not answer. Try again in a moment.',
+  'Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.':
+      'Only an administrator of the business can subscribe it to Mara Pro.',
+  '{store} ne propose pas Mara Pro sur cet appareil pour le moment. Réessayez plus tard.':
+      '{store} does not offer Mara Pro on this device for now. Try again later.',
+  'Votre abonnement Mara Pro paie déjà pour « {name} ». Un abonnement {store} couvre une seule entreprise.':
+      'Your Mara Pro subscription already pays for “{name}”. One {store} subscription covers one business.',
+  'Restaurer mes achats':
+      'Restore purchases',
+  'Gérer mon abonnement':
+      'Manage my subscription',
+  'Mara Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.':
+      'Mara Pro is an auto-renewing subscription{prices}. Payment is charged to your {store} account when you confirm the purchase. The subscription renews automatically at the same price for the same length unless it is cancelled at least 24 hours before the end of the current period. Manage or cancel it at any time in your {store} account settings.',
+  ' : 1 mois à {price}':
+      ': 1 month at {price}',
+  ' : 1 an à {price}':
+      ': 1 year at {price}',
+  ', ou 1 an à {price}':
+      ', or 1 year at {price}',
+  'Mara Pro · 1 an':
+      'Mara Pro · 1 year',
+  'Mara Pro · 1 mois':
+      'Mara Pro · 1 month',
+  '{price} par an':
+      '{price} a year',
+  '{price} par mois':
+      '{price} a month',
+  'S\'abonner':
+      'Subscribe',
 };

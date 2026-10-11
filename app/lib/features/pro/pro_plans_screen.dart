@@ -17,6 +17,9 @@ import '../cauris/cauri_icon.dart';
 import '../cauris/unlock_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/pay/wave_pay.dart' show StoreStanding, StoreVerdict;
+import 'store_billing.dart';
+import 'store_panel.dart';
 
 /// Kaj and Kaj Pro, side by side (`/o/<id>/kaj-pro`).
 ///
@@ -26,7 +29,10 @@ import '../../core/notify/bell_room.dart';
 /// limits Pro lifts — read from the platform's own terms (066), so the page
 /// says exactly what the database will enforce. The foot is how to pay
 /// (ProPayPanel): by card, by Wave, or by hand — except in the iPhone app,
-/// which describes Pro and sells nothing ([sellsDigitalInApp]).
+/// which describes Pro and sells nothing ([sellsDigitalInApp]). Once the
+/// platform sells Pro through the stores (130, [sellsProThroughStore]),
+/// the store apps' foot is [StorePanel] instead: the App Store's or Google
+/// Play's own month and year, never a card or Wave beside them.
 class ProPlansScreen extends StatefulWidget {
   const ProPlansScreen({
     super.key,
@@ -37,6 +43,9 @@ class ProPlansScreen extends StatefulWidget {
     this.cardManage,
     this.stripeReturn,
     this.onPaid,
+    this.storeBilling,
+    this.storeVerify,
+    this.storeStanding,
   });
 
   final OrgSummary org;
@@ -56,6 +65,15 @@ class ProPlansScreen extends StatefulWidget {
   /// Asked to read the business again once Stripe says it is paid (the
   /// webhook may land a few seconds after the owner).
   final VoidCallback? onPaid;
+
+  /// The store's purchase, in the store apps (130); null elsewhere.
+  final StoreBilling? storeBilling;
+
+  /// The payments Worker's /store/verify.
+  final Future<StoreVerdict> Function(StorePurchase purchase)? storeVerify;
+
+  /// my_store_subscription().
+  final Future<StoreStanding?> Function()? storeStanding;
 
   @override
   State<ProPlansScreen> createState() => _ProPlansScreenState();
@@ -140,8 +158,12 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final muted = theme.textTheme.bodyMedium?.copyWith(color: kMist);
     // The iPhone app sells no Pro (125): the comparison stays — what each
     // plan gives — with no period to choose, no price, no way to pay and
-    // no Stripe page.
-    final sells = sellsDigitalInApp;
+    // no Stripe page. Sold through the store (130), the store's panel says
+    // its own prices: no period above it, no card, no Wave.
+    final viaStore = sellsProThroughStore &&
+        widget.storeBilling != null &&
+        widget.storeVerify != null;
+    final sells = sellsDigitalInApp && !sellsProThroughStore;
 
     return Scaffold(
       appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Mara Pro'))),
@@ -238,9 +260,17 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   const SizedBox(height: 28),
                   // Mara Pro complet, earned rather than paid (085).
                   if (!org.isPro && _costs['pro_all'] != null) ...[
-                    _EarnIt(org: org, cost: _costs['pro_all']!, sells: sells),
+                    _EarnIt(org: org, cost: _costs['pro_all']!, sells: sells || viaStore),
                     const SizedBox(height: 20),
                   ],
+                  if (viaStore)
+                    StorePanel(
+                      org: org,
+                      billing: widget.storeBilling!,
+                      verify: widget.storeVerify!,
+                      standing: widget.storeStanding,
+                      onPro: widget.onPaid,
+                    ),
                   if (org.isPro && sells && widget.cardManage != null) widget.cardManage!,
                   if (!org.isPro && sells)
                     ProPayPanel(
