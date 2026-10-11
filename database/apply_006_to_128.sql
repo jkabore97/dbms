@@ -50822,6 +50822,24 @@ notify pgrst, 'reload schema';
 --      re-check of what is close to its end, service role), and
 --      store_org_of() (a notification names a token or a transaction, the
 --      Worker finds its business, service role).
+--   5b. Order (review S1): every row keeps signed_at, when the store said
+--      what it holds (Apple's signedDate on the JWS the Worker fetched
+--      itself from the App Store Server API; for Google, the moment the
+--      Worker read the purchase from the Play Developer API — a Pub/Sub
+--      eventTime is only a wake-up, the content is always fetched).
+--      store_settle() ignores anything older than what it already holds:
+--      a notification Apple retries after a refund cannot turn Pro back
+--      on.
+--   5c. Sandbox purchases (review S2), decided: a sandbox (TestFlight,
+--      App Review, Google licence tester) purchase counts ONLY for a
+--      business owned by a platform admin or by the account named in the
+--      platform setting store_review_account (default
+--      review.mara@gmail.com, the account given to App Review). App
+--      Review and the owner's own TestFlight work; nobody else gets a
+--      free, renewable Pro from a test card. store_settle() refuses every
+--      other sandbox purchase (reason 'sandbox', said in French by the
+--      Worker), and store_pro_active() does not count one either, should
+--      the business change hands.
 --
 -- B. ACCOUNT DELETION FOR REAL (« Supprimer mon compte », every account)
 --
@@ -50855,16 +50873,27 @@ notify pgrst, 'reload schema';
 --        * one of the doomed businesses' orders in transit (goods on the
 --          road, a courier paid on delivery) or paid online and not yet
 --          handed over (money Mara cannot give back by itself): the owner
---          finishes or refunds it first. Every other open order (pending,
---          accepted, ready — nothing paid, nothing moving) is cancelled,
---          each customer told on their own bell (org_id null: the notice
---          outlives the business), with no charge to anybody.
---   8. delete_my_account(p_confirmed_orgs): the deletion, as the caller,
---      for the account Worker (POST /v1/me/delete) — SECURITY DEFINER for
---      the reason 014 gives delete_org (it destroys rows RLS rightly
---      refuses to anyone, an owner included) and because it must act on
---      rows of businesses the caller only belongs to. The Worker never
---      names anybody: the id is auth.uid(). An owner's businesses go only
+--          finishes or refunds it first;
+--        * a Wave payout Mara still owes one of them (pending or failed).
+--      Each refusal has a code (blocked_code) the app translates. Every
+--      other open order (pending, accepted, ready — nothing paid, nothing
+--      moving) is cancelled, each customer told on their own bell (org_id
+--      null: the notice outlives the business), with no charge to anybody.
+--   8. delete_my_account(p_me, p_confirmed_orgs, p_stopped): the
+--      deletion, the account Worker's alone (POST /v1/me/delete; service
+--      role — the app's role calls none of section 8, review B1). The
+--      Worker learns the person's id from GoTrue, from their own token,
+--      signed in less than ten minutes ago (S8). Order (B1): the Worker
+--      first asks delete_my_account_stops() what must be stopped outside
+--      (every Stripe subscription and Google Play purchase of the
+--      businesses that go; nothing changed), stops each, writes the ids
+--      in account_deletion_log (account_deletion_note, before any purge,
+--      in a log that outlives both), and only then calls the deletion,
+--      which checks once more that nothing still running was left. One
+--      cancellation that fails, or a key the Worker lacks, and nothing is
+--      deleted. SECURITY DEFINER for the reason 014 gives delete_org (it
+--      destroys rows RLS rightly refuses to anyone, an owner included).
+--      An owner's businesses go only
 --      if the list the app showed (p_confirmed_orgs) is the list that
 --      would go — a business created since, or an older app that showed
 --      none, is refused. Then, for the person, exactly what GoTrue's
@@ -50880,16 +50909,24 @@ notify pgrst, 'reload schema';
 --      the Worker then soft-deletes the auth user (GoTrue's
 --      should_soft_delete: e-mail, phone, password, identities and
 --      metadata wiped, no sign-in ever again) instead of deleting the
---      row. Otherwise « hard ». The answer also names what the Worker
---      must stop outside: Google Play subscriptions (revoked), Stripe
---      subscriptions (cancelled), and how many App Store subscriptions
---      the owner must cancel themselves (Mara cannot).
+--      row. Otherwise « hard ». The App Store subscriptions are counted:
+--      Mara cannot cancel them, the app tells the owner where to.
+--   9. Mara's own money (S5): wave_payments — what customers paid Mara and
+--      Mara paid out, Mara Pro and the spots, Mara's revenue — no longer
+--      cascades with a business: detached (org_id null, former_org_id
+--      naming its tombstone), kept for Mara's accounts. A deletion is
+--      refused while a Wave payout to a doomed business is pending or
+--      failed.
 --   113's delete_my_account_check() stays for the Worker deployed today,
 --   until this batch's account Worker replaces it (BUILD_PLAN: dropped in
 --   129).
 -- ============================================================
 
 insert into platform_settings (key, value) values ('store_billing_on', 'false')
+on conflict (key) do nothing;
+-- 5c: the one account (besides the platform's admins) whose businesses a
+-- sandbox purchase may turn Pro — the account given to App Review.
+insert into platform_settings (key, value) values ('store_review_account', '"review.mara@gmail.com"')
 on conflict (key) do nothing;
 
 create table if not exists store_subscriptions (
@@ -50909,6 +50946,8 @@ create table if not exists store_subscriptions (
     -- Who bought it, for « this store account already pays for … ».
     bought_by        uuid references profiles(id) on delete set null,
     last_verified_at timestamptz not null default now(),
+    -- 5b: when the store signed what this row holds; older news is ignored.
+    signed_at        timestamptz,
     raw              jsonb,
     created_at       timestamptz not null default now(),
     unique (platform, original_id)
@@ -50933,6 +50972,27 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
+-- 5c. Whose sandbox purchases count
+-- ------------------------------------------------------------
+create or replace function store_sandbox_allowed(p_org_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select exists (
+        select 1 from memberships m
+          join profiles p on p.id = m.user_id
+          left join auth.users u on u.id = m.user_id
+         where m.org_id = p_org_id and m.role = 'owner'
+           and (p.is_platform_admin
+                or lower(btrim(coalesce(u.email, ''))) = lower(btrim(coalesce(
+                       (select value #>> '{}' from platform_settings
+                         where key = 'store_review_account'), 'review.mara@gmail.com')))));
+$$;
+
+-- ------------------------------------------------------------
 -- The store's half of « is this business on Pro »
 -- ------------------------------------------------------------
 create or replace function store_pro_active(p_org_id uuid)
@@ -50946,7 +51006,9 @@ as $$
         select 1 from store_subscriptions s
          where s.org_id = p_org_id
            and s.state in ('active', 'grace', 'cancelled')
-           and s.expires_at > now());
+           and s.expires_at > now()
+           -- 5c: a test purchase is Pro only for Mara's own and App Review.
+           and (s.environment = 'production' or store_sandbox_allowed(s.org_id)));
 $$;
 
 -- 085's org_plan, with the store added.
@@ -51085,6 +51147,8 @@ begin
 end;
 $$;
 
+-- The WIP signature (no p_signed_at), on a copy that had it.
+drop function if exists store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text);
 create or replace function store_settle(
     p_platform    text,
     p_org_id      uuid,
@@ -51096,7 +51160,8 @@ create or replace function store_settle(
     p_environment text,
     p_raw         jsonb default null,
     p_bought_by   uuid default null,
-    p_replaces    text default null
+    p_replaces    text default null,
+    p_signed_at   timestamptz default null
 )
 returns jsonb
 language plpgsql
@@ -51124,15 +51189,27 @@ begin
         -- A purchase is the business it was bought for.
         return jsonb_build_object('ok', false, 'reason', 'another business');
     end if;
+    -- 5c: a test purchase, for Mara's own businesses and App Review's only.
+    if p_environment = 'sandbox' and not store_sandbox_allowed(p_org_id) then
+        return jsonb_build_object('ok', false, 'reason', 'sandbox');
+    end if;
+    -- 5b: older news than what is held changes nothing (a notification
+    -- retried after a refund, two answers crossing).
+    if found and v_row.signed_at is not null and p_signed_at is not null
+       and p_signed_at < v_row.signed_at then
+        return jsonb_build_object('ok', true, 'stale', true,
+                                  'pro', org_plan(p_org_id) = 'pro',
+                                  'state', v_row.state, 'expires_at', v_row.expires_at);
+    end if;
     v_was := store_pro_active(p_org_id) or org_plan(p_org_id) = 'pro';
 
     insert into store_subscriptions (org_id, platform, product_id, original_id, state,
                                      expires_at, auto_renew, environment, bought_by,
-                                     last_verified_at, raw)
+                                     last_verified_at, signed_at, raw)
     values (p_org_id, p_platform, p_product_id, p_original_id, p_state,
             p_expires_at, coalesce(p_auto_renew, false),
             case when p_environment = 'sandbox' then 'sandbox' else 'production' end,
-            p_bought_by, now(), p_raw)
+            p_bought_by, now(), p_signed_at, p_raw)
     on conflict (platform, original_id) do update set
         product_id       = excluded.product_id,
         state            = excluded.state,
@@ -51141,6 +51218,7 @@ begin
         environment      = excluded.environment,
         bought_by        = coalesce(store_subscriptions.bought_by, excluded.bought_by),
         last_verified_at = now(),
+        signed_at        = coalesce(excluded.signed_at, store_subscriptions.signed_at),
         raw              = excluded.raw;
 
     -- Google: an upgrade or a re-subscription is a new token naming the old
@@ -51197,6 +51275,8 @@ as $$
     select s.platform, s.org_id, s.product_id, s.original_id, s.expires_at, s.environment
       from store_subscriptions s
      where s.state not in ('expired', 'revoked')
+       -- 5c: a test purchase no longer counted is not asked about daily.
+       and (s.environment = 'production' or store_sandbox_allowed(s.org_id))
        and (s.expires_at is null
             or s.expires_at < now() + interval '2 days'
             or s.last_verified_at < now() - interval '7 days')
@@ -51233,9 +51313,10 @@ as $$
 $$;
 
 revoke execute on function store_pro_active(uuid)    from public;
+revoke execute on function store_sandbox_allowed(uuid) from public;
 revoke execute on function store_billing_on()        from public;
 revoke execute on function store_verify_begin(uuid)  from public;
-revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text) from public;
+revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text, timestamptz) from public;
 revoke execute on function store_org_of(text, text)  from public;
 revoke execute on function store_due()               from public;
 revoke execute on function my_store_subscription(uuid) from public;
@@ -51244,9 +51325,10 @@ do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
         revoke execute on function store_pro_active(uuid)    from anon;
+        revoke execute on function store_sandbox_allowed(uuid) from anon;
         revoke execute on function store_billing_on()        from anon;
         revoke execute on function store_verify_begin(uuid)  from anon;
-        revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text) from anon;
+        revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text, timestamptz) from anon;
         revoke execute on function store_org_of(text, text)  from anon;
         revoke execute on function store_due()               from anon;
         revoke execute on function my_store_subscription(uuid) from anon;
@@ -51258,9 +51340,10 @@ begin
         -- Read inside org_plan() / feature_paid() / plan_terms(), as their
         -- owner: nobody's to call.
         revoke execute on function store_pro_active(uuid)    from authenticated;
+        revoke execute on function store_sandbox_allowed(uuid) from authenticated;
         revoke execute on function store_billing_on()        from authenticated;
         -- The Worker's alone.
-        revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text) from authenticated;
+        revoke execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text, timestamptz) from authenticated;
         revoke execute on function store_org_of(text, text)  from authenticated;
         revoke execute on function store_due()               from authenticated;
         -- The caller's own.
@@ -51269,7 +51352,7 @@ begin
         grant execute on function plan_terms()               to authenticated;
     end if;
     if exists (select 1 from pg_roles where rolname = 'service_role') then
-        grant execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text) to service_role;
+        grant execute on function store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text, timestamptz) to service_role;
         grant execute on function store_org_of(text, text)   to service_role;
         grant execute on function store_due()                to service_role;
         grant select on store_subscriptions to service_role;
@@ -51279,6 +51362,62 @@ end $$;
 -- ============================================================
 -- B. ACCOUNT DELETION
 -- ============================================================
+
+-- ------------------------------------------------------------
+-- 6a. Mara's money outlives a business (review S5)
+-- ------------------------------------------------------------
+-- wave_payments is Mara's own ledger, not the business's books: what a
+-- customer paid Mara for an order and what Mara paid out to the shop,
+-- and every Mara Pro and « Mettre en avant » payment — Mara's revenue,
+-- which Mara must account for whatever becomes of the business. Until
+-- now it cascaded away with the business. Now a business that goes
+-- (purge_org: the platform's « Supprimer » and an owner's account
+-- deletion alike) leaves its payments in place, detached: org_id null
+-- (no business's admin reads them any more; the platform's console
+-- still does), former_org_id naming the business, whose tombstone
+-- (deleted_orgs: name, slug, kind, when, by whom) says which it was;
+-- the order and the spot they paid for, gone with the business, are
+-- unlinked. Amounts, commission, payout, Wave's ids and dates stay as
+-- they were: an audit reads them as on the day. A detached row is
+-- never paid out again: a deletion is refused while a payout to the
+-- business is pending or failed (delete_my_account_plan).
+alter table wave_payments add column if not exists former_org_id uuid;
+alter table wave_payments alter column org_id drop not null;
+do $$
+begin
+    if exists (select 1 from pg_constraint
+                where conname = 'wave_payments_org_id_fkey' and confdeltype = 'c') then
+        alter table wave_payments drop constraint wave_payments_org_id_fkey;
+        alter table wave_payments add constraint wave_payments_org_id_fkey
+            foreign key (org_id) references orgs(id) on delete set null;
+    end if;
+end $$;
+create index if not exists wave_payments_former_org on wave_payments (former_org_id)
+    where former_org_id is not null;
+
+-- 076's console list, with the payments of a business that is gone named
+-- by its tombstone (an inner join on orgs would hide them).
+create or replace function platform_wave_payments(p_limit integer default 50)
+returns table (
+    id uuid, kind text, org_name text, amount numeric, commission numeric,
+    method text, status text, payout_status text, payout_to text,
+    payout_error text, created_at timestamptz, paid_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select p.id, p.kind, coalesce(o.name, d.name || ' (supprimée)', '—'), p.amount, p.commission,
+           p.method, p.status, p.payout_status, p.payout_to, p.payout_error, p.created_at, p.paid_at
+    from wave_payments p
+    left join orgs o on o.id = p.org_id
+    left join deleted_orgs d on d.id = p.former_org_id
+    where exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+      and (o.id is not null or p.former_org_id is not null)
+    order by (p.payout_status = 'failed') desc, p.created_at desc
+    limit least(greatest(coalesce(p_limit, 50), 1), 200);
+$$;
 
 -- ------------------------------------------------------------
 -- 6. One path to destroy a business: 014's, moved out unchanged
@@ -51394,6 +51533,11 @@ begin
     delete from accounts        where org_id = p_org_id;
     delete from church_members  where org_id = p_org_id;
 
+    -- 6a: Mara's own payments stay, detached from the business.
+    update wave_payments
+       set former_org_id = org_id, org_id = null, order_id = null, promotion_id = null
+     where org_id = p_org_id;
+
     -- What is left cascades cleanly: memberships, entities, departments,
     -- pending_invitations, audit_log.
     delete from orgs where id = p_org_id;
@@ -51482,12 +51626,14 @@ set search_path = public, auth
 as $$
 declare
     v_blocked    text;
+    v_code       text;
+    v_shop       text;
     v_businesses jsonb;
     v_leaves     jsonb;
     v_name       text;
 begin
     if p_me is null then
-        return jsonb_build_object('blocked', 'Connectez-vous d''abord');
+        return jsonb_build_object('blocked', 'Connectez-vous d''abord', 'blocked_code', 'signed_out');
     end if;
 
     -- The businesses that disappear: those the person is the only owner of.
@@ -51522,12 +51668,17 @@ begin
      where exists (select 1 from memberships m where m.org_id = o.id and m.user_id = p_me)
        and o.id not in (select (b ->> 'id')::uuid from jsonb_array_elements(v_businesses) b);
 
+    -- Each refusal has a code (the app says it in the reader's language)
+    -- and, where it names one, the business (blocked_shop).
     if exists (select 1 from profiles where id = p_me and is_platform_admin) then
+        v_code := 'platform';
         v_blocked := 'Un compte de la plateforme ne se supprime pas ici.';
     elsif exists (select 1 from orders where customer_id = p_me
                     and status in ('pending', 'accepted', 'ready', 'in_transit')) then
+        v_code := 'own_order';
         v_blocked := 'Une commande est en cours : attendez qu''elle soit terminée, ou annulez-la, puis supprimez votre compte.';
     elsif exists (select 1 from orders where courier_id = p_me and status in ('ready', 'in_transit')) then
+        v_code := 'delivering';
         v_blocked := 'Une livraison est en cours : terminez-la, puis supprimez votre compte.';
     else
         select o.name into v_name
@@ -51536,20 +51687,39 @@ begin
            and (d.status = 'in_transit'
                 or (d.status in ('pending', 'accepted', 'ready')
                     and d.payment_method = 'wave' and d.paid_at is not null))
+         order by o.name
          limit 1;
         if v_name is not null then
+            v_code := 'business_order';
+            v_shop := v_name;
             v_blocked := format('Une commande de « %s » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', v_name);
+        else
+            -- S5: money Mara still owes the business (a Wave payout
+            -- pending, or failed and to be retried) is never lost with it.
+            select o.name into v_name
+              from wave_payments w join orgs o on o.id = w.org_id
+             where w.org_id in (select (b ->> 'id')::uuid from jsonb_array_elements(v_businesses) b)
+               and w.payout_status in ('pending', 'failed')
+             order by o.name
+             limit 1;
+            if v_name is not null then
+                v_code := 'payout';
+                v_shop := v_name;
+                v_blocked := format('Mara doit encore verser à « %s » l''argent d''une commande payée par Wave (versement en attente ou en échec) : attendez qu''il arrive, ou écrivez à l''aide Mara, puis supprimez votre compte.', v_name);
+            end if;
         end if;
     end if;
 
     return jsonb_build_object(
-        'blocked',    v_blocked,
-        'businesses', v_businesses,
-        'leaves',     v_leaves,
-        'courier',    exists (select 1 from couriers where user_id = p_me),
-        'apple_store', (select count(*) from jsonb_array_elements(v_businesses) b,
-                               jsonb_array_elements(b -> 'store') s
-                         where s ->> 'platform' = 'apple' and (s ->> 'auto_renew')::boolean));
+        'blocked',      v_blocked,
+        'blocked_code', v_code,
+        'blocked_shop', v_shop,
+        'businesses',   v_businesses,
+        'leaves',       v_leaves,
+        'courier',      exists (select 1 from couriers where user_id = p_me),
+        'apple_store',  (select count(*) from jsonb_array_elements(v_businesses) b,
+                                jsonb_array_elements(b -> 'store') s
+                          where s ->> 'platform' = 'apple' and (s ->> 'auto_renew')::boolean));
 end;
 $$;
 
@@ -51566,32 +51736,79 @@ as $$
 $$;
 
 -- ------------------------------------------------------------
--- 8. The deletion
+-- 8. The deletion — the account Worker's alone (review B1)
 -- ------------------------------------------------------------
-create or replace function delete_my_account(p_confirmed_orgs uuid[] default null)
+-- The order, which holds whatever fails:
+--   1. delete_my_account_stops(me, shown list): the plan's refusals and
+--      the list check, then every Stripe subscription and Google Play
+--      purchase of the businesses that will go — nothing is changed.
+--   2. The Worker cancels each Stripe subscription and revokes each
+--      Google Play purchase. One failure, or a key it needs that is not
+--      set: it stops there and nothing is deleted (« Nous n'avons pas pu
+--      arrêter l'abonnement … »).
+--   3. account_deletion_note(me, 'stopped', what was stopped): the ids,
+--      written down in account_deletion_log before anything is purged —
+--      the log outlives the account and the businesses (no foreign key),
+--      so what Mara stopped is known even if step 4 then fails.
+--   4. delete_my_account(me, shown list, what was stopped): checks once
+--      more that every subscription still to stop was stopped (one
+--      started between 1 and 4 refuses it), then the deletion.
+-- All four are the service role's (the Worker's): the app's role calls
+-- none of them, so the Worker can never be skipped — the Worker learns
+-- the person's id from GoTrue, from the person's own token, and a
+-- recent sign-in is required there (review S8). The caller's own
+-- delete_my_account(uuid[]) of the first draft of this file is gone.
+drop function if exists delete_my_account(uuid[]);
+
+create table if not exists account_deletion_log (
+    id         bigint generated always as identity primary key,
+    -- No foreign key: the record outlives the account it is about.
+    user_id    uuid not null,
+    stage      text not null check (stage in ('stopped', 'deleted')),
+    businesses jsonb not null default '[]'::jsonb,
+    stopped    jsonb not null default '{}'::jsonb,
+    at         timestamptz not null default now()
+);
+create index if not exists account_deletion_log_by_user on account_deletion_log (user_id, at desc);
+alter table account_deletion_log enable row level security;
+comment on table account_deletion_log is
+    'Every account deletion (128): the businesses that went with it and the '
+    'Stripe subscriptions and Google Play purchases the account Worker stopped '
+    'before the purge (stage stopped), then the deletion itself (stage deleted). '
+    'No policy, no grant: the service role writes it, the platform reads it in SQL.';
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on account_deletion_log from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on account_deletion_log from authenticated;
+    end if;
+end $$;
+
+-- 1. What will go and what must be stopped first; refuses as the plan does.
+create or replace function delete_my_account_stops(p_me uuid, p_confirmed_orgs uuid[] default null)
 returns jsonb
 language plpgsql
+stable
 security definer
 set search_path = public, auth
 as $$
 declare
-    v_me      uuid := auth.uid();
     v_plan    jsonb;
     v_doomed  uuid[];
+    v_names   text[];
     v_google  jsonb;
     v_stripe  jsonb;
-    v_names   text[];
-    v_mode    text := 'hard';
-    v_held    boolean;
-    r         record;
-    v_o       record;
 begin
-    if v_me is null then
+    if p_me is null or not exists (select 1 from profiles where id = p_me) then
         raise exception 'Connectez-vous d''abord';
     end if;
-    v_plan := delete_my_account_plan(v_me);
+    v_plan := delete_my_account_plan(p_me);
     if v_plan ->> 'blocked' is not null then
-        raise exception '%', v_plan ->> 'blocked';
+        raise exception '%', v_plan ->> 'blocked'
+            using detail = coalesce(v_plan ->> 'blocked_code', ''),
+                  hint = coalesce(v_plan ->> 'blocked_shop', '');
     end if;
     select coalesce(array_agg((b ->> 'id')::uuid order by (b ->> 'id')), '{}'),
            coalesce(array_agg(b ->> 'name' order by b ->> 'name'), '{}')
@@ -51599,25 +51816,95 @@ begin
       from jsonb_array_elements(v_plan -> 'businesses') b;
     if cardinality(v_doomed) > 0 then
         if p_confirmed_orgs is null then
-            raise exception 'Mettez Mara à jour : la suppression d''un compte qui tient une activité se confirme dans la dernière version de l''application.';
+            raise exception 'Mettez Mara à jour : la suppression d''un compte qui tient une activité se confirme dans la dernière version de l''application.'
+                using detail = 'old_app';
         end if;
         if (select coalesce(array_agg(distinct x order by x), '{}') from unnest(p_confirmed_orgs) x)
            is distinct from v_doomed then
-            raise exception 'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.';
+            raise exception 'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.'
+                using detail = 'list_changed';
         end if;
     end if;
 
-    -- What the Worker must stop outside, read before the rows go.
-    select coalesce(jsonb_agg(jsonb_build_object('token', s.original_id, 'org', o.name)), '[]'::jsonb)
+    select coalesce(jsonb_agg(jsonb_build_object('token', s.original_id, 'org_id', o.id, 'org', o.name)
+                              order by s.original_id), '[]'::jsonb)
       into v_google
       from store_subscriptions s join orgs o on o.id = s.org_id
      where s.org_id = any (v_doomed) and s.platform = 'google'
        and s.state in ('active', 'grace', 'cancelled', 'on_hold', 'paused', 'pending');
-    select coalesce(jsonb_agg(t.subscription_id), '[]'::jsonb)
+    select coalesce(jsonb_agg(jsonb_build_object('id', t.subscription_id, 'org_id', o.id, 'org', o.name)
+                              order by t.subscription_id), '[]'::jsonb)
       into v_stripe
-      from stripe_subscriptions t
+      from stripe_subscriptions t join orgs o on o.id = t.org_id
      where t.org_id = any (v_doomed) and t.subscription_id is not null
        and t.status in ('active', 'trialing', 'past_due', 'unpaid', 'incomplete');
+
+    return jsonb_build_object(
+        'user_id',     p_me,
+        'orgs',        to_jsonb(v_doomed),
+        'businesses',  to_jsonb(v_names),
+        'google',      v_google,
+        'stripe',      v_stripe,
+        'apple_store', coalesce((v_plan ->> 'apple_store')::int, 0));
+end;
+$$;
+
+-- 3. What the Worker stopped, written down before the purge.
+create or replace function account_deletion_note(p_me uuid, p_businesses jsonb, p_stopped jsonb)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+    insert into account_deletion_log (user_id, stage, businesses, stopped)
+    values (p_me, 'stopped', coalesce(p_businesses, '[]'::jsonb), coalesce(p_stopped, '{}'::jsonb));
+$$;
+
+-- 4. The deletion.
+create or replace function delete_my_account(
+    p_me             uuid,
+    p_confirmed_orgs uuid[] default null,
+    p_stopped        jsonb default '{}'::jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_stops   jsonb;
+    v_doomed  uuid[];
+    v_mode    text := 'hard';
+    v_held    boolean;
+    v_left    text;
+    r         record;
+    v_o       record;
+begin
+    -- Its refusals, the list check, and what had to be stopped — again,
+    -- now, under the deletion's own transaction.
+    v_stops := delete_my_account_stops(p_me, p_confirmed_orgs);
+    select coalesce(array_agg(x::uuid), '{}') into v_doomed
+      from jsonb_array_elements_text(v_stops -> 'orgs') x;
+
+    -- Every subscription still running on a business that goes was
+    -- stopped by the Worker (one started since step 1 refuses it all).
+    select string_agg(g ->> 'org', ', ') into v_left
+      from jsonb_array_elements(v_stops -> 'google') g
+     where not coalesce(p_stopped -> 'google', '[]'::jsonb) ? (g ->> 'token');
+    if v_left is null then
+        select string_agg(t ->> 'org', ', ') into v_left
+          from jsonb_array_elements(v_stops -> 'stripe') t
+         where not coalesce(p_stopped -> 'stripe', '[]'::jsonb) ? (t ->> 'id');
+    end if;
+    if v_left is not null then
+        raise exception 'Nous n''avons pas pu arrêter l''abonnement de « % » : rien n''a été supprimé. Réessayez dans un moment ou écrivez à l''aide.', v_left
+            using detail = 'not_stopped';
+    end if;
+
+    insert into account_deletion_log (user_id, stage, businesses, stopped)
+    values (p_me, 'deleted', v_stops -> 'businesses',
+            jsonb_build_object('google', v_stops -> 'google', 'stripe', v_stops -> 'stripe',
+                               'apple_store', v_stops -> 'apple_store'));
 
     -- Each business the person alone owns: its customers and members told
     -- on their own bell (no business: the notice outlives it), then
@@ -51630,17 +51917,17 @@ begin
                                   'booking', d.booked_for is not null)
           from orders d
          where d.org_id = v_o.id and d.status in ('pending', 'accepted', 'ready')
-           and d.customer_id is not null and d.customer_id <> v_me;
+           and d.customer_id is not null and d.customer_id <> p_me;
         insert into notifications (recipient_id, org_id, kind, message, params)
         select distinct m.user_id, null::uuid, 'org_closed',
                format('« %s » a fermé sur Mara : vous n''en faites plus partie. Votre compte reste le vôtre.', v_o.name),
                jsonb_build_object('to', 'me', 'shop', v_o.name)
           from memberships m
-         where m.org_id = v_o.id and m.user_id <> v_me;
+         where m.org_id = v_o.id and m.user_id <> p_me;
         update orgs set archived_at = coalesce(archived_at, now()),
-                        archived_by = coalesce(archived_by, v_me)
+                        archived_by = coalesce(archived_by, p_me)
          where id = v_o.id;
-        perform purge_org(v_o.id, v_me, 'Compte du propriétaire supprimé');
+        perform purge_org(v_o.id, p_me, 'Compte du propriétaire supprimé');
     end loop;
 
     -- The person: what GoTrue's delete cascades, done as it does it — with
@@ -51652,8 +51939,11 @@ begin
     update orders
        set customer_name = 'Client supprimé', phone = null, address = null,
            drop_lat = null, drop_lng = null
-     where customer_id = v_me;
+     where customer_id = p_me;
 
+    -- One statement per foreign key to profiles, each on its own column
+    -- (not every one is indexed: a full scan per key, fine at Mara's size;
+    -- an index belongs beside any of these tables that grows large).
     for r in
         select c.conrelid::regclass as tbl, a.attname as col, c.confdeltype as act,
                not a.attnotnull as nullable
@@ -51666,9 +51956,9 @@ begin
     loop
         begin
             if r.act = 'c' then
-                execute format('delete from %s where %I = $1', r.tbl, r.col) using v_me;
+                execute format('delete from %s where %I = $1', r.tbl, r.col) using p_me;
             elsif r.act = 'n' or (r.act in ('a', 'r') and r.nullable) then
-                execute format('update %s set %I = null where %I = $1', r.tbl, r.col, r.col) using v_me;
+                execute format('update %s set %I = null where %I = $1', r.tbl, r.col, r.col) using p_me;
             end if;
         exception when others then
             -- Left as it is: the row then holds the account (soft below).
@@ -51680,7 +51970,7 @@ begin
        set full_name = 'Compte supprimé', first_name = null, middle_name = null,
            last_name = null, phone = null, date_of_birth = null, title = null,
            profile_completed_at = null, preferred_locale = 'fr'
-     where id = v_me;
+     where id = p_me;
 
     -- Whatever still names the person is the businesses' books (NOT NULL
     -- « written by »): the account stays as an empty shell.
@@ -51694,7 +51984,7 @@ begin
            and cardinality(c.conkey) = 1
     loop
         execute format('select exists (select 1 from %s where %I = $1)', r.tbl, r.col)
-           into v_held using v_me;
+           into v_held using p_me;
         if v_held then
             v_mode := 'soft';
             exit;
@@ -51702,38 +51992,53 @@ begin
     end loop;
 
     return jsonb_build_object(
-        'user_id',     v_me,
+        'user_id',     p_me,
         'mode',        v_mode,
-        'businesses',  to_jsonb(v_names),
-        'google',      v_google,
-        'stripe',      v_stripe,
-        'apple_store', coalesce((v_plan ->> 'apple_store')::int, 0));
+        'businesses',  v_stops -> 'businesses',
+        'google',      v_stops -> 'google',
+        'stripe',      v_stops -> 'stripe',
+        'apple_store', coalesce((v_stops ->> 'apple_store')::int, 0));
 end;
 $$;
 
-revoke execute on function purge_org(uuid, uuid, text)        from public;
-revoke execute on function delete_org(uuid, text, boolean)    from public;
-revoke execute on function delete_my_account_plan(uuid)       from public;
-revoke execute on function delete_my_account_preview()        from public;
-revoke execute on function delete_my_account(uuid[])         from public;
+revoke execute on function purge_org(uuid, uuid, text)                 from public;
+revoke execute on function delete_org(uuid, text, boolean)             from public;
+revoke execute on function delete_my_account_plan(uuid)                from public;
+revoke execute on function delete_my_account_preview()                 from public;
+revoke execute on function delete_my_account_stops(uuid, uuid[])       from public;
+revoke execute on function account_deletion_note(uuid, jsonb, jsonb)   from public;
+revoke execute on function delete_my_account(uuid, uuid[], jsonb)      from public;
+revoke execute on function platform_wave_payments(integer)             from public;
 
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
-        revoke execute on function purge_org(uuid, uuid, text)     from anon;
-        revoke execute on function delete_org(uuid, text, boolean) from anon;
-        revoke execute on function delete_my_account_plan(uuid)    from anon;
-        revoke execute on function delete_my_account_preview()     from anon;
-        revoke execute on function delete_my_account(uuid[])      from anon;
+        revoke execute on function purge_org(uuid, uuid, text)               from anon;
+        revoke execute on function delete_org(uuid, text, boolean)           from anon;
+        revoke execute on function delete_my_account_plan(uuid)              from anon;
+        revoke execute on function delete_my_account_preview()              from anon;
+        revoke execute on function delete_my_account_stops(uuid, uuid[])     from anon;
+        revoke execute on function account_deletion_note(uuid, jsonb, jsonb) from anon;
+        revoke execute on function delete_my_account(uuid, uuid[], jsonb)    from anon;
+        revoke execute on function platform_wave_payments(integer)           from anon;
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         -- Internal: called by delete_org and delete_my_account as their owner.
-        revoke execute on function purge_org(uuid, uuid, text)     from authenticated;
-        revoke execute on function delete_my_account_plan(uuid)    from authenticated;
+        revoke execute on function purge_org(uuid, uuid, text)               from authenticated;
+        revoke execute on function delete_my_account_plan(uuid)              from authenticated;
+        -- B1: the deletion is the account Worker's (service role) alone.
+        revoke execute on function delete_my_account_stops(uuid, uuid[])     from authenticated;
+        revoke execute on function account_deletion_note(uuid, jsonb, jsonb) from authenticated;
+        revoke execute on function delete_my_account(uuid, uuid[], jsonb)    from authenticated;
         -- The doors, each about the caller (delete_org: the platform's).
-        grant execute on function delete_org(uuid, text, boolean)  to authenticated;
-        grant execute on function delete_my_account_preview()      to authenticated;
-        grant execute on function delete_my_account(uuid[])       to authenticated;
+        grant execute on function delete_org(uuid, text, boolean)            to authenticated;
+        grant execute on function delete_my_account_preview()                to authenticated;
+        grant execute on function platform_wave_payments(integer)            to authenticated;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+        grant execute on function delete_my_account_stops(uuid, uuid[])      to service_role;
+        grant execute on function account_deletion_note(uuid, jsonb, jsonb)  to service_role;
+        grant execute on function delete_my_account(uuid, uuid[], jsonb)     to service_role;
     end if;
 end $$;
 

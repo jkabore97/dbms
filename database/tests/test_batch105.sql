@@ -747,6 +747,8 @@ declare
         'stripe_xof_per_usd',
         -- 128: read by store_billing_on(), which plan_terms asks.
         'store_billing_on',
+        -- 128: read by store_sandbox_allowed(), which store_settle asks.
+        'store_review_account',
         'pro_features',
         'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
         'free_history_months', 'vitrine_free_basics',

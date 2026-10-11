@@ -447,7 +447,16 @@ class AdminRepository {
       body: jsonEncode(body),
     );
     if (response.statusCode >= 400) {
-      throw StateError(_accountError(response));
+      String? code;
+      String? name;
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          if (decoded['code'] is String) code = decoded['code'] as String;
+          if (decoded['name'] is String) name = decoded['name'] as String;
+        }
+      } catch (_) {}
+      throw AccountRefused(_accountError(response), code: code, name: name);
     }
   }
 
@@ -1574,11 +1583,23 @@ class Showcase {
       );
 }
 
+/// The account Worker said no (130): its French sentence, and the code
+/// and business the app says it with in the reader's language
+/// (not_stopped, reauth, payout, business_order, own_order…).
+class AccountRefused extends StateError {
+  AccountRefused(super.message, {this.code, this.name});
+
+  final String? code;
+  final String? name;
+}
+
 /// What « Supprimer mon compte » would do (128): read before the person
 /// confirms, so the confirmation names every business that disappears.
 class AccountDeletionPlan {
   const AccountDeletionPlan({
     this.blocked,
+    this.blockedCode,
+    this.blockedShop,
     this.businesses = const [],
     this.leaves = const [],
     this.courier = false,
@@ -1587,6 +1608,11 @@ class AccountDeletionPlan {
 
   /// Why it cannot be done now, in the server's French; null when it can.
   final String? blocked;
+
+  /// The refusal's code (platform, own_order, delivering, business_order,
+  /// payout) and the business it names, for the reader's language.
+  final String? blockedCode;
+  final String? blockedShop;
 
   /// The businesses the person alone owns: they disappear with the account.
   final List<DoomedBusiness> businesses;
@@ -1607,6 +1633,8 @@ class AccountDeletionPlan {
     final l = json['leaves'];
     return AccountDeletionPlan(
       blocked: json['blocked'] as String?,
+      blockedCode: json['blocked_code'] as String?,
+      blockedShop: json['blocked_shop'] as String?,
       businesses: [
         if (b is List)
           for (final x in b)

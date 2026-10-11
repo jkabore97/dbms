@@ -31,8 +31,11 @@ do $$ begin
     if not exists (select 1 from pg_roles where rolname = 'authenticated') then
         create role authenticated nologin;
     end if;
+    if not exists (select 1 from pg_roles where rolname = 'service_role') then
+        create role service_role nologin;
+    end if;
 end $$;
-grant usage on schema public to anon, authenticated;
+grant usage on schema public to anon, authenticated, service_role;
 -- Supabase gives the app's role every table; RLS, the triggers and 128's
 -- own revokes (applied right after) are the gates these claims are about.
 grant select, insert, update, delete on all tables in schema public to authenticated;
@@ -89,7 +92,7 @@ language sql
 as $$
     select store_settle(p_platform, p_org,
                         case when p_platform = 'apple' then 'bf.kaj.app.pro.monthly' else 'mara_pro:monthly' end,
-                        p_id, p_state, p_expires, p_state = 'active', 'sandbox',
+                        p_id, p_state, p_expires, p_state = 'active', 'production',
                         '{"test": true}'::jsonb, null, null);
 $$;
 
@@ -235,13 +238,73 @@ end $$;
 commit;
 
 \echo ''
+\echo '--- TEST 1b: older news is ignored (S1); a test purchase is Pro only for Mara''s own and App Review (S2) ---'
+begin;
+do $$
+declare v_r jsonb; v_shop uuid := '12800000-0000-0000-0000-000000000001'; v_free uuid := '12800000-0000-0000-0000-000000000007';
+        v_mine uuid := '12800000-0000-0000-0000-000000000009';
+begin
+    -- S1: Apple's REFUND, signed now, then the DID_RENEW of an hour ago
+    -- arriving late (a retry): Pro stays off.
+    v_r := store_settle('apple', v_shop, 'bf.kaj.app.pro.monthly', 'orig-1', 'active', now() + interval '30 days',
+                        true, 'production', null, null, null, now() - interval '2 hours');
+    if not (v_r ->> 'pro')::boolean then raise exception 'FAIL: active: %', v_r; end if;
+    v_r := store_settle('apple', v_shop, 'bf.kaj.app.pro.monthly', 'orig-1', 'revoked', now() + interval '30 days',
+                        false, 'production', null, null, null, now());
+    if (v_r ->> 'pro')::boolean then raise exception 'FAIL: the refund: %', v_r; end if;
+    v_r := store_settle('apple', v_shop, 'bf.kaj.app.pro.monthly', 'orig-1', 'active', now() + interval '30 days',
+                        true, 'production', null, null, null, now() - interval '1 hour');
+    if (v_r ->> 'pro')::boolean or not coalesce((v_r ->> 'stale')::boolean, false)
+       or org_plan(v_shop) <> 'free'
+       or (select state from store_subscriptions where original_id = 'orig-1' and platform = 'apple') <> 'revoked' then
+        raise exception 'FAIL: a replayed renewal after the refund turned Pro on: %', v_r;
+    end if;
+    -- Newer news is written (a re-subscription Apple signs later).
+    v_r := store_settle('apple', v_shop, 'bf.kaj.app.pro.monthly', 'orig-1', 'active', now() + interval '30 days',
+                        true, 'production', null, null, null, now() + interval '1 second');
+    if not (v_r ->> 'pro')::boolean then raise exception 'FAIL: newer news ignored: %', v_r; end if;
+
+    -- S2: a sandbox purchase for an ordinary business: refused, nothing written.
+    v_r := store_settle('apple', v_free, 'bf.kaj.app.pro.monthly', 'sbx-1', 'active', now() + interval '30 days',
+                        true, 'sandbox');
+    if (v_r ->> 'ok')::boolean or v_r ->> 'reason' <> 'sandbox'
+       or exists (select 1 from store_subscriptions where original_id = 'sbx-1') or org_plan(v_free) <> 'free' then
+        raise exception 'FAIL: a sandbox purchase for a stranger''s business: %', v_r;
+    end if;
+    -- The App Review account (store_review_account) — its business, yes.
+    update platform_settings set value = '"autre128@example.org"' where key = 'store_review_account';
+    v_r := store_settle('apple', v_free, 'bf.kaj.app.pro.monthly', 'sbx-1', 'active', now() + interval '30 days',
+                        true, 'sandbox');
+    if not (v_r ->> 'pro')::boolean or org_plan(v_free) <> 'pro' then
+        raise exception 'FAIL: the review account''s sandbox purchase: %', v_r;
+    end if;
+    -- Named no longer: its sandbox row stops counting.
+    update platform_settings set value = '"review.mara@gmail.com"' where key = 'store_review_account';
+    if org_plan(v_free) <> 'free' then raise exception 'FAIL: a sandbox row counted for an ordinary business'; end if;
+    -- A business a platform admin owns: Mara's own TestFlight.
+    insert into orgs (id, name, slug, profile, default_currency)
+    values (v_mine, 'Mara Test 128', 'mara-test-128', 'retail', 'XOF');
+    insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+    values (v_mine, '12812812-0000-0000-0000-000000000001', 'owner', 'org', v_mine, 'full');
+    v_r := store_settle('google', v_mine, 'mara_pro:monthly', 'sbx-google-1', 'active', now() + interval '30 days',
+                        true, 'sandbox');
+    if not (v_r ->> 'pro')::boolean then raise exception 'FAIL: the platform''s own sandbox: %', v_r; end if;
+    if (select value #>> '{}' from platform_settings where key = 'store_review_account') <> 'review.mara@gmail.com' then
+        raise exception 'FAIL: store_review_account default';
+    end if;
+    raise notice 'PASS: S1 — after a refund signed now, a renewal signed an hour ago is ignored (stale, Pro stays off), newer news is written; S2 — a sandbox purchase is refused for an ordinary business (nothing written), counted for the store_review_account''s business and for a platform admin''s, and stops counting when the account is named no longer; default review.mara@gmail.com';
+end $$;
+rollback;
+
+\echo ''
 \echo '--- TEST 2: only the Worker writes; anon calls nothing ---'
 do $$
 declare v text; f text;
 begin
     foreach f in array array[
-        'store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text)',
-        'store_org_of(text, text)', 'store_due()', 'store_pro_active(uuid)', 'store_billing_on()'] loop
+        'store_settle(text, uuid, text, text, text, timestamptz, boolean, text, jsonb, uuid, text, timestamptz)',
+        'store_org_of(text, text)', 'store_due()', 'store_pro_active(uuid)', 'store_billing_on()',
+        'store_sandbox_allowed(uuid)'] loop
         if has_function_privilege('authenticated', f, 'execute') then
             raise exception 'FAIL: authenticated may run %', f;
         end if;
@@ -280,7 +343,7 @@ begin
     if v not like 'ERR: permission denied%' then raise exception 'FAIL: anon ran store_verify_begin: %', v; end if;
     v := pg_temp.try128(null, $q$select count(*)::text from store_subscriptions$q$, 'anon');
     if v not like 'ERR: permission denied%' then raise exception 'FAIL: anon read: %', v; end if;
-    raise notice 'PASS: store_settle / store_org_of / store_due / store_pro_active / store_billing_on are nobody''s in the app; no insert, update or delete for the app or anon; the owner''s forged settle, insert and update are refused; anon runs no store door and reads nothing';
+    raise notice 'PASS: store_settle / store_org_of / store_due / store_pro_active / store_billing_on / store_sandbox_allowed are nobody''s in the app; no insert, update or delete for the app or anon; the owner''s forged settle, insert and update are refused; anon runs no store door and reads nothing';
 end $$;
 
 \echo ''
@@ -592,53 +655,116 @@ end $$;
 do $$
 declare v text;
 begin
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000011', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000011')::text$q$, 'service_role');
     if v not like 'ERR: Mettez Mara à jour%' then raise exception 'FAIL: an old app''s call: %', v; end if;
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
-        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012']::uuid[])::text$q$);
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$, 'service_role');
     if v not like 'ERR: La liste de vos activités a changé%' then raise exception 'FAIL: a list short of one: %', v; end if;
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
-        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000014']::uuid[])::text$q$);
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000014']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$, 'service_role');
     if v not like 'ERR: La liste de vos activités a changé%' then raise exception 'FAIL: a list with the co-owned one: %', v; end if;
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000015')::text$q$, 'service_role');
     if v not like 'ERR: Une commande est en cours%' then raise exception 'FAIL: the buyer with an open order: %', v; end if;
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000017', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000017')::text$q$, 'service_role');
     if v not like 'ERR: Une livraison est en cours%' then raise exception 'FAIL: the courier on the road: %', v; end if;
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000001', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000001')::text$q$, 'service_role');
     if v not like 'ERR: Un compte de la plateforme%' then raise exception 'FAIL: the platform: %', v; end if;
-    v := pg_temp.try128(null, $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account(null::uuid)::text$q$, 'service_role');
     if v not like 'ERR: Connectez-vous%' then raise exception 'FAIL: nobody: %', v; end if;
     -- An order paid online and not yet handed over, or on the road: the
     -- owner finishes or refunds it first.
     update orders set payment_method = 'wave', paid_at = now()
      where id = '128aaaaa-0000-0000-0000-000000000001';
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
-        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[])::text$q$);
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$, 'service_role');
     update orders set payment_method = 'cash', paid_at = null
      where id = '128aaaaa-0000-0000-0000-000000000001';
     if v not like 'ERR: Une commande de « Boutique Fin » est en route ou déjà payée en ligne%' then
         raise exception 'FAIL: a paid order: %', v;
     end if;
+    -- S5: Mara still owes the shop a Wave payout (pending, then failed).
+    -- Written as wave_settle leaves it; the checkout's own doors (Pro,
+    -- cash-only, the vitrine's switches) are not what is tested here.
+    set local session_replication_role = replica;
+    insert into wave_payments (id, kind, org_id, amount, currency, status, payout_status, payout_to, payout_amount, paid_at)
+    values ('128bbbbb-0000-0000-0000-000000000009', 'order', '12800000-0000-0000-0000-000000000011',
+            2500, 'XOF', 'succeeded', 'pending', '+22612801011', 2400, now());
+    set local session_replication_role = origin;
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$, 'service_role');
+    if v not like 'ERR: Mara doit encore verser à « Boutique Fin »%' then raise exception 'FAIL: a pending payout: %', v; end if;
+    update wave_payments set payout_status = 'failed' where id = '128bbbbb-0000-0000-0000-000000000009';
+    if delete_my_account_plan('12812812-0000-0000-0000-000000000011') ->> 'blocked_code' <> 'payout'
+       or delete_my_account_plan('12812812-0000-0000-0000-000000000011') ->> 'blocked_shop' <> 'Boutique Fin' then
+        raise exception 'FAIL: a failed payout: %', delete_my_account_plan('12812812-0000-0000-0000-000000000011');
+    end if;
+    update wave_payments set payout_status = 'sent', paid_out_at = now() where id = '128bbbbb-0000-0000-0000-000000000009';
+    if delete_my_account_plan('12812812-0000-0000-0000-000000000011') ->> 'blocked' is not null then
+        raise exception 'FAIL: a payout sent still blocks';
+    end if;
+    -- The codes the app translates.
+    if delete_my_account_plan('12812812-0000-0000-0000-000000000015') ->> 'blocked_code' <> 'own_order'
+       or delete_my_account_plan('12812812-0000-0000-0000-000000000017') ->> 'blocked_code' <> 'delivering'
+       or delete_my_account_plan('12812812-0000-0000-0000-000000000001') ->> 'blocked_code' <> 'platform' then
+        raise exception 'FAIL: the refusal codes';
+    end if;
+    -- B1: a subscription the Worker did not stop refuses it all.
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[], '{"google": ["fin-google-token"]}'::jsonb)::text$q$, 'service_role');
+    if v not like 'ERR: Nous n''avons pas pu arrêter l''abonnement de « Ferme Fin »%rien n''a été supprimé%' then
+        raise exception 'FAIL: Stripe not stopped: %', v;
+    end if;
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[])::text$q$, 'service_role');
+    if v not like 'ERR: Nous n''avons pas pu arrêter l''abonnement de « Boutique Fin »%' then
+        raise exception 'FAIL: nothing stopped: %', v;
+    end if;
     if not exists (select 1 from orgs where id = '12800000-0000-0000-0000-000000000011') then
         raise exception 'FAIL: a refusal deleted something';
     end if;
-    raise notice 'PASS: refused — an old app''s call for an owner, a list that is not the one shown (short, or with the co-owned business), the buyer''s open order, a delivery on the road, a business''s order paid online, the platform, nobody; nothing deleted';
+    if not exists (select 1 from stripe_subscriptions where subscription_id = 'sub_fin')
+       or not exists (select 1 from store_subscriptions where original_id = 'fin-google-token')
+       or exists (select 1 from account_deletion_log where user_id = '12812812-0000-0000-0000-000000000011') then
+        raise exception 'FAIL: a refusal changed a subscription row or logged a deletion';
+    end if;
+    -- What the Worker must stop, read before anything changes.
+    v := pg_temp.try128(null,
+        $q$select delete_my_account_stops('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[])::text$q$, 'service_role');
+    if (v::jsonb) -> 'google' -> 0 ->> 'token' <> 'fin-google-token'
+       or (v::jsonb) -> 'stripe' -> 0 ->> 'id' <> 'sub_fin'
+       or ((v::jsonb) ->> 'apple_store')::int <> 1 then
+        raise exception 'FAIL: the stops: %', v;
+    end if;
+    v := pg_temp.try128(null,
+        $q$select delete_my_account_stops('12812812-0000-0000-0000-000000000015')::text$q$, 'service_role');
+    if v not like 'ERR: Une commande est en cours%' then raise exception 'FAIL: the stops of the buyer: %', v; end if;
+    raise notice 'PASS: refused — an old app''s call for an owner, a list that is not the one shown (short, or with the co-owned business), the buyer''s open order, a delivery on the road, a business''s order paid online, a Wave payout Mara still owes the shop (pending, failed; sent no longer blocks), the platform, nobody; each with its code; a Stripe or Google subscription the Worker did not stop refuses it all; nothing deleted, no subscription row touched, nothing logged; delete_my_account_stops names the Google token, the Stripe id and the App Store count';
 end $$;
 
 \echo ''
 \echo '--- TEST 9: an owner deleted — the shop, the farm and the association gone, the members shoppers ---'
 begin;
+-- Mara's own money: a Mara Pro payment and a spot the shop paid Mara for.
+insert into wave_payments (id, kind, org_id, period, amount, currency, status, paid_at) values
+    ('128bbbbb-0000-0000-0000-000000000001', 'pro',  :dshop, 'month', 2900, 'XOF', 'succeeded', now() - interval '40 days'),
+    ('128bbbbb-0000-0000-0000-000000000002', 'spot', :dshop, null,    1000, 'XOF', 'succeeded', now() - interval '10 days');
 do $$
 declare v text; r jsonb; n int;
 begin
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
-        $q$select delete_my_account(array['12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000011']::uuid[])::text$q$);
+    -- The Worker's note, written before the purge (B1, step 3).
+    perform pg_temp.as128(null);
+    set local role service_role;
+    perform account_deletion_note('12812812-0000-0000-0000-000000000011', '["Boutique Fin", "Entraide Fin", "Ferme Fin"]',
+                                  '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}');
+    reset role;
+    v := pg_temp.try128(null,
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000013', '12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000011']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$, 'service_role');
     if v like 'ERR:%' then raise exception 'FAIL: the owner''s deletion: %', v; end if;
     r := v::jsonb;
     if r ->> 'user_id' <> '12812812-0000-0000-0000-000000000011' or r ->> 'mode' <> 'hard'
        or r -> 'businesses' <> '["Boutique Fin", "Entraide Fin", "Ferme Fin"]'::jsonb
        or r -> 'google' -> 0 ->> 'token' <> 'fin-google-token'
-       or r -> 'stripe' <> '["sub_fin"]'::jsonb
+       or r -> 'stripe' -> 0 ->> 'id' <> 'sub_fin'
        or (r ->> 'apple_store')::int <> 1 then
         raise exception 'FAIL: the answer: %', r;
     end if;
@@ -691,7 +817,30 @@ begin
     if (select count(*) from journal_entries where org_id = '12800000-0000-0000-0000-000000000015') < 1 then
         raise exception 'FAIL: Ferme Y lost its books';
     end if;
-    raise notice 'PASS: the owner of a shop, a farm and an association — all three archived and purged (books, photos, invoices, debts, the subscription rows; three tombstones), off the street; the employee is the shop''s no more (told, still at Ferme Y); the buyer''s order cancelled and told; « À Deux » kept by its other owner; Google token and Stripe subscription handed to the Worker, one App Store subscription to cancel by hand; profile emptied; the auth user deleted outright (hard)';
+    -- S5: Mara's own payments kept, detached, named by the tombstone.
+    if (select count(*) from wave_payments
+         where id in ('128bbbbb-0000-0000-0000-000000000001', '128bbbbb-0000-0000-0000-000000000002')
+           and org_id is null and former_org_id = '12800000-0000-0000-0000-000000000011'
+           and status = 'succeeded') <> 2 then
+        raise exception 'FAIL: Mara''s payments went with the shop';
+    end if;
+    perform pg_temp.as128('12812812-0000-0000-0000-000000000001');
+    set local role authenticated;
+    if (select count(*) from platform_wave_payments(200) w
+         where w.org_name = 'Boutique Fin (supprimée)' and w.kind in ('pro', 'spot')) <> 2 then
+        raise exception 'FAIL: the console no longer shows them';
+    end if;
+    reset role;
+    -- B1: the log outlives the account: what was stopped, then the deletion.
+    if (select count(*) from account_deletion_log where user_id = '12812812-0000-0000-0000-000000000011') <> 2
+       or not exists (select 1 from account_deletion_log where user_id = '12812812-0000-0000-0000-000000000011'
+                        and stage = 'stopped' and stopped -> 'stripe' ? 'sub_fin')
+       or not exists (select 1 from account_deletion_log where user_id = '12812812-0000-0000-0000-000000000011'
+                        and stage = 'deleted' and stopped -> 'stripe' -> 0 ->> 'id' = 'sub_fin'
+                        and stopped -> 'google' -> 0 ->> 'token' = 'fin-google-token') then
+        raise exception 'FAIL: the deletion log: %', (select jsonb_agg(to_jsonb(l)) from account_deletion_log l);
+    end if;
+    raise notice 'PASS: the owner of a shop, a farm and an association — all three archived and purged (books, photos, invoices, debts, the subscription rows; three tombstones), off the street; the employee is the shop''s no more (told, still at Ferme Y); the buyer''s order cancelled and told; « À Deux » kept by its other owner; the Google token and the Stripe id, stopped first, logged before the purge and kept in account_deletion_log after it; one App Store subscription to cancel by hand; Mara''s Pro and spot payments kept, detached, shown in the console under the tombstone''s name; profile emptied; the auth user deleted outright (hard)';
 end $$;
 rollback;
 
@@ -704,7 +853,7 @@ begin
     select count(*) into v_entries from journal_entries where org_id = '12800000-0000-0000-0000-000000000015';
     -- The member's name is on Ferme Y's books (a NOT NULL « written by »):
     -- the account is kept as an empty shell (soft).
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000013', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000013')::text$q$, 'service_role');
     if v like 'ERR:%' then raise exception 'FAIL: the member''s deletion: %', v; end if;
     r := v::jsonb;
     if r ->> 'mode' <> 'soft' or jsonb_array_length(r -> 'businesses') <> 0 then
@@ -728,10 +877,10 @@ begin
     end;
 
     -- The buyer, once Ferme Y's order is delivered: hard.
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000015')::text$q$, 'service_role');
     if v not like 'ERR: Une commande est en cours%' then raise exception 'FAIL: the buyer: %', v; end if;
     delete from orders where id = '128aaaaa-0000-0000-0000-000000000001';
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000015', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000015')::text$q$, 'service_role');
     if v like 'ERR:%' or (v::jsonb) ->> 'mode' <> 'hard' then raise exception 'FAIL: the buyer: %', v; end if;
     if (select customer_name from orders where id = '128aaaaa-0000-0000-0000-000000000002') <> 'Client supprimé'
        or (select phone from orders where id = '128aaaaa-0000-0000-0000-000000000002') is not null
@@ -741,7 +890,7 @@ begin
     delete from auth.users where id = '12812812-0000-0000-0000-000000000015';
 
     -- The courier with a delivery done: hard, the delivery kept unnamed.
-    v := pg_temp.try128('12812812-0000-0000-0000-000000000016', $q$select delete_my_account()::text$q$);
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000016')::text$q$, 'service_role');
     if v like 'ERR:%' or (v::jsonb) ->> 'mode' <> 'hard' then raise exception 'FAIL: the courier: %', v; end if;
     if exists (select 1 from couriers where user_id = '12812812-0000-0000-0000-000000000016')
        or (select courier_id from orders where id = '128aaaaa-0000-0000-0000-000000000002') is not null
@@ -758,17 +907,41 @@ rollback;
 do $$
 declare v text; f text;
 begin
-    foreach f in array array['purge_org(uuid, uuid, text)', 'delete_my_account_plan(uuid)'] loop
+    foreach f in array array['purge_org(uuid, uuid, text)', 'delete_my_account_plan(uuid)',
+                             'delete_my_account_stops(uuid, uuid[])', 'account_deletion_note(uuid, jsonb, jsonb)',
+                             'delete_my_account(uuid, uuid[], jsonb)'] loop
         if has_function_privilege('authenticated', f, 'execute') or has_function_privilege('anon', f, 'execute') then
             raise exception 'FAIL: % is the app''s', f;
         end if;
     end loop;
-    foreach f in array array['delete_my_account(uuid[])', 'delete_my_account_preview()'] loop
-        if has_function_privilege('anon', f, 'execute') then raise exception 'FAIL: anon may run %', f; end if;
-        if not has_function_privilege('authenticated', f, 'execute') then raise exception 'FAIL: the app may not run %', f; end if;
+    foreach f in array array['delete_my_account_stops(uuid, uuid[])', 'account_deletion_note(uuid, jsonb, jsonb)',
+                             'delete_my_account(uuid, uuid[], jsonb)'] loop
+        if not has_function_privilege('service_role', f, 'execute') then raise exception 'FAIL: the Worker may not run %', f; end if;
     end loop;
-    v := pg_temp.try128(null, $q$select delete_my_account()::text$q$, 'anon');
+    if to_regprocedure('delete_my_account(uuid[])') is not null then
+        raise exception 'FAIL: the caller''s delete_my_account(uuid[]) is still there';
+    end if;
+    if has_function_privilege('anon', 'delete_my_account_preview()', 'execute')
+       or not has_function_privilege('authenticated', 'delete_my_account_preview()', 'execute') then
+        raise exception 'FAIL: the preview is not the signed-in caller''s';
+    end if;
+    if has_table_privilege('authenticated', 'account_deletion_log', 'select')
+       or has_table_privilege('anon', 'account_deletion_log', 'select') then
+        raise exception 'FAIL: the deletion log is readable by the app';
+    end if;
+    -- B1, the review's attack: the owner calls the deletion straight
+    -- through PostgREST, skipping the Worker.
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account('12812812-0000-0000-0000-000000000011', array['12800000-0000-0000-0000-000000000011', '12800000-0000-0000-0000-000000000012', '12800000-0000-0000-0000-000000000013']::uuid[], '{"google": ["fin-google-token"], "stripe": ["sub_fin"]}'::jsonb)::text$q$);
+    if v not like 'ERR: permission denied%' then raise exception 'FAIL: the owner skipped the Worker: %', v; end if;
+    v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
+        $q$select delete_my_account_stops('12812812-0000-0000-0000-000000000011')::text$q$);
+    if v not like 'ERR: permission denied%' then raise exception 'FAIL: the owner read the stops: %', v; end if;
+    v := pg_temp.try128(null, $q$select delete_my_account('12812812-0000-0000-0000-000000000015')::text$q$, 'anon');
     if v not like 'ERR: permission denied%' then raise exception 'FAIL: anon: %', v; end if;
+    if not exists (select 1 from orgs where id = '12800000-0000-0000-0000-000000000011') then
+        raise exception 'FAIL: the direct call deleted the shop';
+    end if;
     v := pg_temp.try128('12812812-0000-0000-0000-000000000011',
         $q$select purge_org('12800000-0000-0000-0000-000000000015', null, 'x')::text$q$);
     if v not like 'ERR: permission denied%' then raise exception 'FAIL: an owner purged: %', v; end if;
@@ -779,7 +952,7 @@ begin
     v := pg_temp.try128('12812812-0000-0000-0000-000000000001',
         $q$select delete_org('12800000-0000-0000-0000-000000000015', 'Ferme Y', true)::text$q$);
     if v not like 'ERR: Archive Ferme Y first%' then raise exception 'FAIL: unarchived: %', v; end if;
-    raise notice 'PASS: purge_org and the plan are nobody''s; delete_my_account and its preview the signed-in caller''s, not anon''s; an owner purges nothing; delete_org keeps its platform-only and archive-first fences';
+    raise notice 'PASS: purge_org and the plan are nobody''s; delete_my_account, its stops and its note the service role''s (the account Worker''s) alone — the owner''s direct call through PostgREST is refused and deletes nothing; the preview the signed-in caller''s, not anon''s; the log unreadable by the app; an owner purges nothing; delete_org keeps its platform-only and archive-first fences';
 end $$;
 begin;
 select pg_temp.as128(:mara);

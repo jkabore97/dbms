@@ -11,6 +11,7 @@ import '../../core/nav/router.dart';
 import '../../core/pay/wave_pay.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'store_billing.dart';
+import 'store_watcher.dart';
 
 /// The foot of the Pro page in the store apps once the platform sells Pro
 /// through the store (130, [sellsProThroughStore]): Mara Pro's month and
@@ -21,20 +22,25 @@ import 'store_billing.dart';
 /// A purchase is not Pro until the payments Worker said so: the store's
 /// transaction (Apple) or token (Google) is sent to /store/verify, which
 /// asks the store itself; only then is the purchase completed and the page
-/// reads the business again. A Worker that cannot be reached leaves the
-/// purchase open — the store hands it back on the next visit or on
-/// « Restaurer mes achats ».
+/// reads the business again. The listening is the app's, from its start
+/// ([StoreWatcher], review S3): this page draws what it says, and makes
+/// one of its own only where the app has none (a test).
 ///
 /// One store account pays Mara Pro for one business: Apple keeps one
-/// running subscription per group and Apple ID, Google one purchase of
-/// `mara_pro` per account. A second business of the same owner says so
-/// ([StoreStanding.elsewhereName]) and the store refuses a second.
+/// running subscription per group and Apple ID — buying the other period
+/// for a second business would only change the first one's (a
+/// crossgrade) — and Google one purchase of `mara_pro` per account. So
+/// when the owner's own purchase in this store already pays for another
+/// business ([StoreStanding.elsewhereName], review S4), this page sells
+/// nothing: it says which business is paid and offers « Gérer mon
+/// abonnement ».
 class StorePanel extends StatefulWidget {
   const StorePanel({
     super.key,
     required this.org,
     required this.billing,
     required this.verify,
+    this.watcher,
     this.standing,
     this.onPro,
     this.launch,
@@ -44,8 +50,12 @@ class StorePanel extends StatefulWidget {
   final OrgSummary org;
   final StoreBilling billing;
 
-  /// The Worker's /store/verify for one purchase (WavePay.verifyStore).
+  /// The Worker's /store/verify for one purchase (WavePay.verifyStore),
+  /// for the page's own listener when the app has none.
   final Future<StoreVerdict> Function(StorePurchase purchase) verify;
+
+  /// The app's purchase listener (main.dart); null in a test.
+  final StoreWatcher? watcher;
 
   /// Where this business's store subscription stands (my_store_subscription).
   final Future<StoreStanding?> Function()? standing;
@@ -66,14 +76,12 @@ class StorePanel extends StatefulWidget {
 }
 
 class _StorePanelState extends State<StorePanel> {
-  StreamSubscription<List<StorePurchase>>? _sub;
+  late final StoreWatcher _watcher;
+  late final bool _ownWatcher;
   List<StoreProduct>? _products;
   bool _unavailable = false;
   bool _busy = false;
   bool _restoring = false;
-  bool _heard = false;
-  String? _message;
-  bool _good = false;
   StoreStanding? _standing;
 
   String get _store => widget.billing.platform == 'apple' ? 'App Store' : 'Google Play';
@@ -81,14 +89,25 @@ class _StorePanelState extends State<StorePanel> {
   @override
   void initState() {
     super.initState();
-    _sub = widget.billing.purchases.listen(_onPurchases);
+    _ownWatcher = widget.watcher == null;
+    _watcher = widget.watcher ??
+        StoreWatcher(billing: widget.billing, verify: widget.verify, onPro: widget.onPro);
+    if (_ownWatcher) _watcher.start();
+    _watcher.attach();
+    _watcher.notice.addListener(_onNotice);
     _load();
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _watcher.notice.removeListener(_onNotice);
+    _watcher.detach();
+    if (_ownWatcher) _watcher.dispose();
     super.dispose();
+  }
+
+  void _onNotice() {
+    if (mounted) setState(() => _busy = false);
   }
 
   Future<void> _load() async {
@@ -111,115 +130,32 @@ class _StorePanelState extends State<StorePanel> {
     }
   }
 
-  void _say(String Function(BuildContext context) text, {bool good = false}) {
-    if (!mounted) return;
-    setState(() {
-      _message = text(context);
-      _good = good;
-    });
-  }
-
-  Future<void> _onPurchases(List<StorePurchase> list) async {
-    for (final p in list) {
-      _heard = true;
-      switch (p.status) {
-        case StorePurchaseStatus.pending:
-          _say((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}));
-        case StorePurchaseStatus.canceled:
-          await _completeQuietly(p);
-          _say((context) => context.tr('Achat annulé : rien n\'a été prélevé.'));
-        case StorePurchaseStatus.error:
-          await _completeQuietly(p);
-          _say((context) => _errorText(context, p.errorCode, p.errorMessage));
-        case StorePurchaseStatus.purchased:
-        case StorePurchaseStatus.restored:
-          await _verify(p);
-      }
-    }
-    if (mounted) setState(() => _busy = false);
-  }
-
-  String _errorText(BuildContext context, String? code, String? message) {
-    final all = '${code ?? ''} ${message ?? ''}';
-    if (all.contains('itemAlreadyOwned') || all.contains('alreadyOwned')) {
-      return context.tr('Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.', {'store': _store});
-    }
-    if (all.contains('userCancel') || all.contains('canceled')) {
-      return context.tr('Achat annulé : rien n\'a été prélevé.');
-    }
-    return context.tr('L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.', {'store': _store});
-  }
-
-  Future<void> _completeQuietly(StorePurchase p) async {
-    if (!p.needsCompletion) return;
-    try {
-      await widget.billing.complete(p);
-    } catch (_) {}
-  }
-
-  Future<void> _verify(StorePurchase p) async {
-    if (!mounted) return;
-    {
-      setState(() {
-        _busy = true;
-        _message = context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store});
-        _good = false;
-      });
-    }
-    try {
-      final verdict = await widget.verify(p);
-      await _completeQuietly(p);
-      if (verdict.pro) {
-        widget.onPro?.call();
-        _say((context) => context.tr('Merci ! Mara Pro est actif.'), good: true);
-      } else {
-        _say((context) => switch (verdict.state) {
-          'expired' => context.tr('Cet abonnement est terminé : il ne donne plus Mara Pro.'),
-          'revoked' => context.tr('Cet abonnement a été remboursé : il ne donne plus Mara Pro.'),
-          'on_hold' || 'paused' => context.tr('Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.', {'store': _store}),
-          'pending' => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}),
-          _ => context.tr('Cet achat ne donne pas Mara Pro à cette entreprise.'),
-        });
-      }
-    } on StoreVerifyRefused catch (e) {
-      // Real, but not this business's (or not Mara Pro): the store is told
-      // it was handled, so it stops offering it back.
-      await _completeQuietly(p);
-      _say((_) => e.message);
-    } catch (_) {
-      // The Worker was not reached: the purchase stays open, the store
-      // hands it back.
-      _say((context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'));
-    }
+  void _say(String Function(BuildContext context) text) {
+    _watcher.notice.value = StoreNotice(text);
   }
 
   Future<void> _buy(StoreProduct product) async {
-    setState(() {
-      _busy = true;
-      _message = null;
-    });
+    setState(() => _busy = true);
+    _watcher.notice.value = null;
     try {
       await widget.billing.buy(product, orgId: widget.org.id);
     } on PlatformException catch (e) {
-      _say((context) => _errorText(context, e.code, e.message));
+      _say((context) => storeErrorText(context, e.code, e.message, _store));
       if (mounted) setState(() => _busy = false);
     } catch (_) {
-      _say((context) => _errorText(context, null, null));
+      _say((context) => storeErrorText(context, null, null, _store));
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _restore() async {
-    setState(() {
-      _restoring = true;
-      _heard = false;
-      _message = context.tr('Recherche de vos achats sur {store}…', {'store': _store});
-      _good = false;
-    });
+    setState(() => _restoring = true);
+    final before = _watcher.heard;
+    _say((context) => context.tr('Recherche de vos achats sur {store}…', {'store': _store}));
     try {
       await widget.billing.restore();
       await Future<void>.delayed(widget.restoreWait);
-      if (!_heard) {
+      if (_watcher.heard == before) {
         _say((context) => context.tr('Aucun abonnement Mara Pro à restaurer sur ce compte {store}.', {'store': _store}));
       }
     } catch (_) {
@@ -255,6 +191,21 @@ class _StorePanelState extends State<StorePanel> {
     final month = of('month');
     final year = of('year');
     final elsewhere = _standing?.elsewhereName;
+    // S4: the owner's purchase in THIS store already pays for another
+    // business — nothing to buy here (on Apple, the other period would
+    // only crossgrade that one).
+    final paidElsewhere = elsewhere != null &&
+        elsewhere.isNotEmpty &&
+        (_standing?.elsewherePlatform == null || _standing!.elsewherePlatform == widget.billing.platform);
+    // « Gérer » opens this store's page: offered where this store holds
+    // the subscription in question, never for a Pro paid by card or in
+    // the other store.
+    final manageable = org.isPro
+        ? _standing?.platform == widget.billing.platform
+        : org.isAdmin;
+    final notice = _watcher.notice.value;
+    final message = notice?.text(context);
+    final good = notice?.good ?? false;
 
     return Column(
       key: const Key('store-panel'),
@@ -273,16 +224,16 @@ class _StorePanelState extends State<StorePanel> {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             )
+          else if (paidElsewhere) ...[
+            Text(
+              context.tr('Votre abonnement {store} paie déjà Mara Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.', {'name': elsewhere, 'store': _store}),
+              key: const Key('store-elsewhere'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+          ]
           else ...[
-            if (elsewhere != null && elsewhere.isNotEmpty) ...[
-              Text(
-                context.tr('Votre abonnement Mara Pro paie déjà pour « {name} ». Un abonnement {store} couvre une seule entreprise.', {'name': elsewhere, 'store': _store}),
-                key: const Key('store-elsewhere'),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 12),
-            ],
             for (final p in [?month, ?year]) ...[
               _ProductTile(
                 product: p,
@@ -293,17 +244,17 @@ class _StorePanelState extends State<StorePanel> {
             ],
           ],
         ],
-        if (_message != null) ...[
+        if (message != null) ...[
           const SizedBox(height: 4),
           Container(
             key: const Key('store-message'),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: _good ? kInk : theme.colorScheme.surfaceContainerHighest,
+              color: good ? kInk : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(_message!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: _good ? kPaper : kInk)),
+            child: Text(message,
+                style: theme.textTheme.bodyMedium?.copyWith(color: good ? kPaper : kInk)),
           ),
           const SizedBox(height: 10),
         ],
@@ -314,13 +265,15 @@ class _StorePanelState extends State<StorePanel> {
             icon: const Icon(Icons.restore),
             label: Text(context.tr('Restaurer mes achats')),
           ),
-          const SizedBox(height: 6),
-          TextButton.icon(
-            key: const Key('store-manage'),
-            onPressed: _manage,
-            icon: const Icon(Icons.open_in_new, size: 18),
-            label: Text(context.tr('Gérer mon abonnement')),
-          ),
+          if (manageable || paidElsewhere) ...[
+            const SizedBox(height: 6),
+            TextButton.icon(
+              key: const Key('store-manage'),
+              onPressed: _manage,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(context.tr('Gérer mon abonnement')),
+            ),
+          ],
         ],
         const SizedBox(height: 10),
         Text(

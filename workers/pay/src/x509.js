@@ -20,6 +20,13 @@
 //
 // The pin is a parameter only so a test can build its own chain; the
 // Worker never passes one.
+//
+// Not done: an online revocation check (OCSP) of the leaf and the
+// intermediate, which Apple's library makes when it can reach Apple.
+// Accepted, with the root pinned: a payload is believed only when it came
+// back from Apple's own API over TLS, which the Worker asked itself — a
+// notification is only a wake-up (store.js appleNotify) — so a revoked
+// signing key could only replay what Apple's API already said.
 
 import { unb64, unb64url } from "./jwt.js";
 

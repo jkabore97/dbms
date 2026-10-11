@@ -6300,8 +6300,6 @@ const enStrings = <String, String>{
       'Only an administrator of the business can subscribe it to Mara Pro.',
   '{store} ne propose pas Mara Pro sur cet appareil pour le moment. Réessayez plus tard.':
       '{store} does not offer Mara Pro on this device for now. Try again later.',
-  'Votre abonnement Mara Pro paie déjà pour « {name} ». Un abonnement {store} couvre une seule entreprise.':
-      'Your Mara Pro subscription already pays for “{name}”. One {store} subscription covers one business.',
   'Restaurer mes achats':
       'Restore purchases',
   'Gérer mon abonnement':
@@ -6364,4 +6362,35 @@ const enStrings = <String, String>{
   // 130: the date of birth and the number, optional at sign-up.
   'Numéro de téléphone (facultatif)':
       'Phone number (optional)',
+  // 130 review fixes: the store's refusals by their code, the deletion's.
+  'Compte de test des boutiques (achats sandbox acceptés)':
+      'Store test account (sandbox purchases accepted)',
+  'Me reconnecter':
+      'Sign in again',
+  'Cet achat a été fait pour une autre entreprise.':
+      'This purchase was made for another business.',
+  'Cet achat ne dit pas pour quelle entreprise il a été fait.':
+      'This purchase does not say which business it was made for.',
+  'Cet abonnement est déjà celui d\'une autre entreprise.':
+      'This subscription already belongs to another business.',
+  'Cet achat n\'est pas Mara Pro.':
+      'This purchase is not Mara Pro.',
+  'Cet achat n\'est pas pour Mara.':
+      'This purchase is not for Mara.',
+  'Cet achat n\'a pas pu être lu par Mara.':
+      'Mara could not read this purchase.',
+  'Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Mara Pro que pour les comptes de test de Mara.':
+      'Test purchase refused: a purchase made with a test account (sandbox, TestFlight) turns on Mara Pro only for Mara\'s own test accounts.',
+  'Votre session a expiré : reconnectez-vous, puis touchez « Restaurer mes achats ». Rien ne sera prélevé deux fois.':
+      'Your session has expired: sign in again, then tap “Restore purchases”. Nothing will be charged twice.',
+  'Votre abonnement {store} paie déjà Mara Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.':
+      'Your {store} subscription already pays Mara Pro for “{name}”. One subscription covers one business: it cannot also pay for this one from this {store} account. To move it to another business, or stop it, manage it in {store}.',
+  'Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.':
+      'An order of “{name}” is on its way or already paid online: deliver or refund it, then delete your account.',
+  'Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.':
+      'Mara still owes “{name}” the money of an order paid by Wave (payout pending or failed): wait for it to arrive, or write to Mara\'s help, then delete your account.',
+  'Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.':
+      'For your safety, sign in again before deleting your account: the sign-in must be less than 10 minutes old.',
+  'Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.':
+      'We could not stop the subscription of “{name}”: nothing was deleted. Try again in a moment or write to the help desk.',
 };

@@ -20,6 +20,7 @@ import '../../core/notify/bell_room.dart';
 import '../../core/pay/wave_pay.dart' show StoreStanding, StoreVerdict;
 import 'store_billing.dart';
 import 'store_panel.dart';
+import 'store_watcher.dart';
 
 /// Kaj and Kaj Pro, side by side (`/o/<id>/kaj-pro`).
 ///
@@ -46,6 +47,7 @@ class ProPlansScreen extends StatefulWidget {
     this.storeBilling,
     this.storeVerify,
     this.storeStanding,
+    this.storeWatcher,
   });
 
   final OrgSummary org;
@@ -74,6 +76,9 @@ class ProPlansScreen extends StatefulWidget {
 
   /// my_store_subscription().
   final Future<StoreStanding?> Function()? storeStanding;
+
+  /// The app's store purchase listener, from its start (review S3).
+  final StoreWatcher? storeWatcher;
 
   @override
   State<ProPlansScreen> createState() => _ProPlansScreenState();
@@ -268,6 +273,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       org: org,
                       billing: widget.storeBilling!,
                       verify: widget.storeVerify!,
+                      watcher: widget.storeWatcher,
                       standing: widget.storeStanding,
                       onPro: widget.onPaid,
                     ),

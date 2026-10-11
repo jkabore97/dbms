@@ -180,21 +180,24 @@ class WavePay {
 
   /// Mara Pro bought in the App Store or on Google Play (130): the Worker
   /// asks the store itself (/store/verify) and writes it down; the answer
-  /// says whether the business is now on Pro. Throws the Worker's own
-  /// French sentence when it refuses ([StoreVerifyRefused] with its code:
-  /// another business's purchase, not Mara Pro…), or a [StateError] when
-  /// it could not be reached — the purchase is then not completed, so the
-  /// store hands it back on the next try.
+  /// says whether the business is now on Pro. [orgId] is the business the
+  /// purchase itself names (StorePurchase.orgId) — never the page open —
+  /// or null, and the Worker reads it from the store (review S3). Throws
+  /// [StoreVerifyRefused] with the Worker's code when it refuses (another
+  /// business's purchase, not Mara Pro, an expired session…), or a
+  /// [StateError] when it could not be reached — the purchase is then not
+  /// completed, so the store hands it back on the next try.
   Future<StoreVerdict> verifyStore({
     required String platform,
-    required String orgId,
+    String? orgId,
     required String productId,
     String? transactionId,
     String? token,
   }) async {
+    if (!compiledIn) throw StateError('Pas de connexion au serveur de Mara.');
     final session = _client?.auth.currentSession?.accessToken;
-    if (!compiledIn || session == null) {
-      throw StateError('Connectez-vous pour vous abonner.');
+    if (session == null) {
+      throw const StoreVerifyRefused('Connectez-vous pour vous abonner.', 'session', status: 401);
     }
     final http.Response response;
     try {
@@ -206,7 +209,7 @@ class WavePay {
         },
         body: jsonEncode({
           'platform': platform,
-          'org_id': orgId,
+          'org_id': ?orgId,
           'product_id': productId,
           'transaction_id': ?transactionId,
           'token': ?token,
@@ -226,10 +229,15 @@ class WavePay {
         pro: body['pro'] == true,
         state: '${body['state'] ?? ''}',
         expiresAt: DateTime.tryParse('${body['expires_at'] ?? ''}'),
+        orgId: body['org_id'] is String ? body['org_id'] as String : orgId,
       );
     }
     if (response.statusCode >= 400 && response.statusCode < 500) {
-      throw StoreVerifyRefused('${body['error'] ?? 'Achat refusé.'}', '${body['code'] ?? ''}');
+      throw StoreVerifyRefused(
+        '${body['error'] ?? 'Achat refusé.'}',
+        response.statusCode == 401 ? 'session' : '${body['code'] ?? ''}',
+        status: response.statusCode,
+      );
     }
     throw StateError('${body['error'] ?? 'La vérification de l\'achat n\'a pas abouti.'}');
   }
@@ -250,6 +258,9 @@ class WavePay {
         expiresAt: mine is Map ? DateTime.tryParse('${mine['expires_at'] ?? ''}') : null,
         autoRenew: mine is Map && mine['auto_renew'] == true,
         elsewhereName: elsewhere is Map ? '${elsewhere['name'] ?? ''}' : null,
+        elsewherePlatform: elsewhere is Map && elsewhere['platform'] is String
+            ? elsewhere['platform'] as String
+            : null,
       );
     } catch (_) {
       return null;
@@ -306,7 +317,7 @@ class WaveTerms {
 
 /// The payments Worker's word on a store purchase (130).
 class StoreVerdict {
-  const StoreVerdict({required this.pro, required this.state, this.expiresAt});
+  const StoreVerdict({required this.pro, required this.state, this.expiresAt, this.orgId});
 
   /// The business is on Mara Pro now.
   final bool pro;
@@ -314,15 +325,20 @@ class StoreVerdict {
   /// active · grace · cancelled · on_hold · paused · pending · expired · revoked
   final String state;
   final DateTime? expiresAt;
+
+  /// The business the purchase was settled for.
+  final String? orgId;
 }
 
 /// The Worker refused a purchase, in its own French words; [code] says why
-/// (wrong_org, replayed, product, bundle, no_org…).
+/// (wrong_org, replayed, product, bundle, no_org, sandbox — for good;
+/// session, not_admin — for now, see StoreWatcher).
 class StoreVerifyRefused implements Exception {
-  const StoreVerifyRefused(this.message, this.code);
+  const StoreVerifyRefused(this.message, this.code, {this.status = 400});
 
   final String message;
   final String code;
+  final int status;
 
   @override
   String toString() => message;
@@ -336,6 +352,7 @@ class StoreStanding {
     this.expiresAt,
     this.autoRenew = false,
     this.elsewhereName,
+    this.elsewherePlatform,
   });
 
   final String? platform;
@@ -345,6 +362,9 @@ class StoreStanding {
 
   /// The business the caller's own store purchase already pays for.
   final String? elsewhereName;
+
+  /// Which store that purchase is in ('apple' / 'google').
+  final String? elsewherePlatform;
 }
 
 /// A business's Kaj Pro paid by card (082), as the owner reads it.

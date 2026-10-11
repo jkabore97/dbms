@@ -153,7 +153,7 @@ const sub = (over = {}) => ({
 
 /// A fake world. `db` is the store_subscriptions table as store_settle
 /// keeps it (by platform + original id, one business each).
-function world({ apple = {}, google = {}, admin = true } = {}) {
+function world({ apple = {}, google = {}, admin = true, sandboxOk = true, gone = [] } = {}) {
   const calls = [];
   const db = new Map();
   const fetchImpl = async (url, init = {}) => {
@@ -200,10 +200,19 @@ function world({ apple = {}, google = {}, admin = true } = {}) {
   const rpcService = async (_env, fn, args) => {
     calls.push({ rpc: fn, service: true, args });
     if (fn === "store_settle") {
+      // store_settle's own rules, as 128 has them (test_batch128 proves
+      // them in SQL): the business, the token's owner, the sandbox, the order.
+      if (gone.includes(args.p_org_id)) return { ok: false, reason: "no such business" };
       const key = `${args.p_platform}:${args.p_original_id}`;
       const had = db.get(key);
       if (had && had.org !== args.p_org_id) return { ok: false, reason: "another business" };
-      db.set(key, { org: args.p_org_id, state: args.p_state, expires: args.p_expires_at, product: args.p_product_id, env: args.p_environment });
+      if (args.p_environment === "sandbox" && !sandboxOk) return { ok: false, reason: "sandbox" };
+      if (had?.signed && args.p_signed_at && Date.parse(args.p_signed_at) < Date.parse(had.signed)) {
+        const pro = ["active", "grace", "cancelled"].includes(had.state) && Date.parse(had.expires) > Date.now();
+        return { ok: true, stale: true, pro, state: had.state };
+      }
+      db.set(key, { org: args.p_org_id, state: args.p_state, expires: args.p_expires_at, product: args.p_product_id,
+        env: args.p_environment, signed: args.p_signed_at || had?.signed });
       const pro = ["active", "grace", "cancelled"].includes(args.p_state) && Date.parse(args.p_expires_at) > Date.now();
       return { ok: true, pro, state: args.p_state };
     }
@@ -462,7 +471,8 @@ test("Google: every state; wrong business, wrong product, a token replayed for a
 test("a caller who is not an administrator, or not signed in, gets nothing asked of the store", async () => {
   const w = world({ admin: false, google: { "tok-0123456789": sub() } });
   let r = await call(w, "/store/verify", { platform: "google", org_id: ORG, token: "tok-0123456789" });
-  assert.equal(r.status, 400);
+  assert.equal(r.status, 403);
+  assert.equal(r.body.code, "not_admin");
   assert.match(r.body.error, /administrateur/);
   assert.ok(!w.calls.some((c) => c.url), "neither Google nor Apple was asked");
   r = await call(w, "/store/verify", { platform: "google", org_id: ORG, token: "tok-0123456789" }, { token: null });
@@ -481,8 +491,11 @@ test("a caller who is not an administrator, or not signed in, gets nothing asked
 // Notifications and the daily re-check
 // ------------------------------------------------------------
 
-test("App Store Server Notifications V2: verified, settled; forged ones refused", async () => {
-  const w = world();
+test("App Store Server Notifications V2: verified, then Apple asked again; forged ones refused", async () => {
+  // What Apple's API holds, by original transaction id; the test changes
+  // it between notifications as Apple would.
+  const apple = { 2000000100: { tx: tx({ transactionId: "2000000100" }), status: 1 } };
+  const w = world({ apple });
   const note = (type, status, t = tx(), renewal = { autoRenewStatus: 1 }) => ({
     signedPayload: jws({
       notificationType: type,
@@ -493,17 +506,25 @@ test("App Store Server Notifications V2: verified, settled; forged ones refused"
   let r = await call(w, "/store/apple-notify", note("SUBSCRIBED", 1), { token: null });
   assert.equal(r.status, 200, JSON.stringify(r.body));
   assert.equal(r.body.pro, true);
-  // A renewal that failed and expired: off.
-  r = await call(w, "/store/apple-notify", note("EXPIRED", 2, tx({ expiresDate: Date.now() - DAY })), { token: null });
+  assert.ok(w.calls.some((c) => c.url?.includes("/inApps/v1/subscriptions/2000000100")), "Apple's API was asked");
+  // The payload says active; Apple now says expired: Apple is believed.
+  apple[2000000100] = { tx: tx({ transactionId: "2000000100" }), status: 2,
+    latest: tx({ expiresDate: Date.now() - DAY }) };
+  r = await call(w, "/store/apple-notify", note("DID_RENEW", 1), { token: null });
   assert.equal(r.body.pro, false);
   assert.equal(w.db.get("apple:2000000100").state, "expired");
   // A renewal on a transaction with no appAccountToken: found by its id.
+  apple[2000000100] = { tx: tx({ transactionId: "2000000100", appAccountToken: undefined }), status: 1 };
   r = await call(w, "/store/apple-notify", note("DID_RENEW", 1, tx({ appAccountToken: undefined, transactionId: "2000000222" })), { token: null });
   assert.equal(r.body.pro, true);
+  assert.equal(w.calls.filter((c) => c.rpc === "store_org_of").length, 1);
   // Refund.
+  apple[2000000100] = { tx: tx({ transactionId: "2000000100", revocationDate: Date.now() }), status: 5 };
   r = await call(w, "/store/apple-notify", note("REFUND", 5, tx({ revocationDate: Date.now() })), { token: null });
   assert.equal(r.body.state, "revoked");
   assert.equal(r.body.pro, false);
+  // Every settle carries Apple's signedDate.
+  assert.ok(w.calls.filter((c) => c.rpc === "store_settle").every((c) => typeof c.args.p_signed_at === "string"));
   // Apple's TEST.
   r = await call(w, "/store/apple-notify", { signedPayload: jws({ notificationType: "TEST" }) }, { token: null });
   assert.equal(r.body.test, true);
@@ -514,6 +535,108 @@ test("App Store Server Notifications V2: verified, settled; forged ones refused"
   // Another app's.
   r = await call(w, "/store/apple-notify", { signedPayload: jws({ notificationType: "SUBSCRIBED", data: { bundleId: "com.x" } }) }, { token: null });
   assert.equal(r.status, 422);
+  // No App Store key on the Worker: nothing believed, Apple retries later.
+  r = await call(w, "/store/apple-notify", note("DID_RENEW", 1), { token: null, e: { ...env, APPLE_IAP_PRIVATE_KEY: "" } });
+  assert.equal(r.status, 503);
+});
+
+test("S1: a DID_RENEW replayed after a REFUND leaves Pro off", async () => {
+  const apple = { 2000000100: { tx: tx({ transactionId: "2000000100" }), status: 1 } };
+  const w = world({ apple });
+  const note = (type, status, t) => ({ signedPayload: jws({ notificationType: type, signedDate: Date.now(),
+    data: { bundleId: "bf.kaj.app", environment: "Sandbox", status, signedTransactionInfo: jws(t),
+      signedRenewalInfo: jws({ autoRenewStatus: 1 }) } }) });
+  const renew = note("DID_RENEW", 1, tx());
+  let r = await call(w, "/store/apple-notify", renew, { token: null });
+  assert.equal(r.body.pro, true);
+  apple[2000000100] = { tx: tx({ transactionId: "2000000100", revocationDate: Date.now() }), status: 5 };
+  r = await call(w, "/store/apple-notify", note("REFUND", 5, tx({ revocationDate: Date.now() })), { token: null });
+  assert.equal(r.body.pro, false);
+  r = await call(w, "/store/apple-notify", renew, { token: null }); // the same bytes, again
+  assert.equal(r.status, 200);
+  assert.equal(r.body.pro, false);
+  assert.equal(r.body.state, "revoked");
+  assert.equal(w.db.get("apple:2000000100").state, "revoked");
+  // And an answer signed before the one held is not written (store_settle).
+  const settles = w.calls.filter((c) => c.rpc === "store_settle");
+  const older = { ...settles.at(-1).args, p_state: "active", p_signed_at: new Date(Date.now() - 3_600_000).toISOString() };
+  const stale = await w.io.rpcService(env, "store_settle", older);
+  assert.equal(stale.stale, true);
+  assert.equal(stale.pro, false);
+});
+
+test("S2: a sandbox purchase for an ordinary business is refused, in French", async () => {
+  const w = world({ sandboxOk: false, apple: { 2000000111: { tx: tx() } } });
+  const r = await call(w, "/store/verify", { platform: "apple", org_id: ORG, transaction_id: "2000000111" });
+  assert.equal(r.status, 403);
+  assert.equal(r.body.code, "sandbox");
+  assert.match(r.body.error, /Achat de test refusé/);
+  assert.equal(w.db.size, 0);
+  // Google's licence testers likewise.
+  const g = world({ sandboxOk: false, google: { "tok-0123456789": sub({ testPurchase: {} }) } });
+  const rg = await call(g, "/store/verify", { platform: "google", org_id: ORG, token: "tok-0123456789" });
+  assert.equal(rg.status, 403);
+  assert.equal(rg.body.code, "sandbox");
+  assert.ok(!g.calls.some((c) => c.url?.endsWith(":acknowledge")), "not acknowledged");
+});
+
+test("S3: a purchase verified without naming the business is the store's business, for its admin only", async () => {
+  let w = world({ apple: { 2000000111: { tx: tx() } } });
+  let r = await call(w, "/store/verify", { platform: "apple", transaction_id: "2000000111" });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.org_id, ORG);
+  const begin = w.calls.find((c) => c.rpc === "store_verify_begin");
+  assert.equal(begin.args.p_org_id, ORG, "the caller must administer the business the store holds");
+  assert.equal(w.calls.find((c) => c.rpc === "store_settle").args.p_org_id, ORG);
+  // Not an administrator of it: refused, nothing written.
+  w = world({ admin: false, apple: { 2000000111: { tx: tx({ appAccountToken: OTHER }) } } });
+  r = await call(w, "/store/verify", { platform: "apple", transaction_id: "2000000111" });
+  assert.equal(r.status, 403);
+  assert.equal(r.body.code, "not_admin");
+  assert.ok(!w.calls.some((c) => c.rpc === "store_settle"));
+  // An expired session said as such, so the app keeps the purchase open.
+  w = world({ apple: { 2000000111: { tx: tx() } } });
+  w.io.rpcAs = async () => { const e = new Error("JWT expired"); e.status = 400; e.upstream = 401; throw e; };
+  r = await call(w, "/store/verify", { platform: "apple", org_id: ORG, transaction_id: "2000000111" });
+  assert.equal(r.status, 401);
+  assert.equal(r.body.code, "session");
+});
+
+test("S7: notifications for a business that is gone, or another business's token: 200 ignored, logged", async () => {
+  const logged = [];
+  const warn = console.warn;
+  console.warn = (...a) => logged.push(a.join(" "));
+  try {
+    const w = world({ gone: [ORG], apple: { 2000000100: { tx: tx({ transactionId: "2000000100" }), status: 1 } },
+      google: { "tok-0123456789": sub() } });
+    let r = await call(w, "/store/apple-notify", { signedPayload: jws({ notificationType: "DID_RENEW",
+      data: { bundleId: "bf.kaj.app", status: 1, signedTransactionInfo: jws(tx()) } }) }, { token: null });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ignored, "no_business");
+    const data = Buffer.from(JSON.stringify({ packageName: "bf.kaj.app", subscriptionNotification: { notificationType: 2, purchaseToken: "tok-0123456789" } })).toString("base64");
+    r = await call(w, "/store/google-notify?secret=s3cret-pubsub", { message: { data } }, { token: null });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ignored, "no_business");
+    // A transaction Apple does not know: ignored too.
+    const u = world();
+    r = await call(u, "/store/apple-notify", { signedPayload: jws({ notificationType: "DID_RENEW",
+      data: { bundleId: "bf.kaj.app", status: 1, signedTransactionInfo: jws(tx()) } }) }, { token: null });
+    assert.equal(r.status, 200);
+    assert.ok(r.body.ignored);
+    assert.ok(logged.some((l) => l.includes("apple-notify: ignored (no_business)")), logged.join("\n"));
+    assert.ok(logged.some((l) => l.includes("google-notify: ignored (no_business)")));
+    assert.ok(!logged.some((l) => l.includes("tok-0123456789")), "no token in the log");
+  } finally {
+    console.warn = warn;
+  }
+});
+
+test("Google: a line with no base plan is not Mara Pro", async () => {
+  const w = world({ google: { "tok-0123456789": sub({ lineItems: [{ productId: "mara_pro", expiryTime: new Date(Date.now() + 30 * DAY).toISOString(), offerDetails: {} }] }) } });
+  const r = await call(w, "/store/verify", { platform: "google", org_id: ORG, token: "tok-0123456789" });
+  assert.equal(r.status, 422);
+  assert.equal(r.body.code, "base_plan");
+  assert.ok(!w.calls.some((c) => c.rpc === "store_settle"));
 });
 
 test("Google RTDN: only with the secret; the token is read again from Google", async () => {
@@ -553,6 +676,20 @@ test("the daily re-check asks the store again and closes what it no longer knows
   w.db.set("google:tok-gone-00000", { org: ORG, state: "active", expires: new Date(Date.now() - DAY).toISOString(), product: "mara_pro:monthly", env: "production" });
   const result = await storeRecheck(env, w.io);
   assert.deepEqual(result, { due: 3, checked: 3, failed: 0 });
+  // A failure is counted and logged by its code, never the token.
+  const logged = [];
+  const error = console.error;
+  console.error = (...a) => logged.push(a.join(" "));
+  try {
+    const broken = world();
+    broken.db.set("google:tok-0123456789", { org: ORG, state: "active", expires: new Date().toISOString(), product: "mara_pro:monthly", env: "production" });
+    broken.io.fetch = async () => new Response("no", { status: 500 });
+    assert.deepEqual(await storeRecheck(env, broken.io), { due: 1, checked: 0, failed: 1 });
+  } finally {
+    console.error = error;
+  }
+  assert.ok(logged.some((l) => l.startsWith("store recheck failed google 502")), logged.join("\n"));
+  assert.ok(!logged.some((l) => l.includes("tok-0123456789")));
   assert.equal(w.db.get("google:tok-0123456789").state, "active", "renewed");
   assert.ok(Date.parse(w.db.get("google:tok-0123456789").expires) > Date.now() + 20 * DAY);
   assert.equal(w.db.get("apple:2000000100").state, "expired");

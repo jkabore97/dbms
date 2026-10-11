@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/access/store_rules.dart';
-import '../../core/admin/admin_repository.dart' show AccountDeletionPlan, DoomedBusiness;
+import '../../core/admin/admin_repository.dart' show AccountDeletionPlan, AccountRefused, DoomedBusiness;
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../shopper/shopper_profile_screen.dart' show DeleteAccountDialog;
@@ -39,7 +39,7 @@ Future<void> askAccountDeletion(
         key: const Key('deletion-blocked'),
         icon: const Icon(Icons.info_outline),
         title: Text(context.tr('Pas encore possible')),
-        content: Text(context.tr(p.blocked!)),
+        content: Text(deletionBlockedText(context, p)),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('Compris'))),
         ],
@@ -68,6 +68,8 @@ Future<void> askAccountDeletion(
       details: DeletionSummary(plan: p),
       confirmLabel: context.tr('Supprimer définitivement'),
       delete: () => go(p.businessIds),
+      // S8: a sign-in older than ten minutes — signed out, to sign in again.
+      reauth: signOut ?? scope?.session.signOut,
     ),
   );
   if (gone == true && context.mounted) {
@@ -76,6 +78,33 @@ Future<void> askAccountDeletion(
     await (signOut ?? scope?.session.signOut)?.call();
   }
 }
+
+/// Why a deletion cannot be done now, in the reader's language: by the
+/// server's code (128's blocked_code) and the business it names; the
+/// server's own French only for a code this build does not know.
+String deletionBlockedText(BuildContext context, AccountDeletionPlan p) => switch (p.blockedCode) {
+      'platform' => context.tr('Un compte de la plateforme ne se supprime pas ici.'),
+      'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
+      'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
+      'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
+      'payout' => context.tr('Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
+      _ => context.tr(p.blocked ?? ''),
+    };
+
+/// The account Worker's refusal of a deletion, in the reader's language
+/// (by its code and the business it names; its French otherwise).
+String accountRefusalText(BuildContext context, AccountRefused e) => switch (e.code) {
+      'reauth' => context.tr('Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.'),
+      'not_stopped' => context.tr('Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.', {'name': e.name ?? ''}),
+      'platform' => context.tr('Un compte de la plateforme ne se supprime pas ici.'),
+      'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
+      'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
+      'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': e.name ?? ''}),
+      'payout' => context.tr('Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.', {'name': e.name ?? ''}),
+      'list_changed' => context.tr('La liste de vos activités a changé : relisez-la avant de supprimer votre compte.'),
+      'old_app' => context.tr('Mettez Mara à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.'),
+      _ => context.tr(e.message),
+    };
 
 /// What disappears, business by business — the confirmation's middle.
 class DeletionSummary extends StatelessWidget {

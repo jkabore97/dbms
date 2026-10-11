@@ -31,6 +31,11 @@ grant usage on schema public to anon, authenticated;
 -- is written to be re-run — so what follows tests the migration's own
 -- grants and revokes, not this file's.
 \i database/migrations/063_least_privilege.sql
+-- And 128 after it, as on the live database (063 long before, its default
+-- privileges opening each new function to authenticated): 128 closes the
+-- account deletion to the app's role itself (review B1), which TEST 4
+-- checks. Written to be re-run, like the bundle.
+\i database/migrations/128_store_billing.sql
 
 \echo ''
 \echo '--- TEST 1: the street is still open to a stranger ---'
@@ -145,7 +150,19 @@ begin
        or has_function_privilege('authenticated', 'remove_push_target(text)', 'execute') then
         raise exception 'FAIL: the push address book is open to an app role';
     end if;
-    raise notice 'PASS: authenticated keeps my_orgs/shop_orders/courier_earnings; push_targets stays service-role only';
+    -- 128 (review B1): an account's deletion is the account Worker's — the
+    -- service role — alone; the app's role only reads its preview.
+    if has_function_privilege('authenticated', 'delete_my_account(uuid, uuid[], jsonb)', 'execute')
+       or has_function_privilege('anon', 'delete_my_account(uuid, uuid[], jsonb)', 'execute')
+       or has_function_privilege('authenticated', 'delete_my_account_stops(uuid, uuid[])', 'execute')
+       or has_function_privilege('authenticated', 'account_deletion_note(uuid, jsonb, jsonb)', 'execute')
+       or to_regprocedure('delete_my_account(uuid[])') is not null then
+        raise exception 'FAIL: an account deletion door is open to an app role';
+    end if;
+    if not has_function_privilege('authenticated', 'delete_my_account_preview()', 'execute') then
+        raise exception 'FAIL: the deletion preview was taken from authenticated';
+    end if;
+    raise notice 'PASS: authenticated keeps my_orgs/shop_orders/courier_earnings; push_targets stays service-role only; delete_my_account / its stops / its note are closed to authenticated and anon (the preview stays the caller''s)';
 end $$;
 
 \echo ''

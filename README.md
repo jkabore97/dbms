@@ -839,7 +839,33 @@ store subscription is active, in grace, or cancelled but still paid, and
 until its end — a refund turns it off at once. Renewals and cancellations
 arrive without the app open (App Store Server Notifications V2, Google's
 Real-Time Developer Notifications), and once a day the Worker asks the
-stores again about every subscription near its end.
+stores again about every subscription near its end. A notification is
+only a wake-up: the Worker asks Apple's or Google's API again and writes
+what the store says now, with when the store said it (`signed_at`) — an
+answer older than the one held is ignored, so a notification Apple
+retries after a refund cannot turn Pro back on. A notification for a
+business that no longer exists (or another business's token, or a
+refused sandbox purchase) is answered 200 « ignored » and logged.
+
+The app listens to the store from its start, not only on the Pro page,
+and verifies each purchase for the business the purchase itself names.
+It finishes a purchase only on the Worker's yes or a refusal for good
+(another business's, not Mara Pro, a refused test purchase — said and
+logged); an expired session, a server error or no network leaves it open
+for the store to hand back. When the owner's purchase in this store
+already pays for another business, the Pro page sells nothing there: it
+names that business and offers « Gérer mon abonnement » (on Apple, the
+other period would only change the first business's subscription).
+
+**Test (sandbox) purchases — the decision.** A sandbox purchase
+(TestFlight, App Review, a Google licence tester) turns Mara Pro on only
+for a business owned by a platform admin or by the account named in
+Réglages › Mara Pro « Compte de test des boutiques »
+(`store_review_account`, default `review.mara@gmail.com`). Give App Review
+that account (with a business on it) in the review notes. Every other
+sandbox purchase is refused (« Achat de test refusé … ») and never
+counted, so a TestFlight tester cannot give any business free, renewable
+Pro on the live backend.
 
 One-time setup (keys go only in GitHub's secrets page, never in chat):
 
@@ -878,22 +904,45 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
 
 Every account deletes itself from the app (130): a shopper, a courier, a
 business member, a business owner (a platform account is refused). The
-confirmation names what goes; `delete_my_account()` (128) does the
-database's part as the caller — the businesses the person alone owns
-archived and purged by 014's path (`purge_org`), their members left as
-plain shoppers, open orders cancelled with a notice, the person's rows
-deleted and their name taken off what they wrote — and the account
-Worker deletes the auth user (soft when a business's books must keep the
-« written by »). Optional repository secrets for the account Worker
-(`deploy-account-admin.yml`): `PLAY_SERVICE_ACCOUNT_JSON` (revokes a
-deleted business's Google Play subscription), `STRIPE_SECRET_KEY`
-(cancels its card subscription), and the **Sign in with Apple key**:
+confirmation names what goes. The deletion is the account Worker's alone
+(`POST /v1/me/delete`; 128's `delete_my_account*` are the service
+role's, never the app's), in this order:
+
+1. who: GoTrue, from the person's own token — signed in **less than 10
+   minutes ago**, else the app says « Par sécurité, reconnectez-vous … »
+   and offers « Me reconnecter »;
+2. `delete_my_account_stops` — the database's refusals (an open order, a
+   delivery on the road, an order paid online, a Wave payout Mara still
+   owes the business…), else what will go and what must be stopped;
+3. every **Stripe** subscription cancelled and every **Google Play**
+   purchase revoked, for each business that goes. One failure — or
+   `STRIPE_SECRET_KEY` / `PLAY_SERVICE_ACCOUNT_JSON` not set while there
+   is one to stop — and **nothing is deleted**: « Nous n'avons pas pu
+   arrêter l'abonnement … Réessayez dans un moment ou écrivez à l'aide. »;
+4. the ids stopped written in `account_deletion_log` (it outlives the
+   account and the businesses) before any purge;
+5. `delete_my_account` — the businesses the person alone owns archived
+   and purged by 014's path (`purge_org`), their members left as plain
+   shoppers, open orders cancelled with a notice, Mara's own Wave
+   payments kept (detached: `org_id` null, `former_org_id` naming the
+   tombstone), the person's rows deleted and their name taken off what
+   they wrote;
+6. the Sign in with Apple token revoked, and the auth user deleted (soft
+   when a business's books must keep the « written by »).
+
+Repository secrets for the account Worker (`deploy-account-admin.yml`):
+`PLAY_SERVICE_ACCOUNT_JSON` and `STRIPE_SECRET_KEY` — needed as soon as a
+business has such a subscription (a deletion that needs one is refused
+without it) — and, optional, the **Sign in with Apple key**:
 developer.apple.com › Certificates, Identifiers & Profiles › Keys › « + »
 › Sign in with Apple, primary App ID `bf.kaj.app` → `APPLE_SIGNIN_KEY_ID`
 and `APPLE_SIGNIN_PRIVATE_KEY` (the `.p8` text); team `9K236BL7SX` and
 client `bf.kaj.app` are in `workers/account-admin/wrangler.toml`. Without
-one, that step is logged and the rest is done. An App Store subscription
+it, that step is logged and the rest is done. An App Store subscription
 cannot be cancelled by Mara: the app tells the owner where to cancel it.
+On a database still before 128 the Worker uses 113's path (a shopper
+with nothing on any business's books), so the order in which the
+database and the Worker go live does not break a shopper's deletion.
 
 ### Google sign-in
 

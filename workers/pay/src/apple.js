@@ -101,7 +101,15 @@ export function appleSettlement(tx, renewal, status) {
     autoRenew: renewal ? Number(renewal.autoRenewStatus) === 1 : false,
     environment: String(tx.environment || "").toLowerCase() === "sandbox" ? "sandbox" : "production",
     orgId: tx.appAccountToken ? String(tx.appAccountToken).toLowerCase() : null,
+    // When Apple signed what this says (store_settle ignores older news).
+    signedAt: signedAt(tx, renewal),
   };
+}
+
+/// The latest signedDate of the JWS behind a settlement, or now.
+function signedAt(tx, renewal) {
+  const dates = [Number(tx?.signedDate || 0), Number(renewal?.signedDate || 0)].filter((d) => d > 0);
+  return new Date(dates.length ? Math.max(...dates) : Date.now()).toISOString();
 }
 
 /// Refuses what is not Mara Pro for this app.
@@ -142,7 +150,9 @@ export async function appleLookup(env, transactionId, io = { fetch }, verify = {
 }
 
 /// App Store Server Notifications V2: the decoded, verified notification,
-/// or null for one that is not about a subscription of ours.
+/// or null for one that is not about a subscription of ours. The store
+/// door (store.js appleNotify) believes none of its state: it is a
+/// wake-up, and Apple's API is asked what holds now (review S1).
 export async function appleNotification(env, body, verify = {}) {
   const payload = await verifyAppleJws(body?.signedPayload, verify);
   const data = payload.data || {};

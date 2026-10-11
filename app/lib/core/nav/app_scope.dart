@@ -20,6 +20,7 @@ import '../retail/staff.dart';
 import '../sync/sync_service.dart';
 import '../tontine/tontine_repository.dart';
 import '../pay/wave_pay.dart';
+import '../../features/pro/store_watcher.dart' show StoreWatcher;
 import '../security/security_repository.dart';
 import '../security/security_settings.dart';
 import 'session.dart';
@@ -62,6 +63,7 @@ class AppScope extends InheritedWidget {
     this.security,
     this.securityApi,
     this.wavePay,
+    this.storeWatcher,
     required super.child,
   });
 
@@ -93,6 +95,10 @@ class AppScope extends InheritedWidget {
 
   /// Wave checkout through the kaj-pay Worker (076). Null in tests.
   final WavePay? wavePay;
+
+  /// The store builds' purchase listener, started with the app (130,
+  /// review S3). Null on the web, the GitHub APK and in tests.
+  final StoreWatcher? storeWatcher;
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();

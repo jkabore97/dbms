@@ -1235,15 +1235,19 @@ GoRouter buildRouter(SessionController session) {
                 storeBilling: sellsProThroughStore
                     ? biz.PluginStoreBilling(storeBillingPlatform!)
                     : null,
+                // The purchase's own business (review S3), never this
+                // page's: a purchase for another business that arrives
+                // here is settled for that one.
                 storeVerify: scope.wavePay == null
                     ? null
                     : (p) => scope.wavePay!.verifyStore(
                           platform: storeBillingPlatform ?? '',
-                          orgId: org.id,
+                          orgId: p.orgId,
                           productId: p.productId,
                           transactionId: p.transactionId,
                           token: p.token,
                         ),
+                storeWatcher: scope.storeWatcher,
                 storeStanding: scope.wavePay == null
                     ? null
                     : () => scope.wavePay!.storeStanding(org.id),

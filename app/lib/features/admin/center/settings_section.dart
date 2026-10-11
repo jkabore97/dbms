@@ -72,6 +72,9 @@ const platformSettingDefs = <SettingDef>[
   // 128: Mara Pro sold through the App Store and Google Play in the store
   // apps — off until both stores answer the payments Worker.
   SettingDef('store_billing_on', 'pro', SettingType.flag),
+  // 128 (review S2): the one account, besides the platform's admins, whose
+  // businesses a test (sandbox) purchase turns Pro — App Review's.
+  SettingDef('store_review_account', 'pro', SettingType.text),
   SettingDef('pro_features', 'pro', SettingType.list, options: [
     'payroll', 'team_access', 'analytics', 'accounting', 'currencies', 'tontines',
     'vitrine_plus', 'delivery', 'online_payment',
@@ -169,6 +172,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'stripe_xof_per_usd' => context.tr('Taux pour la carte : FCFA pour 1 \$'),
       'store_billing_on' =>
         context.tr('Abonnement dans les applications (App Store, Google Play)'),
+      'store_review_account' =>
+        context.tr('Compte de test des boutiques (achats sandbox acceptés)'),
       'pro_features' => context.tr('Outils réservés à Mara Pro'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),

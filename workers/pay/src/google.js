@@ -104,12 +104,14 @@ export function googleSettlement(token, sub) {
   const latest = items.reduce((a, b) =>
     (Date.parse(b.expiryTime || 0) > Date.parse(a.expiryTime || 0) ? b : a));
   const basePlan = latest.offerDetails?.basePlanId || null;
-  if (basePlan && !GOOGLE_BASE_PLANS.includes(basePlan)) {
+  // Mara Pro is sold as one of its two base plans, and only so: a line
+  // with none (or another) is not a purchase of ours.
+  if (!basePlan || !GOOGLE_BASE_PLANS.includes(basePlan)) {
     throw new StoreError("Cet achat n'est pas Mara Pro.", 422, "base_plan");
   }
   return {
     platform: "google",
-    productId: basePlan ? `${GOOGLE_PRODUCT}:${basePlan}` : GOOGLE_PRODUCT,
+    productId: `${GOOGLE_PRODUCT}:${basePlan}`,
     originalId: token,
     state: googleState(sub.subscriptionState),
     expiresAt: latest.expiryTime ? new Date(latest.expiryTime).toISOString() : null,
@@ -133,7 +135,12 @@ function checkToken(token) {
 export async function googleLookup(env, token, io = { fetch }) {
   checkToken(token);
   const sub = await play(env, "GET", `purchases/subscriptionsv2/tokens/${encodeURIComponent(token)}`, io);
-  return googleSettlement(token, sub);
+  const settlement = googleSettlement(token, sub);
+  // Play's answer is as of the moment it was read: that is when « the
+  // store said so » (store_settle ignores anything older). A Pub/Sub
+  // eventTime is never used for it — the notification is only a wake-up.
+  settlement.signedAt = new Date(io.now?.() ?? Date.now()).toISOString();
+  return settlement;
 }
 
 /// Google refunds a purchase not acknowledged within three days.

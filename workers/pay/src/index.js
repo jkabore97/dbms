@@ -206,6 +206,10 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
     }
   } catch (error) {
     const { status, body: answer } = storeProblem(error);
+    // Every refusal is in the Worker's log by its code (review S3) —
+    // never a token or a transaction id.
+    if (status < 500) console.warn(`store ${url.pathname}: refused ${status} ${answer.code || ""}`.trim());
+    else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""}`.trim());
     // A notification failing for a passing reason is retried by Apple and
     // Pub/Sub (any non-2xx); a bad signature or secret is not worth it,
     // but says so with its 401.
@@ -393,6 +397,9 @@ async function rpc(env, fn, args, apikey, token, fetchImpl = fetch) {
     // person; a 4xx stays a 4xx.
     const error = new Error(data?.message || `${fn} answered ${response.status}`);
     error.status = response.status >= 500 ? 502 : 400;
+    // PostgREST's own status, for a door that tells an expired session
+    // (401) from a refusal (the store doors, 130).
+    error.upstream = response.status;
     throw error;
   }
   return data;
