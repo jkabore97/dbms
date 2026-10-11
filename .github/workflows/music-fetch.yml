@@ -20,23 +20,29 @@ jobs:
           cat > crawl.py <<'PY'
           import html, json, os, re, time, urllib.request, urllib.parse
           UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
-          os.makedirs('out/pages', exist_ok=True); os.makedirs('out/audio', exist_ok=True); os.makedirs('out/tracks', exist_ok=True)
+          for d in ('pages', 'audio', 'tracks', 'legal'): os.makedirs('out/' + d, exist_ok=True)
           log = open('out/log.txt', 'a')
-          def get(url, binary=False, tries=2):
+          def get(url, binary=False, tries=2, hdr=None):
               for t in range(tries):
                   try:
-                      r = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9'}), timeout=60)
+                      h = {'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9'}; h.update(hdr or {})
+                      r = urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=60)
                       b = r.read(); log.write(f'200 {len(b)} {url} -> {r.geturl()}\n'); return b if binary else b.decode('utf-8', 'replace')
                   except Exception as e:
                       log.write(f'ERR {e} {url}\n'); time.sleep(2)
               return None
           def slug(u): return re.sub(r'[^A-Za-z0-9]+', '_', u.split('://', 1)[-1])[:150]
-          # 1. FMA listings
-          Q = ['afrobeat', 'afrobeats', 'afro pop', 'afropop', 'amapiano', 'afro house', 'afroswing', 'afro', 'african pop', 'naija', 'azonto', 'highlife', 'log drum']
-          lists = [f'https://freemusicarchive.org/search?quicksearch={urllib.parse.quote(q)}&pageSize=100' for q in Q]
-          lists += [f'https://freemusicarchive.org/genre/Afrobeat/?pageSize=100&page={p}' for p in (1, 2, 3)]
-          lists += ['https://freemusicarchive.org/music/alex-morgan/', 'https://freemusicarchive.org/music/alex-morgan/pop-afro-party-instrumentals/',
-                    'https://freemusicarchive.org/music/oibeats/', 'https://freemusicarchive.org/music/creepzz/', 'https://freemusicarchive.org/music/sneaky-club/']
+          def text(page):
+              t = re.sub(r'(?s)<script.*?</script>|<style.*?</style>', ' ', page); t = html.unescape(re.sub(r'<[^>]+>', ' ', t)); return re.sub(r'\s+', ' ', t)
+          for u in ['https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt', 'https://creativecommons.org/licenses/by/4.0/legalcode.txt',
+                    'https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt', 'https://freemusicarchive.org/License_Guide', 'https://freemusicarchive.org/Terms_of_Use']:
+              b = get(u)
+              if b: open(f'out/legal/{slug(u)}.txt', 'w').write(b)
+          seen = set('199768 279236 27202 27196 27194 27197 27200 27198 27195 222526 227469 224050 222202 62594 231513 62589 224048 227468 222213 222195 62591 222196 62596 224052 224051 224053 46746 231514 62590 227471 62592 274531 62595 227467 62593 224049 227470 38326 24317 16744 228852 62189 24318 228855 24322 62186 24314 111940 24315 111943 24319 62192 212600 24316 71840 71838 213271 140584 16747 71835 71839 24321 71842 62183 24313 111941 62188 228854 71841 71843 31617 71836 62191 276926 279239 279235 279237 279238 279240 279241 279242 279234 276982 246815 246814 246817 246816 276761 123069 72303 56243 104809 194774 173923 102223 27968 214797 28921 240323 141612 141615 141611 240334 255779 141613 205269 255778 141614 255777 186538 212031 196868 196866 198419 198794 202692 199146 199141 196882 199149 202693 202698 198418 199156 212924 192521 206299 215087 208633 210213 215086 216837 213324 217195 31151 31152 278519 278520 278521 278515 278516 278517 278518 278514 277070 268709 258336 255775 255776 255517 255518 255516 255511 255515 255514 255512 255509 255510 255513 245138 240335 240339 240331 240332 240319 240326 240329 240320 240330 240322 240333 240321 240146 233486 233377 231526 231528 231527 231524 231525 230771 230770 230774 230772 230773 229053 229000 228957 228853 228851 227492 227480 227305 226905 224082 223957 219835 216058 214651 214650 214649 214648 214647 214646 214645 212506 211675 210820 210222 208953 208952 208949 208951 208948 208946 208944 208945 208947 208304 205304 205078 204670 204610 204204 204125 204130 204124 204134 203472 203076 202353 202338 202340 201536 201106 200073 199961 199533 199142 197803 197806 197809 197805 194526 194357 194355 194342 194336 193853 193788 192453 192422 192402 192151 191827 175106 175105 175104 175102 175103 175101 175100 168147 168146 168145 168144 168143 168142 165524 157160 157161 157159 157157 157158 157156 157155 157154 157152 157151 157150 157149 157148 279185 279207 279200 275816 275874 275873 275870 277196 279574 277427'.split())
+          Q = ['afrobeat', 'afrobeats', 'amapiano', 'afro', 'afro house', 'afropop', 'afro pop', 'african', 'log drum', 'gqom', 'kuduro', 'azonto', 'naija', 'highlife', 'dancehall instrumental', 'afro instrumental', 'afrobeat instrumental', 'amapiano instrumental', 'afro beat', 'zouk', 'coupe decale', 'soukous', 'bongo flava', 'afro fusion']
+          lists = [f'https://freemusicarchive.org/search?quicksearch={urllib.parse.quote(q)}&page={p}' for q in Q for p in (1, 2, 3, 4)]
+          lists += [f'https://freemusicarchive.org/genre/Afrobeat/?page={p}' for p in range(1, 11)] + [f'https://freemusicarchive.org/genre/African/?page={p}' for p in range(1, 6)]
+          lists += [f'https://freemusicarchive.org/music/Ketsa/?page={p}' for p in (1, 2, 3, 4, 5)] + ['https://freemusicarchive.org/music/Ketsa/upbeat-street/', 'https://freemusicarchive.org/music/amarent/']
           tracks = {}
           for u in lists:
               s = get(u)
@@ -48,45 +54,39 @@ jobs:
                   tracks.setdefault(str(j.get('id')), j)
           rows = []
           for tid, j in tracks.items():
+              if tid in seen: continue
               page = get(j['url'])
               if not page: continue
-              open(f'out/tracks/{tid}.html', 'w').write(page)
+              t = text(page)
               lic = sorted(set(re.findall(r'creativecommons\.org/(?:licenses|publicdomain)/[a-z\-]+/[0-9.]+', page)))
-              t = re.sub(r'(?s)<script.*?</script>|<style.*?</style>', ' ', page); t = html.unescape(re.sub(r'<[^>]+>', ' ', t)); t = re.sub(r'\s+', ' ', t)
+              ins = re.search(r'Instrumental (Yes|No)', t); ai = re.search(r'AI generated\? (Yes|No)', t)
+              g = re.search(r'Genres? (.{0,120}?) Instrumental', t)
               row = dict(id=tid, title=j.get('title'), artist=j.get('artistName'), url=j['url'], stream=j.get('playbackUrl'), licences=lic,
-                         content_id=bool(re.search(r'content ?id', t, re.I)), text_lic=re.findall(r'(?:Attribution[^.]{0,80}|CC0[^.]{0,40}|Public Domain[^.]{0,40})', t)[:4])
-              comm = lic and all(('-nc' not in l and '-nd' not in l) for l in lic)
-              row['commercial_ok'] = bool(comm)
-              if comm and j.get('playbackUrl'):
+                         instr=ins.group(1) if ins else '?', ai=ai.group(1) if ai else '?', genre=g.group(1) if g else '', content_id=bool(re.search(r'content ?id', t, re.I)))
+              row['commercial_ok'] = bool(lic) and all(('-nc' not in l and '-nd' not in l) for l in lic)
+              if row['commercial_ok'] and row['instr'] == 'Yes' and row['ai'] != 'Yes' and j.get('playbackUrl'):
+                  open(f'out/tracks/{tid}.html', 'w').write(page)
                   b = get(j['playbackUrl'], binary=True)
                   if b: open(f'out/audio/fma_{tid}.mp3', 'wb').write(b); row['file'] = f'audio/fma_{tid}.mp3'
               rows.append(row)
           json.dump(rows, open('out/fma.json', 'w'), indent=1, ensure_ascii=False)
-          # 2. Mixkit searches and licence
-          mk = {}
-          for q in ['afrobeat', 'afro', 'african', 'africa', 'amapiano', 'dancehall', 'reggaeton', 'tropical', 'latin', 'moombahton', 'tropical-house', 'afro-house', 'percussion', 'summer', 'party']:
-              u = f'https://mixkit.co/free-stock-music/discover/{q}/'
-              s = get(u)
+          # Openverse (Jamendo, ccMixter, Freesound, Wikimedia), commercial licences only
+          ov = []
+          for q in ['afrobeat', 'afrobeats', 'amapiano', 'afro house', 'afro pop', 'african dance', 'log drum']:
+              u = f'https://api.openverse.org/v1/audio/?q={urllib.parse.quote(q)}&license=cc0,by,by-sa,pdm&page_size=40'
+              s = get(u, hdr={'Accept': 'application/json'})
               if not s: continue
-              open(f'out/pages/mixkit_{q}.html', 'w').write(s)
-              for m in re.finditer(r'(?s)<script type="application/ld\+json">(.*?)</script>', s):
-                  for r in re.finditer(r'\{[^{}]*"@type": ?"MusicRecording"[^{}]*\}', m.group(1)):
-                      try: o = json.loads(r.group(0))
-                      except Exception: continue
-                      o.setdefault('queries', []); mk.setdefault(o['url'], o)['queries'].append(q)
-          json.dump(list(mk.values()), open('out/mixkit.json', 'w'), indent=1)
-          for o in mk.values():
-              n = re.search(r'/music/(\d+)/', o['url']).group(1)
-              if os.path.exists(f'out/audio/mixkit_{n}.mp3'): continue
-              b = get(o['url'], binary=True)
-              if b: open(f'out/audio/mixkit_{n}.mp3', 'wb').write(b)
-          s = get('https://mixkit.co/license/')
-          for js in re.findall(r'https://assets\.mixkit\.co/build/[^"]+\.js', s or ''):
-              b = get(js)
-              if b: open(f'out/pages/{slug(js)}.js', 'w').write(b)
-          for u in ['https://mixkit.co/license/music-free/', 'https://mixkit.co/license/musicFree/', 'https://mixkit.co/license/?license=musicFree', 'https://mixkit.co/license/modal/musicFree']:
-              b = get(u)
-              if b: open(f'out/pages/{slug(u)}.html', 'w').write(b)
+              open(f'out/pages/openverse_{slug(q)}.json', 'w').write(s)
+              try: ov += [dict(r, query=q) for r in json.loads(s).get('results', [])]
+              except Exception: pass
+          json.dump(ov, open('out/openverse.json', 'w'), indent=1)
+          n = 0
+          for r in ov:
+              if (r.get('duration') or 0) < 45000 or n >= 40 or not r.get('url'): continue
+              fn = f"out/audio/ov_{r['id']}.{(r.get('filetype') or 'mp3')}"
+              if os.path.exists(fn): continue
+              b = get(r['url'], binary=True)
+              if b: open(fn, 'wb').write(b); n += 1
           PY
           python3 crawl.py
           tail -n 60 out/log.txt
@@ -100,5 +100,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -qm "Candidate music (FMA and Mixkit crawl)"
+          git commit -qm "Candidate music (wider FMA, Openverse, legal codes)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" music-samples
