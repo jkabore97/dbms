@@ -33,7 +33,7 @@ jobs:
 
           existing = requests.get(base + "/subscriptions", headers=h)
           show(existing, "list")
-          have = [s["productId"] for s in existing.json().get("subscriptions", [])] if existing.ok else []
+          have = [s["productId"] for s in existing.json().get("subscriptions", [])] if existing.ok and existing.text.strip() else []
           print("existing:", have)
 
           def regional(units, nanos):
