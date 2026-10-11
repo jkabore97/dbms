@@ -360,13 +360,13 @@ $$;
 -- here; this is for the renewals and refunds a notification missed.
 create or replace function store_due()
 returns table (platform text, org_id uuid, product_id text, original_id text,
-               expires_at timestamptz)
+               expires_at timestamptz, environment text)
 language sql
 stable
 security definer
 set search_path = public
 as $$
-    select s.platform, s.org_id, s.product_id, s.original_id, s.expires_at
+    select s.platform, s.org_id, s.product_id, s.original_id, s.expires_at, s.environment
       from store_subscriptions s
      where s.state not in ('expired', 'revoked')
        and (s.expires_at is null
