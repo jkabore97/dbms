@@ -16,50 +16,81 @@ jobs:
       - name: Fetch
         run: |
           set +e
-          mkdir -p out/pages out/audio
-          cat > pages.txt <<'EOF'
-          mixkit_license https://mixkit.co/license/
-          mixkit_terms https://mixkit.co/terms/
-          mixkit_music https://mixkit.co/free-stock-music/
-          mixkit_afro https://mixkit.co/free-stock-music/tag/afro/
-          mixkit_african https://mixkit.co/free-stock-music/tag/african/
-          mixkit_afrobeat https://mixkit.co/free-stock-music/tag/afrobeat/
-          mixkit_world https://mixkit.co/free-stock-music/world/
-          mixkit_dance https://mixkit.co/free-stock-music/dance/
-          mixkit_hiphop https://mixkit.co/free-stock-music/hip-hop/
-          mixkit_happy https://mixkit.co/free-stock-music/mood/happy/
-          mixkit_upbeat https://mixkit.co/free-stock-music/tag/upbeat/
-          mixkit_tropical https://mixkit.co/free-stock-music/tag/tropical/
-          pixabay_license https://pixabay.com/service/license-summary/
-          pixabay_terms https://pixabay.com/service/terms/
-          pixabay_afrobeat https://pixabay.com/music/search/afrobeat/
-          pixabay_amapiano https://pixabay.com/music/search/amapiano/
-          pixabay_afropop https://pixabay.com/music/search/afro%20pop/
-          pixabay_afrobeats https://pixabay.com/music/search/afrobeats/
-          fma_afrobeat https://freemusicarchive.org/search?quicksearch=afrobeat
-          fma_amapiano https://freemusicarchive.org/search?quicksearch=amapiano
-          fma_genre https://freemusicarchive.org/genre/Afrobeat/
-          ia_afrobeat https://archive.org/advancedsearch.php?q=%28afrobeat+OR+amapiano+OR+afrobeats+OR+afropop%29+AND+mediatype%3Aaudio&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=subject&rows=300&output=json
-          ccm_afrobeat https://ccmixter.org/api/query?tags=afrobeat&f=json&limit=60
-          ccm_african https://ccmixter.org/api/query?tags=african&f=json&limit=60
-          ccm_afro https://ccmixter.org/api/query?tags=afro&f=json&limit=60
-          ytlib https://www.youtube.com/audiolibrary
-          EOF
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          sed 's/^ *//' pages.txt | while read -r name url; do
-            [ -n "$name" ] || continue
-            code=$(curl -sL -m 40 -A "$UA" -H "Accept-Language: en-US,en;q=0.9" -o "out/pages/$name.html" -w '%{http_code}' "$url")
-            echo "$code $(wc -c < out/pages/$name.html) $name $url" | tee -a out/pages/index.txt
-          done
-          # every audio link found in the pages
-          grep -ohE 'https?:[^"'"'"' <>]+\.mp3[^"'"'"' <>]*' out/pages/*.html | sed 's/\\u002F/\//g; s/\\\//\//g; s/&amp;/\&/g' | sort -u > out/audio_links.txt || true
-          wc -l out/audio_links.txt
-          head -n 120 out/audio_links.txt | while read -r u; do
-            fn=$(echo "$u" | sed 's/[?#].*//' | awk -F/ '{print $NF}')
-            code=$(curl -sL -m 60 -A "$UA" -o "out/audio/$fn" -w '%{http_code}' "$u")
-            echo "$code $(wc -c < "out/audio/$fn") $fn $u" | tee -a out/audio/index.txt
-          done
-          ls -la out/audio | head -50
+          mkdir -p out
+          cat > crawl.py <<'PY'
+          import html, json, os, re, time, urllib.request, urllib.parse
+          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+          os.makedirs('out/pages', exist_ok=True); os.makedirs('out/audio', exist_ok=True); os.makedirs('out/tracks', exist_ok=True)
+          log = open('out/log.txt', 'a')
+          def get(url, binary=False, tries=2):
+              for t in range(tries):
+                  try:
+                      r = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9'}), timeout=60)
+                      b = r.read(); log.write(f'200 {len(b)} {url} -> {r.geturl()}\n'); return b if binary else b.decode('utf-8', 'replace')
+                  except Exception as e:
+                      log.write(f'ERR {e} {url}\n'); time.sleep(2)
+              return None
+          def slug(u): return re.sub(r'[^A-Za-z0-9]+', '_', u.split('://', 1)[-1])[:150]
+          # 1. FMA listings
+          Q = ['afrobeat', 'afrobeats', 'afro pop', 'afropop', 'amapiano', 'afro house', 'afroswing', 'afro', 'african pop', 'naija', 'azonto', 'highlife', 'log drum']
+          lists = [f'https://freemusicarchive.org/search?quicksearch={urllib.parse.quote(q)}&pageSize=100' for q in Q]
+          lists += [f'https://freemusicarchive.org/genre/Afrobeat/?pageSize=100&page={p}' for p in (1, 2, 3)]
+          lists += ['https://freemusicarchive.org/music/alex-morgan/', 'https://freemusicarchive.org/music/alex-morgan/pop-afro-party-instrumentals/',
+                    'https://freemusicarchive.org/music/oibeats/', 'https://freemusicarchive.org/music/creepzz/', 'https://freemusicarchive.org/music/sneaky-club/']
+          tracks = {}
+          for u in lists:
+              s = get(u)
+              if not s: continue
+              open(f'out/pages/{slug(u)}.html', 'w').write(s)
+              for m in re.finditer(r"data-track-info='([^']*)'|data-track-info=\"([^\"]*)\"", s):
+                  try: j = json.loads(html.unescape(m.group(1) or m.group(2)))
+                  except Exception: continue
+                  tracks.setdefault(str(j.get('id')), j)
+          rows = []
+          for tid, j in tracks.items():
+              page = get(j['url'])
+              if not page: continue
+              open(f'out/tracks/{tid}.html', 'w').write(page)
+              lic = sorted(set(re.findall(r'creativecommons\.org/(?:licenses|publicdomain)/[a-z\-]+/[0-9.]+', page)))
+              t = re.sub(r'(?s)<script.*?</script>|<style.*?</style>', ' ', page); t = html.unescape(re.sub(r'<[^>]+>', ' ', t)); t = re.sub(r'\s+', ' ', t)
+              row = dict(id=tid, title=j.get('title'), artist=j.get('artistName'), url=j['url'], stream=j.get('playbackUrl'), licences=lic,
+                         content_id=bool(re.search(r'content ?id', t, re.I)), text_lic=re.findall(r'(?:Attribution[^.]{0,80}|CC0[^.]{0,40}|Public Domain[^.]{0,40})', t)[:4])
+              comm = lic and all(('-nc' not in l and '-nd' not in l) for l in lic)
+              row['commercial_ok'] = bool(comm)
+              if comm and j.get('playbackUrl'):
+                  b = get(j['playbackUrl'], binary=True)
+                  if b: open(f'out/audio/fma_{tid}.mp3', 'wb').write(b); row['file'] = f'audio/fma_{tid}.mp3'
+              rows.append(row)
+          json.dump(rows, open('out/fma.json', 'w'), indent=1, ensure_ascii=False)
+          # 2. Mixkit searches and licence
+          mk = {}
+          for q in ['afrobeat', 'afro', 'african', 'africa', 'amapiano', 'dancehall', 'reggaeton', 'tropical', 'latin', 'moombahton', 'tropical-house', 'afro-house', 'percussion', 'summer', 'party']:
+              u = f'https://mixkit.co/free-stock-music/discover/{q}/'
+              s = get(u)
+              if not s: continue
+              open(f'out/pages/mixkit_{q}.html', 'w').write(s)
+              for m in re.finditer(r'(?s)<script type="application/ld\+json">(.*?)</script>', s):
+                  for r in re.finditer(r'\{[^{}]*"@type": ?"MusicRecording"[^{}]*\}', m.group(1)):
+                      try: o = json.loads(r.group(0))
+                      except Exception: continue
+                      o.setdefault('queries', []); mk.setdefault(o['url'], o)['queries'].append(q)
+          json.dump(list(mk.values()), open('out/mixkit.json', 'w'), indent=1)
+          for o in mk.values():
+              n = re.search(r'/music/(\d+)/', o['url']).group(1)
+              if os.path.exists(f'out/audio/mixkit_{n}.mp3'): continue
+              b = get(o['url'], binary=True)
+              if b: open(f'out/audio/mixkit_{n}.mp3', 'wb').write(b)
+          s = get('https://mixkit.co/license/')
+          for js in re.findall(r'https://assets\.mixkit\.co/build/[^"]+\.js', s or ''):
+              b = get(js)
+              if b: open(f'out/pages/{slug(js)}.js', 'w').write(b)
+          for u in ['https://mixkit.co/license/music-free/', 'https://mixkit.co/license/musicFree/', 'https://mixkit.co/license/?license=musicFree', 'https://mixkit.co/license/modal/musicFree']:
+              b = get(u)
+              if b: open(f'out/pages/{slug(u)}.html', 'w').write(b)
+          PY
+          python3 crawl.py
+          tail -n 60 out/log.txt
+          ls out/audio | wc -l
       - name: Keep them on the music-samples branch
         if: always()
         run: |
@@ -69,5 +100,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -qm "Candidate music (discovery)"
+          git commit -qm "Candidate music (FMA and Mixkit crawl)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" music-samples
