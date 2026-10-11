@@ -95,8 +95,10 @@ async function setPassword(request, env, userId) {
   }
 
   // The authorisation, forwarded to Postgres as the caller: may you manage this
-  // user? A platform admin, or an admin of a business they belong to — decided
-  // by 044's manages_user(), the same function the app is gated by.
+  // user? A platform admin, or an admin above them in a business they belong
+  // to — and, since 127, never somebody who also belongs to a business the
+  // caller does not administer — decided by manages_user(), the same function
+  // the app is gated by.
   if (!(await rpcBool(env, token, "manages_user", { p_user_id: userId }))) {
     return problem(403, "Vous ne gérez pas ce compte.");
   }

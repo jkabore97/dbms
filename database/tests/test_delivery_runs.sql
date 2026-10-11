@@ -93,12 +93,16 @@ begin
     exception when others then
         if sqlerrm not like 'Demandez au client%' then raise; end if;
     end;
-    begin
-        perform courier_deliver('45aaaaaa-0000-0000-0000-000000000001', 'xxxx');
+    -- 127: a wrong code is counted, not raised (a raise would undo the
+    -- count); courier_handover says why, courier_deliver leaves it open.
+    if courier_handover('45aaaaaa-0000-0000-0000-000000000001', 'xxxx') ->> 'message'
+           not like 'Code incorrect%' then
+        raise exception 'FAIL: a wrong code was not refused in words';
+    end if;
+    perform courier_deliver('45aaaaaa-0000-0000-0000-000000000001', 'xxxx');
+    if (select status from orders where id = '45aaaaaa-0000-0000-0000-000000000001') <> 'in_transit' then
         raise exception 'FAIL: a wrong code closed the delivery';
-    exception when others then
-        if sqlerrm not like 'Code incorrect%' then raise; end if;
-    end;
+    end if;
 end $$;
 reset role;
 create temp table t_code on commit drop as

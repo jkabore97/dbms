@@ -15,7 +15,8 @@ import worker from "../src/index.js";
 
 const UID = "11211211-0000-0000-0000-000000000002";
 const KEY = `courier/${UID}/6f1c2f8e-1111-4a2b-9c3d-000000000001.jpg`;
-const ORG_KEY = "org/6f1c2f8e-1111-4a2b-9c3d-000000000009/2026/10/abc.jpg";
+const ORG = "6f1c2f8e-1111-4a2b-9c3d-000000000009";
+const ORG_KEY = `org/${ORG}/2026/10/abc.jpg`;
 const SELFIE = new Uint8Array(4_000).fill(9);
 
 function bucket(objects = {}) {
@@ -294,8 +295,20 @@ test("purge: signed out a 401; nothing due, nothing deleted; Postgres's no, noth
 
 test("the org routes keep working for an org photo", async () => {
   const e = env({ [ORG_KEY]: { bytes: SELFIE, type: "image/jpeg" } });
-  await withPostgres({ documents: () => [200, [{ id: "d1" }]], storefront_photo_allowed: () => [200, true] }, async () => {
+  await withPostgres({ documents: () => [200, [{ org_id: ORG }]], storefront_photo_allowed: () => [200, true] }, async () => {
     assert.equal((await read(e, ORG_KEY, { token: "member", route: "objects" })).status, 200);
     assert.equal((await read(e, ORG_KEY, { route: "public/objects" })).status, 200);
   });
+});
+
+test("a members' read needs a row of the business whose folder the key is in (127)", async () => {
+  const e = env({ [ORG_KEY]: { bytes: SELFIE, type: "image/jpeg" } });
+  // A row the caller may read — of another business, naming this key.
+  for (const rows of [[{ org_id: "6f1c2f8e-1111-4a2b-9c3d-000000000008" }], [{ id: "d1" }], [], [{ org_id: null }]]) {
+    await withPostgres({ documents: () => [200, rows] }, async (asked) => {
+      assert.equal((await read(e, ORG_KEY, { token: "member", route: "objects" })).status, 404, JSON.stringify(rows));
+      assert.match(asked[0].query, /select=org_id/);
+    });
+  }
+  assert.equal(e.UPLOADS.gets.length, 0, "no byte read for a row of another business");
 });

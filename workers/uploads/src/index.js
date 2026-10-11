@@ -676,12 +676,20 @@ async function isMember(env, token, orgId) {
   return Array.isArray(rows) && rows.length === 1;
 }
 
+// A row the caller may read, and of the business whose folder the key is
+// in (127): a row of one business naming another's key — written before
+// 127 refused it — opens nothing.
 async function mayReadDocument(env, token, key) {
   const url =
     `${env.SUPABASE_URL}/rest/v1/documents` +
-    `?r2_key=eq.${encodeURIComponent(key)}&select=id&limit=1`;
+    `?r2_key=eq.${encodeURIComponent(key)}&select=org_id&limit=1`;
   const rows = await postgrest(env, token, url);
-  return Array.isArray(rows) && rows.length === 1;
+  return (
+    Array.isArray(rows) &&
+    rows.length === 1 &&
+    typeof rows[0].org_id === "string" &&
+    key.startsWith(`org/${rows[0].org_id}/`)
+  );
 }
 
 async function postgrest(env, token, url) {

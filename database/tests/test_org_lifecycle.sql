@@ -318,12 +318,14 @@ declare
     v_entry uuid;
 begin
     -- Give the archived business something in its books, then try to delete
-    -- it the ordinary way.
+    -- it the ordinary way. (127: the grant past RLS — no app door writes one.)
+    execute 'reset role';
     insert into memberships (org_id, user_id, role, scope_kind, scope_id)
     values ('81000000-0000-0000-0000-000000000002',
             '81818181-0000-0000-0000-000000000001', 'owner', 'org',
             '81000000-0000-0000-0000-000000000002')
     on conflict do nothing;
+    execute 'set local role authenticated';
 
     v_entry := record_entry('81000000-0000-0000-0000-000000000002', 5000, 'in',
                             'Vente d''essai');
@@ -449,11 +451,14 @@ declare
     v_sale     uuid;
     v_employee uuid;
 begin
+    -- 127: the grant past RLS — no app door writes one.
+    execute 'reset role';
     insert into memberships (org_id, user_id, role, scope_kind, scope_id)
     values ('81000000-0000-0000-0000-000000000002',
             '81818181-0000-0000-0000-000000000001', 'owner', 'org',
             '81000000-0000-0000-0000-000000000002')
     on conflict do nothing;
+    execute 'set local role authenticated';
 
     -- One of everything, on purpose. Most of the danger in delete_org() is
     -- not the deleting, it is a table nobody remembered: the references

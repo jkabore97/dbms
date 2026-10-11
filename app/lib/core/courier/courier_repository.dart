@@ -5,6 +5,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// courier_dossier.dart). Every rule lives
 /// server-side — who is approved, whose job it is, which step comes next —
 /// so this class only carries the calls.
+/// The door refused the code (127): a wrong one, with [left] tries before
+/// the order locks, or the order [locked] for [minutes] after five.
+class HandoverRefused implements Exception {
+  const HandoverRefused({required this.locked, this.left, this.minutes});
+
+  final bool locked;
+  final int? left;
+  final int? minutes;
+
+  @override
+  String toString() => locked
+      ? 'HandoverRefused(locked, ${minutes ?? '?'} min)'
+      : 'HandoverRefused(wrong code, ${left ?? '?'} left)';
+}
+
 class CourierRepository {
   CourierRepository(this._client);
 
@@ -74,11 +89,29 @@ class CourierRepository {
   }
 
   /// Closes a delivery at the door with the shopper's four digits (073).
+  ///
+  /// Since 127 a wrong code is counted — five lock the order for 15
+  /// minutes and the shop is told — so the server answers it instead of
+  /// raising (a raise would undo the count): [HandoverRefused] carries the
+  /// answer. A database before 127 has only courier_deliver, which raises.
   Future<void> deliver(String orderId, String code) async {
-    await _requireClient().rpc('courier_deliver', params: {
-      'p_order_id': orderId,
-      'p_code': code.trim(),
-    });
+    final client = _requireClient();
+    final params = {'p_order_id': orderId, 'p_code': code.trim()};
+    final Object? answer;
+    try {
+      answer = await client.rpc('courier_handover', params: params);
+    } on PostgrestException catch (error) {
+      if (error.code != 'PGRST202' && error.code != '42883') rethrow;
+      await client.rpc('courier_deliver', params: params);
+      return;
+    }
+    if (answer is Map && answer['ok'] != true) {
+      throw HandoverRefused(
+        locked: answer['reason'] == 'locked',
+        left: (answer['left'] as num?)?.toInt(),
+        minutes: (answer['minutes'] as num?)?.toInt(),
+      );
+    }
   }
 
   /// The door did not open (073): 'absent', 'refused', 'unreachable' or

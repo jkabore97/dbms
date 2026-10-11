@@ -4992,6 +4992,14 @@ const enStrings = <String, String>{
       'This run can no longer be handed back.',
   'Code refusé : demandez au client les 4 chiffres affichés dans sa commande.':
       'Code refused: ask the customer for the 4 digits shown in their order.',
+  'Code incorrect : demandez au client les 4 chiffres de sa commande ({n} essais avant blocage).':
+      'Wrong code: ask the customer for the 4 digits of their order ({n} tries before it locks).',
+  'Code incorrect : demandez au client les 4 chiffres de sa commande (1 essai avant blocage).':
+      'Wrong code: ask the customer for the 4 digits of their order (1 try before it locks).',
+  'Trop de codes faux : cette livraison est bloquée {n} min. La boutique est prévenue.':
+      'Too many wrong codes: this delivery is locked for {n} min. The shop has been told.',
+  'Livraison de {name} : 5 codes faux, bloquée 15 min. Appelez le livreur ou le client.':
+      'Delivery for {name}: 5 wrong codes, locked for 15 min. Call the courier or the customer.',
   'L\'échec n\'a pas pu être enregistré.':
       'The failure could not be saved.',
   'à {km} km de vous':
