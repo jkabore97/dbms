@@ -1,0 +1,41 @@
+# Temporary: renders the promo test lines with every Google Chirp 3 HD
+# French voice (project ccelim, key GCP_TTS_API_KEY) and keeps them as an
+# artifact. Removed once the voices are chosen.
+name: Voice samples
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/voice-tts.yml]
+  workflow_dispatch:
+jobs:
+  voices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Render
+        env:
+          KEY: ${{ secrets.GCP_TTS_API_KEY }}
+        run: |
+          set -eu
+          mkdir out
+          curl -sS -H "X-Goog-Api-Key: $KEY" \
+            "https://texttospeech.googleapis.com/v1/voices?languageCode=fr-FR" > voices.json
+          jq -r '.error.message // empty' voices.json
+          jq -r '.voices[] | select(.name | test("Chirp3-HD|Chirp-HD")) | "\(.name) \(.ssmlGender)"' voices.json | tee list.txt
+          TEXT="Vos photos se perdent dans les discussions ? Avec Mara, votre vitrine est en ligne. Mettez vos œufs en vente, à votre prix. La commande arrive dans Mara. Chaque dépense, avec son reçu en photo. La confiance se lit dans vos comptes."
+          while read -r name gender; do
+            jq -n --arg t "$TEXT" --arg v "$name" \
+              '{input:{text:$t}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000}}' > req.json
+            curl -sS -H "X-Goog-Api-Key: $KEY" -H "Content-Type: application/json" \
+              -d @req.json https://texttospeech.googleapis.com/v1/text:synthesize > res.json
+            if jq -e '.audioContent' res.json >/dev/null; then
+              jq -r '.audioContent' res.json | base64 -d > "out/${gender}_${name}.wav"
+              echo "ok $name"
+            else
+              echo "fail $name: $(jq -r '.error.message' res.json)"
+            fi
+          done < list.txt
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voices
+          path: out/
