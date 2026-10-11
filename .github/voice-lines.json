@@ -1,303 +1,388 @@
 [
  {
-  "file": "f1_01_r090.wav",
+  "file": "f1_01_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Vos photos se perdent dans les discussions ?",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_01_r100.wav",
+  "file": "f1_01_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Vos photos se perdent dans les discussions ?",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_02_r090.wav",
+  "file": "f1_02_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mettez tout dans votre vitrine Mara.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_02_r100.wav",
+  "file": "f1_02_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mettez tout dans votre vitrine Mara.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_03_r090.wav",
+  "file": "f1_03_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Partagez-la en statut WhatsApp.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_03_r100.wav",
+  "file": "f1_03_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Partagez-la en statut WhatsApp.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_04_r090.wav",
+  "file": "f1_04_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "On vous trouve sur la carte.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_04_r100.wav",
+  "file": "f1_04_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "On vous trouve sur la carte.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_05_r090.wav",
+  "file": "f1_05_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Et vous voyez combien de personnes sont passées.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_05_r100.wav",
+  "file": "f1_05_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Et vous voyez combien de personnes sont passées.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_06_r090.wav",
+  "file": "f1_06_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
-  "text": "Commandes et rendez-vous arrivent dans Mara.",
-  "speakingRate": 0.9
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_06_r100.wav",
+  "file": "f1_06_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
-  "text": "Commandes et rendez-vous arrivent dans Mara.",
-  "speakingRate": 1.0
+  "text": "Les commandes et les rendez-vous arrivent dans Mara.",
+  "speakingRate": 0.85
  },
  {
-  "file": "f1_07_r090.wav",
-  "voice": "fr-FR-Chirp3-HD-Sadachbia",
-  "text": "Votre nom, enfin vu.",
-  "speakingRate": 0.9
- },
- {
-  "file": "f1_07_r100.wav",
+  "file": "f1_07_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Votre nom, enfin vu.",
-  "speakingRate": 1.0
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_08_r090.wav",
+  "file": "f1_07_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Votre nom, enfin vu.",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f1_08_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f1_08_r100.wav",
+  "file": "f1_08_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_01_r090.wav",
+  "file": "f2_01_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Vos plateaux d'œufs sont prêts. Mais qui le sait ?",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_01_r100.wav",
+  "file": "f2_01_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Vos plateaux d'œufs sont prêts. Mais qui le sait ?",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_02_r090.wav",
+  "file": "f2_02_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mettez-les en vente, à votre prix.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_02_r100.wav",
+  "file": "f2_02_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mettez-les en vente, à votre prix.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_03_r090.wav",
+  "file": "f2_03_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Partagez votre vitrine. On vous trouve.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_03_r100.wav",
+  "file": "f2_03_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Partagez votre vitrine. On vous trouve.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_04_r090.wav",
+  "file": "f2_04_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "La commande arrive dans Mara.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_04_r100.wav",
+  "file": "f2_04_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "La commande arrive dans Mara.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_05_r090.wav",
+  "file": "f2_05_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Pertes, mortalité, stock : tout est noté.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_05_r100.wav",
+  "file": "f2_05_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Pertes, mortalité, stock : tout est noté.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_06_r090.wav",
+  "file": "f2_06_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Même sans réseau.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_06_r100.wav",
+  "file": "f2_06_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Même sans réseau.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_07_r090.wav",
+  "file": "f2_07_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Votre travail, vu.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_07_r100.wav",
+  "file": "f2_07_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Votre travail, vu.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_08_r090.wav",
+  "file": "f2_08_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f2_08_r100.wav",
+  "file": "f2_08_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_01_r090.wav",
+  "file": "f3_01_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Et l'argent… il est où ?",
-  "speakingRate": 0.9
+  "speakingRate": 0.8,
+  "markup": "Et l'argent... [pause] il est où ?"
  },
  {
-  "file": "f3_01_r100.wav",
+  "file": "f3_01_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Et l'argent… il est où ?",
-  "speakingRate": 1.0
+  "speakingRate": 0.85,
+  "markup": "Et l'argent... [pause] il est où ?"
  },
  {
-  "file": "f3_02_r090.wav",
+  "file": "f3_02_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque cotisation est notée.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_02_r100.wav",
+  "file": "f3_02_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque cotisation est notée.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_03_r090.wav",
+  "file": "f3_03_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque dépense, avec son reçu en photo.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_03_r100.wav",
+  "file": "f3_03_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque dépense, avec son reçu en photo.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_04_r090.wav",
+  "file": "f3_04_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque semaine, envoyez le résumé au groupe.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_04_r100.wav",
+  "file": "f3_04_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Chaque semaine, envoyez le résumé au groupe.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_05_r090.wav",
+  "file": "f3_05_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Tout le monde voit les mêmes chiffres.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_05_r100.wav",
+  "file": "f3_05_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Tout le monde voit les mêmes chiffres.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_06_r090.wav",
+  "file": "f3_06_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "La confiance se lit dans vos comptes.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_06_r100.wav",
+  "file": "f3_06_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "La confiance se lit dans vos comptes.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_07_r090.wav",
+  "file": "f3_07_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "La tête haute.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_07_r100.wav",
+  "file": "f3_07_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "La tête haute.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f3_08_r090.wav",
+  "file": "f3_08_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 0.9
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_08_r100.wav",
+  "file": "f3_08_r085.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
   "text": "Mara. Gratuit pour commencer.",
-  "speakingRate": 1.0
+  "speakingRate": 0.85
  },
  {
-  "file": "f2_01alt_r090.wav",
+  "file": "f2_01a_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Sadachbia",
-  "text": "Vos œufs sont prêts. Mais qui le sait ?",
-  "speakingRate": 0.9
+  "text": "Vos œufs frais sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8
  },
  {
-  "file": "f3_01mk_r090.wav",
+  "file": "f2_01a_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos œufs frais sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f2_01b_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux d'œufs frais sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_01b_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux d'œufs frais sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f2_01c_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_01c_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Vos plateaux sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f2_01d_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les œufs sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_01d_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Les œufs sont prêts. Mais qui le sait ?",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f1_06a_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Commandes, rendez-vous : tout arrive dans Mara.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_06a_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Commandes, rendez-vous : tout arrive dans Mara.",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f1_09_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f1_09_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f2_09_r080.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f2_09_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Sadachbia",
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.85
+ },
+ {
+  "file": "f3_09_r080.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et l'argent… il est où ?",
-  "markup": "Et l'argent... [pause] il est où ?",
-  "speakingRate": 0.9
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.8
+ },
+ {
+  "file": "f3_09_r085.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Sur Google Play et l'App Store.",
+  "speakingRate": 0.85
  }
 ]
