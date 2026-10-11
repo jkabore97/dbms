@@ -22,16 +22,32 @@
 //   POST /v1/stripe           Stripe's webhook, signed with
 //                             STRIPE_WEBHOOK_SECRET
 //
+// And Mara Pro bought in the store apps (130, src/store.js): the app's
+// purchase verified with Apple or Google, their notifications, and a
+// daily re-check —
+//
+//   POST /store/verify        the app, with the owner's token
+//   POST /store/apple-notify  App Store Server Notifications V2 (JWS)
+//   POST /store/google-notify Google Play RTDN by Pub/Sub push
+//                             (?secret=GOOGLE_NOTIFY_SECRET)
+//   cron 17 3 * * *           store_due(), asked again
+//
 // What it holds, and why (secrets set by deploy-pay.yml):
 //
 //   WAVE_API_KEY               Kaj's Wave Business key — never in an app
 //   WAVE_WEBHOOK_SECRET        what Wave signs its webhook with
 //   STRIPE_SECRET_KEY          Kaj's Stripe key — never in an app
 //   STRIPE_WEBHOOK_SECRET      what Stripe signs its webhook with
-//   SUPABASE_SERVICE_ROLE_KEY  used for exactly five functions granted to
+//   APPLE_IAP_KEY_ID, APPLE_IAP_ISSUER_ID, APPLE_IAP_PRIVATE_KEY
+//                              the App Store Connect In-App Purchase key
+//                              (the .p8's text) for the App Store Server API
+//   PLAY_SERVICE_ACCOUNT_JSON  the Google Play service account
+//   GOOGLE_NOTIFY_SECRET       the secret in Google's Pub/Sub push URL
+//   SUPABASE_SERVICE_ROLE_KEY  used for exactly eight functions granted to
 //                              the service role alone: wave_attach,
 //                              wave_settle, wave_payout_done,
-//                              wave_payout_queue, stripe_settle
+//                              wave_payout_queue, stripe_settle, and
+//                              128's store_settle, store_org_of, store_due
 //
 // The amount is never the app's: wave_begin() (called with the person's
 // own token, so under their identity) reads it from the order, the plan or
@@ -42,6 +58,15 @@ import {
   createCheckout, createPortal, getSubscription, readSubscription, subscriptionOf,
   verifyStripeSignature,
 } from "./stripe.js";
+import {
+  appleNotify, googleNotify, storeProblem, storeRecheck, storeVerify,
+} from "./store.js";
+import { appleConfigured } from "./apple.js";
+import { googleConfigured } from "./google.js";
+
+/// What the store doors call through: the network and the two ways into
+/// PostgREST — swapped by the tests.
+export const storeIo = () => ({ fetch, rpcAs, rpcService });
 
 export default {
   async fetch(request, env) {
@@ -54,7 +79,13 @@ export default {
       return json({
         ready: Boolean(env.WAVE_API_KEY && env.WAVE_WEBHOOK_SECRET),
         stripe: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET),
+        apple: appleConfigured(env),
+        google: googleConfigured(env),
       }, 200, cors);
+    }
+
+    if (request.method === "POST" && url.pathname.startsWith("/store/")) {
+      return storeDoor(request, url, env, cors);
     }
 
     if (request.method === "POST"
@@ -139,11 +170,53 @@ export default {
     return json({ error: "not found" }, 404, cors);
   },
 
-  async scheduled(_event, env, ctx) {
+  async scheduled(event, env, ctx) {
+    // Once a day: the store subscriptions near their end (130).
+    if (event?.cron === STORE_CRON) {
+      if (env.SUPABASE_SERVICE_ROLE_KEY) ctx.waitUntil(storeRecheck(env, storeIo()));
+      return;
+    }
     if (!env.WAVE_API_KEY) return;
     ctx.waitUntil(retryPayouts(env));
   },
 };
+
+/// wrangler.toml's second cron.
+export const STORE_CRON = "17 3 * * *";
+
+/// /store/verify, /store/apple-notify, /store/google-notify.
+export async function storeDoor(request, url, env, cors, io = storeIo()) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "body is not JSON" }, 400, cors);
+  }
+  try {
+    if (url.pathname === "/store/verify") {
+      const token = bearer(request);
+      if (!token) return json({ error: "Connectez-vous pour vous abonner." }, 401, cors);
+      return json(await storeVerify(body, token, env, io), 200, cors);
+    }
+    if (url.pathname === "/store/apple-notify") {
+      return json(await appleNotify(body, env, io), 200, {});
+    }
+    if (url.pathname === "/store/google-notify") {
+      return json(await googleNotify(url, body, env, io), 200, {});
+    }
+  } catch (error) {
+    const { status, body: answer } = storeProblem(error);
+    // Every refusal is in the Worker's log by its code (review S3) —
+    // never a token or a transaction id.
+    if (status < 500) console.warn(`store ${url.pathname}: refused ${status} ${answer.code || ""}`.trim());
+    else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""}`.trim());
+    // A notification failing for a passing reason is retried by Apple and
+    // Pub/Sub (any non-2xx); a bad signature or secret is not worth it,
+    // but says so with its 401.
+    return json(answer, status, url.pathname === "/store/verify" ? cors : {});
+  }
+  return json({ error: "not found" }, 404, cors);
+}
 
 /// The app asked to pay something.
 export async function checkout(body, userToken, env, io = { fetch }) {
@@ -297,12 +370,12 @@ export async function retryPayouts(env, io = { fetch, sendPayout }) {
 }
 
 /// PostgREST as the person: their token, the public key.
-async function rpcAs(env, token, fn, args, fetchImpl) {
+export async function rpcAs(env, token, fn, args, fetchImpl) {
   return rpc(env, fn, args, env.SUPABASE_PUBLISHABLE_KEY, token, fetchImpl);
 }
 
 /// PostgREST as the service role, for the five functions it alone runs.
-async function rpcService(env, fn, args, fetchImpl) {
+export async function rpcService(env, fn, args, fetchImpl) {
   return rpc(env, fn, args, env.SUPABASE_SERVICE_ROLE_KEY, env.SUPABASE_SERVICE_ROLE_KEY, fetchImpl);
 }
 
@@ -324,6 +397,9 @@ async function rpc(env, fn, args, apikey, token, fetchImpl = fetch) {
     // person; a 4xx stays a 4xx.
     const error = new Error(data?.message || `${fn} answered ${response.status}`);
     error.status = response.status >= 500 ? 502 : 400;
+    // PostgREST's own status, for a door that tells an expired session
+    // (401) from a refusal (the store doors, 130).
+    error.upstream = response.status;
     throw error;
   }
   return data;

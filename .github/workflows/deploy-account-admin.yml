@@ -21,6 +21,12 @@ on:
     branches: [main]
     paths:
       - 'workers/account-admin/**'
+      # 130: « Supprimer mon compte » revokes a deleted business's Google
+      # Play subscription and signs Apple's client secret with these.
+      - 'workers/pay/src/google.js'
+      - 'workers/pay/src/apple.js'
+      - 'workers/pay/src/jwt.js'
+      - 'workers/pay/src/x509.js'
       - '.github/workflows/deploy-account-admin.yml'
 
 concurrency:
@@ -37,8 +43,22 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
       ALLOWED_ORIGINS: ${{ vars.ACCOUNT_ALLOWED_ORIGINS || 'https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+      # 130: what an owner's account deletion stops outside (a deleted
+      # business's Google Play and Stripe subscriptions) — needed as soon
+      # as one business has such a subscription: without the key, that
+      # deletion is refused and nothing is deleted (review B1) — and the
+      # Sign in with Apple key, optional, that revokes an Apple user's
+      # token (App Store Connect › Certificates, Identifiers & Profiles ›
+      # Keys, « Sign in with Apple », for bf.kaj.app; team 9K236BL7SX).
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      APPLE_SIGNIN_KEY_ID: ${{ secrets.APPLE_SIGNIN_KEY_ID }}
+      APPLE_SIGNIN_PRIVATE_KEY: ${{ secrets.APPLE_SIGNIN_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: The Worker's own tests
+        run: node --test workers/account-admin/test/*.test.mjs
 
       - name: Check what this needs is present
         run: |
@@ -75,6 +95,21 @@ jobs:
             --var "SUPABASE_URL:$SUPABASE_URL" \
             --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
             --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+
+      # Secrets through wrangler's store — never as --var. Each only when
+      # set: without the Play or Stripe key, a deletion that has such a
+      # subscription to stop is refused; without the Apple key, that step
+      # is logged and the rest done.
+      - name: Install the deletion's optional secrets
+        run: |
+          for name in PLAY_SERVICE_ACCOUNT_JSON STRIPE_SECRET_KEY APPLE_SIGNIN_KEY_ID APPLE_SIGNIN_PRIVATE_KEY; do
+            value="${!name}"
+            if [ -n "$value" ]; then
+              printf '%s' "$value" | npx --yes wrangler@4 secret put "$name" --config workers/account-admin/wrangler.toml
+            else
+              echo "::notice::$name is not set: « Supprimer mon compte » refuses a deletion that needs it (Play, Stripe) or logs that step (Apple)."
+            fi
+          done
 
       - name: Say where it went
         run: |

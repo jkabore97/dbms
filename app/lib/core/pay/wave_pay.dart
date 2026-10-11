@@ -178,6 +178,95 @@ class WavePay {
     }
   }
 
+  /// Mara Pro bought in the App Store or on Google Play (130): the Worker
+  /// asks the store itself (/store/verify) and writes it down; the answer
+  /// says whether the business is now on Pro. [orgId] is the business the
+  /// purchase itself names (StorePurchase.orgId) — never the page open —
+  /// or null, and the Worker reads it from the store (review S3). Throws
+  /// [StoreVerifyRefused] with the Worker's code when it refuses (another
+  /// business's purchase, not Mara Pro, an expired session…), or a
+  /// [StateError] when it could not be reached — the purchase is then not
+  /// completed, so the store hands it back on the next try.
+  Future<StoreVerdict> verifyStore({
+    required String platform,
+    String? orgId,
+    required String productId,
+    String? transactionId,
+    String? token,
+  }) async {
+    if (!compiledIn) throw StateError('Pas de connexion au serveur de Mara.');
+    final session = _client?.auth.currentSession?.accessToken;
+    if (session == null) {
+      throw const StoreVerifyRefused('Connectez-vous pour vous abonner.', 'session', status: 401);
+    }
+    final http.Response response;
+    try {
+      response = await _http.post(
+        Uri.parse('${_url.replaceAll(RegExp(r'/$'), '')}/store/verify'),
+        headers: {
+          'Authorization': 'Bearer $session',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'platform': platform,
+          'org_id': ?orgId,
+          'product_id': productId,
+          'transaction_id': ?transactionId,
+          'token': ?token,
+        }),
+      );
+    } catch (_) {
+      throw StateError('Pas de connexion au serveur de Mara.');
+    }
+    Map<String, dynamic> body;
+    try {
+      body = Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    } catch (_) {
+      body = const {};
+    }
+    if (response.statusCode == 200 && body['ok'] == true) {
+      return StoreVerdict(
+        pro: body['pro'] == true,
+        state: '${body['state'] ?? ''}',
+        expiresAt: DateTime.tryParse('${body['expires_at'] ?? ''}'),
+        orgId: body['org_id'] is String ? body['org_id'] as String : orgId,
+      );
+    }
+    if (response.statusCode >= 400 && response.statusCode < 500) {
+      throw StoreVerifyRefused(
+        '${body['error'] ?? 'Achat refusé.'}',
+        response.statusCode == 401 ? 'session' : '${body['code'] ?? ''}',
+        status: response.statusCode,
+      );
+    }
+    throw StateError('${body['error'] ?? 'La vérification de l\'achat n\'a pas abouti.'}');
+  }
+
+  /// Where this business's store subscription stands, and whether the
+  /// caller's own store purchase already pays for another business (128).
+  Future<StoreStanding?> storeStanding(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('my_store_subscription', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      final mine = v['this'];
+      final elsewhere = v['elsewhere'];
+      return StoreStanding(
+        platform: mine is Map ? '${mine['platform'] ?? ''}' : null,
+        state: mine is Map ? '${mine['state'] ?? ''}' : null,
+        expiresAt: mine is Map ? DateTime.tryParse('${mine['expires_at'] ?? ''}') : null,
+        autoRenew: mine is Map && mine['auto_renew'] == true,
+        elsewhereName: elsewhere is Map ? '${elsewhere['name'] ?? ''}' : null,
+        elsewherePlatform: elsewhere is Map && elsewhere['platform'] is String
+            ? elsewhere['platform'] as String
+            : null,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<String> _postForUrl(String path, Map<String, Object?> json) async {
     final token = _client?.auth.currentSession?.accessToken;
     if (!compiledIn || token == null) {
@@ -224,6 +313,58 @@ class WaveTerms {
 
   /// The platform's share of an order paid by Wave, in percent.
   final double commissionPct;
+}
+
+/// The payments Worker's word on a store purchase (130).
+class StoreVerdict {
+  const StoreVerdict({required this.pro, required this.state, this.expiresAt, this.orgId});
+
+  /// The business is on Mara Pro now.
+  final bool pro;
+
+  /// active · grace · cancelled · on_hold · paused · pending · expired · revoked
+  final String state;
+  final DateTime? expiresAt;
+
+  /// The business the purchase was settled for.
+  final String? orgId;
+}
+
+/// The Worker refused a purchase, in its own French words; [code] says why
+/// (wrong_org, replayed, product, bundle, no_org, sandbox — for good;
+/// session, not_admin — for now, see StoreWatcher).
+class StoreVerifyRefused implements Exception {
+  const StoreVerifyRefused(this.message, this.code, {this.status = 400});
+
+  final String message;
+  final String code;
+  final int status;
+
+  @override
+  String toString() => message;
+}
+
+/// my_store_subscription() (128).
+class StoreStanding {
+  const StoreStanding({
+    this.platform,
+    this.state,
+    this.expiresAt,
+    this.autoRenew = false,
+    this.elsewhereName,
+    this.elsewherePlatform,
+  });
+
+  final String? platform;
+  final String? state;
+  final DateTime? expiresAt;
+  final bool autoRenew;
+
+  /// The business the caller's own store purchase already pays for.
+  final String? elsewhereName;
+
+  /// Which store that purchase is in ('apple' / 'google').
+  final String? elsewherePlatform;
 }
 
 /// A business's Kaj Pro paid by card (082), as the owner reads it.

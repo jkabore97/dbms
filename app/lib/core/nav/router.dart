@@ -6,6 +6,7 @@ import '../cauris/cauris_repository.dart';
 import '../console/command_center.dart';
 import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
+import '../access/store_rules.dart' show sellsProThroughStore, storeBillingPlatform;
 
 import '../../core/courier/courier_repository.dart';
 import '../../core/courier/courier_dossier.dart';
@@ -1228,6 +1229,28 @@ GoRouter buildRouter(SessionController session) {
                 cardManage: org.isAdmin ? biz.StripeManage(orgId: org.id) : null,
                 stripeReturn: state.uri.queryParameters['stripe'],
                 onPaid: () => scope.session.refresh(force: true),
+                // 130: in the store apps, once the platform sells Pro
+                // through the stores — the App Store's or Google Play's
+                // own purchase, verified by the payments Worker.
+                storeBilling: sellsProThroughStore
+                    ? biz.PluginStoreBilling(storeBillingPlatform!)
+                    : null,
+                // The purchase's own business (review S3), never this
+                // page's: a purchase for another business that arrives
+                // here is settled for that one.
+                storeVerify: scope.wavePay == null
+                    ? null
+                    : (p) => scope.wavePay!.verifyStore(
+                          platform: storeBillingPlatform ?? '',
+                          orgId: p.orgId,
+                          productId: p.productId,
+                          transactionId: p.transactionId,
+                          token: p.token,
+                        ),
+                storeWatcher: scope.storeWatcher,
+                storeStanding: scope.wavePay == null
+                    ? null
+                    : () => scope.wavePay!.storeStanding(org.id),
               ),
             ),
           ),

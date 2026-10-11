@@ -12,6 +12,7 @@ export '../../features/cauris/league_screen.dart';
 export '../../features/farm/for_sale_screen.dart';
 export '../../features/pay/stripe_button.dart';
 export '../../features/pro/pro_plans_screen.dart';
+export '../../features/pro/store_billing_plugin.dart' show PluginStoreBilling;
 export '../../features/accounting/account_ledger_screen.dart';
 export '../../features/accounting/accounting_hub_screen.dart';
 export '../../features/accounting/balance_sheet_screen.dart';

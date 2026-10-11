@@ -135,4 +135,12 @@ void main() {
       expect(o.isOpen, isTrue);
     });
   });
+
+  group('how an order is collected', () {
+    test('a pickup reads « sur place », right for a shop, a farm and an association', () {
+      expect(fulfilmentLabel('pickup'), 'Retrait sur place');
+      expect(fulfilmentLabel('pickup', appointment: true), 'Sur rendez-vous');
+      expect(fulfilmentLabel('delivery'), 'Livraison');
+    });
+  });
 }

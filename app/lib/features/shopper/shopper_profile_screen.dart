@@ -16,6 +16,8 @@ import '../../core/site/site.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../l10n/strings.dart';
+import '../../core/admin/admin_repository.dart' show AccountRefused;
+import '../account/account_deletion.dart' show accountRefusalText;
 import '../account/support.dart';
 import '../storefront/shop_style.dart';
 import '../storefront/whatsapp_verify_screen.dart';
@@ -158,8 +160,12 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
             throw StateError(
                 'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
           }
-          await scope.admin.deleteMyAccount();
+          // An Apple account, on the iPhone: Apple's sheet once more, for
+          // the code that revokes Apple's token (130).
+          final code = await scope.auth.appleReauthorizationCode();
+          await scope.admin.deleteMyAccount(appleAuthorizationCode: code);
         },
+        reauth: scope.session.signOut,
       ),
     );
     if (gone == true && mounted) {
@@ -733,15 +739,29 @@ class _CityDialogState extends State<_CityDialog> {
 }
 
 /// « Supprimer mon compte »: said plainly, confirmed by typing a word.
-/// Also the business Compte's (for a member, [delete] sends the request to
-/// Mara and [message] says so).
+/// Also the business Compte's (130: [message] and [details] say which
+/// businesses go with the account).
 class DeleteAccountDialog extends StatefulWidget {
-  const DeleteAccountDialog({super.key, required this.delete, this.message, this.confirmLabel});
+  const DeleteAccountDialog({
+    super.key,
+    required this.delete,
+    this.message,
+    this.details,
+    this.confirmLabel,
+    this.reauth,
+  });
 
   final Future<void> Function() delete;
 
+  /// The server asks for a fresh sign-in (review S8): « Me reconnecter »
+  /// signs the person out, to sign in again and come back.
+  final Future<void> Function()? reauth;
+
   /// What happens, in place of the shopper's sentence.
   final String? message;
+
+  /// Drawn under [message]: what disappears, business by business.
+  final Widget? details;
 
   /// The red button, in place of « Supprimer ».
   final String? confirmLabel;
@@ -754,6 +774,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
   final _typed = TextEditingController();
   bool _busy = false;
   String? _error;
+  bool _reauth = false;
 
   /// The word to type, in the reader's language.
   String _word(BuildContext context) => context.tr('SUPPRIMER');
@@ -768,6 +789,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
     setState(() {
       _busy = true;
       _error = null;
+      _reauth = false;
     });
     try {
       await widget.delete();
@@ -776,7 +798,12 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = e is StateError ? context.tr(e.message) : describeError(e);
+          _reauth = e is AccountRefused && e.code == 'reauth';
+          _error = e is AccountRefused
+              ? accountRefusalText(context, e)
+              : e is StateError
+                  ? context.tr(e.message)
+                  : describeError(e);
         });
       }
     }
@@ -799,6 +826,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.message ?? context.tr('Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.')),
+            ?widget.details,
             const SizedBox(height: 14),
             Text(context.tr('Pour confirmer, tapez {word} :', {'word': word}),
                 style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -813,7 +841,19 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: TextStyle(color: error)),
+              Text(_error!, key: const Key('delete-error'), style: TextStyle(color: error)),
+            ],
+            if (_reauth && widget.reauth != null) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const Key('delete-reauth'),
+                icon: const Icon(Icons.login),
+                label: Text(context.tr('Me reconnecter')),
+                onPressed: () async {
+                  Navigator.of(context).pop(false);
+                  await widget.reauth!();
+                },
+              ),
             ],
           ],
         ),

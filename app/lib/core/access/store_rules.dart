@@ -28,6 +28,11 @@ import '../update/update_check.dart' show installStore;
 ///
 /// Every screen asks here, never `installStore` itself, so the rule has
 /// one place to change.
+///
+/// Since 130 the stores may sell Mara Pro themselves: once the platform
+/// turns `store_billing_on` on, [sellsProThroughStore] — App Store In-App
+/// Purchase in the iPhone app, Google Play Billing in the Play app — and
+/// every « Passer à Pro » asks [sellsProInApp]. The spots stay as above.
 bool get sellsDigitalInApp =>
     debugSellsDigitalInApp ?? installStore != 'appstore';
 
@@ -35,3 +40,34 @@ bool get sellsDigitalInApp =>
 /// inside one test run). Null: the build decides. Reset it in tearDown.
 @visibleForTesting
 bool? debugSellsDigitalInApp;
+
+/// The store that sells Mara Pro inside this build (130): 'apple' in the
+/// iPhone app (STORE=appstore), 'google' in the Play build (STORE=play),
+/// null on the web and the GitHub APK — which keep Stripe and Wave.
+String? get storeBillingPlatform =>
+    debugStoreBillingPlatform ??
+    switch (installStore) {
+      'appstore' => 'apple',
+      'play' => 'google',
+      _ => null,
+    };
+
+@visibleForTesting
+String? debugStoreBillingPlatform;
+
+/// The platform's switch, plan_terms().store_billing_on (128), as the
+/// session last read it: until the owner turns it on — once Apple and
+/// Google both answer the payments Worker — the store apps keep the
+/// behaviour above. Written by the session only (and by tests).
+bool storeBillingOn = false;
+
+/// Mara Pro is sold here through the store's own purchase — App Store
+/// In-App Purchase, Google Play Billing (130): never Stripe or Wave beside
+/// it. The spots (« Mettre en avant ») are not sold through the stores:
+/// they keep [sellsDigitalInApp].
+bool get sellsProThroughStore => storeBillingPlatform != null && storeBillingOn;
+
+/// Whether this build may offer Mara Pro at all: through the store when
+/// [sellsProThroughStore], by card and Wave where [sellsDigitalInApp].
+/// Every « Passer à Pro » asks here.
+bool get sellsProInApp => sellsProThroughStore || sellsDigitalInApp;

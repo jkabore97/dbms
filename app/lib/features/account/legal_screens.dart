@@ -69,9 +69,10 @@ class PrivacyScreen extends StatelessWidget {
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
             'photos de pièces justificatives, et les personnes de votre équipe.',
         '# Ce que nous collectons',
-        'Votre nom et votre numéro de téléphone, les données que vous entrez '
-            'dans l\'application, et les photos que vous prenez pour vos reçus '
-            'et livraisons.',
+        'Votre nom et votre numéro de téléphone, votre date de naissance si '
+            'vous la donnez (elle n\'est jamais obligatoire), les données que '
+            'vous entrez dans l\'application, et les photos que vous prenez '
+            'pour vos reçus et livraisons.',
         '# Connexion avec Google',
         'Si vous vous connectez avec Google, nous recevons de Google votre nom, '
             'votre adresse e-mail et votre photo de profil. Ils servent '
@@ -94,19 +95,20 @@ class PrivacyScreen extends StatelessWidget {
             'ne voit que ses propres données ; l\'isolement entre activités est '
             'appliqué par le serveur.',
         '# Les prestataires',
-        'Mara fait appel à quelques prestataires, chacun seulement pour '
-            'ce qui le concerne : Supabase (la base de données et les '
-            'comptes) et Cloudflare (le site, les photos) hébergent les '
-            'données ; Google pour la connexion avec Google et l\'envoi des '
-            'notifications sur le téléphone (Firebase) ; Apple pour la '
-            'connexion avec Apple ; Stripe pour le '
-            'paiement par carte de Mara Pro (Mara ne voit jamais le numéro '
-            'de la carte) ; Sentry pour les rapports d\'erreur de '
+        'Mara fait appel à quelques prestataires, chacun seulement pour ce '
+            'qui le concerne : Supabase (la base de données et les comptes) et '
+            'Cloudflare (le site, les photos) hébergent les données ; Google '
+            'pour la connexion avec Google et l\'envoi des notifications sur le '
+            'téléphone (Firebase) ; Apple pour la connexion avec Apple ; Apple '
+            '(l\'App Store) et Google (Google Play) pour l\'abonnement Mara Pro '
+            'pris dans l\'application, qu\'ils facturent et gèrent eux-mêmes ; '
+            'Stripe pour le paiement par carte de Mara Pro (Mara ne voit jamais '
+            'le numéro de la carte) ; Sentry pour les rapports d\'erreur de '
             'l\'application (sans nom, numéro ni contenu de vos livres) ; '
-            'Resend pour envoyer l\'e-mail de bienvenue ; '
-            'et, quand ils sont ouverts, Wave pour le paiement par mobile '
-            'money et WhatsApp (Meta) pour envoyer le code de vérification '
-            'du numéro. Aucun ne reçoit vos données pour de la publicité.',
+            'Resend pour envoyer l\'e-mail de bienvenue ; et, quand ils sont '
+            'ouverts, Wave pour le paiement par mobile money et WhatsApp (Meta) '
+            'pour envoyer le code de vérification du numéro. Aucun ne reçoit '
+            'vos données pour de la publicité.',
         '# Les visites des vitrines',
         'Quand vous ouvrez la vitrine d\'une activité, l\'application ou '
             'votre navigateur envoie un numéro tiré au hasard et gardé sur '
@@ -139,13 +141,20 @@ class PrivacyScreen extends StatelessWidget {
         '# Vos droits',
         'Vous pouvez demander la correction ou la suppression de vos '
             'données en contactant le support. Vous pouvez aussi télécharger '
-            'vos données et supprimer votre compte vous-même, depuis Mon profil '
-            '› Mes données : vos adresses, vos favoris et vos signalements '
+            'vos données et supprimer votre compte vous-même, tout de suite, '
+            'depuis Mon profil › Mes données (ou Compte › Mes données si vous '
+            'tenez une activité ou en êtes membre) : votre profil, vos '
+            'adresses, vos favoris, vos notifications et vos signalements '
             'partent avec lui ; vos commandes restent chez les boutiques, au '
-            'nom de « Client supprimé », sans votre numéro ni votre adresse '
-            '(une vente déjà inscrite dans leurs comptes y reste telle quelle). '
-            'La suppression d\'une activité efface ses données de façon '
-            'définitive.',
+            'nom de « Client supprimé », sans votre numéro ni votre adresse ; '
+            'ce que vous avez inscrit pour une activité (une vente, une '
+            'écriture) lui reste, sans votre nom. Si vous êtes le seul '
+            'propriétaire d\'une activité, elle est supprimée avec votre compte '
+            ': ses ventes, son stock, ses comptes et sa vitrine sont effacés de '
+            'façon définitive, ses commandes en cours sont annulées et ses '
+            'clients prévenus, et ses membres gardent leur propre compte. Un '
+            'abonnement Mara Pro pris sur l\'App Store s\'annule dans les '
+            'réglages de votre compte Apple : Mara ne peut pas l\'annuler.',
         '# Contact',
         'Pour toute question sur vos données, ou pour demander leur '
             'correction ou leur suppression, écrivez à '
@@ -183,6 +192,16 @@ class TermsScreen extends StatelessWidget {
         'Mara vous aide à tenir vos comptes, mais la responsabilité finale de '
             'vos décisions commerciales et de vos obligations légales vous '
             'revient.',
+        '# Mara Pro',
+        'Mara Pro est un abonnement, au mois ou à l\'année, pour une '
+            'activité : il vaut pour celle pour laquelle il a été pris. Pris '
+            'dans l\'application iPhone ou Android, il est facturé et géré par '
+            'l\'App Store ou Google Play : le prix est celui que le store '
+            'affiche, le paiement est débité sur votre compte du store à la '
+            'confirmation de l\'achat, l\'abonnement se renouvelle '
+            'automatiquement sauf s\'il est annulé au moins 24 heures avant la '
+            'fin de la période en cours, et il s\'annule dans les réglages de '
+            'votre compte du store, selon ses règles.',
         '# Modifications',
         'Ces conditions peuvent évoluer. Les changements importants vous seront '
             'signalés dans l\'application.',

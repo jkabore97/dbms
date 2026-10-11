@@ -39,6 +39,9 @@ import 'core/retail/retail_repository.dart';
 import 'core/retail/staff.dart';
 import 'core/reports/reports_repository.dart';
 import 'core/pay/wave_pay.dart';
+import 'core/access/store_rules.dart' show storeBillingPlatform;
+import 'features/pro/store_billing_plugin.dart' deferred as store_plugin;
+import 'features/pro/store_watcher.dart';
 import 'core/security/security_repository.dart';
 import 'core/security/security_settings.dart';
 import 'core/sync/sync_service.dart';
@@ -296,6 +299,12 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   late final SecurityRepository _securityApi =
       SecurityRepository(widget.auth.client);
   late final WavePay _wavePay = WavePay(widget.auth.client);
+
+  /// The store builds' purchase listener (130, review S3): every purchase
+  /// the App Store or Google Play reports from the app's start — not only
+  /// while the Pro page is open — verified for the business it was bought
+  /// for. Null on the web and the GitHub APK.
+  StoreWatcher? _storeWatcher;
   DateTime? _awayAt;
   bool _deviceRegistered = false;
 
@@ -369,6 +378,33 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _refreshTimer = Timer.periodic(SessionController.refreshEvery,
         (_) => unawaited(_session.refresh(force: true)));
+    if (!kIsWeb && storeBillingPlatform != null) unawaited(_startStore(storeBillingPlatform!));
+  }
+
+  Future<void> _startStore(String platform) async {
+    await store_plugin.loadLibrary();
+    if (!mounted) return;
+    final watcher = StoreWatcher(
+      billing: store_plugin.PluginStoreBilling(platform),
+      verify: (p) => _wavePay.verifyStore(
+        platform: platform,
+        orgId: p.orgId,
+        productId: p.productId,
+        transactionId: p.transactionId,
+        token: p.token,
+      ),
+      onPro: () => unawaited(_session.refresh(force: true)),
+      // Said and kept: the console's log and the crash reporter — a code
+      // and a product, never a token.
+      log: (line) {
+        debugPrint(line);
+        unawaited(CrashReporting.report(StateError(line)));
+      },
+      outside: (notice) => BackFirst.instance.messenger.currentState?.showSnackBar(
+        SnackBar(content: Builder(builder: (context) => Text(notice.text(context)))),
+      ),
+    )..start();
+    setState(() => _storeWatcher = watcher);
   }
 
   /// The phone's language changed while Mara was open: with no choice made
@@ -416,6 +452,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     _session.removeListener(_onSession);
     _session.dispose();
     _security.dispose();
+    _storeWatcher?.dispose();
     super.dispose();
   }
 
@@ -451,6 +488,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       security: _security,
       securityApi: _securityApi,
       wavePay: _wavePay,
+      storeWatcher: _storeWatcher,
       // Rebuilds when the language changes — that is the whole trick: every
       // screen below re-reads Strings.of(context) and repaints in the new
       // language with nothing reloaded and nothing lost.

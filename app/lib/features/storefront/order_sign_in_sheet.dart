@@ -99,7 +99,9 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final google = _google;
+    // On an iPhone, Google only beside Apple, below it (130: App Review 4.8
+    // — never Google alone, never Google first).
+    final google = appleSignInPlatform && !_apple ? false : _google;
     return SafeArea(
       top: false,
       child: Padding(

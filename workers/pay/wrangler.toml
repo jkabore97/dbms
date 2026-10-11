@@ -6,6 +6,8 @@
 #
 #   secrets   SUPABASE_SERVICE_ROLE_KEY   WAVE_API_KEY   WAVE_WEBHOOK_SECRET
 #             STRIPE_SECRET_KEY   STRIPE_WEBHOOK_SECRET
+#             APPLE_IAP_KEY_ID   APPLE_IAP_ISSUER_ID   APPLE_IAP_PRIVATE_KEY
+#             PLAY_SERVICE_ACCOUNT_JSON   GOOGLE_NOTIFY_SECRET   (130)
 #   vars      SUPABASE_URL  SUPABASE_PUBLISHABLE_KEY  APP_ORIGIN  ALLOWED_ORIGINS
 
 name = "kaj-pay"
@@ -17,11 +19,14 @@ compatibility_date = "2026-01-01"
 workers_dev = true
 
 # Payouts that failed (Wave busy, a timeout) are tried again, five times.
+# And once a day (130), every App Store / Google Play subscription near its
+# end is asked again (src/index.js STORE_CRON — the two must match).
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["*/15 * * * *", "17 3 * * *"]
 
 [vars]
 SUPABASE_URL = ""
 SUPABASE_PUBLISHABLE_KEY = ""
 APP_ORIGIN = "https://marakaj.com"
+APPLE_BUNDLE_ID = "bf.kaj.app"
 ALLOWED_ORIGINS = "https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080"

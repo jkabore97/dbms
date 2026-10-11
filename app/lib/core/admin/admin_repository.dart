@@ -395,12 +395,37 @@ class AdminRepository {
     await _accountPost('/v1/users/$userId/delete', const {});
   }
 
-  /// « Supprimer mon compte » (113): the signed-in person deletes their own
-  /// account. Same Worker; the server answers whose (the caller's own,
-  /// read from the token) or why not, in French (113's
-  /// delete_my_account_check).
-  Future<void> deleteMyAccount() async {
-    await _accountPost('/v1/me/delete', const {});
+  /// « Supprimer mon compte » (113, every account since 130): the
+  /// signed-in person deletes their own account. Same Worker; the server
+  /// reads whose from the token and refuses in French when it cannot
+  /// (128's delete_my_account). An owner sends [confirmedOrgs], the
+  /// businesses the confirmation listed ([deletionPlan]) — a list that is
+  /// not the server's is refused, so nothing goes that was not shown. The
+  /// iPhone app sends Apple's fresh [appleAuthorizationCode] for an Apple
+  /// account, to revoke Apple's token.
+  Future<void> deleteMyAccount({
+    List<String>? confirmedOrgs,
+    String? appleAuthorizationCode,
+  }) async {
+    await _accountPost('/v1/me/delete', {
+      'confirmed_orgs': ?confirmedOrgs,
+      'apple_authorization_code': ?appleAuthorizationCode,
+    });
+  }
+
+  /// What deleting the signed-in person's account would do (128's
+  /// delete_my_account_preview): the businesses that disappear, the ones
+  /// only left, what refuses it. Null on a database before 128 or offline.
+  Future<AccountDeletionPlan?> deletionPlan() async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('delete_my_account_preview');
+      if (v is! Map) return null;
+      return AccountDeletionPlan.fromJson(Map<String, dynamic>.from(v));
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _accountPost(String path, Map<String, dynamic> body) async {
@@ -422,7 +447,16 @@ class AdminRepository {
       body: jsonEncode(body),
     );
     if (response.statusCode >= 400) {
-      throw StateError(_accountError(response));
+      String? code;
+      String? name;
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          if (decoded['code'] is String) code = decoded['code'] as String;
+          if (decoded['name'] is String) name = decoded['name'] as String;
+        }
+      } catch (_) {}
+      throw AccountRefused(_accountError(response), code: code, name: name);
     }
   }
 
@@ -1547,4 +1581,117 @@ class Showcase {
         visible: r['visible'] == true,
         managing: r['managing'] == true,
       );
+}
+
+/// The account Worker said no (130): its French sentence, and the code
+/// and business the app says it with in the reader's language
+/// (not_stopped, reauth, payout, business_order, own_order…).
+class AccountRefused extends StateError {
+  AccountRefused(super.message, {this.code, this.name});
+
+  final String? code;
+  final String? name;
+}
+
+/// What « Supprimer mon compte » would do (128): read before the person
+/// confirms, so the confirmation names every business that disappears.
+class AccountDeletionPlan {
+  const AccountDeletionPlan({
+    this.blocked,
+    this.blockedCode,
+    this.blockedShop,
+    this.businesses = const [],
+    this.leaves = const [],
+    this.courier = false,
+    this.appleStore = 0,
+  });
+
+  /// Why it cannot be done now, in the server's French; null when it can.
+  final String? blocked;
+
+  /// The refusal's code (platform, own_order, delivering, business_order,
+  /// payout) and the business it names, for the reader's language.
+  final String? blockedCode;
+  final String? blockedShop;
+
+  /// The businesses the person alone owns: they disappear with the account.
+  final List<DoomedBusiness> businesses;
+
+  /// The businesses the person only leaves (another owner keeps them, or
+  /// the person is a member).
+  final List<String> leaves;
+  final bool courier;
+
+  /// App Store subscriptions still renewing on those businesses: Mara
+  /// cannot cancel them, the owner must.
+  final int appleStore;
+
+  List<String> get businessIds => [for (final b in businesses) b.id];
+
+  factory AccountDeletionPlan.fromJson(Map<String, dynamic> json) {
+    final b = json['businesses'];
+    final l = json['leaves'];
+    return AccountDeletionPlan(
+      blocked: json['blocked'] as String?,
+      blockedCode: json['blocked_code'] as String?,
+      blockedShop: json['blocked_shop'] as String?,
+      businesses: [
+        if (b is List)
+          for (final x in b)
+            if (x is Map) DoomedBusiness.fromJson(Map<String, dynamic>.from(x)),
+      ],
+      leaves: [
+        if (l is List)
+          for (final x in l)
+            if (x is Map) '${x['name'] ?? ''}',
+      ],
+      courier: json['courier'] == true,
+      appleStore: json['apple_store'] is num ? (json['apple_store'] as num).toInt() : 0,
+    );
+  }
+}
+
+class DoomedBusiness {
+  const DoomedBusiness({
+    required this.id,
+    required this.name,
+    this.profile = 'retail',
+    this.members = 0,
+    this.orders = 0,
+    this.storePlatforms = const [],
+    this.stripe = false,
+  });
+
+  final String id;
+  final String name;
+  final String profile;
+
+  /// The other people in it, who become plain shoppers.
+  final int members;
+
+  /// Its open orders, cancelled with a word to each customer.
+  final int orders;
+
+  /// 'apple' / 'google' for each store subscription still running.
+  final List<String> storePlatforms;
+
+  /// A card subscription (Stripe), stopped with it.
+  final bool stripe;
+
+  factory DoomedBusiness.fromJson(Map<String, dynamic> json) {
+    final store = json['store'];
+    return DoomedBusiness(
+      id: '${json['id']}',
+      name: '${json['name'] ?? ''}',
+      profile: '${json['profile'] ?? 'retail'}',
+      members: json['members'] is num ? (json['members'] as num).toInt() : 0,
+      orders: json['orders'] is num ? (json['orders'] as num).toInt() : 0,
+      storePlatforms: [
+        if (store is List)
+          for (final s in store)
+            if (s is Map) '${s['platform'] ?? ''}',
+      ],
+      stripe: json['stripe'] == true,
+    );
+  }
 }

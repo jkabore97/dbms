@@ -838,6 +838,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch127.sql
 
+      - name: Prove Mara Pro bought in the App Store or on Google Play — an active store subscription turns Pro on, expired off, grace and cancelled-but-paid on to their end, a refund off at once; a token is the business it was bought for; only the Worker writes, anon calls nothing, another business's admin reads nothing; store_billing_on off and the platform's; an account deleted for real — an owner's businesses gone (members become shoppers, vitrines off the street, open orders cancelled with a notice), a member, a shopper and a courier leave no personal data, the platform refused; P1 Stripe, Wave, free and cauris businesses unchanged, the three kinds (128)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch128.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

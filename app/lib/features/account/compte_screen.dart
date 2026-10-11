@@ -25,8 +25,8 @@ import '../common/attention_banner.dart';
 import '../../core/notify/bell.dart';
 import '../admin/admin_pill.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
-import '../../core/shopper/shopper_repository.dart';
-import '../shopper/shopper_profile_screen.dart' show DeleteAccountDialog;
+import '../../core/admin/admin_repository.dart' show AccountDeletionPlan;
+import 'account_deletion.dart';
 import '../../core/notify/bell_room.dart';
 
 /// One screen for everything that used to be scattered across a long popup
@@ -42,36 +42,14 @@ import '../../core/notify/bell_room.dart';
 /// it stays a real page with an address (`/o/<id>/compte`) that the back button
 /// and a reload both respect.
 class CompteScreen extends StatelessWidget {
-  const CompteScreen({super.key, required this.org, this.shopper});
+  const CompteScreen({super.key, required this.org, this.deletionPlan, this.deleteAccount});
 
   final OrgSummary org;
 
-  /// Where « Supprimer mon compte » sends its request; the live one when
-  /// not given (a test passes its own).
-  final ShopperRepository? shopper;
-
-  Future<void> _askDeletion(BuildContext context) async {
-    final scope = AppScope.of(context);
-    final repo = shopper ?? ShopperRepository(scope.auth.client);
-    final names = scope.session.orgs.map((o) => o.name).join(', ');
-    final sent = await showDialog<bool>(
-      context: context,
-      builder: (_) => DeleteAccountDialog(
-        message: context.tr('Votre compte est lié à {names} : vos ventes, votre stock et votre équipe y portent votre nom. Mara reçoit votre demande, vous contacte si une activité doit être transmise ou fermée, puis supprime votre compte et vos données personnelles sous 30 jours.', {'names': names}),
-        confirmLabel: context.tr('Envoyer la demande'),
-        // Read by Mara's team in Signalements, so in French whatever the
-        // person's language.
-        delete: () => repo.report(
-          topic: 'other',
-          message: 'Demande de suppression de compte (depuis Compte). Activités : $names.',
-        ),
-      ),
-    );
-    if (sent == true && context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-          content: Text(context.tr('Demande envoyée : Mara supprime votre compte et vous prévient.'))));
-    }
-  }
+  /// « Supprimer mon compte »'s plan and deletion; the live ones when not
+  /// given (a test passes its own).
+  final Future<AccountDeletionPlan?> Function()? deletionPlan;
+  final Future<void> Function(List<String> confirmedOrgs)? deleteAccount;
 
   /// The rows of Compte › Outils for this business, in order, by key.
   ///
@@ -361,7 +339,7 @@ class CompteScreen extends StatelessWidget {
                   icon: Icons.workspace_premium_outlined,
                   // The iPhone app invites to no purchase (125): the plan's
                   // name, and the page that says what it includes.
-                  title: org.isPro || !sellsDigitalInApp
+                  title: org.isPro || !sellsProInApp
                       ? context.tr('Mara Pro')
                       : context.tr('Passer à Mara Pro'),
                   subtitle: org.isPro
@@ -491,13 +469,10 @@ class CompteScreen extends StatelessWidget {
             ],
           ),
 
-          // Google Play's rule, and a person's right: every account can ask to
-          // be deleted from inside the app. A member's account carries the
-          // business's books (sales, stock, pay) under their name, so the
-          // server never deletes it on the spot (113's
-          // delete_my_account_check): the request goes to Mara, through
-          // « Signaler un problème » (À faire › Signalements), with the
-          // person's contact, and Mara closes the account.
+          // Google Play's and the App Store's rule, and a person's right:
+          // every account is deleted from inside the app (130) — a member's
+          // and an owner's too. The confirmation names each business that
+          // disappears with the owner (account_deletion.dart).
           if (live)
             _Group(
               title: context.tr('Mes données'),
@@ -506,8 +481,9 @@ class CompteScreen extends StatelessWidget {
                   key: const Key('compte-delete-account'),
                   icon: Icons.delete_outline,
                   title: context.tr('Supprimer mon compte'),
-                  subtitle: context.tr('Mara vous le confirme sous 30 jours'),
-                  onTap: () => _askDeletion(context),
+                  subtitle: context.tr('Votre compte, et les activités dont vous êtes le seul propriétaire'),
+                  onTap: () => askAccountDeletion(context,
+                      plan: deletionPlan, delete: deleteAccount),
                 ),
               ],
             ),

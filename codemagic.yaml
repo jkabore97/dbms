@@ -37,6 +37,27 @@ workflows:
         distribution_type: app_store
         bundle_identifier: bf.kaj.app
     scripts:
+      # First, before a minute of Mac time is spent (130): a value missing
+      # from the `mara_app` group makes an app that builds, signs and
+      # uploads — and then cannot sign anybody in, delete an account (App
+      # Review 5.1.1(v)), verify an App Store purchase or show a photo.
+      # Said by name, and the build stops.
+      - name: The values this build needs are set
+        script: |
+          #!/usr/bin/env bash
+          missing=""
+          for name in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY ACCOUNT_ADMIN_URL PAY_URL UPLOADS_URL; do
+            if [ -z "${!name:-}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "Empty in Codemagic (App › Environment variables, group mara_app):$missing" >&2
+            echo "Each is the same value as the GitHub repository secret or variable of that name." >&2
+            exit 1
+          fi
+          for name in SENTRY_DSN PUSH_URL; do
+            if [ -z "${!name:-}" ]; then echo "Note: $name is empty — built without it."; fi
+          done
+          echo "SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, ACCOUNT_ADMIN_URL, PAY_URL and UPLOADS_URL are set."
       - name: Firebase's config, when there is one
         script: |
           if [ -n "${GOOGLE_SERVICE_INFO_PLIST:-}" ]; then

@@ -2,13 +2,17 @@ name: Deploy the payments Worker
 
 # Publishes workers/pay — Wave checkout for orders, Kaj Pro and spots, and
 # the payouts that send each shop its money (migration 076) — and Kaj Pro
-# by card, as a Stripe subscription (082). See README "Wave checkout" and
-# "Kaj Pro by card (Stripe)" for the one-time setup with each.
+# by card, as a Stripe subscription (082) — and Mara Pro bought in the
+# store apps, verified with Apple and Google (128/130). See README "Wave
+# checkout", "Kaj Pro by card (Stripe)" and "Mara Pro in the store apps"
+# for the one-time setup with each.
 #
-# Dormant until the owner has a Wave or a Stripe key: with neither pair
-# (WAVE_API_KEY + WAVE_WEBHOOK_SECRET, STRIPE_SECRET_KEY +
-# STRIPE_WEBHOOK_SECRET) the job says so and succeeds, and nothing is
-# deployed. Either pair alone is enough; the other's doors answer 503.
+# Dormant until the owner has a Wave, a Stripe or a store key: with no
+# pair (WAVE_API_KEY + WAVE_WEBHOOK_SECRET, STRIPE_SECRET_KEY +
+# STRIPE_WEBHOOK_SECRET), no Apple In-App Purchase key (APPLE_IAP_KEY_ID +
+# APPLE_IAP_ISSUER_ID + APPLE_IAP_PRIVATE_KEY) and no
+# PLAY_SERVICE_ACCOUNT_JSON, the job says so and succeeds, and nothing is
+# deployed. Any one is enough; the others' doors answer 503.
 # Kept apart from "Deploy to Cloudflare" like the push Worker: it holds the
 # service-role key and Kaj's Wave key, and a mistake in its setup must not
 # stop the app itself going out.
@@ -39,6 +43,15 @@ jobs:
       WAVE_WEBHOOK_SECRET: ${{ secrets.WAVE_WEBHOOK_SECRET }}
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      # 130: the App Store Server API (an In-App Purchase key from App
+      # Store Connect › Users and Access › Integrations › In-App Purchase)
+      # and the Google Play Developer API (the service account that
+      # already publishes the app), and the secret in the Pub/Sub push URL.
+      APPLE_IAP_KEY_ID: ${{ secrets.APPLE_IAP_KEY_ID }}
+      APPLE_IAP_ISSUER_ID: ${{ secrets.APPLE_IAP_ISSUER_ID }}
+      APPLE_IAP_PRIVATE_KEY: ${{ secrets.APPLE_IAP_PRIVATE_KEY }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      GOOGLE_NOTIFY_SECRET: ${{ secrets.GOOGLE_NOTIFY_SECRET }}
       APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://marakaj.com' }}
       ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
     steps:
@@ -47,16 +60,20 @@ jobs:
       - name: The Worker's own tests
         run: node --test workers/pay/test/*.test.mjs
 
-      - name: Say so when neither Wave nor Stripe is set up yet
+      - name: Say so when neither Wave nor Stripe nor a store is set up yet
         id: ready
         run: |
-          wave=false; stripe=false
+          wave=false; stripe=false; apple=false; google=false
           if [ -n "$WAVE_API_KEY" ] && [ -n "$WAVE_WEBHOOK_SECRET" ]; then wave=true; fi
           if [ -n "$STRIPE_SECRET_KEY" ] && [ -n "$STRIPE_WEBHOOK_SECRET" ]; then stripe=true; fi
+          if [ -n "$APPLE_IAP_KEY_ID" ] && [ -n "$APPLE_IAP_ISSUER_ID" ] && [ -n "$APPLE_IAP_PRIVATE_KEY" ]; then apple=true; fi
+          if [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ]; then google=true; fi
           echo "wave=$wave" >> "$GITHUB_OUTPUT"
           echo "stripe=$stripe" >> "$GITHUB_OUTPUT"
-          if [ "$wave" = false ] && [ "$stripe" = false ]; then
-            echo "::notice::Neither WAVE_API_KEY + WAVE_WEBHOOK_SECRET nor STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET is set: the payments Worker was not deployed. README, 'Wave checkout' and 'Kaj Pro by card (Stripe)'."
+          echo "apple=$apple" >> "$GITHUB_OUTPUT"
+          echo "google=$google" >> "$GITHUB_OUTPUT"
+          if [ "$wave" = false ] && [ "$stripe" = false ] && [ "$apple" = false ] && [ "$google" = false ]; then
+            echo "::notice::None of WAVE_API_KEY + WAVE_WEBHOOK_SECRET, STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET, APPLE_IAP_KEY_ID + APPLE_IAP_ISSUER_ID + APPLE_IAP_PRIVATE_KEY, PLAY_SERVICE_ACCOUNT_JSON is set: the payments Worker was not deployed. README, 'Wave checkout', 'Kaj Pro by card (Stripe)', 'Mara Pro in the store apps'."
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
             echo "go=true" >> "$GITHUB_OUTPUT"
@@ -99,15 +116,29 @@ jobs:
             printf '%s' "$STRIPE_SECRET_KEY"     | npx --yes wrangler@4 secret put STRIPE_SECRET_KEY     --config workers/pay/wrangler.toml
             printf '%s' "$STRIPE_WEBHOOK_SECRET" | npx --yes wrangler@4 secret put STRIPE_WEBHOOK_SECRET --config workers/pay/wrangler.toml
           fi
+          if [ "${{ steps.ready.outputs.apple }}" = true ]; then
+            printf '%s' "$APPLE_IAP_KEY_ID"      | npx --yes wrangler@4 secret put APPLE_IAP_KEY_ID      --config workers/pay/wrangler.toml
+            printf '%s' "$APPLE_IAP_ISSUER_ID"   | npx --yes wrangler@4 secret put APPLE_IAP_ISSUER_ID   --config workers/pay/wrangler.toml
+            printf '%s' "$APPLE_IAP_PRIVATE_KEY" | npx --yes wrangler@4 secret put APPLE_IAP_PRIVATE_KEY --config workers/pay/wrangler.toml
+          fi
+          if [ "${{ steps.ready.outputs.google }}" = true ]; then
+            printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" | npx --yes wrangler@4 secret put PLAY_SERVICE_ACCOUNT_JSON --config workers/pay/wrangler.toml
+          fi
+          if [ -n "$GOOGLE_NOTIFY_SECRET" ]; then
+            printf '%s' "$GOOGLE_NOTIFY_SECRET" | npx --yes wrangler@4 secret put GOOGLE_NOTIFY_SECRET --config workers/pay/wrangler.toml
+          fi
 
       - name: Say what is left to do
         if: steps.ready.outputs.go == 'true'
         run: |
           {
-            echo "### Payments Worker deployed (Wave: ${{ steps.ready.outputs.wave }}, Stripe: ${{ steps.ready.outputs.stripe }})"
+            echo "### Payments Worker deployed (Wave: ${{ steps.ready.outputs.wave }}, Stripe: ${{ steps.ready.outputs.stripe }}, App Store: ${{ steps.ready.outputs.apple }}, Google Play: ${{ steps.ready.outputs.google }})"
             echo
             echo "1. Wave: in the Wave Business portal, set the webhook URL to \`<kaj-pay origin>/v1/wave\` (events: checkout.session.completed, checkout.session.payment_failed)."
             echo "2. Stripe: in Developers, Webhooks, add \`<kaj-pay origin>/v1/stripe\` (events: checkout.session.completed, invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted)."
             echo "3. Set the repository variable \`PAY_URL\` to the kaj-pay origin and re-run *Deploy to Cloudflare*."
             echo "4. In the console: switch Wave checkout on; for cards, Kaj Pro, « Paiement par carte (Stripe) »."
+            echo "5. App Store Connect › the app › App Information › App Store Server Notifications: Production and Sandbox URL \`<kaj-pay origin>/store/apple-notify\`, Version 2."
+            echo "6. Google Cloud: a Pub/Sub topic, Play Console › Monetization setup › Real-time developer notifications set to it, and a push subscription to \`<kaj-pay origin>/store/google-notify?secret=<GOOGLE_NOTIFY_SECRET>\`."
+            echo "7. Once both stores answer: Réglages › Mara Pro › « Abonnement dans les applications (App Store, Google Play) »."
           } >> "$GITHUB_STEP_SUMMARY"

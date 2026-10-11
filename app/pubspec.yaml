@@ -141,6 +141,21 @@ dependencies:
   # and the web never draw it.
   sign_in_with_apple: ^8.2.0
 
+  # Mara Pro bought inside the store apps (130): StoreKit on the iPhone,
+  # Google Play Billing on Android — the flutter.dev team's own plugin,
+  # BSD-3-Clause like Flutter. Pinned exactly: a purchase flow is not
+  # where a minor version should change under us. Reached only through
+  # features/pro/store_billing.dart, and only when the build came from a
+  # store (STORE=appstore / play) and the platform set store_billing_on;
+  # the web and the GitHub APK never call it. Its receipts are checked by
+  # workers/pay (/store/verify) with Apple and Google, never trusted here.
+  in_app_purchase: 3.3.1
+  # Its two halves, named because store_billing.dart reads their own types
+  # (StoreKit 2's purchase option, Play's base plans): the versions
+  # in_app_purchase 3.3.1 resolves, pinned with it.
+  in_app_purchase_android: 0.5.3
+  in_app_purchase_storekit: 0.4.13+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1924,8 +1924,8 @@ const enStrings = <String, String>{
       'to settle',
   'Œufs frais, poulets de chair…':
       'Fresh eggs, broilers…',
-  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent, viennent le chercher à la ferme ou se le font livrer.':
-      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order, collect it at the farm or have it delivered.',
+  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.':
+      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order and collect it at the farm; delivery comes with Mara Pro.',
   '— fin —':
       '— end —',
   'Ajoutez au moins un article.':
@@ -2230,8 +2230,6 @@ const enStrings = <String, String>{
       'Business switched to Mara Pro.',
   'Entreprise repassée sur Mara (gratuit).':
       'Business back on Mara (free).',
-  'Envoyer la demande':
-      'Send the request',
   'Faites grandir {name}':
       'Grow {name}',
   'Fermée':
@@ -2374,6 +2372,8 @@ const enStrings = <String, String>{
       'Pickup at the shop',
   'Retrait ou livraison':
       'Pickup or delivery',
+  'Retrait sur place':
+      'Pickup on site',
   'Retrait à la ferme':
       'Pickup at the farm',
   'Rien de refusé. Ce qui reste partira dès que le réseau reviendra.':
@@ -6072,12 +6072,6 @@ const enStrings = <String, String>{
       'From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
-  'Mara vous le confirme sous 30 jours':
-      'Mara confirms within 30 days',
-  'Votre compte est lié à {names} : vos ventes, votre stock et votre équipe y portent votre nom. Mara reçoit votre demande, vous contacte si une activité doit être transmise ou fermée, puis supprime votre compte et vos données personnelles sous 30 jours.':
-      'Your account is linked to {names}: your sales, stock and team carry your name there. Mara receives your request, contacts you if a business must be handed over or closed, then deletes your account and your personal data within 30 days.',
-  'Demande envoyée : Mara supprime votre compte et vous prévient.':
-      'Request sent: Mara deletes your account and lets you know.',
   '1 vitrine sur la carte':
       '1 storefront on the map',
   '{n} vitrines sur la carte':
@@ -6269,4 +6263,134 @@ const enStrings = <String, String>{
       'Order online, pick up at the farm',
   'Les produits de la ferme, vendus par la ferme':
       'The farm\'s produce, sold by the farm',
+  // 130: Mara Pro in the store apps (store_panel.dart), its notice and its switch.
+  'Abonnement dans les applications (App Store, Google Play)':
+      'Subscription in the apps (App Store, Google Play)',
+  'Mara Pro est actif, payé sur l\'App Store, jusqu\'au {date}.':
+      'Mara Pro is on, paid on the App Store, until {date}.',
+  'Mara Pro est actif, payé sur Google Play, jusqu\'au {date}.':
+      'Mara Pro is on, paid on Google Play, until {date}.',
+  'Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.':
+      'Purchase pending: {store} still has to confirm it (parental approval, payment in progress). Mara Pro turns on as soon as it is confirmed.',
+  'Achat annulé : rien n\'a été prélevé.':
+      'Purchase cancelled: nothing was charged.',
+  'Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.':
+      'This {store} account already pays for Mara Pro, probably for another of your businesses: one subscription covers one business.',
+  'L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.':
+      'The purchase did not go through: {store} charged nothing. Try again in a moment.',
+  'Vérification de l\'achat auprès de {store}…':
+      'Checking the purchase with {store}…',
+  'Cet abonnement est terminé : il ne donne plus Mara Pro.':
+      'This subscription has ended: it no longer gives Mara Pro.',
+  'Cet abonnement a été remboursé : il ne donne plus Mara Pro.':
+      'This subscription was refunded: it no longer gives Mara Pro.',
+  'Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.':
+      'The payment for this subscription is on hold at {store}: update your payment method in {store}.',
+  'Cet achat ne donne pas Mara Pro à cette entreprise.':
+      'This purchase does not give this business Mara Pro.',
+  'Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Mara could not check it yet. Stay connected and tap “Restore purchases”: nothing will be charged twice.',
+  'Recherche de vos achats sur {store}…':
+      'Looking for your purchases on {store}…',
+  'Aucun abonnement Mara Pro à restaurer sur ce compte {store}.':
+      'No Mara Pro subscription to restore on this {store} account.',
+  '{store} n\'a pas répondu. Réessayez dans un moment.':
+      '{store} did not answer. Try again in a moment.',
+  'Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.':
+      'Only an administrator of the business can subscribe it to Mara Pro.',
+  '{store} ne propose pas Mara Pro sur cet appareil pour le moment. Réessayez plus tard.':
+      '{store} does not offer Mara Pro on this device for now. Try again later.',
+  'Restaurer mes achats':
+      'Restore purchases',
+  'Gérer mon abonnement':
+      'Manage my subscription',
+  'Mara Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.':
+      'Mara Pro is an auto-renewing subscription{prices}. Payment is charged to your {store} account when you confirm the purchase. The subscription renews automatically at the same price for the same length unless it is cancelled at least 24 hours before the end of the current period. Manage or cancel it at any time in your {store} account settings.',
+  ' : 1 mois à {price}':
+      ': 1 month at {price}',
+  ' : 1 an à {price}':
+      ': 1 year at {price}',
+  ', ou 1 an à {price}':
+      ', or 1 year at {price}',
+  'Mara Pro · 1 an':
+      'Mara Pro · 1 year',
+  'Mara Pro · 1 mois':
+      'Mara Pro · 1 month',
+  '{price} par an':
+      '{price} a year',
+  '{price} par mois':
+      '{price} a month',
+  'S\'abonner':
+      'Subscribe',
+  // 130: « Supprimer mon compte » for every account (account_deletion.dart) and the server's new refusals.
+  'Votre compte, et les activités dont vous êtes le seul propriétaire':
+      'Your account, and the businesses you alone own',
+  'La suppression n\'a pas pu être préparée : vérifiez la connexion et réessayez.':
+      'The deletion could not be prepared: check the connection and try again.',
+  'Pas encore possible':
+      'Not possible yet',
+  'Votre compte et vos données personnelles seront effacés pour toujours. Vous quittez les activités dont vous faites partie ; ce que vous y avez inscrit leur reste, sans votre nom.':
+      'Your account and your personal data will be erased for good. You leave the businesses you belong to; what you recorded there stays theirs, without your name.',
+  'Votre compte et vos données personnelles seront effacés pour toujours, et avec eux ces activités :':
+      'Your account and your personal data will be erased for good, and with them these businesses:',
+  '1 membre redevient simple client':
+      '1 member becomes a plain shopper',
+  '{n} membres redeviennent simples clients':
+      '{n} members become plain shoppers',
+  '1 commande en cours annulée, le client prévenu':
+      '1 open order cancelled, the customer told',
+  '{n} commandes en cours annulées, les clients prévenus':
+      '{n} open orders cancelled, the customers told',
+  'l\'abonnement Google Play arrêté':
+      'the Google Play subscription stopped',
+  'l\'abonnement par carte arrêté':
+      'the card subscription stopped',
+  'Leurs ventes, leur stock, leurs comptes et leur vitrine disparaissent aussi : c\'est définitif.':
+      'Their sales, stock, books and shop window go too: this is final.',
+  'Votre abonnement Mara Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Mara Pro. Mara ne peut pas l\'annuler pour vous.':
+      'Your App Store Mara Pro subscription keeps being charged by Apple until you cancel it: Settings › your name › Subscriptions › Mara Pro. Mara cannot cancel it for you.',
+  'Vous quittez aussi : {names}.':
+      'You also leave: {names}.',
+  'Une livraison est en cours : terminez-la, puis supprimez votre compte.':
+      'A delivery is under way: finish it, then delete your account.',
+  'Mettez Mara à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.':
+      'Update Mara: deleting an account that runs a business is confirmed in the latest version of the app.',
+  'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.':
+      'The list of your businesses has changed: read it again before deleting your account.',
+  '« {shop} » a fermé sur Mara : vous n\'en faites plus partie. Votre compte reste le vôtre.':
+      '“{shop}” closed on Mara: you are no longer part of it. Your account stays yours.',
+  // 130: the date of birth and the number, optional at sign-up.
+  'Numéro de téléphone (facultatif)':
+      'Phone number (optional)',
+  // 130 review fixes: the store's refusals by their code, the deletion's.
+  'Compte de test des boutiques (achats sandbox acceptés)':
+      'Store test account (sandbox purchases accepted)',
+  'Me reconnecter':
+      'Sign in again',
+  'Cet achat a été fait pour une autre entreprise.':
+      'This purchase was made for another business.',
+  'Cet achat ne dit pas pour quelle entreprise il a été fait.':
+      'This purchase does not say which business it was made for.',
+  'Cet abonnement est déjà celui d\'une autre entreprise.':
+      'This subscription already belongs to another business.',
+  'Cet achat n\'est pas Mara Pro.':
+      'This purchase is not Mara Pro.',
+  'Cet achat n\'est pas pour Mara.':
+      'This purchase is not for Mara.',
+  'Cet achat n\'a pas pu être lu par Mara.':
+      'Mara could not read this purchase.',
+  'Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Mara Pro que pour les comptes de test de Mara.':
+      'Test purchase refused: a purchase made with a test account (sandbox, TestFlight) turns on Mara Pro only for Mara\'s own test accounts.',
+  'Votre session a expiré : reconnectez-vous, puis touchez « Restaurer mes achats ». Rien ne sera prélevé deux fois.':
+      'Your session has expired: sign in again, then tap “Restore purchases”. Nothing will be charged twice.',
+  'Votre abonnement {store} paie déjà Mara Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.':
+      'Your {store} subscription already pays Mara Pro for “{name}”. One subscription covers one business: it cannot also pay for this one from this {store} account. To move it to another business, or stop it, manage it in {store}.',
+  'Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.':
+      'An order of “{name}” is on its way or already paid online: deliver or refund it, then delete your account.',
+  'Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.':
+      'Mara still owes “{name}” the money of an order paid by Wave (payout pending or failed): wait for it to arrive, or write to Mara\'s help, then delete your account.',
+  'Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.':
+      'For your safety, sign in again before deleting your account: the sign-in must be less than 10 minutes old.',
+  'Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.':
+      'We could not stop the subscription of “{name}”: nothing was deleted. Try again in a moment or write to the help desk.',
 };

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 
 import '../access/org_access.dart';
 import '../access/plan_terms.dart';
+import '../access/store_rules.dart' show storeBillingOn;
 import '../cauris/feature_states.dart';
 import '../accounting/accounting_repository.dart';
 import '../admin/admin_repository.dart';
@@ -69,7 +70,12 @@ class SessionController extends ChangeNotifier {
     // the browser returns to the app — so the controller listens for it
     // rather than waiting on the button that started it.
     _authEvents = auth.onAuthStateChange?.listen((AuthState s) {
-      if (s.event == AuthChangeEvent.signedIn) unawaited(adoptGoogleSession());
+      if (s.event == AuthChangeEvent.signedIn) {
+        // On an iPhone, Google's page is still up in the Safari sheet over
+        // the app: closed now that the app has the session (130).
+        unawaited(auth.closeSignInSheet());
+        unawaited(adoptGoogleSession());
+      }
     }, onError: (_) {});
   }
 
@@ -258,6 +264,8 @@ class SessionController extends ChangeNotifier {
       if (t is PlanTerms) {
         _terms = t;
         _termsLoaded = true;
+        // 130: whether the store apps sell Pro through the store.
+        storeBillingOn = t.storeBillingOn;
       }
     }
     // What the device last heard of the platform's hidden list, read beside

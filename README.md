@@ -588,7 +588,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_127.sql`, below),
+older database, applied with `database/apply_006_to_128.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -689,7 +689,7 @@ One-time setup, in this order:
    any long random string (`openssl rand -hex 32`) — its own, not push's.
    `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` and `CLOUDFLARE_API_TOKEN`
    are the ones push already uses.
-4. **The database**: apply 124 (in `database/apply_006_to_127.sql`, below).
+4. **The database**: apply 124 (in `database/apply_006_to_128.sql`, below).
 5. **Deploy the Worker**: the "Deploy the mail Worker" workflow (it runs
    on its own on a push to main that touches `workers/mail`). Without
    `RESEND_API_KEY` it deploys nothing and says so in its summary. Its
@@ -808,6 +808,142 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
 
 Until step 6, no card button appears anywhere.
 
+### Mara Pro in the store apps (App Store, Google Play)
+
+Since 128/130 the iPhone app sells Mara Pro through Apple's In-App
+Purchase and the Android (Play) app through Google Play Billing; the web
+and the GitHub APK keep Stripe and Wave. Pro stays **per business**: the
+business's id rides inside the purchase (Apple's `appAccountToken`,
+Google's `obfuscatedAccountId`), and one store account pays Mara Pro for
+one business (Apple: one running subscription per group and Apple ID;
+Google: one `mara_pro` per account). Prices are the stores' own — set in
+App Store Connect and Play Console, shown as the store localises them,
+never written in the app:
+
+* **Apple** — group « Mara Pro » (22464773): `bf.kaj.app.pro.monthly`
+  (1 month, $4.99) and `bf.kaj.app.pro.yearly` (1 year, $49.99), level 1.
+* **Google** — subscription `mara_pro`, base plans `monthly` (P1M) and
+  `yearly` (P1Y): XOF 2 900 / 29 900 in CI and SN, €4.42 / €45.58
+  elsewhere in the XOF zone.
+
+How it goes: « S'abonner » → the store's own sheet → the app sends the
+transaction (Apple) or the token (Google) to `<PAY_URL>/store/verify` →
+the Worker checks the caller administers the business
+(`store_verify_begin`, as the caller), asks Apple's App Store Server API
+or Google's `purchases.subscriptionsv2` itself, checks bundle `bf.kaj.app`,
+product, expiry, revocation and that the business inside the purchase is
+the one asked for, verifies Apple's signatures up to Apple Root CA - G3,
+acknowledges Google's purchase, and calls `store_settle()` (service role
+only). Only then does the app complete the purchase. Pro is on while a
+store subscription is active, in grace, or cancelled but still paid, and
+until its end — a refund turns it off at once. Renewals and cancellations
+arrive without the app open (App Store Server Notifications V2, Google's
+Real-Time Developer Notifications), and once a day the Worker asks the
+stores again about every subscription near its end. A notification is
+only a wake-up: the Worker asks Apple's or Google's API again and writes
+what the store says now, with when the store said it (`signed_at`) — an
+answer older than the one held is ignored, so a notification Apple
+retries after a refund cannot turn Pro back on. A notification for a
+business that no longer exists (or another business's token, or a
+refused sandbox purchase) is answered 200 « ignored » and logged.
+
+The app listens to the store from its start, not only on the Pro page,
+and verifies each purchase for the business the purchase itself names.
+It finishes a purchase only on the Worker's yes or a refusal for good
+(another business's, not Mara Pro, a refused test purchase — said and
+logged); an expired session, a server error or no network leaves it open
+for the store to hand back. When the owner's purchase in this store
+already pays for another business, the Pro page sells nothing there: it
+names that business and offers « Gérer mon abonnement » (on Apple, the
+other period would only change the first business's subscription).
+
+**Test (sandbox) purchases — the decision.** A sandbox purchase
+(TestFlight, App Review, a Google licence tester) turns Mara Pro on only
+for a business owned by a platform admin or by the account named in
+Réglages › Mara Pro « Compte de test des boutiques »
+(`store_review_account`, default `review.mara@gmail.com`). Give App Review
+that account (with a business on it) in the review notes. Every other
+sandbox purchase is refused (« Achat de test refusé … ») and never
+counted, so a TestFlight tester cannot give any business free, renewable
+Pro on the live backend.
+
+One-time setup (keys go only in GitHub's secrets page, never in chat):
+
+1. **App Store Connect › Users and Access › Integrations › In-App
+   Purchase**: generate a key. Repository secrets `APPLE_IAP_KEY_ID` (its
+   key id), `APPLE_IAP_ISSUER_ID` (the issuer id shown above the list) and
+   `APPLE_IAP_PRIVATE_KEY` (the whole text of the `.p8`). The bundle id
+   is `bf.kaj.app` (`APPLE_BUNDLE_ID` in `workers/pay/wrangler.toml`).
+2. **App Store Connect › the app › App Information › App Store Server
+   Notifications**: Production and Sandbox URL
+   `<PAY_URL>/store/apple-notify`, Version 2.
+3. **Google Play Console › Users and permissions**: give the service
+   account that already publishes the app (`PLAY_SERVICE_ACCOUNT_JSON`)
+   « View financial data » and « Manage orders and subscriptions ». The
+   same repository secret is now also the payments Worker's.
+4. **Google Cloud › Pub/Sub**: a topic (e.g. `mara-play-rtdn`), with
+   `google-play-developer-notifications@system.gserviceaccount.com` as a
+   Publisher; a **push** subscription to
+   `<PAY_URL>/store/google-notify?secret=<GOOGLE_NOTIFY_SECRET>`, where
+   `GOOGLE_NOTIFY_SECRET` is a long random string you also put in the
+   repository secret of that name. **Play Console › Monetization setup ›
+   Real-time developer notifications**: that topic; « Send test
+   notification » answers 200.
+5. **Deploy**: run "Deploy the payments Worker"; `/v1/health` then says
+   `apple: true, google: true`.
+6. **Submit the products**: both Apple products with the next build
+   (their review screenshot is the Pro page), and the Google base plans
+   activated.
+7. **Switch it on** once a sandbox purchase on each store turned a test
+   business Pro: Command center › Réglages › Mara Pro « Abonnement dans
+   les applications (App Store, Google Play) » (`store_billing_on`). Until
+   then the iPhone app sells no Pro and the Play app sells it by card and
+   Wave, exactly as before.
+
+### Deleting an account (« Supprimer mon compte »)
+
+Every account deletes itself from the app (130): a shopper, a courier, a
+business member, a business owner (a platform account is refused). The
+confirmation names what goes. The deletion is the account Worker's alone
+(`POST /v1/me/delete`; 128's `delete_my_account*` are the service
+role's, never the app's), in this order:
+
+1. who: GoTrue, from the person's own token — signed in **less than 10
+   minutes ago**, else the app says « Par sécurité, reconnectez-vous … »
+   and offers « Me reconnecter »;
+2. `delete_my_account_stops` — the database's refusals (an open order, a
+   delivery on the road, an order paid online, a Wave payout Mara still
+   owes the business…), else what will go and what must be stopped;
+3. every **Stripe** subscription cancelled and every **Google Play**
+   purchase revoked, for each business that goes. One failure — or
+   `STRIPE_SECRET_KEY` / `PLAY_SERVICE_ACCOUNT_JSON` not set while there
+   is one to stop — and **nothing is deleted**: « Nous n'avons pas pu
+   arrêter l'abonnement … Réessayez dans un moment ou écrivez à l'aide. »;
+4. the ids stopped written in `account_deletion_log` (it outlives the
+   account and the businesses) before any purge;
+5. `delete_my_account` — the businesses the person alone owns archived
+   and purged by 014's path (`purge_org`), their members left as plain
+   shoppers, open orders cancelled with a notice, Mara's own Wave
+   payments kept (detached: `org_id` null, `former_org_id` naming the
+   tombstone), the person's rows deleted and their name taken off what
+   they wrote;
+6. the Sign in with Apple token revoked, and the auth user deleted (soft
+   when a business's books must keep the « written by »).
+
+Repository secrets for the account Worker (`deploy-account-admin.yml`):
+`PLAY_SERVICE_ACCOUNT_JSON` and `STRIPE_SECRET_KEY` — needed as soon as a
+business has such a subscription (a deletion that needs one is refused
+without it) — and, optional, the **Sign in with Apple key**:
+developer.apple.com › Certificates, Identifiers & Profiles › Keys › « + »
+› Sign in with Apple, primary App ID `bf.kaj.app` → `APPLE_SIGNIN_KEY_ID`
+and `APPLE_SIGNIN_PRIVATE_KEY` (the `.p8` text); team `9K236BL7SX` and
+client `bf.kaj.app` are in `workers/account-admin/wrangler.toml`. Without
+it, that step is logged and the rest is done. An App Store subscription
+cannot be cancelled by Mara: the app tells the owner where to cancel it.
+On a database still before 128 the Worker uses 113's path (a shopper
+with nothing on any business's books), so the order in which the
+database and the Worker go live does not break a shopper's deletion.
+
 ### Google sign-in
 
 « Continuer avec Google » sits above the e-mail form, for signing in and
@@ -913,6 +1049,13 @@ spot bought elsewhere still shows as sponsored in the street. Shoppers
 paying shops for orders and delivery (Wave, cash, card) are untouched:
 those are physical goods and services, which Apple lets be paid outside.
 Android and the web are unchanged.
+
+Once the platform turns `store_billing_on` on (130, « Mara Pro in the
+store apps » above), the iPhone app sells Mara Pro through Apple's own
+purchase and every « Passer à Pro » comes back (`sellsProInApp`), with
+the store's prices, « Restaurer mes achats », « Gérer mon abonnement » and
+the auto-renewal terms; the Play app then sells it through Google Play
+Billing instead of the card and Wave. The spots stay as above.
 
 ### What only the owner can switch on
 
@@ -1105,9 +1248,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `127` up to date, paste
-`database/apply_006_to_127.sql` into the Supabase SQL editor and run it once.
-It is `006` through `127` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
+To bring a database anywhere between `005` and `128` up to date, paste
+`database/apply_006_to_128.sql` into the Supabase SQL editor and run it once.
+It is `006` through `128` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

@@ -77,12 +77,6 @@ class StringsDyu extends Strings {
   String get enterLastName => 'Entrez votre nom de famille.';
 
   @override
-  String get enterBirthDate => 'Indiquez votre date de naissance.';
-
-  @override
-  String get enterPhone => 'Entrez votre numéro de téléphone.';
-
-  @override
   String get phonesDiffer => 'Les deux numéros ne sont pas identiques.';
 
   @override
