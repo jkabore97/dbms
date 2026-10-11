@@ -1105,9 +1105,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `126` up to date, paste
+To bring a database anywhere between `005` and `127` up to date, paste
 `database/apply_006_to_127.sql` into the Supabase SQL editor and run it once.
-It is `006` through `126` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
+It is `006` through `127` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

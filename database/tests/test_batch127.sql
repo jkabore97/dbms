@@ -25,6 +25,12 @@
 --     blocage »), the fifth locks the order 15 minutes and tells the shop,
 --     the right code is refused while locked and delivers after; the old
 --     door courier_deliver counts a wrong code and leaves the order open;
+--     the third lock is for good: the code no longer closes the order, the
+--     shop is told « bloquée — appelez le livreur » and ends it itself
+--     (decide_order delivered) or the courier reports « Échec »;
+--   * the sign-in sweep claims by a proved number only an invitation older
+--     than the account (a recycled number claims with its code); the
+--     e-mail path is unchanged;
 --   * the doors: the new helpers and triggers are nobody's; courier_handover
 --     is the app's (authenticated), not the street's;
 --   * P1: the ordinary flows of the three kinds — inviting and claiming,
@@ -406,10 +412,32 @@ begin
     if v_r <> '(went through)' then
         raise exception 'FAIL: the association''s own receipt was refused: %', v_r;
     end if;
+    -- The logo and the cover take the documents rule (key_is_orgs): not a
+    -- courier's file either, even written past the setters; a showcase's
+    -- own showcase/ key stays its own.
+    v_r := pg_temp.try127('12712712-0000-0000-0000-000000000002', format(
+        $q$update orgs set logo_key = 'courier/12712712-0000-0000-0000-000000000008/id.jpg' where id = %L$q$, v_shop),
+        'postgres');
+    if v_r is distinct from 'Le logo doit être une photo de cette entreprise' then
+        raise exception 'FAIL: a courier''s file as a logo gave « % »', v_r;
+    end if;
+    v_r := pg_temp.try127('12712712-0000-0000-0000-000000000002', format(
+        $q$update orgs set storefront_style = coalesce(storefront_style, '{}') || '{"cover_key": "elsewhere/x.jpg"}' where id = %L$q$, v_shop),
+        'postgres');
+    if v_r is distinct from 'La photo de couverture doit être une photo de cette entreprise' then
+        raise exception 'FAIL: a cover outside the folder gave « % »', v_r;
+    end if;
+    perform pg_temp.as127(null);
+    update orgs set showcase = true where id = v_farm;
+    v_r := pg_temp.try127('12712712-0000-0000-0000-000000000003', format(
+        $q$update orgs set logo_key = 'showcase/ferme/logo.jpg' where id = %L$q$, v_farm), 'postgres');
+    if v_r <> '(went through)' then
+        raise exception 'FAIL: a showcase''s own showcase/ logo was refused: %', v_r;
+    end if;
     if not exists (select 1 from pg_constraint where conname = 'courier_file_key_is_theirs' and convalidated) then
         raise exception 'FAIL: a courier''s file is not held to their own folder';
     end if;
-    raise notice 'PASS: no row of a shop, a farm or an association names another''s key (insert or update); one''s own photo, logo and receipt still taken; a forged older row serves nothing and makes no logo or cover; a courier file stays in its folder';
+    raise notice 'PASS: no row of a shop, a farm or an association names another''s key (insert or update); one''s own photo, logo and receipt still taken; a forged older row serves nothing and makes no logo or cover; a logo or cover outside the folder (a courier''s file) refused, a showcase''s showcase/ logo taken; a courier file stays in its folder';
 end $$;
 rollback;
 
@@ -683,6 +711,145 @@ begin
         raise exception 'FAIL: the old door with the right code gave « % »', v_r;
     end if;
     raise notice 'PASS: four wrong codes counted (4…1 left), the fifth locks 15 min and tells the shop (shop_orders), the right code refused while locked (both doors), the count starts again after, the right code delivers and tells the customer; the farm''s delivery through the old door: a wrong code counted and left open, another courier refused';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 6b: the third lock is for good; the shop ends the order, or the courier reports « Échec » ---'
+begin;
+do $$
+declare
+    v_o uuid := '127aaaaa-0000-0000-0000-000000000001';
+    v_code text := (select handover_code from orders where id = '127aaaaa-0000-0000-0000-000000000001');
+    v_wrong text;
+    v jsonb; i int; k int; v_r text;
+begin
+    v_wrong := lpad(((v_code::int + 1) % 10000)::text, 4, '0');
+    for k in 1 .. 3 loop
+        perform pg_temp.as127('12712712-0000-0000-0000-000000000008');
+        execute 'set local role authenticated';
+        for i in 1 .. 5 loop
+            v := courier_handover(v_o, v_wrong);
+        end loop;
+        execute 'reset role';
+        if k < 3 then
+            if v ->> 'reason' <> 'locked' or (v ->> 'minutes')::int <> 15 or v ? 'blocked' then
+                raise exception 'FAIL: lock % gave %', k, v;
+            end if;
+            -- Fifteen minutes later.
+            update handover_guards set locked_until = now() - interval '1 second' where order_id = v_o;
+        end if;
+    end loop;
+    if v is distinct from jsonb_build_object('ok', false, 'reason', 'locked', 'blocked', true, 'fresh', true,
+            'message', 'Trop de codes faux : cette livraison est bloquée. Appelez la boutique.') then
+        raise exception 'FAIL: the third lock gave %', v;
+    end if;
+    if (select locked_until from handover_guards where order_id = v_o) <> 'infinity'
+       or (select lockouts from handover_guards where order_id = v_o) <> 3 then
+        raise exception 'FAIL: the third lock is not for good';
+    end if;
+    -- A day later the right code still does not close it, through either door.
+    update handover_guards set updated_at = now() - interval '1 day' where order_id = v_o;
+    perform pg_temp.as127('12712712-0000-0000-0000-000000000008');
+    execute 'set local role authenticated';
+    v := courier_handover(v_o, v_code);
+    if v ->> 'reason' <> 'locked' or not (v ? 'blocked') or v ? 'fresh' then
+        raise exception 'FAIL: the right code on a blocked order gave %', v;
+    end if;
+    begin
+        perform courier_deliver(v_o, v_code);
+        raise exception 'FAIL: courier_deliver delivered a blocked order';
+    exception when raise_exception then
+        if sqlerrm <> 'Trop de codes faux : cette livraison est bloquée. Appelez la boutique.' then raise; end if;
+    end;
+    execute 'reset role';
+    if (select status from orders where id = v_o) <> 'in_transit' then
+        raise exception 'FAIL: the blocked order moved';
+    end if;
+    if (select count(*) from notifications where recipient_id = '12712712-0000-0000-0000-000000000002'
+         and kind = 'delivery_code_locked' and params ->> 'order_id' = v_o::text) <> 2
+       or not exists (select 1 from notifications where recipient_id = '12712712-0000-0000-0000-000000000002'
+         and kind = 'delivery_code_blocked' and params ->> 'order_id' = v_o::text
+         and message like 'Livraison de Acheteuse 127 : bloquée — appelez le livreur.%') then
+        raise exception 'FAIL: the shop was not told of two locks and the block';
+    end if;
+    if notification_type_of('delivery_code_blocked', jsonb_build_object('to', 'shop')) <> 'shop_orders' then
+        raise exception 'FAIL: the block is not a shop order notice';
+    end if;
+    -- The shop ends it with what it already has: « Livrée au client ».
+    v_r := pg_temp.try127('12712712-0000-0000-0000-000000000002', format(
+        $q$select decide_order(%L, 'delivered')$q$, v_o));
+    if v_r <> '(went through)' or (select status from orders where id = v_o) <> 'delivered' then
+        raise exception 'FAIL: the shop could not end the blocked order: %', v_r;
+    end if;
+    -- The farm's order, blocked: the courier reports « Échec » and brings it back.
+    v_o := '127aaaaa-0000-0000-0000-000000000002';
+    insert into handover_guards (order_id, failures, lockouts, locked_until)
+    values (v_o, 0, 3, 'infinity');
+    v_r := pg_temp.try127('12712712-0000-0000-0000-000000000008', format(
+        $q$select courier_fail(%L, 'unreachable')$q$, v_o));
+    if v_r <> '(went through)' or (select status from orders where id = v_o) <> 'cancelled' then
+        raise exception 'FAIL: the courier could not report the blocked order as failed: %', v_r;
+    end if;
+    raise notice 'PASS: two 15-minute locks, the third for good (15 wrong codes in all, the shop told « bloquée — appelez le livreur »); the right code no longer closes it, either door; the shop ends it (« Livrée au client »), or the courier reports « Échec »';
+end $$;
+rollback;
+
+\echo ''
+\echo '--- TEST 6c: the sign-in sweep — a proved number claims only an invitation older than the account ---'
+begin;
+insert into auth.users (id, phone, phone_confirmed_at, email, email_confirmed_at, created_at, raw_user_meta_data) values
+    ('12712712-0000-0000-0000-000000000021', '+22612701021', now(), 'recycle127@example.org', now(),
+     now() - interval '30 days', '{"full_name": "Ancien Titulaire"}'),
+    ('12712712-0000-0000-0000-000000000022', '+22612701022', now(), 'neuf127@example.org', now(),
+     now(), '{"full_name": "Nouvelle Recrue"}'),
+    ('12712712-0000-0000-0000-000000000023', null, null, 'courriel127@example.org', now(),
+     now() - interval '30 days', '{"full_name": "Invitée Courriel"}');
+insert into pending_invitations (org_id, role, scope_kind, scope_id, code, phone, email, created_by, created_at) values
+    (:shop,  'employee', 'org', :shop,  'B127-0021', '+22612701021', null, :sowner, now()),
+    (:farm,  'employee', 'org', :farm,  'B127-0022', '+22612701022', null, :fowner, now() - interval '1 day'),
+    (:assoc, 'employee', 'org', :assoc, 'B127-0023', null, 'courriel127@example.org', :aowner, now());
+do $$ begin
+    -- The account is older than the invitation: the number may have been
+    -- somebody else's. Nothing swept; the code still claims.
+    execute 'reset role';
+    perform pg_temp.as127('12712712-0000-0000-0000-000000000021');
+    execute 'set local role authenticated';
+    if claim_my_invitations() <> 0 then
+        raise exception 'FAIL: a number older than its invitation swept it';
+    end if;
+    if exists (select 1 from memberships where user_id = '12712712-0000-0000-0000-000000000021') then
+        raise exception 'FAIL: the older account came away with a seat';
+    end if;
+    if claim_invitation('B127-0021') <> '12700000-0000-0000-0000-000000000001' then
+        raise exception 'FAIL: the code did not claim';
+    end if;
+    -- An account made after its invitation: swept, as before.
+    execute 'reset role';
+    perform pg_temp.as127('12712712-0000-0000-0000-000000000022');
+    execute 'set local role authenticated';
+    if claim_my_invitations() <> 1 then
+        raise exception 'FAIL: the account made for its invitation did not sweep it';
+    end if;
+    -- The e-mail path is unchanged: an older account, a proved address.
+    execute 'reset role';
+    perform pg_temp.as127('12712712-0000-0000-0000-000000000023');
+    execute 'set local role authenticated';
+    if claim_my_invitations() <> 1 then
+        raise exception 'FAIL: the proved address did not sweep its invitation';
+    end if;
+    execute 'reset role';
+end $$;
+do $$ begin
+    if (select count(*) from memberships where user_id in ('12712712-0000-0000-0000-000000000021',
+            '12712712-0000-0000-0000-000000000022', '12712712-0000-0000-0000-000000000023')) <> 3
+       or not exists (select 1 from memberships where user_id = '12712712-0000-0000-0000-000000000022'
+                       and org_id = '12700000-0000-0000-0000-000000000002')
+       or not exists (select 1 from memberships where user_id = '12712712-0000-0000-0000-000000000023'
+                       and org_id = '12700000-0000-0000-0000-000000000003') then
+        raise exception 'FAIL: the memberships do not match';
+    end if;
+    raise notice 'PASS: an account older than its invitation sweeps nothing and claims with the code; an account made after sweeps it (farm); the e-mail path unchanged (association)';
 end $$;
 rollback;
 

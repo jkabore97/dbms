@@ -1007,6 +1007,9 @@ class _CashStrip extends StatelessWidget {
 
 /// What the courier reads when the door refuses the code (127).
 String handoverRefusalLine(BuildContext context, HandoverRefused refused) {
+  if (refused.blocked) {
+    return context.tr('Trop de codes faux : cette livraison est bloquée. Appelez la boutique.');
+  }
   if (refused.locked) {
     return context.tr(
         'Trop de codes faux : cette livraison est bloquée {n} min. La boutique est prévenue.',

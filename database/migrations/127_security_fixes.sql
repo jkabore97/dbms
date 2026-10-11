@@ -13,6 +13,8 @@
 --      the doors for a role and a removal. A row never changes hands
 --      (user_id, org_id fixed), and its scope belongs to its business.
 --      An invitation is never written as already claimed by an admin.
+--      The sign-in sweep (claim_my_invitations) claims by a proved number
+--      only an invitation older than the account; otherwise the code.
 --      manages_user (the Worker's password reset, admin_save_member_profile,
 --      can_delete_user) asks what can_delete_user asked: the person belongs
 --      to no business the caller does not administer. Never a platform
@@ -20,8 +22,8 @@
 --      103's rule, as outranks_member.
 --   2. documents. r2_key starts with org/<the row's org_id>/ (a showcase's
 --      own showcase/… keys aside), on every signed-in write (a trigger);
---      orgs.logo_key and the vitrine's cover_key never name another
---      business's folder; a courier file's key under courier/<its user>/.
+--      orgs.logo_key and the vitrine's cover_key follow the same rule;
+--      a courier file's key under courier/<its user>/.
 --      storefront_photo_allowed never serves a key under another business's
 --      folder, so a row written before 127 that pointed there serves nothing.
 --   3. Ledger. A line joins an entry only in the transaction that wrote the
@@ -32,7 +34,9 @@
 --      business's row to another business-owned row stays inside the
 --      business (trg_same_org, on every child table the audit listed).
 --   4. The delivery code. Five wrong codes for one order lock it for 15
---      minutes and tell the shop. courier_handover(order, code) answers
+--      minutes and tell the shop; the third lock is for good (the shop
+--      ends the order itself, « Livrée au client », or the courier
+--      reports « Échec »). courier_handover(order, code) answers
 --      {ok, reason, left, minutes, message} instead of raising on a wrong
 --      code — a raise would roll the count back with it. courier_deliver
 --      keeps its signature for the app already installed (void; a wrong
@@ -190,6 +194,72 @@ as $$
     end;
 $$;
 
+-- The sign-in sweep (103's). A number is handed on when a line is given up,
+-- so a proved number claims by itself only an invitation sent before the
+-- account existed: the account was made for it. An account older than the
+-- invitation (the number may have been somebody else's before) claims it
+-- with its code, claim_invitation, as everybody does today. The e-mail
+-- path is unchanged.
+create or replace function claim_my_invitations()
+returns integer
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_uid     uuid := auth.uid();
+    v_phone   text;
+    v_email   text;
+    v_created timestamptz;
+    v_count   int := 0;
+    v_inv     pending_invitations%rowtype;
+begin
+    if v_uid is null then
+        return 0;
+    end if;
+
+    if not exists (select 1 from profiles where id = v_uid) then
+        return 0;
+    end if;
+
+    -- Only what auth.users itself holds as confirmed (103).
+    select case when u.phone_confirmed_at is not null then u.phone end,
+           case when u.email_confirmed_at is not null then u.email end,
+           u.created_at
+      into v_phone, v_email, v_created
+      from auth.users u where u.id = v_uid;
+
+    for v_inv in
+        select * from pending_invitations i
+        where i.claimed_at is null
+          and i.expires_at > now()
+          and (
+              (v_phone is not null and i.phone = v_phone
+               and v_created is not null and v_created >= i.created_at)
+              or (v_email is not null and lower(i.email) = lower(v_email))
+          )
+        for update
+    loop
+        begin
+            insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility)
+            values (v_inv.org_id, v_uid, v_inv.role, v_inv.scope_kind,
+                    v_inv.scope_id, v_inv.visibility)
+            on conflict (user_id, scope_kind, scope_id, role) do nothing;
+        exception when raise_exception or insufficient_privilege then
+            continue;  -- no seat, or a grant only the platform makes (100)
+        end;
+
+        update pending_invitations
+        set claimed_at = now(), claimed_by = v_uid
+        where id = v_inv.id and claimed_at is null;
+
+        v_count := v_count + 1;
+    end loop;
+
+    return v_count;
+end;
+$$;
+
 -- A sign-out only closes sessions: it stays with 103's rule (someone below
 -- the caller in one of the caller's businesses, never the platform, an
 -- owner or a trainer), even for a clerk who also works elsewhere.
@@ -322,14 +392,18 @@ begin
     if auth.uid() is null then
         return new;
     end if;
+    -- The same rule as a documents row (key_is_orgs): the business's own
+    -- folder, or showcase/ for an example vitrine. set_org_logo and
+    -- set_storefront_style already take a key only from a documents row
+    -- of the business, so they pass; this also holds a direct write.
     if (tg_op = 'INSERT' or new.logo_key is distinct from old.logo_key)
-       and key_names_other_org(new.logo_key, new.id) then
+       and not key_is_orgs(new.logo_key, new.id) then
         raise exception 'Le logo doit être une photo de cette entreprise'
             using errcode = 'check_violation';
     end if;
     if (tg_op = 'INSERT'
         or new.storefront_style ->> 'cover_key' is distinct from old.storefront_style ->> 'cover_key')
-       and key_names_other_org(new.storefront_style ->> 'cover_key', new.id) then
+       and not key_is_orgs(new.storefront_style ->> 'cover_key', new.id) then
         raise exception 'La photo de couverture doit être une photo de cette entreprise'
             using errcode = 'check_violation';
     end if;
@@ -513,6 +587,10 @@ $$;
 
 -- Arguments: 'column:parent_table', one per reference. The row's own
 -- org_id (when it has one) and every parent's business must be one.
+-- Cost: one primary-key lookup per reference, on an insert or on an update
+-- that changes org_id or a referencing column (none otherwise) — about
+-- 60 µs a row per reference here (50k inserts: 3.7 s against 0.8 s
+-- without). Nothing at the app's scale; a bulk import feels it.
 create or replace function trg_same_org()
 returns trigger
 language plpgsql
@@ -608,7 +686,8 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
--- 4. The delivery code: five wrong codes lock the order 15 minutes
+-- 4. The delivery code: five wrong codes lock the order 15 minutes;
+--    the third lock is for good
 -- ------------------------------------------------------------
 create table if not exists handover_guards (
     order_id     uuid primary key references orders(id) on delete cascade,
@@ -616,6 +695,7 @@ create table if not exists handover_guards (
     locked_until timestamptz,
     updated_at   timestamptz not null default now()
 );
+alter table handover_guards add column if not exists lockouts integer not null default 0;
 alter table handover_guards enable row level security;
 revoke all on handover_guards from public;
 do $$
@@ -630,12 +710,21 @@ end $$;
 
 comment on table handover_guards is
     'The wrong delivery codes of an order (127): five lock it for 15 '
-    'minutes. Written only by courier_handover; no policy, no grant.';
+    'minutes; the third lock (15 wrong codes) is for good (locked_until '
+    '= infinity) — the code no longer closes it. Written only by '
+    'courier_handover; no policy, no grant.';
 
 -- {ok: true} — delivered.
 -- {ok: false, reason: 'wrong_code', left: n, message} — a wrong code, counted.
 -- {ok: false, reason: 'locked', minutes: m, message} — a code tried while
 --   locked; with fresh: true, the fifth wrong code (the shop is told).
+-- {ok: false, reason: 'locked', blocked: true, message} — the third lock:
+--   for good. Nobody resets it, by design (no new door, no new screen):
+--   the code is spent. The shop is told « bloquée — appelez le livreur »
+--   and ends it with what it already has — it calls the customer, then
+--   confirms « Livrée au client » itself (decide_order, in_transit →
+--   delivered), or the courier reports « Échec » (courier_fail) and brings
+--   the parcel back.
 -- Raises as before for an order that is not the courier's or not on its
 -- way. A wrong code does not raise: the raise would undo its count.
 create or replace function courier_handover(p_order_id uuid, p_code text)
@@ -649,7 +738,10 @@ declare
     v_shop  text;
     v_guard handover_guards%rowtype;
     v_fails integer;
+    v_locks integer;
     v_min   integer;
+    v_blocked_msg constant text :=
+        'Trop de codes faux : cette livraison est bloquée. Appelez la boutique.';
 begin
     -- for update: two attempts at once count as two.
     select * into v from orders where id = p_order_id for update;
@@ -661,6 +753,10 @@ begin
     end if;
 
     select * into v_guard from handover_guards where order_id = p_order_id;
+    if v_guard.locked_until = 'infinity' then
+        return jsonb_build_object('ok', false, 'reason', 'locked', 'blocked', true,
+            'message', v_blocked_msg);
+    end if;
     if v_guard.locked_until > now() then
         v_min := greatest(1, ceil(extract(epoch from v_guard.locked_until - now()) / 60)::int);
         return jsonb_build_object('ok', false, 'reason', 'locked', 'minutes', v_min,
@@ -672,19 +768,35 @@ begin
        and btrim(coalesce(p_code, '')) <> v.handover_code then
         v_fails := coalesce(v_guard.failures, 0) + 1;
         if v_fails >= 5 then
-            insert into handover_guards (order_id, failures, locked_until, updated_at)
-            values (p_order_id, 0, now() + interval '15 minutes', now())
+            v_locks := coalesce(v_guard.lockouts, 0) + 1;
+            insert into handover_guards (order_id, failures, lockouts, locked_until, updated_at)
+            values (p_order_id, 0, v_locks,
+                    case when v_locks >= 3 then 'infinity'::timestamptz
+                         else now() + interval '15 minutes' end, now())
             on conflict (order_id) do update
-               set failures = 0, locked_until = excluded.locked_until, updated_at = now();
-            select name into v_shop from orgs where id = v.org_id;
+               set failures = 0, lockouts = excluded.lockouts,
+                   locked_until = excluded.locked_until, updated_at = now();
             begin
-                perform notify_org_admins(v.org_id, 'delivery_code_locked',
-                    'Livraison de ' || v.customer_name
-                        || ' : 5 codes faux, bloquée 15 min. Appelez le livreur ou le client.',
-                    jsonb_build_object('to', 'shop', 'order_id', v.id, 'name', v.customer_name,
-                                       'minutes', 15));
+                if v_locks >= 3 then
+                    perform notify_org_admins(v.org_id, 'delivery_code_blocked',
+                        'Livraison de ' || v.customer_name
+                            || ' : bloquée — appelez le livreur. Trop de codes faux : '
+                            || 'le code ne la fermera plus. Après avoir appelé le client, '
+                            || 'confirmez « Livrée au client » ou laissez le livreur la déclarer en échec.',
+                        jsonb_build_object('to', 'shop', 'order_id', v.id, 'name', v.customer_name));
+                else
+                    perform notify_org_admins(v.org_id, 'delivery_code_locked',
+                        'Livraison de ' || v.customer_name
+                            || ' : 5 codes faux, bloquée 15 min. Appelez le livreur ou le client.',
+                        jsonb_build_object('to', 'shop', 'order_id', v.id, 'name', v.customer_name,
+                                           'minutes', 15));
+                end if;
             exception when others then null;
             end;
+            if v_locks >= 3 then
+                return jsonb_build_object('ok', false, 'reason', 'locked', 'blocked', true,
+                    'fresh', true, 'message', v_blocked_msg);
+            end if;
             return jsonb_build_object('ok', false, 'reason', 'locked', 'minutes', 15, 'fresh', true,
                 'message', 'Trop de codes faux : cette livraison est bloquée 15 min. La boutique est prévenue.');
         end if;
@@ -716,7 +828,8 @@ $$;
 
 -- The app already installed calls this one and reads no answer: a wrong
 -- code is counted and the delivery stays open (its list shows it still on
--- the way); a locked order is said, as a refusal.
+-- the way); a locked or blocked order is said, as a refusal (the call
+-- that locks it returns, so its count stands).
 create or replace function courier_deliver(p_order_id uuid, p_code text)
 returns void
 language plpgsql

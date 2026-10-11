@@ -15,7 +15,8 @@ import 'package:kaj_app/l10n/strings.dart';
 /// The delivery code's lockout (127): five wrong codes lock the order for
 /// 15 minutes and the shop is told. The server answers a wrong code
 /// instead of raising (a raise would undo the count); « Mes courses » says
-/// how many tries are left, or that the order is locked.
+/// how many tries are left, or that the order is locked — after the third
+/// lock, for good.
 
 SupabaseClient _client(List<String> asked, Object? Function(String fn) answer) => SupabaseClient(
       'http://db.test',
@@ -111,6 +112,22 @@ void main() {
         'courier_handover {"p_order_id":"o1","p_code":"4821"}',
       ]);
       answers = [];
+    });
+
+    test('the third lock: blocked for good', () async {
+      final asked = <String>[];
+      final repo = CourierRepository(_client(asked, (_) => {
+            'ok': false,
+            'reason': 'locked',
+            'blocked': true,
+            'message': 'Trop de codes faux : cette livraison est bloquée. Appelez la boutique.',
+          }));
+      await expectLater(
+          repo.deliver('o1', '1234'),
+          throwsA(isA<HandoverRefused>()
+              .having((e) => e.locked, 'locked', true)
+              .having((e) => e.blocked, 'blocked', true)
+              .having((e) => e.minutes, 'minutes', null)));
     });
 
     test('a database before 127: the old door', () async {
@@ -216,5 +233,34 @@ void main() {
       }),
     ));
     expect(line, 'Delivery for Fati: 5 wrong codes, locked for 15 min. Call the courier or the customer.');
+  });
+
+  testWidgets('the third lock: « bloquée », for the courier and in the shop\'s bell', (tester) async {
+    final courier = _Courier([const HandoverRefused(locked: true, blocked: true)]);
+    await open(tester, courier);
+    await tryCode(tester, '1111');
+    expect(find.text('Trop de codes faux : cette livraison est bloquée. Appelez la boutique.'), findsOneWidget);
+    ScaffoldMessenger.of(tester.element(find.byType(CourierScreen))).clearSnackBars();
+    await tester.pumpAndSettle();
+
+    String? line;
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: Builder(builder: (context) {
+        line = notificationLine(
+            context,
+            NotificationRow.fromRow({
+              'id': 'n2',
+              'kind': 'delivery_code_blocked',
+              'message': 'Livraison de Fati : bloquée — appelez le livreur.',
+              'params': {'to': 'shop', 'order_id': 'o1', 'name': 'Fati'},
+              'created_at': '2026-10-11T10:00:00Z',
+            }));
+        return const SizedBox();
+      }),
+    ));
+    expect(line, 'Delivery for Fati: blocked — call the courier. The code will no longer close it.');
   });
 }

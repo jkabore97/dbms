@@ -5000,6 +5000,10 @@ const enStrings = <String, String>{
       'Too many wrong codes: this delivery is locked for {n} min. The shop has been told.',
   'Livraison de {name} : 5 codes faux, bloquée 15 min. Appelez le livreur ou le client.':
       'Delivery for {name}: 5 wrong codes, locked for 15 min. Call the courier or the customer.',
+  'Trop de codes faux : cette livraison est bloquée. Appelez la boutique.':
+      'Too many wrong codes: this delivery is blocked. Call the shop.',
+  'Livraison de {name} : bloquée — appelez le livreur. Le code ne la fermera plus.':
+      'Delivery for {name}: blocked — call the courier. The code will no longer close it.',
   'L\'échec n\'a pas pu être enregistré.':
       'The failure could not be saved.',
   'à {km} km de vous':

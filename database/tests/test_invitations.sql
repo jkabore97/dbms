@@ -310,6 +310,11 @@ rollback;
 \echo ''
 \echo '--- TEST 6: the sign-in sweep claims what was addressed to you, and only that ---'
 begin;
+-- 127: a number sweeps only an invitation sent before its account was made
+-- (an older account may hold a recycled number: it claims with the code).
+update pending_invitations
+   set created_at = (select created_at from auth.users where id = :bearer) - interval '1 minute'
+ where code = 'MINE-9999';
 set local "request.jwt.claim.sub" = 'cccccccc-0000-0000-0000-000000000004';
 set local role authenticated;
 do $$

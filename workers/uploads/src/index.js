@@ -678,11 +678,18 @@ async function isMember(env, token, orgId) {
 
 // A row the caller may read, and of the business whose folder the key is
 // in (127): a row of one business naming another's key — written before
-// 127 refused it — opens nothing.
+// 127 refused it — opens nothing. The query asks for that business's row
+// only, so such a row cannot be the one limit=1 returns either and hide
+// the real one from somebody who belongs to both.
+const ORG_FOLDER = /^org\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\//;
+
 async function mayReadDocument(env, token, key) {
+  const folder = ORG_FOLDER.exec(key);
+  if (!folder) return false;
   const url =
     `${env.SUPABASE_URL}/rest/v1/documents` +
-    `?r2_key=eq.${encodeURIComponent(key)}&select=org_id&limit=1`;
+    `?r2_key=eq.${encodeURIComponent(key)}` +
+    `&org_id=eq.${folder[1]}&select=org_id&limit=1`;
   const rows = await postgrest(env, token, url);
   return (
     Array.isArray(rows) &&

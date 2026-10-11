@@ -47,7 +47,7 @@ insert into products (id, org_id, name, sale_price, quantity, is_active, is_publ
     (:p_f, :shop_f, 'Sucre', 750, 10, true, true),
     (:p_p, :shop_p, 'Pagne', 6000, 9, true, true);
 insert into documents (org_id, r2_key, kind, uploaded_by) values
-    (:shop_f, 'org/63f/devanture.jpg', 'photo', :owner_f);
+    (:shop_f, 'org/63000000-0000-0000-0000-000000000001/devanture.jpg', 'photo', :owner_f);
 
 \echo ''
 \echo '--- TEST 1: a Free owner dresses the window with the basics ---'
@@ -59,7 +59,7 @@ select set_storefront_style('63000000-0000-0000-0000-000000000001', '{
     "hours": "Lun–Sam 8h–19h",
     "schedule": {"days": [6, 1, 2, 3, 4, 5], "open": "08:00", "close": "19:00"},
     "accent": "#2e7d5b",
-    "cover_key": "org/63f/devanture.jpg",
+    "cover_key": "org/63000000-0000-0000-0000-000000000001/devanture.jpg",
     "layout": "list",
     "pinned": ["63aaaaaa-0000-0000-0000-000000000001"],
     "hide_out_of_stock": true
@@ -94,11 +94,11 @@ declare v jsonb;
 begin
     select style into v from storefront('libre-63');
     if v ->> 'tagline' <> 'Le sucre du quartier' or v ->> 'accent' <> '#2E7D5B'
-       or v ->> 'cover_key' <> 'org/63f/devanture.jpg' or not v ? 'schedule'
+       or v ->> 'cover_key' <> 'org/63000000-0000-0000-0000-000000000001/devanture.jpg' or not v ? 'schedule'
        or v ? 'open_now' or v ? 'layout' then
         raise exception 'FAIL: the street reads %', v;
     end if;
-    if not storefront_photo_allowed('org/63f/devanture.jpg') then
+    if not storefront_photo_allowed('org/63000000-0000-0000-0000-000000000001/devanture.jpg') then
         raise exception 'FAIL: a Free cover cannot be served';
     end if;
     raise notice 'PASS: the street reads the basics, no banner, the cover is served';

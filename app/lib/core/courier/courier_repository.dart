@@ -6,18 +6,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// server-side — who is approved, whose job it is, which step comes next —
 /// so this class only carries the calls.
 /// The door refused the code (127): a wrong one, with [left] tries before
-/// the order locks, or the order [locked] for [minutes] after five.
+/// the order locks, or the order [locked] for [minutes] after five — or,
+/// after the third lock, [blocked] for good (the shop ends it).
 class HandoverRefused implements Exception {
-  const HandoverRefused({required this.locked, this.left, this.minutes});
+  const HandoverRefused({required this.locked, this.left, this.minutes, this.blocked = false});
 
   final bool locked;
   final int? left;
   final int? minutes;
+  final bool blocked;
 
   @override
-  String toString() => locked
-      ? 'HandoverRefused(locked, ${minutes ?? '?'} min)'
-      : 'HandoverRefused(wrong code, ${left ?? '?'} left)';
+  String toString() => blocked
+      ? 'HandoverRefused(blocked)'
+      : locked
+          ? 'HandoverRefused(locked, ${minutes ?? '?'} min)'
+          : 'HandoverRefused(wrong code, ${left ?? '?'} left)';
 }
 
 class CourierRepository {
@@ -110,6 +114,7 @@ class CourierRepository {
         locked: answer['reason'] == 'locked',
         left: (answer['left'] as num?)?.toInt(),
         minutes: (answer['minutes'] as num?)?.toInt(),
+        blocked: answer['blocked'] == true,
       );
     }
   }

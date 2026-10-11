@@ -312,3 +312,22 @@ test("a members' read needs a row of the business whose folder the key is in (12
   }
   assert.equal(e.UPLOADS.gets.length, 0, "no byte read for a row of another business");
 });
+
+test("the members' read asks only for the row of the key's own business (127)", async () => {
+  const e = env({ [ORG_KEY]: { bytes: SELFIE, type: "image/jpeg" } });
+  await withPostgres({ documents: () => [200, [{ org_id: ORG }]] }, async (asked) => {
+    assert.equal((await read(e, ORG_KEY, { token: "member", route: "objects" })).status, 200);
+    const q = new URLSearchParams(asked[0].query);
+    assert.equal(q.get("org_id"), `eq.${ORG}`);
+    assert.equal(q.get("r2_key"), `eq.${ORG_KEY}`);
+    assert.equal(q.get("limit"), "1");
+  });
+  // A key whose folder is not a business's id: no question, no byte.
+  const odd = "org/not-a-uuid/2026/10/abc.jpg";
+  const e2 = env({ [odd]: { bytes: SELFIE, type: "image/jpeg" } });
+  await withPostgres({ documents: () => [200, [{ org_id: ORG }]] }, async (asked) => {
+    assert.equal((await read(e2, odd, { token: "member", route: "objects" })).status, 404);
+    assert.equal(asked.filter((a) => a.name === "documents").length, 0);
+  });
+  assert.equal(e2.UPLOADS.gets.length, 0);
+});
