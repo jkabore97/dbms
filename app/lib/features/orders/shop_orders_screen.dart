@@ -27,6 +27,7 @@ import '../common/keyboard_sheet.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/format/money_text.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -325,7 +326,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     return Scaffold(
         appBar: AppBar(
           // An association is asked for its services, not sold to (098).
-          title: Text(widget.org.profile == 'association' ||
+          title: AppBarTitle(widget.org.profile == 'association' ||
                   widget.org.profile == 'church'
               ? context.tr('Demandes')
               : context.tr('Commandes')),
@@ -638,7 +639,8 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Text(phone, style: theme.textTheme.bodyMedium),
+                  // Gives way to its two buttons at large text (R-2).
+                  Flexible(child: Text(phone, style: theme.textTheme.bodyMedium)),
                   IconButton(
                     tooltip: context.tr('Appeler'),
                     icon: const Icon(Icons.call_outlined, size: 20),
@@ -699,7 +701,7 @@ class _OrderCard extends StatelessWidget {
                 // Whole on one line, shrunk if it must (R-1).
                 Flexible(
                   child: MoneyText(money.format(order.total),
-                      key: Key('order-total-${order.id}'),
+                      textKey: Key('order-total-${order.id}'),
                       alignment: Alignment.centerRight,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w700)),
@@ -833,6 +835,8 @@ class _CashSheetState extends State<_CashSheet> {
     setState(() => _busy = c.orderId);
     try {
       await widget.retail.confirmCashReceived(c.orderId);
+      // The sheet may have been closed while the call was out (R-3).
+      if (!mounted) return;
       setState(() {
         _left.remove(c);
         _changed = true;

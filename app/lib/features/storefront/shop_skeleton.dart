@@ -52,10 +52,11 @@ class ShopSkeleton extends StatelessWidget {
             SizedBox(height: 8),
             Bone(width: 200, height: 14),
             SizedBox(height: 22),
+            // Flexible: a 320 px phone is narrower than the two (SH-3).
             Row(children: [
-              Bone(width: 180, height: 50, radius: 999),
+              Flexible(child: Bone(width: 180, height: 50, radius: 999)),
               SizedBox(width: 12),
-              Bone(width: 110, height: 50, radius: 999),
+              Flexible(child: Bone(width: 110, height: 50, radius: 999)),
             ]),
             SizedBox(height: 40),
             Bone(width: 110, height: 12),

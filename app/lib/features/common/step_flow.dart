@@ -808,12 +808,10 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
             : const Icon(Icons.check),
         // A long label (« Enregistrer la vente ») shrinks to one whole line
         // rather than being cut on a small phone at large text (S-3).
-        label: Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(widget.saveLabel ?? context.tr('Enregistrer'),
-                maxLines: 1, style: const TextStyle(fontSize: 18)),
-          ),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(widget.saveLabel ?? context.tr('Enregistrer'),
+              maxLines: 1, style: const TextStyle(fontSize: 18)),
         ),
       );
     } else {

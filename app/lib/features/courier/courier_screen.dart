@@ -121,6 +121,9 @@ class _CourierScreenState extends State<CourierScreen>
   }
 
   Future<void> _load({bool silent = false}) async {
+    // After an await (a course finished on the map pops this page): the
+    // page may be gone (K-2).
+    if (!mounted) return;
     setState(() {
       if (!silent) _loading = true;
       _error = null;
@@ -790,11 +793,14 @@ class _JobCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: ShopStyle.ink)),
                 ),
-                Text('$when · ${money.format(job.total)}',
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ShopStyle.ink)),
+                Flexible(
+                  child: Text('$when · ${money.format(job.total)}',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ShopStyle.ink)),
+                ),
               ],
             ),
             if (job.ownShop || job.toShopKm != null) ...[

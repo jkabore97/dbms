@@ -185,11 +185,15 @@ class _LivestockScreenState extends State<LivestockScreen>
                             style: theme.textTheme.headlineSmall),
                       ],
                     ),
+                    // The species in the reader's words, never its stored
+                    // code (« caprin »), and not twice when the herd is named
+                    // after it (UI audit F-2).
                     Text(
                       [
-                        herd.species,
+                        if (livestockSpeciesLabel(context, herd.species) != herd.label)
+                          livestockSpeciesLabel(context, herd.species),
                         herd.breed,
-                        herd.purpose,
+                        livestockPurposeLabel(context, herd.purpose),
                       ]
                           .whereType<String>()
                           .where((s) => s.isNotEmpty)
@@ -388,3 +392,34 @@ class _LivestockScreenState extends State<LivestockScreen>
         ),
       );
 }
+
+/// A herd's species as the farm flow offers it (farm_animal_flows.dart
+/// stores the code: caprin, ovin…), in the reader's language; a species
+/// typed by hand before the list existed is shown as it was typed.
+String livestockSpeciesLabel(BuildContext context, String species) =>
+    switch (species.trim().toLowerCase()) {
+      'pondeuses' => context.tr('Poules pondeuses'),
+      'chair' => context.tr('Poulets de chair'),
+      'pintades' => context.tr('Pintades'),
+      'canards' => context.tr('Canards'),
+      'caprin' => context.tr('Chèvres'),
+      'ovin' => context.tr('Moutons'),
+      'bovin' => context.tr('Bœufs'),
+      'porcin' => context.tr('Porcs'),
+      'lapin' => context.tr('Lapins'),
+      'autre' => context.tr('Autres animaux'),
+      _ => species,
+    };
+
+/// What a herd is kept for, when it says so in a word the app knows (the
+/// field is free text from before 019's flow): its translation; otherwise
+/// as typed.
+String? livestockPurposeLabel(BuildContext context, String? purpose) =>
+    switch (purpose?.trim().toLowerCase()) {
+      null || '' => null,
+      'meat' || 'viande' => context.tr('Viande'),
+      'milk' || 'lait' => context.tr('Lait'),
+      'eggs' || 'oeufs' || 'œufs' => context.tr('Œufs'),
+      'breeding' || 'reproduction' || 'élevage' => context.tr('Reproduction'),
+      _ => purpose,
+    };

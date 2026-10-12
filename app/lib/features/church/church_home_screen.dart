@@ -34,6 +34,7 @@ import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// Israel's home screen.
 ///
@@ -303,7 +304,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
       // its place, with its word, on the bar at the foot (HomeNav).
       bottomNavigationBar: nav.bar(context),
       appBar: AppBar(
-        title: Text(widget.orgName),
+        title: AppBarTitle(widget.orgName),
         actions: [
           if (_pending > 0)
             Padding(
@@ -332,7 +333,10 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
           : RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                // Room under the last card for the three buttons floating
+                // over the list (transfer, « Dépense », « Recette »), so the
+                // trust card is never left under them (UI audit S-4, A-4).
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 210),
                 children: [
                   // The ring with the app closed (115), until this device
                   // rings — for every member but an observer.

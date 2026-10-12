@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/rates/currency_rates.dart';
@@ -833,17 +834,30 @@ class _SaleFlowState extends State<SaleFlow> {
         LayoutBuilder(builder: (context, box) {
           final width = MediaQuery.sizeOf(context).width;
           final scaler = MediaQuery.textScalerOf(context);
+          final large = scaler.scale(10) > 11.5;
           final columns = width >= 520
               ? 3
-              : (width < 360 && scaler.scale(10) > 11.5 ? 1 : 2);
+              : ((large && width < 400) || width < 340 ? 1 : 2);
           final tileWidth = (box.maxWidth - 10 * (columns - 1)) / columns;
           // Padding, the name (two lines, or the 44 px photo), the price
-          // and the stock, each at the reader's text size.
+          // and the stock — measured in their own styles at the reader's
+          // text size.
+          double lines(TextStyle? style, int n) {
+            final painter = TextPainter(
+              text: TextSpan(text: List.filled(n, 'Ag').join('\n'), style: style),
+              textDirection: Directionality.of(context),
+              textScaler: scaler,
+            )..layout();
+            final h = painter.height;
+            painter.dispose();
+            return h;
+          }
+          final theme = Theme.of(context);
           final needed = 20 +
-              math.max(44.0, scaler.scale(14) * 1.43 * 2) +
-              scaler.scale(14) * 1.43 +
-              scaler.scale(12) * 1.34 +
-              10;
+              math.max(44.0, lines(theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600), 2)) +
+              lines(theme.textTheme.bodyMedium, 1) +
+              lines(theme.textTheme.bodySmall, 1) +
+              8;
           return GridView(
             key: const Key('sale-tiles'),
             shrinkWrap: true,
@@ -852,7 +866,8 @@ class _SaleFlowState extends State<SaleFlow> {
               crossAxisCount: columns,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              mainAxisExtent: math.max(tileWidth / 1.45, needed),
+              // One tile a row: as tall as its words, not 1.45 of its width.
+              mainAxisExtent: columns == 1 ? needed : math.max(tileWidth / 1.45, needed),
             ),
             children: [for (final p in pickable) _tile(context, p)],
           );
@@ -1037,10 +1052,15 @@ class _SaleFlowState extends State<SaleFlow> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(context.tr('Total'), style: theme.textTheme.titleMedium),
-            Text(_money.format(_total),
-                key: const Key('sale-total'),
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 12),
+            // Whole on one line, shrunk if it must (R-1).
+            Flexible(
+              child: MoneyText(_money.format(_total),
+                  textKey: const Key('sale-total'),
+                  alignment: Alignment.centerRight,
+                  style: theme.textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ],

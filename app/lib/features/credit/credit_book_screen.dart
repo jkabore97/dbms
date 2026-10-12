@@ -19,6 +19,7 @@ import 'credit_flows.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// Qui me doit combien — the carnet de crédit.
 ///
@@ -157,7 +158,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(strings.creditBook)),
+      appBar: AppBar(actions: const [bellRoom], title: AppBarTitle(strings.creditBook)),
       floatingActionButton: !canEdit
           ? null
           : Column(
@@ -445,7 +446,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(me?.name ?? strings.creditBook)),
+      appBar: AppBar(actions: const [bellRoom], title: AppBarTitle(me?.name ?? strings.creditBook)),
       floatingActionButton: !canEdit || remaining <= 0
           ? null
           : FloatingActionButton.extended(

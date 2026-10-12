@@ -250,7 +250,9 @@ class _BusinessFrameState extends State<BusinessFrame> {
           context: context,
           removeTop: true,
           child: MediaQuery.withClampedTextScaling(
-            maxScaleFactor: 1.15,
+            // At 1.0 on a phone narrower than 360 (« Commandes » in a fifth
+            // of 320 px), 1.15 elsewhere.
+            maxScaleFactor: MediaQuery.sizeOf(context).width < 360 ? 1.0 : 1.15,
             child: Builder(
               builder: (themed) => NavigationBar(
                 selectedIndex: none ? 0 : selected,

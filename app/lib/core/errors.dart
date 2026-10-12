@@ -88,8 +88,18 @@ String _describe(Object error) {
     return 'Pas de connexion. Réessayez quand le réseau revient.';
   }
 
+  // A programming error (a null check, a cast, a parse) is never shown as
+  // Dart's own text (UI audit X-1): the person gets one plain sentence, the
+  // error itself still goes to the crash reporter where it is caught.
+  if ((error is Error && error is! StateError) || error is FormatException) {
+    return unexpectedErrorText;
+  }
+
   return text;
 }
+
+/// What a programming error says to the person holding the phone.
+const unexpectedErrorText = 'Une erreur inattendue est survenue. Réessayez.';
 
 /// True when [error] is the transport failing — no signal, a dropped or
 /// stalled connection — rather than the server answering no. What the till

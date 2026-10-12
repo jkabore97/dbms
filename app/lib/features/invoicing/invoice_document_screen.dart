@@ -22,6 +22,7 @@ import 'invoice_paper.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// The invoice as a document somebody can actually be handed.
 ///
@@ -301,7 +302,7 @@ class _InvoiceDocumentScreenState extends State<InvoiceDocumentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(doc == null ? context.tr('Facture') : context.tr('Facture {number}', {'number': doc.number})),
+        title: AppBarTitle(doc == null ? context.tr('Facture') : context.tr('Facture {number}', {'number': doc.number})),
         actions: [
           if (doc != null)
             IconButton(

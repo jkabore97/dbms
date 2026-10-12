@@ -100,6 +100,8 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // One height for both buttons: 58, or 52 on a narrow phone (AU-1).
+    final double buttonHeight = MediaQuery.sizeOf(context).width < 360 ? 52 : 58;
     // On an iPhone, Google only beside Apple, below it (130: App Review 4.8
     // — never Google alone, never Google first).
     final google = appleSignInPlatform && !_apple ? false : _google;
@@ -134,19 +136,24 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
             ),
             const SizedBox(height: 24),
             if (_apple) ...[
-              // Apple's own button, as tall as Google's, above it.
-              SignInWithAppleButton(
-                key: const Key('order-sign-in-apple'),
-                text: context.tr('Continuer avec Apple'),
-                height: 58,
-                borderRadius: const BorderRadius.all(Radius.circular(29)),
-                onPressed: () => _choose(OrderSignIn.apple),
+              // Apple's own button, as tall as Google's, above it. Its label
+              // is sized from its height, as Apple's system button is — never
+              // wrapped and cut at large text (UI audit AU-1); a little lower
+              // on an iPhone SE so the words keep one line.
+              MediaQuery.withNoTextScaling(
+                child: SignInWithAppleButton(
+                  key: const Key('order-sign-in-apple'),
+                  text: context.tr('Continuer avec Apple'),
+                  height: buttonHeight,
+                  borderRadius: BorderRadius.all(Radius.circular(buttonHeight / 2)),
+                  onPressed: () => _choose(OrderSignIn.apple),
+                ),
               ),
               SizedBox(height: google == false ? 28 : 12),
             ],
             if (google != false) ...[
               SizedBox(
-                height: 58,
+                height: buttonHeight,
                 child: FilledButton(
                   key: const Key('order-sign-in-google'),
                   onPressed: google == true ? () => _choose(OrderSignIn.google) : null,
@@ -163,10 +170,13 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
                         const _GoogleG(),
                       const SizedBox(width: 12),
                       Flexible(
-                        child: Text(
-                          context.tr('Continuer avec Google'),
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            context.tr('Continuer avec Google'),
+                            maxLines: 1,
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                     ],
@@ -242,6 +252,8 @@ class _GoogleG extends StatelessWidget {
       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
       child: const Text(
         'G',
+        // The mark keeps its disc's size whatever the text size.
+        textScaler: TextScaler.noScaling,
         style: TextStyle(
           fontSize: 17,
           height: 1,

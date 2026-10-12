@@ -14,6 +14,7 @@ class MoneyText extends StatelessWidget {
     this.style,
     this.alignment = Alignment.centerLeft,
     this.maxWidth,
+    this.textKey,
   });
 
   final String text;
@@ -24,12 +25,15 @@ class MoneyText extends StatelessWidget {
   /// trailing) where the amount must leave the rest its share.
   final double? maxWidth;
 
+  /// The key of the Text inside, for a test that reads the amount.
+  final Key? textKey;
+
   @override
   Widget build(BuildContext context) {
     Widget child = FittedBox(
       fit: BoxFit.scaleDown,
       alignment: alignment,
-      child: Text(text, maxLines: 1, softWrap: false, style: style),
+      child: Text(text, key: textKey, maxLines: 1, softWrap: false, style: style),
     );
     if (maxWidth != null) {
       child = ConstrainedBox(constraints: BoxConstraints(maxWidth: maxWidth!), child: child);

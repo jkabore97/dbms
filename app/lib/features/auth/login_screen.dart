@@ -601,8 +601,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // A mark, not words: its size is the button's, not the
+              // reader's (at 2.0 it was cut in half by the 52 px button).
               const Text(
                 'G',
+                textScaler: TextScaler.noScaling,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

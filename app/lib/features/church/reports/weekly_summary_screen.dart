@@ -11,6 +11,7 @@ import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../../core/notify/bell_room.dart';
+import '../../../core/format/money_text.dart';
 
 /// The Sunday summary.
 ///
@@ -310,24 +311,31 @@ class SummaryCard extends StatelessWidget {
           Container(height: 1, color: const Color(0xFFE8EEEB)),
           const SizedBox(height: 16),
 
+          // The label wraps, the amount stays whole (UI audit A-1).
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                context.tr('Solde de la semaine'),
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: _ink,
+              Expanded(
+                child: Text(
+                  context.tr('Solde de la semaine'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: _ink,
+                  ),
                 ),
               ),
-              Text(
+              const SizedBox(width: 8),
+              Flexible(
+                child: MoneyText(
                 money.format(summary.net),
+                alignment: Alignment.centerRight,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: summary.net >= 0 ? _green : _orange,
                 ),
+              ),
               ),
             ],
           ),
@@ -417,8 +425,10 @@ class _Line extends StatelessWidget {
               style: const TextStyle(fontSize: 14, color: SummaryCard._ink),
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             amount,
+            softWrap: false,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -447,16 +457,22 @@ class _Total extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 15, color: SummaryCard._muted),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 15, color: SummaryCard._muted),
+          ),
         ),
-        Text(
+        const SizedBox(width: 8),
+        Flexible(
+          child: MoneyText(
           amount,
+          alignment: Alignment.centerRight,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: color,
+          ),
           ),
         ),
       ],

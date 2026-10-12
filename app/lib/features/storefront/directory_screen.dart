@@ -711,8 +711,12 @@ class _Street extends StatelessWidget {
                 const SizedBox(height: 32),
                 ShopSectionLabel(context.tr('À la une'), note: context.tr('Sponsorisé')),
                 const SizedBox(height: 14),
+                // As tall as a tile at the reader's text size (UI audit
+                // SH-1: a fixed 244 cut the shop's name at 1.3): the 156 px
+                // square, two lines of name, the price, the shop.
                 SizedBox(
-                  height: 244,
+                  height: 156 + 8 + 2 + 8 +
+                      MediaQuery.textScalerOf(context).scale(14 * 1.25 * 2 + 13 * 1.4 + 12 * 1.4),
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: featured.length,

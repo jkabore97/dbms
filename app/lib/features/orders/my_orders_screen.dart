@@ -96,6 +96,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   Future<void> _load({bool silent = false}) async {
+    // Called from a timer and after awaits: the page may be gone (SH-10).
+    if (!mounted) return;
     setState(() {
       if (!silent) _loading = true;
       _error = null;
@@ -463,11 +465,15 @@ class _OrderCard extends StatelessWidget {
                   child: Text(context.tr('Livraison'),
                       style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
                 ),
-                Text(
-                    order.deliveryFee == null
-                        ? context.tr('à discuter')
-                        : context.tr('{fee} au livreur', {'fee': money.format(order.deliveryFee!)}),
-                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
+                // Wraps under its label rather than overflowing (SH-7).
+                Flexible(
+                  child: Text(
+                      order.deliveryFee == null
+                          ? context.tr('à discuter')
+                          : context.tr('{fee} au livreur', {'fee': money.format(order.deliveryFee!)}),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 14, color: ShopStyle.mist)),
+                ),
               ],
             ),
             const SizedBox(height: 4),
