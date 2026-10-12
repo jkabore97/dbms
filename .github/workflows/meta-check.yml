@@ -1,5 +1,6 @@
-# Temporary: reads Mara's WhatsApp Business status from Meta (business
-# verification, number, templates). Read-only. Removed once it has run.
+# Temporary: creates Mara's WhatsApp authentication template « mara_code »
+# (French, copy-code button, 10-minute expiry), then lists the templates.
+# Removed once it has run.
 name: Meta check
 on:
   push:
@@ -9,17 +10,22 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Ask Meta
+      - name: Create the template
         env:
           TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
-          PHONE: ${{ secrets.WHATSAPP_PHONE_ID }}
+          NAME: ${{ secrets.WHATSAPP_TEMPLATE }}
         run: |
           set -u
           G=https://graph.facebook.com/v21.0
           WABA=39044506931863115
-          q() { curl -sS -G "$G/$1" --data-urlencode "fields=$2" -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d, ensure_ascii=False)[:1500])"; }
-          echo "== WABA"; q "$WABA" "name,account_review_status,business_verification_status,owner_business_info"
-          echo "== phone"; q "$PHONE" "display_phone_number,verified_name,name_status,status,quality_rating,messaging_limit_tier,code_verification_status,platform_type"
-          echo "== templates"; q "$WABA/message_templates" "name,status,category,language,rejected_reason"
-          BIZ=$(curl -sS -G "$G/$WABA" --data-urlencode "fields=owner_business_info" -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; print(json.load(sys.stdin).get('owner_business_info',{}).get('id',''))")
-          echo "== business $BIZ"; [ -n "$BIZ" ] && q "$BIZ" "name,verification_status"
+          echo "template name secret is mara_code: $([ "$NAME" = mara_code ] && echo yes || echo NO)"
+          curl -sS -X POST "$G/$WABA/message_templates" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{
+            "name": "mara_code", "language": "fr", "category": "AUTHENTICATION",
+            "components": [
+              {"type": "BODY", "add_security_recommendation": true},
+              {"type": "FOOTER", "code_expiration_minutes": 10},
+              {"type": "BUTTONS", "buttons": [{"type": "OTP", "otp_type": "COPY_CODE", "text": "Copier le code"}]}
+            ]}'
+          echo
+          sleep 5
+          curl -sS -G "$G/$WABA/message_templates" --data-urlencode "fields=name,status,category,language,rejected_reason" -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; [print(t) for t in json.load(sys.stdin).get('data',[])]"
