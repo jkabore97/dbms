@@ -47,6 +47,7 @@ import 'core/security/security_settings.dart';
 import 'core/sync/sync_service.dart';
 import 'core/tontine/tontine_repository.dart';
 import 'core/theme/kaj_theme.dart';
+import 'core/site/server_url.dart';
 import 'core/update/update_banner.dart';
 import 'core/update/update_check.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -56,7 +57,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 ///
 /// Supabase renamed the anon key to the publishable key. Both the legacy
 /// `eyJ...` anon key and a new `sb_publishable_...` key work here.
-const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+final supabaseUrl = supabaseOrigin(const String.fromEnvironment('SUPABASE_URL'));
 const supabasePublishableKey =
     String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
