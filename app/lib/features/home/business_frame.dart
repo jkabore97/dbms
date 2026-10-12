@@ -241,23 +241,35 @@ class _BusinessFrameState extends State<BusinessFrame> {
       bar = SizedBox(
         key: const Key('business-bar'),
         height: barHeight,
-        child: Builder(
-          builder: (themed) => NavigationBar(
-            selectedIndex: none ? 0 : selected,
-            indicatorColor: none ? Colors.transparent : null,
-            labelTextStyle: none && labels != null
-                ? WidgetStatePropertyAll(labels.resolve(const <WidgetState>{}))
-                : null,
-            onDestinationSelected: (i) => tap(themed, i),
-            destinations: [
-              for (final p in places)
-                NavigationDestination(
-                  icon: HomeNav.placeIcon(p, p.icon),
-                  selectedIcon: HomeNav.placeIcon(
-                      p, none ? p.icon : (p.selectedIcon ?? p.icon)),
-                  label: p.label,
-                ),
-            ],
+        // The bar stands at the bottom: the top's safe area (a notch, the
+        // Dynamic Island, Android's status bar) is not its own. Without
+        // this, NavigationBar's SafeArea took it off the bar's height too
+        // and squeezed the row to 21 px on an iPhone (UI audit B-1). Its
+        // labels are held to 1.15 × so they stay whole at large text (B-2).
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.15,
+            child: Builder(
+              builder: (themed) => NavigationBar(
+                selectedIndex: none ? 0 : selected,
+                indicatorColor: none ? Colors.transparent : null,
+                labelTextStyle: none && labels != null
+                    ? WidgetStatePropertyAll(labels.resolve(const <WidgetState>{}))
+                    : null,
+                onDestinationSelected: (i) => tap(themed, i),
+                destinations: [
+                  for (final p in places)
+                    NavigationDestination(
+                      icon: HomeNav.placeIcon(p, p.icon),
+                      selectedIcon: HomeNav.placeIcon(
+                          p, none ? p.icon : (p.selectedIcon ?? p.icon)),
+                      label: p.label,
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       );

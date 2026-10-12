@@ -7,6 +7,7 @@ import '../../../core/reports/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../../core/notify/bell_room.dart';
+import '../../../core/format/money_text.dart';
 
 /// Where the money is, right now — cash, bank, mobile money.
 ///
@@ -132,7 +133,8 @@ class _BalancesScreenState extends State<BalancesScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          // Whole on one line, shrunk if it must (R-1).
+                          MoneyText(
                             money.format(total),
                             style: theme.textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -163,8 +165,10 @@ class _BalancesScreenState extends State<BalancesScreen> {
                         child: ListTile(
                           leading: Icon(_iconFor(b.name)),
                           title: Text(b.displayName),
-                          trailing: Text(
+                          trailing: MoneyText(
                             money.format(b.balance),
+                            alignment: Alignment.centerRight,
+                            maxWidth: MediaQuery.sizeOf(context).width * 0.42,
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,

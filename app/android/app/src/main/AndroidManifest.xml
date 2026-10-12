@@ -29,10 +29,18 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
+    <!-- No backup, no device-to-device copy (SEC_AUDIT_2 L6): the session
+         (its refresh token) and the local books live in app storage in
+         clear; they are not to land in a cloud backup or on another
+         phone. A new phone signs in and is filled again from the server.
+         allowBackup stops the cloud backup; on Android 12 and later the
+         transfer to a new phone is stopped by dataExtractionRules. -->
     <application
         android:label="Mara"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <!-- Downloads the text-recognition model at install time instead of
              on first use. Without it the first photograph somebody takes
              either waits on a download or silently reads nothing — and the

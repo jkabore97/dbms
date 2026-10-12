@@ -144,64 +144,78 @@ class _OfflineSheetState extends State<OfflineSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(
-              _phase == _Phase.done && _failed.isEmpty
-                  ? Icons.cloud_done_outlined
-                  : Icons.cloud_off_outlined,
-              size: 44,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _phase == _Phase.done
-                  ? (_failed.isEmpty
-                      ? context.tr('Prêt : Mara fonctionne sans connexion')
-                      : context.tr('Presque prêt'))
-                  : context.tr('Utiliser Mara sans connexion ?'),
-              key: const Key('offline-title'),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _phase == _Phase.done
-                  ? (_failed.isEmpty
-                      ? context.tr('Sans réseau, vos écritures restent sur ce téléphone et partent dès que la connexion revient.')
-                      : context.tr('Certaines parties n\'ont pas pu être téléchargées. Réessayez avec une meilleure connexion.'))
-                  : context.tr('Mara peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.'),
-              textAlign: TextAlign.center,
-              style: muted,
-            ),
-            const SizedBox(height: 18),
-            if (_phase != _Phase.ask)
-              for (final step in steps)
-                ListTile(
-                  key: Key('offline-step-${step.name}'),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: _done.contains(step)
-                      ? Icon(
-                          _failed.contains(step)
-                              ? Icons.error_outline
-                              : Icons.check_circle,
-                          color: _failed.contains(step)
-                              ? theme.colorScheme.error
-                              : theme.colorScheme.primary)
-                      : _current == step
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2.2))
-                          : const Icon(Icons.radio_button_unchecked),
-                  title: Text(_label(context, step)),
-                  subtitle: step == OfflineStep.app &&
-                          _current == step &&
-                          _files != null
-                      ? Text(context.tr('{done} fichiers sur {total}',
-                          {'done': _files!.$1, 'total': _files!.$2}))
-                      : null,
+            // The words and the steps scroll; the buttons stay below them,
+            // always in reach — on an iPhone SE at large text the sheet is
+            // taller than the screen (UI audit O-1).
+            Flexible(
+              child: SingleChildScrollView(
+                key: const Key('offline-scroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      _phase == _Phase.done && _failed.isEmpty
+                          ? Icons.cloud_done_outlined
+                          : Icons.cloud_off_outlined,
+                      size: 44,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _phase == _Phase.done
+                          ? (_failed.isEmpty
+                              ? context.tr('Prêt : Mara fonctionne sans connexion')
+                              : context.tr('Presque prêt'))
+                          : context.tr('Utiliser Mara sans connexion ?'),
+                      key: const Key('offline-title'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _phase == _Phase.done
+                          ? (_failed.isEmpty
+                              ? context.tr('Sans réseau, vos écritures restent sur ce téléphone et partent dès que la connexion revient.')
+                              : context.tr('Certaines parties n\'ont pas pu être téléchargées. Réessayez avec une meilleure connexion.'))
+                          : context.tr('Mara peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.'),
+                      textAlign: TextAlign.center,
+                      style: muted,
+                    ),
+                    const SizedBox(height: 18),
+                    if (_phase != _Phase.ask)
+                      for (final step in steps)
+                        ListTile(
+                          key: Key('offline-step-${step.name}'),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: _done.contains(step)
+                              ? Icon(
+                                  _failed.contains(step)
+                                      ? Icons.error_outline
+                                      : Icons.check_circle,
+                                  color: _failed.contains(step)
+                                      ? theme.colorScheme.error
+                                      : theme.colorScheme.primary)
+                              : _current == step
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child:
+                                          CircularProgressIndicator(strokeWidth: 2.2))
+                                  : const Icon(Icons.radio_button_unchecked),
+                          title: Text(_label(context, step)),
+                          subtitle: step == OfflineStep.app &&
+                                  _current == step &&
+                                  _files != null
+                              ? Text(context.tr('{done} fichiers sur {total}',
+                                  {'done': _files!.$1, 'total': _files!.$2}))
+                              : null,
+                        ),
+                  ],
                 ),
+              ),
+            ),
             const SizedBox(height: 12),
             switch (_phase) {
               _Phase.ask => Row(

@@ -83,7 +83,7 @@ async function play(env, method, path, io, body) {
   if (response.status === 404 || response.status === 410) {
     throw new StoreError("Achat inconnu de Google Play.", 404, String(response.status));
   }
-  if (!response.ok) throw new StoreError(`Google Play answered ${response.status}`, 502, text.slice(0, 200));
+  if (!response.ok) throw new StoreError(`Google Play answered ${response.status}`, 502, "upstream", text.slice(0, 200));
   return text ? JSON.parse(text) : {};
 }
 

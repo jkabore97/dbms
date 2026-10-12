@@ -448,3 +448,73 @@ begin
     end if;
     raise notice 'PASS: notify_plain, otp_send_allow, store_sandbox_allowed and the new-account trigger are nobody''s in the app; the definers pin their search path';
 end $$;
+
+\echo ''
+\echo '--- TEST 6: « Mara Pro est actif » once per subscription, not once per renewal ---'
+do $$
+declare
+    v_plain uuid := '13000000-0000-0000-0000-000000000004';   -- a shop
+    v_farm  uuid := '13000000-0000-0000-0000-000000000002';   -- a farm
+    v_r jsonb;
+    told int;
+begin
+    -- Google: bought — one bell.
+    v_r := store_settle('google', v_plain, 'mara_pro:yearly', 'renew-130-1', 'active',
+                        now() + interval '30 minutes', true, 'production');
+    if not (v_r ->> 'pro')::boolean then raise exception 'FAIL: the purchase: %', v_r; end if;
+    select count(*) into told from notifications where org_id = v_plain and kind = 'pro_active';
+    if told <> 1 then raise exception 'FAIL: % bells for the purchase', told; end if;
+    -- Renewed, its news a few minutes after the paid end (the plan free
+    -- meanwhile): no new bell. Twice.
+    update store_subscriptions set expires_at = now() - interval '4 minutes' where original_id = 'renew-130-1';
+    if org_plan(v_plain) <> 'free' then raise exception 'FAIL: the lapse is not a lapse'; end if;
+    v_r := store_settle('google', v_plain, 'mara_pro:yearly', 'renew-130-1', 'active',
+                        now() + interval '30 minutes', true, 'production');
+    update store_subscriptions set expires_at = now() - interval '2 minutes', state = 'expired' where original_id = 'renew-130-1';
+    v_r := store_settle('google', v_plain, 'mara_pro:yearly', 'renew-130-1', 'active',
+                        now() + interval '30 minutes', true, 'production');
+    if not (v_r ->> 'pro')::boolean then raise exception 'FAIL: the renewal: %', v_r; end if;
+    select count(*) into told from notifications where org_id = v_plain and kind = 'pro_active';
+    if told <> 1 then raise exception 'FAIL: a renewal rang again (% bells)', told; end if;
+    -- A new token replacing it (an upgrade, a re-buy) while it ran in the
+    -- last 24 hours: no bell either.
+    update store_subscriptions set expires_at = now() - interval '10 minutes' where original_id = 'renew-130-1';
+    v_r := store_settle('google', v_plain, 'mara_pro:monthly', 'renew-130-2', 'active',
+                        now() + interval '30 days', true, 'production', null, null, 'renew-130-1');
+    select count(*) into told from notifications where org_id = v_plain and kind = 'pro_active';
+    if not (v_r ->> 'pro')::boolean or told <> 1 then
+        raise exception 'FAIL: a replacing token rang (% bells) / %', told, v_r;
+    end if;
+    -- Lapsed more than 24 hours, then subscribed again: a new bell.
+    update store_subscriptions set expires_at = now() - interval '25 hours', state = 'expired'
+     where original_id = 'renew-130-2';
+    if org_plan(v_plain) <> 'free' then raise exception 'FAIL: still Pro after the lapse'; end if;
+    v_r := store_settle('google', v_plain, 'mara_pro:monthly', 'renew-130-2', 'active',
+                        now() + interval '30 days', true, 'production');
+    select count(*) into told from notifications where org_id = v_plain and kind = 'pro_active';
+    if told <> 2 then raise exception 'FAIL: a re-subscription after 24 hours: % bells', told; end if;
+    -- A brand-new token after a lapse of more than 24 hours: a bell.
+    update store_subscriptions set expires_at = now() - interval '26 hours', state = 'expired'
+     where org_id = v_plain;
+    v_r := store_settle('google', v_plain, 'mara_pro:monthly', 'renew-130-3', 'active',
+                        now() + interval '30 days', true, 'production', null, null, 'renew-130-2');
+    select count(*) into told from notifications where org_id = v_plain and kind = 'pro_active';
+    if told <> 3 then raise exception 'FAIL: a new token after 24 hours: % bells', told; end if;
+
+    -- Apple (one originalTransactionId through every renewal), on a farm.
+    v_r := store_settle('apple', v_farm, 'bf.kaj.app.pro.monthly', 'orig-130-a', 'active',
+                        now() + interval '5 minutes', true, 'production');
+    update store_subscriptions set expires_at = now() - interval '3 minutes' where original_id = 'orig-130-a';
+    v_r := store_settle('apple', v_farm, 'bf.kaj.app.pro.monthly', 'orig-130-a', 'active',
+                        now() + interval '30 days', true, 'production');
+    select count(*) into told from notifications where org_id = v_farm and kind = 'pro_active';
+    if told <> 1 then raise exception 'FAIL: Apple: % bells for a purchase and its renewal', told; end if;
+    -- Refunded more than 24 hours ago, bought again: a bell.
+    update store_subscriptions set state = 'revoked', last_verified_at = now() - interval '30 hours'
+     where original_id = 'orig-130-a';
+    v_r := store_settle('apple', v_farm, 'bf.kaj.app.pro.monthly', 'orig-130-a', 'active',
+                        now() + interval '30 days', true, 'production');
+    select count(*) into told from notifications where org_id = v_farm and kind = 'pro_active';
+    if told <> 2 then raise exception 'FAIL: Apple: a re-subscription after a refund: % bells', told; end if;
+    raise notice 'PASS: Pro bells — one for a purchase; none for a renewal whose news came minutes after the paid end (twice), nor for a Google token replacing one that ran in the last 24 hours; one for a re-subscription after 24 hours (same token, new token, Apple after a refund); a shop and a farm';
+end $$;

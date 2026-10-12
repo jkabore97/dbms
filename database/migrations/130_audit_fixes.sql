@@ -48,6 +48,11 @@
 --       20 per day. Over: refused, nothing sent, nothing said of which
 --       limit. The number is kept only as a hash (md5 of its digits), for
 --       two days, then forgotten; the account's rows go with the account.
+--   Store. « Mara Pro est actif » rang at every store renewal whose news
+--       came a little after the paid end (the plan briefly free): it now
+--       rings for a new subscription, or a re-subscription after more than
+--       24 hours without one — never a renewal of the same subscription,
+--       nor (Google) a token replacing one that ran in the last 24 hours.
 --
 -- Platform-level: the same for a shop, a farm and an association — the
 -- ledger, the admins' bell, the store's sandbox rule and the WhatsApp code
@@ -293,6 +298,141 @@ begin
 
     insert into otp_sends (phone_key, user_id) values (v_key, v_user);
     return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- « Mara Pro est actif » once per subscription, not once per renewal
+-- ------------------------------------------------------------
+-- Live: a Google test subscription (renewing every 30 minutes) told the
+-- owner « Mara Pro est actif » at each renewal — the plan had dropped to
+-- free between the paid end and the renewal's news, so 128's « not Pro →
+-- Pro » looked like an activation. 128's store_settle(), as it stands,
+-- with one change: the bell rings only for a new subscription or a true
+-- re-subscription (v_fresh below). Shop, farm and association alike.
+create or replace function store_settle(
+    p_platform    text,
+    p_org_id      uuid,
+    p_product_id  text,
+    p_original_id text,
+    p_state       text,
+    p_expires_at  timestamptz,
+    p_auto_renew  boolean,
+    p_environment text,
+    p_raw         jsonb default null,
+    p_bought_by   uuid default null,
+    p_replaces    text default null,
+    p_signed_at   timestamptz default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_row   store_subscriptions%rowtype;
+    v_found boolean;
+    v_was   boolean;
+    v_now   boolean;
+    v_fresh boolean;
+begin
+    if p_platform not in ('apple', 'google') then
+        return jsonb_build_object('ok', false, 'reason', 'unknown store');
+    end if;
+    if coalesce(p_original_id, '') = '' or coalesce(p_product_id, '') = '' then
+        return jsonb_build_object('ok', false, 'reason', 'no purchase');
+    end if;
+    if not exists (select 1 from orgs where id = p_org_id) then
+        return jsonb_build_object('ok', false, 'reason', 'no such business');
+    end if;
+    select * into v_row from store_subscriptions
+     where platform = p_platform and original_id = p_original_id
+       for update;
+    v_found := found;
+    if v_found and v_row.org_id <> p_org_id then
+        -- A purchase is the business it was bought for.
+        return jsonb_build_object('ok', false, 'reason', 'another business');
+    end if;
+    -- 5c: a test purchase, for Mara's own businesses and App Review's only.
+    if p_environment = 'sandbox' and not store_sandbox_allowed(p_org_id) then
+        return jsonb_build_object('ok', false, 'reason', 'sandbox');
+    end if;
+    -- 5b: older news than what is held changes nothing (a notification
+    -- retried after a refund, two answers crossing).
+    if v_found and v_row.signed_at is not null and p_signed_at is not null
+       and p_signed_at < v_row.signed_at then
+        return jsonb_build_object('ok', true, 'stale', true,
+                                  'pro', org_plan(p_org_id) = 'pro',
+                                  'state', v_row.state, 'expires_at', v_row.expires_at);
+    end if;
+    v_was := store_pro_active(p_org_id) or org_plan(p_org_id) = 'pro';
+    -- 130: is this a new subscription, or the same one renewing? A renewal
+    -- whose news lands a little after the paid end finds the plan briefly
+    -- free (v_was false), and rang « Mara Pro est actif » once a period.
+    --   new: this original id never seen (Apple keeps one originalTransactionId
+    --        through every renewal; Google one token) — unless, on Google,
+    --        it replaces (linkedPurchaseToken) a subscription of this
+    --        business that was running in the last 24 hours: an upgrade or
+    --        a re-buy, not news;
+    --   or a true re-subscription: the subscription held had lapsed more
+    --        than 24 hours ago (its paid end, or for a refund the moment it
+    --        was written).
+    v_fresh := case
+        when not v_found then
+            p_platform <> 'google' or p_replaces is null or p_replaces = p_original_id
+            or not exists (select 1 from store_subscriptions r
+                            where r.platform = p_platform and r.original_id = p_replaces
+                              and r.org_id = p_org_id
+                              and (r.state in ('active', 'grace', 'on_hold', 'paused', 'pending')
+                                   or (r.state <> 'revoked' and r.expires_at > now() - interval '24 hours')
+                                   or (r.state = 'revoked' and r.last_verified_at > now() - interval '24 hours')))
+        else
+            case when v_row.state = 'revoked' then v_row.last_verified_at
+                 else v_row.expires_at end < now() - interval '24 hours'
+    end;
+
+    insert into store_subscriptions (org_id, platform, product_id, original_id, state,
+                                     expires_at, auto_renew, environment, bought_by,
+                                     last_verified_at, signed_at, raw)
+    values (p_org_id, p_platform, p_product_id, p_original_id, p_state,
+            p_expires_at, coalesce(p_auto_renew, false),
+            case when p_environment = 'sandbox' then 'sandbox' else 'production' end,
+            p_bought_by, now(), p_signed_at, p_raw)
+    on conflict (platform, original_id) do update set
+        product_id       = excluded.product_id,
+        state            = excluded.state,
+        expires_at       = excluded.expires_at,
+        auto_renew       = excluded.auto_renew,
+        environment      = excluded.environment,
+        bought_by        = coalesce(store_subscriptions.bought_by, excluded.bought_by),
+        last_verified_at = now(),
+        signed_at        = coalesce(excluded.signed_at, store_subscriptions.signed_at),
+        raw              = excluded.raw;
+
+    -- Google: an upgrade or a re-subscription is a new token naming the old
+    -- one (linkedPurchaseToken); the old one is over.
+    if p_replaces is not null and p_replaces <> p_original_id then
+        update store_subscriptions
+           set state = 'expired', last_verified_at = now()
+         where platform = p_platform and original_id = p_replaces and org_id = p_org_id
+           and state not in ('expired', 'revoked');
+    end if;
+
+    v_now := org_plan(p_org_id) = 'pro';
+    if v_now and not v_was and coalesce(v_fresh, false) then
+        begin
+            perform notify_org_admins(p_org_id, 'pro_active',
+                case when p_platform = 'apple'
+                     then 'Mara Pro est actif, payé sur l''App Store, jusqu''au '
+                     else 'Mara Pro est actif, payé sur Google Play, jusqu''au ' end
+                || to_char((p_expires_at at time zone 'Africa/Ouagadougou')::date, 'DD/MM/YYYY') || '.',
+                jsonb_build_object('to', 'shop', 'store', p_platform,
+                                   'until', (p_expires_at at time zone 'Africa/Ouagadougou')::date));
+        exception when others then null;
+        end;
+    end if;
+    return jsonb_build_object('ok', true, 'pro', v_now, 'state', p_state,
+                              'expires_at', p_expires_at);
 end;
 $$;
 

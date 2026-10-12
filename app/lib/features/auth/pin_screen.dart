@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/mara_mark.dart';
@@ -205,8 +207,24 @@ class _PinScreenState extends State<PinScreen> {
         // Column simply clips whatever does not fit — which here is the way
         // out for somebody who cannot remember their code. Centred while
         // there is room, scrollable when there is not.
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
+        child: LayoutBuilder(builder: (context, constraints) {
+          // The keypad is sized to the height there is (UI audit AU-2): on
+          // an iPhone SE at 1.3 the full header and 68 px keys put 7, 8, 9,
+          // 0 and « Se reconnecter » below the fold, behind a scroll
+          // nothing announced. A short screen gets a smaller mark, tighter
+          // gaps, the title on one line, and keys between 44 and 68 px —
+          // so the whole pad and the way out are on screen at once.
+          final s = MediaQuery.textScalerOf(context).scale(1);
+          final compact = constraints.maxHeight < 640;
+          final header = compact
+              ? 40 + 8 + 32 * s + 4 + 40 * s + 12 + 18 + 8 + 24
+              : 64 + 20 + 32 * s + 8 + 40 * s + 32 + 18 + 16 + 40;
+          final way = widget.onSignOut != null && widget.purpose == PinPurpose.unlock
+              ? (compact ? 8 : 16) + 48 * math.max(1.0, s)
+              : 0.0;
+          final keyHeight =
+              ((constraints.maxHeight - header - way - 8) / 4).clamp(44.0, 68.0);
+          return SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Center(
@@ -217,45 +235,59 @@ class _PinScreenState extends State<PinScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const MaraMark(size: 64),
-                        const SizedBox(height: 20),
-                        Text(_title, style: theme.textTheme.headlineSmall),
-                        const SizedBox(height: 8),
+                        MaraMark(size: compact ? 40 : 64),
+                        SizedBox(height: compact ? 8 : 20),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(_title,
+                              key: const Key('pin-title'),
+                              maxLines: 1,
+                              style: theme.textTheme.headlineSmall),
+                        ),
+                        SizedBox(height: compact ? 4 : 8),
                         Text(
                           _subtitle,
                           textAlign: TextAlign.center,
+                          maxLines: compact ? 2 : null,
+                          overflow: compact ? TextOverflow.ellipsis : null,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: compact ? 12 : 32),
                         _Dots(filled: _entry.length, total: _pinLength),
-                        const SizedBox(height: 16),
+                        SizedBox(height: compact ? 8 : 16),
                         SizedBox(
-                          height: 40,
+                          height: compact ? 24 : 40,
                           child: _error == null
                               ? null
-                              : Text(
-                                  _error!,
-                                  textAlign: TextAlign.center,
-                                  style:
-                                      TextStyle(color: theme.colorScheme.error),
+                              : FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _error!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: theme.colorScheme.error),
+                                  ),
                                 ),
                         ),
                         _Keypad(
+                          keyHeight: keyHeight,
                           onDigit: _press,
                           onBackspace: _backspace,
                           onBiometric: _canBiometric ? _biometric : null,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: compact ? 8 : 16),
                         if (widget.onSignOut != null &&
                             widget.purpose == PinPurpose.unlock)
                           TextButton(
+                            key: const Key('pin-sign-out'),
                             onPressed: _busy ? null : widget.onSignOut,
                             child: Text(
                               _failures >= 3
                                   ? Strings.of(context).pinForgot
                                   : Strings.of(context).pinReconnect,
+                              textAlign: TextAlign.center,
                             ),
                           ),
                       ],
@@ -264,8 +296,8 @@ class _PinScreenState extends State<PinScreen> {
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
@@ -301,11 +333,14 @@ class _Dots extends StatelessWidget {
 
 class _Keypad extends StatelessWidget {
   const _Keypad({
+    this.keyHeight = 68,
     required this.onDigit,
     required this.onBackspace,
     this.onBiometric,
   });
 
+  /// Each key's height: 68 where there is room, less on a short screen.
+  final double keyHeight;
   final void Function(String digit) onDigit;
   final VoidCallback onBackspace;
 
@@ -330,7 +365,7 @@ class _Keypad extends StatelessWidget {
               for (final key in row)
                 SizedBox(
                   width: 88,
-                  height: 68,
+                  height: keyHeight,
                   child: key.isEmpty
                       ? (onBiometric == null
                           ? const SizedBox.shrink()
@@ -349,11 +384,16 @@ class _Keypad extends StatelessWidget {
                             )
                           : TextButton(
                               onPressed: () => onDigit(key),
-                              child: Text(
-                                key,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w500,
+                              style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  key,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),

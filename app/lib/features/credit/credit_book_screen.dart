@@ -221,9 +221,8 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                           Padding(
                             padding: const EdgeInsets.all(8),
                             child: Text(
-                              strings.totalOutstanding(
-                                  '${_money.format(total)} '
-                                  '${widget.org.currency}'),
+                              // The amount carries its currency (C-1).
+                              strings.totalOutstanding(_money.format(total)),
                               style: theme.textTheme.titleMedium,
                             ),
                           ),
@@ -465,9 +464,8 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
-                        strings.totalOutstanding(
-                            '${_money.format(remaining)} '
-                            '${widget.org.currency}'),
+                        // The amount carries its currency (C-1).
+                        strings.totalOutstanding(_money.format(remaining)),
                         style: theme.textTheme.titleLarge,
                       ),
                     ),

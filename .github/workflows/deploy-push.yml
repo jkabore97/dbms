@@ -43,7 +43,7 @@ jobs:
       VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}
       PUSH_SUBJECT: ${{ vars.PUSH_SUBJECT || 'mailto:kabore.boss@gmail.com' }}
       APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://marakaj.com' }}
-      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev,http://localhost:8080,http://127.0.0.1:8080' }}
+      ALLOWED_ORIGINS: ${{ vars.UPLOAD_ALLOWED_ORIGINS || 'https://marakaj.com,https://www.marakaj.com,https://dbms.kabore-boss.workers.dev' }}
     steps:
       - uses: actions/checkout@v4
 

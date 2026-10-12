@@ -576,13 +576,19 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!apple && !google) return const [];
     return [
       if (apple) ...[
-        // Apple's own button (its logo, its black), with Mara's words.
-        SignInWithAppleButton(
-          key: const Key('apple-sign-in'),
-          text: context.tr('Continuer avec Apple'),
-          height: 52,
-          borderRadius: const BorderRadius.all(Radius.circular(26)),
-          onPressed: _busy ? null : _continueWithApple,
+        // Apple's own button (its logo, its black), with Mara's words. Its
+        // label is sized from its height (43 %), as Apple's system button
+        // is, not from the reader's text size: at 1.3 on an iPhone SE it
+        // wrapped onto two lines and was cut inside its 52 px (UI audit
+        // AU-1). Unscaled it is 22 px — still larger than Google's below.
+        MediaQuery.withNoTextScaling(
+          child: SignInWithAppleButton(
+            key: const Key('apple-sign-in'),
+            text: context.tr('Continuer avec Apple'),
+            height: 52,
+            borderRadius: const BorderRadius.all(Radius.circular(26)),
+            onPressed: _busy ? null : _continueWithApple,
+          ),
         ),
         if (google) const SizedBox(height: 12),
       ],
@@ -604,12 +610,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Shrinks before it overflows: a narrow phone at a large text
-              // size is the usual phone here.
+              // Shrinks, whole, before it overflows: a narrow phone at a
+              // large text size is the usual phone here — never « Continuer
+              // avec … » (AU-1).
               Flexible(
-                child: Text(
-                  Strings.of(context).continueWithGoogle,
-                  overflow: TextOverflow.ellipsis,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    Strings.of(context).continueWithGoogle,
+                    key: const Key('google-sign-in-label'),
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ],

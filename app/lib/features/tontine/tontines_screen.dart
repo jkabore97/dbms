@@ -111,8 +111,8 @@ class _TontinesScreenState extends State<TontinesScreen> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(
-                                  '${_money.format(t.amount)} '
-                                  '${widget.org.currency} · '
+                                  // The amount carries its currency (A-2).
+                                  '${_money.format(t.amount)} · '
                                   '${strings.roundN(t.currentRound)}'),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () async {
@@ -396,7 +396,7 @@ class _NewTontineSheetState extends State<_NewTontineSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: strings.amountPerRound,
-                suffixText: widget.org.currency,
+                suffixText: currencySymbol(widget.org.currency),
               ),
             ),
             const SizedBox(height: 12),

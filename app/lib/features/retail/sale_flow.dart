@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -824,15 +826,37 @@ class _SaleFlowState extends State<SaleFlow> {
               style: theme.textTheme.bodyMedium,
             ),
           ),
-        GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width >= 520 ? 3 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1.45,
-          children: [for (final p in pickable) _tile(context, p)],
-        ),
+        // The tiles' height follows the text size (UI audit S-1): at 1.3 on
+        // an iPhone SE a fixed 1.45 ratio cut the price and the stock off.
+        // A small phone at large text gets one tile per row, wide enough
+        // for the article's name.
+        LayoutBuilder(builder: (context, box) {
+          final width = MediaQuery.sizeOf(context).width;
+          final scaler = MediaQuery.textScalerOf(context);
+          final columns = width >= 520
+              ? 3
+              : (width < 360 && scaler.scale(10) > 11.5 ? 1 : 2);
+          final tileWidth = (box.maxWidth - 10 * (columns - 1)) / columns;
+          // Padding, the name (two lines, or the 44 px photo), the price
+          // and the stock, each at the reader's text size.
+          final needed = 20 +
+              math.max(44.0, scaler.scale(14) * 1.43 * 2) +
+              scaler.scale(14) * 1.43 +
+              scaler.scale(12) * 1.34 +
+              10;
+          return GridView(
+            key: const Key('sale-tiles'),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              mainAxisExtent: math.max(tileWidth / 1.45, needed),
+            ),
+            children: [for (final p in pickable) _tile(context, p)],
+          );
+        }),
         // Lines typed on the spot, already in the basket.
         for (final l in _lines)
           if (l.productId == null)
@@ -1061,56 +1085,69 @@ class _SaleFlowState extends State<SaleFlow> {
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              IconButton.filledTonal(
-                key: ValueKey('sale-minus-${l.productId ?? l.name}'),
-                iconSize: 28,
-                onPressed: l.qty > 1 ? () => step(-1) : null,
-                icon: const Icon(Icons.remove),
+          LayoutBuilder(builder: (context, box) {
+            final priceField = TextField(
+              key: ValueKey('sale-price-${l.productId ?? l.name}'),
+              controller: l.price,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
+              ],
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: context.tr('Prix unitaire'),
+                border: const OutlineInputBorder(),
+                isDense: true,
               ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 72,
-                child: TextField(
-                  key: ValueKey('sale-qty-${l.productId ?? l.name}'),
-                  controller: l.quantity,
-                  textAlign: TextAlign.center,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                      border: OutlineInputBorder(), isDense: true),
+            );
+            // The price beside the stepper while « 1 250 000 » fits there;
+            // under it otherwise (UI audit S-2: 18 500 read « 185 » at 1.3).
+            final digits = MediaQuery.textScalerOf(context).scale(16) * 0.6 * 9 + 28;
+            final beside = box.maxWidth - 196 >= digits;
+            final stepper = Row(
+              children: [
+                IconButton.filledTonal(
+                  key: ValueKey('sale-minus-${l.productId ?? l.name}'),
+                  iconSize: 28,
+                  onPressed: l.qty > 1 ? () => step(-1) : null,
+                  icon: const Icon(Icons.remove),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                key: ValueKey('sale-plus-${l.productId ?? l.name}'),
-                iconSize: 28,
-                onPressed: () => step(1),
-                icon: const Icon(Icons.add),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  key: ValueKey('sale-price-${l.productId ?? l.name}'),
-                  controller: l.price,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
-                  ],
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    labelText: context.tr('Prix unitaire'),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 72,
+                  child: TextField(
+                    key: ValueKey('sale-qty-${l.productId ?? l.name}'),
+                    controller: l.quantity,
+                    textAlign: TextAlign.center,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(), isDense: true),
                   ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  key: ValueKey('sale-plus-${l.productId ?? l.name}'),
+                  iconSize: 28,
+                  onPressed: () => step(1),
+                  icon: const Icon(Icons.add),
+                ),
+                if (beside) ...[
+                  const SizedBox(width: 12),
+                  Expanded(child: priceField),
+                ],
+              ],
+            );
+            return beside
+                ? stepper
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [stepper, const SizedBox(height: 10), priceField],
+                  );
+          }),
           const SizedBox(height: 6),
           Align(
             alignment: Alignment.centerRight,

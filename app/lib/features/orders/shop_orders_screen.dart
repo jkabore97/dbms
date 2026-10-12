@@ -26,6 +26,7 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/format/money_text.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -679,9 +680,12 @@ class _OrderCard extends StatelessWidget {
                                   ?.copyWith(fontWeight: FontWeight.w700)),
                         ),
                       ),
-                    Text(money.format(l.total),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant)),
+                    Flexible(
+                      child: MoneyText(money.format(l.total),
+                          alignment: Alignment.centerRight,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant)),
+                    ),
                   ],
                 ),
               ),
@@ -692,9 +696,14 @@ class _OrderCard extends StatelessWidget {
                     child: Text(context.tr('Total'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w600))),
-                Text(money.format(order.total),
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                // Whole on one line, shrunk if it must (R-1).
+                Flexible(
+                  child: MoneyText(money.format(order.total),
+                      key: Key('order-total-${order.id}'),
+                      alignment: Alignment.centerRight,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                ),
               ],
             ),
             // What the courier collects for the run (061): the shop sees it
