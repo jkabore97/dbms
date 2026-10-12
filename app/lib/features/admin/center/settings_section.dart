@@ -75,6 +75,9 @@ const platformSettingDefs = <SettingDef>[
   // 128 (review S2): the one account, besides the platform's admins, whose
   // businesses a test (sandbox) purchase turns Pro — App Review's.
   SettingDef('store_review_account', 'pro', SettingType.text),
+  // 130 (audit M4): empty, any business that account owns; ids (commas or
+  // spaces between them), only those.
+  SettingDef('store_review_orgs', 'pro', SettingType.text),
   SettingDef('pro_features', 'pro', SettingType.list, options: [
     'payroll', 'team_access', 'analytics', 'accounting', 'currencies', 'tontines',
     'vitrine_plus', 'delivery', 'online_payment',
@@ -176,6 +179,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
         context.tr('Abonnement dans les applications (App Store, Google Play)'),
       'store_review_account' =>
         context.tr('Compte de test des boutiques (achats sandbox acceptés)'),
+      'store_review_orgs' => context.tr(
+          'Entreprises de ce compte de test (identifiants ; vide : toutes)'),
       'pro_features' => context.tr('Outils réservés à Mara Pro'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),

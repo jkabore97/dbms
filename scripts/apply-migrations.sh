@@ -34,6 +34,20 @@ create table if not exists kaj_migrations (
 );
 alter table kaj_migrations enable row level security;
 revoke all on kaj_migrations from public;
+-- Supabase gives a table made in public ALL for anon and authenticated
+-- (its default privileges): taken back, so no account can pre-insert a
+-- migration (this script would then skip it) or delete one (it would run
+-- again). Row security with no policy stops them too; both, on purpose
+-- (SEC_AUDIT_2 M1; 130 does the same on a database made before this).
+do \$\$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on kaj_migrations from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on kaj_migrations from authenticated;
+    end if;
+end \$\$;
 " >/dev/null
 
 count="$("${psql_q[@]}" -c 'select count(*) from kaj_migrations')"

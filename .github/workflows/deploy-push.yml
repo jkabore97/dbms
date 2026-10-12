@@ -23,6 +23,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Production secrets through the `production` environment (SEC_AUDIT_2
+    # H1): once the owner limits it to main, no other branch reads them.
+    # Until then it is created on first use, unrestricted — runs as before.
+    environment: production
     timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}

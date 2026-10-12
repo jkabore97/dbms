@@ -32,11 +32,26 @@
 // and two plain settings in wrangler.toml: WHATSAPP_LANGUAGE (the
 // template's language, fr) and GRAPH_API_VERSION.
 //
+// and, optional (130, SEC_AUDIT_2 M6), the database's ration:
+//
+//   SUPABASE_URL               the project's address (a variable)
+//   SUPABASE_SERVICE_ROLE_KEY  used for one function, otp_send_allow(),
+//                              granted to the service role alone
+//
 // The code is never logged, never kept, and sent nowhere but to Meta. A
 // code goes only to an account that already exists by e-mail or Google —
 // the app's only ways in — so the hook cannot be used to open accounts by
-// phone or to send messages at Mara's expense to numbers nobody signed up
-// with.
+// phone. But the number is whatever the account typed: any signed-in
+// account could make Mara pay for messages to any number. So every code
+// is rationed before it goes (otpGate): at most 3 per number per 10
+// minutes and 10 a day, 5 per account per 10 minutes and 20 a day. The
+// database counts (130's otp_send_allow, md5 of the number, two days);
+// without it — not configured, 130 not applied yet, unreachable — this
+// Worker's own memory counts the same limits (per isolate: weaker, never
+// none). Over the limit the code is not sent, the log says which limit
+// (never the number), and the shopper reads only « too many codes ».
+// Supabase's hook carries no client address: the limits are per number
+// and per account; Supabase's own « SMS per hour » is the global cap.
 
 const HOOK_TOLERANCE_SECONDS = 5 * 60;
 
@@ -86,6 +101,13 @@ export async function onSendSms(request, env, fetchImpl) {
   const target = hookTarget(payload);
   if (target.error) return hookError(target.status, target.error);
 
+  const gate = await otpGate(env, target.userId, target.to, fetchImpl);
+  if (!gate.ok) {
+    // Which limit, and who counted — never the number or the code.
+    console.log(`whatsapp-otp: refused, over the limit (${gate.reason || "limit"}, ${gate.by})`);
+    return hookError(429, "Trop de codes envoyés. Réessayez plus tard.");
+  }
+
   let answer;
   try {
     answer = await fetchImpl(graphUrl(env), {
@@ -126,7 +148,84 @@ export function hookTarget(payload) {
   if (phone.length < 8 || phone.length > 15) {
     return { status: 422, error: "Numéro de téléphone incomplet." };
   }
-  return { to: phone, otp };
+  const id = String(user.id ?? "");
+  return { to: phone, otp, userId: UUID.test(id) ? id : null };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// ----------------------------------------------------------------
+// The ration (130, SEC_AUDIT_2 M6)
+// ----------------------------------------------------------------
+
+/// The limits — the same as 130's otp_send_allow().
+export const LIMITS = Object.freeze({
+  phonePer10Minutes: 3,
+  phonePerDay: 10,
+  accountPer10Minutes: 5,
+  accountPerDay: 20,
+});
+
+const TEN_MINUTES = 10 * 60 * 1000;
+const DAY = 24 * 60 * 60 * 1000;
+
+/// May a code go to this number for this account now? The database
+/// decides when it can be asked; otherwise this isolate's memory does.
+/// { ok, by: "database" | "memory", reason? }.
+export async function otpGate(env, userId, phone, fetchImpl, now = Date.now()) {
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const answer = await fetchImpl(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/rest/v1/rpc/otp_send_allow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ p_phone: phone, p_user: userId }),
+      });
+      if (answer.ok) {
+        const body = await answer.json().catch(() => null);
+        if (body && typeof body.ok === "boolean") {
+          return { ok: body.ok, by: "database", reason: typeof body.reason === "string" ? body.reason : undefined };
+        }
+      }
+      // 404: 130 not applied yet; anything else: the database unwell.
+      console.log(`whatsapp-otp: the ration answered ${answer.status}; counted in memory`);
+    } catch {
+      console.log("whatsapp-otp: the ration did not answer; counted in memory");
+    }
+  }
+  return { ...memoryAllow(phone, userId, now), by: "memory" };
+}
+
+const memory = new Map();
+
+/// For the tests: a fresh isolate.
+export function resetMemoryLimits() {
+  memory.clear();
+}
+
+/// The same limits, counted in this isolate's memory.
+export function memoryAllow(phone, userId, now = Date.now()) {
+  if (memory.size > 5000) memory.clear();
+  const recent = (key) => {
+    const kept = (memory.get(key) || []).filter((t) => now - t < DAY);
+    memory.set(key, kept);
+    return kept;
+  };
+  const within = (list, ms) => list.filter((t) => now - t < ms).length;
+  const byPhone = recent(`p:${phone}`);
+  if (within(byPhone, TEN_MINUTES) >= LIMITS.phonePer10Minutes) return { ok: false, reason: "phone_10_minutes" };
+  if (byPhone.length >= LIMITS.phonePerDay) return { ok: false, reason: "phone_day" };
+  const byAccount = userId ? recent(`u:${userId}`) : null;
+  if (byAccount) {
+    if (within(byAccount, TEN_MINUTES) >= LIMITS.accountPer10Minutes) return { ok: false, reason: "account_10_minutes" };
+    if (byAccount.length >= LIMITS.accountPerDay) return { ok: false, reason: "account_day" };
+    byAccount.push(now);
+  }
+  byPhone.push(now);
+  return { ok: true };
 }
 
 /// The authentication template, its code in the body and in the « copy

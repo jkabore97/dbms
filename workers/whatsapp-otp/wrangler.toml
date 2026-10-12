@@ -8,7 +8,9 @@
 #
 #   secrets   WHATSAPP_TOKEN   WHATSAPP_PHONE_ID   WHATSAPP_TEMPLATE
 #             SEND_SMS_HOOK_SECRET
+#             SUPABASE_SERVICE_ROLE_KEY (130: the ration, otp_send_allow)
 #   vars      WHATSAPP_LANGUAGE   GRAPH_API_VERSION   (below)
+#             SUPABASE_URL (130: passed with --var at deploy)
 
 name = "kaj-whatsapp-otp"
 main = "src/index.js"

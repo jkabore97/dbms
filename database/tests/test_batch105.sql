@@ -749,6 +749,8 @@ declare
         'store_billing_on',
         -- 128: read by store_sandbox_allowed(), which store_settle asks.
         'store_review_account',
+        -- 130 (M4): read by store_sandbox_allowed() too.
+        'store_review_orgs',
         'pro_features',
         'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
         'free_history_months', 'vitrine_free_basics',

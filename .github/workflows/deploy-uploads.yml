@@ -26,6 +26,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Production secrets through the `production` environment (SEC_AUDIT_2
+    # H1): once the owner limits it to main, no other branch reads them.
+    # Until then it is created on first use, unrestricted — runs as before.
+    environment: production
     # Every job here normally finishes in two to three minutes. The
     # default is six hours, and a stalled runner spends all of it
     # looking like a slow build -- which is how a deploy that never

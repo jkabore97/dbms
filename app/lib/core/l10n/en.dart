@@ -6365,6 +6365,9 @@ const enStrings = <String, String>{
   // 130 review fixes: the store's refusals by their code, the deletion's.
   'Compte de test des boutiques (achats sandbox acceptés)':
       'Store test account (sandbox purchases accepted)',
+  // 130 (audit M4): the test account's businesses, by id.
+  'Entreprises de ce compte de test (identifiants ; vide : toutes)':
+      'That test account\'s businesses (ids; empty: all of them)',
   'Me reconnecter':
       'Sign in again',
   'Cet achat a été fait pour une autre entreprise.':
