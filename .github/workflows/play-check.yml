@@ -1,0 +1,30 @@
+# Temporary: runs the payments Worker's own Google code (workers/pay/src/
+# google.js) with the real key against a fake purchase token, to see how
+# Google answers. Nothing is bought or changed. Removed once it has run.
+name: Play check
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/play-check.yml]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ask Google as the Worker does
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          cd workers/pay
+          cat > /tmp/check.mjs <<'JS'
+          import { googleToken, googleLookup } from "/home/runner/work/dbms/dbms/workers/pay/src/google.js";
+          const env = { PLAY_SERVICE_ACCOUNT_JSON: process.env.PLAY_SERVICE_ACCOUNT_JSON };
+          try { const t = await googleToken(env); console.log("token ok", t.length); }
+          catch (e) { console.log("token failed", e.message, e.status, e.code, e.detail); }
+          try { await googleLookup(env, "fake-token-for-a-check"); console.log("lookup ok?"); }
+          catch (e) { console.log("lookup failed:", e.message, "| status", e.status, "| code", e.code, "| detail", e.detail ?? e.upstream ?? ""); }
+          JS
+          node /tmp/check.mjs
