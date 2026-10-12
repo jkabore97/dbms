@@ -101,13 +101,16 @@ class _ShareSheetState extends State<_ShareSheet> {
     }
     setState(() => _busy = false);
     final navigator = Navigator.of(context);
+    // Built now, while this sheet is alive: the preview's route rebuilds
+    // during its exit, after the sheet is gone (UI audit V-2).
+    final text = ShareVitrine.message(context, shop);
     await navigator.push(MaterialPageRoute<void>(
       fullscreenDialog: true,
       builder: (_) => StatusPreview(
         card: StatusCard(
             shop: shop, items: chosen, cover: cover, photos: photos),
         name: '${shop.slug}-mara.png',
-        text: ShareVitrine.message(context, shop),
+        text: text,
       ),
     ));
     if (mounted) navigator.pop();
@@ -131,8 +134,11 @@ class _ShareSheetState extends State<_ShareSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Scrolls when taller than the screen (iPhone SE at large text, UI
+    // audit V-1): every button stays reachable.
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
+        key: const Key('share-scroll'),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(
           key: const Key('share-vitrine'),
@@ -141,6 +147,8 @@ class _ShareSheetState extends State<_ShareSheet> {
           children: [
             Text(context.tr('Partager {name}', {'name': widget.shop.name}),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
@@ -149,8 +157,8 @@ class _ShareSheetState extends State<_ShareSheet> {
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 18),
-            SizedBox(
-              height: 56,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
               child: FilledButton.icon(
                 key: const Key('share-status'),
                 style: FilledButton.styleFrom(
@@ -166,8 +174,8 @@ class _ShareSheetState extends State<_ShareSheet> {
               ),
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              height: 52,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: OutlinedButton.icon(
                 key: const Key('share-contact'),
                 onPressed: _busy ? null : _contact,
@@ -282,7 +290,10 @@ class StatusCard extends StatelessWidget {
         );
     // Its own text style: the card is drawn wherever it is captured, and
     // must not borrow (or miss) the screen's.
-    return Material(
+    // A picture of a fixed size: drawn at the card's own text size, never
+    // the reader's (UI audit V-3: it overflowed at 2.0).
+    return MediaQuery.withNoTextScaling(
+      child: Material(
       type: MaterialType.transparency,
       child: DefaultTextStyle(
       style: TextStyle(fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily),
@@ -412,6 +423,7 @@ class StatusCard extends StatelessWidget {
         ),
       ),
     ),
+      ),
       ),
     );
   }

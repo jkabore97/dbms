@@ -848,6 +848,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch129.sql
 
+      - name: "Prove the second security audit's database fixes — the migrations' ledger locked (row security, nothing for PUBLIC, anon or authenticated: no pre-insert, no delete); the new account's bell in plain words (no link, tag, control or invisible mark, at most 60 characters; the contact kept for the search; older bells rewritten); a sandbox purchase only for the confirmed App Review account's businesses, narrowed by store_review_orgs; the WhatsApp code rationed per number and per account, the service role's alone; « Mara Pro est actif » once per subscription, not per renewal; shop, farm and association (130)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch130.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

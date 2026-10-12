@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../notify/notifications_screen.dart' show ShopperBell;
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -2183,16 +2184,42 @@ class _Window extends StatelessWidget {
                         SizedBox(width: wide ? 18 : 14),
                       ],
                       Expanded(
-                        child: Text(
-                          shop.name,
-                          style: TextStyle(
-                            fontSize: wide ? 40 : 30,
-                            height: 1.1,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.6,
-                            color: ShopStyle.ink,
-                          ),
-                        ),
+                        // Never a word cut in the middle (UI audit SH-2:
+                        // « Boutiqu / e Awa » on an iPhone SE at 1.3): the
+                        // size comes down until the longest word fits.
+                        child: LayoutBuilder(builder: (context, box) {
+                          final base = wide ? 40.0 : 30.0;
+                          TextStyle at(double size) => TextStyle(
+                                fontSize: size,
+                                height: 1.1,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.6,
+                                color: ShopStyle.ink,
+                              );
+                          final scaler = MediaQuery.textScalerOf(context);
+                          final words = shop.name.split(RegExp(r'\s+'));
+                          var size = base;
+                          while (size > 16) {
+                            var widest = 0.0;
+                            for (final w in words) {
+                              final painter = TextPainter(
+                                text: TextSpan(text: w, style: at(size)),
+                                textDirection: Directionality.of(context),
+                                textScaler: scaler,
+                                maxLines: 1,
+                              )..layout();
+                              widest = math.max(widest, painter.width);
+                              painter.dispose();
+                            }
+                            if (widest <= box.maxWidth) break;
+                            size -= 2;
+                          }
+                          return Text(
+                            shop.name,
+                            key: const Key('shop-title'),
+                            style: at(size),
+                          );
+                        }),
                       ),
                       ?heart,
                     ],
@@ -2920,7 +2947,7 @@ class _ItemTile extends StatelessWidget {
         container: true,
         button: true,
         label: label,
-        hint: "Voir l'article",
+        hint: context.tr('Voir l\'article'),
         onTap: onOpen,
         child: InkWell(
           onTap: onOpen,
@@ -3228,9 +3255,10 @@ class _QuickAdd extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onAdd,
+          // 44: a full tap target (UI audit SH-6).
           child: SizedBox(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             child: Icon(Icons.add, size: 20, color: scheme.onPrimary),
           ),
         ),

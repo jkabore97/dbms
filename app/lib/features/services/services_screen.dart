@@ -20,6 +20,7 @@ import '../retail/product_photo.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -124,15 +125,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final slug = widget.org.slug;
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('Mes services')),
+        title: AppBarTitle(context.tr('Mes services')),
         actions: [
           if (slug != null && slug.isNotEmpty)
-            TextButton.icon(
-              key: const Key('services-see-vitrine'),
-              onPressed: () => context.push(Routes.storefront(slug)),
-              icon: const Icon(Icons.storefront_outlined),
-              label: Text(context.tr('Ma vitrine')),
-            ),
+            labelledBarAction(context,
+                key: const Key('services-see-vitrine'),
+                onPressed: () => context.push(Routes.storefront(slug)),
+                icon: Icons.storefront_outlined,
+                label: context.tr('Ma vitrine')),
           bellRoom,
         ],
       ),

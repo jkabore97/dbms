@@ -30,10 +30,13 @@ const HOSTS = {
 };
 
 export class StoreError extends Error {
-  constructor(message, status = 400, code = "") {
+  /// [detail]: what the store itself said — for the Worker's log only,
+  /// never answered to the app (SEC_AUDIT_2 L1).
+  constructor(message, status = 400, code = "", detail = "") {
     super(message);
     this.status = status;
     this.code = code;
+    this.detail = detail;
   }
 }
 
@@ -69,7 +72,7 @@ async function appleGet(env, path, io) {
     }
     const text = await response.text();
     if (!response.ok) {
-      throw new StoreError(`App Store answered ${response.status}`, 502, text.slice(0, 200));
+      throw new StoreError(`App Store answered ${response.status}`, 502, "upstream", text.slice(0, 200));
     }
     return { environment, body: JSON.parse(text) };
   }

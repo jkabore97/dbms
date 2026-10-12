@@ -29,6 +29,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -430,26 +431,30 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('Articles')),
+        title: AppBarTitle(context.tr('Articles')),
+        // On a small phone the view switch stays, the rest fold into one
+        // menu (B-3).
         actions: [
-          IconButton(
-            key: const Key('products-view'),
-            onPressed: _toggleView,
-            icon: Icon(_cards ? Icons.view_list_outlined : Icons.grid_view),
-            tooltip: _cards ? context.tr('Afficher en liste') : context.tr('Afficher en cartes'),
-          ),
-          if (widget.access.canEdit('products'))
-            IconButton(
-              onPressed: _bulkAdd,
-              icon: const Icon(Icons.playlist_add),
-              tooltip: context.tr('Ajout multiple'),
+          ...barActions(context, moreLabel: context.tr('Plus d\'actions'), [
+            BarAction(
+              key: const Key('products-view'),
+              onPressed: _toggleView,
+              icon: _cards ? Icons.view_list_outlined : Icons.grid_view,
+              label: _cards ? context.tr('Afficher en liste') : context.tr('Afficher en cartes'),
             ),
-          if (widget.capture != null)
-            IconButton(
-              onPressed: _scan,
-              icon: const Icon(Icons.qr_code_scanner),
-              tooltip: context.tr('Scanner un code-barres'),
-            ),
+            if (widget.access.canEdit('products'))
+              BarAction(
+                onPressed: _bulkAdd,
+                icon: Icons.playlist_add,
+                label: context.tr('Ajout multiple'),
+              ),
+            if (widget.capture != null)
+              BarAction(
+                onPressed: _scan,
+                icon: Icons.qr_code_scanner,
+                label: context.tr('Scanner un code-barres'),
+              ),
+          ]),
           bellRoom,
         ],
       ),
@@ -501,8 +506,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             style: theme.textTheme.titleMedium,
                           ),
                         ),
-                        Text(context.tr('Valeur : {value}', {'value': _money.format(stockValue)}),
-                            style: theme.textTheme.titleMedium),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(context.tr('Valeur : {value}', {'value': _money.format(stockValue)}),
+                              textAlign: TextAlign.right,
+                              style: theme.textTheme.titleMedium),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),

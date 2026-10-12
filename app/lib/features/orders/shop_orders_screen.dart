@@ -26,6 +26,8 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/format/money_text.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -324,7 +326,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     return Scaffold(
         appBar: AppBar(
           // An association is asked for its services, not sold to (098).
-          title: Text(widget.org.profile == 'association' ||
+          title: AppBarTitle(widget.org.profile == 'association' ||
                   widget.org.profile == 'church'
               ? context.tr('Demandes')
               : context.tr('Commandes')),
@@ -637,7 +639,8 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Text(phone, style: theme.textTheme.bodyMedium),
+                  // Gives way to its two buttons at large text (R-2).
+                  Flexible(child: Text(phone, style: theme.textTheme.bodyMedium)),
                   IconButton(
                     tooltip: context.tr('Appeler'),
                     icon: const Icon(Icons.call_outlined, size: 20),
@@ -679,9 +682,12 @@ class _OrderCard extends StatelessWidget {
                                   ?.copyWith(fontWeight: FontWeight.w700)),
                         ),
                       ),
-                    Text(money.format(l.total),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant)),
+                    Flexible(
+                      child: MoneyText(money.format(l.total),
+                          alignment: Alignment.centerRight,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant)),
+                    ),
                   ],
                 ),
               ),
@@ -692,9 +698,14 @@ class _OrderCard extends StatelessWidget {
                     child: Text(context.tr('Total'),
                         style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.w600))),
-                Text(money.format(order.total),
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                // Whole on one line, shrunk if it must (R-1).
+                Flexible(
+                  child: MoneyText(money.format(order.total),
+                      textKey: Key('order-total-${order.id}'),
+                      alignment: Alignment.centerRight,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                ),
               ],
             ),
             // What the courier collects for the run (061): the shop sees it
@@ -824,6 +835,8 @@ class _CashSheetState extends State<_CashSheet> {
     setState(() => _busy = c.orderId);
     try {
       await widget.retail.confirmCashReceived(c.orderId);
+      // The sheet may have been closed while the call was out (R-3).
+      if (!mounted) return;
       setState(() {
         _left.remove(c);
         _changed = true;

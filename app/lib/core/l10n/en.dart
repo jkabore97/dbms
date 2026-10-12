@@ -163,7 +163,7 @@ const enStrings = <String, String>{
   'Aucun article ne correspond — tapez le nom ci-dessous pour le vendre quand même.':
       'No item matches — type the name below to sell it anyway.',
   'Aucun article ne répond à « {query} ». Essayez un autre mot.':
-      'No item matches « {query} ». Try another word.',
+      'No item matches “{query}”. Try another word.',
   'Aucun article pour l\'instant.\nEnregistrez une entrée de stock, ou vendez directement — l\'article sera créé tout seul.':
       'No items yet.\nRecord a stock delivery, or sell directly — the item will be created by itself.',
   'Aucun article prêt : mettez sur la vitrine un article avec un prix et du stock.':
@@ -323,9 +323,9 @@ const enStrings = <String, String>{
   'Changer le mot de passe':
       'Change the password',
   'Chaque lundi, les 3 premiers de chaque ligue gagnent des cauris, le badge « Top 3 » sur leur vitrine pour la semaine, et le premier est mis en avant 7 jours.':
-      'Every Monday, the top 3 of each league win cauris, the « Top 3 » badge on their vitrine for the week, and the winner is featured for 7 days.',
+      'Every Monday, the top 3 of each league win cauris, the “Top 3” badge on their vitrine for the week, and the winner is featured for 7 days.',
   'Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Mara le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».':
-      'Each member has a code on their phone. Set the longest wait before Mara asks for it again: nobody on the team can choose longer, nor « Never ».',
+      'Each member has a code on their phone. Set the longest wait before Mara asks for it again: nobody on the team can choose longer, nor “Never”.',
   'Chargement de vos entreprises…':
       'Loading your businesses…',
   'Chargement…':
@@ -711,7 +711,7 @@ const enStrings = <String, String>{
   'Identifiant marchand Wave':
       'Wave merchant ID',
   'Ils voient « une boutique de … »':
-      'They see « a shop in … »',
+      'They see “a shop in …”',
   'Impayées':
       'Unpaid',
   'Impossible d\'ouvrir WhatsApp sur cet appareil.':
@@ -783,7 +783,7 @@ const enStrings = <String, String>{
   'La caméra n\'est pas disponible : {name}':
       'The camera is not available: {name}',
   'La commande de {customerName} passe « en route ». Vous encaissez la livraison ; marquez-la livrée une fois remise.':
-      '{customerName}\'s order goes « on the way ». You collect the payment; mark it delivered once handed over.',
+      '{customerName}\'s order goes “on the way”. You collect the payment; mark it delivered once handed over.',
   'La commande est annulée et vous rapportez le colis à la boutique. La boutique et le client sont prévenus.':
       'The order is cancelled and you bring the parcel back to the shop. The shop and the customer are told.',
   'La confiance ne s\'achète pas et ne se compare pas : elle se lit dans vos comptes. Tenez-les chaque semaine et justifiez chaque dépense : c\'est ce qu\'un donateur regarde.':
@@ -877,7 +877,7 @@ const enStrings = <String, String>{
   'Les plus gros gains de la semaine':
       'The week\'s biggest earners',
   'Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Mara Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.':
-      'Owners subscribe by card, at the price above, renewed every month or every year. To open once the Stripe keys are installed (README, « Mara Pro by card »). A new price applies to new subscriptions.',
+      'Owners subscribe by card, at the price above, renewed every month or every year. To open once the Stripe keys are installed (README, “Mara Pro by card”). A new price applies to new subscriptions.',
   'Les ventes déjà faites gardent l\'ancien nom.':
       'Sales already made keep the old name.',
   'Les vitrines':
@@ -1149,7 +1149,7 @@ const enStrings = <String, String>{
   'Outils':
       'Tools',
   'Ouvrez Équipe et accès, puis la personne, puis « Déconnecter partout » : tous ses appareils devront se reconnecter avec le mot de passe.':
-      'Open Team and access, then the person, then « Sign out everywhere »: all their devices will have to sign in again with the password.',
+      'Open Team and access, then the person, then “Sign out everywhere”: all their devices will have to sign in again with the password.',
   'Ouvrir':
       'Open',
   'Ouvrir l\'application d\'authentification':
@@ -1289,7 +1289,7 @@ const enStrings = <String, String>{
   'Plus tard':
       'Later',
   'Plus tard : Stock › « + ».':
-      'Later: Stock › « + ».',
+      'Later: Stock › “+”.',
   'Politique de confidentialité':
       'Privacy policy',
   'Ponte (7 j)':
@@ -1309,7 +1309,7 @@ const enStrings = <String, String>{
   'Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.':
       'To pay, contact Mara: the payment number will be given to you directly.',
   'Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.':
-      'So customers find you in the directory, « near me » and on the map. Optional.',
+      'So customers find you in the directory, “near me” and on the map. Optional.',
   'Pour un téléphone, une radio, un panneau…':
       'For a phone, a radio, a panel…',
   'Pourquoi la livraison échoue ?':
@@ -1351,7 +1351,7 @@ const enStrings = <String, String>{
   'Profil':
       'Profile',
   'Proposer « Payer par carte »':
-      'Offer « Pay by card »',
+      'Offer “Pay by card”',
   'Propriétaire':
       'Owner',
   'Près de moi':
@@ -1479,7 +1479,7 @@ const enStrings = <String, String>{
   'Rien de lisible sur cette page. Reprenez la photo de plus près, bien éclairée.':
       'Nothing readable on this page. Take the photo again closer, in good light.',
   'Rien en vente pour le moment. « Mettre en vente » : un plateau d\'œufs, un sac de maïs, une pintade…':
-      'Nothing for sale yet. « Put on sale »: a tray of eggs, a bag of maize, a guinea fowl…',
+      'Nothing for sale yet. “Put on sale”: a tray of eggs, a bag of maize, a guinea fowl…',
   'Rien enregistré aujourd\'hui.\nAppuyez sur le bouton pour commencer.':
       'Nothing recorded today.\nPress the button to start.',
   'Rien enregistré cette semaine.':
@@ -1491,7 +1491,7 @@ const enStrings = <String, String>{
   'Rien à afficher. Le journal enregistre les changements d\'accès, de structure et de plan comptable à partir du moment où il a été installé — il ne remonte pas plus loin.':
       'Nothing to show. The log records changes to access, structure and the chart of accounts from the moment it was installed — it does not go further back.',
   'Rien à récolter pour l\'instant. Ouvrez une culture dans « Élevage et cultures » — cela demande le réseau.':
-      'Nothing to harvest yet. Open a crop in « Livestock and crops » — this needs the network.',
+      'Nothing to harvest yet. Open a crop in “Livestock and crops” — this needs the network.',
   'Règlement des livreurs':
       'Courier settlements',
   'Règlement du mois':
@@ -1615,7 +1615,7 @@ const enStrings = <String, String>{
   'Taille, goût, origine — ce que le client demande au comptoir.':
       'Size, taste, origin — what the customer asks at the counter.',
   'Tapez « {name} » pour confirmer.':
-      'Type « {name} » to confirm.',
+      'Type “{name}” to confirm.',
   'Taux':
       'Rate',
   'Taux de change':
@@ -1639,9 +1639,9 @@ const enStrings = <String, String>{
   'Touchez la carte pour déplacer le repère sur la porte.':
       'Tap the map to move the pin onto the door.',
   'Touchez un article pour le voir, « + » pour l\'ajouter.':
-      'Tap an item to see it, « + » to add it.',
+      'Tap an item to see it, “+” to add it.',
   'Touchez « Reçu » quand le livreur vous a remis l\'argent de la commande.':
-      'Tap « Received » when the courier has handed you the order\'s money.',
+      'Tap “Received” when the courier has handed you the order\'s money.',
   'Tout':
       'All',
   'Tout effacer':
@@ -1689,7 +1689,7 @@ const enStrings = <String, String>{
   'Un nom, un prix, combien vous en avez.':
       'A name, a price, how many you have.',
   'Un propriétaire a tapé « J\'ai payé ». Vérifiez le paiement dans Wave, passez l\'entreprise en Pro depuis sa formule, puis marquez la demande traitée.':
-      'An owner tapped « I\'ve paid ». Check the payment in Wave, switch the business to Pro from its plan, then mark the request handled.',
+      'An owner tapped “I\'ve paid”. Check the payment in Wave, switch the business to Pro from its plan, then mark the request handled.',
   'Un rapport est un chiffre à un instant. Mieux vaut pas de chiffre du tout que le chiffre de la semaine dernière présenté comme celui d\'aujourd\'hui.':
       'A report is a figure at a moment. Better no figure at all than last week\'s shown as today\'s.',
   'Un téléphone perdu ou volé':
@@ -1977,7 +1977,7 @@ const enStrings = <String, String>{
   'Indiquez où livrer.':
       'Say where to deliver.',
   'L\'adresse « {_slug} » est déjà utilisée par une autre activité.':
-      'The address « {_slug} » is already used by another business.',
+      'The address “{_slug}” is already used by another business.',
   'L\'annuaire a besoin d\'une connexion.':
       'The directory needs a connection.',
   'L\'annuaire n\'a pas pu être chargé. Vérifiez le réseau.':
@@ -2243,7 +2243,7 @@ const enStrings = <String, String>{
   'Journée déjà clôturée — vous pouvez la revalider.':
       'Day already closed — you can confirm it again.',
   'L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé ». Il lui faut une photo, un prix et du stock.':
-      'The item appears at the top of « Featured » on the home page, marked « Sponsored ». It needs a photo, a price and stock.',
+      'The item appears at the top of “Featured” on the home page, marked “Sponsored”. It needs a photo, a price and stock.',
   'L\'envoi de photos n\'est pas disponible sur cette installation.':
       'Sending photos is not available on this installation.',
   'La course commence.':
@@ -2393,7 +2393,7 @@ const enStrings = <String, String>{
   'Salaire mensuel':
       'Monthly salary',
   'Sans nom, ce sera « Transfert »':
-      'Without a name, it will be « Transfer »',
+      'Without a name, it will be “Transfer”',
   'Scanner un code':
       'Scan a code',
   'Suspendre gèle toutes les écritures sans rien supprimer. À utiliser pour un impayé, un litige ou un abus, le temps de le régler.':
@@ -2427,7 +2427,7 @@ const enStrings = <String, String>{
   'Une page publique de la boutique, avec les articles que vous choisissez d\'afficher — photo et prix — à partager sur WhatsApp. Les clients commandent depuis la vitrine.':
       'A public page for the shop, with the items you choose to show — photo and price — to share on WhatsApp. Customers order from the vitrine.',
   'Une page publique de la ferme, avec ce que vous mettez « À vendre » — photo, prix, à l\'unité ou au plateau — à partager sur WhatsApp. Les clients commandent, même à l\'avance pour une bande ou une récolte à venir.':
-      'A public page for the farm, with what you put « For sale » — photo, price, by the unit or the tray — to share on WhatsApp. Customers order, even in advance for a batch or a harvest to come.',
+      'A public page for the farm, with what you put “For sale” — photo, price, by the unit or the tray — to share on WhatsApp. Customers order, even in advance for a batch or a harvest to come.',
   'Vitrine {score} % · {orders}/3 commandes':
       'Vitrine {score} % · {orders}/3 orders',
   'Votre accès porte sur les totaux. Le détail des bandes ne vous est pas communiqué.':
@@ -2439,7 +2439,7 @@ const enStrings = <String, String>{
   'Votre accès porte sur les totaux. Le détail du stock ne vous est pas communiqué.':
       'Your access covers the totals. The detail of the stock is not shared with you.',
   'Votre article est à la une. Ses vues et commandes s\'affichent dans « Mettre en avant ».':
-      'Your item is featured. Its views and orders show in « Feature ».',
+      'Your item is featured. Its views and orders show in “Feature”.',
   'Votre code':
       'Your code',
   'Votre compte est créé.':
@@ -2557,7 +2557,7 @@ const enStrings = <String, String>{
   'Choisissez au moins un jour.': 'Choose at least one day.',
   'AVEC MARA PRO': 'WITH MARA PRO',
   'La présentation, les articles à la une et « Ouvert maintenant ».':
-      'The layout, featured articles and « Open now ».',
+      'The layout, featured articles and “Open now”.',
   'Présentation des articles': 'How articles are shown',
   'Grille': 'Grid',
   'Grandes photos': 'Large photos',
@@ -2576,7 +2576,7 @@ const enStrings = <String, String>{
   '{n} vitrine(s) recréée(s).': '{n} vitrine(s) recreated.',
   'Vitrines d\'exemple': 'Example vitrines',
   'Des boutiques de la plateforme, pour montrer à quoi ressemble une vitrine pleine. Elles ne sont pas sur la carte, affichent « Pas à proximité » et ne prennent aucune commande.':
-      'Shops run by the platform, to show what a full vitrine looks like. They are not on the map, show « Not nearby » and take no orders.',
+      'Shops run by the platform, to show what a full vitrine looks like. They are not on the map, show “Not nearby” and take no orders.',
   '{items} articles · {photos} avec photo · {state}':
       '{items} articles · {photos} with a photo · {state}',
   'sur la rue': 'on the street',
@@ -2584,7 +2584,7 @@ const enStrings = <String, String>{
   'Gérer': 'Manage',
   'Recréer les vitrines manquantes': 'Recreate the missing vitrines',
   '« Gérer » vous en donne les clés : articles, photos, prix et « Habiller ma vitrine » s\'y modifient comme dans toute entreprise.':
-      '« Manage » gives you the keys: articles, photos, prices and « Dress my vitrine » are edited as in any business.',
+      '“Manage” gives you the keys: articles, photos, prices and “Dress my vitrine” are edited as in any business.',
   'Pas à proximité': 'Not nearby',
   'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.':
       'This shop takes no orders near you. It is a Mara example vitrine: look, get inspired, and order from the shops in your neighbourhood.',
@@ -2686,7 +2686,7 @@ const enStrings = <String, String>{
   'Avec {n} produits, votre vitrine se montre à tout le monde.': 'With {n} products, your vitrine shows itself to everyone.',
   'Une entreprise vous nomme parrain. Quand elle décolle, +{referral} cauris de plus.': 'A business names you as its sponsor. When it takes off, +{referral} more cauris.',
   'Faites vos ventes à la caisse, sur l\'accueil.': 'Make your sales at the till, on the home screen.',
-  'Rejoignez Mara, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».': 'Join Mara, the shops near you. When you are asked who referred you, give the code « {code} ».',
+  'Rejoignez Mara, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».': 'Join Mara, the shops near you. When you are asked who referred you, give the code “{code}”.',
   'Pas encore de cauris. Votre premier article en vente en rapporte.': 'No cauris yet. Your first item for sale earns some.',
   'Étapes du chemin : {n} cauris chacune': 'Path steps: {n} cauris each',
   'Étapes du chemin : {min} à {max} cauris chacune': 'Path steps: {min} to {max} cauris each',
@@ -2982,7 +2982,7 @@ const enStrings = <String, String>{
   'Offrir {n} cauris ?': 'Give {n} cauris?',
   'À {name}. C\'est plus de {limit} cauris.': 'To {name}. That is more than {limit} cauris.',
   'Pas encore de cauris.': 'No cauris yet.',
-  'Payé à l\'heure : se change dans « Paie et journées »': 'Paid by the hour: changed in « Payroll and days »',
+  'Payé à l\'heure : se change dans « Paie et journées »': 'Paid by the hour: changed in “Payroll and days”',
   'Place libre': 'Place free',
   'Remplacer': 'Replace',
   'Remplacer {name} ?': 'Replace {name}?',
@@ -3004,7 +3004,7 @@ const enStrings = <String, String>{
   'Seule la plateforme nomme une formatrice ou un formateur': 'Only the platform names a trainer',
   'Le propriétaire ne se change pas ici': 'The owner is not changed here',
   'Seule la plateforme nomme un propriétaire': 'Only the platform names an owner',
-  'Cette personne est payée à l\'heure dans « Paie et journées » : son taux se change là-bas.': 'This person is paid by the hour in « Payroll and days »: their rate is changed there.',
+  'Cette personne est payée à l\'heure dans « Paie et journées » : son taux se change là-bas.': 'This person is paid by the hour in “Payroll and days”: their rate is changed there.',
   'Cette entreprise a déjà ses photos sans limite': 'This business already has photos without limit',
   // Batch 101/102 (builder A): the association walkthrough, Équipe, the hub, the domain.
   'Adresse de la vitrine : marakaj.com/s/{slug}': 'Vitrine address: marakaj.com/s/{slug}',
@@ -3014,7 +3014,7 @@ const enStrings = <String, String>{
   'Responsabilité mise à jour.': 'Responsibility updated.',
   'Les deux ne correspondent pas.': 'The two do not match.',
   'Mot de passe changé.': 'Password changed.',
-  'Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'équipe ».': 'All their phones and browsers will have to sign in again with the password, within an hour at most. Their access to the business does not change: to remove it, use « Remove from the team ».',
+  'Tous ses téléphones et navigateurs devront se reconnecter avec le mot de passe, au plus tard dans une heure. Ses accès à l\'entreprise ne changent pas : pour les retirer, utilisez « Retirer de l\'équipe ».': 'All their phones and browsers will have to sign in again with the password, within an hour at most. Their access to the business does not change: to remove it, use “Remove from the team”.',
   '{label} est déconnecté de {n} appareil(s).': '{label} is signed out of {n} device(s).',
   'Compte supprimé.': 'Account deleted.',
   'Administration': 'Administration',
@@ -3273,8 +3273,8 @@ const enStrings = <String, String>{
   'Retour au centre admin': 'Back to the admin center',
   ' et {n} autres': ' and {n} others',
   'Cauris pour chacune': 'Cauris for each',
-  'Chaque action est dans le Journal, avec son « Annuler » quand elle peut être reprise.': 'Each action is in the Journal, with its « Undo » when it can be taken back.',
-  'Elles disparaissent de l\'accueil de leurs membres ; rien n\'est effacé. Le Journal les restaure d\'un « Annuler ».': 'They leave their members\' home screens; nothing is erased. The Journal restores them with an « Undo ».',
+  'Chaque action est dans le Journal, avec son « Annuler » quand elle peut être reprise.': 'Each action is in the Journal, with its “Undo” when it can be taken back.',
+  'Elles disparaissent de l\'accueil de leurs membres ; rien n\'est effacé. Le Journal les restaure d\'un « Annuler ».': 'They leave their members\' home screens; nothing is erased. The Journal restores them with an “Undo”.',
   'Envoyer un message': 'Send a message',
   'Fait pour {n} entreprise(s)': 'Done for {n} business(es)',
   'Il arrive dans la cloche de leurs propriétaires et administrateurs.': 'It reaches their owners\' and administrators\' bell.',
@@ -3339,7 +3339,7 @@ const enStrings = <String, String>{
   'Kilomètres offerts avec Pro': 'Kilometres included with Pro',
   'La boutique à la une, 30 jours': 'The shop featured, 30 days',
   'La boutique à la une, 7 jours': 'The shop featured, 7 days',
-  'Les nombres de toute la plateforme. Chaque changement est écrit dans le Journal, où « Annuler » le reprend.': 'The whole platform\'s numbers. Every change is written in the Journal, where « Undo » takes it back.',
+  'Les nombres de toute la plateforme. Chaque changement est écrit dans le Journal, où « Annuler » le reprend.': 'The whole platform\'s numbers. Every change is written in the Journal, where “Undo” takes it back.',
   'Ligue moyenne : moins de … commandes en 30 jours': 'Medium league: fewer than … orders in 30 days',
   'Livraison : par kilomètre': 'Delivery: per kilometre',
   'Livraison : prise en charge': 'Delivery: base fee',
@@ -3394,7 +3394,7 @@ const enStrings = <String, String>{
   'Un article à la une jusqu\'au {date}': 'One item featured until {date}',
   'Versements Wave échoués': 'Failed Wave payouts',
   'Vitrine personnalisée': 'Custom vitrine',
-  'dont {n} « J\'ai payé »': 'of which {n} « I have paid »',
+  'dont {n} « J\'ai payé »': 'of which {n} “I have paid”',
   'en attente depuis 2 h, ou en route depuis 3 h': 'waiting for 2 h, or on the way for 3 h',
   'masquée': 'hidden',
   'rien n\'attend': 'nothing waiting',
@@ -3402,7 +3402,7 @@ const enStrings = <String, String>{
   '{feature} : {state} jusqu\'au {date}': '{feature}: {state} until {date}',
   '{n} cauris à utiliser avant le {date}': '{n} cauris to use before {date}',
   '{tool} jusqu\'au {date}{gift}': '{tool} until {date}{gift}',
-  '« J\'ai payé » Mara Pro à confirmer': 'Mara Pro « I have paid » to confirm',
+  '« J\'ai payé » Mara Pro à confirmer': 'Mara Pro “I have paid” to confirm',
   'À traiter': 'To handle',
   'Message': 'Message',
   'Ouvrir l\'activité': 'Open the business',
@@ -3450,7 +3450,7 @@ const enStrings = <String, String>{
   'À surveiller': 'To watch',
   'Rien à signaler': 'Nothing to report',
   'Suspendue depuis le {date}': 'Suspended since {date}',
-  '« J\'ai payé » à confirmer ({n})': '« I have paid » to confirm ({n})',
+  '« J\'ai payé » à confirmer ({n})': '“I have paid” to confirm ({n})',
   'Mise en avant à décider ({n})': 'Promotion to decide ({n})',
   'Mara Pro se termine le {date}': 'Mara Pro ends on {date}',
   'Outil ouvert qui se ferme dans 7 jours ({n})': 'Open tool closing within 7 days ({n})',
@@ -3464,9 +3464,9 @@ const enStrings = <String, String>{
   'Espèces seulement': 'Cash only',
   'Vitrine d\'exemple': 'Example vitrine',
   'Fiche': 'Card',
-  '« {label} » : {state}. Le propriétaire est prévenu.': '« {label} »: {state}. The owner is told.',
+  '« {label} » : {state}. Le propriétaire est prévenu.': '“{label}”: {state}. The owner is told.',
   'Ce que {name} voit': 'What {name} sees',
-  '« Par défaut » est ce que voit aujourd\'hui chaque activité de ce type. Une fonction payée ne se masque jamais.': '« Default » is what every business of this kind sees today. A paid feature is never hidden.',
+  '« Par défaut » est ce que voit aujourd\'hui chaque activité de ce type. Une fonction payée ne se masque jamais.': '“Default” is what every business of this kind sees today. A paid feature is never hidden.',
   'par défaut': 'default',
   'Réglé pour cette activité': 'Set for this business',
   'Réglé pour tout le type d\'activité': 'Set for the whole kind of business',
@@ -3474,9 +3474,9 @@ const enStrings = <String, String>{
   'Formule Mara': 'Mara plan',
   'Outil ouvert': 'Tool open',
   'Payée — ne peut pas être masquée': 'Paid — cannot be hidden',
-  'Masquer « {label} » pour {name} ?': 'Hide « {label} » for {name}?',
-  'Rendre « {label} » visible pour {name} ?': 'Make « {label} » visible for {name}?',
-  'Remettre « {label} » par défaut pour {name} ?': 'Set « {label} » back to default for {name}?',
+  'Masquer « {label} » pour {name} ?': 'Hide “{label}” for {name}?',
+  'Rendre « {label} » visible pour {name} ?': 'Make “{label}” visible for {name}?',
+  'Remettre « {label} » par défaut pour {name} ?': 'Set “{label}” back to default for {name}?',
   'Le propriétaire est prévenu sur sa cloche.': 'The owner is told on their bell.',
   '{who} est prévenu(e) sur sa cloche.': '{who} is told on their bell.',
   'Jusqu\'au {date}': 'Until {date}',
@@ -3484,16 +3484,16 @@ const enStrings = <String, String>{
   'Identité enregistrée.': 'Identity saved.',
   'Identité enregistrée. {who} est prévenu(e).': 'Identity saved. {who} is told.',
   'Vous modifiez l\'identité de {name} en tant que Mara': 'You are changing {name}\'s identity as Mara',
-  'Le propriétaire est prévenu. Chaque changement va au journal, avec « Annuler ».': 'The owner is told. Every change goes to the journal, with « Undo ».',
+  'Le propriétaire est prévenu. Chaque changement va au journal, avec « Annuler ».': 'The owner is told. Every change goes to the journal, with “Undo”.',
   'Chaque membre ouvrira un autre accueil. Il faudra taper le nom de l\'activité pour confirmer.': 'Every member will open another home. You will type the business\'s name to confirm.',
   'L\'ancien lien de la vitrine ne marchera plus.': 'The vitrine\'s old link will stop working.',
   'Sur la vitrine et les factures.': 'On the vitrine and the invoices.',
   'Le sceau de confiance de l\'association, sur sa vitrine.': 'The association\'s seal of trust, on its vitrine.',
   'Changer le type d\'activité ?': 'Change the kind of business?',
-  'Chaque membre ouvrira un autre accueil dès demain matin. Tapez « {name} » pour confirmer.': 'Every member will open another home from tomorrow morning. Type « {name} » to confirm.',
+  'Chaque membre ouvrira un autre accueil dès demain matin. Tapez « {name} » pour confirmer.': 'Every member will open another home from tomorrow morning. Type “{name}” to confirm.',
   'Changer le type': 'Change the kind',
   'Vous modifiez la vitrine de {name} en tant que Mara': 'You are changing {name}\'s vitrine as Mara',
-  'C\'est l\'éditeur du propriétaire. Il est prévenu, et chaque changement va au journal, avec « Annuler ».': 'This is the owner\'s editor. They are told, and every change goes to the journal, with « Undo ».',
+  'C\'est l\'éditeur du propriétaire. Il est prévenu, et chaque changement va au journal, avec « Annuler ».': 'This is the owner\'s editor. They are told, and every change goes to the journal, with “Undo”.',
   'Le lien que le propriétaire partage': 'The link the owner shares',
   'Ouvrir l\'éditeur de la vitrine': 'Open the vitrine editor',
   'Voir la vitrine publique': 'See the public vitrine',
@@ -3505,7 +3505,7 @@ const enStrings = <String, String>{
   '{name} est sur Mara Pro.': '{name} is on Mara Pro.',
   '{name} est sur Mara (gratuit).': '{name} is on Mara (free).',
   'Mara Pro, sans date de fin': 'Mara Pro, with no end date',
-  'Ouvert par « Mara Pro complet », pas par la formule.': 'Opened by « Mara Pro complete », not by the plan.',
+  'Ouvert par « Mara Pro complet », pas par la formule.': 'Opened by “Mara Pro complete”, not by the plan.',
   'Payé jusqu\'au {date}': 'Paid until {date}',
   'Note (vue par Mara seulement)': 'Note (seen by Mara only)',
   'Outils ouverts': 'Open tools',
@@ -4019,7 +4019,7 @@ const enStrings = <String, String>{
   'Ce qui ne va pas': 'What is wrong',
   'Un mot pour le livreur (facultatif)': 'A word for the courier (optional)',
   'Renvoyer au livreur': 'Send back to the courier',
-  'Personne n\'a encore demandé à devenir livreur. La demande se fait depuis « Devenir livreur », au pied de la page des vitrines.': 'Nobody has applied to become a courier yet. Applications start from « Become a courier », at the foot of the shop windows page.',
+  'Personne n\'a encore demandé à devenir livreur. La demande se fait depuis « Devenir livreur », au pied de la page des vitrines.': 'Nobody has applied to become a courier yet. Applications start from “Become a courier”, at the foot of the shop windows page.',
   'Examiner': 'Review',
   'À corriger par le livreur': 'To be fixed by the courier',
   'Voir ma demande': 'See my application',
@@ -4328,7 +4328,7 @@ const enStrings = <String, String>{
   '{qty} × {name} fabriqués': '{qty} × {name} made',
   'Un coûte {cost}. Le stock de vos ingrédients a baissé, celui de {name} a monté.': 'One costs {cost}. Your ingredients\' stock went down, {name}\'s went up.',
   'Fabriquer autre chose': 'Make something else',
-  'Ajoutez d\'abord vos ingrédients comme articles et cochez « Utilisé en production ».': 'First add your ingredients as items and tick « Used in production ».',
+  'Ajoutez d\'abord vos ingrédients comme articles et cochez « Utilisé en production ».': 'First add your ingredients as items and tick “Used in production”.',
   'Ensuite revenez ici : vous continuez où vous étiez.': 'Then come back here: you carry on where you were.',
   'Ajouter un ingrédient': 'Add an ingredient',
   'Plus dans vos articles : {names}': 'No longer in your items: {names}',
@@ -4342,7 +4342,7 @@ const enStrings = <String, String>{
   'Livrée au client': 'Delivered to the customer',
   'Le livreur ou vous l\'avez remise': 'The courier or you handed it over',
   'Je la livre moi-même': 'I deliver it myself',
-  'Elle passe « en route » ; vous encaissez la livraison': 'It goes « on the way »; you collect the delivery fee',
+  'Elle passe « en route » ; vous encaissez la livraison': 'It goes “on the way”; you collect the delivery fee',
   'Remise au client': 'Handed to the customer',
   '{name} est venu la chercher': '{name} came to collect it',
   'Réservation refusée. {name} est prévenu.': 'Booking refused. {name} has been told.',
@@ -4352,9 +4352,9 @@ const enStrings = <String, String>{
   'Ses articles sont retirés de votre stock.': 'Its items are taken off your stock.',
   'Prête. {name} est prévenu.': 'Ready. {name} has been told.',
   'Les livreurs la voient maintenant. Vous pouvez aussi la livrer vous-même.': 'Couriers can see it now. You can also deliver it yourself.',
-  'Quand {name} vient la chercher, touchez « Remise au client ».': 'When {name} comes for it, tap « Handed to the customer ».',
+  'Quand {name} vient la chercher, touchez « Remise au client ».': 'When {name} comes for it, tap “Handed to the customer”.',
   'En route : vous livrez {name}.': 'On the way: you are delivering to {name}.',
-  'Une fois remise, touchez « Confirmer la livraison ».': 'Once handed over, tap « Confirm the delivery ».',
+  'Une fois remise, touchez « Confirmer la livraison ».': 'Once handed over, tap “Confirm the delivery”.',
   'Réservation terminée.': 'Booking done.',
   'Commande terminée.': 'Order done.',
   'La vente est enregistrée toute seule — ne la passez pas à la caisse.': 'The sale records itself — do not ring it at the till.',
@@ -4377,14 +4377,14 @@ const enStrings = <String, String>{
   '{amount} · {how}': '{amount} · {how}',
   'Oui, payé': 'Yes, paid',
   'Pas encore': 'Not yet',
-  '« Paiement reçu » reste sur la commande': '« Payment received » stays on the order',
+  '« Paiement reçu » reste sur la commande': '“Payment received” stays on the order',
   'Réponse': 'Answer',
   'Raison': 'Reason',
   'Articles prêts': 'Items ready',
   'Ensuite': 'Next',
   'Proposée aux livreurs': 'Offered to couriers',
   '{name} est prévenu de venir': '{name} is told to come',
-  'Le paiement n\'a pas pu être noté : touchez « Paiement reçu » sur la commande.': 'The payment could not be noted: tap « Payment received » on the order.',
+  'Le paiement n\'a pas pu être noté : touchez « Paiement reçu » sur la commande.': 'The payment could not be noted: tap “Payment received” on the order.',
   'Répondre': 'Answer',
   'Préparer': 'Prepare',
   'Confirmer la livraison': 'Confirm the delivery',
@@ -4411,7 +4411,7 @@ const enStrings = <String, String>{
   'Votre responsabilité ne permet pas d\'inviter quelqu\'un.': 'Your responsibility does not allow inviting someone.',
   'Ce que {name} verra': 'What {name} will see',
   'Son salaire': 'Their salary',
-  'Noté dans Équipe dès qu\'il rejoint. Le payer reste dans « Paie et journées ».': 'Noted in Team as soon as they join. Paying it stays in « Pay and days ».',
+  'Noté dans Équipe dès qu\'il rejoint. Le payer reste dans « Paie et journées ».': 'Noted in Team as soon as they join. Paying it stays in “Pay and days”.',
   'Fonction': 'Job',
   'Pas de numéro : le code marche pour qui l\'a': 'No number: the code works for whoever has it',
   'Responsabilité': 'Responsibility',
@@ -4528,7 +4528,7 @@ const enStrings = <String, String>{
   'Dans un mois': 'In a month',
   'Une date précise': 'A specific date',
   'Des articles, choisis à l\'étape suivante': 'Items, chosen at the next step',
-  '« Choisir les articles » ouvre la vente, déjà sur Crédit.': '« Choose the items » opens the sale, already on Credit.',
+  '« Choisir les articles » ouvre la vente, déjà sur Crédit.': '“Choose the items” opens the sale, already on Credit.',
   'Il faut du réseau pour enregistrer un crédit.': 'Recording a credit needs a connection.',
   'Choisir les articles': 'Choose the items',
   'Enregistrer le crédit': 'Save the credit',
@@ -4656,15 +4656,15 @@ const enStrings = <String, String>{
   'Firebase démarré':
       'Firebase started',
   'Ils voient « une ferme de … »':
-      'They see « a farm in … »',
+      'They see “a farm in …”',
   'Jeton de l\'appareil obtenu':
       'Device token obtained',
   'L\'enregistrement n\'a pas abouti : voyez la ligne marquée « non » ci-dessus.':
-      'The registration did not go through: see the line marked « no » above.',
+      'The registration did not go through: see the line marked “no” above.',
   'La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé ».':
-      'The vitrine appears at the top of the list of vitrines, marked « Sponsored ».',
+      'The vitrine appears at the top of the list of vitrines, marked “Sponsored”.',
   'Les notifications de Mara sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.':
-      'Mara\'s notifications are blocked on this phone. Open the settings, tap « Notifications » and allow them: you will get your orders, deliveries and messages even with the app closed.',
+      'Mara\'s notifications are blocked on this phone. Open the settings, tap “Notifications” and allow them: you will get your orders, deliveries and messages even with the app closed.',
   'Ma ferme':
       'My farm',
   'Mon association':
@@ -4686,7 +4686,7 @@ const enStrings = <String, String>{
   'Téléphone de la ferme':
       'Farm\'s phone',
   'Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 ou 30 jours.':
-      'An article at the top of « Featured » on the home page, or the whole vitrine at the top of the list, for 7 or 30 days.',
+      'An article at the top of “Featured” on the home page, or the whole vitrine at the top of the list, for 7 or 30 days.',
   'Un mot pour l\'association (facultatif)':
       'A word for the association (optional)',
   'Un mot pour la ferme (facultatif)':
@@ -4859,7 +4859,7 @@ const enStrings = <String, String>{
   '{n} crédits ont dépassé leur date de remboursement':
       '{n} credits are past their repayment date',
   'Le chiffre rouge sur « Compte » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
-      'The red number on « Account » stays until these credits are repaid: opening this page does not clear it.',
+      'The red number on “Account” stays until these credits are repaid: opening this page does not clear it.',
   'Ouvrir le carnet':
       'Open the credit book',
   '1 crédit a dépassé sa date de remboursement : {names}':
@@ -4885,7 +4885,7 @@ const enStrings = <String, String>{
   '{n} articles à réapprovisionner : {names}':
       '{n} items to restock: {names}',
   'Le chiffre rouge sur « {place} » reste tant que ces articles ne sont pas réapprovisionnés : ouvrir cette page ne l\'efface pas.':
-      'The red number on « {place} » stays until these items are restocked: opening this page does not clear it.',
+      'The red number on “{place}” stays until these items are restocked: opening this page does not clear it.',
   'Plus rien en stock':
       'Nothing left in stock',
   'Reste {q} (alerte à {low})':
@@ -4895,7 +4895,7 @@ const enStrings = <String, String>{
   '{n} fournitures sous leur seuil : {names}':
       '{n} supplies under their threshold: {names}',
   'Le chiffre rouge sur « Stock » reste tant que ces fournitures ne sont pas réapprovisionnées : ouvrir cette page ne l\'efface pas.':
-      'The red number on « Stock » stays until these supplies are restocked: opening this page does not clear it.',
+      'The red number on “Stock” stays until these supplies are restocked: opening this page does not clear it.',
   'Reste {q} {unit} (seuil {low})':
       '{q} {unit} left (threshold {low})',
   '1 bande sans saisie aujourd\'hui : {names}':
@@ -4903,7 +4903,7 @@ const enStrings = <String, String>{
   '{n} bandes sans saisie aujourd\'hui : {names}':
       '{n} batches with nothing recorded today: {names}',
   'Le chiffre rouge sur « Bandes » reste jusqu\'à une saisie du jour pour chacune (œufs, mortalité, pesée, vaccination) : ouvrir cette page ne l\'efface pas, et il revient chaque matin.':
-      'The red number on « Batches » stays until each has an entry for today (eggs, deaths, weighing, vaccination): opening this page does not clear it, and it comes back every morning.',
+      'The red number on “Batches” stays until each has an entry for today (eggs, deaths, weighing, vaccination): opening this page does not clear it, and it comes back every morning.',
   '{alive} vivants':
       '{alive} alive',
   'Saisir':
@@ -4921,7 +4921,7 @@ const enStrings = <String, String>{
   'livraison jusqu\'à {km} km':
       'delivery up to {km} km',
   'Aucun article ne répond à « {q} » dans cette boutique.':
-      'No item matches « {q} » in this shop.',
+      'No item matches “{q}” in this shop.',
   'Les articles':
       'Items',
   'épuisé':
@@ -4929,7 +4929,7 @@ const enStrings = <String, String>{
   'Voir l\'article':
       'See the item',
   'Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Mara.':
-      'Hello {shop}, a question about « {item} » seen on your Mara vitrine.',
+      'Hello {shop}, a question about “{item}” seen on your Mara vitrine.',
   'Retrait en boutique, ou livraison dans le quartier':
       'Pick up at the shop, or delivery in the neighbourhood',
   'Des boutiques de chez vous, tenues par leurs commerçants':
@@ -5269,9 +5269,9 @@ const enStrings = <String, String>{
   'Cet enregistrement existe déjà.':
       'This record already exists.',
   'Cette adresse n\'a pas encore de compte. Choisissez « Créer un compte ».':
-      'This address has no account yet. Choose « Create an account ».',
+      'This address has no account yet. Choose “Create an account”.',
   'Un compte existe déjà pour ces informations. Choisissez « Se connecter ».':
-      'An account already exists for these details. Choose « Sign in ».',
+      'An account already exists for these details. Choose “Sign in”.',
   'Le mot de passe doit contenir au moins 6 caractères.':
       'The password must have at least 6 characters.',
   'Adresse e-mail ou mot de passe incorrect.':
@@ -5357,13 +5357,13 @@ const enStrings = <String, String>{
   'Il manque le nom.':
       'The name is missing.',
   'Il faut au moins la quantité et le prix : « {name} 10 600 ».':
-      'At least the quantity and the price are needed: « {name} 10 600 ».',
+      'At least the quantity and the price are needed: “{name} 10 600”.',
   'La quantité doit être supérieure à zéro.':
       'The quantity must be above zero.',
   'Un prix ne peut pas être négatif.':
       'A price cannot be negative.',
   'Doublon : « {name} » est déjà plus haut. Renommez-le (ex. « {name} 25kg ») ou retirez la ligne.':
-      'Duplicate: « {name} » is already above. Rename it (e.g. « {name} 25kg ») or remove the line.',
+      'Duplicate: “{name}” is already above. Rename it (e.g. “{name} 25kg”) or remove the line.',
   '{n} photo(s) sur cet appareil. Le serveur en a refusé {stuck}.':
       '{n} photo(s) on this device. The server refused {stuck}.',
   '{n} photo(s) en attente de réseau.':
@@ -5629,7 +5629,7 @@ const enStrings = <String, String>{
   'Position indisponible sur cet appareil.':
       'Position unavailable on this device.',
   'Autorisez la position, ou choisissez « Plus tard ».':
-      'Allow location, or choose « Later ».',
+      'Allow location, or choose “Later”.',
   'Prévenir en dessous de ce nombre':
       'Warn below this number',
   '{n} jours':
@@ -5739,7 +5739,7 @@ const enStrings = <String, String>{
   'Ardoise':
       'Slate',
   'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.':
-      'Hello! You are invited to join « {org} » on Mara.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
+      'Hello! You are invited to join “{org}” on Mara.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
   'quelques jours':
       'a few days',
   'Normal':
@@ -6138,7 +6138,7 @@ const enStrings = <String, String>{
   'Réservation indisponible pour le moment':
       'Booking unavailable for now',
   'Bonjour {shop}, je voudrais prendre rendez-vous pour « {item} ».':
-      'Hello {shop}, I would like to book « {item} ».',
+      'Hello {shop}, I would like to book “{item}”.',
   'Appelez ou écrivez sur WhatsApp pour prendre rendez-vous. Les articles se commandent comme d\'habitude.':
       'Call or write on WhatsApp to make an appointment. Items can be ordered as usual.',
   'Demandé':
@@ -6365,6 +6365,9 @@ const enStrings = <String, String>{
   // 130 review fixes: the store's refusals by their code, the deletion's.
   'Compte de test des boutiques (achats sandbox acceptés)':
       'Store test account (sandbox purchases accepted)',
+  // 130 (audit M4): the test account's businesses, by id.
+  'Entreprises de ce compte de test (identifiants ; vide : toutes)':
+      'That test account\'s businesses (ids; empty: all of them)',
   'Me reconnecter':
       'Sign in again',
   'Cet achat a été fait pour une autre entreprise.':
@@ -6405,4 +6408,92 @@ const enStrings = <String, String>{
   'l\'App Store': 'the App Store',
   'Ce compte {store} a déjà un abonnement Mara Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.':
       'This {store} account already has a Mara Pro subscription for this business: tap “Restore purchases” to turn it on.',
+  // 133 (UI audit F-1, F-2): the farm's stock lines and herds.
+  'seuil {n} {unit}': 'threshold {n} {unit}',
+  'aucun seuil': 'no threshold',
+  'dernier mouvement {date}': 'last movement {date}',
+  'Viande': 'Meat',
+  'Lait': 'Milk',
+  'Reproduction': 'Breeding',
+  // 133 (UI audit SH-9): the privacy policy and the terms, translated
+  // faithfully for the English app; the French text binds (legal_screens.dart).
+  'La version française de ce texte est celle qui fait foi. Voici sa traduction en anglais, pour information.':
+      'The French version of this text is the binding one. Here is its English translation, for information.',
+  'Mara enregistre les informations que vous saisissez pour faire fonctionner votre activité : ventes, dépenses, membres, produits, photos de pièces justificatives, et les personnes de votre équipe.':
+      'Mara records the information you enter to run your business: sales, expenses, members, products, photos of receipts and supporting documents, and the people on your team.',
+  '# Ce que nous collectons':
+      '# What we collect',
+  'Votre nom et votre numéro de téléphone, votre date de naissance si vous la donnez (elle n\'est jamais obligatoire), les données que vous entrez dans l\'application, et les photos que vous prenez pour vos reçus et livraisons.':
+      'Your name and phone number, your date of birth if you give it (it is never required), the data you enter in the app, and the photos you take for your receipts and deliveries.',
+  '# Connexion avec Google':
+      '# Signing in with Google',
+  'Si vous vous connectez avec Google, nous recevons de Google votre nom, votre adresse e-mail et votre photo de profil. Ils servent uniquement à vous identifier et à afficher votre nom dans l\'application. Nous ne lisons rien d\'autre de votre compte Google et ne transmettons ces informations à personne.':
+      'If you sign in with Google, we receive from Google your name, your email address and your profile photo. They are used only to identify you and to show your name in the app. We read nothing else from your Google account and pass this information on to no one.',
+  '# Connexion avec Apple':
+      '# Signing in with Apple',
+  'Si vous vous connectez avec Apple (sur iPhone), nous recevons d\'Apple une adresse e-mail — la vôtre, ou une adresse relais privée qu\'Apple crée pour vous — et, la première fois seulement, votre nom. Ils servent uniquement à vous identifier. Nous ne transmettons ces informations à personne.':
+      'If you sign in with Apple (on iPhone), we receive from Apple an email address — your own, or a private relay address Apple creates for you — and, the first time only, your name. They are used only to identify you. We pass this information on to no one.',
+  '# Comment elles sont utilisées':
+      '# How it is used',
+  'Uniquement pour vous fournir le service : afficher vos livres, vos rapports et vos stocks à vous et aux personnes que vous autorisez. Nous ne vendons pas vos données et ne les partageons pas à des fins publicitaires.':
+      'Only to provide the service to you: showing your books, your reports and your stock to you and to the people you authorise. We do not sell your data and do not share it for advertising purposes.',
+  '# Où elles sont stockées':
+      '# Where it is stored',
+  'Sur des serveurs sécurisés (Supabase et Cloudflare). Chaque activité ne voit que ses propres données ; l\'isolement entre activités est appliqué par le serveur.':
+      'On secure servers (Supabase and Cloudflare). Each business sees only its own data; the separation between businesses is enforced by the server.',
+  '# Les prestataires':
+      '# Service providers',
+  'Mara fait appel à quelques prestataires, chacun seulement pour ce qui le concerne : Supabase (la base de données et les comptes) et Cloudflare (le site, les photos) hébergent les données ; Google pour la connexion avec Google et l\'envoi des notifications sur le téléphone (Firebase) ; Apple pour la connexion avec Apple ; Apple (l\'App Store) et Google (Google Play) pour l\'abonnement Mara Pro pris dans l\'application, qu\'ils facturent et gèrent eux-mêmes ; Stripe pour le paiement par carte de Mara Pro (Mara ne voit jamais le numéro de la carte) ; Sentry pour les rapports d\'erreur de l\'application (sans nom, numéro ni contenu de vos livres) ; Resend pour envoyer l\'e-mail de bienvenue ; et, quand ils sont ouverts, Wave pour le paiement par mobile money et WhatsApp (Meta) pour envoyer le code de vérification du numéro. Aucun ne reçoit vos données pour de la publicité.':
+      'Mara uses a few service providers, each only for what concerns it: Supabase (the database and the accounts) and Cloudflare (the website, the photos) host the data; Google for signing in with Google and for sending notifications to the phone (Firebase); Apple for signing in with Apple; Apple (the App Store) and Google (Google Play) for the Mara Pro subscription taken in the app, which they bill and manage themselves; Stripe for paying for Mara Pro by card (Mara never sees the card number); Sentry for the app\'s error reports (with no name, number or content of your books); Resend to send the welcome email; and, when they are open, Wave for mobile money payments and WhatsApp (Meta) to send the phone number verification code. None of them receives your data for advertising.',
+  '# Les visites des vitrines':
+      '# Visits to vitrines',
+  'Quand vous ouvrez la vitrine d\'une activité, l\'application ou votre navigateur envoie un numéro tiré au hasard et gardé sur l\'appareil, afin que chaque visiteur ne soit compté qu\'une fois par jour. Ce numéro n\'est jamais lié à vous ni à votre compte, et la vitrine n\'affiche que le nombre de ses visiteurs. Les membres de l\'activité ne sont pas comptés ; les visites de plus de 400 jours sont effacées (le total reste).':
+      'When you open a business\'s vitrine, the app or your browser sends a randomly drawn number kept on the device, so that each visitor is counted only once a day. This number is never linked to you or to your account, and the vitrine shows only the number of its visitors. The business\'s members are not counted; visits older than 400 days are erased (the total remains).',
+  '# Devenir livreur':
+      '# Becoming a courier',
+  'Pour devenir livreur, vous envoyez un selfie et la photo de votre pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces photos sont gardées à part, en privé : seule l\'équipe Mara qui examine les demandes peut les voir, jamais les boutiques, les clients ni la rue. Si votre demande est refusée et que vous ne la renvoyez pas, elles ne sont plus jamais montrées après 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte (par l\'équipe Mara, ou par vous sur « Devenir livreur »). Il en va de même, sans attendre, d\'une photo remplacée par une nouvelle et, après 30 jours sans suite, d\'une demande commencée puis laissée. Si vous êtes accepté, elles sont gardées tant que vous êtes livreur ; votre compte supprimé, elles ne sont plus montrées et sont effacées de la même façon.':
+      'To become a courier, you send a selfie and a photo of your identity document (on a motorbike or in a car, also your driving licence). These photos are kept separately, in private: only the Mara team that reviews applications can see them, never the shops, the customers or the street. If your application is refused and you do not send it again, they are never shown again after 30 days, and are erased the next time the list of couriers is opened (by the Mara team, or by you on “Devenir livreur”). The same applies, without waiting, to a photo replaced by a new one and, after 30 days with no follow-up, to an application started and then left. If you are accepted, they are kept as long as you are a courier; once your account is deleted, they are no longer shown and are erased in the same way.',
+  'Quand vous êtes livreur et ouvrez les livraisons disponibles, votre téléphone donne votre position, si vous l\'autorisez. Mara garde la dernière, pour vous seul — ni les boutiques, ni les clients, ni les autres livreurs ne la voient — afin de vous montrer les livraisons proches et de vous prévenir de celles-ci. Après 24 heures, elle n\'est plus utilisée ; après 30 jours, elle est effacée.':
+      'When you are a courier and open the available deliveries, your phone gives your position, if you allow it. Mara keeps the latest one, for you alone — neither the shops, nor the customers, nor the other couriers see it — in order to show you the deliveries nearby and to alert you to them. After 24 hours it is no longer used; after 30 days it is erased.',
+  '# Vos droits':
+      '# Your rights',
+  'Vous pouvez demander la correction ou la suppression de vos données en contactant le support. Vous pouvez aussi télécharger vos données et supprimer votre compte vous-même, tout de suite, depuis Mon profil › Mes données (ou Compte › Mes données si vous tenez une activité ou en êtes membre) : votre profil, vos adresses, vos favoris, vos notifications et vos signalements partent avec lui ; vos commandes restent chez les boutiques, au nom de « Client supprimé », sans votre numéro ni votre adresse ; ce que vous avez inscrit pour une activité (une vente, une écriture) lui reste, sans votre nom. Si vous êtes le seul propriétaire d\'une activité, elle est supprimée avec votre compte : ses ventes, son stock, ses comptes et sa vitrine sont effacés de façon définitive, ses commandes en cours sont annulées et ses clients prévenus, et ses membres gardent leur propre compte. Un abonnement Mara Pro pris sur l\'App Store s\'annule dans les réglages de votre compte Apple : Mara ne peut pas l\'annuler.':
+      'You can ask for your data to be corrected or deleted by contacting support. You can also download your data and delete your account yourself, right away, from Mon profil › Mes données (or Compte › Mes données if you run a business or are a member of one): your profile, your addresses, your favourites, your notifications and your reports go with it; your orders stay with the shops, under the name “Client supprimé”, without your number or your address; what you recorded for a business (a sale, an entry) stays with it, without your name. If you are the only owner of a business, it is deleted with your account: its sales, its stock, its accounts and its vitrine are permanently erased, its open orders are cancelled and its customers notified, and its members keep their own accounts. A Mara Pro subscription taken on the App Store is cancelled in your Apple account settings: Mara cannot cancel it.',
+  '# Contact':
+      '# Contact',
+  'Pour toute question sur vos données, ou pour demander leur correction ou leur suppression, écrivez à hello@kaj-consulting.com, ou contactez le support depuis l\'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.':
+      'For any question about your data, or to ask for it to be corrected or deleted, write to hello@kaj-consulting.com, or contact support from the Compte › Aide screen. Mara is published by KAJ Consulting LLC.',
+  'En utilisant Mara, vous acceptez ces conditions.':
+      'By using Mara, you accept these terms.',
+  '# Votre compte':
+      '# Your account',
+  'Vous êtes responsable de l\'exactitude des informations que vous saisissez et de la confidentialité de votre code (PIN). Ne partagez pas votre accès avec une personne qui ne devrait pas voir vos données.':
+      'You are responsible for the accuracy of the information you enter and for keeping your code (PIN) confidential. Do not share your access with a person who should not see your data.',
+  '# Utilisation correcte':
+      '# Proper use',
+  'Mara est un outil de gestion pour votre activité. N\'utilisez pas l\'application pour enregistrer des activités illégales ou pour nuire à autrui.':
+      'Mara is a management tool for your business. Do not use the app to record illegal activities or to harm others.',
+  '# Disponibilité':
+      '# Availability',
+  'Nous faisons de notre mieux pour que le service reste disponible, mais nous ne pouvons pas le garantir sans interruption. L\'application continue de fonctionner hors ligne et synchronise dès que la connexion revient.':
+      'We do our best to keep the service available, but we cannot guarantee it without interruption. The app keeps working offline and synchronises as soon as the connection returns.',
+  '# Responsabilité':
+      '# Liability',
+  'Mara vous aide à tenir vos comptes, mais la responsabilité finale de vos décisions commerciales et de vos obligations légales vous revient.':
+      'Mara helps you keep your accounts, but the final responsibility for your business decisions and your legal obligations lies with you.',
+  '# Mara Pro':
+      '# Mara Pro',
+  'Mara Pro est un abonnement, au mois ou à l\'année, pour une activité : il vaut pour celle pour laquelle il a été pris. Pris dans l\'application iPhone ou Android, il est facturé et géré par l\'App Store ou Google Play : le prix est celui que le store affiche, le paiement est débité sur votre compte du store à la confirmation de l\'achat, l\'abonnement se renouvelle automatiquement sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours, et il s\'annule dans les réglages de votre compte du store, selon ses règles.':
+      'Mara Pro is a subscription, monthly or yearly, for one business: it applies to the business it was taken for. Taken in the iPhone or Android app, it is billed and managed by the App Store or Google Play: the price is the one the store shows, payment is charged to your store account when the purchase is confirmed, the subscription renews automatically unless it is cancelled at least 24 hours before the end of the current period, and it is cancelled in your store account settings, according to its rules.',
+  '# Modifications':
+      '# Changes',
+  'Ces conditions peuvent évoluer. Les changements importants vous seront signalés dans l\'application.':
+      'These terms may change. Important changes will be announced to you in the app.',
+  // 133 (UI audit B-3): a small phone's folded bar actions.
+  'Plus d\'actions': 'More actions',
+  // 133 (UI audit X-1): a programming error, said plainly.
+  'Une erreur inattendue est survenue. Réessayez.': 'An unexpected error occurred. Try again.',
+  // 133 (UI audit B-2): the bar's short words on a 320 px phone.
+  'Cmdes': 'Orders',
+  'Histo.': 'History',
 };

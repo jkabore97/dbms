@@ -269,7 +269,7 @@ export async function storeRecheck(env, io) {
       } else {
         failed++;
         console.error("store recheck failed", row.platform,
-          error instanceof StoreError ? `${error.status} ${error.code}` : String(error?.name || "error"));
+          error instanceof StoreError ? `${error.status} ${error.code} ${error.detail || ""}`.trim() : String(error?.name || "error"));
       }
     }
   }

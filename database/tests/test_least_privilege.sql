@@ -36,6 +36,10 @@ grant usage on schema public to anon, authenticated;
 -- account deletion to the app's role itself (review B1), which TEST 4
 -- checks. Written to be re-run, like the bundle.
 \i database/migrations/128_store_billing.sql
+-- And 130, which replaces two of 128's functions (store_sandbox_allowed,
+-- store_settle): as on the live database, where it follows 128, so the
+-- suites after this one test 130's, not 128's again.
+\i database/migrations/130_audit_fixes.sql
 
 \echo ''
 \echo '--- TEST 1: the street is still open to a stranger ---'

@@ -217,7 +217,9 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
     // A failure also says why (the message, never a token): a 502 with no
     // code was all the log held when the first Google check failed.
     else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""} ${answer.error || ""}`.trim(),
-                       error instanceof Error && !(error.code) ? String(error.stack || "").split("\n").slice(0, 3).join(" | ") : "");
+                       error instanceof Error && !(error.code) ? String(error.stack || "").split("\n").slice(0, 3).join(" | ")
+                         // The store's own words, here only (L1).
+                         : String(error?.detail || ""));
     // A notification failing for a passing reason is retried by Apple and
     // Pub/Sub (any non-2xx); a bad signature or secret is not worth it,
     // but says so with its 401.

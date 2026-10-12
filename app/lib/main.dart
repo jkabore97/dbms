@@ -19,6 +19,7 @@ import 'core/nav/url_strategy.dart';
 import 'core/accounting/accounting_repository.dart';
 import 'core/analytics/analytics_repository.dart';
 import 'core/admin/admin_repository.dart';
+import 'core/auth/auth_callback.dart';
 import 'core/auth/auth_repository.dart';
 import 'core/capture/capture_repository.dart';
 import 'core/console/console_repository.dart';
@@ -131,7 +132,17 @@ Future<void> _startup() async {
       // phone that has been out of range for a fortnight still knows who its
       // owner is. Refreshing that session needs signal; the device PIN covers
       // the stretch where there is none.
-      authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
+      //
+      // PKCE only (SEC_AUDIT_2 M3): a link signs this device in only with
+      // the `code` of a sign-in this device started — never with a raw
+      // access_token / refresh_token somebody put in a link
+      // (core/auth/auth_callback.dart). Google's return and an e-mail
+      // confirmation asked from here both come back with that code.
+      authOptions: const FlutterAuthClientOptions(
+        autoRefreshToken: true,
+        authFlowType: AuthFlowType.pkce,
+        detectSessionInUriPredicate: isPkceAuthCallback,
+      ),
     );
     client = Supabase.instance.client;
   }

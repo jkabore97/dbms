@@ -189,6 +189,9 @@ test("B1 an owner: Stripe cancelled and Google revoked BEFORE the database delet
   assert.deepEqual(JSON.parse(fake.calls[note].body).p_stopped, { google: ["fin-google-token"], stripe: ["sub_fin"] });
   assert.deepEqual(JSON.parse(fake.calls[purge].body).p_stopped, { google: ["fin-google-token"], stripe: ["sub_fin"] });
   assert.ok(out.logged.some((l) => l.includes("account deletion: stopped") && l.includes("sub_fin")));
+  // A Google purchase token is never written whole (SEC_AUDIT_2 L2).
+  assert.ok(!out.logged.some((l) => l.includes("fin-google-token")), out.logged.join("\n"));
+  assert.ok(out.logged.some((l) => l.includes("account deletion: stopped") && l.includes("…-token")));
 });
 
 test("B1 Stripe fails: nothing deleted, said in French; what was stopped before it is logged", async () => {

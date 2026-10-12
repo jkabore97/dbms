@@ -10,9 +10,11 @@ import 'support.dart';
 /// as links, so they open with no signal — a policy nobody can read offline is
 /// a policy nobody reads on a two-bar connection.
 ///
-/// The privacy policy and the terms stay in French on every phone: they are
-/// legal texts, and the French one is the text that binds (the site serves
-/// the same words). The FAQ is help, and is said in the phone's language.
+/// The privacy policy and the terms are written in French: they are legal
+/// texts, and the French one is the text that binds (the site serves the
+/// same words). A phone in English shows their faithful English translation
+/// (en.dart, keyed by each French paragraph) under a note saying the French
+/// binds (133). The FAQ is help, and is said in the phone's language.
 ///
 /// The text is plain and in French, the app's primary language. It is written
 /// to be true of what the app actually does today (Supabase storage, no resale
@@ -22,9 +24,20 @@ import 'support.dart';
 /// test/legal_pages_test.dart keeps the two copies saying the same thing.
 
 class _DocScaffold extends StatelessWidget {
-  const _DocScaffold({required this.title, required this.blocks, this.header});
+  const _DocScaffold({
+    required this.title,
+    required this.blocks,
+    this.header,
+    this.legal = false,
+  });
 
   final String title;
+
+  /// A legal text, kept in French (the binding words): on a phone in
+  /// English it is shown in its faithful English translation (en.dart),
+  /// under a note that the French text is the one that binds (UI audit
+  /// SH-9: App Review and English readers saw a French policy).
+  final bool legal;
 
   /// Drawn above the text (the FAQ's « Aide Mara » card).
   final Widget? header;
@@ -36,13 +49,30 @@ class _DocScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final english = legal && context.trLanguage != 'fr';
+    // The French paragraphs are the keys of their English (en.dart).
+    final shown = english ? [for (final b in blocks) context.tr(b)] : blocks;
     return ScrollHint(child: Scaffold(
       appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(title)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
           if (header case final header?) ...[header, const SizedBox(height: 20)],
-          for (final b in blocks)
+          if (english)
+            Card(
+              key: const Key('legal-translation-note'),
+              elevation: 0,
+              color: theme.colorScheme.surfaceContainerHighest,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  context.tr('La version française de ce texte est celle qui fait foi. Voici sa traduction en anglais, pour information.'),
+                  style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                ),
+              ),
+            ),
+          for (final b in shown)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: b.startsWith('# ')
@@ -64,6 +94,7 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DocScaffold(
       title: context.tr('Politique de confidentialité'),
+      legal: true,
       blocks: [
         'Mara enregistre les informations que vous saisissez pour faire '
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
@@ -172,6 +203,7 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DocScaffold(
       title: context.tr('Conditions d\'utilisation'),
+      legal: true,
       blocks: [
         'En utilisant Mara, vous acceptez ces conditions.',
         '# Votre compte',

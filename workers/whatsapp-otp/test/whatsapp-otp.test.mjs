@@ -8,11 +8,15 @@
 
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
-import { test } from "node:test";
+import { beforeEach, test } from "node:test";
 
 import {
-  graphUrl, hookKey, hookTarget, hmacBase64, route, verifyHook, whatsappMessage,
+  LIMITS, graphUrl, hookKey, hookTarget, hmacBase64, memoryAllow, otpGate, resetMemoryLimits, route,
+  verifyHook, whatsappMessage,
 } from "../src/index.js";
+
+// Each test starts with a fresh isolate's ration (130).
+beforeEach(() => resetMemoryLimits());
 
 // A made-up hook secret, in the shape Supabase shows: « v1,whsec_<base64> ».
 const KEY = "dGVzdC1rZXktb25seS1mb3ItdGhlc2UtdGVzdHM=";
@@ -157,6 +161,7 @@ test("Meta's refusals come back as the hook's error, in words the shopper reads"
     [500, "not json", 502],
   ];
   for (const [status, body, httpCode] of cases) {
+    resetMemoryLimits(); // Meta's words, not the ration (130), are tried here.
     const meta = fakeMeta(status, body);
     const res = await route(await signed(payload()), env, meta.fetchImpl);
     assert.equal(res.status, 200, "Supabase reads the error from a 200");
@@ -203,4 +208,121 @@ test("only the two doors", async () => {
   assert.equal((await route(new Request("https://otp.example/v1/send-sms"), env, meta.fetchImpl)).status, 405);
   assert.equal((await route(new Request("https://otp.example/"), env, meta.fetchImpl)).status, 404);
   assert.equal(graphUrl({ WHATSAPP_PHONE_ID: "99" }), "https://graph.facebook.com/v23.0/99/messages");
+});
+
+// ----------------------------------------------------------------
+// The ration (130, SEC_AUDIT_2 M6)
+// ----------------------------------------------------------------
+
+const USER = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
+
+/// Meta and Supabase, faked together: the ration's answer for each call
+/// (or a status), and every call recorded.
+function fakeBoth(rationAnswers) {
+  const meta = [];
+  const ration = [];
+  const fetchImpl = async (url, init) => {
+    if (String(url).includes("/rest/v1/rpc/otp_send_allow")) {
+      ration.push({ url, headers: init.headers, body: JSON.parse(init.body) });
+      const next = rationAnswers.length > 1 ? rationAnswers.shift() : rationAnswers[0];
+      if (next instanceof Error) throw next;
+      if (typeof next === "number") return new Response("{}", { status: next });
+      return new Response(JSON.stringify(next), { status: 200 });
+    }
+    meta.push({ url, body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({ messages: [{ id: "wamid.1" }] }), { status: 200 });
+  };
+  return { fetchImpl, meta, ration };
+}
+
+const withDb = { ...env, SUPABASE_URL: "https://proj.supabase.co/", SUPABASE_SERVICE_ROLE_KEY: "service-role-test-key" };
+
+test("the ration in memory: a 4th code to one number in 10 minutes is refused quietly, nothing sent", async () => {
+  const meta = fakeMeta();
+  for (let i = 0; i < LIMITS.phonePer10Minutes; i++) {
+    const res = await route(await signed(payload({ user: { id: USER } }), { id: `m${i}` }), env, meta.fetchImpl);
+    assert.deepEqual(await res.json(), {}, `code ${i + 1} sent`);
+  }
+  const { result, lines } = await captureConsole(async () =>
+    route(await signed(payload({ user: { id: USER } }), { id: "m4" }), env, meta.fetchImpl));
+  const out = await result.json();
+  assert.equal(result.status, 200, "Supabase reads the refusal from a 200");
+  assert.equal(out.error.http_code, 429);
+  assert.equal(out.error.message, "Trop de codes envoyés. Réessayez plus tard.");
+  assert.equal(meta.calls.length, LIMITS.phonePer10Minutes, "nothing sent over the limit");
+  const all = lines.join("\n");
+  assert.ok(all.includes("phone_10_minutes"));
+  assert.ok(!all.includes("70123456") && !all.includes(OTP), "the log names neither the number nor the code");
+  // Another number, the same account: still free.
+  const other = await route(await signed(payload({ user: { id: USER }, sms: { phone: "22670999999" } }), { id: "m5" }),
+    env, meta.fetchImpl);
+  assert.deepEqual(await other.json(), {});
+});
+
+test("the ration in memory: windows of 10 minutes and a day, per number and per account", () => {
+  const t0 = Date.UTC(2026, 9, 12, 8, 0, 0);
+  const min = 60 * 1000;
+  // Per number: 3 in 10 minutes, 10 a day.
+  let sent = 0;
+  for (let i = 0; i < 30; i++) {
+    if (memoryAllow("22670000001", null, t0 + i * 4 * min).ok) sent++;
+  }
+  assert.equal(sent, LIMITS.phonePerDay, "ten a day, however spread");
+  assert.equal(memoryAllow("22670000001", null, t0 + 25 * 60 * min).ok, true, "a day later, again");
+  resetMemoryLimits();
+  // Per account: 5 in 10 minutes across numbers, 20 a day.
+  const results = [];
+  for (let i = 0; i < 6; i++) results.push(memoryAllow(`2267100000${i}`, USER, t0 + i * 1000).ok);
+  assert.deepEqual(results, [true, true, true, true, true, false]);
+  assert.equal(memoryAllow("22671000009", USER, t0 + 2000).reason, "account_10_minutes");
+  let day = 5;
+  for (let i = 0; i < 40; i++) {
+    if (memoryAllow(`22672${String(i).padStart(6, "0")}`, USER, t0 + (11 + i * 11) * min).ok) day++;
+  }
+  assert.equal(day, LIMITS.accountPerDay);
+  assert.equal(memoryAllow("22673000000", USER, t0 + 23 * 60 * min).reason, "account_day");
+});
+
+test("the database decides when it can be asked: the number's digits and the account, as the service role", async () => {
+  const both = fakeBoth([{ ok: true }]);
+  const res = await route(await signed(payload({ user: { id: USER } })), withDb, both.fetchImpl);
+  assert.deepEqual(await res.json(), {});
+  assert.equal(both.ration.length, 1);
+  assert.equal(both.ration[0].url, "https://proj.supabase.co/rest/v1/rpc/otp_send_allow");
+  assert.deepEqual(both.ration[0].body, { p_phone: "22670123456", p_user: USER });
+  assert.equal(both.ration[0].headers.Authorization, "Bearer service-role-test-key");
+  assert.equal(both.meta.length, 1, "sent");
+  // Its no: refused, nothing sent — even where memory would say yes.
+  const no = fakeBoth([{ ok: false, reason: "phone_day" }]);
+  const { result, lines } = await captureConsole(async () =>
+    route(await signed(payload({ user: { id: USER } }), { id: "d2" }), withDb, no.fetchImpl));
+  const out = await result.json();
+  assert.equal(out.error.http_code, 429);
+  assert.equal(no.meta.length, 0);
+  assert.ok(lines.join("\n").includes("phone_day, database"));
+  assert.ok(!lines.join("\n").includes("service-role-test-key"));
+  // An account id that is not a UUID is not passed on.
+  const odd = fakeBoth([{ ok: true }]);
+  await route(await signed(payload({ user: { id: "u1" } }), { id: "d3" }), withDb, odd.fetchImpl);
+  assert.equal(odd.ration[0].body.p_user, null);
+});
+
+test("without the database's answer (130 not applied, an error, no answer) memory counts the same limits", async () => {
+  for (const answer of [404, 500, new Error("offline"), { unexpected: true }]) {
+    resetMemoryLimits();
+    const both = fakeBoth([answer]);
+    const codes = [];
+    for (let i = 0; i < LIMITS.phonePer10Minutes + 1; i++) {
+      const { result } = await captureConsole(async () =>
+        route(await signed(payload({ user: { id: USER } }), { id: `f${i}` }), withDb, both.fetchImpl));
+      const body = await result.json();
+      codes.push(body.error?.http_code ?? 200);
+    }
+    assert.deepEqual(codes, [200, 200, 200, 429], `ration answered ${answer}`);
+    assert.equal(both.meta.length, LIMITS.phonePer10Minutes);
+  }
+  // Asked directly: who counted.
+  resetMemoryLimits();
+  assert.equal((await otpGate({}, null, "22670123456", async () => { throw new Error("never"); })).by, "memory");
+  assert.equal((await otpGate(withDb, null, "22670123456", fakeBoth([{ ok: true }]).fetchImpl)).by, "database");
 });

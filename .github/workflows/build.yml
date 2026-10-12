@@ -25,6 +25,7 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+      - '.github/actions/android-build/**'
   # A pull request that touches the app builds the Android app too, so a
   # change to the Gradle setup or the shrinker rules is proven before it
   # merges — this sandbox has no Android SDK, and CI's Flutter tests do
@@ -33,219 +34,94 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+      - '.github/actions/android-build/**'
 
-# The Android job publishes the APKs to a GitHub release so a shop can
-# download the app from a public link (README: "Installing and updating
-# the Android app"). That needs write access to releases; nothing else
-# here writes anything.
+# Read-only by default (SEC_AUDIT_2 M5). Only main's release job, which
+# publishes the APKs to a GitHub release so a shop can download the app
+# from a public link (README: "Installing and updating the Android app"),
+# writes — releases, nothing else.
 permissions:
-  contents: write
+  contents: read
+
+# The public values every build compiles in, for every job. Secrets first,
+# then Actions variables, then the older names. The project URL is not
+# sensitive, so a plain variable is a fair place for it. Empty values are
+# falsy to `||`, so the first one actually set wins. These stay repository
+# secrets or variables: a pull request's build never enters the
+# `production` environment.
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+  SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
+  # Probed one by one so a failure can say which name carries a value.
+  # Only "set"/"empty" is ever printed, never a value.
+  PROBE_URL: ${{ secrets.SUPABASE_URL }}
+  PROBE_URL_VAR: ${{ vars.SUPABASE_URL }}
+  PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+  PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+  PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
+  # The Workers' origins, exactly as deploy-cloudflare.yml sources them:
+  # public hostnames, so repository variables; missing ones hide the
+  # camera and the account actions rather than failing the build.
+  UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
+  ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
+  # Crash reporting (README: "Crash reporting"). The DSN ships in every
+  # client and can only send, so a variable is fine; empty means off.
+  SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
+  # The push Worker's origin (README: "Push notifications"). A public
+  # hostname, so a variable; empty means the app offers no push alerts.
+  PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
+  PAY_URL: ${{ vars.PAY_URL || secrets.PAY_URL }}
 
 jobs:
+  # A pull request (and a manual run on another branch): the Android app
+  # built, so a change to the Gradle setup or the shrinker rules is proven
+  # before it merges — with the DEBUG key. No upload key, no Google Play
+  # account, no Firebase file is handed to it: the pull request's own
+  # Gradle and Dart code runs here, and must find no secret to print
+  # (SEC_AUDIT_2 M5). Nothing is published.
   build-android:
+    if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     # Every job here normally finishes in two to three minutes. The
     # default is six hours, and a stalled runner spends all of it
     # looking like a slow build -- which is how a deploy that never
     # happened goes unnoticed. Fail loudly instead.
     timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/android-build
+
+  # main — a push or a manual run there: the same build with the upload
+  # key, published to the GitHub release and sent to Google Play. Its
+  # secrets come through the `production` environment (SEC_AUDIT_2 H1):
+  # once the owner limits that environment to main, no branch can read
+  # them. Until then it is created on first use, unrestricted, and this
+  # runs exactly as before.
+  release-android:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: write
     env:
-      # Secrets first, then Actions variables, then the older names. The
-      # project URL is not sensitive, so a plain variable is a fair place for
-      # it. Empty values are falsy to `||`, so the first one actually set wins.
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
-      # Probed one by one so a failure can say which name carries a value.
-      # Only "set"/"empty" is ever printed, never a value.
-      PROBE_URL: ${{ secrets.SUPABASE_URL }}
-      PROBE_URL_VAR: ${{ vars.SUPABASE_URL }}
-      PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-      PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
-      PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
-      # The Workers' origins, exactly as deploy-cloudflare.yml sources them:
-      # public hostnames, so repository variables; missing ones hide the
-      # camera and the account actions rather than failing the build.
-      UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
-      ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
-      # Crash reporting (README: "Crash reporting"). The DSN ships in every
-      # client and can only send, so a variable is fine; empty means off.
-      SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
-      # The push Worker's origin (README: "Push notifications"). A public
-      # hostname, so a variable; empty means the app offers no push alerts.
-      PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
-      PAY_URL: ${{ vars.PAY_URL || secrets.PAY_URL }}
       # The Android upload key (README: "Signing the Android app"). Empty
       # means a debug-signed build, and the job summary says so.
       KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
       KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
+      KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
+      KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
       # Google Play (README: "Publishing to Google Play"): a service
       # account's JSON key with release rights on bf.kaj.app. Empty means
       # the bundle is only attached to the GitHub release.
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-      KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
-      KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
       # Android push (README: "Push notifications"): the Firebase project's
       # google-services.json, whole, as a secret. Empty means a build with no
       # Android push — it still builds.
       GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check the Supabase secrets are set
-        run: |
-          missing=""
-          [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
-          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
-          if [ -n "$missing" ]; then
-            state() { [ -n "$1" ] && echo set || echo empty; }
-            {
-              echo "Empty at build time:$missing"
-              echo
-              echo "What this job can actually read:"
-              echo "  secrets.SUPABASE_URL              $(state "$PROBE_URL")"
-              echo "  vars.SUPABASE_URL                 $(state "$PROBE_URL_VAR")"
-              echo "  secrets.SUPABASE_PUBLISHABLE_KEY  $(state "$PROBE_PUBLISHABLE")"
-              echo "  secrets.SUPABASE_ANON_KEY         $(state "$PROBE_ANON")"
-              echo "  secrets.SUPABASE_KEY              $(state "$PROBE_KEY")"
-              echo
-              echo "All empty means the values are not repository Actions secrets."
-              echo "They must be at:"
-              echo "  Settings > Secrets and variables > Actions > Repository secrets"
-              echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions"
-              echo
-              echo "Secrets under Codespaces, Dependabot, or an Actions"
-              echo "environment are invisible here, as are secrets on a"
-              echo "different repository."
-              echo
-              echo "Building without them produces an app whose login screen"
-              echo "only says 'Serveur non configuré'."
-            } >&2
-            exit 1
-          fi
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-
-      - name: Install dependencies
-        working-directory: app
-        run: flutter pub get
-
-      # The upload key, from four repository secrets (README: "Signing the
-      # Android app"). Written to the two gitignored files Gradle reads and
-      # never printed. Without them the release build falls back to the
-      # debug key: still installable for testing, never publishable — and
-      # the summary below says which of the two this run produced.
-      - name: Install the upload key
-        if: env.KAJ_KEYSTORE_BASE64 != ''
-        working-directory: app/android
-        run: |
-          echo "$KAJ_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
-          {
-            echo "storeFile=upload-keystore.jks"
-            echo "storePassword=$KAJ_KEYSTORE_PASSWORD"
-            echo "keyAlias=$KAJ_KEY_ALIAS"
-            echo "keyPassword=$KAJ_KEY_PASSWORD"
-          } > key.properties
-          echo "Upload key installed; this run is publishable." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Install Firebase's config (Android push)
-        if: env.GOOGLE_SERVICES_JSON != ''
-        working-directory: app/android
-        run: |
-          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
-          echo "google-services.json installed: Android push is in this build." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Note an unsigned build
-        if: env.KAJ_KEYSTORE_BASE64 == ''
-        run: |
-          echo "No KAJ_KEYSTORE_BASE64 secret — signed with the debug key: installable for testing, not publishable." >> "$GITHUB_STEP_SUMMARY"
-
-      # Every --dart-define the web deploy passes, or the phone gets an app
-      # with no camera and no account admin — a build that compiles and
-      # then quietly lacks half its features.
-      #
-      # --split-per-abi: one APK per processor instead of one carrying all
-      # three. Nearly every phone in the field is arm64; the 32-bit one is
-      # for the older ones. Neither carries the other's engine, which is
-      # what made the single APK weigh what it did. The bundle still holds
-      # every ABI — the Play Store splits it itself.
-      #
-      # BUILD_SHA: the commit this build is made from. The web deploy writes
-      # the same commit into version.json, and the app compares the two to
-      # know a newer build exists (core/update).
-      - name: Build APKs and App Bundle
-        working-directory: app
-        run: |
-          flutter build apk --release --split-per-abi \
-            --target-platform android-arm,android-arm64 \
-            --split-debug-info=build/symbols \
-            --build-number="$GITHUB_RUN_NUMBER" \
-            --dart-define=BUILD_SHA="$GITHUB_SHA" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
-            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
-            --dart-define=PUSH_URL="$PUSH_URL" \
-            --dart-define=PAY_URL="$PAY_URL"
-          # arm and arm64 only, like the APKs: x86_64 is the emulator's, and
-          # carried it would add a third engine to the bundle for no phone.
-          # STORE=play: the bundle is what Google Play installs, and the
-          # store updates its own copy — that build never shows the
-          # « Télécharger » banner pointing at the GitHub APK (core/update).
-          flutter build appbundle --release \
-            --target-platform android-arm,android-arm64 \
-            --split-debug-info=build/symbols \
-            --build-number="$GITHUB_RUN_NUMBER" \
-            --dart-define=STORE=play \
-            --dart-define=BUILD_SHA="$GITHUB_SHA" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-            --dart-define=UPLOADS_URL="$UPLOADS_URL" \
-            --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
-            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
-            --dart-define=PUSH_URL="$PUSH_URL" \
-            --dart-define=PAY_URL="$PAY_URL"
-          # Stable names, so the release's "latest" links never change.
-          mkdir -p out
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   out/kaj-arm64-v8a.apk
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk out/kaj-armeabi-v7a.apk
-          cp build/app/outputs/bundle/release/app-release.aab          out/kaj.aab
-
-      - name: Say what it weighs
-        working-directory: app
-        run: |
-          {
-            echo "### Sizes"
-            echo ""
-            echo "| File | Size |"
-            echo "|---|---|"
-            for f in out/kaj-arm64-v8a.apk out/kaj-armeabi-v7a.apk out/kaj.aab; do
-              echo "| $(basename "$f") | $(du -h "$f" | cut -f1) |"
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: kaj-app-android
-          path: app/out/*
-          if-no-files-found: error
-
-      # The Dart symbols --split-debug-info took out of the app: what turns
-      # an obfuscated stack trace from a phone back into file and line
-      # (`flutter symbolize`). Kept for a quarter, never shipped.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: kaj-app-android-symbols
-          path: app/build/symbols
-          retention-days: 90
-          if-no-files-found: warn
+      - uses: ./.github/actions/android-build
 
       # The public download link. Every push to main makes one release,
       # tagged by run number and marked latest, so
@@ -257,9 +133,9 @@ jobs:
       # right APK and published nothing, so the phones kept the last push's
       # build: android-243, made before the Firebase secret existed, was
       # « latest » while run 244 (with it) sat unpublished in Artifacts. A
-      # manual run on another branch is for trying it, and publishes nothing.
+      # manual run on another branch is the pull request's job: debug key,
+      # nothing published.
       - name: Publish the release
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         working-directory: app
         env:
           GH_TOKEN: ${{ github.token }}
@@ -289,7 +165,7 @@ jobs:
       # each upload is newer than the last. Only with the upload key: a
       # debug-signed bundle would be refused anyway.
       - name: Send to Google Play
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.PLAY_SERVICE_ACCOUNT_JSON != '' && env.KAJ_KEYSTORE_BASE64 != ''
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != '' && env.KAJ_KEYSTORE_BASE64 != ''
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -299,7 +175,6 @@ jobs:
           status: ${{ vars.PLAY_STATUS || 'completed' }}
 
       - name: Say where the bundle went
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           if [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ] && [ -n "$KAJ_KEYSTORE_BASE64" ]; then
             echo "Sent to Google Play, track ${{ vars.PLAY_TRACK || 'internal' }}." >> "$GITHUB_STEP_SUMMARY"
@@ -310,32 +185,8 @@ jobs:
   build-web:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || vars.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY || vars.SUPABASE_KEY }}
-      PROBE_URL: ${{ secrets.SUPABASE_URL }}
-      PROBE_URL_VAR: ${{ vars.SUPABASE_URL }}
-      PROBE_PUBLISHABLE: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-      PROBE_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
-      PROBE_KEY: ${{ secrets.SUPABASE_KEY }}
-      # The Workers' origins, exactly as deploy-cloudflare.yml sources them:
-      # public hostnames, so repository variables; missing ones hide the
-      # camera and the account actions rather than failing the build.
-      UPLOADS_URL: ${{ vars.UPLOADS_URL || secrets.UPLOADS_URL }}
-      ACCOUNT_ADMIN_URL: ${{ vars.ACCOUNT_ADMIN_URL || secrets.ACCOUNT_ADMIN_URL }}
-      # Crash reporting (README: "Crash reporting"). The DSN ships in every
-      # client and can only send, so a variable is fine; empty means off.
-      SENTRY_DSN: ${{ vars.SENTRY_DSN || secrets.SENTRY_DSN }}
-      # The push Worker's origin (README: "Push notifications"). A public
-      # hostname, so a variable; empty means the app offers no push alerts.
-      PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
-      PAY_URL: ${{ vars.PAY_URL || secrets.PAY_URL }}
-      # The Android upload key (README: "Signing the Android app"). Empty
-      # means a debug-signed build, and the job summary says so.
-      KAJ_KEYSTORE_BASE64: ${{ secrets.KAJ_KEYSTORE_BASE64 }}
-      KAJ_KEYSTORE_PASSWORD: ${{ secrets.KAJ_KEYSTORE_PASSWORD }}
-      KAJ_KEY_ALIAS: ${{ secrets.KAJ_KEY_ALIAS }}
-      KAJ_KEY_PASSWORD: ${{ secrets.KAJ_KEY_PASSWORD }}
+    # The public values come from the workflow's env above. No signing key:
+    # the web build never used one (SEC_AUDIT_2 M5).
     steps:
       - uses: actions/checkout@v4
 

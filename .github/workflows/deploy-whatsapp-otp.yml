@@ -29,6 +29,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The production secrets come through the `production` environment
+    # (SEC_AUDIT_2 H1): once the owner limits it to main, no other branch
+    # can read them. README, « Secrets and the production environment ».
+    environment: production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -38,6 +42,11 @@ jobs:
       WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
       WHATSAPP_TEMPLATE: ${{ secrets.WHATSAPP_TEMPLATE }}
       SEND_SMS_HOOK_SECRET: ${{ secrets.SEND_SMS_HOOK_SECRET }}
+      # The ration (130, SEC_AUDIT_2 M6): the Worker asks the database's
+      # otp_send_allow() before each code. Without these two it counts in
+      # its own memory (weaker) and says so below.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || secrets.SUPABASE_PROJECT_URL || vars.SUPABASE_PROJECT_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -72,7 +81,12 @@ jobs:
 
       - name: Deploy
         if: steps.ready.outputs.go == 'true'
-        run: npx --yes wrangler@4 deploy --config workers/whatsapp-otp/wrangler.toml
+        run: |
+          if [ -n "$SUPABASE_URL" ]; then
+            npx --yes wrangler@4 deploy --config workers/whatsapp-otp/wrangler.toml --var "SUPABASE_URL:$SUPABASE_URL"
+          else
+            npx --yes wrangler@4 deploy --config workers/whatsapp-otp/wrangler.toml
+          fi
 
       # Secrets through wrangler's store — never as --var, which would print
       # them in the deploy log.
@@ -83,6 +97,13 @@ jobs:
           printf '%s' "$WHATSAPP_PHONE_ID"    | npx --yes wrangler@4 secret put WHATSAPP_PHONE_ID    --config workers/whatsapp-otp/wrangler.toml
           printf '%s' "$WHATSAPP_TEMPLATE"    | npx --yes wrangler@4 secret put WHATSAPP_TEMPLATE    --config workers/whatsapp-otp/wrangler.toml
           printf '%s' "$SEND_SMS_HOOK_SECRET" | npx --yes wrangler@4 secret put SEND_SMS_HOOK_SECRET --config workers/whatsapp-otp/wrangler.toml
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/whatsapp-otp/wrangler.toml
+            echo "The ration is the database's (otp_send_allow, 130)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing: the codes are rationed in the Worker's memory only."
+            echo "The ration is the Worker's memory only (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing)." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Say what is left to do
         if: steps.ready.outputs.go == 'true'

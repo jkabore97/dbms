@@ -27,54 +27,72 @@ class InvoicePaper extends StatelessWidget {
       color: Colors.white,
       padding: const EdgeInsets.all(24),
       child: DefaultTextStyle(
-        style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 13),
+        // The app's own face, in the paper's ink (I-1: a bare TextStyle
+        // drew in whatever font was the default there).
+        style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+            .copyWith(color: const Color(0xFF1A1A1A), fontSize: 13),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Who is billing.
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        doc.orgName,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: accent,
-                        ),
-                      ),
-                      if ((doc.orgAddress ?? '').trim().isNotEmpty)
-                        Text(doc.orgAddress!.trim()),
-                      if ((doc.orgPhone ?? '').trim().isNotEmpty)
-                        Text(context.tr('Tél. {phone}', {'phone': doc.orgPhone!.trim()})),
-                      if ((doc.orgEmail ?? '').trim().isNotEmpty)
-                        Text(doc.orgEmail!.trim()),
-                      if (doc.taxLine != null) Text(doc.taxLine!),
-                    ],
+            // Who is billing, and the invoice's number and dates: side by
+            // side on a wide sheet; on a phone's narrow one, one under the
+            // other, so the business's name and address keep the sheet's
+            // width instead of 17 px (UI audit I-1).
+            LayoutBuilder(builder: (context, box) {
+              final who = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doc.orgName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: accent,
+                    ),
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(context.tr('FACTURE'),
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2)),
-                    Text(context.tr('N° {number}', {'number': doc.number}),
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(date.format(doc.issuedOn)),
-                    if (doc.dueOn != null)
-                      Text(context.tr('Échéance {date}', {'date': date.format(doc.dueOn!)})),
-                  ],
-                ),
-              ],
-            ),
+                  if ((doc.orgAddress ?? '').trim().isNotEmpty)
+                    Text(doc.orgAddress!.trim()),
+                  if ((doc.orgPhone ?? '').trim().isNotEmpty)
+                    Text(context.tr('Tél. {phone}', {'phone': doc.orgPhone!.trim()})),
+                  if ((doc.orgEmail ?? '').trim().isNotEmpty)
+                    Text(doc.orgEmail!.trim()),
+                  if (doc.taxLine != null) Text(doc.taxLine!),
+                ],
+              );
+              final stacked = box.maxWidth < 340;
+              final what = Column(
+                key: const Key('invoice-head-number'),
+                crossAxisAlignment:
+                    stacked ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                children: [
+                  Text(context.tr('FACTURE'),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2)),
+                  Text(context.tr('N° {number}', {'number': doc.number}),
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(date.format(doc.issuedOn)),
+                  if (doc.dueOn != null)
+                    Text(context.tr('Échéance {date}', {'date': date.format(doc.dueOn!)})),
+                ],
+              );
+              return stacked
+                  ? Column(
+                      key: const Key('invoice-head-stacked'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [who, const SizedBox(height: 14), what],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: who),
+                        const SizedBox(width: 12),
+                        Flexible(child: what),
+                      ],
+                    );
+            }),
 
             if (doc.isCancelled) ...[
               const SizedBox(height: 12),
@@ -251,11 +269,16 @@ class _Total extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(label, style: style),
+          // The label gives way first (I-2).
+          Flexible(child: Text(label, textAlign: TextAlign.right, style: style)),
           const SizedBox(width: 16),
           SizedBox(
             width: 130,
-            child: Text(value, textAlign: TextAlign.right, style: style),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(value, maxLines: 1, textAlign: TextAlign.right, style: style),
+            ),
           ),
         ],
       ),

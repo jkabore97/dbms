@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/format/money_text.dart';
 import '../../core/l10n/tr.dart';
 
 /// One thing a red number on the bar is counting (122): its name, a word
@@ -102,48 +103,61 @@ class AttentionBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
+          // Narrow (a small phone, large text): the button goes on its own
+          // line under the name, so the name keeps the row's width instead
+          // of three letters a line (UI audit S-5); and every button is a
+          // full 44 px tall.
           for (final item in items.take(shown))
             Padding(
               key: item.id == null ? null : Key('attention-item-${item.id}'),
               padding: const EdgeInsets.only(left: 36, top: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              child: LayoutBuilder(builder: (context, box) {
+                final words = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 2,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(item.label,
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600)),
-                            if (item.chip != null)
-                              AttentionChip(label: item.chip!, soft: item.chipSoft),
-                          ],
-                        ),
-                        if (item.detail != null)
-                          Text(item.detail!,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant)),
+                        Text(item.label,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600)),
+                        if (item.chip != null)
+                          AttentionChip(label: item.chip!, soft: item.chipSoft),
                       ],
                     ),
+                    if (item.detail != null)
+                      MoneyText(item.detail!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant)),
+                  ],
+                );
+                final hasAction = item.actionLabel != null && item.onAction != null;
+                if (!hasAction) return words;
+                final button = TextButton(
+                  key: item.id == null ? null : Key('attention-action-${item.id}'),
+                  onPressed: item.onAction,
+                  style: TextButton.styleFrom(
+                    foregroundColor: scheme.onErrorContainer,
+                    minimumSize: const Size(48, 44),
                   ),
-                  if (item.actionLabel != null && item.onAction != null)
-                    TextButton(
-                      key: item.id == null ? null : Key('attention-action-${item.id}'),
-                      onPressed: item.onAction,
-                      style: TextButton.styleFrom(
-                        foregroundColor: scheme.onErrorContainer,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      child: Text(item.actionLabel!,
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                ],
-              ),
+                  child: Text(item.actionLabel!,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                );
+                // About 16 em: the button and a dozen letters of the name.
+                final narrow = box.maxWidth <
+                    MediaQuery.textScalerOf(context).scale(14) * 16;
+                return narrow
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          words,
+                          Align(alignment: Alignment.centerRight, child: button),
+                        ],
+                      )
+                    : Row(children: [Expanded(child: words), button]);
+              }),
             ),
           if (rest > 0)
             Padding(

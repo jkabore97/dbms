@@ -1210,7 +1210,8 @@ class _SalarySheetState extends State<SalarySheet> {
               style: theme.textTheme.headlineSmall,
               decoration: InputDecoration(
                 labelText: context.tr('Montant'),
-                suffixText: widget.org.currency == 'XOF' ? 'F' : widget.org.currency,
+                // The symbol the rest of the app writes (T-2): FCFA, not F.
+                suffixText: currencySymbol(widget.org.currency),
                 border: const OutlineInputBorder(),
               ),
             ),

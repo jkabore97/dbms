@@ -1,0 +1,175 @@
+name: Build the Android app
+description: >
+  The Android build shared by build.yml's two Android jobs: the pull
+  request's (debug key, no store secret) and main's release (the upload
+  key, Firebase, Google Play — inside the `production` environment). It
+  reads everything from the calling job's env; a secret the job does not
+  hand it is simply absent here (SEC_AUDIT_2 M5).
+
+runs:
+  using: composite
+  steps:
+    - name: Check the Supabase secrets are set
+      shell: bash
+      run: |
+        missing=""
+        [ -n "$SUPABASE_URL" ] || missing="$missing SUPABASE_URL"
+        [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || missing="$missing SUPABASE_PUBLISHABLE_KEY"
+        if [ -n "$missing" ]; then
+          state() { [ -n "$1" ] && echo set || echo empty; }
+          {
+            echo "Empty at build time:$missing"
+            echo
+            echo "What this job can actually read:"
+            echo "  secrets.SUPABASE_URL              $(state "$PROBE_URL")"
+            echo "  vars.SUPABASE_URL                 $(state "$PROBE_URL_VAR")"
+            echo "  secrets.SUPABASE_PUBLISHABLE_KEY  $(state "$PROBE_PUBLISHABLE")"
+            echo "  secrets.SUPABASE_ANON_KEY         $(state "$PROBE_ANON")"
+            echo "  secrets.SUPABASE_KEY              $(state "$PROBE_KEY")"
+            echo
+            echo "All empty means the values are not repository Actions secrets."
+            echo "They must be at:"
+            echo "  Settings > Secrets and variables > Actions > Repository secrets"
+            echo "  https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions"
+            echo
+            echo "Secrets under Codespaces or Dependabot are invisible here,"
+            echo "as are secrets on a different repository. Keep these two"
+            echo "(public values) at repository level: a pull request's"
+            echo "build does not enter the production environment."
+            echo
+            echo "Building without them produces an app whose login screen"
+            echo "only says 'Serveur non configuré'."
+          } >&2
+          exit 1
+        fi
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: app
+      run: flutter pub get
+
+    # The upload key, from four secrets (README: "Signing the Android
+    # app") — handed only to main's release job. Written to the two
+    # gitignored files Gradle reads and never printed. Without them the
+    # release build falls back to the debug key: still installable for
+    # testing, never publishable — and the summary says which of the two
+    # this run produced.
+    - name: Install the upload key
+      if: env.KAJ_KEYSTORE_BASE64 != ''
+      shell: bash
+      working-directory: app/android
+      run: |
+        echo "$KAJ_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+        {
+          echo "storeFile=upload-keystore.jks"
+          echo "storePassword=$KAJ_KEYSTORE_PASSWORD"
+          echo "keyAlias=$KAJ_KEY_ALIAS"
+          echo "keyPassword=$KAJ_KEY_PASSWORD"
+        } > key.properties
+        echo "Upload key installed; this run is publishable." >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Install Firebase's config (Android push)
+      if: env.GOOGLE_SERVICES_JSON != ''
+      shell: bash
+      working-directory: app/android
+      run: |
+        printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+        echo "google-services.json installed: Android push is in this build." >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Note an unsigned build
+      if: env.KAJ_KEYSTORE_BASE64 == ''
+      shell: bash
+      run: |
+        echo "No upload key in this job — signed with the debug key: installable for testing, not publishable." >> "$GITHUB_STEP_SUMMARY"
+
+    # Every --dart-define the web deploy passes, or the phone gets an app
+    # with no camera and no account admin — a build that compiles and
+    # then quietly lacks half its features.
+    #
+    # --split-per-abi: one APK per processor instead of one carrying all
+    # three. Nearly every phone in the field is arm64; the 32-bit one is
+    # for the older ones. Neither carries the other's engine, which is
+    # what made the single APK weigh what it did. The bundle still holds
+    # every ABI — the Play Store splits it itself.
+    #
+    # BUILD_SHA: the commit this build is made from. The web deploy writes
+    # the same commit into version.json, and the app compares the two to
+    # know a newer build exists (core/update).
+    - name: Build APKs and App Bundle
+      shell: bash
+      working-directory: app
+      run: |
+        flutter build apk --release --split-per-abi \
+          --target-platform android-arm,android-arm64 \
+          --split-debug-info=build/symbols \
+          --build-number="$GITHUB_RUN_NUMBER" \
+          --dart-define=BUILD_SHA="$GITHUB_SHA" \
+          --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+          --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+          --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+          --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+          --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+          --dart-define=PUSH_URL="$PUSH_URL" \
+          --dart-define=PAY_URL="$PAY_URL"
+        # arm and arm64 only, like the APKs: x86_64 is the emulator's, and
+        # carried it would add a third engine to the bundle for no phone.
+        # STORE=play: the bundle is what Google Play installs, and the
+        # store updates its own copy — that build never shows the
+        # « Télécharger » banner pointing at the GitHub APK (core/update).
+        flutter build appbundle --release \
+          --target-platform android-arm,android-arm64 \
+          --split-debug-info=build/symbols \
+          --build-number="$GITHUB_RUN_NUMBER" \
+          --dart-define=STORE=play \
+          --dart-define=BUILD_SHA="$GITHUB_SHA" \
+          --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+          --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+          --dart-define=UPLOADS_URL="$UPLOADS_URL" \
+          --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
+          --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+          --dart-define=PUSH_URL="$PUSH_URL" \
+          --dart-define=PAY_URL="$PAY_URL"
+        # Stable names, so the release's "latest" links never change.
+        mkdir -p out
+        cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   out/kaj-arm64-v8a.apk
+        cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk out/kaj-armeabi-v7a.apk
+        cp build/app/outputs/bundle/release/app-release.aab          out/kaj.aab
+
+    - name: Say what it weighs
+      shell: bash
+      working-directory: app
+      run: |
+        {
+          echo "### Sizes"
+          echo ""
+          echo "| File | Size |"
+          echo "|---|---|"
+          for f in out/kaj-arm64-v8a.apk out/kaj-armeabi-v7a.apk out/kaj.aab; do
+            echo "| $(basename "$f") | $(du -h "$f" | cut -f1) |"
+          done
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: kaj-app-android
+        path: app/out/*
+        if-no-files-found: error
+
+    # The Dart symbols --split-debug-info took out of the app: what turns
+    # an obfuscated stack trace from a phone back into file and line
+    # (`flutter symbolize`). Kept for a quarter, never shipped.
+    - uses: actions/upload-artifact@v4
+      with:
+        name: kaj-app-android-symbols
+        path: app/build/symbols
+        retention-days: 90
+        if-no-files-found: warn

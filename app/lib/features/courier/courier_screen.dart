@@ -121,6 +121,9 @@ class _CourierScreenState extends State<CourierScreen>
   }
 
   Future<void> _load({bool silent = false}) async {
+    // After an await (a course finished on the map pops this page): the
+    // page may be gone (K-2).
+    if (!mounted) return;
     setState(() {
       if (!silent) _loading = true;
       _error = null;
@@ -394,35 +397,53 @@ class _CourierScreenState extends State<CourierScreen>
                   'suspended' => ShopNotice(
                       text: context.tr('Votre accès livreur est suspendu. Contactez la plateforme.'),
                     ),
-                  _ => Column(
-                        children: [
-                          // The ring on a moto in traffic (115): a job on
-                          // the board reaches a closed app once this device
-                          // is in the book — offered until it is.
-                          _pushOffer(context,
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16)),
-                          // What today paid (062): the one strip on the
-                          // page a courier reads before anything else.
-                          if (_earnings.isNotEmpty)
-                            _EarningsStrip(
-                                earnings: _earnings,
-                                currency: _mine.isNotEmpty
-                                    ? _mine.first.currency
-                                    : 'XOF'),
-                          if (_cash.isNotEmpty) _CashStrip(cash: _cash),
-                          Material(
-                            color: ShopStyle.paper,
-                            child: TabBar(controller: tabs, tabs: [
-                              Tab(
-                                  text:
-                                      '${context.tr('Disponibles')}${_board.isEmpty ? '' : ' (${_board.length})'}'),
-                              Tab(
-                                  text:
-                                      '${context.tr('Mes courses')}${running == 0 ? '' : ' ($running)'}'),
-                            ]),
+                  // The strips scroll away with the lists and the tabs stay
+                  // pinned (UI audit K-1): at large text on a small phone
+                  // the strips alone were taller than the screen, and the
+                  // lists got no room at all.
+                  _ => NestedScrollView(
+                        key: const Key('courier-board'),
+                        headerSliverBuilder: (context, _) => [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // The ring on a moto in traffic (115): a job
+                                // on the board reaches a closed app once this
+                                // device is in the book — offered until it is.
+                                _pushOffer(context,
+                                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16)),
+                                // What today paid (062): the one strip on the
+                                // page a courier reads before anything else.
+                                if (_earnings.isNotEmpty)
+                                  _EarningsStrip(
+                                      earnings: _earnings,
+                                      currency: _mine.isNotEmpty
+                                          ? _mine.first.currency
+                                          : 'XOF'),
+                                if (_cash.isNotEmpty) _CashStrip(cash: _cash),
+                              ],
+                            ),
                           ),
-                          Expanded(
-                            child: TabBarView(controller: tabs, children: [
+                          SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _PinnedTabs(
+                              Material(
+                                color: ShopStyle.paper,
+                                child: TabBar(controller: tabs, tabs: [
+                                  Tab(
+                                      text:
+                                          '${context.tr('Disponibles')}${_board.isEmpty ? '' : ' (${_board.length})'}'),
+                                  Tab(
+                                      text:
+                                          '${context.tr('Mes courses')}${running == 0 ? '' : ' ($running)'}'),
+                                ]),
+                              ),
+                            ),
+                          ),
+                        ],
+                        body: TabBarView(controller: tabs, children: [
                               _JobList(
                                 jobs: _board,
                                 // 122: with neither a position nor a city,
@@ -503,12 +524,32 @@ class _CourierScreenState extends State<CourierScreen>
                                 },
                               ),
                             ]),
-                          ),
-                        ],
                       ),
                 },
     );
   }
+}
+
+/// The two tabs, pinned at the top of the board while the strips above
+/// them scroll away (K-1).
+class _PinnedTabs extends SliverPersistentHeaderDelegate {
+  _PinnedTabs(this.child);
+
+  final Widget child;
+
+  static const double _height = 46;
+
+  @override
+  double get minExtent => _height;
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      SizedBox.expand(child: child);
+
+  @override
+  bool shouldRebuild(_PinnedTabs old) => old.child != child;
 }
 
 /// Today, this week, this month — courses, money, kilometres — on the
@@ -525,63 +566,101 @@ class _EarningsStrip extends StatelessWidget {
     final money = moneyFormat(currency);
     final today = earnings.where((e) => e.period == 'today').firstOrNull;
     final rest = earnings.where((e) => e.period != 'today').toList();
-    return ColoredBox(
-      color: ShopStyle.stone,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+    // A small phone or large text: the week and the month go under today,
+    // side by side, rather than squeezing today to a letter a line (K-1).
+    final compact = MediaQuery.sizeOf(context).width < 400 ||
+        MediaQuery.textScalerOf(context).scale(10) > 11.5;
+    Widget period(CourierEarnings e, {required bool start}) => Column(
+          crossAxisAlignment: start ? CrossAxisAlignment.start : CrossAxisAlignment.end,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.tr('AUJOURD\'HUI'),
+            Text(context.tr(CourierEarnings.label(e.period)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, color: ShopStyle.mist)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: start ? Alignment.centerLeft : Alignment.centerRight,
+              child: Text(money.format(e.net),
+                  maxLines: 1,
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: ShopStyle.ink)),
+            ),
+            Text('${e.courses} · ${e.km.toStringAsFixed(0)} km',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+          ],
+        );
+    final todayBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.tr('AUJOURD\'HUI'),
                       style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.4,
                           color: ShopStyle.mist)),
                   const SizedBox(height: 2),
-                  // What the courier keeps (067): the fees minus the
-                  // platform's part, said beside it so settlement day
-                  // never surprises.
-                  Text(money.format(today?.net ?? 0),
-                      style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                          color: ShopStyle.ink)),
-                  Text(
-                      '${(today?.courses ?? 0) > 1 ? context.tr('{n} courses', {'n': today!.courses}) : context.tr('{n} course', {'n': today?.courses ?? 0})}'
-                      ' · ${(today?.km ?? 0).toStringAsFixed(1)} km'
-                      '${(today?.share ?? 0) > 0 ? ' · ${context.tr('part Mara {amount}', {'amount': money.format(today!.share)})}' : ''}',
-                      style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+        // What the courier keeps (067): the fees minus the platform's part,
+        // said beside it so settlement day never surprises. One line, the
+        // amount whole: it shrinks rather than breaks.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(money.format(today?.net ?? 0),
+              key: const Key('courier-today'),
+              maxLines: 1,
+              style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: ShopStyle.ink)),
+        ),
+        Text(
+            '${(today?.courses ?? 0) > 1 ? context.tr('{n} courses', {'n': today!.courses}) : context.tr('{n} course', {'n': today?.courses ?? 0})}'
+            ' · ${(today?.km ?? 0).toStringAsFixed(1)} km'
+            '${(today?.share ?? 0) > 0 ? ' · ${context.tr('part Mara {amount}', {'amount': money.format(today!.share)})}' : ''}',
+            style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
+      ],
+    );
+    return ColoredBox(
+      color: ShopStyle.stone,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+        child: compact
+            ? Column(
+                key: const Key('courier-earnings-compact'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  todayBlock,
+                  if (rest.isNotEmpty) const SizedBox(height: 10),
+                  if (rest.isNotEmpty)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var k = 0; k < rest.length; k++) ...[
+                          if (k > 0) const SizedBox(width: 16),
+                          Expanded(child: period(rest[k], start: true)),
+                        ],
+                      ],
+                    ),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: todayBlock),
+                  for (final e in rest)
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 18),
+                        child: period(e, start: false),
+                      ),
+                    ),
                 ],
               ),
-            ),
-            for (final e in rest)
-              Padding(
-                padding: const EdgeInsets.only(left: 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(CourierEarnings.label(e.period),
-                        style: const TextStyle(
-                            fontSize: 11, color: ShopStyle.mist)),
-                    Text(money.format(e.net),
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: ShopStyle.ink)),
-                    Text('${e.courses} · ${e.km.toStringAsFixed(0)} km',
-                        style: const TextStyle(
-                            fontSize: 12, color: ShopStyle.mist)),
-                  ],
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
@@ -714,11 +793,14 @@ class _JobCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: ShopStyle.ink)),
                 ),
-                Text('$when · ${money.format(job.total)}',
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ShopStyle.ink)),
+                Flexible(
+                  child: Text('$when · ${money.format(job.total)}',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ShopStyle.ink)),
+                ),
               ],
             ),
             if (job.ownShop || job.toShopKm != null) ...[

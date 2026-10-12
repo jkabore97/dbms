@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../cauris/path_card.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,7 @@ import 'credit_flows.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// Qui me doit combien — the carnet de crédit.
 ///
@@ -157,7 +159,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(strings.creditBook)),
+      appBar: AppBar(actions: const [bellRoom], title: AppBarTitle(strings.creditBook)),
       floatingActionButton: !canEdit
           ? null
           : Column(
@@ -221,9 +223,8 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                           Padding(
                             padding: const EdgeInsets.all(8),
                             child: Text(
-                              strings.totalOutstanding(
-                                  '${_money.format(total)} '
-                                  '${widget.org.currency}'),
+                              // The amount carries its currency (C-1).
+                              strings.totalOutstanding(_money.format(total)),
                               style: theme.textTheme.titleMedium,
                             ),
                           ),
@@ -247,8 +248,12 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                                   ],
                                 ),
                                 subtitle: _subtitle(context, row),
-                                trailing: Text(
+                                // Whole, and never more than about a quarter of the
+                                // row: the name keeps its words (R-1).
+                                trailing: MoneyText(
                                   _money.format(row.totalOwed),
+                                  alignment: Alignment.centerRight,
+                                  maxWidth: MediaQuery.sizeOf(context).width * 0.28,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontFeatures: const [
                                       FontFeature.tabularFigures()
@@ -446,7 +451,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(me?.name ?? strings.creditBook)),
+      appBar: AppBar(actions: const [bellRoom], title: AppBarTitle(me?.name ?? strings.creditBook)),
       floatingActionButton: !canEdit || remaining <= 0
           ? null
           : FloatingActionButton.extended(
@@ -465,9 +470,8 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
-                        strings.totalOutstanding(
-                            '${_money.format(remaining)} '
-                            '${widget.org.currency}'),
+                        // The amount carries its currency (C-1).
+                        strings.totalOutstanding(_money.format(remaining)),
                         style: theme.textTheme.titleLarge,
                       ),
                     ),

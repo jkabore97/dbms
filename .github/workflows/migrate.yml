@@ -33,6 +33,10 @@ concurrency:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    # Production secrets through the `production` environment (SEC_AUDIT_2
+    # H1): once the owner limits it to main, no other branch reads them.
+    # Until then it is created on first use, unrestricted — runs as before.
+    environment: production
     env:
       DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:

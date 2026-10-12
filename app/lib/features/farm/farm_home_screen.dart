@@ -35,6 +35,7 @@ import '../../core/retail/models.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// Ignace's home screen.
 ///
@@ -285,7 +286,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
       // its place, with its word, on the bar at the foot (HomeNav).
       bottomNavigationBar: nav.bar(context),
       appBar: AppBar(
-        title: Text(widget.org.name),
+        title: AppBarTitle(widget.org.name),
         actions: [
           if (_pending > 0)
             Padding(
@@ -314,7 +315,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           : RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                // Room under the last card for the row of round buttons and
+                // « Récolte » floating over the list (UI audit S-4).
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
                 children: [
                   // Le Chemin (097): the one next thing to do. Gone once
                   // the path is walked.

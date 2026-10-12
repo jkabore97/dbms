@@ -83,10 +83,25 @@ class _ScrollHintState extends State<ScrollHint> {
     // A list under a nearer hint (a step flow's, a sheet's, inside a page
     // that has its own) is that one's: never two arrows.
     if (from.findAncestorStateOfType<_ScrollHintState>() != this) return false;
+    // Sizes are not to be read while the frame is being laid out (a
+    // ScrollMetricsNotification is sent from layout): measured once the
+    // frame is done (UI audit B-6).
+    final Element element = from;
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted && element.mounted) _measure(element, metrics);
+      });
+      return false;
+    }
+    _measure(from, metrics);
+    return false;
+  }
+
+  void _measure(Element from, ScrollMetrics metrics) {
     final box = from.findRenderObject();
     final me = context.findRenderObject();
     if (box is! RenderBox || me is! RenderBox || !box.attached || !box.hasSize || !me.hasSize) {
-      return false;
+      return;
     }
     final rect = box.localToGlobal(Offset.zero, ancestor: me) & box.size;
     _seen[from] = _Seen(
@@ -97,7 +112,6 @@ class _ScrollHintState extends State<ScrollHint> {
     );
     _refresh();
     _watch();
-    return false;
   }
 
   /// A page pushed over the list, or popped off it, sends no notification
@@ -171,7 +185,11 @@ class _ScrollHintState extends State<ScrollHint> {
             Positioned(
               left: at.rect.left,
               width: at.rect.width,
-              bottom: at.gap + 10,
+              // Never inside the home indicator's band (UI audit B-5).
+              bottom: (at.gap < MediaQuery.paddingOf(context).bottom
+                      ? MediaQuery.paddingOf(context).bottom
+                      : at.gap) +
+                  10,
               child: IgnorePointer(
                 child: ExcludeSemantics(
                   child: AnimatedSwitcher(

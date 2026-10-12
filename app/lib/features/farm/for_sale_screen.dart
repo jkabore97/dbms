@@ -21,6 +21,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../core/theme/app_bar_title.dart';
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -142,15 +143,14 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final slug = widget.org.slug;
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('À vendre')),
+        title: AppBarTitle(context.tr('À vendre')),
         actions: [
           if (slug != null && slug.isNotEmpty)
-            TextButton.icon(
-              key: const Key('see-vitrine'),
-              onPressed: () => context.push(Routes.storefront(slug)),
-              icon: const Icon(Icons.storefront_outlined),
-              label: Text(context.tr('Ma vitrine')),
-            ),
+            labelledBarAction(context,
+                key: const Key('see-vitrine'),
+                onPressed: () => context.push(Routes.storefront(slug)),
+                icon: Icons.storefront_outlined,
+                label: context.tr('Ma vitrine')),
           bellRoom,
         ],
       ),

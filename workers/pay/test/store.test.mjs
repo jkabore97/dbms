@@ -715,3 +715,38 @@ test("the store doors call the global fetch as a plain function", async () => {
     globalThis.fetch = real;
   }
 });
+
+// SEC_AUDIT_2 L1: what Apple or Google said on a failure stays in the
+// Worker's log; the app is answered a fixed code.
+test("an App Store or Google Play failure answers the code « upstream », never the store's own words", async () => {
+  const raw = '{"errorCode":4040010,"errorMessage":"internal detail for Mara only"}';
+  const logged = [];
+  const error = console.error;
+  console.error = (...a) => logged.push(a.join(" "));
+  try {
+    const w = world();
+    const inner = w.io.fetch;
+    w.io.fetch = async (url, init) =>
+      String(url).startsWith("https://api.storekit") ? new Response(raw, { status: 500 }) : inner(url, init);
+    const r = await call(w, "/store/verify", {
+      platform: "apple", org_id: ORG, product_id: "bf.kaj.app.pro.monthly", transaction_id: "2000000111",
+    });
+    assert.equal(r.status, 502);
+    assert.equal(r.body.code, "upstream");
+    assert.ok(!JSON.stringify(r.body).includes("internal detail"), JSON.stringify(r.body));
+
+    const g = world();
+    const gInner = g.io.fetch;
+    g.io.fetch = async (url, init) =>
+      String(url).startsWith("https://androidpublisher.googleapis.com") ? new Response(raw, { status: 503 }) : gInner(url, init);
+    const rg = await call(g, "/store/verify", {
+      platform: "google", org_id: ORG, product_id: "mara_pro", token: "tok-0123456789",
+    });
+    assert.equal(rg.status, 502, JSON.stringify(rg.body));
+    assert.equal(rg.body.code, "upstream");
+    assert.ok(!JSON.stringify(rg.body).includes("internal detail"));
+  } finally {
+    console.error = error;
+  }
+  assert.ok(logged.some((l) => l.includes("internal detail for Mara only")), "the log keeps it: " + logged.join("\n"));
+});

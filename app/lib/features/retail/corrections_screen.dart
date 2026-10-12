@@ -10,6 +10,7 @@ import '../../core/retail/retail_repository.dart';
 import '../common/owned_controller.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/format/money_text.dart';
 
 /// Undoing a transaction the honest way.
 ///
@@ -212,7 +213,8 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
       color: theme.colorScheme.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(
+        // Whole on one line (R-1: « 26 850 F / CFA »).
+        title: MoneyText(
           _money.format(s.total),
           style: TextStyle(
             fontWeight: FontWeight.w600,

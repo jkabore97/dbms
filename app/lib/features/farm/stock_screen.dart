@@ -279,13 +279,16 @@ class _ItemTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+        // In the reader's language (UI audit F-1: French in the English app).
         [
           if (item.reorderLevel != null)
-            'seuil ${trimQuantity(item.reorderLevel!)} ${item.unit}'
+            context.tr('seuil {n} {unit}',
+                {'n': trimQuantity(item.reorderLevel!), 'unit': item.unit})
           else
-            'aucun seuil',
+            context.tr('aucun seuil'),
           if (item.lastMovement != null)
-            'dernier mouvement ${DateFormat('d MMM', intlLocale()).format(item.lastMovement!)}',
+            context.tr('dernier mouvement {date}',
+                {'date': DateFormat('d MMM', intlLocale()).format(item.lastMovement!)}),
         ].join(' · '),
           ),
           if (item.belowReorder && canEdit)

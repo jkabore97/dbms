@@ -21,9 +21,15 @@ export 'package:intl/intl.dart' show NumberFormat;
 ///   * fr_FR grouping, so 1 200 000 reads the way it is written by hand here.
 NumberFormat moneyFormat(String currency) => NumberFormat.currency(
       locale: 'fr_FR',
-      symbol: currency == 'XOF' ? 'FCFA' : currency,
+      symbol: currencySymbol(currency),
       decimalDigits: 0,
     );
+
+/// The symbol moneyFormat writes after an amount — for the places that
+/// show it alone, such as an amount field's suffix. Never add it after
+/// moneyFormat(...).format(...): the amount already carries it (UI audit
+/// C-1, A-2: « 160 000 FCFA XOF »).
+String currencySymbol(String currency) => currency == 'XOF' ? 'FCFA' : currency;
 
 /// What a person typed as an amount. Thousands are written here with a
 /// space, a dot or a comma — « 45 000 », « 45.000 », « 45,000 » are all

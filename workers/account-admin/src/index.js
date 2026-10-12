@@ -261,7 +261,9 @@ async function deleteMe(request, env) {
   // 1. What will go, and what must be stopped first.
   const stopsAnswer = await rpcAsService(env, "delete_my_account_stops", { p_me: me.id, p_confirmed_orgs: confirmed });
   if (!stopsAnswer.ok) {
-    if (stopsAnswer.code === "PGRST202" || stopsAnswer.status === 404) return deleteMeBefore128(env, token, me);
+    // Only « no such function » (a database before 128) takes 113's path —
+    // never any other 404 (SEC_AUDIT_2 L15).
+    if (stopsAnswer.code === "PGRST202") return deleteMeBefore128(env, token, me);
     if (stopsAnswer.code === "P0001" && stopsAnswer.message) {
       return problem(409, stopsAnswer.message, stopsAnswer.details || "refused", stopsAnswer.hint || undefined);
     }
@@ -319,7 +321,15 @@ async function deleteMe(request, env) {
   // 3. Written down before any purge — what was stopped, even if a later
   // step fails (and when this one fails, what was stopped is in the log).
   if (stopped.stripe.length || stopped.google.length) {
-    console.log("account deletion: stopped", JSON.stringify({ user: me.id, ...stopped }));
+    // Stripe's ids (useless without Mara's key); of Google's purchase
+    // tokens — bearer identifiers for the Play API — the count and the last
+    // 6 characters only (SEC_AUDIT_2 L2).
+    console.log("account deletion: stopped", JSON.stringify({
+      user: me.id,
+      stripe: stopped.stripe,
+      google: stopped.google.length,
+      google_ends: stopped.google.map((t) => `…${String(t).slice(-6)}`),
+    }));
   }
   if (stopped.stripe.length || stopped.google.length || failedOn === null) {
     const noted = await rpcAsService(env, "account_deletion_note", {
