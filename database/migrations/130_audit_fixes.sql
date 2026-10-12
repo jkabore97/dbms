@@ -239,6 +239,10 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         revoke all on otp_sends from authenticated;
     end if;
+    -- The Worker asks otp_send_allow(); it reads and writes no row itself.
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+        revoke all on otp_sends from service_role;
+    end if;
 end $$;
 
 -- May a code go to this number for this account now? Yes: counted, and
