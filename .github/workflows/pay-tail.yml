@@ -1,0 +1,32 @@
+# Temporary: listens to the payments Worker's live log for 7 minutes, to
+# read why a Google Play check fails (codes only; the Worker never logs a
+# token). Removed once it has run.
+name: Pay tail
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/pay-tail.yml]
+jobs:
+  tail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tail kaj-pay
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          timeout 420 npx --yes wrangler@4 tail kaj-pay --format json > tail.json || true
+          python3 - <<'PY'
+          import json
+          for line in open("tail.json"):
+              line=line.strip()
+              if not line.startswith("{"): continue
+              try: e=json.loads(line)
+              except Exception: continue
+              req=(e.get("event") or {}).get("request") or {}
+              path=req.get("url","").split("?")[0]
+              status=((e.get("event") or {}).get("response") or {}).get("status")
+              logs=[" ".join(map(str,l.get("message",[]))) for l in e.get("logs",[])]
+              exc=[x.get("message") for x in e.get("exceptions",[])]
+              print(e.get("eventTimestamp"), req.get("method"), path, status, logs, exc)
+          PY
