@@ -64,9 +64,14 @@ import {
 import { appleConfigured } from "./apple.js";
 import { googleConfigured } from "./google.js";
 
+// The global fetch, called as a plain function: a Worker throws « Illegal
+// invocation » when it is called as io.fetch(…) with io as `this` (the
+// first Google check failed so).
+const callFetch = (input, init) => fetch(input, init);
+
 /// What the store doors call through: the network and the two ways into
 /// PostgREST — swapped by the tests.
-export const storeIo = () => ({ fetch, rpcAs, rpcService });
+export const storeIo = () => ({ fetch: callFetch, rpcAs, rpcService });
 
 export default {
   async fetch(request, env) {
@@ -209,7 +214,10 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
     // Every refusal is in the Worker's log by its code (review S3) —
     // never a token or a transaction id.
     if (status < 500) console.warn(`store ${url.pathname}: refused ${status} ${answer.code || ""}`.trim());
-    else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""}`.trim());
+    // A failure also says why (the message, never a token): a 502 with no
+    // code was all the log held when the first Google check failed.
+    else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""} ${answer.error || ""}`.trim(),
+                       error instanceof Error && !(error.code) ? String(error.stack || "").split("\n").slice(0, 3).join(" | ") : "");
     // A notification failing for a passing reason is retried by Apple and
     // Pub/Sub (any non-2xx); a bad signature or secret is not worth it,
     // but says so with its 401.
@@ -219,7 +227,7 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
 }
 
 /// The app asked to pay something.
-export async function checkout(body, userToken, env, io = { fetch }) {
+export async function checkout(body, userToken, env, io = { fetch: callFetch }) {
   const kind = String(body?.kind || "");
   const method = body?.method === "card" ? "card" : "wave";
   const begun = await rpcAs(env, userToken, "wave_begin", {
@@ -250,7 +258,7 @@ export async function checkout(body, userToken, env, io = { fetch }) {
 }
 
 /// The owner asked to subscribe by card.
-export async function stripeCheckout(body, userToken, env, io = { fetch }) {
+export async function stripeCheckout(body, userToken, env, io = { fetch: callFetch }) {
   const begun = await rpcAs(env, userToken, "stripe_begin", {
     p_org_id: body?.org_id,
     p_period: body?.period === "year" ? "year" : "month",
@@ -274,7 +282,7 @@ export async function stripeCheckout(body, userToken, env, io = { fetch }) {
 }
 
 /// The owner asked for Stripe's page: change the card, cancel.
-export async function stripePortal(body, userToken, env, io = { fetch }) {
+export async function stripePortal(body, userToken, env, io = { fetch: callFetch }) {
   const customerId = await rpcAs(env, userToken, "stripe_customer_of", {
     p_org_id: body?.org_id,
   }, io.fetch);
@@ -294,7 +302,7 @@ export async function stripePortal(body, userToken, env, io = { fetch }) {
 /// Stripe says something about a subscription. Whatever the event, the
 /// subscription is read again from Stripe, so events out of order or twice
 /// write the same truth.
-export async function onStripeEvent(event, env, io = { fetch }) {
+export async function onStripeEvent(event, env, io = { fetch: callFetch }) {
   const ref = subscriptionOf(event);
   if (!ref || !ref.id) return { ignored: event?.type || "" };
   const sub = readSubscription(await getSubscription(env, ref.id, io.fetch));
@@ -313,7 +321,7 @@ export async function onStripeEvent(event, env, io = { fetch }) {
 }
 
 /// Wave says a session ended.
-export async function onWebhook(event, env, io = { fetch, sendPayout }) {
+export async function onWebhook(event, env, io = { fetch: callFetch, sendPayout }) {
   const type = event?.type || "";
   const data = event?.data || {};
   if (type !== "checkout.session.completed" && type !== "checkout.session.payment_failed") {
@@ -332,7 +340,7 @@ export async function onWebhook(event, env, io = { fetch, sendPayout }) {
 }
 
 /// Sends one shop its money and records the outcome either way.
-export async function payOut(payout, env, io = { fetch, sendPayout }) {
+export async function payOut(payout, env, io = { fetch: callFetch, sendPayout }) {
   try {
     const sent = await io.sendPayout(env, {
       paymentId: payout.payment_id,
@@ -360,7 +368,7 @@ export async function payOut(payout, env, io = { fetch, sendPayout }) {
   }
 }
 
-export async function retryPayouts(env, io = { fetch, sendPayout }) {
+export async function retryPayouts(env, io = { fetch: callFetch, sendPayout }) {
   const queue = await rpcService(env, "wave_payout_queue", {}, io.fetch);
   let sent = 0;
   for (const row of queue || []) {

@@ -695,3 +695,23 @@ test("the daily re-check asks the store again and closes what it no longer knows
   assert.equal(w.db.get("apple:2000000100").state, "expired");
   assert.equal(w.db.get("google:tok-gone-00000").state, "expired");
 });
+
+// A Worker refuses fetch called with an object as `this` (« Illegal
+// invocation »): the doors' own network must call it as a plain function.
+test("the store doors call the global fetch as a plain function", async () => {
+  const { storeIo } = await import("../src/index.js");
+  const real = globalThis.fetch;
+  let seen;
+  globalThis.fetch = function (input) {
+    if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
+    seen = String(input);
+    return Promise.resolve(new Response("{}"));
+  };
+  try {
+    const io = storeIo();
+    await io.fetch("https://example.test/x");
+    assert.equal(seen, "https://example.test/x");
+  } finally {
+    globalThis.fetch = real;
+  }
+});
