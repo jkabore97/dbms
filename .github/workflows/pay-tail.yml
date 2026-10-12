@@ -15,18 +15,22 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          timeout 420 npx --yes wrangler@4 tail kaj-pay --format json > tail.json || true
+          timeout 540 npx --yes wrangler@4 tail kaj-pay --format json > tail.json || true
           python3 - <<'PY'
           import json
-          for line in open("tail.json"):
-              line=line.strip()
-              if not line.startswith("{"): continue
-              try: e=json.loads(line)
-              except Exception: continue
-              req=(e.get("event") or {}).get("request") or {}
+          txt=open("tail.json").read()
+          print("bytes", len(txt))
+          dec=json.JSONDecoder(); i=0
+          while True:
+              j=txt.find("{", i)
+              if j<0: break
+              try: e,i=dec.raw_decode(txt,j)
+              except Exception: i=j+1; continue
+              ev=e.get("event") or {}
+              req=ev.get("request") or {}
               path=req.get("url","").split("?")[0]
-              status=((e.get("event") or {}).get("response") or {}).get("status")
+              status=(ev.get("response") or {}).get("status")
               logs=[" ".join(map(str,l.get("message",[]))) for l in e.get("logs",[])]
               exc=[x.get("message") for x in e.get("exceptions",[])]
-              print(e.get("eventTimestamp"), req.get("method"), path, status, logs, exc)
+              print(e.get("eventTimestamp"), req.get("method"), path, status, e.get("outcome"), logs, exc)
           PY
