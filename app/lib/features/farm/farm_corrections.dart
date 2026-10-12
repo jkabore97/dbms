@@ -6,6 +6,7 @@ import '../../core/errors.dart';
 import '../../core/farm/farm_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Correcting a farm entry after it was recorded — the app's version of
 /// crossing a wrong number out in a notebook. Backed by the 033 update_
@@ -47,7 +48,7 @@ Future<void> showFarmCorrections(
   required String subjectId,
   required bool canWrite,
 }) {
-  return showModalBottomSheet<void>(
+  return showMaraSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -135,7 +136,7 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
   }
 
   Future<void> _edit(Map<String, dynamic> row) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

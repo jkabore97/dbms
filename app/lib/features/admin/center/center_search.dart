@@ -12,6 +12,7 @@ import '../../../core/nav/router.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk, kindSingular;
 import '../admin_pill.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The one search (105's platform_search): businesses, people, orders.
 /// A computer opens it with Ctrl/Cmd+K too.
@@ -115,7 +116,7 @@ class _CenterSearchState extends State<CenterSearch> {
 
   void _openOrder(OrderHit o) {
     _close();
-    showModalBottomSheet<void>(
+    showMaraSheet<void>(
       context: widget.outer,
       showDragHandle: true,
       isScrollControlled: true,

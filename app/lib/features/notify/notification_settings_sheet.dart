@@ -7,6 +7,7 @@ import '../../core/notify/notifications_repository.dart';
 import '../../core/notify/push_client.dart';
 import '../../core/notify/push_setup.dart';
 import 'push_diagnostics.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Notifications » (115): this device's ring with the app closed, the
 /// person's switches per type, and « M'envoyer une notification test ».
@@ -44,7 +45,7 @@ class NotificationSettingsSheet extends StatefulWidget {
     required NotificationsRepository notify,
     required Set<String> audiences,
   }) =>
-      showModalBottomSheet<void>(
+      showMaraSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

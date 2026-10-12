@@ -20,6 +20,7 @@ import 'center/bulk_sheet.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The console for somebody running a platform with thousands of businesses
 /// on it.
@@ -282,7 +283,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   }
 
   Future<void> _edit(OrgRow org) async {
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

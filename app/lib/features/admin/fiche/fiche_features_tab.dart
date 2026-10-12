@@ -8,6 +8,7 @@ import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'fiche_widgets.dart';
 import '../../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Fonctions: 104's switchboard for this one business — each tool it has,
 /// « Par défaut » (today's), « Visible » or « Masquée », until a date if
@@ -54,7 +55,7 @@ class _FicheFeaturesTabState extends State<FicheFeaturesTab> {
   }
 
   Future<void> _set(FeatureBoardRow row, String state) async {
-    final choice = await showModalBottomSheet<({DateTime? until, String? note})>(
+    final choice = await showMaraSheet<({DateTime? until, String? note})>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

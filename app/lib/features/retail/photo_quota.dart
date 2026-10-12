@@ -10,6 +10,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../cauris/cauri_icon.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The photographed articles a Basic business keeps (100), as the session
 /// last read them; null when there is no limit to say, or no reading yet.
@@ -40,7 +41,7 @@ Future<bool> photoAllowed(BuildContext context, OrgSummary org,
   }
   final q = photoQuotaOf(context, org);
   if (q == null || !q.full) return true;
-  final bought = await showModalBottomSheet<bool>(
+  final bought = await showMaraSheet<bool>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -101,7 +102,7 @@ class PhotoCounter extends StatelessWidget {
               key: const Key('photo-buy'),
               style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact, foregroundColor: maraBrown),
-              onPressed: () => showModalBottomSheet<bool>(
+              onPressed: () => showMaraSheet<bool>(
                 context: context,
                 showDragHandle: true,
                 isScrollControlled: true,

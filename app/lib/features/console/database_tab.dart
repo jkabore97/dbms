@@ -7,6 +7,7 @@ import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// What the database actually holds for this business.
 ///
@@ -69,7 +70,7 @@ class _DatabaseTabState extends State<DatabaseTab> {
   }
 
   Future<void> _inspect(DatabaseTable table) async {
-    await showModalBottomSheet<void>(
+    await showMaraSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

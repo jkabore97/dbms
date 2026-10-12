@@ -6,6 +6,7 @@ import '../../core/console/models.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Where the platform runs its trainers (038): the students sent out to teach
 /// businesses the app.
@@ -73,7 +74,7 @@ class _TrainersScreenState extends State<TrainersScreen> {
   }
 
   Future<void> _openTrainer(Trainer trainer) async {
-    await showModalBottomSheet<void>(
+    await showMaraSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -254,7 +255,7 @@ class _TrainerSheetState extends State<_TrainerSheet> {
   }
 
   Future<void> _assign() async {
-    final org = await showModalBottomSheet<OrgRow>(
+    final org = await showMaraSheet<OrgRow>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

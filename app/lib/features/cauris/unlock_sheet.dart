@@ -13,6 +13,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import 'cauri_icon.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The grey « PRO · 400 » on a tool a Basic business has not opened (085):
 /// the plan's mark and its price in cauris, side by side.
@@ -109,7 +110,7 @@ class UnlockSheet extends StatefulWidget {
       await router.push(Routes.inside(org.id, 'kaj-pro'));
       return;
     }
-    await showModalBottomSheet<void>(
+    await showMaraSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -369,7 +370,7 @@ class ProOnlySheet extends StatelessWidget {
   final String? feature;
 
   static Future<void> open(BuildContext context, {String? feature}) =>
-      showModalBottomSheet<void>(
+      showMaraSheet<void>(
         context: context,
         showDragHandle: true,
         useSafeArea: true,

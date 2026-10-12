@@ -33,6 +33,7 @@ import '../../core/nav/router.dart';
 import '../../core/nav/app_scope.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Israel's home screen.
 ///
@@ -222,7 +223,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
   }
 
   Future<void> _openTransferSheet() async {
-    final recorded = await showModalBottomSheet<bool>(
+    final recorded = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -237,7 +238,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
   }
 
   Future<void> _openCloseDay() async {
-    final closed = await showModalBottomSheet<bool>(
+    final closed = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

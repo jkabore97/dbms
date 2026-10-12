@@ -1,6 +1,7 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart' show SK2Transaction;
 
 import 'store_billing.dart';
 
@@ -73,6 +74,7 @@ class PluginStoreBilling implements StoreBilling {
       token: platform == 'google' ? p.verificationData.serverVerificationData : null,
       errorCode: p.error?.code,
       errorMessage: p.error?.message,
+      errorDetails: p.error?.details?.toString(),
       needsCompletion: p.pendingCompletePurchase,
       orgId: orgId == null || orgId.isEmpty ? null : orgId.toLowerCase(),
       native: p,
@@ -108,6 +110,36 @@ class PluginStoreBilling implements StoreBilling {
       await _iap.completePurchase(native);
     }
   }
+
+  @override
+  Future<List<StoreOwned>> owned() async {
+    if (platform == 'google') {
+      final addition = _iap.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+      final response = await addition.queryPastPurchases();
+      return [
+        for (final p in response.pastPurchases)
+          if (p.productID == googleProduct)
+            StoreOwned(
+              productId: p.productID,
+              orgId: _org(p.billingClientPurchase.obfuscatedAccountId),
+              token: p.verificationData.serverVerificationData,
+            ),
+      ];
+    }
+    // Apple: every transaction of the app (Transaction.all), the ones of
+    // Mara Pro still running — a current entitlement.
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final out = <StoreOwned>[];
+    for (final t in await SK2Transaction.transactions()) {
+      if (!appleProducts.containsKey(t.productId)) continue;
+      final ends = int.tryParse(t.expirationDate ?? '');
+      if (ends == null || ends <= now) continue;
+      out.add(StoreOwned(productId: t.productId, orgId: _org(t.appAccountToken), transactionId: t.id));
+    }
+    return out;
+  }
+
+  static String? _org(String? id) => id == null || id.isEmpty ? null : id.toLowerCase();
 
   @override
   Uri get manageUrl => platform == 'apple'

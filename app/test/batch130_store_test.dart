@@ -74,6 +74,10 @@ class FakeStore implements StoreBilling {
   Future<void> restore() async => restores++;
   @override
   Future<void> complete(StorePurchase purchase) async => completed.add(purchase);
+  /// What the store account holds (132).
+  List<StoreOwned> held = [];
+  @override
+  Future<List<StoreOwned>> owned() async => held;
   @override
   Uri get manageUrl => platform == 'apple'
       ? Uri.parse('https://apps.apple.com/account/subscriptions')
@@ -447,7 +451,8 @@ void main() {
       build('appstore', on: true);
       final fake = FakeStore('apple');
       final sent = <StorePurchase>[];
-      final w = StoreWatcher(billing: fake, verify: (p) async {
+      final outside = <StoreNotice>[];
+      final w = StoreWatcher(billing: fake, outside: outside.add, verify: (p) async {
         sent.add(p);
         return const StoreVerdict(pro: true, state: 'active');
       })..start();
@@ -468,7 +473,10 @@ void main() {
       await tester.pump();
       expect(sent.single.orgId, _shop.id, reason: 'the shop it was bought for, not the farm on screen');
       expect(fake.completed, hasLength(1));
-      expect(find.text('Merci ! Mara Pro est actif.'), findsOneWidget, reason: 'the open page draws the notice');
+      // 132: the farm's page draws only the farm's notices — the shop's
+      // is said outside (a snackbar in the app), never on another's page.
+      expect(find.text('Merci ! Mara Pro est actif.'), findsNothing, reason: 'the shop\'s notice, not the farm\'s');
+      expect(outside.last.orgId, _shop.id);
     });
 
     test('a refusal that may pass — session, not an admin (yet), the server, no network — leaves it open', () async {

@@ -10,13 +10,14 @@ import '../../../core/nav/router.dart';
 import '../../../core/storefront/storefront_repository.dart' show whatsappUrl;
 import '../../../core/theme/mara_mark.dart';
 import '../../shopper/report_sheet.dart' show reportTopicLabel;
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// À faire › « Signalements » (113): what shoppers reported, the oldest
 /// open first. Each says who, how to answer them (their WhatsApp or their
 /// e-mail), the vitrine it names; « Traité », with a line the person reads
 /// in their notifications, closes it — journaled, with « Annuler ».
 Future<void> showReportsSheet(BuildContext context, {required CommandCenterRepository center}) =>
-    showModalBottomSheet<void>(
+    showMaraSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

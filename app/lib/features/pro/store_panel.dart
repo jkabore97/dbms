@@ -80,9 +80,18 @@ class _StorePanelState extends State<StorePanel> {
   late final bool _ownWatcher;
   List<StoreProduct>? _products;
   bool _unavailable = false;
-  bool _busy = false;
+
+  /// The period whose « S'abonner » was tapped, while its purchase runs
+  /// (132): only that button says it is busy; the other stays as it is,
+  /// only not tappable.
+  String? _buying;
   bool _restoring = false;
   StoreStanding? _standing;
+
+  /// The Mara Pro subscriptions this store account holds (132).
+  List<StoreOwned> _owned = const [];
+
+  bool get _busy => _buying != null;
 
   String get _store => widget.billing.platform == 'apple' ? 'App Store' : 'Google Play';
 
@@ -93,7 +102,7 @@ class _StorePanelState extends State<StorePanel> {
     _watcher = widget.watcher ??
         StoreWatcher(billing: widget.billing, verify: widget.verify, onPro: widget.onPro);
     if (_ownWatcher) _watcher.start();
-    _watcher.attach();
+    _watcher.attach(widget.org.id);
     _watcher.notice.addListener(_onNotice);
     _load();
   }
@@ -101,13 +110,22 @@ class _StorePanelState extends State<StorePanel> {
   @override
   void dispose() {
     _watcher.notice.removeListener(_onNotice);
-    _watcher.detach();
+    _watcher.detach(widget.org.id);
     if (_ownWatcher) _watcher.dispose();
     super.dispose();
   }
 
   void _onNotice() {
-    if (mounted) setState(() => _busy = false);
+    if (mounted) setState(() => _buying = null);
+  }
+
+  /// What the store account holds; nothing when the store cannot say.
+  Future<List<StoreOwned>> _readOwned() async {
+    try {
+      return await widget.billing.owned();
+    } catch (_) {
+      return const [];
+    }
   }
 
   Future<void> _load() async {
@@ -118,10 +136,12 @@ class _StorePanelState extends State<StorePanel> {
         return;
       }
       final products = await widget.billing.products();
+      final owned = await _readOwned();
       if (mounted) {
         setState(() {
           _products = products;
           _standing = standing;
+          _owned = owned;
           _unavailable = products.isEmpty;
         });
       }
@@ -131,21 +151,30 @@ class _StorePanelState extends State<StorePanel> {
   }
 
   void _say(String Function(BuildContext context) text) {
-    _watcher.notice.value = StoreNotice(text);
+    _watcher.notice.value = StoreNotice(text, orgId: widget.org.id);
   }
 
   Future<void> _buy(StoreProduct product) async {
-    setState(() => _busy = true);
+    setState(() => _buying = product.period);
     _watcher.notice.value = null;
     try {
       await widget.billing.buy(product, orgId: widget.org.id);
     } on PlatformException catch (e) {
-      _say((context) => storeErrorText(context, e.code, e.message, _store));
-      if (mounted) setState(() => _busy = false);
-    } catch (_) {
-      _say((context) => storeErrorText(context, null, null, _store));
-      if (mounted) setState(() => _busy = false);
+      // StoreKit 2 says its refusal here, not on the purchase stream (the
+      // iPhone's « storekit2_failed_to_fetch_product » among them): its
+      // code is said and reported (132).
+      _failed(product, e.code, e.message, e.details?.toString());
+    } catch (e) {
+      _failed(product, e.runtimeType.toString(), '$e', null);
     }
+  }
+
+  void _failed(StoreProduct product, String? code, String? message, String? details) {
+    if (!storeCancelled(code, message)) {
+      _watcher.log?.call(storeErrorLine(widget.billing.platform, product.id, code, message, details));
+    }
+    _say((context) => storeErrorText(context, code, message, _store));
+    if (mounted) setState(() => _buying = null);
   }
 
   Future<void> _restore() async {
@@ -155,6 +184,8 @@ class _StorePanelState extends State<StorePanel> {
     try {
       await widget.billing.restore();
       await Future<void>.delayed(widget.restoreWait);
+      final owned = await _readOwned();
+      if (mounted) setState(() => _owned = owned);
       if (_watcher.heard == before) {
         _say((context) => context.tr('Aucun abonnement Mara Pro à restaurer sur ce compte {store}.', {'store': _store}));
       }
@@ -203,8 +234,18 @@ class _StorePanelState extends State<StorePanel> {
     final manageable = org.isPro
         ? _standing?.platform == widget.billing.platform
         : org.isAdmin;
+    // 132: this store account already holds Mara Pro — for another
+    // business, or one the Worker refused (a test purchase for a business
+    // that may not have one): the store would refuse a second purchase
+    // (Google: « You're already subscribed »). Nothing to buy: manage it
+    // in the store first.
+    final ownedElsewhere = _owned.any((o) => o.orgId != org.id || _watcher.refusedOwned(o));
+    // For this very business, not yet read by Mara: restore it.
+    final ownedHere = !ownedElsewhere && _owned.any((o) => o.orgId == org.id);
+    // Only this business's notices (132): never another business's
+    // purchase, refused or not, on this page.
     final notice = _watcher.notice.value;
-    final message = notice?.text(context);
+    final message = notice != null && notice.isFor(org.id) ? notice.text(context) : null;
     final good = notice?.good ?? false;
 
     return Column(
@@ -233,11 +274,33 @@ class _StorePanelState extends State<StorePanel> {
             ),
             const SizedBox(height: 12),
           ]
+          else if (ownedElsewhere) ...[
+            Text(
+              context.tr('Ce compte {account} a déjà un abonnement Mara Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.', {
+                'account': widget.billing.platform == 'apple' ? 'Apple' : 'Google Play',
+                'store': widget.billing.platform == 'apple' ? context.tr('l\'App Store') : 'Google Play',
+              }),
+              key: const Key('store-owned-elsewhere'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+          ]
+          else if (ownedHere) ...[
+            Text(
+              context.tr('Ce compte {store} a déjà un abonnement Mara Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.', {'store': _store}),
+              key: const Key('store-owned-here'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+          ]
           else ...[
             for (final p in [?month, ?year]) ...[
               _ProductTile(
                 product: p,
-                busy: _busy,
+                busy: _buying == p.period,
+                locked: _busy && _buying != p.period,
                 onBuy: () => _buy(p),
               ),
               const SizedBox(height: 10),
@@ -265,7 +328,7 @@ class _StorePanelState extends State<StorePanel> {
             icon: const Icon(Icons.restore),
             label: Text(context.tr('Restaurer mes achats')),
           ),
-          if (manageable || paidElsewhere) ...[
+          if (manageable || paidElsewhere || ownedElsewhere || ownedHere) ...[
             const SizedBox(height: 6),
             TextButton.icon(
               key: const Key('store-manage'),
@@ -313,10 +376,21 @@ class _StorePanelState extends State<StorePanel> {
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile({required this.product, required this.busy, required this.onBuy});
+  const _ProductTile({
+    required this.product,
+    required this.busy,
+    required this.locked,
+    required this.onBuy,
+  });
 
   final StoreProduct product;
+
+  /// This product's purchase runs: its button says so.
   final bool busy;
+
+  /// The other product's purchase runs: this button looks as it always
+  /// does, only it does not answer (132 — « both buttons react »).
+  final bool locked;
   final VoidCallback onBuy;
 
   @override
@@ -352,9 +426,31 @@ class _ProductTile extends StatelessWidget {
           const SizedBox(width: 10),
           FilledButton(
             key: Key('store-buy-${product.period}'),
-            onPressed: busy ? null : onBuy,
-            style: FilledButton.styleFrom(backgroundColor: kInk, foregroundColor: kPaper),
-            child: Text(context.tr('S\'abonner')),
+            onPressed: busy || locked ? null : onBuy,
+            // Disabled, it keeps its colours: only the spinner says which
+            // purchase is running.
+            style: FilledButton.styleFrom(
+              backgroundColor: kInk,
+              foregroundColor: kPaper,
+              disabledBackgroundColor: kInk,
+              disabledForegroundColor: kPaper,
+            ),
+            // The word stays (hidden) under the spinner: the button keeps
+            // its width.
+            child: busy
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Opacity(opacity: 0, child: Text(context.tr('S\'abonner'))),
+                      const SizedBox(
+                        key: Key('store-buy-busy'),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: kPaper),
+                      ),
+                    ],
+                  )
+                : Text(context.tr('S\'abonner')),
           ),
         ],
       ),

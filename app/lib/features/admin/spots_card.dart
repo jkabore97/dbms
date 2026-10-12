@@ -12,6 +12,7 @@ import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../pay/wave_buttons.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// "Mettre en avant" (071): the shop's spots on the street, and the door to
 /// buy one.
@@ -244,7 +245,7 @@ class SpotSheet {
     String? productId,
     bool vitrineOnly = false,
   }) {
-    return showModalBottomSheet<bool>(
+    return showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -266,7 +267,7 @@ class SpotSheet {
     required Promotion spot,
     required AdminRepository admin,
   }) {
-    return showModalBottomSheet<bool>(
+    return showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

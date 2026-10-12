@@ -1629,6 +1629,8 @@ Widget _businessFrame(
       org: session.orgById(state.pathParameters['orgId']),
       location: state.uri.path,
       cover: cover,
+      // The bar on the first frame (132).
+      session: session,
       child: child,
     ),
   );

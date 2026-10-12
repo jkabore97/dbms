@@ -95,6 +95,12 @@ class _MerchantPreviewScreenState extends State<MerchantPreviewScreen> {
         actions: const [bellRoom],
         backgroundColor: maraDeep,
         foregroundColor: maraPaper,
+        // The app's AppBarTheme sets its icons and title in ink, which wins
+        // over foregroundColor: on this dark bar they were drawn ink on
+        // black — the way back was there but invisible (132).
+        iconTheme: const IconThemeData(color: maraPaper),
+        actionsIconTheme: const IconThemeData(color: maraPaper),
+        titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: maraPaper),
         title: Text(previewTitle(context, widget.org.profile),
             style: const TextStyle(color: maraPaper, fontWeight: FontWeight.w700)),
       ),

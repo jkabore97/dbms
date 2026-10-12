@@ -7,6 +7,7 @@ import '../../core/capture/models.dart';
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/theme/mara_mark.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Choisir dans Photos » (114): the business's own photographs — the
 /// gallery « Photos » — to give one to an article or a service instead of
@@ -21,7 +22,7 @@ Future<CapturedDocument?> showPhotoLibrary(
   required String orgId,
   required CaptureRepository capture,
 }) =>
-    showModalBottomSheet<CapturedDocument>(
+    showMaraSheet<CapturedDocument>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

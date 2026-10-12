@@ -10,6 +10,7 @@ import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
 import 'todo_section.dart' show featureName;
 import '../../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// What several ticked businesses can be given at once (105's
 /// platform_bulk).
@@ -25,7 +26,7 @@ Future<BulkResult?> showBulkSheet(
   required CommandCenterRepository center,
   List<String> tools = const [],
 }) async {
-  final result = await showModalBottomSheet<BulkResult>(
+  final result = await showMaraSheet<BulkResult>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

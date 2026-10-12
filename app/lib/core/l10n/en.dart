@@ -6398,4 +6398,11 @@ const enStrings = <String, String>{
   'e-mail': 'email',
   'Notifier les administrateurs de Mara à chaque nouveau compte':
       'Notify Mara\'s admins of every new account',
+  // 132: the store's own reason, an existing store subscription.
+  '({store} : {code})': '({store}: {code})',
+  'Ce compte {account} a déjà un abonnement Mara Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.':
+      'This {account} account already has a Mara Pro subscription, for another business or refused. Manage or cancel it in {store}, then try again.',
+  'l\'App Store': 'the App Store',
+  'Ce compte {store} a déjà un abonnement Mara Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.':
+      'This {store} account already has a Mara Pro subscription for this business: tap “Restore purchases” to turn it on.',
 };

@@ -13,6 +13,7 @@ import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Partager » on a vitrine (the owner's or anybody's): three ways out,
 /// each made for WhatsApp, where a vitrine travels here.
@@ -33,7 +34,7 @@ class ShareVitrine {
     required List<PublicItem> items,
     CaptureRepository? capture,
   }) =>
-      showModalBottomSheet<void>(
+      showMaraSheet<void>(
         context: context,
         showDragHandle: true,
         builder: (_) => _ShareSheet(shop: shop, items: items, capture: capture),
@@ -472,6 +473,21 @@ class _StatusPreviewState extends State<StatusPreview> {
           actions: const [bellRoom],
           backgroundColor: maraBlack,
           foregroundColor: maraPaper,
+          // The app's AppBarTheme sets its icons and title in ink, which wins
+          // over foregroundColor: on this dark bar they were drawn ink on
+          // black — the way back was there but invisible (132).
+          iconTheme: const IconThemeData(color: maraPaper),
+          actionsIconTheme: const IconThemeData(color: maraPaper),
+          titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: maraPaper),
+          // Always its own way back (132): an iPhone has no system back,
+          // and this page is also opened where nothing implies one.
+          leading: IconButton(
+            key: const Key('status-close'),
+            tooltip: context.tr('Fermer'),
+            color: maraPaper,
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
           title: Text(context.tr('Votre statut')),
         ),
         body: SafeArea(

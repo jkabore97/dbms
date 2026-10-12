@@ -22,6 +22,7 @@ import 'fiche_vitrine_tab.dart';
 import 'fiche_widgets.dart';
 import 'merchant_preview_screen.dart';
 import '../../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/nav/parent_route.dart';
 
 /// The fiche entreprise (batch 104, 106): one business — a shop, a farm or
 /// an association — on one page of the command center, as only the
@@ -159,8 +160,17 @@ class _BusinessFicheScreenState extends State<BusinessFicheScreen>
     return Scaffold(
       key: const Key('business-fiche'),
       appBar: AppBar(
+        // Opened with `go` from the center's search too: back to the list
+        // (132).
+        leading: parentBack(context),
         backgroundColor: maraDeep,
         foregroundColor: maraPaper,
+        // The app's AppBarTheme sets its icons and title in ink, which wins
+        // over foregroundColor: on this dark bar they were drawn ink on
+        // black — the way back was there but invisible (132).
+        iconTheme: const IconThemeData(color: maraPaper),
+        actionsIconTheme: const IconThemeData(color: maraPaper),
+        titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(color: maraPaper),
         titleSpacing: 0,
         title: o == null
             ? Text(context.tr('Fiche entreprise'))

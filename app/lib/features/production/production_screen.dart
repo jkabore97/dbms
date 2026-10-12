@@ -19,6 +19,7 @@ import '../../l10n/strings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The transformation tool: ingredients in, a product out, and the app doing
 /// the division the maker used to do in her head.
@@ -96,7 +97,7 @@ class _ProductionScreenState extends State<ProductionScreen> {
       };
 
   Future<void> _edit(ProductionRun run) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

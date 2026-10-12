@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/phone/country_codes.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// A phone field whose country code is chosen rather than assumed.
 ///
@@ -82,7 +83,7 @@ class PhoneField extends StatelessWidget {
   }
 
   Future<void> _pick(BuildContext context) async {
-    final chosen = await showModalBottomSheet<CountryCode>(
+    final chosen = await showMaraSheet<CountryCode>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

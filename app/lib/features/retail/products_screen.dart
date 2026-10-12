@@ -28,6 +28,7 @@ import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -164,7 +165,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   /// Twenty articles in one save: a box of lines, "nom quantité prix [coût]",
   /// for the shop being set up or the big market morning.
   Future<void> _bulkAdd() async {
-    final added = await showModalBottomSheet<bool>(
+    final added = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -178,7 +179,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   /// and production so every movement stays on the record, not through a
   /// number silently overwritten here.
   Future<void> _edit(Product product) async {
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

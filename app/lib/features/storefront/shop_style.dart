@@ -11,6 +11,7 @@ import '../../core/theme/motion.dart';
 import '../../core/theme/scroll_hint.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// How the street side looks — the vitrine and the directory — and why it
 /// does not look like the rest of the app.
@@ -681,7 +682,7 @@ Future<T?> showShopSheet<T>({
 }) {
   final desk = MediaQuery.sizeOf(context).width >= ShopStyle.deskWidth;
   if (!desk) {
-    return showModalBottomSheet<T>(
+    return showMaraSheet<T>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

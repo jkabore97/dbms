@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/onboarding/onboarding_repository.dart';
+import '../../core/nav/parent_route.dart';
 import '../../core/nav/router.dart';
 import '../../core/phone/country_codes.dart';
 import '../../l10n/strings.dart';
@@ -387,13 +388,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 // the one who cannot read the rest of this screen. A globe
                 // with the language's own name — the one word guaranteed
                 // legible to them.
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => context.push(Routes.language),
-                    icon: const Icon(Icons.language, size: 18),
-                    label: Text(Strings.of(context).languageName),
-                  ),
+                // And a way back to the street it came from (132): an
+                // iPhone has no system back.
+                Row(
+                  children: [
+                    ?pageBack(context),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () => context.push(Routes.language),
+                      icon: const Icon(Icons.language, size: 18),
+                      label: Text(Strings.of(context).languageName),
+                    ),
+                  ],
                 ),
                 // Mara's seal and name, as one picture: the name is in it.
                 Semantics(
