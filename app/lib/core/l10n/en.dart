@@ -6393,4 +6393,9 @@ const enStrings = <String, String>{
       'For your safety, sign in again before deleting your account: the sign-in must be less than 10 minutes old.',
   'Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.':
       'We could not stop the subscription of “{name}”: nothing was deleted. Try again in a moment or write to the help desk.',
+  // 129: a new account, for Mara's admins.
+  'Nouveau compte : {name} ({how})': 'New account: {name} ({how})',
+  'e-mail': 'email',
+  'Notifier les administrateurs de Mara à chaque nouveau compte':
+      'Notify Mara\'s admins of every new account',
 };

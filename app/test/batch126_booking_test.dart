@@ -668,8 +668,15 @@ void main() {
       final monday = [
         for (var d = 1; d < 9; d++) DateTime.utc(now.year, now.month, now.day + d),
       ].firstWhere((x) => x.weekday == DateTime.monday);
+      // The days scroll sideways and are built lazily: on a Monday the next
+      // one is a week away, off screen until the row is scrolled to it.
       final chip = find.byKey(Key(_dayKey(monday)));
+      await tester.scrollUntilVisible(chip, 120,
+          scrollable: find.descendant(
+              of: find.byKey(const Key('booking-days')),
+              matching: find.byType(Scrollable)));
       await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
       await tester.tap(chip);
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('booking-time-17:30')), findsOneWidget);

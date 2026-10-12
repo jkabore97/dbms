@@ -778,7 +778,9 @@ declare
         -- 122: read by app_store_links(), which the web's download pop-up asks.
         'play_store_live', 'app_store_url',
         -- 124: read by trg_welcome_email_request() and welcome_email_claim().
-        'welcome_email_on'];
+        'welcome_email_on',
+        -- 129: read by trg_notify_new_user().
+        'admin_new_user_notify'];
     v_dead text;
     v_missing text;
 begin

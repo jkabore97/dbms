@@ -145,6 +145,8 @@ export function payloadFor(row, env) {
   // own application — as the app's notificationTarget does. Only an
   // approved courier's bells open the board.
   else if (kind === "courier_application") path = "/console/livreurs";
+  // 129: a new account opens its fiche in the console's « Personnes ».
+  else if (kind === "new_user") path = personPath(row);
   else if (kind === "courier_refused" || kind === "courier_photo") path = "/devenir-livreur";
   // 111: an older app's request answered at once opens the creation.
   else if (kind === "application_update_app") path = "/creer-mon-activite";
@@ -189,6 +191,21 @@ export function payloadFor(row, env) {
 function withOrder(path, row) {
   const id = row.params && typeof row.params.order_id === "string" ? row.params.order_id : "";
   return /^[0-9a-f-]{36}$/i.test(id) ? `${path}?commande=${id}` : path;
+}
+
+/// The console's « Personnes », searched for the new account (its e-mail
+/// or number, else its name) and opening its fiche (129), as the app's
+/// notificationTarget does.
+function personPath(row) {
+  const p = row.params || {};
+  const id = typeof p.user_id === "string" && /^[0-9a-f-]{36}$/i.test(p.user_id) ? p.user_id : "";
+  const q = typeof p.contact === "string" && p.contact ? p.contact
+    : typeof p.name === "string" ? p.name : "";
+  const query = new URLSearchParams();
+  if (q) query.set("q", q.slice(0, 200));
+  if (id) query.set("personne", id);
+  const s = query.toString();
+  return s ? `/console/personnes?${s}` : "/console/personnes";
 }
 
 async function rpc(env, fn, args, fetchImpl = fetch) {

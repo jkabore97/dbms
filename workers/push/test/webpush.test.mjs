@@ -147,6 +147,12 @@ test("a tap lands where the bell points", () => {
     "https://dbms.kabore-boss.workers.dev/devenir-livreur");
   assert.equal(payloadFor({ kind: "courier_suspended", message: "m" }, env).url,
     "https://dbms.kabore-boss.workers.dev/livreur");
+  // 129: a new account opens its fiche in the console's « Personnes ».
+  assert.equal(payloadFor({ kind: "new_user", message: "m", params: { to: "platform",
+    user_id: "12912912-0000-0000-0000-000000000002", name: "Awa", contact: "awa+1@example.org" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/console/personnes?q=awa%2B1%40example.org&personne=12912912-0000-0000-0000-000000000002");
+  assert.equal(payloadFor({ kind: "new_user", message: "m", params: { to: "platform", user_id: "../x" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/console/personnes");
   // 111: an older app's request answered at once.
   assert.equal(payloadFor({ kind: "application_update_app", message: "m" }, env).url,
     "https://dbms.kabore-boss.workers.dev/creer-mon-activite");

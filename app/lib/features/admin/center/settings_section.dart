@@ -144,6 +144,8 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('app_store_url', 'apps', SettingType.text),
   // 124: the welcome e-mail a new account receives once (workers/mail).
   SettingDef('welcome_email_on', 'accounts', SettingType.flag),
+  // 129: every platform admin hears of each new account.
+  SettingDef('admin_new_user_notify', 'accounts', SettingType.flag),
 ];
 
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
@@ -227,6 +229,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'play_store_live' => context.tr('Mara est publiée sur Google Play (sinon : le fichier APK)'),
       'app_store_url' => context.tr('Adresse de Mara sur l\'App Store (vide : écran d\'accueil)'),
       'welcome_email_on' => context.tr('E-mail de bienvenue aux nouveaux comptes'),
+      'admin_new_user_notify' =>
+        context.tr('Notifier les administrateurs de Mara à chaque nouveau compte'),
       _ => key,
     };
 
