@@ -3,8 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../core/access/org_access.dart';
+import '../../core/auth/models.dart';
 import '../../core/theme/scroll_hint.dart';
+import '../../l10n/strings.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// One place a business's home screen leads to.
 class HomeDestination {
@@ -49,6 +53,25 @@ class BusinessNav extends ChangeNotifier {
   String _drawn = '';
   bool _disposed = false;
 
+  /// The business whose frame holds this keeper.
+  String? orgId;
+
+  /// The places each business's home last said, for this run of the app
+  /// (132): what the frame draws the next time that business opens,
+  /// before its home has said them again.
+  /// Kept with the language they were said in: after a change of
+  /// language they are not drawn again in the old one.
+  static final Map<String, (String, HomeNav)> _known = {};
+
+  /// What [orgId]'s home last said in [language], if anything.
+  static HomeNav? lastKnown(String orgId, String language) {
+    final known = _known[orgId];
+    return known != null && known.$1 == language ? known.$2 : null;
+  }
+
+  @visibleForTesting
+  static void forgetKnown() => _known.clear();
+
   /// The places, while the home that published them is still on screen.
   /// Their actions are the home's own.
   HomeNav? get nav => (_owner?.mounted ?? false) ? _nav : null;
@@ -56,6 +79,8 @@ class BusinessNav extends ChangeNotifier {
   void publish(BuildContext owner, HomeNav nav) {
     _owner = owner;
     _nav = nav;
+    final org = orgId;
+    if (org != null) _known[org] = (owner.trLanguage, nav);
     final drawn = nav.signature;
     if (drawn == _drawn) return;
     _drawn = drawn;
@@ -188,6 +213,82 @@ class HomeNav {
     ];
   }
 
+  /// The same places, each opened by [open] with its route instead of the
+  /// home's own action (132): what the frame draws before the home has
+  /// said its places — the home that said them may be gone.
+  HomeNav detached(void Function(HomeDestination place) open) {
+    HomeDestination copy(HomeDestination p) => HomeDestination(
+          icon: p.icon,
+          selectedIcon: p.selectedIcon,
+          label: p.label,
+          badge: p.badge,
+          route: p.route,
+          onTap: () => open(p),
+        );
+    return HomeNav(
+      home: copy(home),
+      primary: [for (final p in primary) copy(p)],
+      more: [for (final p in more) copy(p)],
+    );
+  }
+
+  /// The places a business's home lays out, before its home has said
+  /// them (132) — the first frame of a business, every time on an iPhone
+  /// it came late: the shop's Vente, Articles, Commandes, Factures; the
+  /// farm's Accueil, Stock, Bandes, Factures; the association's Accueil,
+  /// Rapports, Factures — and Plus with what everybody has under it. The
+  /// home's own places replace them at once, the bar's height unchanged.
+  /// Null for a kind this build does not know. [open] is the frame's way
+  /// into a place.
+  static HomeNav? defaultsFor(
+    BuildContext context,
+    OrgSummary org,
+    OrgAccess access,
+    void Function(HomeDestination place) open,
+  ) {
+    final s = Strings.of(context);
+    HomeDestination at(IconData icon, String label, String route, {IconData? selected}) =>
+        HomeDestination(icon: icon, selectedIcon: selected, label: label, route: route, onTap: () {});
+    final common = [
+      if (org.isAdmin) at(Icons.groups_outlined, context.tr('Équipe'), 'equipe'),
+      if (org.isAdmin) at(Icons.admin_panel_settings_outlined, context.tr('Administration'), 'administration'),
+      at(Icons.account_circle_outlined, s.account, 'compte'),
+    ];
+    final nav = switch (org.profile) {
+      'retail' => HomeNav(
+          home: at(Icons.payments_outlined, s.sale, '', selected: Icons.payments),
+          primary: [
+            if (access.canSee('products')) at(Icons.sell_outlined, s.productsLabel, 'produits'),
+            if (access.canSee('orders')) at(Icons.inbox_outlined, context.tr('Commandes'), 'commandes'),
+            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+          ],
+          more: common,
+        ),
+      'farm' => HomeNav(
+          home: at(Icons.agriculture_outlined, context.tr('Accueil'), '', selected: Icons.agriculture),
+          primary: [
+            at(Icons.inventory_2_outlined, s.stock, 'stock'),
+            at(Icons.pets_outlined, s.flocks, 'bandes'),
+            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+          ],
+          more: common,
+        ),
+      'association' || 'church' => HomeNav(
+          home: at(Icons.volunteer_activism_outlined, context.tr('Accueil'), '',
+              selected: Icons.volunteer_activism),
+          primary: [
+            if (org.visibility != 'summary' && access.canSee('reports'))
+              at(Icons.history, s.history, 'journal'),
+            if (access.canSee('reports')) at(Icons.assessment_outlined, s.reports, 'rapports'),
+            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+          ],
+          more: common,
+        ),
+      _ => null,
+    };
+    return nav?.detached(open);
+  }
+
   /// What the bar shows, as one string: the frame redraws when it changes.
   String get signature => [
         for (final p in [home, ...primary, ...more])
@@ -279,7 +380,7 @@ class HomeNav {
     void Function(HomeDestination item)? onPick,
     HomeDestination? here,
   }) {
-    return showModalBottomSheet<void>(
+    return showMaraSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(

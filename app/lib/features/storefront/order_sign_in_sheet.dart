@@ -5,6 +5,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart'
 import '../../core/auth/auth_repository.dart' show appleSignInPlatform;
 import '../../core/l10n/tr.dart';
 import 'shop_style.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// What the shopper chose on [OrderSignInSheet].
 enum OrderSignIn { apple, google, otherWay, newAccount }
@@ -30,7 +31,7 @@ Future<OrderSignIn?> showOrderSignInSheet(
   Future<bool> Function()? appleAvailable,
   Color? accent,
 }) {
-  return showModalBottomSheet<OrderSignIn>(
+  return showMaraSheet<OrderSignIn>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

@@ -8,6 +8,7 @@ import '../../core/capture/text_reader.dart';
 import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'photo_library_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// What [CaptureAction.pick] hands back: the picture, and — chosen in
 /// « Photos » (114) — the document it already is.
@@ -125,7 +126,7 @@ class CaptureAction {
     required CaptureRepository capture,
     String? kind,
   }) async {
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showMaraSheet<ImageSource>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -166,7 +167,7 @@ class CaptureAction {
     CaptureRepository? photos,
   }) async {
     final library = orgId != null && photos != null && photos.isConfigured;
-    final source = await showModalBottomSheet<Object>(
+    final source = await showMaraSheet<Object>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Reading a barcode with the camera.
 ///
@@ -22,10 +23,12 @@ class BarcodeSheet extends StatefulWidget {
 
   /// Opens it and hands back what was read.
   static Future<String?> scan(BuildContext context, {String? title}) {
-    return showModalBottomSheet<String>(
+    return showMaraSheet<String>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      // Its own « X » beside its title.
+      closeButton: false,
       builder: (_) => BarcodeSheet(title: title ?? context.tr('Scanner un code')),
     );
   }

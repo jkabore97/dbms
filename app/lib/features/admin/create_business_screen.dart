@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../core/admin/admin_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/nav/parent_route.dart';
 
 /// Making a new business — the one screen only Kaj-consulting sees.
 ///
@@ -183,7 +184,11 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
         _slug.isEmpty ? null : CreateBusinessScreen.slugProblem(_slug);
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Nouvelle activité'))),
+      appBar: AppBar(
+          // Opened with `go` too: back to its parent (132).
+          leading: parentBack(context),
+          actions: const [bellRoom],
+          title: Text(context.tr('Nouvelle activité'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),

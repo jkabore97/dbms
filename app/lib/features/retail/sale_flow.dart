@@ -17,6 +17,7 @@ import '../capture/barcode_sheet.dart';
 import '../common/step_flow.dart';
 import '../common/keyboard_sheet.dart';
 import 'product_photo.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Vente », one entry at a time (115) — the shop's till and the farm's,
 /// replacing the one-form sale sheet.
@@ -615,7 +616,7 @@ class _SaleFlowState extends State<SaleFlow> {
     }
     if (!mounted) return false;
     final total = _total;
-    final sender = await showModalBottomSheet<String>(
+    final sender = await showMaraSheet<String>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

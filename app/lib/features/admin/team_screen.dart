@@ -24,6 +24,7 @@ import 'team_invite_flow.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import '../common/attention_banner.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Équipe » (100): the one place for the business's people — who is in,
 /// adding somebody (the invitation, 017), replacing or removing them, the
@@ -226,7 +227,7 @@ class _TeamScreenState extends State<TeamScreen> {
     final roles = grantableRolesFor(widget.org.roles);
     final hasSessions = AppScope.read(context)?.securityApi != null;
     final locale = context.trLanguage == 'en' ? 'en' : 'fr_FR';
-    final choice = await showModalBottomSheet<String>(
+    final choice = await showMaraSheet<String>(
       context: context,
       showDragHandle: true,
       // Tall with every action: it scrolls on a small phone.
@@ -413,7 +414,7 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   Future<void> _edit(Member account) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -638,7 +639,7 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   Future<void> _salary(TeamMember m) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

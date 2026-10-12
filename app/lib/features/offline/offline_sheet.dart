@@ -6,6 +6,7 @@ import '../../core/nav/look_only.dart';
 import '../../core/offline/offline_app.dart';
 import '../../core/offline/offline_prep.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Asks a business's admin, once per device, whether to use Mara without a
 /// connection — the first time the business's home opens (after the first
@@ -76,7 +77,7 @@ class OfflineSheet extends StatefulWidget {
           {required OrgSummary org,
           required OfflinePrep prep,
           bool askFirst = true}) =>
-      showModalBottomSheet<void>(
+      showMaraSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

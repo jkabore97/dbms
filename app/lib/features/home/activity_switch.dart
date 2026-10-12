@@ -7,6 +7,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../auth/org_picker_screen.dart'
     show iconForProfile, kindColour, kindInk, kindSingular, labelForRole;
 
@@ -70,7 +71,7 @@ class ActivitySwitch {
       case ActivitySwitchMode.create:
       case ActivitySwitchMode.pro:
         if (org == null) return;
-        final go = await showModalBottomSheet<String>(
+        final go = await showMaraSheet<String>(
           context: context,
           showDragHandle: true,
           isScrollControlled: true,

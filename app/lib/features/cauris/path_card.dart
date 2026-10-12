@@ -11,6 +11,7 @@ import '../../core/theme/motion.dart';
 import 'cauri_icon.dart';
 import 'unlock_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// A tool on Le Chemin (097): its picture and its name.
 typedef PathTool = ({String key, IconData icon, String label});
@@ -466,7 +467,7 @@ class PathGate {
       return;
     }
     final client = AppScope.read(context)?.auth.client;
-    await showModalBottomSheet<void>(
+    await showMaraSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,

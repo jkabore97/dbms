@@ -9,12 +9,21 @@ import 'store_billing.dart';
 /// What the store purchase listener has to say, drawn in the reader's
 /// language wherever it lands (the Pro page, or a snackbar elsewhere).
 class StoreNotice {
-  const StoreNotice(this.text, {this.good = false});
+  const StoreNotice(this.text, {this.good = false, this.orgId});
 
   final String Function(BuildContext context) text;
 
   /// Mara Pro is on: said in the app's ink, not as a warning.
   final bool good;
+
+  /// The business the purchase it is about names (132): only that
+  /// business's Pro page draws it — never another's, so a refusal of one
+  /// business's purchase is not shown on the next business's page. Null:
+  /// any page (the page's own action, a purchase that names nobody).
+  final String? orgId;
+
+  /// Whether the Pro page of [org] draws it.
+  bool isFor(String org) => orgId == null || orgId == org;
 }
 
 /// The Worker's refusals that no retry will change (review S3): the
@@ -88,7 +97,18 @@ class StoreWatcher {
   int heard = 0;
 
   StreamSubscription<List<StorePurchase>>? _sub;
-  int _pages = 0;
+
+  /// The businesses whose Pro page is open (one entry per page).
+  final List<String?> _pages = [];
+
+  /// The purchases the Worker refused for good this run (132), by
+  /// transaction or token: the store account still holds them, so the Pro
+  /// page says so rather than offering a purchase the store will refuse.
+  final Set<String> refused = {};
+
+  /// Whether the store's subscription [owned] is one the Worker refused.
+  bool refusedOwned(StoreOwned owned) =>
+      refused.contains(owned.transactionId) || refused.contains(owned.token);
 
   String get _store => billing.platform == 'apple' ? 'App Store' : 'Google Play';
 
@@ -104,13 +124,15 @@ class StoreWatcher {
     notice.dispose();
   }
 
-  /// A Pro page is open and draws the notices itself.
-  void attach() => _pages++;
-  void detach() => _pages = _pages > 0 ? _pages - 1 : 0;
+  /// A Pro page of [orgId] is open and draws its notices itself.
+  void attach([String? orgId]) => _pages.add(orgId);
+  void detach([String? orgId]) => _pages.remove(orgId);
 
   void _say(StoreNotice n) {
     notice.value = n;
-    if (_pages == 0) outside?.call(n);
+    // No page open that draws it: said outside (a snackbar).
+    final shown = _pages.any((page) => page == null || n.isFor(page));
+    if (!shown) outside?.call(n);
   }
 
   Future<void> handle(List<StorePurchase> list) async {
@@ -118,13 +140,18 @@ class StoreWatcher {
       heard++;
       switch (p.status) {
         case StorePurchaseStatus.pending:
-          _say(StoreNotice((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store})));
+          _say(StoreNotice((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}), orgId: p.orgId));
         case StorePurchaseStatus.canceled:
           await _complete(p);
-          _say(StoreNotice((context) => context.tr('Achat annulé : rien n\'a été prélevé.')));
+          _say(StoreNotice((context) => context.tr('Achat annulé : rien n\'a été prélevé.'), orgId: p.orgId));
         case StorePurchaseStatus.error:
           await _complete(p);
-          _say(StoreNotice((context) => storeErrorText(context, p.errorCode, p.errorMessage, _store)));
+          // A cancel the store reports as an error says nothing alarming
+          // and is not worth a report.
+          if (!storeCancelled(p.errorCode, p.errorMessage)) {
+            log?.call(storeErrorLine(billing.platform, p.productId, p.errorCode, p.errorMessage, p.errorDetails));
+          }
+          _say(StoreNotice((context) => storeErrorText(context, p.errorCode, p.errorMessage, _store), orgId: p.orgId));
         case StorePurchaseStatus.purchased:
         case StorePurchaseStatus.restored:
           await _verify(p);
@@ -140,15 +167,17 @@ class StoreWatcher {
   }
 
   Future<void> _verify(StorePurchase p) async {
-    _say(StoreNotice((context) => context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store})));
+    final org = p.orgId;
+    _say(StoreNotice((context) => context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store}), orgId: org));
     try {
       final verdict = await verify(p);
       await _complete(p);
+      final settled = verdict.orgId?.toLowerCase() ?? org;
       if (verdict.pro) {
         onPro?.call();
-        _say(StoreNotice((context) => context.tr('Merci ! Mara Pro est actif.'), good: true));
+        _say(StoreNotice((context) => context.tr('Merci ! Mara Pro est actif.'), good: true, orgId: settled));
       } else {
-        _say(StoreNotice((context) => switch (verdict.state) {
+        _say(StoreNotice(orgId: settled, (context) => switch (verdict.state) {
               'expired' => context.tr('Cet abonnement est terminé : il ne donne plus Mara Pro.'),
               'revoked' => context.tr('Cet abonnement a été remboursé : il ne donne plus Mara Pro.'),
               'on_hold' || 'paused' => context.tr('Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.', {'store': _store}),
@@ -162,24 +191,59 @@ class StoreWatcher {
       // nothing of; a passing one that repeats is worth seeing too.
       log?.call('store purchase refused (${e.code.isEmpty ? e.status : e.code}, '
           '${forGood ? 'finished' : 'left open'}) ${billing.platform} ${p.productId}');
-      if (forGood) await _complete(p);
-      _say(StoreNotice((context) => storeRefusalText(context, e, _store)));
+      if (forGood) {
+        for (final key in [p.transactionId, p.token]) {
+          if (key != null && key.isNotEmpty) refused.add(key);
+        }
+        await _complete(p);
+      }
+      _say(StoreNotice((context) => storeRefusalText(context, e, _store), orgId: org));
     } catch (_) {
       // The Worker was not reached: the purchase stays open, the store
       // hands it back.
-      _say(StoreNotice((context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.')));
+      _say(StoreNotice((context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'), orgId: org));
     }
   }
 }
 
-/// A purchase the store itself refused, in the reader's language.
+/// Whether what the store said is the person's own « Annuler » (132):
+/// nothing alarming is said, and nothing reported.
+bool storeCancelled(String? code, String? message) {
+  final all = '${code ?? ''} ${message ?? ''}'.toLowerCase();
+  return all.contains('usercancel') || all.contains('canceled') || all.contains('cancelled');
+}
+
+/// The store's own reason, short (132): Google's BillingResponse
+/// (« itemAlreadyOwned »), StoreKit's code (« storekit2_failed_to_fetch_product »)
+/// — what is said beside the friendly line, so a failure can be read
+/// back. Null when the store gave nothing.
+String? storeErrorCode(String? code, String? message) {
+  String clean(String s) => s.replaceFirst('BillingResponse.', '').trim();
+  final c = clean(code ?? '');
+  final m = clean(message ?? '');
+  // Google's generic code says nothing: its BillingResponse does.
+  final picked = (c.isEmpty || c == 'purchase_error') && m.isNotEmpty && m.length <= 60 ? m : c;
+  if (picked.isEmpty) return null;
+  return picked.length > 60 ? '${picked.substring(0, 57)}…' : picked;
+}
+
+/// The line written to the crash reporter for a store failure (132): the
+/// store, the product, its code, its words and details — never a token.
+String storeErrorLine(String platform, String productId, String? code, String? message, [String? details]) =>
+    'store purchase failed $platform $productId: code=${code ?? ''} message=${message ?? ''}'
+    '${details == null || details.isEmpty ? '' : ' details=${details.length > 300 ? details.substring(0, 300) : details}'}';
+
+/// A purchase the store itself refused, in the reader's language: the
+/// friendly line, then the store's own code on a line of its own (132)
+/// — « (App Store : storekit2_failed_to_fetch_product) ».
 String storeErrorText(BuildContext context, String? code, String? message, String store) {
   final all = '${code ?? ''} ${message ?? ''}';
-  if (all.contains('itemAlreadyOwned') || all.contains('alreadyOwned')) {
-    return context.tr('Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.', {'store': store});
-  }
-  if (all.contains('userCancel') || all.contains('canceled')) {
+  if (storeCancelled(code, message)) {
     return context.tr('Achat annulé : rien n\'a été prélevé.');
   }
-  return context.tr('L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.', {'store': store});
+  final why = storeErrorCode(code, message);
+  final line = all.contains('itemAlreadyOwned') || all.contains('alreadyOwned')
+      ? context.tr('Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.', {'store': store})
+      : context.tr('L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.', {'store': store});
+  return why == null ? line : '$line\n${context.tr('({store} : {code})', {'store': store, 'code': why})}';
 }

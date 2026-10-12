@@ -5,8 +5,10 @@ import '../../core/auth/models.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/business_cover.dart';
 import '../../core/nav/router.dart';
+import '../../core/nav/session.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/theme/scroll_hint.dart';
+import '../setup/setup_screen.dart' show SetupGate;
 import 'home_nav.dart';
 
 /// The business's frame (108): its bar at the foot — or its rail down the
@@ -46,6 +48,7 @@ class BusinessFrame extends StatefulWidget {
     required this.location,
     required this.child,
     this.cover,
+    this.session,
   });
 
   /// Null while the business is still being read.
@@ -60,6 +63,13 @@ class BusinessFrame extends StatefulWidget {
   /// What watches that navigator for a sheet or a full-screen flow on top.
   final BusinessCover? cover;
 
+  /// The app's session (the router's frame): with it the bar is drawn on
+  /// the business's very first frame (132), before its home has said its
+  /// places — the places its home said last, or its kind's — unless the
+  /// first setup holds the home. Without it (a test of the frame alone),
+  /// the bar waits for the home.
+  final SessionController? session;
+
   @override
   State<BusinessFrame> createState() => _BusinessFrameState();
 }
@@ -68,10 +78,38 @@ class _BusinessFrameState extends State<BusinessFrame> {
   final _nav = BusinessNav();
 
   @override
+  void initState() {
+    super.initState();
+    _nav.orgId = widget.org?.id;
+  }
+
+  @override
   void didUpdateWidget(BusinessFrame oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Another business's places are never drawn under this one's pages.
     if (oldWidget.org?.id != widget.org?.id) _nav.publishNothing();
+    _nav.orgId = widget.org?.id;
+  }
+
+  /// The places to draw while the home has said none (132): an iPhone
+  /// owner saw the bar come only after a while — it waited for the home's
+  /// first build, one frame at best and longer on a slow start. Drawn at
+  /// once instead, from what this business's home said last in this run
+  /// or else its kind's places, at the bar's own height, so nothing moves
+  /// when the home's own arrive. None while the first setup holds the
+  /// home, nor for a kind this build does not know.
+  HomeNav? _waiting(BuildContext context, OrgSummary org) {
+    final session = widget.session;
+    if (session == null) return null;
+    if (SetupGate.holdsHome(org, session.featuresFor(org.id))) return null;
+    void open(HomeDestination place) {
+      final r = place.route;
+      if (r == null || r.isEmpty) return;
+      context.push(Routes.inside(org.id, r));
+    }
+
+    return BusinessNav.lastKnown(org.id, context.trLanguage)?.detached(open) ??
+        HomeNav.defaultsFor(context, org, session.accessFor(org.id), open);
   }
 
   @override
@@ -157,7 +195,7 @@ class _BusinessFrameState extends State<BusinessFrame> {
 
   Widget _frame(BuildContext context) {
     final org = widget.org;
-    final nav = org == null ? null : _nav.nav;
+    final nav = org == null ? null : _nav.nav ?? _waiting(context, org);
     final places = nav == null ? const <HomeDestination>[] : nav.slots(context);
     final drawn = places.length >= 2;
     final wide = MediaQuery.sizeOf(context).width >= HomeNav.wideFrom;

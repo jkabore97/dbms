@@ -91,3 +91,14 @@ Widget? parentBack(BuildContext context) {
   if (parent == null) return null;
   return BackButton(key: const Key('parent-back'), onPressed: () => router.go(parent));
 }
+
+/// The way back for a page with no AppBar of its own (132): Flutter's
+/// arrow where the page can pop, [parentBack]'s where it cannot — an
+/// iPhone has no system back, so a page with neither would be a dead end.
+/// Null on a root.
+Widget? pageBack(BuildContext context) {
+  if (ModalRoute.of(context)?.impliesAppBarDismissal ?? false) {
+    return const BackButton(key: Key('page-back'));
+  }
+  return parentBack(context);
+}

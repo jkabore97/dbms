@@ -25,6 +25,7 @@ import 'order_walkthrough.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import '../common/attention_banner.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -229,7 +230,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   }
 
   Future<void> _showCash() async {
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showMaraSheet<bool>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -240,7 +241,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
   }
 
   Future<void> _showCouriers() async {
-    await showModalBottomSheet<void>(
+    await showMaraSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,

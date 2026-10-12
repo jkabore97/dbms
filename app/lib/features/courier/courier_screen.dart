@@ -19,6 +19,7 @@ import '../storefront/shop_style.dart';
 import '../notify/notifications_screen.dart' show NotificationBell;
 import '../notify/push_offer.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The livreur's whole world on one page.
 ///
@@ -267,7 +268,7 @@ class _CourierScreenState extends State<CourierScreen>
 
   /// "Échec" (073): why the door did not open.
   Future<void> _fail(DeliveryJob job) async {
-    final reason = await showModalBottomSheet<String>(
+    final reason = await showMaraSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(
@@ -952,7 +953,7 @@ class _CashStrip extends StatelessWidget {
     return Material(
       color: ShopStyle.paper,
       child: InkWell(
-        onTap: () => showModalBottomSheet<void>(
+        onTap: () => showMaraSheet<void>(
           context: context,
           showDragHandle: true,
           builder: (_) => SafeArea(

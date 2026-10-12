@@ -43,6 +43,27 @@ abstract class StoreBilling {
 
   /// The store's own page where the subscription is changed or cancelled.
   Uri get manageUrl;
+
+  /// The Mara Pro subscriptions this store account holds now (132):
+  /// Google Play's purchases owned (queryPastPurchases), the App Store's
+  /// current entitlements. One store account holds one, whatever the
+  /// business: while it holds one, the store refuses a second purchase
+  /// (Google: « You're already subscribed »; Apple would only change the
+  /// one it has).
+  Future<List<StoreOwned>> owned();
+}
+
+/// A Mara Pro subscription the store account holds (132).
+class StoreOwned {
+  const StoreOwned({required this.productId, this.orgId, this.transactionId, this.token});
+
+  final String productId;
+
+  /// The business it was bought for (appAccountToken / obfuscatedAccountId),
+  /// null when the store does not say.
+  final String? orgId;
+  final String? transactionId;
+  final String? token;
 }
 
 /// One of Mara Pro's two periods.
@@ -79,6 +100,7 @@ class StorePurchase {
     this.token,
     this.errorCode,
     this.errorMessage,
+    this.errorDetails,
     this.needsCompletion = false,
     this.orgId,
     this.native,
@@ -104,6 +126,10 @@ class StorePurchase {
   /// (Google's « BillingResponse.itemAlreadyOwned » among them).
   final String? errorCode;
   final String? errorMessage;
+
+  /// The plugin's details (Google's debug message, StoreKit's own), for the
+  /// log only.
+  final String? errorDetails;
   final bool needsCompletion;
   final Object? native;
 }

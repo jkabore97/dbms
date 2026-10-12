@@ -11,6 +11,7 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/theme/mara_mark.dart';
 import '../courier/courier_words.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Livreurs à valider » › one dossier (112): the selfie beside the
 /// identity document, the vehicle, the quartiers and the hours, the number
@@ -109,7 +110,7 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
   }
 
   Future<void> _refuse() async {
-    final answer = await showModalBottomSheet<(String, List<String>, String?)>(
+    final answer = await showMaraSheet<(String, List<String>, String?)>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -120,7 +121,7 @@ class _CourierReviewScreenState extends State<CourierReviewScreen> {
   }
 
   Future<void> _askPhoto() async {
-    final which = await showModalBottomSheet<String>(
+    final which = await showMaraSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(

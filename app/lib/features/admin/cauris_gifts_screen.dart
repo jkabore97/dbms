@@ -19,6 +19,7 @@ import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk
 import '../cauris/cauri_icon.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Console › Mara Pro › Cauris › « Offrir » (100): for any business — a
 /// shop, a farm, an association — the platform gives cauris, gives
@@ -238,7 +239,7 @@ class _OrgGiftsState extends State<OrgGifts> {
 
   Future<void> _give(GiftKind kind) async {
     final org = widget.org;
-    final done = await showModalBottomSheet<bool>(
+    final done = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

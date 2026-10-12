@@ -11,6 +11,7 @@ import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The categories money falls into, and what has landed in each.
 ///
@@ -96,7 +97,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
 
   Future<void> _create() async {
     final result =
-        await showModalBottomSheet<({String name, String type, String? note})>(
+        await showMaraSheet<({String name, String type, String? note})>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

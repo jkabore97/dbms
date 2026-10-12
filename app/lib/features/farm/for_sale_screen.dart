@@ -20,6 +20,7 @@ import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -118,7 +119,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
 
   /// What is already for sale: its price, its count, its photo, its words.
   Future<void> _open(Product product) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

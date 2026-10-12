@@ -17,6 +17,7 @@ import '../admin_pill.dart';
 import '../../notify/notifications_screen.dart' show NotificationBell;
 import 'center_search.dart';
 import '../../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// One page of a section: its name and its address. [leaves] marks a page
 /// outside the center (the street).
@@ -677,7 +678,7 @@ class _PhoneBar extends StatelessWidget {
   }
 
   Future<void> _more(BuildContext context, List<CenterSection> rest) {
-    return showModalBottomSheet<void>(
+    return showMaraSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (sheet) => SafeArea(

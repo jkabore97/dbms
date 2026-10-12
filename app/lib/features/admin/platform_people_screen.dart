@@ -10,6 +10,7 @@ import '../../core/console/models.dart';
 import '../../core/admin/models.dart' show roleLabel;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The platform admin's global directory of people — the other axis to the
 /// business console. Search any account across every business, see where they
@@ -191,7 +192,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
   }
 
   Future<void> _openPerson(PlatformPerson person) async {
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

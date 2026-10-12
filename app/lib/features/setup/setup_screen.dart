@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/setup_steps.dart';
 import '../../core/auth/models.dart';
+import '../../core/cauris/feature_states.dart';
 import '../../core/errors.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/nav/app_scope.dart';
@@ -774,6 +775,14 @@ class SetupGate extends StatelessWidget {
   final OrgSummary org;
   final Widget child;
 
+  /// Whether the first setup holds [org]'s home now, as its feature
+  /// states [f] say — the business's frame draws no bar over it (132).
+  static bool holdsHome(OrgSummary org, FeatureStates? f) {
+    if (!org.isAdmin || f == null || f.setupDone) return false;
+    if (org.isAssociation) return f.team != null && !f.team!.setupDone;
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scope = AppScope.maybeOf(context);
@@ -782,9 +791,8 @@ class SetupGate extends StatelessWidget {
       listenable: scope.session,
       builder: (context, _) {
         final f = scope.session.featuresFor(org.id);
-        if (f == null || f.setupDone) return child;
+        if (!holdsHome(org, f)) return child;
         if (org.isAssociation) {
-          if (f.team == null || f.team!.setupDone) return child;
           // A first setup is never interrupted by « Activer les
           // notifications ? » (120): asked once it is done.
           return PushPromptQuiet(child: AssociationSetupScreen(

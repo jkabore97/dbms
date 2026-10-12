@@ -11,6 +11,7 @@ import '../../core/tontine/tontine_repository.dart';
 import '../../l10n/strings.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// The business's tontines, and the one screen a round needs: who has paid,
 /// who has not, whose turn the pot is.
@@ -66,7 +67,7 @@ class _TontinesScreenState extends State<TontinesScreen> {
   }
 
   Future<void> _create() async {
-    final made = await showModalBottomSheet<bool>(
+    final made = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

@@ -14,6 +14,7 @@ import '../console_today.dart';
 import 'center_search.dart' show orderStatusLabel;
 import 'reports_sheet.dart';
 import '../../../core/notify/bell_room.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « À faire » (105): the center's first page. What waits on the platform
 /// and what ends within seven days, as numbers to tap — each opens the
@@ -62,7 +63,7 @@ class _TodoSectionState extends State<TodoSection> {
     }
   }
 
-  Future<void> _list(String key, String title) => showModalBottomSheet<void>(
+  Future<void> _list(String key, String title) => showMaraSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

@@ -10,6 +10,7 @@ import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Every business on the platform, and the three things that can be done to
 /// one: changed, put away, destroyed.
@@ -74,7 +75,7 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
   }
 
   Future<void> _edit(PlatformOrg org) async {
-    final changed = await showModalBottomSheet<bool>(
+    final changed = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

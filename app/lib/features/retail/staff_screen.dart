@@ -9,6 +9,7 @@ import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// Who gets paid, and what they are owed right now.
 ///
@@ -77,7 +78,7 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Future<void> _addPerson() async {
-    final added = await showModalBottomSheet<bool>(
+    final added = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -87,7 +88,7 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Future<void> _recordShift(Employee person) async {
-    final recorded = await showModalBottomSheet<bool>(
+    final recorded = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

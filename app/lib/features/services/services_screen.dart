@@ -19,6 +19,7 @@ import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/core/theme/mara_sheet.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -100,7 +101,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   /// A service already offered: its price, words, photo — or retire it.
   Future<void> _open(Product service) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showMaraSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
