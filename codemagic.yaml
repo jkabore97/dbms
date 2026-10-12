@@ -54,6 +54,12 @@ workflows:
             echo "Each is the same value as the GitHub repository secret or variable of that name." >&2
             exit 1
           fi
+          # The project's origin only: a pasted « …supabase.co/rest/v1 »
+          # made build 3 call /rest/v1/rest/v1/… (the app now trims it too).
+          case "$SUPABASE_URL" in
+            https://*.supabase.co|https://*.supabase.co/) ;;
+            *) echo "SUPABASE_URL must be the project origin, https://<id>.supabase.co, with no path (now: ${SUPABASE_URL%%.supabase.co*}.supabase.co…)." >&2; exit 1 ;;
+          esac
           for name in SENTRY_DSN PUSH_URL; do
             if [ -z "${!name:-}" ]; then echo "Note: $name is empty — built without it."; fi
           done
