@@ -843,7 +843,7 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch128.sql
 
-      - name: Prove Mara hears of every new account — a sign-up rings every platform admin once (« Nouveau compte : <nom> (Google | Apple | e-mail | téléphone) », the platform's list, user id, name, method and contact in params) and nobody else; the switch admin_new_user_notify off rings nobody; an account that is an admin at birth is not told about itself; a bell that cannot be written never stops a sign-up; the ranking's job cauris-board kept paused where pg_cron exists, cauris-week-close untouched; anon calls none of it; P1 the profile, the welcome e-mail, the other bells and the three kinds unchanged (129)
+      - name: "Prove Mara hears of every new account — a sign-up rings every platform admin once (Nouveau compte, with name, method and contact) and nobody else; the switch admin_new_user_notify off rings nobody; an admin at birth is not told about itself; a bell that cannot be written never stops a sign-up; cauris-board kept paused where pg_cron exists, cauris-week-close untouched; anon calls none of it; P1 unchanged (129)"
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch129.sql
