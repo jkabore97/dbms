@@ -655,17 +655,24 @@ class _Wallet extends StatelessWidget {
             children: [
               const CauriIcon(size: 34),
               const SizedBox(width: 12),
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: balance.toDouble()),
-                duration: reduced
-                    ? Duration.zero
-                    : const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, v, _) => Text(
-                  NumberFormat.decimalPattern(locale).format(v.round()),
-                  key: const Key('cauris-balance'),
-                  style: theme.textTheme.displaySmall?.copyWith(
-                      color: maraPaper, fontWeight: FontWeight.w800),
+              // Shrinks rather than overflowing at large text (CH-1).
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: balance.toDouble()),
+                    duration: reduced
+                        ? Duration.zero
+                        : const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, v, _) => Text(
+                      NumberFormat.decimalPattern(locale).format(v.round()),
+                      key: const Key('cauris-balance'),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                          color: maraPaper, fontWeight: FontWeight.w800),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

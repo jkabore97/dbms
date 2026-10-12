@@ -238,6 +238,7 @@ class _BusinessFrameState extends State<BusinessFrame> {
       // is drawn as unselected (no indicator, its plain icon and label).
       final none = selected < 0;
       final labels = NavigationBarTheme.of(context).labelTextStyle;
+      final narrowBar = MediaQuery.sizeOf(context).width < 360;
       bar = SizedBox(
         key: const Key('business-bar'),
         height: barHeight,
@@ -267,7 +268,11 @@ class _BusinessFrameState extends State<BusinessFrame> {
                       icon: HomeNav.placeIcon(p, p.icon),
                       selectedIcon: HomeNav.placeIcon(
                           p, none ? p.icon : (p.selectedIcon ?? p.icon)),
-                      label: p.label,
+                      // A fifth of a 320 px phone holds « Factures » but not
+                      // « Commandes »: the short word there, the whole one
+                      // as the tooltip and for screen readers (B-2).
+                      label: narrowBar ? shortPlaceLabel(context, p.label) : p.label,
+                      tooltip: p.label,
                     ),
                 ],
               ),
@@ -457,4 +462,13 @@ class _UnsavedInputState extends State<UnsavedInput> {
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+/// The bar's word for a place on a phone narrower than 360 px, where a
+/// fifth of the width holds eight letters: « Commandes » → « Cmdes »,
+/// « Historique » → « Histo. ». Every other word as it is.
+String shortPlaceLabel(BuildContext context, String label) {
+  if (label == context.tr('Commandes')) return context.tr('Cmdes');
+  if (label == context.tr('Historique')) return context.tr('Histo.');
+  return label;
 }

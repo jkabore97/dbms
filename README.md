@@ -588,7 +588,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_129.sql`, below),
+older database, applied with `database/apply_006_to_130.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -689,7 +689,7 @@ One-time setup, in this order:
    any long random string (`openssl rand -hex 32`) — its own, not push's.
    `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` and `CLOUDFLARE_API_TOKEN`
    are the ones push already uses.
-4. **The database**: apply 124 (in `database/apply_006_to_129.sql`, below).
+4. **The database**: apply 124 (in `database/apply_006_to_130.sql`, below).
 5. **Deploy the Worker**: the "Deploy the mail Worker" workflow (it runs
    on its own on a push to main that touches `workers/mail`). Without
    `RESEND_API_KEY` it deploys nothing and says so in its summary. Its
@@ -1248,9 +1248,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `129` up to date, paste
-`database/apply_006_to_129.sql` into the Supabase SQL editor and run it once.
-It is `006` through `129` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
+To bring a database anywhere between `005` and `130` up to date, paste
+`database/apply_006_to_130.sql` into the Supabase SQL editor and run it once.
+It is `006` through `130` concatenated (114, 116 and 120 are unused numbers) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -1346,3 +1346,66 @@ Shops and shoppers are never asked. **Lost the phone with it on:**
 Supabase SQL editor → `update platform_settings set value = 'false' where
 key = 'admin_two_step';` (or delete the account's MFA factor under
 Authentication → Users).
+
+### Secrets and the production environment
+
+Every job that holds a production secret — `migrate.yml`, every
+`deploy-*.yml`, and `build.yml`'s `release-android` (the upload key, the
+Play service account, Firebase's file) — runs in the GitHub Environment
+**`production`**. GitHub creates it, unrestricted, the first time such a job
+runs, so nothing changes until the owner restricts it; once it allows only
+`main`, a pushed branch can no longer read those secrets (SEC_AUDIT_2 H1).
+Pull requests build the Android app in `build-android` with the debug key
+and no store or Firebase secret at all, since a pull request's own Gradle and
+Dart code runs there (M5). Workflows are read-only by default
+(`permissions: contents: read`); only the release job writes, to publish
+the APKs.
+
+The two public values every build compiles in, `SUPABASE_URL` and
+`SUPABASE_PUBLISHABLE_KEY`, stay repository secrets or variables: the
+pull request and web builds never enter `production`. Everything else
+listed in the deploy workflows — `SUPABASE_DB_URL`, `CLOUDFLARE_API_TOKEN`,
+`SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_*`, `WAVE_*`, `APPLE_*`,
+`PLAY_SERVICE_ACCOUNT_JSON`, `GOOGLE_NOTIFY_SECRET`, the `KAJ_KEYSTORE_*` and
+`KAJ_KEY_*` secrets, `GOOGLE_SERVICES_JSON`, `RESEND_API_KEY`,
+`MAIL_WEBHOOK_SECRET`, `PUSH_WEBHOOK_SECRET`, `VAPID_PRIVATE_KEY`,
+`FCM_SERVICE_ACCOUNT`, `WHATSAPP_*` and `SEND_SMS_HOOK_SECRET` — belongs in
+the environment's secrets, and then nowhere else.
+
+### Sign-in links: PKCE only
+
+A link signs a phone or a browser in only with the `code` of a sign-in that
+device started itself (Google, an e-mail confirmation asked from it): the
+code is exchanged with the verifier the device kept. A link carrying a raw
+`access_token` or `refresh_token` — somebody else's session, made into a
+link — is ignored (`core/auth/auth_callback.dart`, `main.dart`'s
+`FlutterAuthClientOptions`; SEC_AUDIT_2 M3). An e-mail confirmation opened
+on another device confirms the address; the person then signs in with the
+password.
+
+### WhatsApp codes are rationed
+
+Each code the Send SMS hook asks for (`workers/whatsapp-otp`) is counted
+before it goes: at most 3 per number per 10 minutes and 10 a day, 5 per
+account per 10 minutes and 20 a day (`otp_send_allow`, migration 130, the
+number kept only as an md5, two days). Over the limit nothing is sent and
+the shopper reads « Trop de codes envoyés ». The Worker asks the database
+with the service role (`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`,
+installed by `deploy-whatsapp-otp.yml`); without them it counts the same
+limits in its own memory. The hook carries no client address: the global
+cap is Supabase's own — Authentication › Rate limits › « Rate limit for
+sending SMS messages », kept small (e.g. 30 an hour).
+
+### Test purchases (App Review)
+
+A sandbox purchase turns Pro on only for a business owned by a platform
+admin, or by the account named in `store_review_account` **once that
+account's address is confirmed**; `store_review_orgs` (Réglages › Mara Pro,
+the businesses' ids) narrows it to those businesses (migration 130).
+
+### The migrations' ledger
+
+`kaj_migrations` is the owner's alone: row security on and no privilege for
+`PUBLIC`, `anon` or `authenticated` (`scripts/apply-migrations.sh` makes it
+so; migration 130 locks one made before) — no account can pre-insert a
+migration for `migrate.yml` to skip, or delete one to run again.

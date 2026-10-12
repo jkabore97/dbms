@@ -6493,4 +6493,7 @@ const enStrings = <String, String>{
   'Plus d\'actions': 'More actions',
   // 133 (UI audit X-1): a programming error, said plainly.
   'Une erreur inattendue est survenue. Réessayez.': 'An unexpected error occurred. Try again.',
+  // 133 (UI audit B-2): the bar's short words on a 320 px phone.
+  'Cmdes': 'Orders',
+  'Histo.': 'History',
 };

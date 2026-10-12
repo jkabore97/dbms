@@ -25,6 +25,7 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+      - '.github/actions/android-build/**'
   # A pull request that touches the app builds the Android app too, so a
   # change to the Gradle setup or the shrinker rules is proven before it
   # merges — this sandbox has no Android SDK, and CI's Flutter tests do
@@ -33,6 +34,7 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/build.yml'
+      - '.github/actions/android-build/**'
 
 # Read-only by default (SEC_AUDIT_2 M5). Only main's release job, which
 # publishes the APKs to a GitHub release so a shop can download the app

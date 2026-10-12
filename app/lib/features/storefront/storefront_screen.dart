@@ -3255,9 +3255,10 @@ class _QuickAdd extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onAdd,
+          // 44: a full tap target (UI audit SH-6).
           child: SizedBox(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             child: Icon(Icons.add, size: 20, color: scheme.onPrimary),
           ),
         ),

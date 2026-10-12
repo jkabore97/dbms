@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../cauris/path_card.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -247,8 +248,12 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                                   ],
                                 ),
                                 subtitle: _subtitle(context, row),
-                                trailing: Text(
+                                // Whole, and never more than about a quarter of the
+                                // row: the name keeps its words (R-1).
+                                trailing: MoneyText(
                                   _money.format(row.totalOwed),
+                                  alignment: Alignment.centerRight,
+                                  maxWidth: MediaQuery.sizeOf(context).width * 0.28,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontFeatures: const [
                                       FontFeature.tabularFigures()

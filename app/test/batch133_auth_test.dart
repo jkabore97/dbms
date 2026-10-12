@@ -134,7 +134,7 @@ void main() {
       // Why the predicate matters: GoTrue itself, even in the PKCE flow,
       // accepts the raw tokens.
       final taken = await auth.getSessionFromUrl(attack);
-      expect(taken.session?.user.email, 'attacker@example.org');
+      expect(taken.session.user.email, 'attacker@example.org');
     });
 
     test('Google: the return with the code this device asked for signs in', () async {
