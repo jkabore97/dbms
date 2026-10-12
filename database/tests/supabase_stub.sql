@@ -9,6 +9,9 @@ create table auth.users (
     phone              text unique,
     email              varchar(255) unique,
     raw_user_meta_data jsonb not null default '{}'::jsonb,
+    -- What GoTrue says of how the account signs in: { provider: google |
+    -- apple | email | phone, … } (129 announces the method to Mara).
+    raw_app_meta_data  jsonb not null default '{}'::jsonb,
     -- When the sign-in proved the number or the address (103's sweep claims
     -- only those). Null, as Supabase leaves an account nobody proved: a
     -- test that needs a proved one says so.

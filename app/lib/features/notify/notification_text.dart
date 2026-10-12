@@ -120,6 +120,16 @@ String notificationLine(BuildContext context, NotificationRow n) {
           : context.tr('Mara demande une nouvelle photo de votre pièce d\'identité.');
     case 'courier_application':
       return context.tr('Nouvelle demande de livreur : {name}', {'name': s('name')});
+    // 129: a new account, for Mara's admins — how it signed up.
+    case 'new_user':
+      final how = switch (s('method')) {
+        'google' => 'Google',
+        'apple' => 'Apple',
+        'email' => context.tr('e-mail'),
+        'phone' => context.tr('téléphone'),
+        final other => other,
+      };
+      return context.tr('Nouveau compte : {name} ({how})', {'name': s('name'), 'how': how});
     // 115: the dossier arrived; a delivery waits near the courier; a shop
     // named them its courier; the cash handed over; the 7-day nudge.
     case 'courier_received':
@@ -421,6 +431,18 @@ String? notificationTarget(
       return Routes.becomeCourier;
     case 'courier_application':
       return Routes.consoleCouriers;
+    // 129: the new account's fiche in « Personnes » (searched for by its
+    // e-mail or number, then opened), the list when the row names nobody.
+    case 'new_user':
+      final id = p['user_id'];
+      final q = '${p['contact'] ?? p['name'] ?? ''}';
+      final query = {
+        if (q.isNotEmpty) 'q': q,
+        if (id is String && id.isNotEmpty) 'personne': id,
+      };
+      return query.isEmpty
+          ? Routes.consolePeople
+          : Uri(path: Routes.consolePeople, queryParameters: query).toString();
     case 'courier_approved' || 'courier_suspended' || 'courier_pending' ||
           'delivery_cancelled' || 'delivery_available' || 'courier_shop_added' ||
           'courier_cash_received' || 'courier_idle':

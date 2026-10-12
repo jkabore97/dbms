@@ -185,6 +185,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'debt_settled' => Icons.handshake_outlined,
         'tontine_ready' => Icons.group_outlined,
         'org_application' => Icons.business_outlined,
+        'new_user' => Icons.person_add_alt_1_outlined,
         'unlock' => Icons.lock_open_outlined,
         'cauris_board' || 'cauris_prize' => Icons.emoji_events_outlined,
         'pro_active' => Icons.workspace_premium_outlined,
