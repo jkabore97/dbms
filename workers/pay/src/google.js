@@ -20,6 +20,11 @@
 import { signRs256 } from "./jwt.js";
 import { StoreError } from "./apple.js";
 
+// The global fetch, called as a plain function: a Worker throws « Illegal
+// invocation » when it is called as io.fetch(…) with io as `this` (the
+// first Google check failed so).
+const callFetch = (input, init) => fetch(input, init);
+
 export const GOOGLE_PACKAGE = "bf.kaj.app";
 export const GOOGLE_PRODUCT = "mara_pro";
 export const GOOGLE_BASE_PLANS = ["monthly", "yearly"];
@@ -41,7 +46,7 @@ function serviceAccount(env) {
 
 /// An access token for the Play Developer API (one hour; asked per call —
 /// a verification is rare enough).
-export async function googleToken(env, io = { fetch }) {
+export async function googleToken(env, io = { fetch: callFetch }) {
   const sa = serviceAccount(env);
   const iat = Math.floor((io.now?.() ?? Date.now()) / 1000);
   const tokenUri = sa.token_uri || "https://oauth2.googleapis.com/token";
@@ -132,7 +137,7 @@ function checkToken(token) {
   }
 }
 
-export async function googleLookup(env, token, io = { fetch }) {
+export async function googleLookup(env, token, io = { fetch: callFetch }) {
   checkToken(token);
   const sub = await play(env, "GET", `purchases/subscriptionsv2/tokens/${encodeURIComponent(token)}`, io);
   const settlement = googleSettlement(token, sub);
@@ -144,7 +149,7 @@ export async function googleLookup(env, token, io = { fetch }) {
 }
 
 /// Google refunds a purchase not acknowledged within three days.
-export async function googleAcknowledge(env, token, io = { fetch }) {
+export async function googleAcknowledge(env, token, io = { fetch: callFetch }) {
   checkToken(token);
   await play(env, "POST",
     `purchases/subscriptions/${GOOGLE_PRODUCT}/tokens/${encodeURIComponent(token)}:acknowledge`, io, {});
@@ -152,7 +157,7 @@ export async function googleAcknowledge(env, token, io = { fetch }) {
 
 /// Ends a subscription now and refunds what is left of the period (the
 /// business it paid for was deleted with its owner's account).
-export async function googleRevoke(env, token, io = { fetch }) {
+export async function googleRevoke(env, token, io = { fetch: callFetch }) {
   checkToken(token);
   await play(env, "POST", `purchases/subscriptionsv2/tokens/${encodeURIComponent(token)}:revoke`, io, {
     revocationContext: { proratedRefund: {} },

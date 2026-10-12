@@ -18,6 +18,11 @@
 import { signEs256 } from "./jwt.js";
 import { verifyAppleJws } from "./x509.js";
 
+// The global fetch, called as a plain function: a Worker throws « Illegal
+// invocation » when it is called as io.fetch(…) with io as `this` (the
+// first Google check failed so).
+const callFetch = (input, init) => fetch(input, init);
+
 export const APPLE_PRODUCTS = ["bf.kaj.app.pro.monthly", "bf.kaj.app.pro.yearly"];
 const HOSTS = {
   production: "https://api.storekit.itunes.apple.com",
@@ -121,7 +126,7 @@ export function checkAppleTransaction(env, tx) {
 }
 
 /// The purchase the app reported, as Apple holds it now.
-export async function appleLookup(env, transactionId, io = { fetch }, verify = {}) {
+export async function appleLookup(env, transactionId, io = { fetch: callFetch }, verify = {}) {
   if (!/^\d{1,30}$/.test(String(transactionId || ""))) {
     throw new StoreError("Identifiant d'achat App Store invalide.", 400, "transaction");
   }
@@ -178,6 +183,6 @@ export async function appleNotification(env, body, verify = {}) {
 }
 
 /// The daily re-check: a subscription by its original transaction id.
-export async function appleRecheck(env, originalId, io = { fetch }, verify = {}) {
+export async function appleRecheck(env, originalId, io = { fetch: callFetch }, verify = {}) {
   return appleLookup(env, originalId, io, verify);
 }
