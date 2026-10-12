@@ -1,0 +1,25 @@
+# Temporary: reads Mara's WhatsApp Business status from Meta (business
+# verification, number, templates). Read-only. Removed once it has run.
+name: Meta check
+on:
+  push:
+    branches: [claude/dbms-login-page-ef71ta]
+    paths: [.github/workflows/meta-check.yml]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Meta
+        env:
+          TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          PHONE: ${{ secrets.WHATSAPP_PHONE_ID }}
+        run: |
+          set -u
+          G=https://graph.facebook.com/v21.0
+          WABA=39044506931863115
+          q() { curl -sS -G "$G/$1" --data-urlencode "fields=$2" -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d, ensure_ascii=False)[:1500])"; }
+          echo "== WABA"; q "$WABA" "name,account_review_status,business_verification_status,owner_business_info"
+          echo "== phone"; q "$PHONE" "display_phone_number,verified_name,name_status,status,quality_rating,messaging_limit_tier,code_verification_status,platform_type"
+          echo "== templates"; q "$WABA/message_templates" "name,status,category,language,rejected_reason"
+          BIZ=$(curl -sS -G "$G/$WABA" --data-urlencode "fields=owner_business_info" -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; print(json.load(sys.stdin).get('owner_business_info',{}).get('id',''))")
+          echo "== business $BIZ"; [ -n "$BIZ" ] && q "$BIZ" "name,verification_status"
