@@ -6866,6 +6866,8 @@ const enStrings = <String, String>{
       'A trainer helps you',
   'Votre demande est gardée.':
       'Your request is kept.',
+  'Demande à toute heure · réponse sous 48 h au plus':
+      'Ask at any hour · answer within 48 h at most',
   'Réponse en quelques minutes, {hours}':
       'An answer within minutes, {hours}',
   'C\'est à propos de…':
