@@ -1025,7 +1025,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           onChanged: (_) => _changed(),
           decoration: InputDecoration(
             labelText: context.tr('Quartier (facultatif)'),
-            hintText: context.tr('Ex. : Dapoya près du marché, Le Plateau, Centre-ville'),
+            hintText: context.tr('Ex. : Ouaga 2000, Cocody, Les Almadies, Hamdallaye, Le Marais, Harlem'),
             hintMaxLines: 2,
             border: const OutlineInputBorder(),
           ),

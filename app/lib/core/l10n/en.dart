@@ -4801,12 +4801,10 @@ const enStrings = <String, String>{
       'E.g. Rice and soap sold loose, coffee and pastries, clothing',
   'Ex. : Œufs frais, légumes bio, miel':
       'E.g. Fresh eggs, organic vegetables, honey',
-  'Ex. : Dapoya près du marché, Le Plateau, Centre-ville':
-      'E.g. Dapoya near the market, Le Plateau, Downtown',
+  'Ex. : Ouaga 2000, Cocody, Les Almadies, Hamdallaye, Le Marais, Harlem':
+      'E.g. Ouaga 2000, Cocody, Les Almadies, Hamdallaye, Le Marais, Harlem',
   'Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon':
       'E.g. Cercle des Bâtisseurs, Fondation Espoir, Club Horizon',
-  'Ex. : Centre-ville, près du grand marché, avenue principale':
-      'E.g. Downtown, near the main market, main avenue',
   'Ex. : Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris':
       'E.g. Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris',
   'Ex. : Pagnes et gâteaux depuis 1998, Le café du coin, Frais et local':
