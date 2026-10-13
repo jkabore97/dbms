@@ -217,10 +217,21 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     try {
       await widget.storefront.cancelOrder(order.id);
       await _load();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
+      // 134: a booking past its cutoff, an order already paid, a Wave
+      // payment still running — each says so.
+      final words = '$error';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.tr('Trop tard : la boutique a déjà répondu.'))));
+          content: Text(booking && words.contains('Trop tard')
+              ? context.tr('Trop tard pour annuler — appelez la boutique')
+              : words.contains('déjà payé')
+                  ? (booking
+                      ? context.tr('Ce rendez-vous est déjà payé : appelez la boutique pour l\'annuler.')
+                      : context.tr('Cette commande est déjà payée : appelez la boutique pour l\'annuler.'))
+                  : words.contains('paiement Wave est en cours')
+                      ? context.tr('Un paiement Wave est en cours : attendez quelques minutes ou appelez la boutique.')
+                      : context.tr('Trop tard : la boutique a déjà répondu.'))));
       await _load();
     } finally {
       if (mounted) setState(() => _busyId = null);
@@ -299,9 +310,20 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                     focused: o.id == widget.focusId,
                                     order: o,
                                     busy: _busyId == o.id,
-                                    onCancel: o.status == 'pending'
+                                    // 134: a confirmed booking too, until
+                                    // its cutoff (the card asks the server).
+                                    // An order of goods already paid: the
+                                    // shop gives the money back, so no
+                                    // button (a booking's area says « call »).
+                                    onCancel: (o.status == 'pending' && (o.hasSlot || !o.isPaid)) ||
+                                            (o.hasSlot && o.status == 'accepted')
                                         ? () => _cancel(o)
                                         : null,
+                                    cancelTerms: o.hasSlot && !o.awaitsCustomer &&
+                                            (o.status == 'pending' || o.status == 'accepted')
+                                        ? () => widget.storefront.bookingCancelTerms(o.id)
+                                        : null,
+                                    onCall: _call,
                                     onAcceptTime: o.awaitsCustomer
                                         ? () => _acceptTime(o)
                                         : null,
@@ -366,7 +388,16 @@ class _OrderCard extends StatelessWidget {
     this.tracking,
     this.wave,
     this.onAgain,
+    this.cancelTerms,
+    this.onCall,
   });
+
+  /// Until when a booking may be cancelled (134). Null: not a booking that
+  /// can be, or asked of nobody.
+  final Future<BookingCancelTerms?> Function()? cancelTerms;
+
+  /// Opens tel: / WhatsApp for « appelez la boutique ».
+  final Future<void> Function(String url)? onCall;
 
   /// « Recommander » / « Réserver à nouveau » (113), on a finished order.
   final VoidCallback? onAgain;
@@ -540,8 +571,18 @@ class _OrderCard extends StatelessWidget {
                   : context.tr('Recommander')),
             ),
           ],
+          // A booking's cancel (134): until its cutoff, then « appelez ».
+          if (cancelTerms != null && onCancel != null)
+            BookingCancelArea(
+              key: ValueKey('cancel-area-${order.id}-${order.status}'),
+              order: order,
+              busy: busy,
+              terms: cancelTerms!,
+              onCancel: onCancel!,
+              onCall: onCall,
+            )
           // A proposal is answered in its own box (« Accepter » / « Annuler »).
-          if (onCancel != null && onAcceptTime == null) ...[
+          else if (onCancel != null && onAcceptTime == null && order.status == 'pending') ...[
             const SizedBox(height: 12),
             OutlinedButton(
               key: Key('order-cancel-${order.id}'),
@@ -707,5 +748,143 @@ class _PayArea extends StatelessWidget {
       );
     }
     return fallback ?? const SizedBox.shrink();
+  }
+}
+
+
+/// « Annuler le rendez-vous » until the cutoff (134) — booked_for minus the
+/// platform's hours (2) — and after it « Trop tard pour annuler — appelez
+/// la boutique » with a call and a WhatsApp button. On a database without
+/// 134 (no terms) a requested booking keeps 125's cancel and a confirmed
+/// one none, as before.
+class BookingCancelArea extends StatefulWidget {
+  const BookingCancelArea({
+    super.key,
+    required this.order,
+    required this.busy,
+    required this.terms,
+    required this.onCancel,
+    this.onCall,
+    this.now,
+  });
+
+  final CustomerOrder order;
+  final bool busy;
+  final Future<BookingCancelTerms?> Function() terms;
+  final VoidCallback onCancel;
+  final Future<void> Function(String url)? onCall;
+
+  /// The clock (a test sets it).
+  final DateTime Function()? now;
+
+  @override
+  State<BookingCancelArea> createState() => _BookingCancelAreaState();
+}
+
+class _BookingCancelAreaState extends State<BookingCancelArea> {
+  BookingCancelTerms? _terms;
+  bool _asked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.terms().then((t) {
+      if (mounted) setState(() { _terms = t; _asked = true; });
+    }).catchError((_) {
+      if (mounted) setState(() => _asked = true);
+    });
+  }
+
+  Widget _cancelButton(BuildContext context, {String? note}) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: Key('order-cancel-${widget.order.id}'),
+            onPressed: widget.busy ? null : widget.onCancel,
+            child: widget.busy
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(context.tr('Annuler le rendez-vous')),
+          ),
+          if (note != null) ...[
+            const SizedBox(height: 4),
+            Text(note,
+                key: Key('order-cancel-until-${widget.order.id}'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+          ],
+        ],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
+    if (!_asked) return const SizedBox.shrink();
+    final t = _terms;
+    if (t == null) {
+      // Before 134: 125's rule — a request only.
+      return order.status == 'pending' ? _cancelButton(context) : const SizedBox.shrink();
+    }
+    final now = (widget.now ?? DateTime.now)();
+    // A request nobody answered whose time has passed: still withdrawn
+    // (134 as reviewed), with no « until » to say.
+    final slot = order.bookedFor;
+    final stale = t.canCancel && order.status == 'pending' && slot != null && !now.isBefore(slot);
+    if (t.openAt(now) || stale) {
+      final until = t.until;
+      return _cancelButton(context,
+          note: until == null || stale
+              ? null
+              : context.tr('Annulable jusqu\'à {when}',
+                  {'when': bookingWhen(until, context.trLanguage, short: true)}));
+    }
+    final phone = t.phone;
+    return Container(
+      key: Key('order-too-late-${order.id}'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: ShopStyle.line),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+              t.paidOnline
+                  ? context.tr('Ce rendez-vous est déjà payé : appelez la boutique pour l\'annuler.')
+                  : context.tr('Trop tard pour annuler — appelez la boutique'),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ShopStyle.ink)),
+          if (!t.paidOnline) ...[
+            const SizedBox(height: 2),
+            Text(
+                context.tr('Un rendez-vous s\'annule jusqu\'à {hours} h avant.', {'hours': '${t.hours}'}),
+                style: const TextStyle(fontSize: 12, color: ShopStyle.mist)),
+          ],
+          if (phone != null && widget.onCall != null) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                FilledButton.icon(
+                  key: Key('order-call-${order.id}'),
+                  onPressed: () => widget.onCall!('tel:$phone'),
+                  icon: const Icon(Icons.call_outlined, size: 18),
+                  label: Text(context.tr('Appeler')),
+                ),
+                OutlinedButton.icon(
+                  key: Key('order-whatsapp-${order.id}'),
+                  onPressed: () => widget.onCall!(whatsappTo(phone)),
+                  icon: const Icon(Icons.chat_outlined, size: 18),
+                  label: const Text('WhatsApp'),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

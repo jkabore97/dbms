@@ -126,4 +126,5 @@ jobs:
             echo "2. In Supabase: Authentication → Auth Hooks → Send SMS hook → HTTPS, URL \`<kaj-whatsapp-otp origin>/v1/send-sms\`, the same secret as SEND_SMS_HOOK_SECRET."
             echo "3. Command center → Réglages → « Numéro WhatsApp vérifié avant de commander » → Oui; order from a vitrine with an account that has no proved number: the code must arrive on WhatsApp."
             echo "4. If it does not arrive, put the switch back to Non (« Annuler » in the Journal) — ordering is then as before."
+            echo "5. « Besoin d'aide » (133): \`<kaj-whatsapp-otp origin>/v1/help/health\` must say \`{\"help\":true}\` (it needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY too); the trainers' alert uses the template named in Réglages (default aide_demande — scratchpad/aide_demande_template.md has its text)."
           } >> "$GITHUB_STEP_SUMMARY"

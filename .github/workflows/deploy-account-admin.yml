@@ -58,6 +58,9 @@ jobs:
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       APPLE_SIGNIN_KEY_ID: ${{ secrets.APPLE_SIGNIN_KEY_ID }}
       APPLE_SIGNIN_PRIVATE_KEY: ${{ secrets.APPLE_SIGNIN_PRIVATE_KEY }}
+      # 139: the website's Services ID — a code from the website's Apple
+      # popup is traded with it. Public (it is in Apple's sign-in address).
+      APPLE_WEB_SERVICES_ID: ${{ vars.APPLE_WEB_SERVICES_ID || 'bf.kaj.app.web' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -98,7 +101,8 @@ jobs:
             --config workers/account-admin/wrangler.toml \
             --var "SUPABASE_URL:$SUPABASE_URL" \
             --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \
-            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS"
+            --var "ALLOWED_ORIGINS:$ALLOWED_ORIGINS" \
+            --var "APPLE_WEB_SERVICES_ID:$APPLE_WEB_SERVICES_ID"
 
       # Secrets through wrangler's store — never as --var. Each only when
       # set: without the Play or Stripe key, a deletion that has such a

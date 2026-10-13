@@ -801,6 +801,9 @@ class SetupGate extends StatelessWidget {
             onDone: () => scope.session.reloadFeatures(org.id),
             stepsOff: () => setupStepsOff(scope.auth.client, org.id),
             known: () => setupKnown(scope.auth.client, org.id),
+            // « La caisse et la cotisation » (134): drawn once the server
+            // says it has it.
+            books: scope.reports,
           ));
         }
         return PushPromptQuiet(child: SetupScreen(

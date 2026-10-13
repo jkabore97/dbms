@@ -93,6 +93,11 @@ abstract final class Routes {
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
+  // 136: « Aide · Console », the training team at work (Clients ›
+  // Formateurs › Aide).
+  static const consoleHelp = '/console/formateurs/aide';
+  // 136: a trainer's « Demandes d'aide », on their account (?demande=<id>).
+  static const trainerInbox = '/formateur';
   static const consolePeople = '/console/personnes';
   static const consoleAudit = '/console/activite';
   static const consoleFeatured = '/console/a-la-une';
@@ -357,6 +362,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.becomeCourier) ||
+            at(Routes.trainerInbox) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.arrival) ||
@@ -396,6 +402,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.becomeCourier) ||
+            at(Routes.trainerInbox) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.console) ||
@@ -427,6 +434,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.payment) ||
             at(Routes.courier) ||
             at(Routes.becomeCourier) ||
+            at(Routes.trainerInbox) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
             at(Routes.console) ||
@@ -582,6 +590,14 @@ GoRouter buildRouter(SessionController session) {
           courier: CourierRepository(AppScope.of(context).auth.client),
         ),
       ),
+      // A trainer's « Demandes d'aide » (136): on their account, whatever
+      // business they are in or none; the server answers a non-trainer
+      // with nothing to show.
+      GoRoute(
+        path: Routes.trainerInbox,
+        builder: (context, state) =>
+            biz.TrainerInboxScreen(focus: state.uri.queryParameters['demande']),
+      ),
       // Becoming one (112): the dossier and its review's progress. Signed
       // in — the redirect sends a stranger through sign-in and back here.
       GoRoute(
@@ -635,8 +651,9 @@ GoRouter buildRouter(SessionController session) {
             onboarding: scope.onboarding,
             onSignedIn: scope.session.handleSignedIn,
             onGoogle: scope.session.signInWithGoogle,
-            // The iPhone app's « Continuer avec Apple » (125); the screen
-            // draws it only there, and only when the project has Apple on.
+            // « Continuer avec Apple »: the iPhone's native sheet (125),
+            // only with Apple on in the project; the website's Apple popup
+            // (139), only with Réglages' « Connexion Apple sur le site » on.
             onApple: scope.session.signInWithApple,
             initialError: scope.session.takeSignInProblem(),
           );
@@ -871,6 +888,8 @@ GoRouter buildRouter(SessionController session) {
               biz.PlatformAnalyticsScreen(analytics: AppScope.of(context).analytics)),
           _centerPage(Routes.trainers, (context, _) =>
               biz.TrainersScreen(console: AppScope.of(context).console)),
+          // « Aide · Console » (136), under Formateurs.
+          _centerPage(Routes.consoleHelp, (_, _) => biz.HelpConsoleScreen()),
           _centerPage(Routes.consolePeople, (context, state) {
             final scope = AppScope.of(context);
             return biz.PlatformPeopleScreen(
@@ -1246,6 +1265,16 @@ GoRouter buildRouter(SessionController session) {
               context,
               state,
               (scope, org) => biz.CompteScreen(org: org),
+            ),
+          ),
+          // « Besoin d'aide » / « Aide » (136): the request's status for a
+          // Pro business, the guides and Mara's contacts for a free one.
+          GoRoute(
+            path: 'aide',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.HelpScreen(org: org),
             ),
           ),
           // Kaj and Kaj Pro side by side: the « Pro » strip, every badged

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/association/books_start.dart';
 import '../../core/db/local_db.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
@@ -35,6 +36,7 @@ class IncomeFlow extends StatefulWidget {
     this.currency = 'XOF',
     this.reports,
     this.store,
+    this.books,
   });
 
   final LocalDb db;
@@ -44,6 +46,10 @@ class IncomeFlow extends StatefulWidget {
   /// The members list (online, best effort). Null: a name is typed.
   final ReportsRepository? reports;
   final FlowStore? store;
+
+  /// The usual cotisation (134): « Cotisation » fills its amount with it,
+  /// still editable. Null: [reports] (which knows it), else none.
+  final BooksStartApi? books;
 
   @override
   State<IncomeFlow> createState() => _IncomeFlowState();
@@ -76,6 +82,11 @@ class _IncomeFlowState extends State<IncomeFlow> {
   List<ChurchMember> _members = const [];
   List<String> _others = const [];
 
+  /// The association's usual cotisation (134), and the amount it last put
+  /// in the field — only that is replaced or taken back.
+  ContributionDefault? _usual;
+  String? _filled;
+
   NumberFormat get _money => moneyFormat(widget.currency);
   double get _value => parseAmount(_amount.text) ?? 0;
 
@@ -83,6 +94,8 @@ class _IncomeFlowState extends State<IncomeFlow> {
   void initState() {
     super.initState();
     _load();
+    // Apart from the phone's categories: the server answers on its own.
+    _loadUsual();
   }
 
   @override
@@ -109,6 +122,57 @@ class _IncomeFlowState extends State<IncomeFlow> {
     } catch (_) {
       // No signal: the name is typed.
     }
+  }
+
+  /// The usual cotisation: this run's last answer at once, the server's
+  /// when it comes (a server without 134 answers nothing).
+  Future<void> _loadUsual() async {
+    final known = BooksStart.lastKnown[widget.orgId]?.contribution;
+    if (known != null && mounted) setState(() => _usual = known);
+    final api = widget.books ??
+        ((widget.reports?.isConfigured ?? false) ? widget.reports : null);
+    if (api == null) return;
+    try {
+      final start = await api.booksStart(widget.orgId);
+      if (start != null && mounted) {
+        setState(() => _usual = start.contribution);
+        if (_kind == 'cotisation') _prefill();
+      }
+    } catch (_) {
+      // No signal: the amount is typed.
+    }
+  }
+
+  /// « Cotisation » chosen: the usual amount, unless something else was typed.
+  void _prefill() {
+    final usual = _usual;
+    if (usual == null) return;
+    final text = usual.amount == usual.amount.roundToDouble()
+        ? usual.amount.toInt().toString()
+        : usual.amount.toString();
+    if (_amount.text.isEmpty || _amount.text == _filled) {
+      _amount.text = text;
+      _filled = text;
+    }
+  }
+
+  void _choose(String? kind) => setState(() {
+        _kind = kind;
+        if (kind == 'cotisation') {
+          _prefill();
+        } else if (_filled != null && _amount.text == _filled) {
+          _amount.clear();
+          _filled = null;
+        }
+      });
+
+  String _usualLine(ContributionDefault c) {
+    final amount = _money.format(c.amount);
+    return switch (c.period) {
+      ContributionPeriod.week => context.tr('Cotisation habituelle : {amount} par semaine', {'amount': amount}),
+      ContributionPeriod.month => context.tr('Cotisation habituelle : {amount} par mois', {'amount': amount}),
+      ContributionPeriod.year => context.tr('Cotisation habituelle : {amount} par an', {'amount': amount}),
+    };
   }
 
   String _kindLabel(String kind) => switch (kind) {
@@ -206,7 +270,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
                   icon: Icons.add, detail: context.tr('Vous lui donnez un nom')),
             ],
             value: _kind,
-            onChanged: (v) => setState(() => _kind = v),
+            onChanged: _choose,
           ),
         ),
         FlowStep(
@@ -296,11 +360,23 @@ class _IncomeFlowState extends State<IncomeFlow> {
           id: 'amount',
           title: context.tr('Combien ?'),
           isValid: () => _value > 0,
-          builder: (_) => FlowNumberField(
-            key: const Key('income-amount'),
-            controller: _amount,
-            suffix: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
-            onChanged: (_) => setState(() {}),
+          builder: (_) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FlowNumberField(
+                key: const Key('income-amount'),
+                controller: _amount,
+                suffix: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
+                onChanged: (_) => setState(() {}),
+              ),
+              if (_kind == 'cotisation' && _usual != null) ...[
+                const SizedBox(height: 10),
+                Text(_usualLine(_usual!),
+                    key: const Key('income-usual'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium),
+              ],
+            ],
           ),
         ),
         FlowStep(

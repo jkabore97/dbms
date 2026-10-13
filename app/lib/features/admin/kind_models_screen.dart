@@ -287,6 +287,7 @@ class _KindTabState extends State<_KindTab> with AutomaticKeepAliveClientMixin {
             : context.tr('Le nom'),
         'article' => context.tr('Le premier article'),
         'members' => context.tr('Les premiers membres'),
+        'caisse' => context.tr('La caisse et la cotisation'),
         'vitrine' => context.tr('La vitrine'),
         'position' => context.tr('La position sur la carte'),
         _ => context.tr(s.label),

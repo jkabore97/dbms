@@ -167,11 +167,14 @@ async function put(request, env, orgId) {
     return problem(413, "That file is too large.");
   }
 
-  // The authorisation, in one line: select the org as the caller. RLS returns
-  // a row to a member and nothing to anybody else, so a 403 here is the same
-  // policy that guards every table.
-  if (!(await isMember(env, token, orgId))) {
-    return problem(403, "You are not a member of that business.");
+  // The authorisation, in one line: can_write_org, asked as the caller —
+  // the same function every write policy asks (an observer, a trainer
+  // reading a business through 133's temporary access, a suspended
+  // business: no). Reading the business is not enough: since 133 a
+  // trainer may read one for 48 h, and reading must never let anybody put
+  // a file in its folder.
+  if (!(await mayWrite(env, token, orgId))) {
+    return problem(403, "You cannot add files to that business.");
   }
 
   const body = await request.arrayBuffer();
@@ -212,8 +215,8 @@ async function put(request, env, orgId) {
 // pages badly — that is not a tuning problem, it is a different capability.
 // This endpoint sends the photograph to an AI vision model and returns
 // product lines for the app's existing confirm-before-save screen. The
-// same authorisation rule as uploads: membership is proven by selecting
-// the org as the caller, and nothing here decides anything on its own.
+// same authorisation rule as uploads: can_write_org, asked as the caller,
+// and nothing here decides anything on its own.
 //
 // The API key lives only in a Worker secret (wrangler secret put
 // ANTHROPIC_API_KEY). Until it is set, the endpoint answers 501 and the
@@ -237,8 +240,10 @@ async function readPage(request, env, orgId) {
   if (!token) {
     return problem(401, "Sign in first.");
   }
-  if (!(await isMember(env, token, orgId))) {
-    return problem(403, "You are not a member of that business.");
+  // The reader fills the article form: a writer's tool (and a paid one),
+  // asked as uploads are.
+  if (!(await mayWrite(env, token, orgId))) {
+    return problem(403, "You cannot add articles to that business.");
   }
   if (!env.ANTHROPIC_API_KEY) {
     return problem(501, "Reader not configured.");
@@ -670,10 +675,12 @@ function refusal(status, message) {
 // Asking Postgres, as the caller
 // ------------------------------------------------------------
 
-async function isMember(env, token, orgId) {
-  const url = `${env.SUPABASE_URL}/rest/v1/orgs?id=eq.${encodeURIComponent(orgId)}&select=id&limit=1`;
-  const rows = await postgrest(env, token, url);
-  return Array.isArray(rows) && rows.length === 1;
+// Whether the caller may write in the business: can_write_org (one of the
+// six policy helpers, executable by the app's role). Anything but a plain
+// true — an error, an expired token, null — is no.
+async function mayWrite(env, token, orgId) {
+  const result = await rpcAs(env, token, "can_write_org", { p_org_id: orgId });
+  return result.ok && result.value === true;
 }
 
 // A row the caller may read, and of the business whose folder the key is

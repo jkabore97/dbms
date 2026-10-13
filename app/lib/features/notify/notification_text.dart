@@ -9,6 +9,7 @@ import '../../core/nav/router.dart';
 import '../../core/orders/booking.dart';
 import '../../core/notify/notifications_repository.dart';
 import '../courier/courier_words.dart' show courierReasonLabel;
+import '../help/help_words.dart' show helpSubjectLabel;
 
 /// What a ring of the bell says, and where a tap on it goes.
 ///
@@ -47,6 +48,29 @@ String notificationLine(BuildContext context, NotificationRow n) {
   }
 
   switch (n.kind) {
+    // 136: « Besoin d'aide » — the trainers', the business's, the platform's.
+    case 'help_request':
+      return context.tr('Demande d\'aide — {org} : {subject}',
+          {'org': s('org'), 'subject': helpSubjectLabel(context, s('subject'))});
+    case 'help_escalated':
+      return context.tr('Demande d\'aide sans réponse — {org} : {subject}',
+          {'org': s('org'), 'subject': helpSubjectLabel(context, s('subject'))});
+    case 'help_taken':
+      return context.tr('{who} (formation Mara) s\'occupe de votre demande d\'aide.', {'who': s('who')});
+    case 'help_visit':
+      return s('visit_answer') == 'accepted'
+          ? context.tr('{who} viendra vous voir.', {'who': s('who')})
+          : context.tr('{who} vous propose plutôt un appel.', {'who': s('who')});
+    case 'help_resolved':
+      return context.tr('{who} a marqué votre demande résolue. C\'est réglé ?', {'who': s('who')});
+    case 'help_reopened':
+      return context.tr('{org} : « pas encore réglé » — la demande vous revient.', {'org': s('org')});
+    case 'help_access':
+      return context.tr('{org} vous ouvre son activité en lecture seule pour 48 h.', {'org': s('org')});
+    case 'help_access_ended':
+      return context.tr('{org} a retiré votre accès en lecture seule.', {'org': s('org')});
+    case 'help_closed':
+      return context.tr('{org} a fermé la demande', {'org': s('org')});
     case 'low_stock':
       return context.tr('Stock bas : {name} ({n} restant)',
           {'name': s('name'), 'n': s('quantity')});
@@ -103,6 +127,9 @@ String notificationLine(BuildContext context, NotificationRow n) {
           {'shop': s('shop'), 'when': when('at')});
     case 'booking_accepted':
       return context.tr('{name} accepte le rendez-vous : {when}', {'name': s('name'), 'when': when('at')});
+    // 134: the customer cancelled a requested or confirmed booking.
+    case 'booking_cancelled':
+      return context.tr('Rendez-vous annulé par le client — {when}', {'when': when('at')});
     case 'delivery_cancelled':
       return context.tr('La livraison pour {name} a été annulée par la boutique', {'name': s('name')});
     case 'courier_approved':
@@ -427,6 +454,17 @@ String? notificationTarget(
       to == 'shop' || (to == null && org != null && (isAdminOf?.call(org) ?? false));
 
   switch (n.kind) {
+    // 136: a trainer's bells open their inbox on the request; the
+    // platform's, the console; the business's, its « Aide » page.
+    case 'help_request' || 'help_reopened' || 'help_access' || 'help_access_ended' || 'help_closed':
+      final id = p['request_id'];
+      return id is String && RegExp(r'^[0-9a-f-]{36}$').hasMatch(id)
+          ? '${Routes.trainerInbox}?demande=$id'
+          : Routes.trainerInbox;
+    case 'help_escalated':
+      return Routes.consoleHelp;
+    case 'help_taken' || 'help_visit' || 'help_resolved':
+      return org == null ? null : inside('aide');
     case 'courier_refused' || 'courier_photo':
       return Routes.becomeCourier;
     case 'courier_application':

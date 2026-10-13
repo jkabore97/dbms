@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_132.sql — applies migrations 006 through 132 in order.
+-- apply_006_to_135.sql — applies migrations 006 through 135 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -53958,6 +53958,2976 @@ do $$ begin
     end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         grant execute on function public.platform_today_counts() to authenticated;
+    end if;
+end $$;
+
+
+-- ============================================================
+-- 133_help_requests.sql
+-- ============================================================
+-- ============================================================
+-- 133_help_requests.sql — batch 136: « Besoin d'aide », Mara's training
+-- team behind a Pro business.
+--
+-- The owner: « a strong system for the training team set up earlier. I
+-- need that to come with Pro. They will be notified through WhatsApp and
+-- the app. I need an easy "Please help" button for Pro members and a very
+-- basic one for regular users. »
+--
+-- WHAT IT IS BUILT ON. Trainers are 038's: an account marked
+-- profiles.is_trainer, assigned to businesses by an observer membership
+-- with full visibility and memberships.is_trainer (read everything, write
+-- nothing). Mara Pro is 065's org_plan(). The bell is 030/115's
+-- notifications row (the push Worker carries every row); 129's « Nouveau
+-- compte » is how the platform admins hear of things; notify_plain (130)
+-- makes typed words safe for a bell or a message.
+--
+-- 1. help_requests — one per « Besoin d'aide ». A Pro business's member
+--    (any role but observer, never a trainer's assignment) asks:
+--      subject  ventes stock factures vitrine commandes equipe autre
+--               (a shop), bandes … (a farm), contributions rapports
+--               membres … (an association) — one list, checked here; the
+--               app shows each kind its own seven chips;
+--      message  optional, 500 characters at most, kept as typed — every
+--               bell and WhatsApp says it through notify_plain (60);
+--      photo    optional: a document of the same business (the app's
+--               existing picker and capture, kind « help »);
+--      contact  call | whatsapp | visit (« Venir me voir »), and the
+--               number to reach the person on (8 to 15 digits; the
+--               profile's by default);
+--      context  the screen, the app's version and platform — 60, 40, 20
+--               characters, plain.
+--    Status: open → taken (« Je m'en occupe ») → resolved (with a note)
+--    → closed by the business (👍 / 👎 as rating 1 / -1, or none). « Pas
+--    encore » takes a resolved request back to taken. Closing an open one
+--    is allowed (nobody needed after all).
+--
+-- 2. LIMITS, all enforced here, never only by the app:
+--      * Pro only: org_plan(org) = 'pro', else « Mara Pro ». A free
+--        business has no trainer queue at all (the app shows it the
+--        guides and support_contacts(), 126);
+--      * one active request (open or taken) per business — a partial
+--        unique index, so two taps at once cannot make two;
+--      * help_daily_limit (default 5) requests per business in 24 hours;
+--      * the words: subject and contact from their lists, the message
+--        and context cut and stripped as above.
+--
+-- 3. ROUTING AND ESCALATION. Pro help hours: help_hours_open (7) to
+--    help_hours_close (21), every day, on Ouagadougou's clock (UTC, no
+--    summer time), platform settings changed in Réglages (105's
+--    platform_set_setting, journaled; a trigger keeps 0 ≤ open < close
+--    ≤ 24). A request made in the hours is routed at once; outside them it
+--    is accepted and queued: routed_at is the next opening, and the app
+--    says « Un formateur vous répondra demain à partir de 7 h ».
+--      * routed_at: the business's assigned trainers (memberships.
+--        is_trainer) who are on duty (help_trainer_status, default on)
+--        are rung — the bell, its push, and WhatsApp when it is on;
+--      * escalate_at = routed_at + help_escalate_minutes (15) of OPEN
+--        time (a request routed at 20:55 escalates at 7:10 the next
+--        morning, never at night). If nobody took it by then — or the
+--        business has no on-duty assigned trainer at all, in which case
+--        escalate_at = routed_at — escalated_at is set: every on-duty
+--        trainer is rung (and sees it in their inbox), and every platform
+--        admin gets a bell under admin_help_notify (default true, as 129's
+--        admin_new_user_notify);
+--      * « late » for « Aujourd'hui »: open (not taken) for more than
+--        help_late_minutes (30) of open time since routed_at.
+--    help_tick() does the routing at opening, the escalation and the
+--    access-expiry journal line; pg_cron runs it every minute
+--    ('help-tick'), the WhatsApp Worker's cron calls it too, and the
+--    inbox and console run it before they answer — so nothing waits on
+--    one clock alone.
+--
+-- 4. WHO SEES A REQUEST (RLS, select only — no direct write anywhere):
+--      * the person who asked; the business's admins (is_org_admin, which
+--        includes the platform admins);
+--      * a trainer: the requests of the businesses they are assigned to,
+--        every OPEN request once escalated, and the ones they took;
+--      * nobody else; nothing for anon (every rule needs auth.uid(),
+--        and the tables are not granted to anon at all).
+--    The policies call only is_org_admin, already one of 063's six policy
+--    helpers, and read profiles / memberships under their own RLS (a
+--    person reads their own rows) — no new helper joins the six.
+--    help_request_events (the request's journal) is readable exactly when
+--    its request is.
+--
+-- 5. THE FIRST WINS. help_take() is one UPDATE … WHERE status = 'open':
+--    of two trainers tapping at once, one row is updated, the other is
+--    told « Un autre formateur s'en occupe déjà ». A platform admin may
+--    take one too (the escalation reaches them).
+--
+-- 6. TEMPORARY ACCESS (help_access_grants). When the trainer who took the
+--    request is not a member of the business, its owner or admin may tap
+--    « Autoriser l'accès 48 h »: a grant (request, business, trainer,
+--    granted_at, expires_at ≤ granted_at + 48 h, revoked_at). It is
+--    READ-ONLY by construction, enforced by the database:
+--      * it is read by exactly four functions: is_org_member,
+--        has_full_visibility and my_org_ids (the read side of every
+--        policy) and my_orgs (so the app lists the business, as an
+--        observer); each checks expires_at > now(), revoked_at is null
+--        and that the grantee is still a trainer itself, on every call —
+--        the grant ends at its second, with no job to wait for. They ask
+--        it inline, of a trainer only, so nobody else's checks cost more
+--        (measured: see section 3); An association's members list, the one read
+--        policy that asked memberships itself, gains is_org_member;
+--      * it is not a membership: can_write_org, is_org_admin and every
+--        write policy and function (which read memberships) never see it
+--        — no write policy in the schema uses a read helper (checked live
+--        before 133), so nothing can be written through it;
+--      * the owner ends it at any time (help_access_revoke), closing the
+--        request ends it, 48 h ends it, and so does the grantee ceasing to
+--        be a trainer (trg_help_trainer_demoted).
+--    Journaled three ways: the request's journal (granted, opened,
+--    revoked, expired), 008's audit_log (audit_row on the grants table:
+--    the business's own Activité shows each grant, each opening — counted
+--    on the row — and each end), and a bell to the trainer.
+--
+-- 7. WHATSAPP. help_whatsapp_template (default 'aide_demande') names the
+--    Meta template. Each trainer rung who has a phone gets an outbox row
+--    (help_whatsapp_outbox) with the template and its four values (the
+--    business's name, its kind, the subject, the request's id for the
+--    link) — unless the setting is empty: then no row, the bell alone,
+--    and the console says WhatsApp is off. The whatsapp-otp Worker
+--    (workers/whatsapp-otp, its existing WHATSAPP_TOKEN, WHATSAPP_PHONE_ID
+--    and 130's SUPABASE_SERVICE_ROLE_KEY) claims the rows every minute
+--    (help_whatsapp_claim, service role only) and says how each went
+--    (help_whatsapp_done). A template not approved yet fails at Meta;
+--    the row says « template », the console says so. Never part of the
+--    request: a request is made, routed and rung whatever WhatsApp does.
+--    Rows older than an hour are not sent (a stale alert helps nobody).
+--
+-- 8. SECURITY DEFINER, each one: the doors write rows the caller may not
+--    write directly (other people's bells, the outbox, a request's status
+--    for a trainer who is not of the business) or read what RLS keeps
+--    from them (the trainer's first name and number for the owner, the
+--    business's name for a trainer who is not its member). Every one
+--    checks auth.uid() and the caller's place first, pins its search path,
+--    is closed to PUBLIC and anon (063), and is open to authenticated only
+--    when the app calls it. help_tick and the two WhatsApp functions are
+--    the service role's (and the cron's, which runs as postgres).
+--
+-- PER KIND. Shop, farm and association alike: the same tables, routing,
+-- access and limits. The subjects differ (the app's chips): a shop Ventes
+-- Stock Factures Vitrine Commandes Équipe Autre; a farm Bandes Stock
+-- Ventes Factures Vitrine Équipe Autre; an association Contributions
+-- Rapports Membres Factures Vitrine Équipe Autre. The WhatsApp kind word
+-- is Boutique, Ferme or Association. Nothing a business, a vitrine or the
+-- street shows changes for anybody without a grant (P1).
+--
+-- Re-runnable (the bundle runs twice): create table if not exists, settings
+-- on conflict do nothing, create or replace, drop policy / trigger if
+-- exists, the cron job scheduled once.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 0. The settings
+-- ------------------------------------------------------------
+insert into platform_settings (key, value) values
+    ('help_hours_open',        '7'),
+    ('help_hours_close',       '21'),
+    ('help_escalate_minutes',  '15'),
+    ('help_late_minutes',      '30'),
+    ('help_daily_limit',       '5'),
+    ('help_whatsapp_template', '"aide_demande"'),
+    ('admin_help_notify',      'true')
+on conflict (key) do nothing;
+
+-- The numbers in their ranges, the template a name Meta accepts (or
+-- nothing: WhatsApp off). Hours are whole: open 0–23, close 1–24, open
+-- before close — checked against the other one as it stands.
+create or replace function trg_help_settings()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+    v_n     numeric;
+    v_other numeric;
+begin
+    if new.key = 'help_whatsapp_template' then
+        if jsonb_typeof(new.value) <> 'string'
+           or (new.value #>> '{}') !~ '^([a-z0-9_]{1,250})?$' then
+            raise exception 'Le modèle WhatsApp : son nom chez Meta, en minuscules, chiffres et _ (par exemple aide_demande), ou rien pour ne pas envoyer de WhatsApp.';
+        end if;
+        return new;
+    end if;
+    if jsonb_typeof(new.value) <> 'number' then
+        raise exception 'Ce réglage attend un nombre.';
+    end if;
+    v_n := (new.value #>> '{}')::numeric;
+    if v_n <> trunc(v_n) then
+        raise exception 'Un nombre entier, s''il vous plaît.';
+    end if;
+    if new.key = 'help_hours_open' then
+        select (value #>> '{}')::numeric into v_other from platform_settings where key = 'help_hours_close';
+        if v_n < 0 or v_n > 23 or v_n >= coalesce(v_other, 24) then
+            raise exception 'L''heure d''ouverture de l''aide Pro : de 0 à 23, avant l''heure de fermeture.';
+        end if;
+    elsif new.key = 'help_hours_close' then
+        select (value #>> '{}')::numeric into v_other from platform_settings where key = 'help_hours_open';
+        if v_n < 1 or v_n > 24 or v_n <= coalesce(v_other, 0) then
+            raise exception 'L''heure de fermeture de l''aide Pro : de 1 à 24, après l''heure d''ouverture.';
+        end if;
+    elsif new.key in ('help_escalate_minutes', 'help_late_minutes') then
+        if v_n < 1 or v_n > 1440 then
+            raise exception 'Un nombre de minutes de 1 à 1440, s''il vous plaît.';
+        end if;
+    elsif new.key = 'help_daily_limit' then
+        if v_n < 1 or v_n > 50 then
+            raise exception 'Un nombre de demandes de 1 à 50 par jour, s''il vous plaît.';
+        end if;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists help_settings_check on platform_settings;
+create trigger help_settings_check
+before insert or update on platform_settings
+for each row when (new.key in ('help_hours_open', 'help_hours_close', 'help_escalate_minutes',
+                               'help_late_minutes', 'help_daily_limit', 'help_whatsapp_template'))
+execute function trg_help_settings();
+
+-- A number setting of the help, or its default. Definer: platform_settings
+-- is the platform's; this reads the six help keys and nothing else.
+create or replace function help_setting(p_key text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce(
+        (select value from platform_settings
+          where key = p_key
+            and p_key in ('help_hours_open', 'help_hours_close', 'help_escalate_minutes',
+                          'help_late_minutes', 'help_daily_limit', 'help_whatsapp_template',
+                          'admin_help_notify')),
+        case p_key
+            when 'help_hours_open'        then '7'::jsonb
+            when 'help_hours_close'       then '21'::jsonb
+            when 'help_escalate_minutes'  then '15'::jsonb
+            when 'help_late_minutes'      then '30'::jsonb
+            when 'help_daily_limit'       then '5'::jsonb
+            when 'help_whatsapp_template' then '""'::jsonb
+            when 'admin_help_notify'      then 'true'::jsonb
+        end);
+$$;
+
+create or replace function help_setting_int(p_key text)
+returns int
+language sql
+stable
+set search_path = public
+as $$
+    select (help_setting(p_key) #>> '{}')::numeric::int;
+$$;
+
+-- ------------------------------------------------------------
+-- 1. The hours, on Ouagadougou's clock
+-- ------------------------------------------------------------
+-- Whether an instant is inside the help hours.
+create or replace function help_in_hours(p_at timestamptz default now())
+returns boolean
+language sql
+stable
+set search_path = public
+as $$
+    select extract(hour from p_at at time zone 'Africa/Ouagadougou')
+             + extract(minute from p_at at time zone 'Africa/Ouagadougou') / 60.0
+             + extract(second from p_at at time zone 'Africa/Ouagadougou') / 3600.0
+           >= help_setting_int('help_hours_open')
+       and extract(hour from p_at at time zone 'Africa/Ouagadougou')
+             + extract(minute from p_at at time zone 'Africa/Ouagadougou') / 60.0
+             + extract(second from p_at at time zone 'Africa/Ouagadougou') / 3600.0
+           < help_setting_int('help_hours_close');
+$$;
+
+-- The instant itself if it is in the hours, else the next opening.
+create or replace function help_next_open(p_at timestamptz default now())
+returns timestamptz
+language plpgsql
+stable
+set search_path = public
+as $$
+declare
+    v_local timestamp := p_at at time zone 'Africa/Ouagadougou';
+    v_day   date := v_local::date;
+    v_open  int := help_setting_int('help_hours_open');
+    v_close int := help_setting_int('help_hours_close');
+begin
+    if v_local < v_day + make_interval(hours => v_open) then
+        return (v_day + make_interval(hours => v_open)) at time zone 'Africa/Ouagadougou';
+    elsif v_local < v_day + make_interval(hours => v_close) then
+        return p_at;
+    end if;
+    return (v_day + 1 + make_interval(hours => v_open)) at time zone 'Africa/Ouagadougou';
+end;
+$$;
+
+-- [p_minutes] of open time after [p_at]: 20:55 + 15 min with 7–21 hours
+-- is 7:10 the next morning.
+create or replace function help_add_open(p_at timestamptz, p_minutes int)
+returns timestamptz
+language plpgsql
+stable
+set search_path = public
+as $$
+declare
+    v_t     timestamptz := help_next_open(p_at);
+    v_left  interval := make_interval(mins => greatest(coalesce(p_minutes, 0), 0));
+    v_close int := help_setting_int('help_hours_close');
+    v_end   timestamptz;
+begin
+    for i in 1..30 loop
+        v_end := ((v_t at time zone 'Africa/Ouagadougou')::date + make_interval(hours => v_close))
+                 at time zone 'Africa/Ouagadougou';
+        if v_t + v_left <= v_end then
+            return v_t + v_left;
+        end if;
+        v_left := v_left - (v_end - v_t);
+        v_t := help_next_open(v_end);
+    end loop;
+    return v_t + v_left;
+end;
+$$;
+
+-- The open minutes between two instants (a month at most is counted).
+create or replace function help_open_minutes(p_from timestamptz, p_to timestamptz default now())
+returns int
+language plpgsql
+stable
+set search_path = public
+as $$
+declare
+    v_open  int := help_setting_int('help_hours_open');
+    v_close int := help_setting_int('help_hours_close');
+    v_day   date;
+    v_last  date;
+    v_a     timestamptz;
+    v_b     timestamptz;
+    v_sum   interval := interval '0';
+begin
+    if p_from is null or p_to is null or p_to <= p_from then
+        return 0;
+    end if;
+    v_day  := greatest((p_from at time zone 'Africa/Ouagadougou')::date,
+                       (p_to at time zone 'Africa/Ouagadougou')::date - 31);
+    v_last := (p_to at time zone 'Africa/Ouagadougou')::date;
+    while v_day <= v_last loop
+        v_a := greatest(p_from, (v_day + make_interval(hours => v_open)) at time zone 'Africa/Ouagadougou');
+        v_b := least(p_to, (v_day + make_interval(hours => v_close)) at time zone 'Africa/Ouagadougou');
+        if v_b > v_a then
+            v_sum := v_sum + (v_b - v_a);
+        end if;
+        v_day := v_day + 1;
+    end loop;
+    return floor(extract(epoch from v_sum) / 60)::int;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2. The tables
+-- ------------------------------------------------------------
+create table if not exists help_requests (
+    id              uuid primary key default gen_random_uuid(),
+    org_id          uuid not null references orgs(id) on delete cascade,
+    requested_by    uuid references profiles(id) on delete set null,
+    subject         text not null check (subject in (
+                        'ventes', 'stock', 'factures', 'vitrine', 'commandes', 'equipe', 'autre',
+                        'bandes', 'contributions', 'rapports', 'membres')),
+    message         text check (message is null or char_length(message) <= 500),
+    photo_document_id uuid,
+    contact         text not null check (contact in ('call', 'whatsapp', 'visit')),
+    contact_phone   text check (contact_phone is null or contact_phone ~ '^[0-9]{8,15}$'),
+    context         jsonb not null default '{}'::jsonb,
+    status          text not null default 'open'
+                        check (status in ('open', 'taken', 'resolved', 'closed')),
+    created_at      timestamptz not null default now(),
+    routed_at       timestamptz not null default now(),
+    routed_rung_at  timestamptz,
+    escalate_at     timestamptz not null default now(),
+    escalated_at    timestamptz,
+    taken_by        uuid references profiles(id) on delete set null,
+    taken_at        timestamptz,
+    visit_answer    text check (visit_answer in ('accepted', 'call_instead')),
+    visit_note      text check (visit_note is null or char_length(visit_note) <= 200),
+    resolved_at     timestamptz,
+    resolution_note text check (resolution_note is null or char_length(resolution_note) <= 500),
+    closed_at       timestamptz,
+    closed_by       uuid references profiles(id) on delete set null,
+    rating          smallint check (rating in (-1, 1))
+);
+
+-- One active request per business: two taps at once make one.
+create unique index if not exists help_requests_one_active
+    on help_requests (org_id) where status in ('open', 'taken');
+create index if not exists help_requests_org_created on help_requests (org_id, created_at desc);
+create index if not exists help_requests_open on help_requests (status, escalate_at)
+    where status = 'open';
+create index if not exists help_requests_taken_by on help_requests (taken_by)
+    where taken_by is not null;
+
+-- The request's journal: what happened, by whom, when.
+create table if not exists help_request_events (
+    id          bigint generated always as identity primary key,
+    request_id  uuid not null references help_requests(id) on delete cascade,
+    at          timestamptz not null default now(),
+    actor_id    uuid references profiles(id) on delete set null,
+    event       text not null check (event in (
+                    'created', 'queued', 'routed', 'escalated', 'taken', 'visit_accepted',
+                    'call_instead', 'resolved', 'reopened', 'closed', 'access_granted',
+                    'access_opened', 'access_revoked', 'access_expired')),
+    note        text check (note is null or char_length(note) <= 500)
+);
+create index if not exists help_request_events_request on help_request_events (request_id, at);
+
+-- The temporary, read-only access (6).
+create table if not exists help_access_grants (
+    id              uuid primary key default gen_random_uuid(),
+    request_id      uuid not null references help_requests(id) on delete cascade,
+    org_id          uuid not null references orgs(id) on delete cascade,
+    trainer_id      uuid not null references profiles(id) on delete cascade,
+    granted_by      uuid references profiles(id) on delete set null,
+    granted_at      timestamptz not null default now(),
+    expires_at      timestamptz not null,
+    revoked_at      timestamptz,
+    revoked_by      uuid references profiles(id) on delete set null,
+    expiry_logged_at timestamptz,
+    opened_count    int not null default 0,
+    last_opened_at  timestamptz,
+    -- What 008's audit log names the row by.
+    label           text,
+    constraint help_access_48h check (expires_at > granted_at
+                                      and expires_at <= granted_at + interval '48 hours')
+);
+create unique index if not exists help_access_one_per_request
+    on help_access_grants (request_id) where revoked_at is null;
+create index if not exists help_access_live
+    on help_access_grants (trainer_id, org_id) where revoked_at is null;
+
+-- WhatsApp's outbox (7): written here, carried by the Worker.
+create table if not exists help_whatsapp_outbox (
+    id          uuid primary key default gen_random_uuid(),
+    request_id  uuid not null references help_requests(id) on delete cascade,
+    trainer_id  uuid references profiles(id) on delete set null,
+    phone       text not null check (phone ~ '^[0-9]{8,15}$'),
+    template    text not null,
+    params      jsonb not null,
+    state       text not null default 'pending'
+                    check (state in ('pending', 'sending', 'sent', 'failed', 'stale')),
+    error       text,
+    created_at  timestamptz not null default now(),
+    claimed_at  timestamptz,
+    done_at     timestamptz
+);
+create index if not exists help_whatsapp_pending on help_whatsapp_outbox (state, created_at);
+
+-- A trainer's « en service » (the inbox's switch): off-duty trainers are
+-- not rung for new requests (they still see them in their inbox).
+create table if not exists help_trainer_status (
+    user_id     uuid primary key references profiles(id) on delete cascade,
+    on_duty     boolean not null default true,
+    updated_at  timestamptz not null default now()
+);
+
+alter table help_requests         enable row level security;
+alter table help_request_events   enable row level security;
+alter table help_access_grants    enable row level security;
+alter table help_whatsapp_outbox  enable row level security;
+alter table help_trainer_status   enable row level security;
+
+-- Who reads what (4). Writes: none — every change goes through a door.
+drop policy if exists "help requests read by their people" on help_requests;
+create policy "help requests read by their people" on help_requests
+for select
+using (
+    requested_by = auth.uid()
+    or taken_by = auth.uid()
+    or is_org_admin(org_id)
+    or (exists (select 1 from profiles p where p.id = auth.uid() and p.is_trainer)
+        and ((escalated_at is not null and status = 'open')
+             or exists (select 1 from memberships m
+                         where m.user_id = auth.uid()
+                           and m.org_id = help_requests.org_id
+                           and m.is_trainer)))
+);
+
+drop policy if exists "help events read with their request" on help_request_events;
+create policy "help events read with their request" on help_request_events
+for select
+using (exists (select 1 from help_requests r where r.id = help_request_events.request_id));
+
+drop policy if exists "help access read by its two sides" on help_access_grants;
+create policy "help access read by its two sides" on help_access_grants
+for select
+using (trainer_id = auth.uid() or is_org_admin(org_id));
+
+drop policy if exists "help duty read by its trainer" on help_trainer_status;
+create policy "help duty read by its trainer" on help_trainer_status
+for select
+using (user_id = auth.uid());
+-- help_whatsapp_outbox: no policy at all — the doors and the service role.
+
+-- An association's members list is the one read policy that asks
+-- memberships itself rather than a read helper (004's « members readable
+-- within org »): a trainer helping an association reads it too while the
+-- grant lives, as an assigned trainer does. Through is_org_member — one
+-- of 063's six policy helpers already, and now carrying the grant — so no
+-- new function joins them (and a signed-out reader is answered nothing,
+-- never refused by a table it may not read). is_org_member also lets a
+-- platform admin read the list, as they read every other table of a
+-- business through it. Read only: the members' write policy (« writable
+-- by non-observers ») still asks memberships alone.
+drop policy if exists "members readable with help access" on church_members;
+create policy "members readable with help access" on church_members
+for select
+using (is_org_member(org_id));
+
+revoke all on help_requests, help_request_events, help_access_grants,
+              help_whatsapp_outbox, help_trainer_status from public;
+do $$ begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on help_requests, help_request_events, help_access_grants,
+                      help_whatsapp_outbox, help_trainer_status from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on help_requests, help_request_events, help_access_grants,
+                      help_whatsapp_outbox, help_trainer_status from authenticated;
+        grant select on help_request_events, help_access_grants,
+                        help_trainer_status to authenticated;
+        -- Every column of a request but the number to call (review of
+        -- 136): the policy lets every trainer read an escalated request,
+        -- and the number is only for the one who takes it — the doors
+        -- (help_inbox_row, help_request_json) say it to whom it is for.
+        -- The app reads the table through the doors only.
+        grant select (id, org_id, requested_by, subject, message, photo_document_id, contact,
+                      context, status, created_at, routed_at, routed_rung_at, escalate_at,
+                      escalated_at, taken_by, taken_at, visit_answer, visit_note, resolved_at,
+                      resolution_note, closed_at, closed_by, rating)
+            on help_requests to authenticated;
+    end if;
+end $$;
+
+-- 127's guard: a grant's business is its request's business, always.
+drop trigger if exists same_org on help_access_grants;
+create trigger same_org before insert or update on help_access_grants
+for each row execute function trg_same_org('request_id:help_requests');
+
+-- 008's journal on the grants: each grant, each opening, each end is in
+-- the business's own Activité.
+drop trigger if exists audit_help_access_grants on help_access_grants;
+create trigger audit_help_access_grants
+after insert or update or delete on help_access_grants
+for each row execute function audit_row();
+
+-- ------------------------------------------------------------
+-- 3. The temporary access in the read helpers (6)
+-- ------------------------------------------------------------
+-- The cost (review of 136). is_org_member and has_full_visibility run on
+-- every row of every policy that calls them. A first draft asked the
+-- grant through a nested definer function: Postgres cannot inline one
+-- and sets its search path on every call, so every row a caller does not
+-- belong to cost seven times more (250 000 articles read by a member of
+-- one business: 2.1 s before 133, 14.6 s with it). Here the grant is one
+-- more EXISTS in the same statement, asked only of a trainer: the
+-- caller's profile is read once for both « platform admin » and
+-- « trainer » (it was read once for the first already), so a person who
+-- is no trainer pays exactly what they paid before 133, and a trainer one
+-- probe of the index below. Measured on a rig of 5 000 businesses: 2.3 s,
+-- within noise of before.
+--
+-- Asked of a trainer only: a grant is made to the trainer who took the
+-- request (help_take checks it), and a trainer no longer one reads
+-- nothing through it from that second (their live grants are also ended,
+-- trg_help_trainer_demoted below). A membership needs its profile (004's
+-- foreign key), so reading the profile first loses nobody.
+create index if not exists help_access_live_until
+    on help_access_grants (trainer_id, org_id, expires_at) where revoked_at is null;
+drop index if exists help_access_live;
+drop function if exists help_grant_active(uuid);
+
+-- 010, and the grant (read side only).
+create or replace function my_org_ids()
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select id from orgs
+    where exists(select 1 from profiles where id = auth.uid() and is_platform_admin)
+    union
+    select distinct m.org_id
+    from memberships m
+    where m.user_id = auth.uid()
+    union
+    -- 133: a trainer's temporary, read-only access, while it lasts.
+    select g.org_id
+    from help_access_grants g
+    join profiles p on p.id = g.trainer_id and p.is_trainer
+    where g.trainer_id = auth.uid()
+      and g.revoked_at is null
+      and g.expires_at > now();
+$$;
+
+-- 010, and the grant: the same answer for everyone else, at the same cost.
+create or replace function is_org_member(p_org_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select coalesce((
+        select p.is_platform_admin
+            or exists (select 1 from memberships m
+                        where m.user_id = p.id and m.org_id = p_org_id)
+            -- 133: a trainer's temporary, read-only access, while it lasts.
+            or (p.is_trainer and exists (
+                    select 1 from help_access_grants g
+                     where g.trainer_id = p.id and g.org_id = p_org_id
+                       and g.revoked_at is null and g.expires_at > now()))
+          from profiles p
+         where p.id = auth.uid()), false);
+$$;
+
+-- 041, and the grant: a trainer helping reads what an assigned trainer
+-- (full visibility) reads.
+create or replace function has_full_visibility(p_org_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select coalesce((
+        select p.is_platform_admin
+            or exists (select 1 from memberships m
+                        where m.user_id = p.id and m.org_id = p_org_id
+                          and m.visibility = 'full')
+            -- 133: a trainer's temporary, read-only access, while it lasts.
+            or (p.is_trainer and exists (
+                    select 1 from help_access_grants g
+                     where g.trainer_id = p.id and g.org_id = p_org_id
+                       and g.revoked_at is null and g.expires_at > now()))
+          from profiles p
+         where p.id = auth.uid()), false);
+$$;
+
+-- A trainer no longer one (038's set_trainer_by_phone, or by hand): their
+-- live grants end now, journaled as a revoke — the helpers above already
+-- read nothing for them, and a trainer made one again gets nothing back.
+create or replace function trg_help_trainer_demoted()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    g record;
+begin
+    for g in
+        update help_access_grants set revoked_at = now(), revoked_by = auth.uid()
+         where trainer_id = new.id and revoked_at is null
+        returning request_id
+    loop
+        insert into help_request_events (request_id, actor_id, event, note)
+        values (g.request_id, auth.uid(), 'access_revoked', 'formateur retiré');
+    end loop;
+    return new;
+end;
+$$;
+
+drop trigger if exists help_trainer_demoted on profiles;
+create trigger help_trainer_demoted
+after update of is_trainer on profiles
+for each row when (old.is_trainer and not coalesce(new.is_trainer, false))
+execute function trg_help_trainer_demoted();
+
+-- 100 verbatim (live checked), and a third part: a business a trainer may read for the
+-- time of a request, listed as an observer's (the app then opens it read-
+-- only, as it opens an assigned trainer's). Never for a business the
+-- trainer already belongs to, never for a platform admin (who sees all).
+create or replace function my_orgs()
+returns table (
+    org_id           uuid,
+    name             text,
+    slug             text,
+    profile          text,
+    default_currency text,
+    roles            text[],
+    visibility       text,
+    theme            text,
+    suspended        boolean,
+    plan             text,
+    owner_name       text
+)
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select
+        o.id, o.name, o.slug, o.profile, o.default_currency,
+        array['platform_admin'::text],
+        'full'::text,
+        o.theme,
+        (o.suspended_at is not null),
+        org_plan(o.id),
+        (select person_name(m.user_id) from memberships m
+          where m.org_id = o.id and m.role = 'owner'
+          order by m.created_at limit 1)
+    from orgs o
+    where exists(select 1 from profiles where id = auth.uid() and is_platform_admin)
+
+    union all
+
+    select
+        o.id, o.name, o.slug, o.profile, o.default_currency,
+        array_agg(distinct m.role::text order by m.role::text),
+        case when bool_or(m.visibility = 'full') then 'full' else 'summary' end,
+        o.theme,
+        (o.suspended_at is not null),
+        org_plan(o.id),
+        (select person_name(w.user_id) from memberships w
+          where w.org_id = o.id and w.role = 'owner'
+          order by w.created_at limit 1)
+    from memberships m
+    join orgs o on o.id = m.org_id
+    where m.user_id = auth.uid()
+      and o.archived_at is null
+      and not exists(select 1 from profiles where id = auth.uid() and is_platform_admin)
+    group by o.id, o.name, o.slug, o.profile, o.default_currency, o.theme,
+             o.suspended_at
+
+    union all
+
+    select distinct
+        o.id, o.name, o.slug, o.profile, o.default_currency,
+        array['observer'::text],
+        'full'::text,
+        o.theme,
+        (o.suspended_at is not null),
+        org_plan(o.id),
+        (select person_name(w.user_id) from memberships w
+          where w.org_id = o.id and w.role = 'owner'
+          order by w.created_at limit 1)
+    from help_access_grants g
+    join orgs o on o.id = g.org_id
+    join profiles tp on tp.id = g.trainer_id and tp.is_trainer
+    where g.trainer_id = auth.uid()
+      and g.revoked_at is null
+      and g.expires_at > now()
+      and o.archived_at is null
+      and not exists (select 1 from memberships m
+                       where m.user_id = auth.uid() and m.org_id = o.id)
+      and not exists(select 1 from profiles where id = auth.uid() and is_platform_admin)
+
+    order by name;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. Words
+-- ------------------------------------------------------------
+create or replace function help_subject_label(p_subject text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+    select case p_subject
+        when 'ventes'        then 'Ventes'
+        when 'stock'         then 'Stock'
+        when 'factures'      then 'Factures'
+        when 'vitrine'       then 'Vitrine'
+        when 'commandes'     then 'Commandes'
+        when 'equipe'        then 'Équipe'
+        when 'bandes'        then 'Bandes'
+        when 'contributions' then 'Contributions'
+        when 'rapports'      then 'Rapports'
+        when 'membres'       then 'Membres'
+        else 'Autre'
+    end;
+$$;
+
+create or replace function help_kind_label(p_profile text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+    select case
+        when p_profile = 'farm' then 'Ferme'
+        when p_profile in ('association', 'church') then 'Association'
+        else 'Boutique'
+    end;
+$$;
+
+-- A person's first name, for « Prise en charge par Awa ». Typed by that
+-- person, and said in other people's bells and pushes: plain words on
+-- one line, 40 characters (notify_plain, 130), as every other typed word.
+create or replace function help_first_name(p_user uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce(
+        notify_plain(nullif(btrim(p.first_name), ''), 40),
+        notify_plain(nullif(split_part(btrim(coalesce(p.full_name, '')), ' ', 1), ''), 40),
+        'Mara')
+      from profiles p where p.id = p_user;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. Ringing (internal)
+-- ------------------------------------------------------------
+-- The trainers to ring for a request: escalated, every on-duty trainer;
+-- else the business's assigned ones on duty.
+create or replace function help_ring_list(p_request uuid, p_escalated boolean)
+returns table (user_id uuid, phone text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select p.id, nullif(regexp_replace(coalesce(p.phone, ''), '[^0-9]', '', 'g'), '')
+      from help_requests r
+      join profiles p on p.is_trainer
+     where r.id = p_request
+       and coalesce((select s.on_duty from help_trainer_status s where s.user_id = p.id), true)
+       and p.id is distinct from r.requested_by
+       and (p_escalated
+            or exists (select 1 from memberships m
+                        where m.org_id = r.org_id and m.user_id = p.id and m.is_trainer));
+$$;
+
+-- Bells (and WhatsApp rows) for the trainers of [p_request]. Escalated:
+-- every on-duty trainer not rung before, and the platform admins.
+-- Never fails the caller: a bell that cannot be written is skipped.
+create or replace function help_ring(p_request uuid, p_escalated boolean)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r          help_requests;
+    v_org      orgs;
+    v_template text := btrim(coalesce(help_setting('help_whatsapp_template') #>> '{}', ''));
+    v_name     text;
+    v_subject  text;
+    v_msg      text;
+    v_n        int := 0;
+    t          record;
+begin
+    select * into r from help_requests where id = p_request;
+    if not found or r.status <> 'open' then
+        return 0;
+    end if;
+    select * into v_org from orgs where id = r.org_id;
+    v_name    := coalesce(notify_plain(v_org.name, 60), 'Une entreprise');
+    v_subject := help_subject_label(r.subject);
+    v_msg := format('Demande d''aide — %s (%s) : %s%s',
+                    v_name, help_kind_label(v_org.profile), v_subject,
+                    coalesce(' « ' || notify_plain(r.message, 60) || ' »', ''));
+
+    for t in select * from help_ring_list(p_request, p_escalated) loop
+        -- Escalation rings the ones not rung yet (the assigned were).
+        if p_escalated and exists (
+            select 1 from memberships m
+             where m.org_id = r.org_id and m.user_id = t.user_id and m.is_trainer)
+           and r.routed_rung_at is not null then
+            continue;
+        end if;
+        begin
+            insert into notifications (recipient_id, org_id, kind, message, params)
+            values (t.user_id, r.org_id, 'help_request', left(v_msg, 200),
+                    jsonb_strip_nulls(jsonb_build_object(
+                        'to', 'me', 'request_id', r.id, 'org', v_name,
+                        'kind', help_kind_label(v_org.profile), 'subject', r.subject,
+                        'escalated', p_escalated)));
+            v_n := v_n + 1;
+        exception when others then
+            null;
+        end;
+        if v_template <> '' and t.phone is not null and t.phone ~ '^[0-9]{8,15}$' then
+            begin
+                insert into help_whatsapp_outbox (request_id, trainer_id, phone, template, params)
+                values (r.id, t.user_id, t.phone, v_template,
+                        jsonb_build_object('name', v_name,
+                                           'kind', help_kind_label(v_org.profile),
+                                           'subject', v_subject,
+                                           'request_id', r.id));
+            exception when others then
+                null;
+            end;
+        end if;
+    end loop;
+
+    if p_escalated and coalesce((help_setting('admin_help_notify') #>> '{}')::boolean, true) then
+        begin
+            insert into notifications (recipient_id, org_id, kind, message, params)
+            select p.id, null::uuid, 'help_escalated',
+                   left(format('Demande d''aide sans réponse — %s (%s) : %s',
+                               v_name, help_kind_label(v_org.profile), v_subject), 200),
+                   jsonb_build_object('to', 'platform', 'request_id', r.id, 'org_id', r.org_id,
+                                      'org', v_name, 'subject', r.subject)
+              from profiles p
+             where p.is_platform_admin
+               and p.id is distinct from r.requested_by;
+        exception when others then
+            null;
+        end;
+    end if;
+    return v_n;
+end;
+$$;
+
+-- A bell to one person about a request (the business's side or the
+-- trainer's). Never fails the caller.
+create or replace function help_bell(p_to uuid, p_request uuid, p_kind text,
+                                     p_message text, p_for text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+begin
+    if p_to is null or p_to = auth.uid() then
+        return;
+    end if;
+    select * into r from help_requests where id = p_request;
+    insert into notifications (recipient_id, org_id, kind, message, params)
+    values (p_to, r.org_id, p_kind, left(p_message, 200),
+            jsonb_strip_nulls(jsonb_build_object('to', p_for,
+                'request_id', p_request,
+                'who', help_first_name(auth.uid()),
+                'org', notify_plain((select name from orgs where id = r.org_id), 60),
+                'subject', r.subject,
+                'visit_answer', r.visit_answer)));
+exception when others then
+    null;
+end;
+$$;
+
+create or replace function help_log(p_request uuid, p_event text, p_note text default null)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+    insert into help_request_events (request_id, actor_id, event, note)
+    values (p_request, auth.uid(), p_event, left(p_note, 500));
+$$;
+
+-- ------------------------------------------------------------
+-- 6. The clock (3): routing at opening, escalation, the end of a grant
+-- ------------------------------------------------------------
+create or replace function help_tick()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r       record;
+    v_rout  int := 0;
+    v_esc   int := 0;
+    v_exp   int := 0;
+begin
+    -- Routed now (made out of hours, the hours have come): the assigned.
+    for r in
+        select id from help_requests
+         where status = 'open' and routed_rung_at is null and routed_at <= now()
+         order by created_at
+         for update skip locked
+    loop
+        perform help_ring(r.id, false);
+        update help_requests set routed_rung_at = now() where id = r.id;
+        insert into help_request_events (request_id, event) values (r.id, 'routed');
+        v_rout := v_rout + 1;
+    end loop;
+
+    -- Nobody took it in time: everyone on duty, and the admins.
+    for r in
+        select id from help_requests
+         where status = 'open' and escalated_at is null and escalate_at <= now()
+           and routed_rung_at is not null
+         order by created_at
+         for update skip locked
+    loop
+        update help_requests set escalated_at = now() where id = r.id;
+        perform help_ring(r.id, true);
+        insert into help_request_events (request_id, event) values (r.id, 'escalated');
+        v_esc := v_esc + 1;
+    end loop;
+
+    -- A grant past its 48 h: said once in the journal (the read helpers
+    -- stopped it at its second already).
+    for r in
+        select id, request_id from help_access_grants
+         where revoked_at is null and expires_at <= now() and expiry_logged_at is null
+         for update skip locked
+    loop
+        update help_access_grants set expiry_logged_at = now() where id = r.id;
+        insert into help_request_events (request_id, event) values (r.request_id, 'access_expired');
+        v_exp := v_exp + 1;
+    end loop;
+
+    -- WhatsApp rows nobody carried within the hour: not sent any more.
+    update help_whatsapp_outbox set state = 'stale', done_at = now()
+     where state in ('pending', 'sending') and created_at < now() - interval '1 hour';
+
+    return jsonb_build_object('routed', v_rout, 'escalated', v_esc, 'expired', v_exp);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. The business's side
+-- ------------------------------------------------------------
+-- The caller's own place in a business, for asking: a member who is not an
+-- observer and not a trainer's assignment.
+create or replace function help_can_ask(p_org_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select auth.uid() is not null and exists (
+        select 1 from memberships m
+         where m.org_id = p_org_id and m.user_id = auth.uid()
+           and m.role <> 'observer' and not m.is_trainer);
+$$;
+
+-- One request as its business reads it.
+create or replace function help_request_json(p_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select jsonb_build_object(
+        'id', r.id, 'org_id', r.org_id, 'subject', r.subject, 'message', r.message,
+        'photo_document_id', r.photo_document_id,
+        'contact', r.contact, 'status', r.status,
+        -- The caller asked it (else: one of the business's admins reads it).
+        'mine', r.requested_by = auth.uid(),
+        'created_at', r.created_at, 'routed_at', r.routed_at,
+        'queued', r.routed_at > r.created_at + interval '1 second',
+        'escalated', r.escalated_at is not null,
+        'taken_at', r.taken_at,
+        'trainer', case when r.taken_by is not null then jsonb_build_object(
+            'first_name', help_first_name(r.taken_by),
+            'phone', (select nullif(regexp_replace(coalesce(p.phone, ''), '[^0-9]', '', 'g'), '')
+                        from profiles p where p.id = r.taken_by),
+            'member', exists (select 1 from memberships m
+                               where m.org_id = r.org_id and m.user_id = r.taken_by)) end,
+        'visit_answer', r.visit_answer, 'visit_note', r.visit_note,
+        'resolved_at', r.resolved_at, 'resolution_note', r.resolution_note,
+        'closed_at', r.closed_at, 'rating', r.rating,
+        'access', (select jsonb_build_object('granted_at', g.granted_at, 'expires_at', g.expires_at,
+                                             'live', g.expires_at > now(),
+                                             'opened', g.opened_count)
+                     from help_access_grants g
+                    where g.request_id = r.id and g.revoked_at is null
+                    order by g.granted_at desc limit 1),
+        'events', coalesce((select jsonb_agg(jsonb_build_object(
+                                'event', e.event, 'at', e.at,
+                                'who', case when e.actor_id is not null
+                                            then help_first_name(e.actor_id) end)
+                                order by e.at, e.id)
+                              from help_request_events e where e.request_id = r.id), '[]'::jsonb))
+    from help_requests r where r.id = p_id;
+$$;
+
+-- What the « Besoin d'aide » button needs (the app, every home):
+--   available  this person may ask here (a member, not an observer)
+--   pro        the business is on Mara Pro (else: the basic Aide)
+--   hours      {open, close, in_hours, next_open}
+--   request    the active request (open or taken), else the last one
+--              resolved and not closed, else null
+--   left       requests left today
+create or replace function help_state(p_org_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+    v_id uuid;
+begin
+    if not help_can_ask(p_org_id) then
+        return jsonb_build_object('available', false);
+    end if;
+    select id into v_id from help_requests
+     where org_id = p_org_id and status in ('open', 'taken', 'resolved')
+     order by (status in ('open', 'taken')) desc, created_at desc
+     limit 1;
+    return jsonb_build_object(
+        'available', true,
+        'pro', org_plan(p_org_id) = 'pro',
+        'hours', jsonb_build_object(
+            'open', help_setting_int('help_hours_open'),
+            'close', help_setting_int('help_hours_close'),
+            'in_hours', help_in_hours(now()),
+            'next_open', help_next_open(now())),
+        'request', case when v_id is null then null else help_request_json(v_id) end,
+        'left', greatest(help_setting_int('help_daily_limit') - (
+            select count(*) from help_requests
+             where org_id = p_org_id and created_at > now() - interval '24 hours'), 0));
+end;
+$$;
+
+-- « Envoyer la demande ».
+create or replace function help_request_create(
+    p_org_id   uuid,
+    p_subject  text,
+    p_message  text default null,
+    p_contact  text default 'whatsapp',
+    p_phone    text default null,
+    p_photo    uuid default null,
+    p_context  jsonb default '{}'::jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_me      uuid := auth.uid();
+    v_phone   text;
+    v_message text;
+    v_routed  timestamptz;
+    v_esc     timestamptz;
+    v_id      uuid;
+    v_assigned boolean;
+    v_context jsonb;
+begin
+    if v_me is null then
+        raise exception 'Connectez-vous pour demander de l''aide.';
+    end if;
+    if not help_can_ask(p_org_id) then
+        raise exception 'Seule l''équipe de l''entreprise peut demander de l''aide ici.';
+    end if;
+    if org_plan(p_org_id) <> 'pro' then
+        raise exception 'L''aide d''un formateur vient avec Mara Pro.';
+    end if;
+    if p_subject is null or p_subject not in ('ventes', 'stock', 'factures', 'vitrine', 'commandes',
+            'equipe', 'autre', 'bandes', 'contributions', 'rapports', 'membres') then
+        raise exception 'Choisissez de quoi il s''agit.';
+    end if;
+    if p_contact is null or p_contact not in ('call', 'whatsapp', 'visit') then
+        raise exception 'Choisissez comment être aidé : appel, WhatsApp ou visite.';
+    end if;
+    v_message := nullif(btrim(regexp_replace(coalesce(p_message, ''), '[[:cntrl:]]', ' ', 'g')), '');
+    if char_length(v_message) > 500 then
+        raise exception 'Un message de 500 caractères au plus, s''il vous plaît.';
+    end if;
+    v_phone := nullif(regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g'), '');
+    if v_phone is null then
+        select nullif(regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g'), '')
+          into v_phone from profiles where id = v_me;
+    end if;
+    if v_phone is null or v_phone !~ '^[0-9]{8,15}$' then
+        raise exception 'Un numéro où vous joindre, avec l''indicatif (par exemple 22670000000).';
+    end if;
+    if p_photo is not null and not exists (
+            select 1 from documents d where d.id = p_photo and d.org_id = p_org_id) then
+        raise exception 'Cette photo n''est pas de cette entreprise.';
+    end if;
+    if exists (select 1 from help_requests where org_id = p_org_id and status in ('open', 'taken')) then
+        raise exception 'Une demande d''aide est déjà en cours pour cette entreprise.';
+    end if;
+    if (select count(*) from help_requests
+         where org_id = p_org_id and created_at > now() - interval '24 hours')
+       >= help_setting_int('help_daily_limit') then
+        raise exception 'Les demandes d''aide de ces 24 heures sont toutes faites. Réessayez demain, ou écrivez à Mara.';
+    end if;
+
+    v_context := jsonb_strip_nulls(jsonb_build_object(
+        'screen',   notify_plain(p_context ->> 'screen', 60),
+        'version',  notify_plain(p_context ->> 'version', 40, true),
+        'platform', notify_plain(p_context ->> 'platform', 20)));
+
+    v_routed := help_next_open(now());
+    select exists (
+        select 1 from memberships m join profiles p on p.id = m.user_id
+         where m.org_id = p_org_id and m.is_trainer and p.is_trainer
+           and coalesce((select s.on_duty from help_trainer_status s where s.user_id = p.id), true))
+      into v_assigned;
+    -- No assigned trainer on duty: everyone, at once.
+    v_esc := case when v_assigned
+                  then help_add_open(v_routed, help_setting_int('help_escalate_minutes'))
+                  else v_routed end;
+
+    begin
+        insert into help_requests (org_id, requested_by, subject, message, photo_document_id,
+                                   contact, contact_phone, context, routed_at, escalate_at)
+        values (p_org_id, v_me, p_subject, v_message, p_photo, p_contact, v_phone,
+                v_context, v_routed, v_esc)
+        returning id into v_id;
+    exception when unique_violation then
+        raise exception 'Une demande d''aide est déjà en cours pour cette entreprise.';
+    end;
+    perform help_log(v_id, 'created', null);
+    if v_routed > now() then
+        perform help_log(v_id, 'queued', null);
+    else
+        -- In the hours: the assigned now, everyone at once without them.
+        perform help_ring(v_id, false);
+        update help_requests set routed_rung_at = now() where id = v_id;
+        if not v_assigned then
+            update help_requests set escalated_at = now() where id = v_id;
+            perform help_ring(v_id, true);
+            insert into help_request_events (request_id, event) values (v_id, 'escalated');
+        end if;
+    end if;
+    return help_request_json(v_id);
+end;
+$$;
+
+-- The request's own people: who asked, while still of the business (one
+-- who left reads nothing of it, the trainer's number least of all), or
+-- the business's admins (a real membership — a platform admin closes
+-- nothing for a business).
+create or replace function help_is_owner_side(p_request uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1 from help_requests r
+         where r.id = p_request
+           and ((r.requested_by = auth.uid() and help_can_ask(r.org_id))
+                or exists (select 1 from memberships m
+                            where m.org_id = r.org_id and m.user_id = auth.uid()
+                              and m.role in ('owner', 'super_admin', 'admin'))));
+$$;
+
+-- « Pas encore » — a resolved request back to its trainer.
+create or replace function help_reopen(p_request uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+begin
+    if not help_is_owner_side(p_request) then
+        raise exception 'Cette demande n''est pas la vôtre.';
+    end if;
+    select * into r from help_requests where id = p_request for update;
+    if r.status <> 'resolved' then
+        raise exception 'Seule une demande marquée résolue peut être rouverte.';
+    end if;
+    begin
+        update help_requests set status = 'taken', resolved_at = null where id = p_request;
+    exception when unique_violation then
+        raise exception 'Une autre demande d''aide est déjà en cours pour cette entreprise.';
+    end;
+    perform help_log(p_request, 'reopened', null);
+    perform help_bell(r.taken_by, p_request, 'help_reopened',
+        format('%s : « pas encore réglé » — la demande vous revient.',
+               coalesce(notify_plain((select name from orgs where id = r.org_id), 60), 'Une entreprise')),
+        'me');
+    return help_request_json(p_request);
+end;
+$$;
+
+-- « Oui, merci » / « Fermer » — the request ends, rated 1 or -1 (or not),
+-- and its access with it.
+create or replace function help_close(p_request uuid, p_rating int default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+begin
+    if not help_is_owner_side(p_request) then
+        raise exception 'Cette demande n''est pas la vôtre.';
+    end if;
+    if p_rating is not null and p_rating not in (-1, 1) then
+        raise exception 'Une note : pouce levé ou pouce baissé.';
+    end if;
+    select * into r from help_requests where id = p_request for update;
+    if r.status = 'closed' then
+        return help_request_json(p_request);
+    end if;
+    update help_requests
+       set status = 'closed', closed_at = now(), closed_by = auth.uid(),
+           rating = case when r.taken_by is null then null else p_rating end
+     where id = p_request;
+    perform help_log(p_request, 'closed',
+        case p_rating when 1 then 'up' when -1 then 'down' end);
+    update help_access_grants set revoked_at = now(), revoked_by = auth.uid()
+     where request_id = p_request and revoked_at is null;
+    perform help_bell(r.taken_by, p_request, 'help_closed',
+        format('%s a fermé la demande%s',
+               coalesce(notify_plain((select name from orgs where id = r.org_id), 60), 'L''entreprise'),
+               case p_rating when 1 then ' — merci !' when -1 then ' — pas satisfait' else '' end),
+        'me');
+    return help_request_json(p_request);
+end;
+$$;
+
+-- « Autoriser l'accès 48 h » (6): the business's owner or admin, for the
+-- trainer who took the request and is not of the business.
+create or replace function help_access_grant(p_request uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r     help_requests;
+    v_exp timestamptz := now() + interval '48 hours';
+begin
+    select * into r from help_requests where id = p_request for update;
+    if not found or not exists (
+        select 1 from memberships m
+         where m.org_id = r.org_id and m.user_id = auth.uid()
+           and m.role in ('owner', 'super_admin', 'admin')) then
+        raise exception 'Seul le propriétaire ou un administrateur de l''entreprise autorise l''accès.';
+    end if;
+    if r.status not in ('taken', 'resolved') or r.taken_by is null then
+        raise exception 'L''accès s''autorise une fois la demande prise en charge.';
+    end if;
+    if exists (select 1 from memberships m where m.org_id = r.org_id and m.user_id = r.taken_by) then
+        raise exception 'Ce formateur voit déjà votre entreprise.';
+    end if;
+    if exists (select 1 from help_access_grants g
+                where g.request_id = p_request and g.revoked_at is null and g.expires_at > now()) then
+        return help_request_json(p_request);
+    end if;
+    -- An earlier grant of this request, past its 48 h: closed for good.
+    update help_access_grants set revoked_at = coalesce(revoked_at, expires_at)
+     where request_id = p_request and revoked_at is null;
+    insert into help_access_grants (request_id, org_id, trainer_id, granted_by, expires_at, label)
+    values (p_request, r.org_id, r.taken_by, auth.uid(), v_exp,
+            format('Accès en lecture seule de %s (formation), 48 h', help_first_name(r.taken_by)));
+    perform help_log(p_request, 'access_granted', null);
+    perform help_bell(r.taken_by, p_request, 'help_access',
+        format('%s vous ouvre son activité en lecture seule pour 48 h.',
+               coalesce(notify_plain((select name from orgs where id = r.org_id), 60), 'L''entreprise')),
+        'me');
+    return help_request_json(p_request);
+end;
+$$;
+
+-- « Retirer l'accès »: the business's owner or admin, the trainer
+-- themselves, or a platform admin.
+create or replace function help_access_revoke(p_request uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+    v_n int;
+begin
+    select * into r from help_requests where id = p_request;
+    if not found or not (
+        r.taken_by = auth.uid()
+        or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+        or exists (select 1 from memberships m
+                    where m.org_id = r.org_id and m.user_id = auth.uid()
+                      and m.role in ('owner', 'super_admin', 'admin'))) then
+        raise exception 'Vous ne pouvez pas retirer cet accès.';
+    end if;
+    update help_access_grants set revoked_at = now(), revoked_by = auth.uid()
+     where request_id = p_request and revoked_at is null;
+    get diagnostics v_n = row_count;
+    if v_n > 0 then
+        perform help_log(p_request, 'access_revoked', null);
+        if r.taken_by is distinct from auth.uid() then
+            perform help_bell(r.taken_by, p_request, 'help_access_ended',
+                format('%s a retiré votre accès en lecture seule.',
+                       coalesce(notify_plain((select name from orgs where id = r.org_id), 60), 'L''entreprise')),
+                'me');
+        end if;
+    end if;
+    return help_request_json(p_request);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 8. The trainer's side
+-- ------------------------------------------------------------
+create or replace function help_is_trainer()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (select 1 from profiles where id = auth.uid() and (is_trainer or is_platform_admin));
+$$;
+
+-- Whether the caller may see this request as a helper (the policy's rule).
+create or replace function help_helper_sees(p_request uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1 from help_requests r
+         where r.id = p_request
+           and (r.taken_by = auth.uid()
+                or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+                or (exists (select 1 from profiles where id = auth.uid() and is_trainer)
+                    and ((r.escalated_at is not null and r.status = 'open')
+                         or exists (select 1 from memberships m
+                                     where m.user_id = auth.uid() and m.org_id = r.org_id
+                                       and m.is_trainer)))));
+$$;
+
+-- One request as a helper reads it: the business, the subject, the words;
+-- the person's number only for the one who took it (or an admin).
+create or replace function help_inbox_row(p_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select jsonb_build_object(
+        'id', r.id, 'org_id', r.org_id, 'org', o.name, 'profile', o.profile, 'city', o.city,
+        'subject', r.subject, 'message', r.message, 'contact', r.contact,
+        'has_photo', r.photo_document_id is not null,
+        'context', r.context, 'status', r.status,
+        'created_at', r.created_at, 'routed_at', r.routed_at,
+        'escalated', r.escalated_at is not null,
+        'mine', r.taken_by = auth.uid(),
+        'taken_by', case when r.taken_by is not null then help_first_name(r.taken_by) end,
+        'assigned', exists (select 1 from memberships m
+                             where m.user_id = auth.uid() and m.org_id = r.org_id and m.is_trainer),
+        'member', exists (select 1 from memberships m
+                           where m.user_id = auth.uid() and m.org_id = r.org_id),
+        'requester', help_first_name(r.requested_by),
+        'phone', case when r.taken_by = auth.uid()
+                        or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)
+                      then r.contact_phone end,
+        'visit_answer', r.visit_answer, 'visit_note', r.visit_note,
+        'resolved_at', r.resolved_at, 'resolution_note', r.resolution_note,
+        'closed_at', r.closed_at, 'rating', r.rating,
+        'access', (select jsonb_build_object('granted_at', g.granted_at, 'expires_at', g.expires_at,
+                                             'live', g.expires_at > now())
+                     from help_access_grants g
+                    where g.request_id = r.id and g.trainer_id = auth.uid()
+                      and g.revoked_at is null and g.expires_at > now()
+                    order by g.granted_at desc limit 1))
+    from help_requests r join orgs o on o.id = r.org_id
+    where r.id = p_id;
+$$;
+
+-- The trainer's inbox: open requests oldest first, then the caller's own
+-- in progress, then the last week's done. {trainer:false} for anybody
+-- else (the app then draws no inbox).
+create or replace function help_inbox()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_rows jsonb;
+begin
+    if not help_is_trainer() then
+        return jsonb_build_object('trainer', false);
+    end if;
+    perform help_tick();
+    select coalesce(jsonb_agg(help_inbox_row(x.id) order by x.ord, x.at), '[]'::jsonb)
+      into v_rows
+      from (
+        select r.id,
+               case when r.status = 'open' then 0
+                    when r.status in ('taken', 'resolved') and r.taken_by = auth.uid() then 1
+                    else 2 end as ord,
+               case when r.status = 'open' then extract(epoch from r.created_at)
+                    else -extract(epoch from coalesce(r.closed_at, r.resolved_at, r.taken_at, r.created_at)) end as at
+          from help_requests r
+         where help_helper_sees(r.id)
+           and (r.status in ('open', 'taken', 'resolved')
+                or coalesce(r.closed_at, r.created_at) > now() - interval '7 days')
+           -- Not yet routed (made out of hours): nobody is asked before the hours.
+           and (r.routed_at <= now() or r.taken_by = auth.uid())
+         order by 2, 3
+         limit 100) x;
+    return jsonb_build_object(
+        'trainer', true,
+        'admin', exists (select 1 from profiles where id = auth.uid() and is_platform_admin),
+        'on_duty', coalesce((select on_duty from help_trainer_status where user_id = auth.uid()), true),
+        'in_hours', help_in_hours(now()),
+        'hours', jsonb_build_object('open', help_setting_int('help_hours_open'),
+                                    'close', help_setting_int('help_hours_close')),
+        'requests', v_rows);
+end;
+$$;
+
+-- « En service » / « Hors service ».
+create or replace function help_set_on_duty(p_on boolean)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_trainer) then
+        raise exception 'Réservé aux formateurs de Mara.';
+    end if;
+    insert into help_trainer_status (user_id, on_duty, updated_at)
+    values (auth.uid(), coalesce(p_on, true), now())
+    on conflict (user_id) do update set on_duty = excluded.on_duty, updated_at = now();
+    return coalesce(p_on, true);
+end;
+$$;
+
+-- « Je m'en occupe » (5): the first wins.
+create or replace function help_take(p_request uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_org uuid;
+    v_by  uuid;
+    v_who text := help_first_name(auth.uid());
+begin
+    if not help_is_trainer() or not help_helper_sees(p_request) then
+        raise exception 'Cette demande ne vous est pas adressée.';
+    end if;
+    update help_requests
+       set status = 'taken', taken_by = auth.uid(), taken_at = now()
+     where id = p_request and status = 'open'
+     returning org_id, requested_by into v_org, v_by;
+    if v_org is null then
+        if exists (select 1 from help_requests where id = p_request and taken_by = auth.uid()) then
+            return help_inbox_row(p_request);
+        end if;
+        raise exception 'Un autre formateur s''occupe déjà de cette demande.';
+    end if;
+    perform help_log(p_request, 'taken', null);
+    perform help_bell(v_by, p_request, 'help_taken',
+        format('%s (formation Mara) s''occupe de votre demande d''aide.', v_who), 'shop');
+    return help_inbox_row(p_request);
+end;
+$$;
+
+-- A visit asked for: accepted, or a call proposed instead.
+create or replace function help_visit_answer(p_request uuid, p_answer text, p_note text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+    v_note text := nullif(btrim(regexp_replace(coalesce(p_note, ''), '[[:cntrl:]]', ' ', 'g')), '');
+begin
+    select * into r from help_requests where id = p_request for update;
+    if not found or r.taken_by is distinct from auth.uid() then
+        raise exception 'Prenez d''abord la demande en charge.';
+    end if;
+    if r.contact <> 'visit' then
+        raise exception 'Cette demande ne demande pas de visite.';
+    end if;
+    if p_answer not in ('accepted', 'call_instead') then
+        raise exception 'Acceptez la visite, ou proposez un appel.';
+    end if;
+    if char_length(v_note) > 200 then
+        raise exception 'Un mot de 200 caractères au plus.';
+    end if;
+    update help_requests set visit_answer = p_answer, visit_note = v_note where id = p_request;
+    perform help_log(p_request, case p_answer when 'accepted' then 'visit_accepted' else 'call_instead' end,
+                     v_note);
+    perform help_bell(r.requested_by, p_request, 'help_visit',
+        case p_answer
+            when 'accepted' then format('%s viendra vous voir%s', help_first_name(auth.uid()),
+                                        coalesce(' : ' || notify_plain(v_note, 60), '.'))
+            else format('%s vous propose plutôt un appel%s', help_first_name(auth.uid()),
+                        coalesce(' : ' || notify_plain(v_note, 60), '.'))
+        end, 'shop');
+    return help_inbox_row(p_request);
+end;
+$$;
+
+-- « Marquer résolue », with a note.
+create or replace function help_resolve(p_request uuid, p_note text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    r help_requests;
+    v_note text := nullif(btrim(regexp_replace(coalesce(p_note, ''), '[[:cntrl:]]', ' ', 'g')), '');
+begin
+    select * into r from help_requests where id = p_request for update;
+    if not found or not (r.taken_by = auth.uid()
+            or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)) then
+        raise exception 'Seul le formateur qui a pris la demande la marque résolue.';
+    end if;
+    if r.status <> 'taken' then
+        raise exception 'Cette demande n''est pas en cours.';
+    end if;
+    if char_length(v_note) > 500 then
+        raise exception 'Une note de 500 caractères au plus.';
+    end if;
+    update help_requests set status = 'resolved', resolved_at = now(), resolution_note = v_note
+     where id = p_request;
+    perform help_log(p_request, 'resolved', v_note);
+    perform help_bell(r.requested_by, p_request, 'help_resolved',
+        format('%s a marqué votre demande résolue. C''est réglé ?', help_first_name(auth.uid())), 'shop');
+    return help_inbox_row(p_request);
+end;
+$$;
+
+-- « Ouvrir l'activité (lecture seule) »: the grantee says they open it —
+-- counted on the grant (so 008's journal shows each opening) and in the
+-- request's journal. Answers the business's id while the grant lives.
+create or replace function help_access_opened(p_request uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_org uuid;
+begin
+    update help_access_grants
+       set opened_count = opened_count + 1, last_opened_at = now()
+     where request_id = p_request and trainer_id = auth.uid()
+       and revoked_at is null and expires_at > now()
+     returning org_id into v_org;
+    if v_org is null then
+        raise exception 'Cet accès est terminé.';
+    end if;
+    perform help_log(p_request, 'access_opened', null);
+    return v_org;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 9. The platform's side (« Aujourd'hui » and the console)
+-- ------------------------------------------------------------
+-- « VOUS ATTEND »: help_late (open, more than help_late_minutes of open
+-- time since routed) and help_open (the other active ones). Null for
+-- anybody but a platform admin.
+create or replace function help_todo_counts()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_late int;
+    v_open int;
+begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_platform_admin) then
+        return null;
+    end if;
+    perform help_tick();
+    select count(*) filter (where status = 'open' and routed_at <= now()
+                              and help_open_minutes(routed_at, now()) >= help_setting_int('help_late_minutes')),
+           count(*) filter (where not (status = 'open' and routed_at <= now()
+                              and help_open_minutes(routed_at, now()) >= help_setting_int('help_late_minutes')))
+      into v_late, v_open
+      from help_requests where status in ('open', 'taken');
+    return jsonb_build_object('help_late', v_late, 'help_open', v_open);
+end;
+$$;
+
+-- The console (mockup 6): the numbers, each trainer, what waits, WhatsApp.
+create or replace function help_console()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_template text := btrim(coalesce(help_setting('help_whatsapp_template') #>> '{}', ''));
+    v_last     help_whatsapp_outbox;
+    v_wa       text;
+begin
+    if not exists (select 1 from profiles where id = auth.uid() and is_platform_admin) then
+        return null;
+    end if;
+    perform help_tick();
+    select * into v_last from help_whatsapp_outbox
+     where state in ('sent', 'failed') order by done_at desc nulls last limit 1;
+    v_wa := case
+        when v_template = '' then 'off'
+        when v_last.id is not null and v_last.state = 'failed' and v_last.error = 'template' then 'template'
+        when v_last.id is not null and v_last.state = 'failed' then 'failing'
+        when exists (select 1 from help_whatsapp_outbox
+                      where state = 'pending' and created_at < now() - interval '5 minutes') then 'waiting'
+        when v_last.id is not null and v_last.state = 'sent' then 'on'
+        else 'unknown' end;
+    return jsonb_build_object(
+        'open', (select count(*) from help_requests where status in ('open', 'taken')),
+        'avg_minutes', (select round(avg(help_open_minutes(routed_at, taken_at)))
+                          from help_requests
+                         where taken_at is not null and taken_at > now() - interval '7 days'),
+        'resolved_7', (select count(*) from help_requests
+                        where resolved_at > now() - interval '7 days'),
+        'up', (select count(*) from help_requests where rating = 1 and closed_at > now() - interval '30 days'),
+        'down', (select count(*) from help_requests where rating = -1 and closed_at > now() - interval '30 days'),
+        'in_hours', help_in_hours(now()),
+        'hours', jsonb_build_object('open', help_setting_int('help_hours_open'),
+                                    'close', help_setting_int('help_hours_close')),
+        'whatsapp', jsonb_build_object('state', v_wa, 'template', v_template,
+                                       'last_error', case when v_last.state = 'failed' then v_last.error end,
+                                       'last_at', v_last.done_at),
+        'trainers', coalesce((
+            select jsonb_agg(jsonb_build_object(
+                       'user_id', p.id, 'name', coalesce(person_name(p.id), 'Formateur'),
+                       'on_duty', coalesce(s.on_duty, true),
+                       'assigned', (select count(*) from memberships m where m.user_id = p.id and m.is_trainer),
+                       'taken', (select count(*) from help_requests r
+                                  where r.taken_by = p.id and r.status = 'taken'),
+                       'resolved_7', (select count(*) from help_requests r
+                                       where r.taken_by = p.id and r.resolved_at > now() - interval '7 days'),
+                       'phone', p.phone is not null)
+                   order by coalesce(s.on_duty, true) desc, person_name(p.id))
+              from profiles p left join help_trainer_status s on s.user_id = p.id
+             where p.is_trainer), '[]'::jsonb),
+        'waiting', coalesce((
+            select jsonb_agg(jsonb_build_object(
+                       'id', r.id, 'org', o.name, 'org_id', r.org_id, 'profile', o.profile,
+                       'subject', r.subject, 'status', r.status,
+                       'created_at', r.created_at, 'routed_at', r.routed_at,
+                       'escalated', r.escalated_at is not null,
+                       'minutes', help_open_minutes(r.routed_at, now()),
+                       'late', r.status = 'open' and r.routed_at <= now()
+                               and help_open_minutes(r.routed_at, now()) >= help_setting_int('help_late_minutes'),
+                       'taken_by', case when r.taken_by is not null then help_first_name(r.taken_by) end)
+                   order by r.created_at)
+              from help_requests r join orgs o on o.id = r.org_id
+             where r.status in ('open', 'taken')), '[]'::jsonb));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 10. WhatsApp's carrier (the Worker, service role only)
+-- ------------------------------------------------------------
+-- Up to [p_limit] rows to send now, each marked « sending » (claimed once:
+-- skip locked). The clock runs first, so the Worker's minute is a tick too.
+create or replace function help_whatsapp_claim(p_limit int default 20)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v jsonb;
+begin
+    perform help_tick();
+    with c as (
+        select id from help_whatsapp_outbox
+         where state = 'pending' and created_at > now() - interval '1 hour'
+         order by created_at
+         limit greatest(least(coalesce(p_limit, 20), 100), 1)
+         for update skip locked
+    ), u as (
+        update help_whatsapp_outbox o set state = 'sending', claimed_at = now()
+          from c where o.id = c.id
+        returning o.id, o.phone, o.template, o.params
+    )
+    select coalesce(jsonb_agg(jsonb_build_object('id', id, 'to', phone, 'template', template,
+                                                 'params', params)), '[]'::jsonb)
+      into v from u;
+    return v;
+end;
+$$;
+
+-- How one went: sent, or failed with a word (template | not_whatsapp |
+-- rate | meta | network).
+create or replace function help_whatsapp_done(p_id uuid, p_ok boolean, p_error text default null)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+    update help_whatsapp_outbox
+       set state = case when p_ok then 'sent' else 'failed' end,
+           error = case when p_ok then null else left(coalesce(nullif(p_error, ''), 'meta'), 40) end,
+           done_at = now()
+     where id = p_id and state = 'sending';
+$$;
+
+-- ------------------------------------------------------------
+-- 11. The clock, every minute (where pg_cron is)
+-- ------------------------------------------------------------
+do $$
+begin
+    if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+        begin
+            create extension if not exists pg_cron;
+            if not exists (select 1 from cron.job where jobname = 'help-tick') then
+                perform cron.schedule('help-tick', '* * * * *', 'select public.help_tick()');
+            end if;
+        exception when others then
+            raise notice 'pg_cron not scheduled here: %', sqlerrm;
+        end;
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 12. Who may call what (063: born closed to PUBLIC and anon)
+-- ------------------------------------------------------------
+do $$
+declare
+    -- The app's doors: authenticated.
+    v_app text[] := array[
+        'help_state(uuid)',
+        'help_request_create(uuid, text, text, text, text, uuid, jsonb)',
+        'help_reopen(uuid)',
+        'help_close(uuid, integer)',
+        'help_access_grant(uuid)',
+        'help_access_revoke(uuid)',
+        'help_inbox()',
+        'help_set_on_duty(boolean)',
+        'help_take(uuid)',
+        'help_visit_answer(uuid, text, text)',
+        'help_resolve(uuid, text)',
+        'help_access_opened(uuid)',
+        'help_todo_counts()',
+        'help_console()'];
+    -- Internal: the definer doors and the policies' helpers call them.
+    v_internal text[] := array[
+        'trg_help_settings()',
+        'help_setting(text)',
+        'help_setting_int(text)',
+        'help_in_hours(timestamptz)',
+        'help_next_open(timestamptz)',
+        'help_add_open(timestamptz, integer)',
+        'help_open_minutes(timestamptz, timestamptz)',
+        'trg_help_trainer_demoted()',
+        'help_subject_label(text)',
+        'help_kind_label(text)',
+        'help_first_name(uuid)',
+        'help_ring_list(uuid, boolean)',
+        'help_ring(uuid, boolean)',
+        'help_bell(uuid, uuid, text, text, text)',
+        'help_log(uuid, text, text)',
+        'help_can_ask(uuid)',
+        'help_request_json(uuid)',
+        'help_is_owner_side(uuid)',
+        'help_is_trainer()',
+        'help_helper_sees(uuid)',
+        'help_inbox_row(uuid)'];
+    -- The service role's (the Worker) and the cron's (postgres).
+    v_service text[] := array[
+        'help_tick()',
+        'help_whatsapp_claim(integer)',
+        'help_whatsapp_done(uuid, boolean, text)'];
+    v_has_anon boolean := exists (select 1 from pg_roles where rolname = 'anon');
+    v_has_auth boolean := exists (select 1 from pg_roles where rolname = 'authenticated');
+    v_has_svc  boolean := exists (select 1 from pg_roles where rolname = 'service_role');
+    f text;
+begin
+    foreach f in array v_app || v_internal || v_service loop
+        execute format('revoke execute on function %s from public', f);
+        if v_has_anon then execute format('revoke execute on function %s from anon', f); end if;
+    end loop;
+    foreach f in array v_app loop
+        if v_has_auth then execute format('grant execute on function %s to authenticated', f); end if;
+    end loop;
+    foreach f in array v_internal || v_service loop
+        if v_has_auth then execute format('revoke execute on function %s from authenticated', f); end if;
+    end loop;
+    foreach f in array v_service loop
+        if v_has_svc then execute format('grant execute on function %s to service_role', f); end if;
+    end loop;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 134_caisse_booking_cancel.sql
+-- ============================================================
+-- ============================================================
+-- 134_caisse_booking_cancel.sql — batch 138: the owner's « yes to all 3 »,
+-- and the weekly prize's bell taken off.
+--
+--   1. Expiry dates: one per article, as today. Nothing here.
+--
+--   2. « La caisse et la cotisation » — an association's books given the
+--      money already in its box, and its usual cotisation.
+--
+--      THE OPENING BALANCE. The ledger has never modelled one: no
+--      equity account exists in any chart (002, 009, 011 seed assets,
+--      income and expenses only; 007's balance sheet adds the accumulated
+--      result as a computed line, not an account). So an opening balance
+--      is what every chart of accounts makes of it — a balanced journal
+--      entry between the box and an equity account of its own:
+--          debit  1000 Cash on Hand (or 1010 / 1020, the method)  amount
+--          credit 3xxx « Solde de départ » (equity, minted the first
+--                  time, in 007's 3000s band)                     amount
+--      labelled « Solde de départ », details {"kind": "opening_balance"}.
+--      It is not income (the income statement does not move, no « first
+--      cotisation » is ticked — 102's first_income reads income credits);
+--      the balance sheet shows the cash on one side and « Solde de
+--      départ » under equity on the other; trial_balance, church_balances
+--      and the journal show it as they show any entry.
+--
+--      What makes it THE opening balance is one row in books_opening
+--      (org_id primary key: once). Zero is a real answer — « la caisse
+--      est vide » — and writes the row with no entry (a zero entry would
+--      be a line in the journal saying nothing).
+--
+--      set_opening_balance(org, amount, method, client_uuid) is SECURITY
+--      INVOKER, as record_contribution is: the entry, its lines, the
+--      equity account and the books_opening row are written under the
+--      caller's own RLS — a non-member writes nothing, an observer
+--      writes no entry, and only an administrator may add an account or
+--      a books_opening row. The guards hold on the TABLE, not only in the
+--      function, so a direct write through PostgREST meets them too
+--      (trg_books_opening_guard, SECURITY DEFINER so that it sees every
+--      entry of the business whatever the caller may read):
+--        * an owner, super_admin or admin of an association (a platform
+--          admin is not a member: RLS refuses the entry anyway);
+--        * an amount of 0 or more; > 0 ⇔ an entry, written in this very
+--          transaction (127's row_is_this_transactions), of this
+--          business, flagged opening_balance, balanced, debiting an asset
+--          and crediting an equity account by exactly the amount;
+--        * once: the primary key; a second call refuses (« déjà
+--          enregistré »), the same call retried (its client_uuid) answers
+--          what it answered — a no-op;
+--        * never over books with movements: any other journal entry of
+--          the business refuses it — UNLESS it is a correction through
+--          the existing correction path: the opening entry reversed by
+--          reverse_entry (002, the « Annuler » of every entry) frees the
+--          row to be written again (an UPDATE, the new entry dated at the
+--          first one's moment, so it still comes before every movement).
+--          A zero opening has nothing to reverse and stays as it is.
+--
+--      THE COTISATION. contribution_defaults (org_id primary key): an
+--      amount > 0 and a period (week, month, year), written by an
+--      administrator (set_contribution_default, INVOKER, under RLS) and
+--      read by every member through books_start(): the app's « Recette »
+--      › « Cotisation » fills its amount with it, still editable.
+--
+--      books_start(org) → jsonb — what the setup step and the home's card
+--      need: whether 134 is there at all (an app on an older database
+--      gets PGRST202 and shows neither), the opening (set, amount, when),
+--      whether the books have movements, whether this caller may set it,
+--      whether the card was put away, and the cotisation. SECURITY
+--      DEFINER (a summary observer may not read the entries it counts),
+--      members only, null otherwise; closed to anon.
+--
+--      dismiss_books_start(org): « Plus tard » on the home's card, for
+--      every administrator of the business (books_start_dismissals).
+--
+--      association_trust (088) leaves the opening entry and its reversal
+--      out of « Régulière » and « Propre »: setting the box is not keeping
+--      the books, and correcting it is not a mistake.
+--
+--      kind_setup_steps (107): the association's walkthrough gains the
+--      optional « caisse » step between the members and the vitrine, so
+--      Mara can turn it off as the other two (setup_off).
+--
+--      Shops and farms: nothing — the tables refuse any business that is
+--      not an association (or a legacy church).
+--
+--   3. A customer cancels a booking up to 2 hours before its slot.
+--      cancel_order (099's, the customer's own door) is redefined — no
+--      second door, no new status: a booking (orders.booked_for, 125)
+--      that is requested (pending, nothing proposed) or confirmed
+--      (accepted) is cancelled until booked_for minus
+--      booking_cancel_hours() hours — a platform setting
+--      (booking_cancel_hours, default 2, 0 to 168, journaled by 105's
+--      platform_set_setting, its range held by a trigger here); later it
+--      is refused in French (« Trop tard pour annuler : appelez la
+--      boutique. ») — except a request nobody answered whose time has
+--      passed (it can no longer be accepted), which is withdrawn as 099
+--      let it. An order already paid — online (Wave, a card) or marked
+--      paid by the business (a deposit) — is not cancelled by the
+--      customer (the money is the business's to give back): refused, call
+--      the business; so is one with a Wave payment opened in the last
+--      30 minutes (it may still land). A proposal waiting for the customer is
+--      declined by cancelling it at any time, as 099 let it (it is not an
+--      agreed time). An order of goods: 099's rule, pending only.
+--      The business hears a cancelled booking as booking_cancelled
+--      (to: shop, 125's « Commandes de la vitrine » switch): « Rendez-vous
+--      annulé par le client — mardi 14 oct., 10:00 »; a pending order or
+--      a declined proposal keeps 099's order_withdrawn word for word.
+--      125 holds no slot (times already taken were left for later), so
+--      there is nothing to free.
+--      booking_cancel_terms(order) → jsonb for its customer: the hours,
+--      the moment it stops, whether it can still be cancelled, the
+--      business's phone (to call or WhatsApp after the cutoff); null for
+--      anybody else or an order with no slot.
+--
+--   4. The weekly prize's bell. cauris_week_close (086, last 099) still
+--      awards the prizes — the result row, the cauris, the winner's free
+--      spot and so the vitrine's badge — and rings nobody unless the new
+--      platform setting cauris_prize_notify (default 0) is 1. No bell
+--      row, so no push (115's webhook sends bell rows); this function
+--      never sent WhatsApp. 'cauris-board' is untouched (129 keeps it
+--      paused); the 'cauris-week-close' job keeps calling the same
+--      function. Associations earn no cauris (084).
+--
+-- Re-runnable: tables and columns if not exists, policies and triggers
+-- dropped and recreated, functions replaced with their own signatures,
+-- settings on conflict do nothing.
+-- ============================================================
+
+do $$
+begin
+    if to_regprocedure('public.row_is_this_transactions(xid)') is null
+       or to_regprocedure('public.booking_when_fr(timestamptz)') is null
+       or to_regprocedure('public.kind_setup_steps(text)') is null
+       or to_regprocedure('public.cauris_week_close(date)') is null then
+        raise exception '134 needs 107 (kind_setup_steps), 125 (booking_when_fr) and 127 (row_is_this_transactions) applied first';
+    end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 1. The opening balance
+-- ------------------------------------------------------------
+create table if not exists books_opening (
+    org_id      uuid primary key references orgs(id) on delete cascade,
+    amount      numeric(14,2) not null check (amount >= 0),
+    method      text not null default 'cash',
+    entry_id    uuid references journal_entries(id),
+    client_uuid uuid,
+    set_by      uuid references profiles(id),
+    set_at      timestamptz not null default now(),
+    check ((amount > 0) = (entry_id is not null))
+);
+
+-- The opening entries it replaced (each reversed first): the trust level
+-- and books_start tell the opening from the books by this, not by an
+-- entry's details, which record_entry lets anybody write.
+alter table books_opening add column if not exists replaced_entry_ids uuid[] not null default '{}';
+
+comment on table books_opening is
+    'An association''s opening balance (134): once, by an administrator, over books with no movement; '
+    'the entry (cash debit, « Solde de départ » equity credit) when above zero.';
+
+alter table books_opening enable row level security;
+
+drop policy if exists "opening readable by members" on books_opening;
+create policy "opening readable by members"
+on books_opening for select
+using (is_org_member(org_id));
+
+drop policy if exists "opening written by admins" on books_opening;
+create policy "opening written by admins"
+on books_opening for insert
+with check (is_org_admin(org_id));
+
+-- Only the correction path updates it (the guard says when).
+drop policy if exists "opening corrected by admins" on books_opening;
+create policy "opening corrected by admins"
+on books_opening for update
+using (is_org_admin(org_id))
+with check (is_org_admin(org_id));
+
+-- The rules, on the table: whatever the path, the same answer.
+create or replace function trg_books_opening_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_actor   uuid := auth.uid();
+    v_entry   journal_entries%rowtype;
+    v_xmin    xid;
+    v_debit   numeric;
+    v_credit  numeric;
+    v_asset   numeric;
+    v_equity  numeric;
+begin
+    if not exists (select 1 from orgs o where o.id = new.org_id
+                    and o.profile in ('association', 'church')) then
+        raise exception 'Le solde de départ est celui d''une association.';
+    end if;
+    -- A person: an administrator of this business (the database's own
+    -- writes — a migration, the platform's SQL — have no caller).
+    if v_actor is not null and not exists (
+        select 1 from memberships m
+         where m.org_id = new.org_id and m.user_id = v_actor
+           and m.role in ('owner', 'super_admin', 'admin')) then
+        raise exception 'Seul un responsable de l''association peut indiquer la caisse de départ.';
+    end if;
+    if new.amount is null or new.amount < 0 then
+        raise exception 'Un montant de 0 ou plus, s''il vous plaît.';
+    end if;
+
+    if tg_op = 'UPDATE' then
+        -- The correction path: the opening entry was reversed (002's
+        -- reverse_entry), and only then.
+        if new.org_id <> old.org_id then
+            raise exception 'Le solde de départ reste celui de son association.';
+        end if;
+        if old.entry_id is null or not exists (
+            select 1 from journal_entries r where r.reverses_entry_id = old.entry_id) then
+            raise exception 'Le solde de départ est déjà enregistré.';
+        end if;
+        if new.entry_id is not distinct from old.entry_id then
+            raise exception 'Le solde de départ est déjà enregistré.';
+        end if;
+        new.replaced_entry_ids := old.replaced_entry_ids || old.entry_id;
+    else
+        new.replaced_entry_ids := '{}';
+        -- Books with no movement: no entry but this one.
+        if exists (select 1 from journal_entries je
+                    where je.org_id = new.org_id
+                      and je.id is distinct from new.entry_id) then
+            raise exception 'Vos comptes ont déjà des mouvements : le solde de départ ne s''indique plus.';
+        end if;
+    end if;
+
+    if new.entry_id is not null then
+        select * into v_entry from journal_entries where id = new.entry_id;
+        select xmin into v_xmin from journal_entries where id = new.entry_id;
+        if not found or v_entry.org_id <> new.org_id
+           or not row_is_this_transactions(v_xmin)
+           or coalesce(v_entry.details ->> 'kind', '') <> 'opening_balance'
+           or v_entry.reverses_entry_id is not null then
+            raise exception 'Le solde de départ s''écrit avec son écriture.';
+        end if;
+        select coalesce(sum(jl.debit), 0), coalesce(sum(jl.credit), 0),
+               coalesce(sum(jl.debit) filter (where a.type = 'asset'), 0),
+               coalesce(sum(jl.credit) filter (where a.type = 'equity'), 0)
+          into v_debit, v_credit, v_asset, v_equity
+          from journal_lines jl join accounts a on a.id = jl.account_id
+         where jl.journal_entry_id = new.entry_id;
+        if v_debit <> new.amount or v_credit <> new.amount
+           or v_asset <> new.amount or v_equity <> new.amount then
+            raise exception 'Le solde de départ s''écrit avec son écriture.';
+        end if;
+        if tg_op = 'UPDATE' and old.entry_id is not null
+           and v_entry.created_at <> (select created_at from journal_entries where id = old.entry_id) then
+            raise exception 'Le solde de départ corrigé garde sa date.';
+        end if;
+    end if;
+
+    new.set_by := coalesce(v_actor, new.set_by);
+    new.set_at := now();
+    return new;
+end;
+$$;
+
+drop trigger if exists books_opening_guard on books_opening;
+create trigger books_opening_guard
+before insert or update on books_opening
+for each row execute function trg_books_opening_guard();
+
+-- 127's generic guard as on every business-owned child: the entry is this
+-- business's (the guard above says it too; test_batch127 asks for this one).
+drop trigger if exists same_org on books_opening;
+create trigger same_org
+before insert or update on books_opening
+for each row execute function trg_same_org('entry_id:journal_entries');
+
+-- The app's door. SECURITY INVOKER on purpose (as record_contribution):
+-- every write below is the caller's own, under RLS.
+create or replace function set_opening_balance(
+    p_org_id      uuid,
+    p_amount      numeric,
+    p_method      text default 'cash',
+    p_client_uuid uuid default null
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public, auth
+as $$
+declare
+    v_actor  uuid := auth.uid();
+    v_row    books_opening%rowtype;
+    v_method text := lower(btrim(coalesce(p_method, 'cash')));
+    v_code   text;
+    v_cash   uuid;
+    v_equity uuid;
+    v_entry  uuid;
+    v_at     timestamptz := now();
+    v_fix    boolean := false;
+begin
+    if v_actor is null then
+        raise exception 'Connectez-vous d''abord.';
+    end if;
+    if not exists (select 1 from memberships m
+                    where m.org_id = p_org_id and m.user_id = v_actor
+                      and m.role in ('owner', 'super_admin', 'admin')) then
+        raise exception 'Seul un responsable de l''association peut indiquer la caisse de départ.';
+    end if;
+    if not exists (select 1 from orgs o where o.id = p_org_id
+                    and o.profile in ('association', 'church')) then
+        raise exception 'Le solde de départ est celui d''une association.';
+    end if;
+    if p_amount is null or p_amount < 0 then
+        raise exception 'Un montant de 0 ou plus, s''il vous plaît.';
+    end if;
+    v_code := case v_method when 'cash' then '1000' when 'bank' then '1010'
+                            when 'mobile_money' then '1020' end;
+    if v_code is null then
+        raise exception 'La caisse, la banque ou le Mobile Money, s''il vous plaît.';
+    end if;
+
+    -- Two taps at once: one waits for the other.
+    perform pg_advisory_xact_lock(hashtext('books_opening:' || p_org_id::text));
+
+    select * into v_row from books_opening where org_id = p_org_id;
+    if found then
+        -- The same call again (a phone retrying): what it said the first time.
+        if p_client_uuid is not null and v_row.client_uuid = p_client_uuid then
+            return jsonb_build_object('amount', v_row.amount, 'entry_id', v_row.entry_id,
+                                      'set_at', v_row.set_at, 'again', true);
+        end if;
+        if v_row.entry_id is not null and exists (
+            select 1 from journal_entries r where r.reverses_entry_id = v_row.entry_id) then
+            v_fix := true;
+            select created_at into v_at from journal_entries where id = v_row.entry_id;
+        else
+            raise exception 'Le solde de départ est déjà enregistré.';
+        end if;
+    elsif exists (select 1 from journal_entries je where je.org_id = p_org_id) then
+        raise exception 'Vos comptes ont déjà des mouvements : le solde de départ ne s''indique plus.';
+    end if;
+
+    if p_amount > 0 then
+        select id into v_cash from accounts where org_id = p_org_id and code = v_code;
+        if v_cash is null then
+            insert into accounts (org_id, code, name, type, created_by)
+            values (p_org_id, v_code,
+                    case v_code when '1000' then 'Cash on Hand' when '1010' then 'Bank Account'
+                                else 'Mobile Money' end,
+                    'asset', v_actor)
+            returning id into v_cash;
+        end if;
+        select id into v_equity from accounts
+         where org_id = p_org_id and type = 'equity'
+           and lower(btrim(name)) = 'solde de départ'
+         order by created_at, code limit 1;
+        if v_equity is null then
+            insert into accounts (org_id, code, name, type, description, created_by)
+            values (p_org_id,
+                    -- The cast only for a code of digits (a CASE: the
+                    -- planner may test the range before the pattern).
+                    (select (coalesce(max(c.n), 2990) + 10)::text
+                       from (select case when a.code ~ '^[0-9]{1,9}$' then a.code::int end as n
+                               from accounts a where a.org_id = p_org_id) c
+                      where c.n between 3000 and 3989),
+                    'Solde de départ', 'equity',
+                    'L''argent qui était dans la caisse au début (134).', v_actor)
+            returning id into v_equity;
+        end if;
+
+        insert into journal_entries (org_id, label, memo, details, created_by, created_at, client_uuid)
+        values (p_org_id, 'Solde de départ',
+                case when v_fix then 'Solde de départ corrigé' end,
+                jsonb_build_object('kind', 'opening_balance'),
+                v_actor, v_at, p_client_uuid)
+        returning id into v_entry;
+        insert into journal_lines (journal_entry_id, account_id, debit, credit) values
+            (v_entry, v_cash,   p_amount, 0),
+            (v_entry, v_equity, 0,        p_amount);
+    end if;
+
+    if v_fix then
+        update books_opening
+           set amount = p_amount, method = v_method, entry_id = v_entry,
+               client_uuid = p_client_uuid
+         where org_id = p_org_id
+        returning * into v_row;
+    else
+        insert into books_opening (org_id, amount, method, entry_id, client_uuid, set_by)
+        values (p_org_id, p_amount, v_method, v_entry, p_client_uuid, v_actor)
+        returning * into v_row;
+    end if;
+
+    return jsonb_build_object('amount', v_row.amount, 'entry_id', v_row.entry_id,
+                              'set_at', v_row.set_at, 'again', false);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 2. The usual cotisation
+-- ------------------------------------------------------------
+create table if not exists contribution_defaults (
+    org_id     uuid primary key references orgs(id) on delete cascade,
+    amount     numeric(14,2) not null check (amount > 0),
+    period     text not null check (period in ('week', 'month', 'year')),
+    updated_by uuid references profiles(id),
+    updated_at timestamptz not null default now()
+);
+
+comment on table contribution_defaults is
+    'An association''s usual cotisation (134): pre-filled, still editable, when a cotisation is recorded.';
+
+alter table contribution_defaults enable row level security;
+
+drop policy if exists "cotisation readable by members" on contribution_defaults;
+create policy "cotisation readable by members"
+on contribution_defaults for select
+using (is_org_member(org_id));
+
+drop policy if exists "cotisation written by admins" on contribution_defaults;
+create policy "cotisation written by admins"
+on contribution_defaults for insert
+with check (is_org_admin(org_id));
+
+drop policy if exists "cotisation changed by admins" on contribution_defaults;
+create policy "cotisation changed by admins"
+on contribution_defaults for update
+using (is_org_admin(org_id))
+with check (is_org_admin(org_id));
+
+drop policy if exists "cotisation removed by admins" on contribution_defaults;
+create policy "cotisation removed by admins"
+on contribution_defaults for delete
+using (is_org_admin(org_id));
+
+create or replace function trg_contribution_default_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    if not exists (select 1 from orgs o where o.id = new.org_id
+                    and o.profile in ('association', 'church')) then
+        raise exception 'La cotisation habituelle est celle d''une association.';
+    end if;
+    new.updated_by := coalesce(auth.uid(), new.updated_by);
+    new.updated_at := now();
+    return new;
+end;
+$$;
+
+drop trigger if exists contribution_default_guard on contribution_defaults;
+create trigger contribution_default_guard
+before insert or update on contribution_defaults
+for each row execute function trg_contribution_default_guard();
+
+-- INVOKER, under RLS: an administrator's. No amount: none any more.
+create or replace function set_contribution_default(
+    p_org_id uuid,
+    p_amount numeric,
+    p_period text default 'month'
+)
+returns void
+language plpgsql
+security invoker
+set search_path = public, auth
+as $$
+begin
+    if auth.uid() is null then
+        raise exception 'Connectez-vous d''abord.';
+    end if;
+    if not exists (select 1 from memberships m
+                    where m.org_id = p_org_id and m.user_id = auth.uid()
+                      and m.role in ('owner', 'super_admin', 'admin')) then
+        raise exception 'Seul un responsable de l''association peut fixer la cotisation.';
+    end if;
+    if p_amount is null then
+        delete from contribution_defaults where org_id = p_org_id;
+        return;
+    end if;
+    if p_amount <= 0 then
+        raise exception 'Une cotisation de plus de zéro, s''il vous plaît.';
+    end if;
+    if coalesce(p_period, '') not in ('week', 'month', 'year') then
+        raise exception 'Par semaine, par mois ou par an, s''il vous plaît.';
+    end if;
+    insert into contribution_defaults (org_id, amount, period)
+    values (p_org_id, p_amount, p_period)
+    on conflict (org_id) do update
+       set amount = excluded.amount, period = excluded.period;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 3. The home's card: put away, and what it reads
+-- ------------------------------------------------------------
+create table if not exists books_start_dismissals (
+    org_id       uuid primary key references orgs(id) on delete cascade,
+    dismissed_by uuid references profiles(id) default auth.uid(),
+    dismissed_at timestamptz not null default now()
+);
+
+alter table books_start_dismissals enable row level security;
+
+drop policy if exists "dismissal readable by members" on books_start_dismissals;
+create policy "dismissal readable by members"
+on books_start_dismissals for select
+using (is_org_member(org_id));
+
+drop policy if exists "dismissal written by admins" on books_start_dismissals;
+create policy "dismissal written by admins"
+on books_start_dismissals for insert
+with check (is_org_admin(org_id));
+
+create or replace function dismiss_books_start(p_org_id uuid)
+returns void
+language plpgsql
+security invoker
+set search_path = public, auth
+as $$
+begin
+    if auth.uid() is null then
+        raise exception 'Connectez-vous d''abord.';
+    end if;
+    insert into books_start_dismissals (org_id) values (p_org_id)
+    on conflict (org_id) do nothing;
+end;
+$$;
+
+create or replace function books_start(p_org_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_o   orgs%rowtype;
+    v_b   books_opening%rowtype;
+    v_c   contribution_defaults%rowtype;
+    v_mov boolean;
+    v_adm boolean;
+    v_fix boolean;
+    v_ids uuid[];
+begin
+    if auth.uid() is null or not exists (
+        select 1 from memberships m where m.org_id = p_org_id and m.user_id = auth.uid()) then
+        return null;
+    end if;
+    select * into v_o from orgs where id = p_org_id;
+    if not found then
+        return null;
+    end if;
+    select * into v_b from books_opening where org_id = p_org_id;
+    select * into v_c from contribution_defaults where org_id = p_org_id;
+    -- An opening entry reversed (002's reverse_entry, the correction path)
+    -- may be written again, as set_opening_balance allows: neither the
+    -- reversed opening nor its reversal is a movement of the books.
+    v_fix := v_b.entry_id is not null and exists (
+        select 1 from journal_entries r where r.reverses_entry_id = v_b.entry_id);
+    v_ids := case when v_b.org_id is null then '{}'::uuid[]
+                  else array_append(v_b.replaced_entry_ids, v_b.entry_id) end;
+    v_mov := exists (select 1 from journal_entries je
+                      where je.org_id = p_org_id
+                        and not coalesce(je.id = any (v_ids), false)
+                        and not coalesce(je.reverses_entry_id = any (v_ids), false));
+    v_adm := exists (select 1 from memberships m
+                      where m.org_id = p_org_id and m.user_id = auth.uid()
+                        and m.role in ('owner', 'super_admin', 'admin'));
+    return jsonb_build_object(
+        'association',    v_o.profile in ('association', 'church'),
+        'opening_set',    v_b.org_id is not null and not v_fix,
+        'opening_amount', case when v_fix then null else v_b.amount end,
+        'opening_at',     case when v_fix then null else v_b.set_at end,
+        'movements',      v_mov,
+        'can_set',        v_adm and v_o.profile in ('association', 'church')
+                          and ((v_b.org_id is null and not v_mov) or v_fix),
+        'dismissed',      exists (select 1 from books_start_dismissals d where d.org_id = p_org_id),
+        'contribution',   case when v_c.org_id is null then null
+                               else jsonb_build_object('amount', v_c.amount, 'period', v_c.period) end);
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 4. The association's walkthrough: « La caisse et la cotisation »
+-- ------------------------------------------------------------
+create or replace function kind_setup_steps(p_kind text)
+returns jsonb
+language sql
+immutable
+set search_path = public
+as $$
+    select case when p_kind in ('association', 'church') then
+        '[{"key": "identity", "label": "Le nom et ce qu''elle est", "required": true},
+          {"key": "members",  "label": "Les premiers membres",     "required": false},
+          {"key": "caisse",   "label": "La caisse et la cotisation", "required": false},
+          {"key": "vitrine",  "label": "La vitrine",               "required": false}]'::jsonb
+    when p_kind in ('retail', 'farm') then
+        '[{"key": "identity", "label": "Le nom",                   "required": true},
+          {"key": "article",  "label": "Le premier article",       "required": true},
+          {"key": "vitrine",  "label": "La vitrine",               "required": false},
+          {"key": "position", "label": "La position sur la carte", "required": false}]'::jsonb
+    else '[]'::jsonb end;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. The settings: booking_cancel_hours, cauris_prize_notify
+-- ------------------------------------------------------------
+insert into platform_settings (key, value) values
+    ('booking_cancel_hours', '2'),
+    ('cauris_prize_notify',  '0')
+on conflict (key) do nothing;
+
+-- Their ranges, whatever writes them (105's platform_set_setting checks
+-- a number is whole and 0 or more; these say the rest).
+create or replace function trg_settings_134()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare v numeric;
+begin
+    if jsonb_typeof(new.value) <> 'number' then
+        raise exception 'Ce réglage attend un nombre.';
+    end if;
+    v := (new.value #>> '{}')::numeric;
+    if new.key = 'booking_cancel_hours' and (v < 0 or v > 168 or v <> trunc(v)) then
+        raise exception 'Un nombre d''heures de 0 à 168, s''il vous plaît.';
+    end if;
+    if new.key = 'cauris_prize_notify' and v not in (0, 1) then
+        raise exception 'Ce réglage vaut 0 (non) ou 1 (oui).';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists settings_134_check on platform_settings;
+create trigger settings_134_check
+before insert or update on platform_settings
+for each row when (new.key in ('booking_cancel_hours', 'cauris_prize_notify'))
+execute function trg_settings_134();
+
+-- How long before its slot a booking can still be cancelled by its customer.
+create or replace function booking_cancel_hours()
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select least(greatest(coalesce(
+        (select (value #>> '{}')::int from platform_settings
+          where key = 'booking_cancel_hours' and jsonb_typeof(value) = 'number'), 2), 0), 168);
+$$;
+
+-- ------------------------------------------------------------
+-- 6. The customer cancels (099's door, the booking's rule added)
+-- ------------------------------------------------------------
+create or replace function cancel_order(p_order_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_order   orders%rowtype;
+    v_booking boolean;
+    v_slot    boolean;
+    v_hours   int := booking_cancel_hours();
+begin
+    if auth.uid() is null then
+        raise exception 'Sign in first';
+    end if;
+    select * into v_order from orders
+     where id = p_order_id and customer_id = auth.uid()
+     for update;
+    if not found then
+        raise exception 'This order can no longer be cancelled';
+    end if;
+    -- 125's booking with its slot: requested or confirmed, until the
+    -- slot minus the hours; a proposal waiting is declined at any time.
+    v_slot := v_order.booked_for is not null;
+    if v_slot and v_order.status in ('pending', 'accepted') then
+        if not (v_order.status = 'pending' and v_order.proposed_for is not null) then
+            -- A request nobody answered whose time has gone can no longer
+            -- be accepted (125's decide_order refuses it): withdrawing it
+            -- costs the business nothing, so its customer still may.
+            if now() > v_order.booked_for - make_interval(hours => v_hours)
+               and not (v_order.status = 'pending' and now() >= v_order.booked_for) then
+                raise exception 'Trop tard pour annuler : appelez la boutique.';
+            end if;
+        end if;
+    elsif v_order.status <> 'pending' then
+        raise exception 'This order can no longer be cancelled';
+    end if;
+    -- Paid — online (Wave or a card, 076's wave_settle), or marked paid by
+    -- the business (099's set_order_paid: a deposit in cash or Mobile
+    -- Money): the money is the business's to give back, so the customer
+    -- calls. Any order, not only a booking: 099 let a paid pending order
+    -- be withdrawn and the money stayed with the business.
+    if v_order.paid_at is not null then
+        raise exception '%', case when v_slot
+            then 'Ce rendez-vous est déjà payé : appelez la boutique pour l''annuler.'
+            else 'Cette commande est déjà payée : appelez la boutique pour l''annuler.' end;
+    end if;
+    -- A Wave payment opened for it in the last half hour may still land
+    -- (wave_settle marks the order paid whatever its status).
+    if exists (select 1 from wave_payments w
+                where w.order_id = p_order_id and w.kind = 'order'
+                  and w.status in ('created', 'open') and w.created_at > now() - interval '30 minutes') then
+        raise exception 'Un paiement Wave est en cours : attendez quelques minutes ou appelez la boutique.';
+    end if;
+
+    update orders
+       set status = 'cancelled', updated_at = now(), decided_at = coalesce(decided_at, now())
+     where id = p_order_id
+    returning * into v_order;
+
+    v_booking := v_order.fulfilment = 'pickup'
+        and exists (select 1 from order_lines l where l.order_id = p_order_id)
+        and not exists (select 1 from order_lines l
+                         where l.order_id = p_order_id and not l.is_service);
+    begin
+        if v_slot and v_order.proposed_for is null then
+            perform notify_org_admins(v_order.org_id, 'booking_cancelled',
+                'Rendez-vous annulé par le client — ' || booking_when_fr(v_order.booked_for),
+                jsonb_build_object('to', 'shop', 'order_id', v_order.id, 'booking', true,
+                                   'name', v_order.customer_name, 'at', v_order.booked_for));
+        else
+            perform notify_org_admins(v_order.org_id, 'order_withdrawn',
+                v_order.customer_name || ' a annulé sa '
+                || case when v_booking then 'demande' else 'commande' end,
+                jsonb_build_object('to', 'shop', 'order_id', v_order.id,
+                                   'booking', v_booking, 'name', v_order.customer_name));
+        end if;
+    exception when others then
+        null;
+    end;
+end;
+$$;
+
+-- What the customer's card needs to say it: until when, and whom to call.
+create or replace function booking_cancel_terms(p_order_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    v_order orders%rowtype;
+    v_hours int := booking_cancel_hours();
+    v_until timestamptz;
+    v_phone text;
+begin
+    select * into v_order from orders
+     where id = p_order_id and customer_id = auth.uid() and auth.uid() is not null;
+    if not found or v_order.booked_for is null then
+        return null;
+    end if;
+    v_until := v_order.booked_for - make_interval(hours => v_hours);
+    select phone into v_phone from orgs where id = v_order.org_id;
+    -- cancel_order's rules, said ahead ('paid_online' keeps its name for
+    -- the app; since the review it is « paid », however it was).
+    return jsonb_build_object(
+        'hours', v_hours,
+        'until', v_until,
+        'paid_online', v_order.paid_at is not null,
+        'can_cancel', v_order.status in ('pending', 'accepted')
+                      and v_order.paid_at is null
+                      and ((v_order.status = 'pending' and v_order.proposed_for is not null)
+                           or now() <= v_until
+                           or (v_order.status = 'pending' and now() >= v_order.booked_for)),
+        'phone', nullif(btrim(coalesce(v_phone, '')), ''));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. The week's close: the prizes, and the bell only when Mara says
+-- ------------------------------------------------------------
+-- 099's body, the notification gated by cauris_prize_notify (default 0).
+create or replace function cauris_week_close(p_week_start date default null)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_from   timestamptz := coalesce(p_week_start::timestamp at time zone 'Africa/Ouagadougou',
+                                     cauris_week_start() - interval '7 days');
+    v_to     timestamptz := v_from + interval '7 days';
+    v_week   date := (v_from at time zone 'Africa/Ouagadougou')::date;
+    v_n      int := 0;
+    r        record;
+    v_pts    int;
+    v_notify boolean := cauris_param('cauris_prize_notify', 0) = 1;
+begin
+    for r in
+        select x.* from (
+            select s.org_id, s.league, s.score,
+                   (rank() over (partition by s.league order by s.score desc, s.name))::int as rank
+              from league_scores(v_from, v_to) s
+             where s.score > 0
+        ) x where x.rank <= 3
+    loop
+        insert into cauris_week_results (week_start, org_id, league, rank, score)
+        values (v_week, r.org_id, r.league, r.rank, r.score)
+        on conflict (week_start, org_id) do nothing;
+        if not found then
+            continue;  -- already closed: once per week
+        end if;
+        v_pts := cauris_param('cauris_prize_' || r.rank, 0);
+        if v_pts > 0 then
+            insert into cauris_ledger (org_id, delta, reason, ref, note)
+            values (r.org_id, v_pts, 'prize', v_week::text,
+                    r.rank || 'e de la semaine · ' || league_label(r.league))
+            on conflict do nothing;
+        end if;
+        if r.rank = 1 then
+            insert into promotions (org_id, kind, days, price, currency, free, status,
+                                    starts_at, ends_at, decided_at, note)
+            values (r.org_id, 'shop', 7, 0, 'XOF', true, 'approved',
+                    next_spot_start('shop'), next_spot_start('shop') + interval '7 days',
+                    now(), 'Premier de la semaine (cauris)');
+        end if;
+        if v_notify then
+            begin
+                perform notify_org_admins(r.org_id, 'cauris_prize',
+                    '🏆 ' || r.rank || 'e de la semaine en ' || league_label(r.league)
+                    || ' ! +' || v_pts || ' cauris'
+                    || case when r.rank = 1 then ', et votre vitrine mise en avant 7 jours.' else '.' end,
+                    jsonb_build_object('to', 'shop', 'league', r.league, 'rank', r.rank,
+                                       'points', v_pts, 'spot', r.rank = 1));
+            exception when others then null;
+            end;
+        end if;
+        v_n := v_n + 1;
+    end loop;
+    return v_n;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7b. The trust level (088) leaves the opening out
+-- ------------------------------------------------------------
+-- 088's body word for word, but for one thing: the opening entry and the
+-- reversal of one are not the books being kept. Without this the opening
+-- ticked one of « Régulière »'s six weeks and one of « Propre »'s five
+-- entries, and correcting it (reverse_entry) counted as a mistake.
+create or replace function association_trust(p_org_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, auth
+as $$
+declare
+    o           orgs%rowtype;
+    v_weeks     int;
+    v_expenses  int;
+    v_receipts  int;
+    v_entries   int;
+    v_reversals int;
+    v_age_days  int;
+    p_verified  boolean;
+    p_regular   boolean;
+    p_justified boolean;
+    p_clean     boolean;
+    p_lasting   boolean;
+    v_met       int;
+    v_open      uuid[];
+begin
+    select * into o from orgs where id = p_org_id;
+    if not found or o.profile not in ('church', 'association') then
+        return null;
+    end if;
+    if not (is_org_member(p_org_id)
+            or exists (select 1 from profiles where id = auth.uid() and is_platform_admin)) then
+        return null;
+    end if;
+    -- The opening entries (134), the one standing and those it replaced.
+    v_open := coalesce((select array_append(b.replaced_entry_ids, b.entry_id)
+                          from books_opening b where b.org_id = p_org_id), '{}');
+
+    select count(distinct date_trunc('week', je.created_at)) into v_weeks
+      from journal_entries je
+     where je.org_id = p_org_id and je.reverses_entry_id is null
+       and not coalesce(je.id = any (v_open), false)
+       and je.created_at >= date_trunc('week', now()) - interval '7 weeks';
+
+    select count(*), count(*) filter (where exists (
+               select 1 from documents d where d.linked_journal_entry_id = je.id))
+      into v_expenses, v_receipts
+      from journal_entries je
+     where je.org_id = p_org_id and je.reverses_entry_id is null
+       and je.created_at >= now() - interval '90 days'
+       and not exists (select 1 from journal_entries r where r.reverses_entry_id = je.id)
+       and exists (select 1 from journal_lines jl join accounts a on a.id = jl.account_id
+                    where jl.journal_entry_id = je.id and jl.debit > 0 and a.code like '5%');
+
+    select count(*) filter (where je.reverses_entry_id is null),
+           count(*) filter (where je.reverses_entry_id is not null)
+      into v_entries, v_reversals
+      from journal_entries je
+     where je.org_id = p_org_id and je.created_at >= now() - interval '90 days'
+       and not coalesce(je.id = any (v_open), false)
+       and not coalesce(je.reverses_entry_id = any (v_open), false);
+
+    v_age_days := extract(day from now() - o.created_at)::int;
+
+    p_verified  := o.verified_at is not null;
+    p_regular   := v_weeks >= 6;
+    p_justified := v_expenses >= 3 and v_receipts * 100 >= v_expenses * 80;
+    p_clean     := v_entries >= 5 and v_reversals * 100 < v_entries * 10;
+    p_lasting   := v_age_days >= 182;
+    v_met := p_verified::int + p_regular::int + p_justified::int + p_clean::int + p_lasting::int;
+
+    return jsonb_build_object(
+        'level', case when v_met = 5 then 'Exemplaire'
+                      when v_met = 4 then 'Fiable'
+                      when v_met >= 2 then 'Régulière'
+                      else 'Nouvelle' end,
+        'met', v_met,
+        'verified_at', o.verified_at,
+        'pillars', jsonb_build_array(
+            jsonb_build_object('key', 'verified', 'met', p_verified),
+            jsonb_build_object('key', 'regular', 'met', p_regular,
+                               'value', v_weeks, 'target', 6),
+            jsonb_build_object('key', 'justified', 'met', p_justified,
+                               'value', v_receipts, 'of', v_expenses),
+            jsonb_build_object('key', 'clean', 'met', p_clean,
+                               'value', v_reversals, 'of', v_entries),
+            jsonb_build_object('key', 'lasting', 'met', p_lasting,
+                               'value', v_age_days, 'target', 182)));
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 8. Who may call what (063: born closed to PUBLIC and anon; each door
+-- said again)
+-- ------------------------------------------------------------
+revoke all on books_opening, contribution_defaults, books_start_dismissals from public;
+
+revoke execute on function trg_books_opening_guard()                         from public;
+revoke execute on function trg_contribution_default_guard()                  from public;
+revoke execute on function trg_settings_134()                                from public;
+revoke execute on function set_opening_balance(uuid, numeric, text, uuid)    from public;
+revoke execute on function set_contribution_default(uuid, numeric, text)     from public;
+revoke execute on function dismiss_books_start(uuid)                         from public;
+revoke execute on function books_start(uuid)                                 from public;
+revoke execute on function booking_cancel_hours()                            from public;
+revoke execute on function cancel_order(uuid)                                from public;
+revoke execute on function booking_cancel_terms(uuid)                        from public;
+revoke execute on function cauris_week_close(date)                           from public;
+revoke execute on function kind_setup_steps(text)                            from public;
+
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on books_opening, contribution_defaults, books_start_dismissals from anon;
+        revoke execute on function trg_books_opening_guard()                      from anon;
+        revoke execute on function trg_contribution_default_guard()               from anon;
+        revoke execute on function trg_settings_134()                             from anon;
+        revoke execute on function set_opening_balance(uuid, numeric, text, uuid) from anon;
+        revoke execute on function set_contribution_default(uuid, numeric, text)  from anon;
+        revoke execute on function dismiss_books_start(uuid)                      from anon;
+        revoke execute on function books_start(uuid)                              from anon;
+        revoke execute on function booking_cancel_hours()                         from anon;
+        revoke execute on function cancel_order(uuid)                             from anon;
+        revoke execute on function booking_cancel_terms(uuid)                     from anon;
+        revoke execute on function cauris_week_close(date)                        from anon;
+        revoke execute on function kind_setup_steps(text)                         from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        -- The INVOKER doors write as the caller: the tables' rights, RLS
+        -- deciding the rows — and nothing more than they use (Supabase's
+        -- default privileges hand authenticated DELETE, REFERENCES, TRIGGER
+        -- and MAINTAIN on every new table; taken back first, as 128 and 133).
+        revoke all on books_opening, contribution_defaults, books_start_dismissals from authenticated;
+        grant select, insert, update on books_opening          to authenticated;
+        grant select, insert, update, delete on contribution_defaults to authenticated;
+        grant select, insert on books_start_dismissals         to authenticated;
+        -- Internal: the triggers, the hours (cancel_order and the terms
+        -- read them as their owner), the week's close (the schedule's).
+        revoke execute on function trg_books_opening_guard()                      from authenticated;
+        revoke execute on function trg_contribution_default_guard()               from authenticated;
+        revoke execute on function trg_settings_134()                             from authenticated;
+        revoke execute on function booking_cancel_hours()                         from authenticated;
+        revoke execute on function cauris_week_close(date)                        from authenticated;
+        revoke execute on function kind_setup_steps(text)                         from authenticated;
+        grant execute on function set_opening_balance(uuid, numeric, text, uuid)  to authenticated;
+        grant execute on function set_contribution_default(uuid, numeric, text)   to authenticated;
+        grant execute on function dismiss_books_start(uuid)                       to authenticated;
+        grant execute on function books_start(uuid)                               to authenticated;
+        grant execute on function cancel_order(uuid)                              to authenticated;
+        grant execute on function booking_cancel_terms(uuid)                      to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 135_apple_web_signin.sql
+-- ============================================================
+-- ============================================================
+-- 135_apple_web_signin.sql — « Continuer avec Apple » on the website
+-- (batch 139), behind its switch.
+--
+-- The owner: « Sign in with Apple on the website too. » The iPhone signs
+-- in with Apple's native sheet and hands Apple's identity token to
+-- Supabase (125); the website does the same with Apple's JS popup for the
+-- Services ID bf.kaj.app.web — an identity token, no OAuth redirect, so no
+-- client secret and nothing that expires. What it needs here:
+--
+--   1. apple_web_signin (oui/non, seeded off): Réglages › Sécurité ›
+--      Connexion, « Connexion Apple sur le site ». Off, the website draws
+--      no Apple button — until the owner has made the Services ID and
+--      added it to Supabase's Apple « Client IDs ». Changed through 105's
+--      platform_set_setting like every switch (journaled, undoable).
+--   2. sign_in_options(): {apple_web: boolean} — definer, search path
+--      pinned, open to anon (the sign-in screen and the vitrine's
+--      « Connectez-vous pour commander » are signed out) and
+--      authenticated. It reads that one switch and nothing else.
+--
+-- Shop, farm and association alike: signing in is the person's, not a
+-- business's; nothing any business, vitrine or the street shows changes.
+-- With the switch off (as seeded) nothing anybody sees changes at all.
+--
+-- Re-runnable (the bundle runs twice): the setting on conflict do
+-- nothing, create or replace.
+-- ============================================================
+
+insert into platform_settings (key, value) values
+    ('apple_web_signin', 'false')
+on conflict (key) do nothing;
+
+create or replace function sign_in_options()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select jsonb_build_object(
+        'apple_web', coalesce((select value from platform_settings
+                                where key = 'apple_web_signin') = 'true'::jsonb, false));
+$$;
+
+-- ------------------------------------------------------------
+-- Grants: born closed (063); opened to whom it is for.
+-- ------------------------------------------------------------
+revoke execute on function sign_in_options() from public;
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        -- The street's: the sign-in screen is signed out.
+        grant execute on function sign_in_options() to anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        grant execute on function sign_in_options() to authenticated;
     end if;
 end $$;
 

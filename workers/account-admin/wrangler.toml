@@ -32,6 +32,11 @@ SUPABASE_PUBLISHABLE_KEY = ""
 # STRIPE_SECRET_KEY (a deleted business's subscriptions, stopped).
 APPLE_TEAM_ID = "9K236BL7SX"
 APPLE_SIGNIN_CLIENT_ID = "bf.kaj.app"
+# 139: the website's Services ID (developer.apple.com › Identifiers ›
+# Services IDs, « Mara Web »): a code from the website's Apple popup is
+# traded with it. Overwritten at deploy from the APPLE_WEB_SERVICES_ID
+# repository variable.
+APPLE_WEB_SERVICES_ID = "bf.kaj.app.web"
 
 # Who may call this from a browser. Not a wildcard: the endpoint acts on behalf
 # of whoever is signed in when a page calls it.

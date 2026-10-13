@@ -87,7 +87,8 @@ class _Admin extends AdminRepository {
   @override
   Future<PlanTerms> planTerms() async => PlanTerms.defaults;
   @override
-  Future<void> deleteMyAccount({List<String>? confirmedOrgs, String? appleAuthorizationCode}) async {
+  Future<void> deleteMyAccount(
+      {List<String>? confirmedOrgs, String? appleAuthorizationCode, String? appleClient}) async {
     final r = refuse;
     if (r != null) throw r;
     deleted++;

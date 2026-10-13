@@ -123,6 +123,9 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('cauris_prize_1', 'cauris', SettingType.count),
   SettingDef('cauris_prize_2', 'cauris', SettingType.count),
   SettingDef('cauris_prize_3', 'cauris', SettingType.count),
+  // 134: the winners' bell at the week's close — off (the owner: « remove
+  // them »); the prizes themselves are always awarded.
+  SettingDef('cauris_prize_notify', 'cauris', SettingType.flag01),
   SettingDef('league_small_max', 'cauris', SettingType.count),
   SettingDef('league_medium_max', 'cauris', SettingType.count),
   SettingDef('path_league_min', 'cauris', SettingType.count),
@@ -133,6 +136,9 @@ const platformSettingDefs = <SettingDef>[
   // 109: a number proved on WhatsApp before an order — off until the
   // WhatsApp code Worker and Supabase's hook are set up.
   SettingDef('order_phone_verified', 'orders', SettingType.flag),
+  // 134: until how many hours before its slot a customer may cancel a
+  // booking (0 to 168).
+  SettingDef('booking_cancel_hours', 'orders', SettingType.count),
   // 111: a number proved on WhatsApp before a business is created — off,
   // as 109's, until the same Worker and hook are set up.
   SettingDef('create_phone_verified', 'creation', SettingType.flag),
@@ -150,6 +156,20 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('welcome_email_on', 'accounts', SettingType.flag),
   // 129: every platform admin hears of each new account.
   SettingDef('admin_new_user_notify', 'accounts', SettingType.flag),
+  // 133 (batch 136): « Besoin d'aide » — the Pro help hours on
+  // Ouagadougou's clock, when a request goes to every trainer, when it is
+  // late, how many a day, the WhatsApp template (empty: the bell alone),
+  // and the platform admins told of a request nobody took.
+  SettingDef('help_hours_open', 'helppro', SettingType.count),
+  SettingDef('help_hours_close', 'helppro', SettingType.count),
+  SettingDef('help_escalate_minutes', 'helppro', SettingType.count),
+  SettingDef('help_late_minutes', 'helppro', SettingType.count),
+  SettingDef('help_daily_limit', 'helppro', SettingType.count),
+  SettingDef('help_whatsapp_template', 'helppro', SettingType.text),
+  SettingDef('admin_help_notify', 'helppro', SettingType.flag),
+  // 135 (batch 139): « Continuer avec Apple » on the website — off until
+  // the Services ID is made and Supabase's Apple « Client IDs » list it.
+  SettingDef('apple_web_signin', 'signin', SettingType.flag),
 ];
 
 /// One of Réglages' eight cards (135): its address, its icon, and the
@@ -189,7 +209,7 @@ const settingCards = <SettingCard>[
       'spots_max_live', 'pro_free_spots_month', 'spot_price_article_7', 'spot_price_article_30',
       'spot_price_shop_7', 'spot_price_shop_30',
     ]),
-    ('orders', ['order_phone_verified']),
+    ('orders', ['order_phone_verified', 'booking_cancel_hours']),
   ]),
   SettingCard('livraison', Icons.delivery_dining_outlined, [
     ('prices', ['delivery_base', 'delivery_per_km', 'delivery_currency', 'delivery_share_pct']),
@@ -207,7 +227,7 @@ const settingCards = <SettingCard>[
       'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',
       'cauris_expire_days', 'cauris_unlock_days',
     ]),
-    ('prizes', ['cauris_prize_1', 'cauris_prize_2', 'cauris_prize_3']),
+    ('prizes', ['cauris_prize_1', 'cauris_prize_2', 'cauris_prize_3', 'cauris_prize_notify']),
     ('leagues', ['league_small_max', 'league_medium_max', 'path_league_min']),
     ('path', ['progress_credit_orders', 'path_gates_open']),
   ]),
@@ -220,10 +240,15 @@ const settingCards = <SettingCard>[
   SettingCard('notifications', Icons.notifications_outlined, [
     ('accounts', ['welcome_email_on', 'admin_new_user_notify']),
     ('help', ['support_whatsapp', 'support_email', 'support_hours']),
+    ('pro_help', [
+      'help_hours_open', 'help_hours_close', 'help_escalate_minutes', 'help_late_minutes',
+      'help_daily_limit', 'help_whatsapp_template', 'admin_help_notify',
+    ]),
     ('apps', ['play_store_live', 'app_store_url']),
   ]),
   SettingCard('securite', Icons.shield_outlined, [
     ('security', ['admin_two_step']),
+    ('signin', ['apple_web_signin']),
   ], links: [
     ('Actions de Mara', Routes.consoleJournal),
     ('Activité', Routes.consoleAudit),
@@ -267,7 +292,7 @@ String settingCardHint(BuildContext context, String card) => switch (card) {
       'cauris' => context.tr('Gains, ligues, prix'),
       'creation' => context.tr('Types d\'activité, parcours'),
       'notifications' => context.tr('Comptes, aide, applications'),
-      'securite' => context.tr('Deux étapes, actions, activité'),
+      'securite' => context.tr('Deux étapes, connexion, actions, activité'),
       _ => '',
     };
 
@@ -292,8 +317,10 @@ String settingPartLabel(BuildContext context, String part) => switch (part) {
       'check' => context.tr('Vérification'),
       'accounts' => context.tr('Nouveaux comptes'),
       'help' => context.tr('Aide aux clients'),
+      'pro_help' => context.tr('Aide Pro : l\'équipe de formation'),
       'apps' => context.tr('Applications mobiles'),
       'security' => context.tr('Sécurité'),
+      'signin' => context.tr('Connexion'),
       _ => part,
     };
 
@@ -346,6 +373,8 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'help' => context.tr('Aide aux clients'),
       'apps' => context.tr('Applications mobiles'),
       'accounts' => context.tr('Nouveaux comptes'),
+      'helppro' => context.tr('Aide Pro'),
+      'signin' => context.tr('Connexion'),
       _ => group,
     };
 
@@ -402,6 +431,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'cauris_prize_1' => context.tr('Cauris pour la 1re place de la semaine'),
       'cauris_prize_2' => context.tr('Cauris pour la 2e place'),
       'cauris_prize_3' => context.tr('Cauris pour la 3e place'),
+      'cauris_prize_notify' => context.tr('Prévenir les gagnants de la semaine (notification)'),
       'league_small_max' => context.tr('Petite ligue : moins de … commandes en 30 jours'),
       'league_medium_max' => context.tr('Ligue moyenne : moins de … commandes en 30 jours'),
       'path_league_min' => context.tr('Entreprises dans une ligue avant le classement'),
@@ -409,6 +439,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'path_gates_open' => context.tr('Ouvrir tous les outils du Chemin à tout le monde'),
       'admin_two_step' => context.tr('Validation en deux étapes du compte de la plateforme'),
       'order_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de commander'),
+      'booking_cancel_hours' =>
+        context.tr('Annulation d\'un rendez-vous par le client : jusqu\'à … heures avant'),
       'create_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de créer une activité'),
       'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
       'support_email' => context.tr('E-mail de l\'aide Mara'),
@@ -418,6 +450,17 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'welcome_email_on' => context.tr('E-mail de bienvenue aux nouveaux comptes'),
       'admin_new_user_notify' =>
         context.tr('Notifier les administrateurs de Mara à chaque nouveau compte'),
+      'help_hours_open' => context.tr('Aide Pro : heure d\'ouverture (0 à 23, heure de Ouagadougou)'),
+      'help_hours_close' => context.tr('Aide Pro : heure de fermeture (1 à 24, heure de Ouagadougou)'),
+      'help_escalate_minutes' =>
+        context.tr('Minutes sans réponse avant d\'envoyer une demande à tous les formateurs'),
+      'help_late_minutes' => context.tr('Minutes sans réponse avant « en retard » dans Aujourd\'hui'),
+      'help_daily_limit' => context.tr('Demandes d\'aide par entreprise et par 24 heures'),
+      'help_whatsapp_template' =>
+        context.tr('Modèle WhatsApp des formateurs chez Meta (vide : pas de WhatsApp)'),
+      'admin_help_notify' =>
+        context.tr('Notifier les administrateurs de Mara d\'une demande d\'aide sans réponse'),
+      'apple_web_signin' => context.tr('Connexion Apple sur le site'),
       _ => key,
     };
 
@@ -442,7 +485,18 @@ const positiveSettings = {'stripe_xof_per_usd'};
 
 /// The numbers with a range of their own: the couriers' radius is 1 to
 /// 100 km (122's platform_set_setting refuses the rest) — said here first.
-const rangedSettings = {'courier_radius_km': (1, 100)};
+const rangedSettings = {
+  'courier_radius_km': (1, 100),
+  // 133: the help hours, its minutes and its daily limit (133's trigger
+  // refuses the rest, and an opening after the closing).
+  'help_hours_open': (0, 23),
+  'help_hours_close': (1, 24),
+  'help_escalate_minutes': (1, 1440),
+  'help_late_minutes': (1, 1440),
+  'help_daily_limit': (1, 50),
+  // 134: a booking's cancel, 0 to 168 hours before (a trigger refuses the rest).
+  'booking_cancel_hours': (0, 168),
+};
 
 /// A help number as typed or pasted, letters and digits only (126): the
 /// spaces, « + », brackets, dashes of every kind and the invisible

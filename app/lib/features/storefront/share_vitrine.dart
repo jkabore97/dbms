@@ -1,27 +1,33 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/capture/capture_repository.dart';
-import '../../core/format/money.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import 'status_card.dart';
+import 'status_designs.dart';
+
+export 'status_card.dart';
+export 'status_designs.dart';
 
 /// « Partager » on a vitrine (the owner's or anybody's): three ways out,
 /// each made for WhatsApp, where a vitrine travels here.
 ///
 ///  * « Mettre en statut » — a picture the size of a phone screen
-///    (1080 × 1920): the shop's photo, its name and line, four articles with
-///    their prices, and its address on marakaj.com with a QR code. Shared as
-///    a file, so WhatsApp offers « Mon statut » straight away.
+///    (1080 × 1920): the business's name and line, its articles with their
+///    prices, and its address on marakaj.com with a QR code, in one of five
+///    designs and a choice of colours (137). Shared as a file, so WhatsApp
+///    offers « Mon statut » straight away.
 ///  * « Envoyer à un contact » — a short message with the link; the chat
 ///    then shows the shop's own preview (the site writes its og tags).
 ///  * « Copier le lien ».
@@ -93,12 +99,24 @@ class _ShareSheetState extends State<_ShareSheet> {
     if (!mounted) return;
     // Decoded before the card is shown: the capture must not catch a photo
     // still loading.
-    for (final b in [?cover, ...photos.values]) {
+    // Mara's marks too, both: a design on a light ground draws the dark one.
+    for (final image in <ImageProvider>[
+      for (final b in [?cover, ...photos.values]) MemoryImage(b),
+      const AssetImage(MaraWordmark.asset),
+      const AssetImage(MaraWordmark.assetDark),
+    ]) {
+      // Bounded: a decode that never answers must not hold the share.
       try {
-        await precacheImage(MemoryImage(b), context);
+        await precacheImage(image, context).timeout(const Duration(seconds: 3));
       } catch (_) {}
       if (!mounted) return;
     }
+    // The design and colour this business chose last time on this phone,
+    // read before the preview opens so it never flashes another one.
+    final db = AppScope.read(context)?.db;
+    final memory = db == null ? null : DbStatusMemory(db);
+    final remembered = await StatusMemory.recall(memory, shop.orgId);
+    if (!mounted) return;
     setState(() => _busy = false);
     final navigator = Navigator.of(context);
     // Built now, while this sheet is alive: the preview's route rebuilds
@@ -111,6 +129,8 @@ class _ShareSheetState extends State<_ShareSheet> {
             shop: shop, items: chosen, cover: cover, photos: photos),
         name: '${shop.slug}-mara.png',
         text: text,
+        initial: remembered,
+        memory: memory,
       ),
     ));
     if (mounted) navigator.pop();
@@ -197,251 +217,35 @@ class _ShareSheetState extends State<_ShareSheet> {
   }
 }
 
-/// The status picture: 1080 × 1920, captured from [StatusPreview].
-class StatusCard extends StatelessWidget {
-  const StatusCard({
-    super.key,
-    required this.shop,
-    required this.items,
-    this.cover,
-    this.photos = const {},
-  });
-
-  final PublicShop shop;
-
-  /// Up to four articles, photographed first.
-  final List<PublicItem> items;
-  final Uint8List? cover;
-  final Map<String, Uint8List> photos;
-
-  static const size = Size(1080, 1920);
-
-  /// The articles the card shows: photographed first, four at most.
-  static List<PublicItem> pick(List<PublicItem> items) => [
-        ...items.where((i) => i.photoKey != null),
-        ...items.where((i) => i.photoKey == null),
-      ].take(4).toList();
-
-  @override
-  Widget build(BuildContext context) {
-    final money = moneyFormat(shop.currency);
-    final line = shop.style.tagline ?? shop.blurb;
-    final url = publicShopUrl(shop.slug);
-    const paper = maraPaper;
-    Widget tile(PublicItem i) => ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (photos[i.id] != null)
-                Image.memory(photos[i.id]!, fit: BoxFit.cover, gaplessPlayback: true)
-              else
-                ColoredBox(
-                  color: paper.withValues(alpha: 0.08),
-                  child: const Icon(Icons.shopping_bag_outlined,
-                      size: 90, color: maraCaramel),
-                ),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(22, 40, 22, 18),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x00000000), Color(0xCC0E0D0C)],
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(i.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              color: paper,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700)),
-                      Text(money.format(i.price),
-                          style: const TextStyle(
-                              color: maraCaramel,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-    Widget row(List<PublicItem> pair) => Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var k = 0; k < 2; k++) ...[
-                if (k > 0) const SizedBox(width: 28),
-                Expanded(
-                    child: k < pair.length ? tile(pair[k]) : const SizedBox()),
-              ],
-            ],
-          ),
-        );
-    // Its own text style: the card is drawn wherever it is captured, and
-    // must not borrow (or miss) the screen's.
-    // A picture of a fixed size: drawn at the card's own text size, never
-    // the reader's (UI audit V-3: it overflowed at 2.0).
-    return MediaQuery.withNoTextScaling(
-      child: Material(
-      type: MaterialType.transparency,
-      child: DefaultTextStyle(
-      style: TextStyle(fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily),
-      child: SizedBox.fromSize(
-      size: size,
-      child: ColoredBox(
-        color: maraDeep,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // The shop's photo, a third of the screen, fading into the ground.
-            SizedBox(
-              height: 560,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (cover != null)
-                    Image.memory(cover!, fit: BoxFit.cover, gaplessPlayback: true)
-                  else
-                    const ColoredBox(color: maraEspresso),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x00000000), Color(0x00000000), maraDeep],
-                        stops: [0, 0.55, 1],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(72, 0, 72, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(shop.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: paper,
-                          fontSize: 92,
-                          height: 1.05,
-                          fontWeight: FontWeight.w900)),
-                  if (line != null && line.trim().isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    Text(line.trim(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: maraCaramel,
-                            fontSize: 44,
-                            height: 1.2,
-                            fontWeight: FontWeight.w600)),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 48),
-            // Four articles, two by two, each with its price.
-            if (items.isNotEmpty)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 72),
-                  child: Column(
-                    children: [
-                      row(items.take(2).toList()),
-                      if (items.length > 2) ...[
-                        const SizedBox(height: 28),
-                        row(items.skip(2).take(2).toList()),
-                      ],
-                    ],
-                  ),
-                ),
-              )
-            else
-              const Spacer(),
-            // Where to find it: the address and a QR code to scan.
-            Container(
-              margin: const EdgeInsets.fromLTRB(72, 24, 72, 96),
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: paper,
-                borderRadius: BorderRadius.circular(36),
-              ),
-              child: Row(
-                children: [
-                  QrImageView(
-                    data: url,
-                    size: 190,
-                    padding: EdgeInsets.zero,
-                    eyeStyle: const QrEyeStyle(
-                        eyeShape: QrEyeShape.square, color: maraBlack),
-                    dataModuleStyle: const QrDataModuleStyle(
-                        dataModuleShape: QrDataModuleShape.square,
-                        color: maraBlack),
-                  ),
-                  const SizedBox(width: 32),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(context.tr('Commandez ici'),
-                            style: const TextStyle(
-                                color: maraBlack,
-                                fontSize: 46,
-                                fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 8),
-                        Text(url.replaceFirst(RegExp(r'^https?://'), ''),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: maraBrown,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 14),
-                        const MaraWordmark(height: 44),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-      ),
-      ),
-    );
-  }
-}
-
-/// The status picture as it will be posted, scaled to the screen, and the
-/// button that shares it: what the shop sees is what goes on its status.
+/// The status picture as it will be posted, scaled to the screen, the one
+/// compact panel that dresses it (137) — five designs as live thumbnails,
+/// the colours as dots, « Surprise » — and the button that shares it: what
+/// the business sees is what goes on its status.
 class StatusPreview extends StatefulWidget {
   const StatusPreview({
     super.key,
     required this.card,
     required this.name,
     required this.text,
+    this.initial,
+    this.memory,
+    this.random,
   });
 
+  /// The picture's content; its design and colour are the panel's.
   final StatusCard card;
   final String name;
   final String text;
+
+  /// The choice to open on (the one remembered); null reads it from
+  /// [memory], and the business's default shows meanwhile.
+  final StatusChoice? initial;
+
+  /// Where the choice is kept; null: this device's, when the app has one.
+  final StatusMemory? memory;
+
+  /// For « Surprise » (a test's own seed).
+  final math.Random? random;
 
   @override
   State<StatusPreview> createState() => _StatusPreviewState();
@@ -450,6 +254,42 @@ class StatusPreview extends StatefulWidget {
 class _StatusPreviewState extends State<StatusPreview> {
   final _key = GlobalKey();
   bool _sharing = false;
+  late StatusChoice _choice;
+  late final List<StatusPalette> _palettes = widget.card.palettes;
+  bool _touched = false;
+
+  StatusMemory? get _memory {
+    if (widget.memory != null) return widget.memory;
+    final db = AppScope.read(context)?.db;
+    return db == null ? null : DbStatusMemory(db);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _choice = widget.initial ?? widget.card.choice;
+    if (widget.initial == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final remembered = await StatusMemory.recall(_memory, widget.card.shop.orgId);
+        if (mounted && remembered != null && !_touched) {
+          setState(() => _choice = remembered);
+        }
+      });
+    }
+  }
+
+  void _choose(StatusChoice c) {
+    if (c == _choice) return;
+    setState(() {
+      _choice = c;
+      _touched = true;
+    });
+    StatusMemory.remember(_memory, widget.card.shop.orgId, c);
+  }
+
+  StatusCard get _card => widget.card
+      .copyWith(design: _choice.design, palette: _choice.paletteIn(_palettes));
 
   Future<void> _share() async {
     setState(() => _sharing = true);
@@ -507,25 +347,33 @@ class _StatusPreviewState extends State<StatusPreview> {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 10),
                   child: Center(
                     child: AspectRatio(
                       aspectRatio: 9 / 16,
                       child: RepaintBoundary(
                         key: _key,
-                        child: FittedBox(child: widget.card),
+                        child: FittedBox(
+                            child: KeyedSubtree(key: const Key('status-card'), child: _card)),
                       ),
                     ),
                   ),
                 ),
               ),
+              _Panel(
+                card: widget.card,
+                palettes: _palettes,
+                choice: _choice,
+                onChoose: _choose,
+                onSurprise: () => _choose(_choice.surprise(_palettes, widget.random)),
+              ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
-                      height: 56,
+                      height: 52,
                       child: FilledButton.icon(
                         key: const Key('status-share'),
                         style: FilledButton.styleFrom(
@@ -536,16 +384,214 @@ class _StatusPreviewState extends State<StatusPreview> {
                         label: Text(context.tr('Partager sur WhatsApp')),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       context.tr('Choisissez WhatsApp, puis « Mon statut ».'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: maraGrey),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: maraGrey, fontSize: 13),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+        ),
+      );
+}
+
+/// The one compact panel under the preview: the choice said in words with
+/// « Surprise » beside it, the five designs as thumbnails, the colours as
+/// dots. Nothing else: the owner hates crowded screens.
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.card,
+    required this.palettes,
+    required this.choice,
+    required this.onChoose,
+    required this.onSurprise,
+  });
+
+  final StatusCard card;
+  final List<StatusPalette> palettes;
+  final StatusChoice choice;
+  final ValueChanged<StatusChoice> onChoose;
+  final VoidCallback onSurprise;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = choice.paletteIn(palettes);
+    return Container(
+      key: const Key('status-panel'),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(14, 4, 4, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1C1A),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${context.tr(choice.design.label)} · ${context.tr(palette.label)}',
+                  key: const Key('status-choice'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: maraPaper, fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+              ),
+              TextButton.icon(
+                key: const Key('status-surprise'),
+                style: TextButton.styleFrom(foregroundColor: maraCaramel),
+                onPressed: onSurprise,
+                icon: const Icon(Icons.shuffle, size: 18),
+                label: Text(context.tr('Surprise')),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 80,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final d in StatusDesign.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _Thumb(
+                      key: Key('status-design-${d.name}'),
+                      label: context.tr(d.label),
+                      selected: d == choice.design,
+                      onTap: () => onChoose(StatusChoice(d, choice.paletteId)),
+                      child: card.copyWith(design: d, palette: palette),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final p in palettes)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _Dot(
+                      key: Key('status-colour-${p.id}'),
+                      palette: p,
+                      label: context.tr(p.label),
+                      selected: p.id == palette.id,
+                      onTap: () => onChoose(StatusChoice(choice.design, p.id)),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A design, drawn small in the colour chosen: what a tap will give.
+class _Thumb extends StatelessWidget {
+  const _Thumb({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 45 + 6,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
+                  color: selected ? maraCaramel : const Color(0x33F4F2EE), width: selected ? 3 : 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              // Drawn once per change, apart from the preview's own layer.
+              child: RepaintBoundary(
+                child: IgnorePointer(
+                  child: ExcludeSemantics(child: FittedBox(child: child)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// A colour: its ground, its accent at the centre.
+class _Dot extends StatelessWidget {
+  const _Dot({
+    super.key,
+    required this.palette,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final StatusPalette palette;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: Tooltip(
+          message: label,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              width: 36,
+              height: 36,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: selected ? maraCaramel : Colors.transparent, width: 2.5),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: palette.ground,
+                  border: Border.all(color: const Color(0x55F4F2EE)),
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 11,
+                  height: 11,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: palette.accent),
+                ),
+              ),
+            ),
           ),
         ),
       );

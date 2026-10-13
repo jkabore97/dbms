@@ -54,6 +54,23 @@
 // and per account; Supabase's own « SMS per hour » is the global cap.
 
 //
+// 133 (batch 136, « Besoin d'aide »): the same Worker carries the alert a
+// trainer receives when a Pro business asks for help. No new secret: the
+// WHATSAPP_TOKEN and WHATSAPP_PHONE_ID above, and 130's SUPABASE_URL and
+// SUPABASE_SERVICE_ROLE_KEY. Every minute (the cron trigger in
+// wrangler.toml) it claims the outbox rows the database wrote
+// (help_whatsapp_claim, the service role's alone — it also runs the
+// help's clock), sends each with the template the row names (the
+// platform setting help_whatsapp_template, default « aide_demande »:
+// body {{1}} the business, {{2}} its kind, {{3}} the subject; the button's
+// URL suffix the request's id) and says how it went
+// (help_whatsapp_done: sent, or template | not_whatsapp | rate | meta |
+// network). A template Meta has not approved fails at Meta and the
+// console says so; an empty setting writes no row at all. Nothing here
+// can fail a request: the bell was written with it, before any of this.
+//
+//   GET /v1/help/health  { help } — whether the four it needs are set
+//
 // Meta's webhook: Meta asked for one, subscribed to the
 // « messages » field (message statuses come through it), before it lets
 // Mara's account create templates. Two optional secrets, made by the owner:
@@ -78,6 +95,13 @@ export default {
   async fetch(request, env) {
     return route(request, env, fetch);
   },
+  // 133: the help's minute.
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(helpRelay(env, fetch).then(
+      (r) => console.log(`whatsapp-otp: help relay ${JSON.stringify(r)}`),
+      () => console.log("whatsapp-otp: help relay failed"),
+    ));
+  },
 };
 
 /// The doors, with the network passed in so the tests can play Meta.
@@ -85,6 +109,9 @@ export async function route(request, env, fetchImpl) {
   const url = new URL(request.url);
   if (request.method === "GET" && url.pathname === "/v1/health") {
     return json({ ready: ready(env) }, 200);
+  }
+  if (request.method === "GET" && url.pathname === "/v1/help/health") {
+    return json({ help: helpReady(env) }, 200);
   }
   if (url.pathname === "/v1/meta") {
     if (request.method === "GET") return onMetaVerify(url, env);
@@ -287,6 +314,150 @@ export function refusalFor(status, metaCode) {
     return [429, "Trop de codes envoyés. Réessayez dans quelques minutes."];
   }
   return [502, "Le code n'a pas pu partir sur WhatsApp. Réessayez dans un moment."];
+}
+
+// ----------------------------------------------------------------
+// « Besoin d'aide » (133): the trainers' alert
+// ----------------------------------------------------------------
+
+/// What the relay needs: Meta's two and the database's two.
+export function helpReady(env) {
+  return Boolean(env.WHATSAPP_TOKEN && env.WHATSAPP_PHONE_ID
+    && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+/// One minute's work: claim, send, say. Answers what it did, never a
+/// number, a name or a message.
+export async function helpRelay(env, fetchImpl, limit = 20) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return { skipped: "no database" };
+  // Without Meta's two the rows are left alone: the database marks them
+  // stale after an hour and the console says WhatsApp waits.
+  if (!env.WHATSAPP_TOKEN || !env.WHATSAPP_PHONE_ID) return { skipped: "no whatsapp" };
+  let rows;
+  try {
+    rows = await serviceRpc(env, "help_whatsapp_claim", { p_limit: limit }, fetchImpl);
+  } catch (e) {
+    // 404: 133 not applied yet. Anything else: the database unwell.
+    return { skipped: e?.status === 404 ? "no help" : "database" };
+  }
+  if (!Array.isArray(rows)) return { sent: 0, failed: 0 };
+  let sent = 0, failed = 0;
+  for (const row of rows) {
+    const outcome = await sendHelp(row, env, fetchImpl);
+    if (outcome === null) sent++;
+    else failed++;
+    try {
+      await serviceRpc(env, "help_whatsapp_done",
+        { p_id: row.id, p_ok: outcome === null, p_error: outcome }, fetchImpl);
+    } catch {
+      // Left « sending »: the database calls it stale within the hour.
+    }
+  }
+  return { sent, failed };
+}
+
+/// Sends one alert: null when Meta took it, else the word for why not.
+export async function sendHelp(row, env, fetchImpl) {
+  if (!row || typeof row.template !== "string" || !/^[a-z0-9_]{1,250}$/.test(row.template)) return "off";
+  const to = String(row.to ?? "").replace(/\D/g, "");
+  if (to.length < 8 || to.length > 15) return "not_whatsapp";
+  let answer;
+  try {
+    answer = await fetchImpl(graphUrl(env), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(helpMessage(row, env)),
+    });
+  } catch {
+    return "network";
+  }
+  if (answer.ok) return null;
+  let metaCode = null;
+  try {
+    metaCode = (await answer.json())?.error?.code ?? null;
+  } catch {}
+  console.log(`whatsapp-otp: help alert, Meta answered ${answer.status}, error ${metaCode ?? "none"}`);
+  return helpRefusal(answer.status, metaCode);
+}
+
+/// Controls, zero-width and direction marks, line and paragraph
+/// separators, the byte-order mark — written as escapes, never as the
+/// characters themselves.
+const INVISIBLE = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u2028-\\u202e\\u2060-\\u2069\\ufeff]", "g");
+
+/// A template's parameter: plain words on one line (Meta refuses a new
+/// line, a tab or four spaces in a row), 60 characters at most.
+export function helpParam(value) {
+  const s = String(value ?? "").replace(INVISIBLE, " ")
+    .replace(/\s+/g, " ").trim();
+  return (s || "—").slice(0, 60);
+}
+
+/// The utility template: {{1}} the business, {{2}} its kind, {{3}} the
+/// subject; the button « Ouvrir dans Mara », its URL ending in the
+/// request's id.
+export function helpMessage(row, env) {
+  const p = row.params || {};
+  const id = String(p.request_id ?? "");
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: String(row.to).replace(/\D/g, ""),
+    type: "template",
+    template: {
+      name: row.template,
+      language: { code: env.HELP_LANGUAGE || env.WHATSAPP_LANGUAGE || "fr" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: helpParam(p.name) },
+            { type: "text", text: helpParam(p.kind) },
+            { type: "text", text: helpParam(p.subject) },
+          ],
+        },
+        {
+          type: "button",
+          sub_type: "url",
+          index: "0",
+          parameters: [{ type: "text", text: /^[0-9a-f-]{36}$/i.test(id) ? id : "" }],
+        },
+      ],
+    },
+  };
+}
+
+/// Meta's refusal, in one word for the console.
+export function helpRefusal(status, metaCode) {
+  // The template: missing, not approved, paused, its parameters wrong.
+  if ([132000, 132001, 132005, 132007, 132012, 132015, 132016, 132068, 132069].includes(metaCode)) {
+    return "template";
+  }
+  if (metaCode === 131026 || metaCode === 131030 || metaCode === 131009) return "not_whatsapp";
+  if (status === 429 || metaCode === 131056 || metaCode === 130429 || metaCode === 80007) return "rate";
+  return "meta";
+}
+
+async function serviceRpc(env, fn, args, fetchImpl) {
+  const answer = await fetchImpl(`${String(env.SUPABASE_URL).replace(/\/$/, "")}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify(args),
+  });
+  if (!answer.ok) {
+    const e = new Error(`${fn} answered ${answer.status}`);
+    e.status = answer.status;
+    throw e;
+  }
+  const text = await answer.text();
+  return text ? JSON.parse(text) : null;
 }
 
 // ----------------------------------------------------------------

@@ -35,6 +35,9 @@
 //                               client APPLE_SIGNIN_CLIENT_ID) — optional:
 //                               without it that step is logged, the rest
 //                               done
+//   APPLE_WEB_SERVICES_ID       139: the website's Services ID (default
+//                               bf.kaj.app.web), whose codes the website's
+//                               Apple popup gives
 
 import { googleRevoke } from "../../pay/src/google.js";
 import { signEs256 } from "../../pay/src/jwt.js";
@@ -215,7 +218,12 @@ export const FRESH_SIGN_IN_SECONDS = 600;
 //      APPLE_SIGNIN_PRIVATE_KEY, team 9K236BL7SX, client bf.kaj.app),
 //      from the fresh authorization code the iPhone app sends
 //      (apple_authorization_code). No key, or no code: logged, the rest
-//      done;
+//      done. 139: a code from the website's popup belongs to the Services
+//      ID (APPLE_WEB_SERVICES_ID), not to bf.kaj.app — the app says whose
+//      (apple_client: "web" | "app") and that client id is tried first,
+//      the other after it when Apple refuses the code (a code is only
+//      valid for the client it was issued to: trying the wrong one first
+//      costs a refusal, never the code);
 //   6. GoTrue: « hard » deletes the auth user; « soft » (a business's
 //      books still name the person, kept for the law as the business's)
 //      soft-deletes it (should_soft_delete: e-mail, phone, password,
@@ -231,7 +239,8 @@ export const FRESH_SIGN_IN_SECONDS = 600;
 // order the database and this Worker go live in (review S6).
 //
 // Body: { confirmed_orgs: [uuid] — the businesses the confirmation
-// showed, apple_authorization_code?: string }. Nothing in it names a
+// showed, apple_authorization_code?: string, apple_client?: "app" |
+// "web" }. Nothing in it names a
 // person.
 async function deleteMe(request, env) {
   const token = bearer(request);
@@ -364,7 +373,8 @@ async function deleteMe(request, env) {
   if (signedInWithApple(me)) {
     appleSignin = false;
     try {
-      appleSignin = await revokeAppleSignIn(env, body.apple_authorization_code);
+      appleSignin = await revokeAppleSignIn(env, body.apple_authorization_code, body.apple_client, fetch,
+        appleWebRedirect(request, env));
     } catch (err) {
       console.error("account deletion: Sign in with Apple token not revoked", String(err?.message || err));
     }
@@ -472,7 +482,17 @@ function signedInWithApple(user) {
 // Sign in with Apple's REST API: the authorization code the app just got
 // traded for a refresh token, which is then revoked. True when Apple said
 // so; false when the key or the code is missing (logged by the caller).
-async function revokeAppleSignIn(env, code, fetchImpl = fetch) {
+//
+// Whose code it is (139): [client] "web" — the website's popup, the
+// Services ID's — or anything else, the iPhone's, bf.kaj.app's. That
+// client id is tried first; when Apple refuses the code for it, the
+// other. The revocation goes with the client id the code was traded for.
+//
+// A website code was issued for a return URL (the popup's
+// `<origin>/connexion`), and Apple trades it only when that same
+// redirect_uri comes with it: [redirectUri], sent with the Services ID
+// only — the iPhone's codes have none.
+export async function revokeAppleSignIn(env, code, client, fetchImpl = fetch, redirectUri = null) {
   if (!env.APPLE_SIGNIN_KEY_ID || !env.APPLE_SIGNIN_PRIVATE_KEY) {
     console.error("account deletion: no Sign in with Apple key (APPLE_SIGNIN_KEY_ID / APPLE_SIGNIN_PRIVATE_KEY)");
     return false;
@@ -481,34 +501,59 @@ async function revokeAppleSignIn(env, code, fetchImpl = fetch) {
     console.error("account deletion: no Apple authorization code from the app");
     return false;
   }
-  const clientId = env.APPLE_SIGNIN_CLIENT_ID || "bf.kaj.app";
+  const appId = env.APPLE_SIGNIN_CLIENT_ID || "bf.kaj.app";
+  const webId = env.APPLE_WEB_SERVICES_ID || "bf.kaj.app.web";
+  const order = [...new Set(client === "web" ? [webId, appId] : [appId, webId])];
+  const form = (fields) => ({
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(fields).toString(),
+  });
+  let lastStatus = 0;
+  for (const clientId of order) {
+    const secret = await appleClientSecret(env, clientId);
+    const fields = { client_id: clientId, client_secret: secret, code, grant_type: "authorization_code" };
+    if (clientId === webId && redirectUri) fields.redirect_uri = redirectUri;
+    const tokenRes = await fetchImpl("https://appleid.apple.com/auth/token", form(fields));
+    const tokens = await tokenRes.json().catch(() => ({}));
+    const refresh = tokens.refresh_token || tokens.access_token;
+    if (!tokenRes.ok || !refresh) {
+      lastStatus = tokenRes.status;
+      continue;
+    }
+    const revokeRes = await fetchImpl("https://appleid.apple.com/auth/revoke", form({
+      client_id: clientId,
+      client_secret: secret,
+      token: refresh,
+      token_type_hint: tokens.refresh_token ? "refresh_token" : "access_token",
+    }));
+    if (!revokeRes.ok) throw new Error(`Apple revoke answered ${revokeRes.status}`);
+    return true;
+  }
+  throw new Error(`Apple token answered ${lastStatus}`);
+}
+
+// The website's Apple return URL (139): the page that opened Apple's
+// popup is `<origin>/connexion`, a return URL of the Services ID; the
+// origin is the request's own, and only one of ALLOWED_ORIGINS. Null
+// otherwise (the iPhone app sends no Origin).
+function appleWebRedirect(request, env) {
+  const origin = request.headers.get("Origin");
+  const allowed = (env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
+  return origin && allowed.includes(origin) ? `${origin}/connexion` : null;
+}
+
+// A five-minute client secret for [clientId], signed with the Sign in
+// with Apple key.
+function appleClientSecret(env, clientId) {
   const iat = Math.floor(Date.now() / 1000);
-  const secret = await signEs256({ kid: env.APPLE_SIGNIN_KEY_ID }, {
+  return signEs256({ kid: env.APPLE_SIGNIN_KEY_ID }, {
     iss: env.APPLE_TEAM_ID || "9K236BL7SX",
     iat,
     exp: iat + 300,
     aud: "https://appleid.apple.com",
     sub: clientId,
   }, env.APPLE_SIGNIN_PRIVATE_KEY);
-  const form = (fields) => ({
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(fields).toString(),
-  });
-  const tokenRes = await fetchImpl("https://appleid.apple.com/auth/token", form({
-    client_id: clientId, client_secret: secret, code, grant_type: "authorization_code",
-  }));
-  const tokens = await tokenRes.json().catch(() => ({}));
-  const refresh = tokens.refresh_token || tokens.access_token;
-  if (!tokenRes.ok || !refresh) throw new Error(`Apple token answered ${tokenRes.status}`);
-  const revokeRes = await fetchImpl("https://appleid.apple.com/auth/revoke", form({
-    client_id: clientId,
-    client_secret: secret,
-    token: refresh,
-    token_type_hint: tokens.refresh_token ? "refresh_token" : "access_token",
-  }));
-  if (!revokeRes.ok) throw new Error(`Apple revoke answered ${revokeRes.status}`);
-  return true;
 }
 
 // ------------------------------------------------------------

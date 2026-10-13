@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/admin/setup_steps.dart' show SetupKnown;
+import '../../core/association/books_start.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
+import '../../core/format/money.dart' show parseAmount;
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/phone/country_codes.dart';
@@ -115,7 +118,11 @@ List<AssociationKind> associationKinds(BuildContext context) => [
 ///  1. Its name, what it is (six kinds, each with its line), a sentence.
 ///  2. Its first three members — records with a name and a phone, not
 ///     accounts — and/or a WhatsApp message inviting them. Skippable.
-///  3. Optionally, one service on the vitrine, its phone and its area.
+///  3. « La caisse et la cotisation » (134): what is in the box today
+///     (0 allowed — the books' opening balance) and the usual cotisation
+///     with its period, both optional. Drawn only when the server has 134
+///     ([books] answers) and this person may set the opening.
+///  4. Optionally, one service on the vitrine, its phone and its area.
 ///
 /// Then « C'est prêt ! »; finishing sets the setup mark, which opens the
 /// one free worker (100). No currency question: the business keeps the
@@ -131,6 +138,7 @@ class AssociationSetupScreen extends StatefulWidget {
     required this.onDone,
     this.stepsOff,
     this.known,
+    this.books,
   });
 
   final OrgSummary org;
@@ -146,8 +154,12 @@ class AssociationSetupScreen extends StatefulWidget {
   /// from it rather than empty.
   final Future<SetupKnown?> Function()? known;
 
-  /// Every step, in order; only 'members' and 'vitrine' can be left out.
-  static const steps = ['identity', 'members', 'vitrine'];
+  /// The books' start (134). Null, or a server without it: no « caisse »
+  /// step.
+  final BooksStartApi? books;
+
+  /// Every step, in order; only the identity is required.
+  static const steps = ['identity', 'members', 'caisse', 'vitrine'];
 
   @override
   State<AssociationSetupScreen> createState() => _AssociationSetupScreenState();
@@ -172,8 +184,22 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
   /// The steps this walkthrough shows, in order.
   List<String> get _keys => [
         for (final k in AssociationSetupScreen.steps)
-          if (k == 'identity' || !_off.contains(k)) k,
+          if (k == 'identity' || (!_off.contains(k) && (k != 'caisse' || _books))) k,
       ];
+
+  /// The server has 134 and this person may set the opening (books_start).
+  bool _books = false;
+
+  /// What is already set (a cotisation chosen earlier): the step starts
+  /// from it.
+  bool _openingSaved = false;
+  bool _cotisationSaved = false;
+  final _caisse = TextEditingController();
+  final _cotisation = TextEditingController();
+  ContributionPeriod _period = ContributionPeriod.month;
+
+  /// One per walkthrough: a retried « Continuer » is the same call (134).
+  final _openingUuid = const Uuid().v4();
 
   int get _count => _keys.length;
 
@@ -185,6 +211,20 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
       // somebody already past it.
       if (mounted && _at == 0 && off.isNotEmpty) setState(() => _off = off);
     });
+    widget.books?.booksStart(widget.org.id).then((b) {
+      // As the steps off: only while still on the first page.
+      if (!mounted || _at != 0 || b == null || !b.association) return;
+      if (!b.canSet && !b.openingSet) return;
+      setState(() {
+        _books = true;
+        _openingSaved = b.openingSet;
+        final c = b.contribution;
+        if (c != null) {
+          _cotisation.text = _plain(c.amount);
+          _period = c.period;
+        }
+      });
+    }).catchError((_) {});
     widget.known?.call().then((k) {
       // Only into what is still empty: nothing chosen or typed is changed.
       if (!mounted || k == null) return;
@@ -226,7 +266,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _about, _service, _price, _phone, _address]) {
+    for (final c in [_name, _about, _service, _price, _phone, _address, _caisse, _cotisation]) {
       c.dispose();
     }
     for (final m in _members) {
@@ -309,6 +349,38 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
     });
   }
 
+  static String _plain(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+
+  /// « La caisse et la cotisation » (134): each answer optional; the
+  /// opening once (the server refuses a second), the cotisation > 0.
+  Future<void> _saveCaisse() async {
+    final books = widget.books;
+    final caisseText = _caisse.text.trim();
+    final cotisationText = _cotisation.text.trim();
+    final caisse = caisseText.isEmpty ? null : parseAmount(caisseText);
+    final cotisation = cotisationText.isEmpty ? null : parseAmount(cotisationText);
+    if (caisseText.isNotEmpty && (caisse == null || caisse < 0)) {
+      setState(() => _error = context.tr('Un montant de 0 ou plus, s\'il vous plaît.'));
+      return;
+    }
+    if (cotisationText.isNotEmpty && (cotisation == null || cotisation <= 0)) {
+      setState(() => _error = context.tr('Une cotisation de plus de zéro, s\'il vous plaît.'));
+      return;
+    }
+    await _run(() async {
+      if (books == null) return;
+      if (caisse != null && !_openingSaved) {
+        await books.setOpeningBalance(widget.org.id, caisse, clientUuid: _openingUuid);
+        _openingSaved = true;
+      }
+      if (cotisation != null && !_cotisationSaved) {
+        await books.setContributionDefault(widget.org.id, cotisation, _period);
+        _cotisationSaved = true;
+      }
+    });
+  }
+
   /// The WhatsApp message: who invites, to what, and what to send back.
   Future<void> _invite() async {
     final name = _name.text.trim().isEmpty ? widget.org.name : _name.text.trim();
@@ -369,6 +441,12 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
         title: context.tr('Vos premiers membres'),
         line: context.tr('Trois pour commencer : un nom, un téléphone.'),
         body: _membersStep(theme),
+      ),
+      (
+        icon: Icons.account_balance_wallet_outlined,
+        title: context.tr('La caisse et la cotisation'),
+        line: context.tr('Deux questions, pour que vos comptes partent juste.'),
+        body: _caisseStep(theme),
       ),
       (
         icon: Icons.storefront_outlined,
@@ -581,6 +659,83 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
           child: Text(context.tr('Passer')),
         ),
       ];
+
+  String _periodLabel(ContributionPeriod p) => switch (p) {
+        ContributionPeriod.week => context.tr('par semaine'),
+        ContributionPeriod.month => context.tr('par mois'),
+        ContributionPeriod.year => context.tr('par an'),
+      };
+
+  List<Widget> _caisseStep(ThemeData theme) {
+    final suffix = widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency;
+    return [
+      Text(context.tr('Combien y a-t-il dans la caisse aujourd\'hui ?'),
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 8),
+      if (_openingSaved)
+        Text(context.tr('Déjà indiqué : la caisse de départ est dans vos comptes.'),
+            key: const Key('asetup-caisse-done'), style: theme.textTheme.bodyMedium)
+      else ...[
+        TextField(
+          key: const Key('asetup-caisse'),
+          controller: _caisse,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: context.tr('Montant en caisse'),
+            suffixText: suffix,
+            prefixIcon: const Icon(Icons.savings_outlined),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(context.tr('0 si elle est vide. Il devient le solde de départ de vos comptes ; il ne s\'indique qu\'une fois.'),
+            style: theme.textTheme.bodySmall),
+      ],
+      const SizedBox(height: 20),
+      Text(context.tr('La cotisation habituelle'),
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 8),
+      TextField(
+        key: const Key('asetup-cotisation'),
+        controller: _cotisation,
+        keyboardType: TextInputType.number,
+        onChanged: (_) => _cotisationSaved = false,
+        decoration: InputDecoration(
+          labelText: context.tr('Montant'),
+          suffixText: suffix,
+          prefixIcon: const Icon(Icons.payments_outlined),
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: [
+          for (final p in ContributionPeriod.values)
+            ChoiceChip(
+              key: Key('asetup-period-${p.name}'),
+              label: Text(_periodLabel(p)),
+              selected: _period == p,
+              onSelected: (_) => setState(() {
+                _period = p;
+                _cotisationSaved = false;
+              }),
+            ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(context.tr('Facultative. Proposée à chaque cotisation enregistrée ; vous pourrez la changer.'),
+          style: theme.textTheme.bodySmall),
+      const SizedBox(height: 20),
+      _primary(context.tr('Continuer'), _saveCaisse, key: const Key('asetup-next-caisse')),
+      TextButton(
+        key: const Key('asetup-skip-caisse'),
+        onPressed: _busy ? null : () => _go(_at + 1),
+        child: Text(context.tr('Passer')),
+      ),
+    ];
+  }
 
   List<Widget> _vitrineStep(ThemeData theme) => [
         SwitchListTile(

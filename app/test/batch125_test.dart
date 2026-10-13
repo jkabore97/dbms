@@ -70,7 +70,7 @@ class _Server extends AuthRepository {
   Future<bool> appleAvailable() async => apple;
 
   @override
-  Future<User?> signInWithApple() async {
+  Future<User?> signInWithApple({Future<void>? ready}) async {
     appleAsked++;
     final r = appleResult;
     if (r is Exception || r is Error) throw r!;
@@ -858,7 +858,7 @@ class _EventServer extends _Server {
   Stream<AuthState>? get onAuthStateChange => _events.stream;
 
   @override
-  Future<User?> signInWithApple() async {
+  Future<User?> signInWithApple({Future<void>? ready}) async {
     appleAsked++;
     user = _ali;
     live = true;

@@ -19,6 +19,7 @@ import '../cauris/unlock_sheet.dart';
 import '../notify/notification_settings_sheet.dart';
 import 'pro_sheet.dart';
 import 'support.dart';
+import '../help/trainer_inbox_tile.dart';
 import '../offline/offline_sheet.dart';
 import '../home/activity_switch.dart';
 import '../common/attention_banner.dart';
@@ -451,6 +452,30 @@ class CompteScreen extends StatelessWidget {
               // set a number, the e-mail always — the same for a shop, a
               // farm and an association.
               const SupportCard(framed: false),
+              // 136: the business's help page — the trainers' « Besoin
+              // d'aide » for a Pro business, the guides and Mara's contacts
+              // for a free one — as on the home's top bar.
+              if (!org.isObserverOnly)
+                _Tile(
+                  key: const Key('compte-help'),
+                  icon: org.isPro ? Icons.support : Icons.menu_book_outlined,
+                  title: org.isPro
+                      ? context.tr('Besoin d\'aide — un formateur')
+                      : context.tr('Guides et aide'),
+                  onTap: () => context.push(Routes.inside(org.id, 'aide')),
+                ),
+              // 136: a trainer's inbox, on their account.
+              TrainerInboxTile(
+                builder: (waiting) => _Tile(
+                  key: const Key('compte-trainer-inbox'),
+                  icon: Icons.support_agent_outlined,
+                  title: context.tr('Demandes d\'aide'),
+                  subtitle: waiting > 0
+                      ? context.tr('{n} en attente', {'n': waiting})
+                      : context.tr('L\'équipe de formation de Mara'),
+                  onTap: () => context.push(Routes.trainerInbox),
+                ),
+              ),
               _Tile(
                 icon: Icons.help_outline,
                 title: context.tr('Questions fréquentes'),

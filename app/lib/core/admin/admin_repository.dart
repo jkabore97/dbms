@@ -402,14 +402,18 @@ class AdminRepository {
   /// businesses the confirmation listed ([deletionPlan]) — a list that is
   /// not the server's is refused, so nothing goes that was not shown. The
   /// iPhone app sends Apple's fresh [appleAuthorizationCode] for an Apple
-  /// account, to revoke Apple's token.
+  /// account, to revoke Apple's token; the website (139) the code of
+  /// Apple's popup, and [appleClient] says whose it is ('app' or 'web':
+  /// AuthRepository.appleCodeClient).
   Future<void> deleteMyAccount({
     List<String>? confirmedOrgs,
     String? appleAuthorizationCode,
+    String? appleClient,
   }) async {
     await _accountPost('/v1/me/delete', {
       'confirmed_orgs': ?confirmedOrgs,
       'apple_authorization_code': ?appleAuthorizationCode,
+      if (appleAuthorizationCode != null) 'apple_client': ?appleClient,
     });
   }
 
