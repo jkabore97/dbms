@@ -42,6 +42,10 @@ jobs:
       WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
       WHATSAPP_TEMPLATE: ${{ secrets.WHATSAPP_TEMPLATE }}
       SEND_SMS_HOOK_SECRET: ${{ secrets.SEND_SMS_HOOK_SECRET }}
+      # Meta's webhook, optional: the verify token typed at Meta
+      # and the Mara app's App secret, which signs every event.
+      META_VERIFY_TOKEN: ${{ secrets.META_VERIFY_TOKEN }}
+      META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
       # The ration (130, SEC_AUDIT_2 M6): the Worker asks the database's
       # otp_send_allow() before each code. Without these two it counts in
       # its own memory (weaker) and says so below.
@@ -97,6 +101,13 @@ jobs:
           printf '%s' "$WHATSAPP_PHONE_ID"    | npx --yes wrangler@4 secret put WHATSAPP_PHONE_ID    --config workers/whatsapp-otp/wrangler.toml
           printf '%s' "$WHATSAPP_TEMPLATE"    | npx --yes wrangler@4 secret put WHATSAPP_TEMPLATE    --config workers/whatsapp-otp/wrangler.toml
           printf '%s' "$SEND_SMS_HOOK_SECRET" | npx --yes wrangler@4 secret put SEND_SMS_HOOK_SECRET --config workers/whatsapp-otp/wrangler.toml
+          if [ -n "$META_VERIFY_TOKEN" ] && [ -n "$META_APP_SECRET" ]; then
+            printf '%s' "$META_VERIFY_TOKEN" | npx --yes wrangler@4 secret put META_VERIFY_TOKEN --config workers/whatsapp-otp/wrangler.toml
+            printf '%s' "$META_APP_SECRET"   | npx --yes wrangler@4 secret put META_APP_SECRET   --config workers/whatsapp-otp/wrangler.toml
+            echo "Meta's webhook is ready at /v1/meta." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Meta's webhook is off (META_VERIFY_TOKEN / META_APP_SECRET missing)." >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx --yes wrangler@4 secret put SUPABASE_SERVICE_ROLE_KEY --config workers/whatsapp-otp/wrangler.toml
             echo "The ration is the database's (otp_send_allow, 130)." >> "$GITHUB_STEP_SUMMARY"
