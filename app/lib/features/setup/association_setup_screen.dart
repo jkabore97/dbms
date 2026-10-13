@@ -589,7 +589,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
           maxLength: 80,
           decoration: InputDecoration(
             labelText: context.tr('En une phrase (facultatif)'),
-            hintText: context.tr('Ex. : L\'entraide des femmes de Gounghin, Les Amis du quartier, Hope Club'),
+            hintText: context.tr('Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon'),
             hintMaxLines: 2,
             prefixIcon: const Icon(Icons.short_text),
             border: const OutlineInputBorder(),

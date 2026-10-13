@@ -566,7 +566,7 @@ void main() {
         await tester.tap(find.byKey(const Key('create-activity-autre')));
         await settle(tester);
         await tapNext(tester);
-        await tester.tap(find.text('Kaya'));
+        await tester.tap(find.text('Ouagadougou').first);
         await settle(tester);
         await tapNext(tester);
       }
@@ -617,7 +617,7 @@ void main() {
       await tester.tap(find.byKey(const Key('create-activity-mixte')));
       await settle(tester);
       await tapNext(tester);
-      await tester.tap(find.text('Banfora'));
+      await tester.tap(find.text('Ouagadougou').first);
       await settle(tester);
       await tapNext(tester);
       await tester.enterText(find.byKey(const Key('create-phone')), '70112233');

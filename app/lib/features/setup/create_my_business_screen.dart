@@ -887,8 +887,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         style: const TextStyle(fontSize: 20),
         onChanged: _onName,
         decoration: InputDecoration(
-          hintText: _ofKind(context.tr('Ex. : Chez Awa, Café Lumière, Green Market'), context.tr('Ex. : Ferme Wendkouni, Green Valley Farm, Rancho Sol'),
-              context.tr('Ex. : Tontine des femmes de Dapoya, Club des amis, Hope Foundation')),
+          hintText: _ofKind(context.tr('Ex. : Maison Élégance, Le Comptoir Doré, Atelier Lumière'), context.tr('Ex. : Domaine des Acacias, Ferme Horizon Vert, Les Jardins du Sahel'),
+              context.tr('Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon')),
           hintMaxLines: 2,
           border: const OutlineInputBorder(),
         ),

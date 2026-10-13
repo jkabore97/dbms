@@ -4792,22 +4792,21 @@ const enStrings = <String, String>{
       'Mara on your phone',
   // Batch 122, builder P: back from a root asks before leaving.
   'Quitter Mara ?': 'Leave Mara?',
-  'Ex. : Chez Awa, Café Lumière, Green Market':
-      'E.g. Chez Awa, Café Lumière, Green Market',
-  'Ex. : Ferme Wendkouni, Green Valley Farm, Rancho Sol':
-      'E.g. Ferme Wendkouni, Green Valley Farm, Rancho Sol',
-  'Ex. : Tontine des femmes de Dapoya, Club des amis, Hope Foundation':
-      'E.g. Tontine des femmes de Dapoya, Friends\' Club, Hope Foundation',
+  'Ex. : Maison Élégance, Le Comptoir Doré, Atelier Lumière':
+      'E.g. Maison Élégance, Le Comptoir Doré, Atelier Lumière',
+  'Ex. : Domaine des Acacias, Ferme Horizon Vert, Les Jardins du Sahel':
+      'E.g. Domaine des Acacias, Horizon Vert Farm, Les Jardins du Sahel',
+
   'Ex. : Riz et savon au détail, café et pâtisseries, vêtements':
       'E.g. Rice and soap sold loose, coffee and pastries, clothing',
   'Ex. : Œufs frais, légumes bio, miel':
       'E.g. Fresh eggs, organic vegetables, honey',
   'Ex. : Dapoya près du marché, Le Plateau, Centre-ville':
       'E.g. Dapoya near the market, Le Plateau, Downtown',
-  'Ex. : L\'entraide des femmes de Gounghin, Les Amis du quartier, Hope Club':
-      'E.g. The Gounghin women\'s mutual aid, Neighbourhood Friends, Hope Club',
-  'Ex. : Gounghin près du marché, Le Plateau, Centre-ville':
-      'E.g. Gounghin near the market, Le Plateau, Downtown',
+  'Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon':
+      'E.g. Cercle des Bâtisseurs, Fondation Espoir, Club Horizon',
+  'Ex. : Centre-ville, près du grand marché, avenue principale':
+      'E.g. Downtown, near the main market, main avenue',
   'Ex. : Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris':
       'E.g. Rue 14.28, Ouagadougou · 12 rue de la Paix, Paris',
   'Ex. : Pagnes et gâteaux depuis 1998, Le café du coin, Frais et local':
