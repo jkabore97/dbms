@@ -24,6 +24,8 @@ Future<void> askAccountDeletion(
   Future<void> Function()? signOut,
 }) async {
   final scope = AppScope.maybeOf(context);
+  // The website's Apple popup, ready before the confirmation (139).
+  scope?.auth.warmAppleWeb();
   final read = plan ?? scope?.admin.deletionPlan;
   final AccountDeletionPlan? p = read == null ? null : await read();
   if (!context.mounted) return;
@@ -55,9 +57,11 @@ Future<void> askAccountDeletion(
               'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
         }
         // An Apple account, on the iPhone: Apple's sheet once more, for the
-        // code that revokes Apple's token.
+        // code that revokes Apple's token; on the website, Apple's popup
+        // (139).
         final code = await s.auth.appleReauthorizationCode();
-        await s.admin.deleteMyAccount(confirmedOrgs: orgs, appleAuthorizationCode: code);
+        await s.admin.deleteMyAccount(
+            confirmedOrgs: orgs, appleAuthorizationCode: code, appleClient: s.auth.appleCodeClient);
       };
   final gone = await showDialog<bool>(
     context: context,

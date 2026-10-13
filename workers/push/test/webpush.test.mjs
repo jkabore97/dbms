@@ -156,6 +156,21 @@ test("a tap lands where the bell points", () => {
   // 111: an older app's request answered at once.
   assert.equal(payloadFor({ kind: "application_update_app", message: "m" }, env).url,
     "https://dbms.kabore-boss.workers.dev/creer-mon-activite");
+  // 133: « Besoin d'aide » — the trainer's inbox on the request, the
+  // business's « Aide », the console; a bad id never makes an address.
+  const req = "13313313-0000-0000-0000-0000000000aa";
+  assert.equal(payloadFor({ kind: "help_request", org_id: "o1", message: "m",
+    params: { to: "me", request_id: req } }, env).url,
+    `https://dbms.kabore-boss.workers.dev/formateur?demande=${req}`);
+  assert.equal(payloadFor({ kind: "help_access", org_id: "o1", message: "m",
+    params: { to: "me", request_id: "../x" } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/formateur");
+  assert.equal(payloadFor({ kind: "help_taken", org_id: "o1", message: "m",
+    params: { to: "shop", request_id: req } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/o/o1/aide");
+  assert.equal(payloadFor({ kind: "help_escalated", message: "m",
+    params: { to: "platform", request_id: req } }, env).url,
+    "https://dbms.kabore-boss.workers.dev/console/formateurs/aide");
 });
 
 test("the bell says Mara, whatever name the database's sentence was written in", () => {

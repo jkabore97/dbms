@@ -6583,8 +6583,8 @@ const enStrings = <String, String>{
       'Creation',
   'Créées':
       'Created',
-  'Deux étapes, actions, activité':
-      'Two-step, actions, activity',
+  'Deux étapes, connexion, actions, activité':
+      'Two-step, sign-in, actions, activity',
   'Distance':
       'Distance',
   'Délais':
@@ -6706,4 +6706,430 @@ const enStrings = <String, String>{
       '{change} vs last {day}',
   'payantes':
       'paying',
+  // ---- 136: « Besoin d'aide », the training team (migration 133) ----
+  'Besoin d\'aide':
+      'Need help',
+  'Demande d\'aide':
+      'Help request',
+  'Demandes d\'aide':
+      'Help requests',
+  'Demandes d\'aide sans réponse':
+      'Help requests with no answer',
+  'aucun formateur ne l\'a prise, dans les heures d\'aide':
+      'no trainer took it, within the help hours',
+  'Demandes d\'aide ouvertes':
+      'Open help requests',
+  'l\'équipe de formation s\'en occupe':
+      'the training team is on it',
+  'Aide Pro : l\'équipe de formation':
+      'Pro help: the training team',
+  'Aide Pro':
+      'Pro help',
+  'Aide Pro : heure d\'ouverture (0 à 23, heure de Ouagadougou)':
+      'Pro help: opening hour (0 to 23, Ouagadougou time)',
+  'Aide Pro : heure de fermeture (1 à 24, heure de Ouagadougou)':
+      'Pro help: closing hour (1 to 24, Ouagadougou time)',
+  'Minutes sans réponse avant d\'envoyer une demande à tous les formateurs':
+      'Minutes with no answer before a request goes to every trainer',
+  'Minutes sans réponse avant « en retard » dans Aujourd\'hui':
+      'Minutes with no answer before “late” in Today',
+  'Demandes d\'aide par entreprise et par 24 heures':
+      'Help requests per business per 24 hours',
+  'Modèle WhatsApp des formateurs chez Meta (vide : pas de WhatsApp)':
+      'Trainers’ WhatsApp template at Meta (empty: no WhatsApp)',
+  'Notifier les administrateurs de Mara d\'une demande d\'aide sans réponse':
+      'Notify Mara’s admins of a help request nobody answered',
+  'Demande d\'aide — {org} : {subject}':
+      'Help request — {org}: {subject}',
+  'Demande d\'aide sans réponse — {org} : {subject}':
+      'Help request with no answer — {org}: {subject}',
+  '{who} (formation Mara) s\'occupe de votre demande d\'aide.':
+      '{who} (Mara training) is handling your help request.',
+  '{who} viendra vous voir.':
+      '{who} will come and see you.',
+  '{who} vous propose plutôt un appel.':
+      '{who} suggests a call instead.',
+  '{who} a marqué votre demande résolue. C\'est réglé ?':
+      '{who} marked your request solved. All sorted?',
+  '{org} : « pas encore réglé » — la demande vous revient.':
+      '{org}: “not sorted yet” — the request is back with you.',
+  '{org} vous ouvre son activité en lecture seule pour 48 h.':
+      '{org} gives you read-only access to its business for 48 h.',
+  '{org} a retiré votre accès en lecture seule.':
+      '{org} removed your read-only access.',
+  '{org} a fermé la demande':
+      '{org} closed the request',
+  '{n} en attente':
+      '{n} waiting',
+  'L\'équipe de formation de Mara':
+      'Mara’s training team',
+  'Besoin d\'aide — un formateur':
+      'Need help — a trainer',
+  'Guides et aide':
+      'Guides and help',
+  'Marquer résolue':
+      'Mark solved',
+  'Ce qui a été fait (facultatif)':
+      'What was done (optional)',
+  'Demande marquée résolue : l\'entreprise confirme.':
+      'Request marked solved: the business confirms.',
+  'Accepter la visite':
+      'Accept the visit',
+  'Proposer un appel':
+      'Suggest a call',
+  'Quand passez-vous ? (facultatif)':
+      'When will you come? (optional)',
+  'Quand appelez-vous ? (facultatif)':
+      'When will you call? (optional)',
+  'Impossible d\'ouvrir ce lien sur cet appareil.':
+      'This link cannot be opened on this device.',
+  'En service':
+      'On duty',
+  'Hors service':
+      'Off duty',
+  'Réservé à l\'équipe de formation de Mara.':
+      'For Mara’s training team only.',
+  'Hors des heures d\'aide ({hours}) : les nouvelles demandes arrivent à l\'ouverture.':
+      'Outside the help hours ({hours}): new requests arrive at opening time.',
+  'Aucune demande pour l\'instant.':
+      'No requests for now.',
+  'C\'est à vous : l\'entreprise est prévenue.':
+      'It’s yours: the business has been told.',
+  'Accès en lecture seule à l\'entreprise le temps de la demande (48 h au plus), quand son propriétaire l\'autorise.':
+      'Read-only access to the business for the time of the request (48 h at most), when its owner allows it.',
+  'REMONTÉE · {age}':
+      'ESCALATED · {age}',
+  'NOUVELLE · {age}':
+      'NEW · {age}',
+  'MOI · en cours':
+      'ME · in progress',
+  '{name} · en cours':
+      '{name} · in progress',
+  'Résolue, à confirmer':
+      'Solved, to be confirmed',
+  'Visite':
+      'Visit',
+  'écran {screen}':
+      'screen {screen}',
+  'Je m\'en occupe':
+      'I’ll take it',
+  'Visite acceptée':
+      'Visit accepted',
+  'Appel proposé à la place de la visite':
+      'Call suggested instead of the visit',
+  'Ouvrir l\'activité (lecture seule)':
+      'Open the business (read-only)',
+  'Pour voir l\'activité, son propriétaire vous ouvre un accès en lecture seule depuis sa demande.':
+      'To see the business, its owner gives you read-only access from their request.',
+  'Contributions':
+      'Contributions',
+  'Appel':
+      'Call',
+  'Venir me voir':
+      'Come and see me',
+  'Un formateur vous répondra aujourd\'hui à partir de {h} h':
+      'A trainer will answer you today from {h}:00',
+  'Un formateur vous répondra demain à partir de {h} h':
+      'A trainer will answer you tomorrow from {h}:00',
+  'Un formateur vous répondra le {d} à partir de {h} h':
+      'A trainer will answer you on {d} from {h}:00',
+  'à l\'instant':
+      'just now',
+  '{n} min':
+      '{n} min',
+  '{n} h':
+      '{n} h',
+  '{n} j':
+      '{n} d',
+  'Un numéro où vous joindre, avec l\'indicatif (par exemple 22670000000).':
+      'A number to reach you on, with the country code (for example 22670000000).',
+  'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Mara.':
+      'You have made all your requests for today. Try again tomorrow, or write to Mara.',
+  'Envoyer la demande':
+      'Send the request',
+  'Mara joint l\'écran, l\'entreprise et la version de l\'app.':
+      'Mara attaches the screen, the business and the app version.',
+  'Un formateur vous aide':
+      'A trainer helps you',
+  'Votre demande est gardée.':
+      'Your request is kept.',
+  'Réponse en quelques minutes, {hours}':
+      'An answer within minutes, {hours}',
+  'C\'est à propos de…':
+      'It’s about…',
+  '« Je n\'arrive pas à annuler une vente… » (facultatif)':
+      '“I can’t cancel a sale…” (optional)',
+  'Ajouter une photo (facultatif)':
+      'Add a photo (optional)',
+  'On vous contacte par':
+      'We contact you by',
+  'Votre numéro (avec l\'indicatif)':
+      'Your number (with the country code)',
+  'On vous joint au {phone}':
+      'We reach you on {phone}',
+  'WhatsApp : actif (modèle « {t} »)':
+      'WhatsApp: on (template “{t}”)',
+  'WhatsApp : le modèle « {t} » n\'est pas encore approuvé par Meta — les formateurs sont prévenus dans l\'app.':
+      'WhatsApp: the template “{t}” is not approved by Meta yet — trainers are told in the app.',
+  'WhatsApp : les derniers envois ont échoué — les formateurs sont prévenus dans l\'app.':
+      'WhatsApp: the last sends failed — trainers are told in the app.',
+  'WhatsApp : en attente — le Worker n\'a rien envoyé depuis 5 minutes.':
+      'WhatsApp: waiting — the Worker has sent nothing for 5 minutes.',
+  'WhatsApp : modèle « {t} », pas encore d\'envoi.':
+      'WhatsApp: template “{t}”, nothing sent yet.',
+  'WhatsApp : désactivé (aucun modèle dans Réglages) — les formateurs sont prévenus dans l\'app.':
+      'WhatsApp: off (no template in Settings) — trainers are told in the app.',
+  'Aide · Console':
+      'Help · Console',
+  'La base de données n\'a pas encore l\'aide Pro (migration 133).':
+      'The database does not have Pro help yet (migration 133).',
+  'ouvertes':
+      'open',
+  'réponse moyenne':
+      'average answer',
+  'résolues · 7 j':
+      'solved · 7 d',
+  'satisfaits · 30 j':
+      'satisfied · 30 d',
+  'Sans réponse depuis {n} min':
+      'No answer for {n} min',
+  'remontée à vous':
+      'escalated to you',
+  'Voir dans les demandes':
+      'See in the requests',
+  'en service':
+      'on duty',
+  'hors service':
+      'off duty',
+  '{n} résolues · 7 j':
+      '{n} solved · 7 d',
+  'Heures de l\'aide Pro : {hours}, heure de Ouagadougou — Réglages › Notifications.':
+      'Pro help hours: {hours}, Ouagadougou time — Settings › Notifications.',
+  'Ma demande d\'aide':
+      'My help request',
+  'Demande reçue':
+      'Request received',
+  '{name}, de l\'équipe de formation, s\'en occupe':
+      '{name}, from the training team, is on it',
+  'En attente d\'un formateur':
+      'Waiting for a trainer',
+  'Toute l\'équipe de formation est prévenue.':
+      'The whole training team has been told.',
+  'Un formateur va prendre votre demande.':
+      'A trainer will take your request.',
+  'Résolu':
+      'Solved',
+  'Écrire à {name}':
+      'Write to {name}',
+  '{name} voit votre activité en lecture seule jusqu\'à {time}':
+      '{name} can see your business read-only until {time}',
+  'Rien ne peut être changé. L\'accès s\'arrête tout seul, ou quand vous le retirez.':
+      'Nothing can be changed. The access ends by itself, or when you remove it.',
+  'Retirer l\'accès':
+      'Remove the access',
+  '{name} n\'est pas de votre entreprise. Pour qu\'on vous guide, vous pouvez lui ouvrir votre activité en lecture seule, 48 h au plus.':
+      '{name} is not part of your business. To be guided, you can give them read-only access to your business, 48 h at most.',
+  'Autoriser l\'accès 48 h':
+      'Allow access for 48 h',
+  'C\'est réglé ?':
+      'All sorted?',
+  'Oui, merci':
+      'Yes, thanks',
+  'Fermer la demande':
+      'Close the request',
+  'viendra vous voir':
+      'will come and see you',
+  'vous propose plutôt un appel':
+      'suggests a call instead',
+  'a reçu votre demande de visite':
+      'has your visit request',
+  'vous appelle':
+      'will call you',
+  'vous écrit sur WhatsApp':
+      'will write to you on WhatsApp',
+  '{time} aujourd\'hui':
+      '{time} today',
+  'demain {time}':
+      'tomorrow {time}',
+  'Autoriser l\'accès 48 h ?':
+      'Allow access for 48 h?',
+  '{name} pourra voir votre activité (ventes, stock, comptes) sans rien pouvoir changer, pendant 48 heures au plus. Vous pouvez retirer l\'accès à tout moment ; il s\'arrête aussi quand vous fermez la demande.':
+      '{name} will be able to see your business (sales, stock, accounts) without changing anything, for 48 hours at most. You can remove the access at any time; it also ends when you close the request.',
+  'Autoriser':
+      'Allow',
+  'Fermer la demande ?':
+      'Close the request?',
+  'L\'aide vous a-t-elle servi ?':
+      'Did the help work for you?',
+  'Personne ne l\'a encore prise. Vous pourrez en faire une autre.':
+      'Nobody has taken it yet. You can make another one.',
+  'Pas satisfait':
+      'Not satisfied',
+  'Satisfait':
+      'Satisfied',
+  'Un formateur de Mara vous aide':
+      'A Mara trainer helps you',
+  'Ajouter un article · Partager ma vitrine · Annuler une vente…':
+      'Add an item · Share my shop window · Cancel a sale…',
+  'Guides — Le Chemin':
+      'Guides — The Path',
+  'Pas à pas, dans l\'app':
+      'Step by step, in the app',
+  'Écrire à Mara':
+      'Write to Mara',
+  'WhatsApp ou e-mail · réponse sous 48 h':
+      'WhatsApp or e-mail · answer within 48 h',
+  'Par e-mail · réponse sous 48 h':
+      'By e-mail · answer within 48 h',
+  'un formateur vous aide en quelques minutes.':
+      'a trainer helps you within minutes.',
+  'Découvrir Pro':
+      'Discover Pro',
+  // 136: the server's refusals (133), said by describeError.
+  'Connectez-vous pour demander de l\'aide.':
+      'Sign in to ask for help.',
+  'Seule l\'équipe de l\'entreprise peut demander de l\'aide ici.':
+      'Only the business’s team can ask for help here.',
+  'L\'aide d\'un formateur vient avec Mara Pro.':
+      'A trainer’s help comes with Mara Pro.',
+  'Choisissez comment être aidé : appel, WhatsApp ou visite.':
+      'Choose how to be helped: a call, WhatsApp or a visit.',
+  'Un message de 500 caractères au plus, s\'il vous plaît.':
+      'A message of 500 characters at most, please.',
+  'Cette photo n\'est pas de cette entreprise.':
+      'This photo is not from this business.',
+  'Une demande d\'aide est déjà en cours pour cette entreprise.':
+      'A help request is already open for this business.',
+  'Les demandes d\'aide de ces 24 heures sont toutes faites. Réessayez demain, ou écrivez à Mara.':
+      'All of this 24 hours’ help requests are used. Try again tomorrow, or write to Mara.',
+  'Une autre demande d\'aide est déjà en cours pour cette entreprise.':
+      'Another help request is already open for this business.',
+  'Cette demande n\'est pas la vôtre.':
+      'This request is not yours.',
+  'Seule une demande marquée résolue peut être rouverte.':
+      'Only a request marked solved can be reopened.',
+  'Une note : pouce levé ou pouce baissé.':
+      'A rating: thumbs up or thumbs down.',
+  'Seul le propriétaire ou un administrateur de l\'entreprise autorise l\'accès.':
+      'Only the owner or an admin of the business can allow access.',
+  'L\'accès s\'autorise une fois la demande prise en charge.':
+      'Access can be allowed once the request is taken.',
+  'Ce formateur voit déjà votre entreprise.':
+      'This trainer already sees your business.',
+  'Vous ne pouvez pas retirer cet accès.':
+      'You cannot remove this access.',
+  'Réservé aux formateurs de Mara.':
+      'For Mara’s trainers only.',
+  'Cette demande ne vous est pas adressée.':
+      'This request is not for you.',
+  'Un autre formateur s\'occupe déjà de cette demande.':
+      'Another trainer is already handling this request.',
+  'Prenez d\'abord la demande en charge.':
+      'Take the request first.',
+  'Cette demande ne demande pas de visite.':
+      'This request does not ask for a visit.',
+  'Acceptez la visite, ou proposez un appel.':
+      'Accept the visit, or suggest a call.',
+  'Un mot de 200 caractères au plus.':
+      'A note of 200 characters at most.',
+  'Seul le formateur qui a pris la demande la marque résolue.':
+      'Only the trainer who took the request can mark it solved.',
+  'Cette demande n\'est pas en cours.':
+      'This request is not in progress.',
+  'Une note de 500 caractères au plus.':
+      'A note of 500 characters at most.',
+  'Cet accès est terminé.':
+      'This access has ended.',
+  'Le modèle WhatsApp : son nom chez Meta, en minuscules, chiffres et _ (par exemple aide_demande), ou rien pour ne pas envoyer de WhatsApp.':
+      'The WhatsApp template: its name at Meta, in lower case, digits and _ (for example aide_demande), or nothing to send no WhatsApp.',
+  'L\'heure d\'ouverture de l\'aide Pro : de 0 à 23, avant l\'heure de fermeture.':
+      'The Pro help opening hour: 0 to 23, before the closing hour.',
+  'L\'heure de fermeture de l\'aide Pro : de 1 à 24, après l\'heure d\'ouverture.':
+      'The Pro help closing hour: 1 to 24, after the opening hour.',
+  'Un nombre de minutes de 1 à 1440, s\'il vous plaît.':
+      'A number of minutes from 1 to 1440, please.',
+  'Un nombre de demandes de 1 à 50 par jour, s\'il vous plaît.':
+      'A number of requests from 1 to 50 a day, please.',
+  // Batch 137: the status picture's designs and colours.
+  'Vedette': 'Spotlight',
+  'Affiche': 'Poster',
+  'Bandeau': 'Banner',
+  'Nuit': 'Night',
+  'Papier': 'Paper',
+  'Espresso': 'Espresso',
+  'Ma couleur': 'My colour',
+  'Surprise': 'Surprise',
+  'Nos articles': 'Our items',
+  'Nos services': 'Our services',
+  'À découvrir': 'Discover',
+  'Nouveautés': 'New in',
+  'Disponible': 'Available',
+  'En précommande': 'Pre-order now',
+  'Réservez ici': 'Book here',
+  'Retrouvez-nous ici': 'Find us here',
+  'Commandez sur Mara': 'Order on Mara',
+  'Réservez sur Mara': 'Book on Mara',
+  'Retrouvez-nous sur Mara': 'Find us on Mara',
+  'Découvrez notre vitrine': 'Discover our vitrine',
+  'La caisse et la cotisation':
+      'The cash box and the dues',
+  'Deux questions, pour que vos comptes partent juste.':
+      'Two questions, so your books start right.',
+  'Combien y a-t-il dans la caisse aujourd\'hui ?':
+      'How much is in the cash box today?',
+  'Déjà indiqué : la caisse de départ est dans vos comptes.':
+      'Already done: the opening cash is in your books.',
+  'Montant en caisse':
+      'Amount in the box',
+  '0 si elle est vide. Il devient le solde de départ de vos comptes ; il ne s\'indique qu\'une fois.':
+      '0 if it is empty. It becomes your books\' opening balance; it is entered only once.',
+  'La cotisation habituelle':
+      'The usual dues',
+  'Facultative. Proposée à chaque cotisation enregistrée ; vous pourrez la changer.':
+      'Optional. Suggested each time dues are recorded; you can still change it.',
+  'par an':
+      'per year',
+  'Un montant de 0 ou plus, s\'il vous plaît.':
+      'An amount of 0 or more, please.',
+  'Une cotisation de plus de zéro, s\'il vous plaît.':
+      'Dues above zero, please.',
+  'Indiquez votre caisse de départ':
+      'Enter your opening cash',
+  'Ce qu\'il y avait dans la caisse avant Mara : vos comptes partiront juste.':
+      'What was in the cash box before Mara: your books will start right.',
+  'Indiquer':
+      'Enter it',
+  'Cotisation habituelle : {amount} par semaine':
+      'Usual dues: {amount} per week',
+  'Cotisation habituelle : {amount} par mois':
+      'Usual dues: {amount} per month',
+  'Cotisation habituelle : {amount} par an':
+      'Usual dues: {amount} per year',
+  'Solde de départ':
+      'Opening balance',
+  'Trop tard pour annuler — appelez la boutique':
+      'Too late to cancel — call the business',
+  'Ce rendez-vous est déjà payé : appelez la boutique pour l\'annuler.':
+      'This booking is already paid: call the business to cancel it.',
+  'Un rendez-vous s\'annule jusqu\'à {hours} h avant.':
+      'A booking can be cancelled up to {hours} h before.',
+  'Annulable jusqu\'à {when}':
+      'Can be cancelled until {when}',
+  'Rendez-vous annulé par le client — {when}':
+      'Booking cancelled by the customer — {when}',
+  'Annulation d\'un rendez-vous par le client : jusqu\'à … heures avant':
+      'A customer may cancel a booking up to … hours before',
+  'Prévenir les gagnants de la semaine (notification)':
+      'Notify the week\'s winners (notification)',
+  'Cette commande est déjà payée : appelez la boutique pour l\'annuler.':
+      'This order is already paid: call the business to cancel it.',
+  'Un paiement Wave est en cours : attendez quelques minutes ou appelez la boutique.':
+      'A Wave payment is under way: wait a few minutes or call the business.',
+  // 139: « Continuer avec Apple » on the website.
+  'Connexion':
+      'Sign-in',
+  'Connexion Apple sur le site':
+      'Sign in with Apple on the website',
+  'La fenêtre d\'Apple n\'a pas pu s\'ouvrir. Touchez à nouveau « Continuer avec Apple » ; si rien ne s\'ouvre, autorisez les fenêtres pour ce site.':
+      'Apple\'s window could not open. Tap “Continue with Apple” again; if nothing opens, allow pop-ups for this site.',
 };

@@ -34,7 +34,15 @@ class CommandCenterRepository {
   /// The counts « À faire » opens on (platform_todo, 105).
   Future<PlatformTodo> todo() async {
     final v = await _requireClient().rpc('platform_todo');
-    return PlatformTodo.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
+    final counts = v is Map ? Map<String, dynamic>.from(v) : <String, dynamic>{};
+    // 136: the help requests (133's help_todo_counts) — late and open.
+    // Without 133 (or on any failure) the two counters are simply not
+    // there: « Aujourd'hui » is as batch 135 drew it.
+    try {
+      final h = await _requireClient().rpc('help_todo_counts');
+      if (h is Map) counts.addAll(Map<String, dynamic>.from(h));
+    } catch (_) {}
+    return PlatformTodo.fromJson(counts);
   }
 
   /// « Activités créées » (111): the businesses people created, and the
@@ -210,7 +218,11 @@ class PlatformTodo {
   int get waiting =>
       this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
-      this['features_lapsed'] + this['reports_open'];
+      this['features_lapsed'] + this['reports_open'] + this['help_late'] + this['help_open'];
+
+  /// A counter this server has: the help's two (136) only where 133 is,
+  /// every other one always.
+  bool has(String key) => !key.startsWith('help_') || counts.containsKey(key);
 
   /// One of « Aujourd'hui »'s fourteen counters (135): the spots are the
   /// paid ones and the asked ones together, as « À faire » drew them.
@@ -221,14 +233,14 @@ class PlatformTodo {
   List<String> get waitingOrder => [
         for (final tier in todoUrgency)
           for (final k in tier)
-            if (count(k) > 0) k,
+            if (has(k) && count(k) > 0) k,
       ];
 
   /// The counters at zero, folded into one green line (135).
   List<String> get zeroKeys => [
         for (final tier in todoUrgency)
           for (final k in tier)
-            if (count(k) == 0) k,
+            if (has(k) && count(k) == 0) k,
       ];
 
   /// The urgent counters' total (135): stuck orders, reports, failed
@@ -244,11 +256,14 @@ class PlatformTodo {
 /// « Aujourd'hui »'s counters by urgency (135), most urgent first: what
 /// is stuck or failed or reported and the « J'ai payé » to confirm; then
 /// the couriers to validate and the new businesses to welcome; then the
-/// businesses to call; then what ends within seven days. No help-request
-/// table exists: a shopper's « Signaler un problème » is the report.
+/// businesses to call; then what ends within seven days. A shopper's
+/// « Signaler un problème » is the report. 136: a Pro business's help
+/// request — late (no answer for 30 open minutes) with the urgent ones,
+/// the other open ones with the couriers and the new businesses; only on
+/// a server with 133 ([PlatformTodo.has]).
 const todoUrgency = <List<String>>[
-  ['orders_stuck', 'reports_open', 'payouts_failed', 'pro_paid', 'spots'],
-  ['couriers', 'new_7'],
+  ['orders_stuck', 'help_late', 'reports_open', 'payouts_failed', 'pro_paid', 'spots'],
+  ['help_open', 'couriers', 'new_7'],
   ['silent_30', 'features_lapsed'],
   ['plans_ending', 'unlocks_ending', 'promos_ending', 'spots_ending', 'rules_ending'],
 ];

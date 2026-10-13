@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart'
     show SignInWithAppleButton;
 
-import '../../core/auth/auth_repository.dart' show appleSignInPlatform;
+import '../../core/auth/auth_repository.dart' show appleSignInPlatform, appleWebPlatform;
 import '../../core/l10n/tr.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
@@ -22,13 +22,15 @@ enum OrderSignIn { apple, google, otherWay, newAccount }
 /// the two others carry the sheet.
 ///
 /// On an iPhone, « Continuer avec Apple » above Google, as big (125: App
-/// Review's 4.8), when [appleAvailable] says the project has Apple on.
-/// Android and the web never draw it.
+/// Review's 4.8), when [appleAvailable] says the project has Apple on. On
+/// the website the same (139), when [appleWebAvailable] says « Connexion
+/// Apple sur le site » is on. Android never draws it.
 Future<OrderSignIn?> showOrderSignInSheet(
   BuildContext context, {
   required bool booking,
   required Future<bool> Function() googleAvailable,
   Future<bool> Function()? appleAvailable,
+  Future<bool> Function()? appleWebAvailable,
   Color? accent,
 }) {
   return showMaraSheet<OrderSignIn>(
@@ -44,6 +46,7 @@ Future<OrderSignIn?> showOrderSignInSheet(
         booking: booking,
         googleAvailable: googleAvailable,
         appleAvailable: appleAvailable,
+        appleWebAvailable: appleWebAvailable,
       ),
     ),
   );
@@ -55,6 +58,7 @@ class OrderSignInSheet extends StatefulWidget {
     required this.booking,
     required this.googleAvailable,
     this.appleAvailable,
+    this.appleWebAvailable,
   });
 
   final bool booking;
@@ -62,6 +66,9 @@ class OrderSignInSheet extends StatefulWidget {
 
   /// The project's Apple switch; asked on an iPhone only. Null: no Apple.
   final Future<bool> Function()? appleAvailable;
+
+  /// The website's Apple switch (139); asked on the website only.
+  final Future<bool> Function()? appleWebAvailable;
 
   @override
   State<OrderSignInSheet> createState() => _OrderSignInSheetState();
@@ -71,14 +78,19 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
   /// Null while the project is asked.
   bool? _google;
 
-  /// Drawn once the project says Apple is on — on an iPhone only.
+  /// Drawn once the project says Apple is on — on an iPhone, or on the
+  /// website with its switch on (139).
   bool _apple = false;
 
   @override
   void initState() {
     super.initState();
-    final apple = widget.appleAvailable;
-    if (apple != null && appleSignInPlatform) {
+    final apple = appleSignInPlatform
+        ? widget.appleAvailable
+        : appleWebPlatform
+            ? widget.appleWebAvailable
+            : null;
+    if (apple != null) {
       apple().then(
         (on) {
           if (mounted && on) setState(() => _apple = true);

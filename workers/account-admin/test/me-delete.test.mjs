@@ -53,7 +53,8 @@ const FRESH = jwt();
 /// A fake world. [stops] is what delete_my_account_stops answers (or
 /// [refused] its refusal); [answer] what delete_my_account answers.
 function world({ stops = plainStops, refused = null, answer, admin = false, gotrue = [200], providers = ["email"],
-  user = ME, stripe = 200, google = 200, before128 = false, check = { ok: true, value: ME } } = {}) {
+  user = ME, stripe = 200, google = 200, before128 = false, check = { ok: true, value: ME },
+  appleCodeFor = null } = {}) {
   const calls = [];
   const statuses = [...gotrue];
   const fetch = async (url, init = {}) => {
@@ -106,7 +107,14 @@ function world({ stops = plainStops, refused = null, answer, admin = false, gotr
     if (url === "https://oauth2.example/token") return Response.json({ access_token: "ya29" });
     if (u.host === "androidpublisher.googleapis.com") return new Response("{}", { status: google });
     if (u.host === "api.stripe.com") return new Response(JSON.stringify({ id: "sub_fin", status: "canceled" }), { status: stripe });
-    if (url === "https://appleid.apple.com/auth/token") return Response.json({ refresh_token: "r-apple" });
+    if (url === "https://appleid.apple.com/auth/token") {
+      // [appleCodeFor]: the one client id Apple accepts the code for (139).
+      const asked = new URLSearchParams(body).get("client_id");
+      if (appleCodeFor && asked !== appleCodeFor) {
+        return new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 });
+      }
+      return Response.json({ refresh_token: "r-apple" });
+    }
     if (url === "https://appleid.apple.com/auth/revoke") return new Response(null, { status: 200 });
     throw new Error(`unexpected call ${url}`);
   };
@@ -318,6 +326,51 @@ test("Sign in with Apple: the fresh code traded and the token revoked; no key or
   out = await deleteMe(google, { e: full, body: { apple_authorization_code: "c" } });
   assert.equal(out.body.apple_signin_revoked, null);
   assert.equal(google.calls.some((c) => c.host === "appleid.apple.com"), false);
+});
+
+test("139 a website Apple account: the popup's code traded for the Services ID first; a wrong hint falls back to the other", async () => {
+  // The website says its code is the Services ID's: asked with it, first
+  // and only; the revocation goes with the same client id.
+  const web = world({ providers: ["apple"], appleCodeFor: "bf.kaj.app.web" });
+  let out = await deleteMe(web, { e: full, body: { apple_authorization_code: "c-web", apple_client: "web" } });
+  assert.equal(out.status, 200);
+  assert.equal(out.body.apple_signin_revoked, true);
+  let tokens = web.calls.filter((c) => c.path === "/auth/token").map((c) => new URLSearchParams(c.body));
+  assert.deepEqual(tokens.map((f) => f.get("client_id")), ["bf.kaj.app.web"]);
+  const secret = tokens[0].get("client_secret").split(".")[1];
+  assert.equal(JSON.parse(Buffer.from(secret, "base64url").toString()).sub, "bf.kaj.app.web");
+  // Apple trades a website code only with the popup's return URL.
+  assert.equal(tokens[0].get("redirect_uri"), "https://marakaj.com/connexion");
+  const revoke = new URLSearchParams(web.calls.find((c) => c.path === "/auth/revoke").body);
+  assert.equal(revoke.get("client_id"), "bf.kaj.app.web");
+
+  // A Services ID set apart (APPLE_WEB_SERVICES_ID) is the one used.
+  const own = world({ providers: ["apple"], appleCodeFor: "com.example.web" });
+  out = await deleteMe(own, { e: { ...full, APPLE_WEB_SERVICES_ID: "com.example.web" },
+    body: { apple_authorization_code: "c-web", apple_client: "web" } });
+  assert.equal(out.body.apple_signin_revoked, true);
+
+  // No hint (an app before 139) and a website's code: bf.kaj.app refused,
+  // then the Services ID — revoked all the same.
+  const old = world({ providers: ["apple"], appleCodeFor: "bf.kaj.app.web" });
+  out = await deleteMe(old, { e: full, body: { apple_authorization_code: "c-web" } });
+  assert.equal(out.body.apple_signin_revoked, true);
+  tokens = old.calls.filter((c) => c.path === "/auth/token").map((c) => new URLSearchParams(c.body).get("client_id"));
+  assert.deepEqual(tokens, ["bf.kaj.app", "bf.kaj.app.web"]);
+  // bf.kaj.app's attempt carries no return URL: the iPhone's codes have none.
+  const forms = old.calls.filter((c) => c.path === "/auth/token").map((c) => new URLSearchParams(c.body));
+  assert.equal(forms[0].get("redirect_uri"), null);
+  assert.equal(forms[1].get("redirect_uri"), "https://marakaj.com/connexion");
+
+  // A code neither client takes: not revoked, logged, the account deleted.
+  const none = world({ providers: ["apple"], appleCodeFor: "someone.else" });
+  out = await deleteMe(none, { e: full, body: { apple_authorization_code: "c-x", apple_client: "web" } });
+  assert.equal(out.status, 200);
+  assert.equal(out.body.apple_signin_revoked, false);
+  assert.deepEqual(out.body.not_done, ["apple_signin"]);
+  assert.equal(none.calls.filter((c) => c.path === "/auth/token").length, 2);
+  assert.equal(none.calls.some((c) => c.path === "/auth/revoke"), false);
+  assert.equal(none.calls.filter((c) => c.method === "DELETE").length, 1);
 });
 
 test("the database's refusal is said in its words with its code, and nothing is deleted or stopped", async () => {

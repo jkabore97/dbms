@@ -124,6 +124,9 @@ begin
                              'record_vitrine_visit',
                              -- 126: « Aide Mara », the signed-out page /aide.
                              'support_contacts',
+                             -- 135: the website's « Continuer avec Apple »
+                             -- switch, read by the signed-out sign-in.
+                             'sign_in_options',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

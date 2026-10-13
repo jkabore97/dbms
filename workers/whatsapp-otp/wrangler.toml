@@ -20,6 +20,12 @@ compatibility_date = "2026-01-01"
 # posts to (<origin>/v1/send-sms). Nothing in the app calls it.
 workers_dev = true
 
+# 133 (« Besoin d'aide »): every minute, the trainers' WhatsApp alerts the
+# database queued (help_whatsapp_claim) — and the help's clock with them.
+# Idle without SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
+[triggers]
+crons = ["* * * * *"]
+
 [vars]
 # The approved template's language, as Meta lists it.
 WHATSAPP_LANGUAGE = "fr"

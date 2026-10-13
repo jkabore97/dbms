@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/help/help_repository.dart';
+import '../help/help_button.dart';
 
 import 'trust_screen.dart';
 import '../../core/theme/kaj_card.dart';
@@ -24,6 +26,7 @@ import '../admin/admin_pill.dart' show AdminPill;
 import '../home/home_counts.dart';
 import '../home/home_nav.dart';
 import '../notify/push_offer.dart';
+import 'books_start_card.dart';
 import 'close_day_sheet.dart';
 import '../common/step_flow.dart';
 import '../money/expense_flow.dart';
@@ -59,6 +62,7 @@ class ChurchHomeScreen extends StatefulWidget {
     this.capture,
     this.staff,
     this.accountAction,
+    this.help,
     this.onHistory,
     this.access = OrgAccess.allEdit,
     this.retail,
@@ -97,6 +101,10 @@ class ChurchHomeScreen extends StatefulWidget {
   final InvoicingRepository? invoicing;
 
   final Widget? accountAction;
+
+  /// « Besoin d'aide » / « Aide » (136): the app's server unless a test
+  /// gives one.
+  final HelpRepository? help;
 
   /// Opens the history of every entry ever recorded. Null in a build with no
   /// server, and null once the token has expired: the list is paginated by the
@@ -316,7 +324,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                     avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
                     // Beside Mara's « Admin » on a phone (104): the number
                     // alone, so the bar keeps the association's name.
-                    label: Text(AdminPill.crowds(context)
+                    label: Text(AdminPill.crowds(context) || HelpButton.crowds(context)
                         ? '$_pending'
                         : Strings.of(context).pendingCount(_pending)),
                     visualDensity: VisualDensity.compact,
@@ -324,6 +332,9 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                 ),
               ),
             ),
+          // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          if (widget.org != null)
+            HelpButton(org: widget.org!, help: widget.help, screen: context.tr('Accueil')),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,
         ],
@@ -353,6 +364,15 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                   // After the walkthrough (102): « Encaissez la première
                   // cotisation », until money has come in.
                   _firstIncomeCard(),
+                  // 134: « Indiquez votre caisse de départ », once, for an
+                  // administrator of books with no movement yet.
+                  if (widget.org?.isAdmin ?? false)
+                    BooksStartCard(
+                      orgId: widget.orgId,
+                      books: widget.reports?.isConfigured ?? false ? widget.reports : null,
+                      currency: widget.org?.currency ?? 'XOF',
+                      hasLocalMoves: _pending > 0 || _entries.isNotEmpty,
+                    ),
                   // Not points: a level read off the books (088).
                   TrustCard(orgId: widget.orgId),
                   // The vitrine (098): the services on it, and who asked.
@@ -409,9 +429,12 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
                   // At the foot of the day it closes, rather than in a menu:
                   // the gesture belongs at the end of the list it is agreeing
                   // with.
-                  SizedBox(
-                    height: 52,
+                  // At least 52: at text × 1.3 a fixed 52 cut the « j » of
+                  // « journée » (review of 138).
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: OutlinedButton.icon(
+                      key: const Key('home-close-day'),
                       onPressed: _openCloseDay,
                       icon: Icon(
                         _dayClosed

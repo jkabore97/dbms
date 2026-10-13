@@ -74,8 +74,9 @@ class LoginScreen extends StatefulWidget {
   /// Signs in with Apple's own sheet (SessionController.signInWithApple),
   /// the iPhone app only (125): App Review asks for it beside Google. The
   /// session is in hand when it returns and the controller has already
-  /// taken it, as after Google. Null hides the button; so do Android, the
-  /// web and a project with Apple switched off.
+  /// taken it, as after Google. On the website (139) the same, in Apple's
+  /// popup, once Réglages' « Connexion Apple sur le site » is on. Null hides the button; so do Android and a project with Apple
+  /// switched off.
   final Future<void> Function()? onApple;
 
   /// A problem from the way back from Google, said once.
@@ -151,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _google = false;
 
   /// Whether to draw « Continuer avec Apple »: an iPhone, and the project
-  /// has it on.
+  /// has it on — or the website with « Connexion Apple sur le site » on.
   bool _apple = false;
 
   @override
@@ -163,10 +164,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted && on) setState(() => _google = true);
       });
     }
-    if (widget.onApple != null && appleSignInPlatform) {
-      widget.auth.appleAvailable().then((on) {
+    if (widget.onApple != null && (appleSignInPlatform || appleWebPlatform)) {
+      // The iPhone: the project has Apple on. The website (139): and
+      // Réglages' « Connexion Apple sur le site » is on.
+      (appleSignInPlatform ? widget.auth.appleAvailable() : widget.auth.appleWebAvailable()).then((on) {
         if (mounted && on) setState(() => _apple = true);
-      });
+      }, onError: (Object _) {});
     }
   }
 
@@ -565,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// One tap, for sign-in and sign-up alike: Apple or Google says who this
   /// is, and the device code is chosen right after, as with a password.
   /// Apple first, black, as tall as Google's (App Review, 4.8: at least as
-  /// prominent), on an iPhone only.
+  /// prominent), on an iPhone — and on the website the same (139).
   ///
   /// On an iPhone Google is never drawn alone (130): wherever Google shows,
   /// Apple shows above it — so with Apple off in the project (or not yet

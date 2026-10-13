@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../help/trainer_inbox_tile.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -152,6 +153,8 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
 
   Future<void> _delete() async {
     final scope = AppScope.of(context);
+    // The website's Apple popup, ready before the confirmation (139).
+    scope.auth.warmAppleWeb();
     final gone = await showDialog<bool>(
       context: context,
       builder: (_) => DeleteAccountDialog(
@@ -161,9 +164,11 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
                 'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
           }
           // An Apple account, on the iPhone: Apple's sheet once more, for
-          // the code that revokes Apple's token (130).
+          // the code that revokes Apple's token (130); on the website,
+          // Apple's popup (139).
           final code = await scope.auth.appleReauthorizationCode();
-          await scope.admin.deleteMyAccount(appleAuthorizationCode: code);
+          await scope.admin.deleteMyAccount(
+              appleAuthorizationCode: code, appleClient: scope.auth.appleCodeClient);
         },
         reauth: scope.session.signOut,
       ),
@@ -350,6 +355,19 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
       _Section(context.tr('Aide'), [
         // « Aide Mara » (126): the same card as a business's Compte.
         const SupportCard(framed: false),
+        // 136: a trainer with no business of their own reaches the inbox
+        // here (and from the bell).
+        TrainerInboxTile(
+          builder: (waiting) => _Row(
+            key: const Key('shopper-trainer-inbox'),
+            icon: Icons.support_agent_outlined,
+            title: context.tr('Demandes d\'aide'),
+            subtitle: waiting > 0
+                ? context.tr('{n} en attente', {'n': waiting})
+                : context.tr('L\'équipe de formation de Mara'),
+            onTap: () => context.push(Routes.trainerInbox),
+          ),
+        ),
         _Row(
           key: const Key('shopper-report'),
           icon: Icons.flag_outlined,

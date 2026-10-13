@@ -766,11 +766,16 @@ declare
         'wave_checkout', 'wave_card', 'wave_commission_pct',
         'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',
         'cauris_expire_days', 'cauris_unlock_days', 'cauris_prize_1', 'cauris_prize_2',
-        'cauris_prize_3', 'league_small_max', 'league_medium_max', 'path_league_min',
+        'cauris_prize_3',
+        -- 134: read by cauris_week_close() (the winners' bell, off by default).
+        'cauris_prize_notify',
+        'league_small_max', 'league_medium_max', 'path_league_min',
         'progress_credit_orders', 'path_gates_open',
         'admin_two_step',
         -- 109: read by order_phone_required(), which place_order asks.
         'order_phone_verified',
+        -- 134: read by booking_cancel_hours(), which cancel_order asks.
+        'booking_cancel_hours',
         -- 111: read by create_phone_required(), which create_my_business asks.
         'create_phone_verified',
         -- 113: read by support_whatsapp(), which the shopper's page asks.
@@ -782,7 +787,12 @@ declare
         -- 124: read by trg_welcome_email_request() and welcome_email_claim().
         'welcome_email_on',
         -- 129: read by trg_notify_new_user().
-        'admin_new_user_notify'];
+        'admin_new_user_notify',
+        -- 133: read by help_setting(), which the help's doors and clock ask.
+        'help_hours_open', 'help_hours_close', 'help_escalate_minutes', 'help_late_minutes',
+        'help_daily_limit', 'help_whatsapp_template', 'admin_help_notify',
+        -- 135: read by sign_in_options(), which the website's sign-in asks.
+        'apple_web_signin'];
     v_dead text;
     v_missing text;
 begin

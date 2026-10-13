@@ -558,6 +558,10 @@ void main() {
       for (final k in known) {
         expect(settingCardOf(k), isNotNull, reason: k);
       }
+      // 134 (batch 138): a booking's cancel with the vitrines' orders, the
+      // winners' bell with the week's prizes.
+      expect(settingCardOf('booking_cancel_hours')?.key, 'vitrines');
+      expect(settingCardOf('cauris_prize_notify')?.key, 'cauris');
     });
 
     testWidgets('eight cards; a card opens its page under uppercase sub-headings; back to the cards',

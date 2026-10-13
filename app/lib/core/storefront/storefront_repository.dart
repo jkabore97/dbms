@@ -4,6 +4,7 @@ import 'dart:ui' show Color;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../orders/booking.dart' show BookingCancelTerms;
 import '../orders/orders.dart';
 import '../site/site.dart';
 import '../theme/kaj_theme.dart' show paletteNamed;
@@ -220,6 +221,22 @@ class StorefrontRepository {
   Future<void> acceptBookingTime(String orderId) async {
     await _requireClient()
         .rpc('accept_booking_time', params: {'p_order_id': orderId});
+  }
+
+  /// Until when this booking may still be cancelled, and the business's
+  /// phone (134). Null with no server, for an order with no slot, or on a
+  /// database before 134 (PGRST202) — the card then offers what 125 did.
+  Future<BookingCancelTerms?> bookingCancelTerms(String orderId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('booking_cancel_terms', params: {'p_order_id': orderId});
+      if (v is! Map) return null;
+      return BookingCancelTerms.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
   }
 
   /// This customer's orders, newest first.

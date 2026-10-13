@@ -147,6 +147,15 @@ export function payloadFor(row, env) {
   else if (kind === "courier_application") path = "/console/livreurs";
   // 129: a new account opens its fiche in the console's « Personnes ».
   else if (kind === "new_user") path = personPath(row);
+  // 133: « Besoin d'aide ». A trainer's bells open their inbox on the
+  // request; the business's its « Aide » page; the platform's the console.
+  else if (kind === "help_request" || kind === "help_reopened" || kind === "help_access" || kind === "help_access_ended" || kind === "help_closed") {
+    path = helpInboxPath(row);
+  }
+  else if (kind === "help_escalated") path = "/console/formateurs/aide";
+  else if ((kind === "help_taken" || kind === "help_visit" || kind === "help_resolved") && row.org_id) {
+    path = `/o/${row.org_id}/aide`;
+  }
   else if (kind === "courier_refused" || kind === "courier_photo") path = "/devenir-livreur";
   // 111: an older app's request answered at once opens the creation.
   else if (kind === "application_update_app") path = "/creer-mon-activite";
@@ -191,6 +200,12 @@ export function payloadFor(row, env) {
 function withOrder(path, row) {
   const id = row.params && typeof row.params.order_id === "string" ? row.params.order_id : "";
   return /^[0-9a-f-]{36}$/i.test(id) ? `${path}?commande=${id}` : path;
+}
+
+/// The trainer's inbox, opened on the request the row names (133).
+function helpInboxPath(row) {
+  const id = row.params && typeof row.params.request_id === "string" ? row.params.request_id : "";
+  return /^[0-9a-f-]{36}$/i.test(id) ? `/formateur?demande=${id}` : "/formateur";
 }
 
 /// The console's « Personnes », searched for the new account (its e-mail

@@ -101,13 +101,18 @@ class _TodoSectionState extends State<TodoSection> {
         ),
       );
 
-  /// Each of the fourteen counters: its words and what a tap opens — the
+  /// Each of the fourteen counters (sixteen with 133's two help ones): its
+  /// words and what a tap opens — the
   /// same as « À faire » opened before (105).
   Map<String, _Count> _counts(BuildContext context, PlatformTodo t) {
     final list = <_Count>[
       _Count('orders_stuck', context.tr('Commandes bloquées'), Icons.timer_outlined,
           () => _list('orders_stuck', context.tr('Commandes bloquées')),
           hint: context.tr('en attente depuis 2 h, ou en route depuis 3 h'), urgent: true),
+      // 136: a Pro business waiting for a trainer for 30 open minutes.
+      _Count('help_late', context.tr('Demandes d\'aide sans réponse'), Icons.support,
+          () => context.go(Routes.consoleHelp),
+          hint: context.tr('aucun formateur ne l\'a prise, dans les heures d\'aide'), urgent: true),
       // « Signaler un problème » from the shopper's page (113).
       _Count('reports_open', context.tr('Signalements'), Icons.flag_outlined, () async {
         await showReportsSheet(context, center: widget.center);
@@ -125,6 +130,10 @@ class _TodoSectionState extends State<TodoSection> {
               ? context.tr('dont {n} « J\'ai payé »', {'n': t['spots_paid']})
               : context.tr('demandées par les boutiques'),
           urgent: true),
+      // 136: the other open help requests — taken, or not late yet.
+      _Count('help_open', context.tr('Demandes d\'aide ouvertes'), Icons.support_agent_outlined,
+          () => context.go(Routes.consoleHelp),
+          hint: context.tr('l\'équipe de formation s\'en occupe')),
       _Count('couriers', context.tr('Livreurs à valider'), Icons.sports_motorsports_outlined,
           () => context.go(Routes.consoleCouriers),
           hint: context.tr('pièces envoyées')),

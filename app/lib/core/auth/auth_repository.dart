@@ -1,31 +1,66 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb, visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart' show closeInAppWebView;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'apple_js.dart';
 import 'models.dart';
 import '../errors.dart' as errors;
 
-/// Apple's native sheet (sign_in_with_apple): asks for [scopes] and seals
-/// [nonce] — the SHA-256 of the raw nonce — into the identity token. A
-/// parameter so a test can stand in for Apple.
+/// Apple's sheet (sign_in_with_apple) — native on the iPhone, Apple's JS
+/// popup on the website (139): asks for [scopes] and seals [nonce] — the
+/// SHA-256 of the raw nonce — into the identity token. A parameter so a
+/// test can stand in for Apple.
 typedef AppleCredentialRequest = Future<AuthorizationCredentialAppleID>
     Function({
   required List<AppleIDAuthorizationScopes> scopes,
   required String nonce,
 });
 
-/// Where « Continuer avec Apple » may be drawn: the iPhone app only (125).
-/// On Android and the web, Apple's sign-in would be a web page of its own,
-/// and App Review's rule (4.8) is about the iPhone app beside Google.
+/// Where « Continuer avec Apple » is Apple's native sheet: the iPhone app
+/// (125). The website has it too since 139, in Apple's JS popup
+/// ([appleWebPlatform]); Android keeps Google and the e-mail.
 bool get appleSignInPlatform =>
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    !appleWebPlatform && defaultTargetPlatform == TargetPlatform.iOS;
+
+/// Stands in for kIsWeb in tests (139): the website's « Continuer avec
+/// Apple » cannot otherwise be drawn in a test, which runs on no web.
+@visibleForTesting
+bool? debugAppleWebOverride;
+
+/// The website (marakaj.com), where « Continuer avec Apple » is Apple's JS
+/// popup (139) once Réglages' « Connexion Apple sur le site » is on.
+bool get appleWebPlatform => debugAppleWebOverride ?? kIsWeb;
+
+/// The Services ID the website signs in as (developer.apple.com ›
+/// Identifiers › Services IDs, « Mara Web ») — a public identifier, in
+/// every Apple sign-in address. Apple's identity token then names it as
+/// its audience, so Supabase's Apple « Client IDs » must list it beside
+/// bf.kaj.app. No client secret: the identity token is checked against
+/// Apple's public keys, nothing of Mara's that could expire.
+const appleWebServicesId =
+    String.fromEnvironment('APPLE_WEB_SERVICES_ID', defaultValue: 'bf.kaj.app.web');
+
+/// Whether the website's popup failed only because the person closed it
+/// (Apple JS's « popup_closed_by_user », or « user_cancelled_authorize »
+/// when they pressed Cancel inside it) — the web plugin says so only in
+/// its message.
+bool appleWebPopupClosed(String message) =>
+    message.contains('popup_closed_by_user') || message.contains('user_cancelled_authorize');
+
+/// Whether the website's popup could not open at all: the browser blocked
+/// it (Apple JS's « popup_blocked_by_browser »), or Apple's script was not
+/// there yet and had to be fetched during the tap, after which a browser
+/// such as Safari no longer counts the window as the tap's.
+bool appleWebPopupBlocked(String message) =>
+    message.contains('popup_blocked') || message.contains('did not load');
 
 /// Everything the app does with Supabase auth, behind one door.
 ///
@@ -44,9 +79,21 @@ class AuthRepository {
     http.Client? httpClient,
     AppleCredentialRequest? appleCredential,
     Future<void> Function()? closeSheet,
+    String Function()? webOrigin,
+    this.appleWebCredential,
   })  : _http = httpClient,
         _appleCredential = appleCredential ?? _askApple,
-        _closeSheet = closeSheet ?? closeInAppWebView;
+        _closeSheet = closeSheet ?? closeInAppWebView,
+        _webOrigin = webOrigin ?? (() => Uri.base.origin);
+
+  /// The page's own origin (https://marakaj.com): Apple's popup answers
+  /// to `<origin>/connexion`, one of the Services ID's return URLs. A
+  /// test's stand-in.
+  final String Function() _webOrigin;
+
+  /// Apple's popup on the website (139): a test's stand-in; null, Apple's
+  /// own (Sign in with Apple JS).
+  final AppleCredentialRequest? appleWebCredential;
 
   /// url_launcher's closeInAppWebView, or a test's stand-in.
   final Future<void> Function() _closeSheet;
@@ -142,6 +189,44 @@ class AuthRepository {
   /// launch; false while offline, and asked again next time.
   Future<bool> appleAvailable() => _providerOn('apple');
 
+  /// Whether the website draws « Continuer avec Apple » (139): this is the
+  /// website, Réglages' « Connexion Apple sur le site » is on
+  /// (sign_in_options().apple_web, 135 — readable signed out), and the
+  /// project has Apple on. Off by default, off while either cannot be
+  /// asked, and off against a database without 135 (no such function):
+  /// the button never sends anybody to an Apple page that is not set up.
+  Future<bool> appleWebAvailable() async {
+    if (!appleWebPlatform || !isConfigured) return false;
+    final on = await (_appleWeb ??= _readAppleWeb());
+    if (on == null) _appleWeb = null; // Could not ask: asked again next time.
+    if (on != true) return false;
+    final apple = await appleAvailable();
+    // The button will be drawn: Apple's script is fetched now, so the tap
+    // opens the popup at once, within the tap's own gesture — a popup
+    // opened after a wait is blocked by the browser.
+    if (apple && appleWebCredential == null) unawaited(ensureAppleJs());
+    return apple;
+  }
+
+  Future<bool?>? _appleWeb;
+
+  /// What [appleWebAvailable] last answered (139), known without waiting:
+  /// the deletion's popup must open within the confirmation's tap, so it
+  /// cannot stop to ask. Null until asked ([warmAppleWeb]).
+  bool? _appleWebReady;
+
+  Future<bool?> _readAppleWeb() async {
+    try {
+      final v = await _client!.rpc('sign_in_options').timeout(const Duration(seconds: 8));
+      return v is Map && v['apple_web'] == true;
+    } on PostgrestException {
+      // A database before 135, or refused: the switch is off.
+      return false;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> _providerOn(String provider) async {
     final external = await (_external ??= _readExternal());
     if (external == null) _external = null; // Offline: asked again next time.
@@ -212,7 +297,7 @@ class AuthRepository {
   }
 
   // ----------------------------------------------------------------
-  // Apple — the iPhone app only (125)
+  // Apple — the iPhone app (125) and the website (139)
   // ----------------------------------------------------------------
 
   final AppleCredentialRequest _appleCredential;
@@ -221,6 +306,12 @@ class AuthRepository {
   /// translated by describeError).
   static const appleFailed =
       "La connexion avec Apple n'a pas abouti. Réessayez.";
+
+  /// The website's popup could not open (139): blocked by the browser, or
+  /// Apple's script came too late for this tap. The next tap has the
+  /// script in hand and opens it at once.
+  static const appleWebBlocked =
+      "La fenêtre d'Apple n'a pas pu s'ouvrir. Touchez à nouveau « Continuer avec Apple » ; si rien ne s'ouvre, autorisez les fenêtres pour ce site.";
 
   static Future<AuthorizationCredentialAppleID> _askApple({
     required List<AppleIDAuthorizationScopes> scopes,
@@ -245,16 +336,27 @@ class AuthRepository {
   /// when this returns. Null when the person closed Apple's sheet — nothing
   /// to say about that. Any other failure throws, for the screen to say.
   ///
+  /// On the website (139) the very same path, with Apple's JS popup for
+  /// the Services ID in place of the native sheet: the identity token, its
+  /// nonce, signInWithIdToken — no redirect, and no client secret (which
+  /// Apple lets live six months) anywhere.
+  ///
   /// Apple gives the name only the very first time somebody signs in to
   /// the app. When it does and the profile has no name yet, it is written
   /// the same way as at sign-up ([saveMyName]); the e-mail may be a private
   /// relay address Apple makes, and is kept as Apple gives it.
-  Future<User?> signInWithApple() async {
+  ///
+  /// [ready] is what the caller must have done before the session is taken
+  /// (the device's notes): started before the tap's popup and awaited only
+  /// after Apple answers, so nothing is waited for between the tap and the
+  /// popup — a browser blocks a window opened after a wait (139).
+  Future<User?> signInWithApple({Future<void>? ready}) async {
     final client = _requireClient();
     final rawNonce = newNonce();
     final AuthorizationCredentialAppleID credential;
+    final ask = appleWebPlatform ? _askAppleWebCredential : _appleCredential;
     try {
-      credential = await _appleCredential(
+      credential = await ask(
         scopes: const [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
@@ -264,8 +366,21 @@ class AuthRepository {
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return null;
       throw StateError(appleFailed);
+    } on SignInWithAppleCredentialsException catch (e) {
+      // The website's popup closed by the person: nothing to say.
+      if (appleWebPopupClosed(e.message)) return null;
+      if (appleWebPopupBlocked(e.message)) throw StateError(appleWebBlocked);
+      throw StateError(appleFailed);
+    } on SignInWithAppleNotSupportedException catch (e) {
+      if (appleWebPopupBlocked(e.message)) throw StateError(appleWebBlocked);
+      throw StateError(appleFailed);
     } on SignInWithAppleException {
       throw StateError(appleFailed);
+    }
+    if (ready != null) {
+      try {
+        await ready;
+      } catch (_) {}
     }
     final idToken = credential.identityToken;
     if (idToken == null || idToken.isEmpty) {
@@ -293,7 +408,7 @@ class AuthRepository {
   /// Whether the signed-in person signed in with Apple at least once (130):
   /// their account deletion must revoke Apple's token.
   bool get signedInWithApple {
-    final user = _client?.auth.currentUser;
+    final user = currentUser;
     final providers = user?.appMetadata['providers'];
     return (providers is List && providers.contains('apple')) ||
         (user?.identities?.any((i) => i.provider == 'apple') ?? false);
@@ -304,10 +419,21 @@ class AuthRepository {
   /// token and revokes (App Review 5.1.1(v)). Null when this is not the
   /// iPhone app, the person did not sign in with Apple, or closed the
   /// sheet — the deletion then goes on and the Worker logs it.
+  ///
+  /// On the website (139), Apple's popup for the Services ID: its code is
+  /// the Services ID's, and the Worker is told so ([appleCodeClient]).
+  ///
+  /// On the website only once [warmAppleWeb] has heard that « Connexion
+  /// Apple sur le site » is on: with it off the Services ID may not be
+  /// made yet, and Apple's window would only show an error — the deletion
+  /// then goes on without a code, as before 139.
   Future<String?> appleReauthorizationCode() async {
-    if (!appleSignInPlatform || !signedInWithApple) return null;
+    if (!signedInWithApple) return null;
+    if (!appleSignInPlatform && !appleWebPlatform) return null;
+    if (appleWebPlatform && _appleWebReady != true) return null;
+    final ask = appleWebPlatform ? _askAppleWebCredential : _appleCredential;
     try {
-      final credential = await _appleCredential(
+      final credential = await ask(
         scopes: const [],
         nonce: sha256.convert(utf8.encode(newNonce())).toString(),
       );
@@ -318,6 +444,50 @@ class AuthRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  /// On the website, for somebody who signed in with Apple (139): Apple's
+  /// script fetched ahead of « Supprimer mon compte », so the popup that
+  /// asks for the fresh code opens within the confirmation's tap — a popup
+  /// opened after a download is blocked by the browser. Nothing elsewhere.
+  /// The switch is asked first ([appleWebAvailable], which fetches the
+  /// script when it is on): nobody downloads Apple's script, or sees its
+  /// window, while the website's Apple sign-in is off.
+  void warmAppleWeb() {
+    if (appleWebPlatform && signedInWithApple) {
+      unawaited(appleWebAvailable().then((on) {
+        _appleWebReady = on;
+      }, onError: (Object _) {}));
+    }
+  }
+
+  /// Whose code [appleReauthorizationCode] gives (139): 'web' (the
+  /// Services ID's, from the website's popup) or 'app' (bf.kaj.app's, from
+  /// the iPhone's sheet). The account Worker trades it with that client id
+  /// first, then the other.
+  String get appleCodeClient => appleWebPlatform ? 'web' : 'app';
+
+  /// Apple's popup on the website (Sign in with Apple JS, usePopup): the
+  /// Services ID, the answer posted back to `<this page's origin>/connexion`
+  /// (a return URL of the Services ID — marakaj.com's and www's), the
+  /// hashed nonce sealed into the identity token as on the iPhone.
+  Future<AuthorizationCredentialAppleID> _askAppleWebCredential({
+    required List<AppleIDAuthorizationScopes> scopes,
+    required String nonce,
+  }) async {
+    final stand = appleWebCredential;
+    if (stand != null) return stand(scopes: scopes, nonce: nonce);
+    if (!await ensureAppleJs()) {
+      throw const SignInWithAppleNotSupportedException(message: 'Sign in with Apple JS did not load');
+    }
+    return SignInWithApple.getAppleIDCredential(
+      scopes: scopes,
+      nonce: nonce,
+      webAuthenticationOptions: WebAuthenticationOptions(
+        clientId: appleWebServicesId,
+        redirectUri: Uri.parse('${_webOrigin()}/connexion'),
+      ),
+    );
   }
 
   /// Whether the signed-in person's profile already carries a name. When it

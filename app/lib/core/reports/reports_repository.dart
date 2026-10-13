@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../association/books_start.dart';
 import 'models.dart';
 
 /// The three reports the church module already had in SQL and never had a
@@ -14,7 +15,7 @@ import 'models.dart';
 /// Nothing here is cached. A report is a claim about money at a moment; a
 /// stale one shown without saying so is worse than no report at all, so these
 /// need signal and the screens say when there is none.
-class ReportsRepository {
+class ReportsRepository implements BooksStartApi {
   ReportsRepository(this._client);
 
   final SupabaseClient? _client;
@@ -83,6 +84,49 @@ class ReportsRepository {
     return rows
         .map((r) => GivingLine.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
+  }
+
+  /// « La caisse et la cotisation » (134). Null with no server, for no
+  /// member, or on a database before 134 (PGRST202).
+  @override
+  Future<BooksStart?> booksStart(String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('books_start', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      final start = BooksStart.fromJson(Map<String, dynamic>.from(v));
+      BooksStart.lastKnown[orgId] = start;
+      return start;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> setOpeningBalance(String orgId, double amount, {String? clientUuid}) async {
+    await _requireClient().rpc('set_opening_balance', params: {
+      'p_org_id': orgId,
+      'p_amount': amount,
+      'p_method': 'cash',
+      'p_client_uuid': ?clientUuid,
+    });
+  }
+
+  @override
+  Future<void> setContributionDefault(
+      String orgId, double? amount, ContributionPeriod period) async {
+    await _requireClient().rpc('set_contribution_default', params: {
+      'p_org_id': orgId,
+      'p_amount': amount,
+      'p_period': period.name,
+    });
+  }
+
+  @override
+  Future<void> dismissBooksStart(String orgId) async {
+    await _requireClient().rpc('dismiss_books_start', params: {'p_org_id': orgId});
   }
 
   static String _dateOnly(DateTime when) =>

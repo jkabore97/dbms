@@ -535,28 +535,38 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       context,
       booking: booking,
       googleAvailable: widget.session.auth.googleAvailable,
-      // iPhone only, and only with Apple on (125).
+      // The iPhone, with Apple on (125); the website, with « Connexion
+      // Apple sur le site » on too (139).
       appleAvailable: widget.session.auth.appleAvailable,
+      appleWebAvailable: widget.session.auth.appleWebAvailable,
       accent: _shop?.accent,
     );
     if (choice == null || !mounted) return;
-    try {
-      await widget.session.db.writePref(
-        _resumeKey,
-        streetResumeNote(widget.slug, booking: booking),
-      );
-    } catch (_) {}
-    if (!mounted) return;
+    // The way back, on the device. Apple's popup on the website must open
+    // within the tap (139): for Apple the note is written meanwhile and
+    // awaited before the session is taken; every other door waits for it.
+    final note = () async {
+      try {
+        await widget.session.db.writePref(
+          _resumeKey,
+          streetResumeNote(widget.slug, booking: booking),
+        );
+      } catch (_) {}
+    }();
+    if (choice != OrderSignIn.apple) {
+      await note;
+      if (!mounted) return;
+    }
     widget.session.stashReturnTo(Routes.storefront(widget.slug));
     switch (choice) {
       // Apple's sheet is native (125): the person is in when it closes,
       // and the vitrine takes the order up again as after Google on a
       // phone (_resumeOrder). Closed without signing in: nothing to say,
-      // and nothing left waiting.
+      // and nothing left waiting. The website's Apple popup (139) the same.
       case OrderSignIn.apple:
         final messenger = ScaffoldMessenger.of(context);
         try {
-          if (!await widget.session.signInWithApple()) {
+          if (!await widget.session.signInWithApple(before: note)) {
             // Closed: the vitrine is not waiting for anybody any more.
             await _forgetResume();
           }

@@ -112,3 +112,45 @@ BookingState bookingStateOf(String status, {DateTime? proposedFor}) =>
       'refused' => BookingState.declined,
       _ => BookingState.cancelled,
     };
+
+/// Until when its customer may cancel a booking (134): booking_cancel_terms.
+class BookingCancelTerms {
+  const BookingCancelTerms({
+    required this.hours,
+    required this.until,
+    required this.canCancel,
+    this.paidOnline = false,
+    this.phone,
+  });
+
+  factory BookingCancelTerms.fromJson(Map<String, dynamic> j) {
+    final phone = (j['phone'] as String?)?.trim() ?? '';
+    return BookingCancelTerms(
+      hours: (j['hours'] as num?)?.toInt() ?? 2,
+      until: DateTime.tryParse('${j['until'] ?? ''}'),
+      canCancel: j['can_cancel'] == true,
+      paidOnline: j['paid_online'] == true,
+      phone: phone.isEmpty ? null : phone,
+    );
+  }
+
+  /// The platform's setting (booking_cancel_hours, 2 unless Mara changed it).
+  final int hours;
+
+  /// booked_for minus [hours]: the last moment.
+  final DateTime? until;
+  final bool canCancel;
+
+  /// Paid online: the business gives the money back — the customer calls.
+  final bool paidOnline;
+
+  /// The business's number, to call or to write on WhatsApp.
+  final String? phone;
+
+  /// Whether [now] is still before the cutoff (the server decides; this
+  /// is what the card draws until it asks again).
+  bool openAt(DateTime now) => canCancel && (until == null || !now.isAfter(until!));
+}
+
+/// « https://wa.me/22670000000 »: a number, digits only.
+String whatsappTo(String phone) => 'https://wa.me/${phone.replaceAll(RegExp(r'[^0-9]'), '')}';

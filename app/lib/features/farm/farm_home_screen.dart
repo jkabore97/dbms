@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/help/help_repository.dart';
+import '../help/help_button.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 
@@ -61,6 +63,7 @@ class FarmHomeScreen extends StatefulWidget {
     this.capture,
     this.staff,
     this.accountAction,
+    this.help,
     this.access = OrgAccess.allEdit,
     this.retail,
   });
@@ -93,6 +96,10 @@ class FarmHomeScreen extends StatefulWidget {
   final InvoicingRepository? invoicing;
 
   final Widget? accountAction;
+
+  /// « Besoin d'aide » / « Aide » (136): the app's server unless a test
+  /// gives one.
+  final HelpRepository? help;
 
   /// The vitrine's orders (083): what rings the doorbell on this home
   /// (100). Null in a build with no server.
@@ -298,7 +305,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     avatar: const Icon(Icons.cloud_upload_outlined, size: 16),
                     // Beside Mara's « Admin » on a phone (104): the number
                     // alone, so the bar keeps the farm's name.
-                    label: Text(AdminPill.crowds(context)
+                    label: Text(AdminPill.crowds(context) || HelpButton.crowds(context)
                         ? '$_pending'
                         : Strings.of(context).pendingCount(_pending)),
                     visualDensity: VisualDensity.compact,
@@ -306,6 +313,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                 ),
               ),
             ),
+          // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          HelpButton(org: widget.org, help: widget.help, screen: context.tr('Accueil')),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,
         ],

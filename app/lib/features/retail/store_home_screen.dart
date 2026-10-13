@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../core/help/help_repository.dart';
+import '../help/help_button.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/alert_tone.dart';
@@ -62,6 +64,7 @@ class StoreHomeScreen extends StatefulWidget {
     this.staff,
     this.capture,
     this.accountAction,
+    this.help,
     this.access = OrgAccess.allEdit,
     this.cauris,
   });
@@ -93,6 +96,10 @@ class StoreHomeScreen extends StatefulWidget {
   final InvoicingRepository? invoicing;
 
   final Widget? accountAction;
+
+  /// « Besoin d'aide » / « Aide » (136): the app's server unless a test
+  /// gives one.
+  final HelpRepository? help;
 
   @override
   State<StoreHomeScreen> createState() => _StoreHomeScreenState();
@@ -381,6 +388,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
       appBar: AppBar(
         title: AppBarTitle(widget.org.name),
         actions: [
+          // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          HelpButton(org: widget.org, help: widget.help, screen: Strings.of(context).sale),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,
         ],

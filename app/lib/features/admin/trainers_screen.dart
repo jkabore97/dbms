@@ -7,6 +7,9 @@ import '../../core/errors.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/nav/router.dart';
+import '../../core/theme/app_bar_title.dart' show labelledBarAction;
 
 /// Where the platform runs its trainers (038): the students sent out to teach
 /// businesses the app.
@@ -90,6 +93,14 @@ class _TrainersScreenState extends State<TrainersScreen> {
       appBar: AppBar(
         title: Text(context.tr('Formateurs')),
         actions: [
+          // 136: the team at work — the requests, the times, WhatsApp.
+          labelledBarAction(
+            context,
+            key: const Key('trainers-help-console'),
+            icon: Icons.support_agent_outlined,
+            label: context.tr('Demandes d\'aide'),
+            onPressed: () => context.push(Routes.consoleHelp),
+          ),
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),

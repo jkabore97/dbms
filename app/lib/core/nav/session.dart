@@ -519,8 +519,9 @@ class SessionController extends ChangeNotifier {
   }
 
   /// « Continuer avec Apple » (125), on the sign-in screen and the
-  /// vitrine's sheet, iPhone only. Apple's sheet is native: the session is
-  /// in hand when it closes, so nothing waits for a return trip and no note
+  /// vitrine's sheet, on the iPhone and (139) the website. Apple's sheet
+  /// is native (on the website, Apple's popup): the session is in hand
+  /// when it closes, so nothing waits for a return trip and no note
   /// is left on the device — the person goes the very path a password or
   /// Google takes ([handleSignedIn]: the identity, the code for somebody
   /// with a business, then the businesses). The auth event Supabase raises
@@ -529,12 +530,30 @@ class SessionController extends ChangeNotifier {
   /// session would otherwise be taken for Google's and handled twice.
   /// Closing Apple's sheet does nothing (false); any other failure throws,
   /// for the screen to say.
-  Future<bool> signInWithApple() async {
+  ///
+  /// The note is cleared without waiting (139): on the website Apple's
+  /// popup must open within the tap, and a browser blocks a window opened
+  /// after a wait — the device's database is asked in between otherwise.
+  /// The clearing is awaited once Apple answers, before the session is
+  /// taken; so is [before], the caller's own note (the vitrine's).
+  Future<bool> signInWithApple({Future<void>? before}) async {
+    final ready = () async {
+      try {
+        await db.writePref(_googleKey, null);
+        await db.writePref(_googleReturnKey, null);
+      } catch (_) {}
+      if (before != null) {
+        try {
+          await before;
+        } catch (_) {}
+      }
+    }();
+    final User? user;
     try {
-      await db.writePref(_googleKey, null);
-      await db.writePref(_googleReturnKey, null);
-    } catch (_) {}
-    final user = await auth.signInWithApple();
+      user = await auth.signInWithApple(ready: ready);
+    } finally {
+      await ready;
+    }
     if (user == null) return false;
     await handleSignedIn(user);
     return true;

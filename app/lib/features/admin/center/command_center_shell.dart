@@ -179,6 +179,8 @@ String? centerParent(String path) {
   if (path == Routes.consoleKinds || path == Routes.consoleRequestForm) {
     return Routes.consoleSettingsCard('creation');
   }
+  // « Aide · Console » (136) opens beneath Formateurs.
+  if (path == Routes.consoleHelp) return Routes.trainers;
   if (path == Routes.consoleJournal || path == Routes.consoleAudit) {
     return Routes.consoleSettingsCard('securite');
   }

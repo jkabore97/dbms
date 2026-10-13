@@ -863,6 +863,19 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch132.sql
 
+      - name: "Prove « Besoin d'aide » — the help hours on Ouagadougou's clock (20:55 + 15 open minutes is 7:10), Pro only and the business's own people only (shop, farm, association, each its subjects); the assigned on-duty trainer rung (bell in plain words, a WhatsApp row), escalated after the open minutes to every on-duty trainer and the admins, at once without one, queued out of hours; one active request, N a day; RLS — the asker, the business's admins, the assigned trainer, everyone after the escalation, nothing for anon, no direct write; the first take wins; visit, resolve, « pas encore », close and rating; the 48 h read-only access read while it lives, every write refused, nothing after expiry, revoke or close, journaled; WhatsApp off writes nothing, the Worker's doors the service role's; « Aujourd'hui »'s late and open; run twice the same (133)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch133.sql
+      - name: "Prove « La caisse et la cotisation », a booking cancelled up to 2 hours before, and the prize's bell off — an association's opening balance set once by an owner or admin, 0 or more, never over movements but through the correction path (002's reverse_entry), one balanced entry (cash / « Solde de départ », equity) on the balance sheet and not in the result, the table's own guards; the usual cotisation an administrator's, read by every member; a confirmed or requested booking cancelled by its customer until booked_for minus booking_cancel_hours (0 to 168, journaled), refused in French after, paid online refused, nobody else's, the business rung « Rendez-vous annulé par le client — <jour>, <heure> », goods and a proposal as 099 and 125 left them; the week's close awards its prizes and rings nobody unless cauris_prize_notify is 1; RLS, invoker doors, pinned definers, nothing for anon; shop, farm and association (134)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch134.sql
+      - name: "Prove « Continuer avec Apple » on the website stays behind its switch — apple_web_signin seeded off, sign_in_options() answers only it to anon, the switch a platform admin's (journaled, a number refused), open to anon and authenticated and closed to PUBLIC, a definer with its path pinned, run twice the same (135)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch135.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

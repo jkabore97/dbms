@@ -273,6 +273,18 @@ void main() {
       await tester.pumpWidget(app(session, BusinessShell(org: org)));
       await settle(tester);
       expect(find.byKey(const Key('admin-pill')), findsNothing, reason: org.profile);
+      // 136: « Aide » / « Besoin d'aide » is on every home's bar now — on a
+      // phone the chip says its number, its words to a long press, as
+      // beside the « Admin » pill; on a wide screen its words, as before.
+      expect(find.descendant(of: pendingChip, matching: find.text('2')), findsOneWidget,
+          reason: org.profile);
+      expect(find.byTooltip('2 en attente'), findsOneWidget, reason: org.profile);
+      expect(tester.takeException(), isNull, reason: org.profile);
+    }
+    tester.view.physicalSize = const Size(1000, 780);
+    for (final org in [_farm, _assoc]) {
+      await tester.pumpWidget(app(session, BusinessShell(org: org)));
+      await settle(tester);
       expect(find.descendant(of: pendingChip, matching: find.text('2 en attente')), findsOneWidget,
           reason: org.profile);
       expect(tester.takeException(), isNull, reason: org.profile);
