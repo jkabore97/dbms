@@ -53,6 +53,25 @@
 // Supabase's hook carries no client address: the limits are per number
 // and per account; Supabase's own « SMS per hour » is the global cap.
 
+//
+// Meta's webhook: Meta asked for one, subscribed to the
+// « messages » field (message statuses come through it), before it lets
+// Mara's account create templates. Two optional secrets, made by the owner:
+//
+//   META_VERIFY_TOKEN  any long random string, typed in the app's webhook
+//                      settings at Meta too (« Verify token »)
+//   META_APP_SECRET    the Mara app's « App secret » (App settings › Basic):
+//                      every event Meta POSTs is signed with it
+//                      (X-Hub-Signature-256), and one unsigned or signed
+//                      otherwise is refused
+//
+//   GET  /v1/meta   Meta's check: hub.mode=subscribe and the verify token
+//                   → hub.challenge, else 403
+//   POST /v1/meta   an event: signature checked, then only counted in the
+//                   log (statuses sent / delivered / read / failed, the
+//                   template reviews) — never a number, a name or a text
+//                   — and 200 at once, as Meta wants
+
 const HOOK_TOLERANCE_SECONDS = 5 * 60;
 
 export default {
@@ -66,6 +85,11 @@ export async function route(request, env, fetchImpl) {
   const url = new URL(request.url);
   if (request.method === "GET" && url.pathname === "/v1/health") {
     return json({ ready: ready(env) }, 200);
+  }
+  if (url.pathname === "/v1/meta") {
+    if (request.method === "GET") return onMetaVerify(url, env);
+    if (request.method === "POST") return onMetaEvent(request, env);
+    return json({ error: "GET or POST only" }, 405);
   }
   if (url.pathname === "/v1/send-sms") {
     if (request.method !== "POST") return json({ error: "POST only" }, 405);
@@ -337,4 +361,69 @@ function json(body, status) {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+/// Meta's subscription check: the challenge back only for our token.
+export function onMetaVerify(url, env) {
+  const mode = url.searchParams.get("hub.mode");
+  const token = url.searchParams.get("hub.verify_token");
+  const challenge = url.searchParams.get("hub.challenge") || "";
+  if (env.META_VERIFY_TOKEN && mode === "subscribe"
+      && token !== null && timingSafeEqual(token, env.META_VERIFY_TOKEN)) {
+    return new Response(challenge, { status: 200, headers: { "content-type": "text/plain" } });
+  }
+  return new Response("forbidden", { status: 403 });
+}
+
+/// An event from Meta: signed with the app secret, or refused.
+export async function onMetaEvent(request, env) {
+  const raw = await request.text();
+  if (!env.META_APP_SECRET) return json({ error: "not configured" }, 503);
+  const header = request.headers.get("x-hub-signature-256") || "";
+  const expected = "sha256=" + (await hmacHex(env.META_APP_SECRET, raw));
+  if (!timingSafeEqual(header, expected)) return json({ error: "bad signature" }, 401);
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    return json({ ok: true }, 200);
+  }
+  console.log(`whatsapp-otp: meta event ${JSON.stringify(metaSummary(payload))}`);
+  return json({ ok: true }, 200);
+}
+
+/// What an event says, counted — nothing that names anybody.
+export function metaSummary(payload) {
+  const out = { statuses: {}, messages: 0, templates: {} };
+  for (const entry of Array.isArray(payload?.entry) ? payload.entry : []) {
+    for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      const v = change?.value || {};
+      if (change?.field === "messages") {
+        for (const st of Array.isArray(v.statuses) ? v.statuses : []) {
+          const k = String(st?.status || "unknown").slice(0, 20);
+          out.statuses[k] = (out.statuses[k] || 0) + 1;
+        }
+        out.messages += Array.isArray(v.messages) ? v.messages.length : 0;
+      } else if (change?.field === "message_template_status_update") {
+        const k = `${String(v.message_template_name || "?").slice(0, 40)}:${String(v.event || "?").slice(0, 20)}`;
+        out.templates[k] = (out.templates[k] || 0) + 1;
+      }
+    }
+  }
+  return out;
+}
+
+async function hmacHex(secret, message) {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message)));
+  return [...mac].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function timingSafeEqual(a, b) {
+  const x = new TextEncoder().encode(String(a));
+  const y = new TextEncoder().encode(String(b));
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) diff |= (x[i] || 0) ^ (y[i] || 0);
+  return diff === 0;
 }
