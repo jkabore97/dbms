@@ -29,8 +29,12 @@ class _ArrivalScreenState extends State<ArrivalScreen> {
   String _choice = 'sell';
   bool _busy = false;
 
+  /// Answered, by a button or by going back.
+  bool _answered = false;
+
   Future<void> _go(String intent) async {
     if (_busy) return;
+    _answered = true;
     setState(() => _busy = true);
     await widget.shopper.answerArrival(intent);
     if (!mounted) return;
@@ -67,63 +71,73 @@ class _ArrivalScreenState extends State<ArrivalScreen> {
         detail: context.tr('Devenir livreur'),
       ),
     ];
-    return Scaffold(
-      key: const Key('arrival'),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-              children: [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: MaraWordmark(height: 30),
-                ),
-                const SizedBox(height: 32),
-                Text(context.tr('Bienvenue !'),
-                    style: theme.textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                Text(context.tr('Vous êtes ici pour…'),
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 24),
-                for (final o in options) ...[
-                  _Option(
-                    key: Key('arrival-${o.key}'),
-                    icon: o.icon,
-                    title: o.title,
-                    detail: o.detail,
-                    selected: _choice == o.key,
-                    onTap: _busy ? null : () => setState(() => _choice = o.key),
+    // Back (the phone's button, a swipe) is « plus tard »: answered, so
+    // the question is not put again at the next start (134's review).
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop && !_answered) {
+          _answered = true;
+          widget.shopper.answerArrival('later');
+        }
+      },
+      child: Scaffold(
+        key: const Key('arrival'),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                children: [
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: MaraWordmark(height: 30),
                   ),
-                  const SizedBox(height: 12),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 54,
-                  child: FilledButton(
-                    key: const Key('arrival-continue'),
-                    onPressed: _busy ? null : () => _go(_choice),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: maraDeep,
-                      foregroundColor: maraPaper,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                  const SizedBox(height: 32),
+                  Text(context.tr('Bienvenue !'),
+                      style: theme.textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Text(context.tr('Vous êtes ici pour…'),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  const SizedBox(height: 24),
+                  for (final o in options) ...[
+                    _Option(
+                      key: Key('arrival-${o.key}'),
+                      icon: o.icon,
+                      title: o.title,
+                      detail: o.detail,
+                      selected: _choice == o.key,
+                      onTap: _busy ? null : () => setState(() => _choice = o.key),
                     ),
-                    child: Text(context.tr('Continuer'),
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                  ],
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 54,
+                    child: FilledButton(
+                      key: const Key('arrival-continue'),
+                      onPressed: _busy ? null : () => _go(_choice),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: maraDeep,
+                        foregroundColor: maraPaper,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(context.tr('Continuer'),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  key: const Key('arrival-later'),
-                  onPressed: _busy ? null : () => _go('later'),
-                  child: Text(context.tr('Je choisirai plus tard')),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  TextButton(
+                    key: const Key('arrival-later'),
+                    onPressed: _busy ? null : () => _go('later'),
+                    child: Text(context.tr('Je choisirai plus tard')),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

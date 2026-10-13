@@ -179,7 +179,8 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
             if (!_loading && _error == null)
               StockAttention(
                 products: _items,
-                place: place,
+                // The bar's word (134: « Ventes », « Catalogue »).
+                place: SectionHost.of(context)?.title ?? place,
                 onRestock: _canWrite ? _restock : null,
               ),
             if (_offVitrine)

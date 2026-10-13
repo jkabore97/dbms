@@ -528,7 +528,12 @@ class _AccountCorner extends StatelessWidget {
             final narrow = MediaQuery.sizeOf(context).width < 360;
             const compact = VisualDensity(horizontal: -2, vertical: -2);
             final padding = EdgeInsets.symmetric(horizontal: narrow ? 10 : 14);
-            return Row(
+            // A large text size on a small phone (320 px at 1.3): the
+            // worded button stays one line beside the wordmark, the
+            // wordmark readable (134's review).
+            return MediaQuery.withClampedTextScaling(
+              maxScaleFactor: narrow ? 1.1 : 1.3,
+              child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // « Admin » (104): the command center, for a platform admin.
@@ -648,7 +653,7 @@ class _AccountCorner extends StatelessWidget {
                   ],
                 ),
               ],
-            );
+            ));
         }
       },
     );

@@ -637,57 +637,43 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             // not places: the bar holds the places.
             // An observer (a trainer, a read-only member) only watches.
             if (!widget.org.isObserverOnly) ...[
-              Row(
-                children: [
-                  if (widget.retail != null)
-                    Expanded(
-                      flex: 3,
-                      child: SizedBox(
-                        height: 56,
-                        child: FilledButton.icon(
-                          key: const Key('home-new-sale'),
-                          onPressed: _sell,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                          ),
-                          icon: const Icon(Icons.add, size: 20),
-                          label: Text(context.tr('Nouvelle vente'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w700)),
+              _Acts(
+                sale: widget.retail == null
+                    ? null
+                    : FilledButton.icon(
+                        key: const Key('home-new-sale'),
+                        onPressed: _sell,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
                         ),
+                        icon: const Icon(Icons.add, size: 20),
+                        label: Text(context.tr('Nouvelle vente'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
-                    ),
-                  if (widget.retail != null) const SizedBox(width: 12),
-                  Expanded(
-                      flex: 2,
-                      child: SizedBox(
-                        height: 56,
-                        child: FilledButton.icon(
-                          key: const Key('home-expense'),
-                          onPressed: _openExpense,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                            foregroundColor: theme.colorScheme.onSurface,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                          ),
-                          icon: const Icon(Icons.remove, size: 20),
-                          label: Text(context.tr('Dépense'),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ),
-                ],
+                expense: FilledButton.icon(
+                  key: const Key('home-expense'),
+                  onPressed: _openExpense,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    foregroundColor: theme.colorScheme.onSurface,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.remove, size: 20),
+                  label: Text(context.tr('Dépense'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
               ),
               const SizedBox(height: 16),
             ],
@@ -811,7 +797,9 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             // Invoices past their due date and not paid (115) — and the
             // carnet's credits past theirs (117), which counted on Compte
             // while the carnet opened from there: it is in Argent now.
-            badge: homeCount('invoices') +
+            // Each counted only for somebody who may open its section
+            // (Argent shows for the books alone too).
+            badge: (widget.access.canSee('invoices') ? homeCount('invoices') : 0) +
                 (widget.access.canSee('credits') ? homeCount('credit') : 0),
             route: 'argent',
             alsoRoutes: HomeNav.shopMoneyAlso,
@@ -963,6 +951,38 @@ class _DiscreetState extends State<_Discreet> {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// The home's two acts (134): « Nouvelle vente » and « Dépense », side by
+/// side — or one above the other when their words would not fit side by
+/// side (a 320 px phone, a large text size: « Nouvelle … », « Dép… »).
+class _Acts extends StatelessWidget {
+  const _Acts({required this.sale, required this.expense});
+
+  final Widget? sale;
+  final Widget expense;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final stacked = MediaQuery.sizeOf(context).width / scale < 350;
+    Widget tall(Widget b) => SizedBox(height: 56, child: b);
+    final sale = this.sale;
+    if (sale == null) return tall(expense);
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [tall(sale), const SizedBox(height: 10), tall(expense)],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(flex: 3, child: tall(sale)),
+        const SizedBox(width: 12),
+        Expanded(flex: 2, child: tall(expense)),
+      ],
     );
   }
 }

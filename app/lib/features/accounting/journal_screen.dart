@@ -66,6 +66,11 @@ class _JournalScreenState extends State<JournalScreen> {
   bool _loading = true;
   bool _loadingMore = false;
   bool _exhausted = false;
+
+  /// The last next page failed (no signal): the expenses' screenful stops
+  /// asking for more by itself — a pull or a scroll asks again — instead
+  /// of asking the server once a frame (134's review).
+  bool _moreFailed = false;
   Object? _error;
 
   @override
@@ -79,6 +84,7 @@ class _JournalScreenState extends State<JournalScreen> {
       _loading = true;
       _error = null;
       _exhausted = false;
+      _moreFailed = false;
     });
     try {
       final range = _period.range;
@@ -124,10 +130,14 @@ class _JournalScreenState extends State<JournalScreen> {
         _all = [..._all, ...more];
         _exhausted = more.length < _pageSize;
         _loadingMore = false;
+        _moreFailed = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loadingMore = false);
+      setState(() {
+        _loadingMore = false;
+        _moreFailed = true;
+      });
     }
   }
 
@@ -139,7 +149,12 @@ class _JournalScreenState extends State<JournalScreen> {
     final expenses = widget.direction == 'out';
     // A page of the books holds a few expenses among the sales: the next
     // pages are read until a screenful of them is here (or none is left).
-    if (expenses && !_loading && !_loadingMore && !_exhausted && _rows.length < _pageSize) {
+    if (expenses &&
+        !_loading &&
+        !_loadingMore &&
+        !_exhausted &&
+        !_moreFailed &&
+        _rows.length < _pageSize) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadMore();
       });

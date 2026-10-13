@@ -143,7 +143,11 @@ class _FarmSalesScreenState extends State<FarmSalesScreen> {
             label: context.tr('Commandes'),
             count: _orders,
             build: (_) => ShopOrdersScreen(
-                org: org, retail: widget.retail, focusId: widget.focusOrder),
+                // A bell's new ?commande= while Ventes is on screen: its order.
+                key: ValueKey('orders:${widget.focusOrder}'),
+                org: org,
+                retail: widget.retail,
+                focusId: widget.focusOrder),
           ),
         if (_invoicesShown)
           PlaceSection(

@@ -86,7 +86,11 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   /// The single ＋: « un article ou un service ? » — or straight to the
   /// one there is.
   Future<void> _add(BuildContext context, VoidCallback reload) async {
-    final kind = _servicesShown ? await _ask(context) : 'article';
+    // A database before 098 has no services: the ＋ is an article's
+    // (« Mes services » says why), as its own button was disabled.
+    final kind = _servicesShown && !widget.retail.servicesMissing
+        ? await _ask(context)
+        : 'article';
     if (kind == null || !context.mounted) return;
     final bool? saved;
     if (kind == 'service') {
@@ -110,8 +114,11 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   Future<String?> _ask(BuildContext context) => showMaraSheet<String>(
         context: context,
         showDragHandle: true,
+        // Scrolls when it cannot all show (320 px at a large text size).
+        isScrollControlled: true,
+        useSafeArea: true,
         builder: (sheet) => SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               key: const Key('catalogue-ask'),
@@ -179,6 +186,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               ? ForSaleScreen(
                   org: org, retail: widget.retail, capture: widget.capture)
               : ProductsScreen(
+                  // A bell's new ?q= while Catalogue is on screen: its article.
+                  key: ValueKey('products:${widget.initialQuery}'),
                   org: org,
                   retail: widget.retail,
                   capture: widget.capture,

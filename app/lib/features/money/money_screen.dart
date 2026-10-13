@@ -265,11 +265,16 @@ class MoneyNumbers extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant)),
+                // Whole, smaller when it must (« Factures imp… » at 320
+                // px and a large text size).
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(t.label,
+                      maxLines: 1,
+                      style: theme.textTheme.labelMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant)),
+                ),
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,

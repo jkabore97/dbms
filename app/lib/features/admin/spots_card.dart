@@ -353,7 +353,9 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
                 p.isPublished &&
                 !p.isIngredient &&
                 p.salePrice > 0 &&
-                p.quantity > 0)
+                // Not followed (131): always there, as request_promotion
+                // allows.
+                (p.quantity > 0 || !p.stockTracked))
             .toList()
           ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         if (_productId == null && _articles.isNotEmpty) {

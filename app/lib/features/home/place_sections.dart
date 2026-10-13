@@ -145,12 +145,15 @@ class SectionSwitch extends StatelessWidget {
                       constraints: const BoxConstraints(minHeight: 44),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                        // One line, smaller when it must: a word cut in two
+                        // (« Command|es · 2 » at 320 px, 1.3) reads worse.
                         child: Center(
+                          child: FittedBox(
+                          fit: BoxFit.scaleDown,
                           child: Text(
                             (s.count ?? 0) > 0 ? '${s.label} · ${s.count}' : s.label,
                             textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                             style: theme.textTheme.labelLarge?.copyWith(
                               fontWeight:
                                   s.id == current ? FontWeight.w700 : FontWeight.w500,
@@ -158,6 +161,7 @@ class SectionSwitch extends StatelessWidget {
                                   ? scheme.onSurface
                                   : scheme.onSurfaceVariant,
                             ),
+                          ),
                           ),
                         ),
                       ),

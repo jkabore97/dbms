@@ -491,7 +491,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     // Why « Articles » has a red number (122), on top.
                     StockAttention(
                       products: _products,
-                      place: context.tr('Articles'),
+                      // The bar's word for the place (134: « Catalogue »).
+                      place: SectionHost.of(context)?.title ?? context.tr('Articles'),
                       onRestock: _canRestock ? _restock : null,
                     ),
                     Row(
