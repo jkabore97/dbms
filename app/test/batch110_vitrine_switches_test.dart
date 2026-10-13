@@ -36,7 +36,7 @@ import 'package:kaj_app/features/church/church_home_screen.dart';
 import 'package:kaj_app/features/farm/farm_home_screen.dart';
 import 'package:kaj_app/features/farm/for_sale_screen.dart';
 import 'package:kaj_app/features/orders/shop_orders_screen.dart';
-import 'package:kaj_app/features/retail/store_home_screen.dart';
+import 'package:kaj_app/features/retail/catalogue_screen.dart';
 import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:kaj_app/l10n/strings.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -434,7 +434,6 @@ void main() {
   });
 
   group('the homes, « À vendre » and « Commandes »', () {
-    Widget store(OrgAccess a) => StoreHomeScreen(org: _shopOrg, retail: _Shop(), access: a);
     Widget farm(OrgAccess a) => FarmHomeScreen(db: db, org: _farmOrg, access: a);
     Widget church(OrgAccess a) => ChurchHomeScreen(
         db: db, orgId: _churchOrg.id, orgName: _churchOrg.name, org: _churchOrg,
@@ -467,7 +466,8 @@ void main() {
             supportedLocales: Strings.supportedLocales,
             home: home,
           );
-      for (final build in [store, farm]) {
+      // The farm's under Plus; the shop's (134) are Catalogue's Services.
+      for (final build in [farm]) {
         await tester.pumpWidget(app(build(OrgAccess.allEdit)));
         await settle(tester);
         expect(await places(tester), contains('Mes services'));
@@ -479,6 +479,16 @@ void main() {
         final after = await places(tester);
         expect(after, isNot(contains('Mes services')));
         expect(after, contains('Compte'));
+      }
+      for (final (hidden, shown) in [(const <String>{}, true), (const {'services'}, false)]) {
+        await tester.pumpWidget(app(CatalogueScreen(
+            org: _shopOrg, retail: _Shop(), access: OrgAccess.admin(hidden: hidden))));
+        await settle(tester);
+        expect(find.byKey(const Key('section-services')), shown ? findsOneWidget : findsNothing,
+            reason: 'services hidden: $hidden');
+        expect(find.byKey(const Key('section-articles')), shown ? findsOneWidget : findsNothing,
+            reason: 'one section left: no switch');
+        expect(find.text('Plateau d\'œufs'), findsWidgets, reason: 'the articles stay');
       }
       await tester.pumpWidget(app(church(const OrgAccess.admin(hidden: {}))));
       await settle(tester);

@@ -135,14 +135,24 @@ class _BusinessFrameState extends State<BusinessFrame> {
   HomeDestination? _here(Iterable<HomeDestination> places) {
     final rest = _rest;
     HomeDestination? best;
+    var bestLength = -1;
+    // Each place's own page and the others that are it too (134: Argent
+    // on `factures/…`), the longest match winning.
     for (final p in places) {
-      final r = p.route;
-      if (r == null) continue;
-      final hit = r.isEmpty ? rest.isEmpty : rest == r || rest.startsWith('$r/');
-      if (hit && (best == null || r.length > best.route!.length)) best = p;
+      for (final r in p.routes) {
+        if (_within(rest, r) && r.length > bestLength) {
+          best = p;
+          bestLength = r.length;
+        }
+      }
     }
     return best;
   }
+
+  /// Whether the address under the business, [rest], is the page [r] or
+  /// under it; '' is the home alone.
+  static bool _within(String rest, String r) =>
+      r.isEmpty ? rest.isEmpty : rest == r || rest.startsWith('$r/');
 
   /// Into a place. A door (no route) opens as it says. A place is opened
   /// from the home, the way the home opens it — so the home is always the
@@ -157,8 +167,7 @@ class _BusinessFrameState extends State<BusinessFrame> {
     // The place already selected — its own page, or deeper in it (an
     // invoice, under Factures): nothing. A door (no route) still opens.
     if (org != null && r != null) {
-      final inIt = r.isEmpty ? rest.isEmpty : rest == r || rest.startsWith('$r/');
-      if (inIt) return;
+      if (p.routes.any((route) => _within(rest, route))) return;
     }
     if (_nav.hasUnsaved && !await _leaveUnsaved(themed)) return;
     if (!mounted) return;
@@ -470,5 +479,6 @@ class _UnsavedInputState extends State<UnsavedInput> {
 String shortPlaceLabel(BuildContext context, String label) {
   if (label == context.tr('Commandes')) return context.tr('Cmdes');
   if (label == context.tr('Historique')) return context.tr('Histo.');
+  if (label == context.tr('Catalogue')) return context.tr('Catal.');
   return label;
 }

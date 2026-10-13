@@ -17,6 +17,7 @@ import 'invoice_flow.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../home/place_sections.dart';
 
 /// Invoicing, for whichever business is open.
 ///
@@ -187,7 +188,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
         .fold<double>(0, (sum, i) => sum + i.outstanding);
 
     return Scaffold(
-      appBar: AppBar(
+      // Argent's (shop) or Ventes' (farm) Factures (134): under the place's
+      // name and its switch; the association's own page, under Plus.
+      appBar: SectionHost.appBar(context,
         title: Text(context.tr('Factures')),
         actions: [
           if (widget.org.isAdmin)
@@ -199,7 +202,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           bellRoom,
         ],
       ),
-      body: _loading
+      body: SectionHost.body(context, _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _Failed(error: _error!, onRetry: _load)
@@ -284,7 +287,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                           ),
                     ],
                   ),
-                ),
+                )),
       floatingActionButton: _canWrite && widget.invoicing.isConfigured
           ? FloatingActionButton.extended(
               onPressed: _openNew,

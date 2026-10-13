@@ -30,6 +30,7 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -430,7 +431,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final visible = _visible;
 
     return Scaffold(
-      appBar: AppBar(
+      // Catalogue's Articles (134): under the place's name and its switch.
+      appBar: SectionHost.appBar(context,
         title: AppBarTitle(context.tr('Articles')),
         // On a small phone the view switch stays, the rest fold into one
         // menu (B-3).
@@ -458,7 +460,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
           bellRoom,
         ],
       ),
-      floatingActionButton: widget.access.canEdit('products')
+      floatingActionButton: widget.access.canEdit('products') &&
+              !SectionHost.ownsAddOf(context)
           ? FloatingActionButton.extended(
               onPressed: _addStock,
               key: const Key('products-add'),
@@ -466,7 +469,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               label: Text(context.tr('Ajouter un article')),
             )
           : null,
-      body: RefreshIndicator(
+      body: SectionHost.body(context, RefreshIndicator(
         onRefresh: _load,
         // Slivers, so a shop of two hundred articles builds — and fetches
         // the pictures of — only the ones on screen.
@@ -579,7 +582,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 96)),
           ],
         ),
-      ),
+      )),
     );
   }
 

@@ -962,9 +962,12 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           context.tr('Regardez la vitrine, appelez ou écrivez sur WhatsApp'),
         ],
         'farm' => ShopPage.farm(delivers: shop?.delivers ?? false),
-        // An association's window (098): its services, booked.
+        // An association's window (098): its services, booked — and, since
+        // 134, its articles (a book, a t-shirt, a ticket), ordered.
         'association' || 'church' => [
-          context.tr('Réservez en ligne, sur rendez-vous'),
+          _items.any((i) => !i.isService)
+              ? context.tr('Commandez ou réservez en ligne')
+              : context.tr('Réservez en ligne, sur rendez-vous'),
           context.tr('Une association de chez vous, tenue par ses membres'),
           context.tr('Rien à payer en ligne : vous réglez sur place'),
         ],

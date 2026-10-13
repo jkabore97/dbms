@@ -206,7 +206,7 @@ GoRouter _business(Widget Function() home, OrgSummary org, SessionController ses
           path: '/o/:orgId',
           builder: (_, _) => BusinessPage(child: home()),
           routes: [
-            for (final r in const ['produits', 'commandes', 'factures', 'stock', 'bandes', 'rapports', 'journal', 'compte', 'administration', 'equipe'])
+            for (final r in const ['produits', 'commandes', 'factures', 'stock', 'bandes', 'rapports', 'journal', 'compte', 'administration', 'equipe', 'catalogue', 'argent', 'ventes'])
               GoRoute(path: r, builder: (_, _) => BusinessPage(child: Scaffold(appBar: AppBar(title: Text('Page $r'))))),
           ],
         ),
@@ -602,9 +602,12 @@ void main() {
         .toList();
 
     for (final (org, first, settled) in [
-      (_shop, ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus'], ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus']),
-      (_farm, ['Accueil', 'Stock', 'Bandes', 'Factures', 'Plus'], ['Accueil', 'Stock', 'Bandes', 'Factures', 'Plus']),
-      (_assoc, ['Accueil', 'Historique', 'Rapports', 'Factures', 'Plus'], ['Accueil', 'Factures', 'Plus']),
+      // 134: the folded bars.
+      (_shop, ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus'], ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus']),
+      (_farm, ['Accueil', 'Bandes', 'Stock', 'Ventes', 'Plus'], ['Accueil', 'Bandes', 'Stock', 'Ventes', 'Plus']),
+      // The association's home here has no reports, journal or catalogue
+      // to give: its invoices are under Plus.
+      (_assoc, ['Accueil', 'Journal', 'Rapports', 'Catalogue', 'Plus'], ['Accueil', 'Plus']),
     ]) {
       testWidgets('${org.profile}: there on the first frame, and the page does not move', (tester) async {
         await _phone(tester);
@@ -637,10 +640,10 @@ void main() {
       // The bar the home has not said yet: a home that never says it.
       final router = _business(() => const Scaffold(body: Text('Accueil lent')), _shop, session);
       await tester.pumpWidget(_app(router: router));
-      expect(labels(tester), ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus']);
-      await tester.tap(find.text('Articles'));
+      expect(labels(tester), ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus']);
+      await tester.tap(find.text('Catalogue'));
       await tester.pumpAndSettle();
-      expect(find.text('Page produits'), findsOneWidget);
+      expect(find.text('Page catalogue'), findsOneWidget);
     });
 
     testWidgets('the second time, the places the home said last', (tester) async {
@@ -654,7 +657,7 @@ void main() {
       // Open again, with a home that has not said them yet.
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(_app(router: _business(() => const Scaffold(body: Text('…')), _shop, session)));
-      expect(labels(tester), ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus']);
+      expect(labels(tester), ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus']);
     });
 
     testWidgets('no session (a frame alone): the bar waits for the home, as before', (tester) async {

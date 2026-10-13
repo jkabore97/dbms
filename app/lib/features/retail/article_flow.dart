@@ -152,6 +152,10 @@ class _ArticleFlowState extends State<ArticleFlow> {
   bool _photoWaits = false;
 
   bool get _farm => widget.farm;
+
+  /// An association's article (134): a name, a price, a photo and, when it
+  /// is counted, how many — no buying price, alert, ingredient or date.
+  bool get _simple => widget.org.isAssociation;
   NumberFormat get _money => moneyFormat(widget.org.currency);
 
   static const _shopUnits = ['pièce', 'kg', 'litre', 'paquet', 'sac', 'carton'];
@@ -172,7 +176,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
   }
 
   bool get _vitrineOffered => !(_farm && _hidden('for_sale'));
-  bool get _productionOffered => !_hidden('production') || widget.ingredient;
+  bool get _productionOffered =>
+      !_simple && (!_hidden('production') || widget.ingredient);
 
   @override
   void initState() {
@@ -263,7 +268,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   double? _num(TextEditingController c) => FlowNumberField.read(c);
 
-  bool get _publishedValue => _published ?? _farm;
+  bool get _publishedValue => _published ?? (_farm || _simple);
 
   Future<bool> _record() async {
     final existing = _existing;
@@ -287,7 +292,9 @@ class _ArticleFlowState extends State<ArticleFlow> {
     // A farm's produce with no buying price was grown, not bought: counted
     // by hand, no purchase booked (as « À vendre », 083). Anything bought
     // is received: the count rises and the purchase is booked.
-    final handCount = _farm && cost == null && qty > 0;
+    // An association's article is counted by hand too (134): nothing was
+    // bought, no purchase is booked.
+    final handCount = (_farm || _simple) && cost == null && qty > 0;
     if (qty > 0 && !handCount) {
       await retail.receive(
         orgId: orgId,
@@ -443,7 +450,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
               ? context.tr('Seulement si vous l\'avez acheté pour le revendre — ce que vous produisez n\'en a pas.')
               : context.tr('Ce qu\'un article vous coûte : il fait votre marge.'),
           optional: true,
-          shown: () => sell,
+          shown: () => sell && !_simple,
           isValid: () => _cost.text.trim().isEmpty || (_num(_cost) ?? -1) >= 0,
           builder: _costStep,
         ),
@@ -452,9 +459,12 @@ class _ArticleFlowState extends State<ArticleFlow> {
           title: existing == null
               ? context.tr('Combien en avez-vous ?')
               : context.tr('Combien arrivent ?'),
-          help: existing == null
-              ? null
-              : context.tr('Déjà en stock : {n}', {'n': stockQty(existing.quantity)}),
+          help: existing != null
+              ? context.tr('Déjà en stock : {n}', {'n': stockQty(existing.quantity)})
+              : _simple
+                  ? context.tr('Facultatif. Sans nombre, la vitrine le montre épuisé : on ne peut pas le commander.')
+                  : null,
+          optional: _simple,
           shown: () => sell,
           isValid: () => _quantity.text.trim().isEmpty || (_num(_quantity) ?? -1) >= 0,
           builder: _quantityStep,
@@ -464,7 +474,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
           title: context.tr('Prévenir quand il en reste peu ?'),
           help: context.tr('En dessous de ce nombre, Mara vous prévient.'),
           optional: true,
-          shown: () => sell && existing == null,
+          shown: () => sell && existing == null && !_simple,
           isValid: () => _low.text.trim().isEmpty || (_num(_low) ?? -1) >= 0,
           builder: (_) => FlowNumberField(
             key: const Key('article-low'),
@@ -515,7 +525,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
               ? context.tr('Une bande ou une récolte à venir : les clients commandent à l\'avance.')
               : null,
           optional: true,
-          shown: () => sell && (!_farm || existing == null),
+          shown: () => sell && !_simple && (!_farm || existing == null),
           builder: _detailsStep,
         ),
       ],

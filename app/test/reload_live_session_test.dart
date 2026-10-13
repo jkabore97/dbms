@@ -126,7 +126,7 @@ void main() {
     // The server has not answered (my_orgs hangs), yet the page is there:
     // a cold start with the list on the device settles on it at once and
     // asks behind the screen (A2) — no splash held for the timeouts.
-    expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
+    expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget,
         reason: 'the device knows the business: no splash on a hanging network');
     expect(find.byType(MaraStacked), findsNothing);
 
@@ -134,8 +134,9 @@ void main() {
     auth.gate.complete(const [org]);
     await flush(tester);
 
-    // The page's own title (its bar says « Articles » too, 108).
-    expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
+    // The page's own title: the old address of the articles is Catalogue's
+    // since 134 (its bar says « Catalogue » too, 108).
+    expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget,
         reason: 'the org list landed with the address unchanged, and the '
             'page never redrew — the spinner the owner saw on every reload');
     expect(find.byType(MaraStacked), findsNothing);

@@ -343,6 +343,33 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     currency: _currency,
                   ),
 
+                  // Money out (115) — the vet, a day's labour, transport —
+                  // a button here since 134, not a line under Plus: an
+                  // act, not a place. Kept on the phone like everything
+                  // the farm records.
+                  if (!widget.org.isObserverOnly) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton.icon(
+                        key: const Key('home-expense'),
+                        onPressed: _openExpense,
+                        // The lighter button: « Récolte » stays the farm's
+                        // headline act.
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                          foregroundColor: theme.colorScheme.onSurface,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Icon(Icons.remove),
+                        label: Text(context.tr('Dépense'),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ],
+
                   if (_refused.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     RefusedNotice(
@@ -511,12 +538,15 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     if (mounted) await _refresh();
   }
 
-  /// The farm's five: Accueil (this screen), Stock, Bandes, Factures,
-  /// and Plus. Stock, Bandes and Factures were tiles in the middle of the
-  /// page; they are on the bar now, where they are always in reach.
+  /// The farm's five (134): Accueil (this screen), Bandes, Stock, Ventes —
+  /// always in that order — and Plus, under its headings. « À vendre »,
+  /// « Commandes », the invoices and the carnet left Plus and the bar for
+  /// Ventes, all the farm's selling in one tab; « Dépense » is a button on
+  /// this screen.
   HomeNav _nav() {
     final s = Strings.of(context);
     final id = widget.org.id;
+    final slug = widget.org.slug;
     return HomeNav(
       home: HomeDestination(
         icon: Icons.agriculture_outlined,
@@ -529,14 +559,6 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
       ),
       primary: [
         HomeDestination(
-          icon: Icons.inventory_2_outlined,
-          label: s.stock,
-          // Supplies under their reorder level (115).
-          badge: homeCount('supplies'),
-          route: 'stock',
-          onTap: () => _push(Routes.inside(id, 'stock')),
-        ),
-        HomeDestination(
           icon: Icons.pets_outlined,
           label: s.flocks,
           // Open batches with nothing written today (115).
@@ -544,35 +566,44 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
           route: 'bandes',
           onTap: () => _push(Routes.inside(id, 'bandes')),
         ),
-        if (widget.invoicing != null && widget.access.canSee('invoices'))
-          HomeDestination(
-            icon: Icons.receipt_long_outlined,
-            label: s.invoices,
-            // Invoices past their due date and not paid (115).
-            badge: homeCount('invoices'),
-            route: 'factures',
-            onTap: () => PathGate.open(context, widget.org, 'invoices',
-                () => _push(Routes.inside(id, 'factures'))),
+        HomeDestination(
+          icon: Icons.inventory_2_outlined,
+          label: s.stock,
+          // Supplies under their reorder level (115).
+          badge: homeCount('supplies'),
+          route: 'stock',
+          onTap: () => _push(Routes.inside(id, 'stock')),
+        ),
+        // The farm's vitrine (083) and its money in: À vendre, Commandes,
+        // Factures, and the carnet below them.
+        HomeDestination(
+            icon: Icons.shopping_basket_outlined,
+            selectedIcon: Icons.shopping_basket,
+            label: context.tr('Ventes'),
+            // What waits there: orders and bookings not answered (115),
+            // articles running out, invoices past their date.
+            badge: (widget.access.canSee('orders')
+                    ? homeCount('orders') + homeCount('bookings')
+                    : 0) +
+                homeCount('articles') +
+                (widget.access.canSee('invoices') ? homeCount('invoices') : 0) +
+                // The carnet's credits past their date (115, 117): the
+                // carnet opens from Ventes.
+                (widget.access.canSee('credits') ? homeCount('credit') : 0),
+            route: 'ventes',
+            alsoRoutes: HomeNav.farmSalesAlso,
+            onTap: () => _push(Routes.inside(id, 'ventes')),
           ),
       ],
       more: [
-        // Money out (115): the vet, a day's labour, transport — one question
-        // a screen, kept on the phone like everything the farm records.
-        if (!widget.org.isObserverOnly)
+        // MA VITRINE.
+        if (slug != null && slug.isNotEmpty)
           HomeDestination(
-            icon: Icons.north_east,
-            label: context.tr('Dépense'),
-            onTap: _openExpense,
+            icon: Icons.visibility_outlined,
+            label: context.tr('Voir ma vitrine'),
+            group: PlusGroup.vitrine,
+            onTap: () => context.go(Routes.storefront(slug)),
           ),
-        // The farm's vitrine (083): what it sells, and the orders for it.
-        HomeDestination(
-          icon: Icons.storefront_outlined,
-          label: context.tr('À vendre'),
-          // Articles at zero or under their alert level (115).
-          badge: homeCount('articles'),
-          route: 'a-vendre',
-          onTap: () => _push(Routes.inside(id, 'a-vendre')),
-        ),
         // What the farm does for others (098): ploughing, a stud, a visit —
         // unless Mara's switchboard hid the services (110).
         if (!widget.access.isHidden('services'))
@@ -580,40 +611,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             icon: Icons.event_available_outlined,
             label: context.tr('Mes services'),
             route: 'services',
+            group: PlusGroup.vitrine,
             onTap: () => _push(Routes.inside(id, 'services')),
-          ),
-        HomeDestination(
-          icon: Icons.shopping_bag_outlined,
-          label: context.tr('Commandes'),
-          // Orders and bookings not answered yet (115).
-          badge: homeCount('orders') + homeCount('bookings'),
-          route: 'commandes',
-          onTap: () => _push(Routes.inside(id, 'commandes')),
-        ),
-        if (widget.org.isAdmin)
-          HomeDestination(
-            icon: Icons.route_outlined,
-            label: context.tr('Mon chemin'),
-            route: 'chemin',
-            onTap: () => _push(Routes.inside(id, 'chemin')),
-          ),
-        if (widget.access.canSee('credits'))
-          HomeDestination(
-            icon: Icons.handshake_outlined,
-            label: s.creditBook,
-            // Credits past their due date (115, 117).
-            badge: homeCount('credit'),
-            route: 'credits',
-            onTap: () => PathGate.open(context, widget.org, 'credits',
-                () => context.push(Routes.inside(id, 'credits'))),
-          ),
-        if (widget.access.canSee('production'))
-          HomeDestination(
-            icon: Icons.precision_manufacturing_outlined,
-            label: s.production,
-            route: 'production',
-            onTap: () => PathGate.open(context, widget.org, 'production',
-                () => context.push(Routes.inside(id, 'production'))),
           ),
         if (widget.capture != null &&
             widget.capture!.isConfigured &&
@@ -622,8 +621,27 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             icon: Icons.photo_library_outlined,
             label: s.photos,
             route: 'photos',
+            group: PlusGroup.vitrine,
             onTap: () => context.push(Routes.inside(id, 'photos')),
           ),
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.route_outlined,
+            label: context.tr('Mon chemin'),
+            route: 'chemin',
+            group: PlusGroup.vitrine,
+            onTap: () => _push(Routes.inside(id, 'chemin')),
+          ),
+        if (widget.access.canSee('production'))
+          HomeDestination(
+            icon: Icons.precision_manufacturing_outlined,
+            label: s.production,
+            route: 'production',
+            group: PlusGroup.vitrine,
+            onTap: () => PathGate.open(context, widget.org, 'production',
+                () => context.push(Routes.inside(id, 'production'))),
+          ),
+        // MON ÉQUIPE.
         if (widget.staff != null && widget.org.isAdmin)
           HomeDestination(
             icon: Icons.groups_outlined,
@@ -631,6 +649,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             // Invitations not claimed yet (115).
             badge: homeCount('invitations'),
             route: 'equipe',
+            group: PlusGroup.team,
             onTap: () => context.push(Routes.inside(id, 'equipe')),
           ),
         // The administration's hub (108), for whoever runs the farm.
@@ -639,12 +658,15 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             icon: Icons.admin_panel_settings_outlined,
             label: context.tr('Administration'),
             route: 'administration',
+            group: PlusGroup.team,
             onTap: () => _push(Routes.inside(id, 'administration')),
           ),
+        // MOI.
         HomeDestination(
           icon: Icons.account_circle_outlined,
           label: s.account,
           route: 'compte',
+          group: PlusGroup.me,
           onTap: () => context.push(Routes.inside(id, 'compte')),
         ),
       ],

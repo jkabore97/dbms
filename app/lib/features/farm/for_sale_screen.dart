@@ -22,6 +22,7 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -54,6 +55,10 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
   String? _error;
 
   bool get _canWrite => !widget.org.isObserverOnly;
+
+  /// An association's articles (134): books, t-shirts, tickets — the same
+  /// simple list, its own words.
+  bool get _association => widget.org.isAssociation;
 
   /// « À vendre sur la vitrine » hidden by Mara's switchboard (110): the list
   /// stays — the farm still sells at the farm — but nothing here reaches the
@@ -141,9 +146,12 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final theme = Theme.of(context);
     final money = moneyFormat(widget.org.currency);
     final slug = widget.org.slug;
+    final place = _association ? context.tr('Articles') : context.tr('À vendre');
     return Scaffold(
-      appBar: AppBar(
-        title: AppBarTitle(context.tr('À vendre')),
+      // The farm's Ventes › À vendre, the association's Catalogue ›
+      // Articles (134): under the place's name and its switch.
+      appBar: SectionHost.appBar(context,
+        title: AppBarTitle(place),
         actions: [
           if (slug != null && slug.isNotEmpty)
             labelledBarAction(context,
@@ -154,7 +162,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
           bellRoom,
         ],
       ),
-      floatingActionButton: _canWrite
+      floatingActionButton: _canWrite && !SectionHost.ownsAddOf(context)
           ? FloatingActionButton.extended(
               key: const Key('for-sale-add'),
               onPressed: _add,
@@ -162,7 +170,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
               label: Text(context.tr('Mettre en vente')),
             )
           : null,
-      body: RefreshIndicator(
+      body: SectionHost.body(context, RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
@@ -171,7 +179,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
             if (!_loading && _error == null)
               StockAttention(
                 products: _items,
-                place: context.tr('À vendre'),
+                place: place,
                 onRestock: _canWrite ? _restock : null,
               ),
             if (_offVitrine)
@@ -185,7 +193,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
               )
             else
             Text(
-              context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.'),
+              _association
+                  ? context.tr('Livres, t-shirts, billets : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les gens commandent et viennent le chercher sur place.')
+                  : context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.'),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
@@ -212,7 +222,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    context.tr('Rien en vente pour le moment. « Mettre en vente » : un plateau d\'œufs, un sac de maïs, une pintade…'),
+                    _association
+                        ? context.tr('Aucun article pour le moment. « ＋ » : un livre, un t-shirt, un billet pour la soirée…')
+                        : context.tr('Rien en vente pour le moment. « Mettre en vente » : un plateau d\'œufs, un sac de maïs, une pintade…'),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
@@ -286,7 +298,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                 ),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -336,6 +348,11 @@ class ForSaleSheet extends StatefulWidget {
 class _ForSaleSheetState extends State<ForSaleSheet> {
   /// The units a farm sells by, offered as one tap; anything else is typed.
   static const units = ['pièce', 'plateau', 'kg', 'sac', 'tête', 'litre'];
+
+  /// An association's (134): a book is a piece, a ticket a place.
+  static const associationUnits = ['pièce', 'place', 'lot'];
+
+  bool get _association => widget.org.isAssociation;
 
   late final _name = TextEditingController(text: widget.product.name);
   late final _price = TextEditingController(
@@ -517,7 +534,9 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       labelText: context.tr('Quoi ?'),
-                      hintText: context.tr('Œufs frais, poulets de chair…'),
+                      hintText: _association
+                          ? context.tr('Un livre, un t-shirt, un billet…')
+                          : context.tr('Œufs frais, poulets de chair…'),
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -561,7 +580,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final u in units)
+                for (final u in _association ? associationUnits : units)
                   ChoiceChip(
                     label: Text(context.tr(u)),
                     selected: _unit.text.trim() == u,
@@ -584,6 +603,9 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               ),
             ),
             const SizedBox(height: 4),
+            // A batch still growing is the farm's (083); an association's
+            // article is there or it is not.
+            if (!_association)
             SwitchListTile(
               key: const Key('for-sale-later'),
               contentPadding: EdgeInsets.zero,
@@ -610,7 +632,9 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               maxLines: 2,
               decoration: InputDecoration(
                 labelText: context.tr('En deux mots (facultatif)'),
-                hintText: context.tr('Poulets fermiers de 2 kg, nourris au maïs.'),
+                hintText: _association
+                    ? context.tr('Le t-shirt de l\'association, taille unique.')
+                    : context.tr('Poulets fermiers de 2 kg, nourris au maïs.'),
                 border: const OutlineInputBorder(),
               ),
             ),

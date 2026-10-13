@@ -21,6 +21,7 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -124,7 +125,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final money = moneyFormat(widget.org.currency);
     final slug = widget.org.slug;
     return Scaffold(
-      appBar: AppBar(
+      // Catalogue's Services (134): under the place's name and its switch.
+      appBar: SectionHost.appBar(context,
         title: AppBarTitle(context.tr('Mes services')),
         actions: [
           if (slug != null && slug.isNotEmpty)
@@ -136,7 +138,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           bellRoom,
         ],
       ),
-      floatingActionButton: _canWrite
+      floatingActionButton: _canWrite && !SectionHost.ownsAddOf(context)
           ? FloatingActionButton.extended(
               key: const Key('services-add'),
               onPressed: _missing || _loading ? null : _add,
@@ -150,7 +152,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               label: Text(context.tr('Ajouter un service')),
             )
           : null,
-      body: RefreshIndicator(
+      body: SectionHost.body(context, RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
@@ -253,7 +255,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

@@ -502,11 +502,14 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     );
   }
 
-  /// The association's five: Accueil (this screen), Historique,
-  /// Rapports, Factures, and Plus.
+  /// The association's five (134): Accueil (this screen), Journal,
+  /// Rapports, Catalogue — always in that order — and Plus, under its
+  /// headings. Its invoices, rare here, are under Plus; « ＋ Contribution »
+  /// and « Dépense » stay the big buttons of this screen.
   HomeNav _nav() {
     final s = Strings.of(context);
     final org = widget.org;
+    final slug = org?.slug;
     return HomeNav(
       home: HomeDestination(
         icon: Icons.volunteer_activism_outlined,
@@ -529,7 +532,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             widget.access.canSee('reports'))
           HomeDestination(
             icon: Icons.history,
-            label: s.history,
+            label: context.tr('Journal'),
             route: 'journal',
             onTap: widget.onHistory!,
           ),
@@ -542,20 +545,45 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             route: 'rapports',
             onTap: () => context.push(Routes.inside(org.id, 'rapports')),
           ),
-        if (widget.invoicing != null &&
+        // What the association offers (134): its articles — a book, a
+        // t-shirt, a ticket — and its services (098), one ＋. Not a shop:
+        // no till, no barcode, no buying price.
+        if (widget.retail != null &&
             org != null &&
-            widget.access.canSee('invoices'))
+            widget.access.canSee('products'))
           HomeDestination(
-            icon: Icons.receipt_long_outlined,
-            label: s.invoices,
-            // Invoices past their due date and not paid (115).
-            badge: homeCount('invoices'),
-            route: 'factures',
-            onTap: () => context.push(Routes.inside(org.id, 'factures')),
+            icon: Icons.sell_outlined,
+            selectedIcon: Icons.sell,
+            label: context.tr('Catalogue'),
+            // Articles at zero or under their alert level (115, counted
+            // for an association since 134).
+            badge: homeCount('articles'),
+            route: 'catalogue',
+            alsoRoutes: HomeNav.catalogueAlso,
+            onTap: () => _open('catalogue'),
           ),
       ],
       more: [
         if (org != null) ...[
+          // OUTILS: the invoices, rare in an association.
+          if (widget.invoicing != null && widget.access.canSee('invoices'))
+            HomeDestination(
+              icon: Icons.receipt_long_outlined,
+              label: s.invoices,
+              // Invoices past their due date and not paid (115).
+              badge: homeCount('invoices'),
+              route: 'factures',
+              group: PlusGroup.tools,
+              onTap: () => context.push(Routes.inside(org.id, 'factures')),
+            ),
+          // MA VITRINE.
+          if (slug != null && slug.isNotEmpty)
+            HomeDestination(
+              icon: Icons.visibility_outlined,
+              label: context.tr('Voir ma vitrine'),
+              group: PlusGroup.vitrine,
+              onTap: () => context.go(Routes.storefront(slug)),
+            ),
           if (widget.capture != null &&
               widget.capture!.isConfigured &&
               widget.access.canSee('photos'))
@@ -563,8 +591,10 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               icon: Icons.photo_library_outlined,
               label: s.photos,
               route: 'photos',
+              group: PlusGroup.vitrine,
               onTap: () => context.push(Routes.inside(org.id, 'photos')),
             ),
+          // MON ÉQUIPE.
           if (widget.staff != null && org.isAdmin)
             HomeDestination(
               icon: Icons.groups_outlined,
@@ -572,6 +602,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               // Invitations not claimed yet (115).
               badge: homeCount('invitations'),
               route: 'equipe',
+              group: PlusGroup.team,
               onTap: () => context.push(Routes.inside(org.id, 'equipe')),
             ),
           // The administration's hub (108), for whoever runs the
@@ -581,8 +612,10 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               icon: Icons.admin_panel_settings_outlined,
               label: context.tr('Administration'),
               route: 'administration',
+              group: PlusGroup.team,
               onTap: () => _open('administration'),
             ),
+          // MOI.
           HomeDestination(
             icon: Icons.account_circle_outlined,
             label: s.account,
@@ -590,6 +623,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
             // shop's Compte: the association's carnet opens from there.
             badge: widget.access.canSee('credits') ? homeCount('credit') : 0,
             route: 'compte',
+            group: PlusGroup.me,
             onTap: () => context.push(Routes.inside(org.id, 'compte')),
           ),
         ],
