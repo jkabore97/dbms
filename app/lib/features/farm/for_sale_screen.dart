@@ -370,6 +370,13 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   late DateTime? _availableFrom = widget.product.availableFrom;
   late bool _published = widget.product.isPublished;
 
+  /// « Suivre le stock » (131). Off: no count — always there on the
+  /// vitrine, ordered in any number, never « Rupture ».
+  late bool _tracked = widget.product.stockTracked;
+
+  /// The switch is offered once the database has 131.
+  bool get _trackingOffered => !widget.retail.stockTrackingMissing;
+
   PickedPhoto? _photo;
   bool _busy = false;
   String? _error;
@@ -430,7 +437,11 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         id,
         name: name,
         salePrice: price,
-        quantity: _num(_quantity) ?? 0,
+        // Not followed: no count (switched off, the count goes to zero in
+        // the same change — the server refuses stock left behind).
+        quantity: _tracked ? _num(_quantity) ?? 0 : 0,
+        stockTracked:
+            _tracked != widget.product.stockTracked ? _tracked : null,
         unit: _unit.text,
         availableFrom: _availableFrom,
         clearAvailableFrom: _availableFrom == null,
@@ -593,18 +604,31 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('for-sale-quantity'),
-              controller: _quantity,
-              enabled: !_busy,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Combien en avez-vous ?'),
-                suffixText: _unit.text.trim().isEmpty ? null : _unit.text.trim(),
-                border: const OutlineInputBorder(),
+            if (_trackingOffered)
+              SwitchListTile(
+                key: const Key('for-sale-tracked'),
+                contentPadding: EdgeInsets.zero,
+                value: _tracked,
+                onChanged: _busy ? null : (v) => setState(() => _tracked = v),
+                title: Text(context.tr('Suivre le stock')),
+                subtitle: Text(_tracked
+                    ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                    : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
               ),
-            ),
+            if (_tracked) ...[
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('for-sale-quantity'),
+                controller: _quantity,
+                enabled: !_busy,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: context.tr('Combien en avez-vous ?'),
+                  suffixText: _unit.text.trim().isEmpty ? null : _unit.text.trim(),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
             const SizedBox(height: 4),
             // A batch still growing is the farm's (083); an association's
             // article is there or it is not.

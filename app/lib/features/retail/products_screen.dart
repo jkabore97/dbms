@@ -788,6 +788,15 @@ class _EditProductSheetState extends State<_EditProductSheet> {
       AppScope.maybeOf(context)?.session.accessFor(widget.org.id).isHidden('production') ??
       false;
   late bool _isPublished = widget.product.isPublished;
+
+  /// « Suivre le stock » (131): off, the article has no count. Offered on
+  /// a database with 131, and — to stop following — only at zero: the
+  /// count here moves by entries and sales, never by hand, so goods on
+  /// the shelf are not wiped from this sheet.
+  late bool _tracked = widget.product.stockTracked;
+  bool get _trackingOffered =>
+      !widget.retail.stockTrackingMissing &&
+      (!widget.product.stockTracked || widget.product.quantity <= 0);
   late final _description =
       TextEditingController(text: widget.product.description ?? '');
 
@@ -911,7 +920,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         name: _name.text,
         salePrice: _parse(_price),
         costPrice: _parse(_cost),
-        lowStockAt: _parse(_low),
+        lowStockAt: _tracked ? _parse(_low) : null,
+        stockTracked:
+            _tracked != widget.product.stockTracked ? _tracked : null,
         expiresOn: _expiresOn,
         isIngredient: _isIngredient,
         isPublished: _isPublished,
@@ -969,10 +980,23 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             Text(widget.product.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
-                  {'n': _EditProductSheetState._plain(widget.product.quantity)}),
+              widget.product.stockTracked
+                  ? context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
+                      {'n': _EditProductSheetState._plain(widget.product.quantity)})
+                  : context.tr('Stock non suivi'),
               style: theme.textTheme.bodySmall,
             ),
+            if (_trackingOffered)
+              SwitchListTile(
+                key: const Key('product-tracked'),
+                contentPadding: EdgeInsets.zero,
+                value: _tracked,
+                onChanged: _busy ? null : (v) => setState(() => _tracked = v),
+                title: Text(context.tr('Suivre le stock')),
+                subtitle: Text(_tracked
+                    ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                    : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
@@ -1043,16 +1067,18 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
-            const SizedBox(height: 12),
-            TextField(
-              controller: _low,
-              enabled: !_busy,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Seuil d\'alerte stock bas (facultatif)'),
-                border: const OutlineInputBorder(),
+            if (_tracked) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _low,
+                enabled: !_busy,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: context.tr('Seuil d\'alerte stock bas (facultatif)'),
+                  border: const OutlineInputBorder(),
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _busy
