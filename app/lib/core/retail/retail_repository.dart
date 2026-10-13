@@ -237,6 +237,11 @@ class RetailRepository {
   /// saving a service that would land as an article.
   bool servicesMissing = false;
 
+  /// True once [products] found a database before 131, with no
+  /// `stock_tracked` column: the article form then offers no « Suivre le
+  /// stock » (writing it would fail), and every article is followed.
+  bool stockTrackingMissing = false;
+
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async {
     // is_published was missing from this list for a while: the edit sheet
     // then read every article as "not on the vitrine", showed the switch
@@ -245,6 +250,19 @@ class RetailRepository {
     // sheet can write back.
     const columns = 'id, name, barcode, serial, cost_price, sale_price, '
         'quantity, expires_on, low_stock_at, is_ingredient, is_published';
+    // « Suivre le stock » (131) first; a database before it answers 42703
+    // and the article is read as followed, as every article was.
+    try {
+      final rows = await _products(orgId,
+          '$columns, description, unit, available_from, is_service, price_from, stock_tracked',
+          activeOnly: activeOnly);
+      servicesMissing = false;
+      stockTrackingMissing = false;
+      return rows;
+    } on PostgrestException catch (error) {
+      if (error.code != '42703') rethrow;
+      stockTrackingMissing = true;
+    }
     try {
       final rows = await _products(orgId,
           '$columns, description, unit, available_from, is_service, price_from',
@@ -713,6 +731,7 @@ class RetailRepository {
     double? quantity,
     bool? isService,
     bool? priceFrom,
+    bool? stockTracked,
   }) async {
     final client = _requireClient();
     // `.select()` turns a silent no-op into a fact we can check. A PostgREST
@@ -749,6 +768,9 @@ class RetailRepository {
           // article's edit on a database before 098 still saves.
           'is_service': ?isService,
           'price_from': ?priceFrom,
+          // « Suivre le stock » (131): sent only when the form changed it,
+          // so an edit on a database before 131 still saves.
+          'stock_tracked': ?stockTracked,
         })
         .eq('id', productId)
         .select('id');

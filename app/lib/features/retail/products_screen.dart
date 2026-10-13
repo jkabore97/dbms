@@ -246,7 +246,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   String _details(Product p) => [
-        context.tr('{n} en stock', {'n': _trim(p.quantity)}),
+        // « Suivre le stock » off (131): no count to say.
+        p.stockTracked
+            ? context.tr('{n} en stock', {'n': _trim(p.quantity)})
+            : context.tr('Stock non suivi'),
         if (p.isIngredient) context.tr('ingrédient'),
         if (p.salePrice > 0) _money.format(p.salePrice),
         if (p.expiresOn != null)
@@ -320,7 +323,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           title: Text(p.name),
-          subtitle: p.quantity <= 0 && _canRestock
+          subtitle: p.counted && p.quantity <= 0 && _canRestock
               // At zero, its own way back on the shelf (122).
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +405,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                     ),
-                    if (p.quantity <= 0 && _canRestock)
+                    if (p.counted && p.quantity <= 0 && _canRestock)
                       IconButton(
                         key: ValueKey('product-restock-${p.id}'),
                         tooltip: context.tr('Ajouter du stock'),

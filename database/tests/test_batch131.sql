@@ -16,6 +16,11 @@
 --     a member of a business, for Mara's own, for nobody signed in;
 --     arrival_answer takes only the four answers, writes only the
 --     caller's own row; anon may call neither;
+--   * « Suivre le stock » off (stock_tracked = false): no count, no
+--     alert, never the red number; a till sale and an order move nothing;
+--     the vitrine, the search and « Commander à nouveau » say « en stock »
+--     with no cap; an article with goods on the shelf refuses the switch;
+--     every article from before is followed;
 --   * the backfill: an old-style shop, farm and association (made before
 --     their kind's chart was seeded) get every missing account — the
 --     account an owner switched off stays off, renamed as they named it —
@@ -47,6 +52,9 @@ update platform_settings set value = 'false' where key = 'order_phone_verified';
 \set mara    '''13113113-0000-0000-0000-000000000003'''
 \set shopper '''13113113-0000-0000-0000-000000000004'''
 \set boss    '''13113113-0000-0000-0000-000000000005'''
+\set courier '''13113113-0000-0000-0000-000000000006'''
+\set trainer '''13113113-0000-0000-0000-000000000007'''
+\set invitee '''13113113-0000-0000-0000-000000000008'''
 \set assoc   '''13100000-0000-0000-0000-000000000001'''
 \set shop    '''13100000-0000-0000-0000-000000000002'''
 \set farm    '''13100000-0000-0000-0000-000000000003'''
@@ -60,8 +68,14 @@ insert into auth.users (id, phone, raw_user_meta_data) values
     (:buyer,   '+22613100002', '{"full_name": "Awa 131"}'),
     (:mara,    '+22613100003', '{"full_name": "Mara 131"}'),
     (:shopper, '+22613100004', '{"full_name": "Issa 131"}'),
-    (:boss,    '+22613100005', '{"full_name": "Patron 131"}');
+    (:boss,    '+22613100005', '{"full_name": "Patron 131"}'),
+    (:courier, '+22613100006', '{"full_name": "Livreur 131"}'),
+    (:trainer, '+22613100007', '{"full_name": "Formatrice 131"}'),
+    (:invitee, '+22613100008', '{"full_name": "Invitée 131"}');
 update profiles set is_platform_admin = true where id = :mara;
+update profiles set is_trainer = true where id = :trainer;
+update profiles set phone = '+22613100008' where id = :invitee;
+insert into couriers (user_id, phone) values (:courier, '+22613100006');
 
 insert into orgs (id, name, slug, profile, default_currency, storefront_enabled) values
     (:assoc, 'Entraide 131', 'entraide-131', 'association', 'XOF', true),
@@ -71,6 +85,9 @@ insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility
     (:assoc, :owner, 'owner', 'org', :assoc, 'full'),
     (:shop,  :boss,  'owner', 'org', :shop,  'full'),
     (:farm,  :boss,  'owner', 'org', :farm,  'full');
+-- Somebody invited to the association, not signed in to it yet.
+insert into pending_invitations (org_id, role, scope_kind, scope_id, code, phone, created_by)
+values (:assoc, 'employee', 'org', :assoc, 'INV131', '+22613100008', :owner);
 -- The association's chart, as org_create_core seeds it; a service of 098.
 select seed_church_accounts(:assoc);
 insert into products (org_id, name, sale_price, quantity, is_active, is_published, is_service)
@@ -241,6 +258,25 @@ set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000003';
 do $$ begin
     if arrival_pending() then raise exception 'FAIL: Mara''s own is asked'; end if;
 end $$;
+-- Not new here: a shopper who has ordered (TEST 2), a courier, a trainer,
+-- somebody whose invitation waits — the review's « Bienvenue ! » to old
+-- accounts.
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000002';
+do $$ begin
+    if arrival_pending() then raise exception 'FAIL: a shopper who has ordered is asked'; end if;
+end $$;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000006';
+do $$ begin
+    if arrival_pending() then raise exception 'FAIL: a courier is asked'; end if;
+end $$;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000007';
+do $$ begin
+    if arrival_pending() then raise exception 'FAIL: a trainer is asked'; end if;
+end $$;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000008';
+do $$ begin
+    if arrival_pending() then raise exception 'FAIL: somebody invited is asked'; end if;
+end $$;
 set local "request.jwt.claim.sub" = '';
 do $$ begin
     if arrival_pending() then raise exception 'FAIL: nobody signed in is asked'; end if;
@@ -274,7 +310,7 @@ begin
      where proname in ('arrival_pending', 'arrival_answer') and prosecdef
        and not coalesce((select true from unnest(proconfig) c where c like 'search_path=%'), false);
     if v_loose > 0 then raise exception 'FAIL: a definer without its search path'; end if;
-    raise notice 'PASS: asked once (an unknown answer refused, the first answer''s time kept, nobody else''s row); never a business''s owner, Mara''s own or nobody; anon may neither ask nor answer; search path pinned';
+    raise notice 'PASS: asked once (an unknown answer refused, the first answer''s time kept, nobody else''s row); never a business''s owner, Mara''s own, nobody, a shopper who has ordered, a courier, a trainer or somebody invited; anon may neither ask nor answer; search path pinned';
 end $$;
 
 \echo ''
@@ -358,6 +394,122 @@ do $$ begin
         raise exception 'FAIL: 131 run twice added something';
     end if;
     raise notice 'PASS: old shop, farm and association get their kind''s whole chart (8, 16, 14); the account the owner renamed and switched off kept as it was; the owner''s dial kept; « premier article » marked on Le Chemin; the showcase left alone; run again, nothing more';
+end $$;
+
+\echo ''
+\echo '--- TEST 5: « Suivre le stock » off — never épuisé, ordered in any number, moved by nothing ---'
+-- Every article there was is followed: nothing changes for anybody.
+do $$ begin
+    if exists (select 1 from products where not stock_tracked) then
+        raise exception 'FAIL: an article from before is not followed';
+    end if;
+end $$;
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000001';
+do $$
+declare
+    v_id uuid;
+    v_before int;
+begin
+    v_before := (home_counts('13100000-0000-0000-0000-000000000001') ->> 'articles')::int;
+    -- The form's « Suivre le stock » off: ensure_product, then the row.
+    v_id := ensure_product('13100000-0000-0000-0000-000000000001', 'Entrée concert 131', 2500,
+                           null, null, null, '13113113-0000-0000-0000-000000000001', false);
+    update products set stock_tracked = false, is_published = true, low_stock_at = 3
+     where id = v_id;
+    insert into t131 values ('concert', v_id);
+    -- A count typed anyway does not stick.
+    update products set quantity = 5 where id = v_id;
+    if (select quantity from products where id = v_id) <> 0
+       or (select low_stock_at from products where id = v_id) is not null then
+        raise exception 'FAIL: an article not followed kept a count or an alert';
+    end if;
+    -- Never Catalogue's red number.
+    if (home_counts('13100000-0000-0000-0000-000000000001') ->> 'articles')::int <> v_before then
+        raise exception 'FAIL: an article not followed is counted as running out';
+    end if;
+    -- A till sale (record_sale) of it: no « plus de stock », nothing moved.
+    perform record_sale('13100000-0000-0000-0000-000000000001',
+        jsonb_build_array(jsonb_build_object('product_id', v_id, 'name', 'Entrée concert 131',
+                                             'quantity', 2, 'unit_price', 2500)));
+    if (select quantity from products where id = v_id) <> 0 then
+        raise exception 'FAIL: a till sale moved a count not followed';
+    end if;
+    -- The t-shirts (3 left, followed) cannot stop being followed with goods on the shelf.
+    begin
+        update products set stock_tracked = false where id = (select id from t131 where which = 'tshirt');
+        raise exception 'FAIL: three t-shirts were zeroed with no trace';
+    exception when others then
+        if sqlerrm like 'FAIL:%' then raise; end if;
+    end;
+    if (select quantity from products where id = (select id from t131 where which = 'tshirt')) <> 3 then
+        raise exception 'FAIL: the t-shirts'' count moved';
+    end if;
+end $$;
+commit;
+begin;
+set local role anon;
+do $$ begin
+    if (select in_stock from storefront_products('entraide-131') where name = 'Entrée concert 131') is not true then
+        raise exception 'FAIL: the vitrine shows an article not followed « épuisé »';
+    end if;
+    if (select stock_left from storefront_stock('entraide-131')
+         where id = (select id from t131 where which = 'concert')) is not null then
+        raise exception 'FAIL: the basket is capped for an article not followed';
+    end if;
+    if (select in_stock from search_products('Entrée concert') where name = 'Entrée concert 131') is not true then
+        raise exception 'FAIL: the search says an article not followed is sold out';
+    end if;
+    -- The ticket at zero, followed, is still « épuisé »: nothing else changed.
+    if (select in_stock from storefront_products('entraide-131') where name = 'Billet soirée 131') is true then
+        raise exception 'FAIL: an article at zero, followed, is in stock';
+    end if;
+end $$;
+commit;
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000002';
+do $$ begin
+    insert into t131 values ('concert_order', place_order('entraide-131',
+        jsonb_build_array(jsonb_build_object(
+            'product_id', (select id from t131 where which = 'concert'), 'quantity', 7)),
+        'pickup', 'Samedi', null, null, 'cash'));
+    insert into t131 values ('concert_order2', place_order('entraide-131',
+        jsonb_build_array(jsonb_build_object(
+            'product_id', (select id from t131 where which = 'concert'), 'quantity', 1)),
+        'pickup', 'Dimanche', null, null, 'cash'));
+end $$;
+commit;
+update orders set status = 'accepted' where id = (select id from t131 where which = 'concert_order');
+update orders set status = 'picked_up' where id = (select id from t131 where which = 'concert_order');
+update orders set status = 'accepted' where id = (select id from t131 where which = 'concert_order2');
+update orders set status = 'cancelled' where id = (select id from t131 where which = 'concert_order2');
+begin;
+set local role authenticated;
+set local "request.jwt.claim.sub" = '13113113-0000-0000-0000-000000000002';
+do $$
+declare b jsonb;
+begin
+    -- « Commander à nouveau »: the seven, uncapped.
+    b := my_order_basket((select id from t131 where which = 'concert_order'));
+    if (b -> 'lines' -> 0 ->> 'quantity')::numeric <> 7 then
+        raise exception 'FAIL: « Commander à nouveau » capped an article not followed: %', b;
+    end if;
+end $$;
+commit;
+do $$ begin
+    if (select quantity from products where id = (select id from t131 where which = 'concert')) <> 0 then
+        raise exception 'FAIL: an order moved a count not followed';
+    end if;
+    if exists (select 1 from order_stock_moves
+                where product_id = (select id from t131 where which = 'concert')) then
+        raise exception 'FAIL: an order wrote a stock move for an article not followed';
+    end if;
+    if (select total from sales where order_id = (select id from t131 where which = 'concert_order')) <> 17500 then
+        raise exception 'FAIL: the collected order is not a sale of 17 500';
+    end if;
+    raise notice 'PASS: every article from before followed; not followed: no count, no alert, never Catalogue''s red number, a till sale moves nothing, goods on the shelf refuse the switch; the vitrine, its basket and the search say « en stock »; ordered 7, collected as a sale of 17 500, one cancelled — nothing moved, no stock move written; « Commander à nouveau » uncapped; an article at zero still « épuisé »';
 end $$;
 
 -- Tidy: the profiles' answers and the fixtures go with the run's database.

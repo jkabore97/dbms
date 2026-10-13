@@ -252,7 +252,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                     ),
                     title: Text(p.name,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: p.quantity <= 0 && _canWrite
+                    subtitle: p.counted && p.quantity <= 0 && _canWrite
                         // At zero, its own way back (122).
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,6 +310,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     final from = p.availableFrom;
     final when = from != null && from.isAfter(today)
         ? translate(trCurrent, 'à partir du {date}', {'date': DateFormat('dd/MM').format(from)})
+        // « Suivre le stock » off (131): always there, no count.
+        : !p.stockTracked
+            ? translate(trCurrent, 'Stock non suivi')
         : p.quantity > 1
             ? translate(trCurrent, '{n} disponibles', {'n': _plain(p.quantity)})
             : translate(trCurrent, '{n} disponible', {'n': _plain(p.quantity)});

@@ -6,15 +6,16 @@ import '../common/attention_banner.dart';
 
 /// The articles the bar's red number counts on « Articles » and on the
 /// farm's « À vendre » (115's home_counts): goods at zero, or at or under
-/// their alert level — out of stock first.
+/// their alert level — out of stock first. An article whose stock is not
+/// followed (131) is never flagged: it has no count.
 List<Product> stockFlagged(List<Product> products) {
   final out = [
     for (final p in products)
-      if (!p.isService && p.quantity <= 0) p,
+      if (p.counted && p.quantity <= 0) p,
   ];
   final low = [
     for (final p in products)
-      if (!p.isService && p.quantity > 0 && p.isLow) p,
+      if (p.counted && p.quantity > 0 && p.isLow) p,
   ];
   return [...out, ...low];
 }
@@ -22,7 +23,7 @@ List<Product> stockFlagged(List<Product> products) {
 /// « Rupture » at zero, « Bientôt épuisé » under the alert level; null for
 /// an article with stock enough.
 String? stockChip(BuildContext context, Product p) {
-  if (p.isService) return null;
+  if (!p.counted) return null;
   if (p.quantity <= 0) return context.tr('Rupture');
   if (p.isLow) return context.tr('Bientôt épuisé');
   return null;
