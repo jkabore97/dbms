@@ -16,15 +16,20 @@ import 'reports_sheet.dart';
 import '../../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 
-/// « À faire » (105): the center's first page. What waits on the platform
-/// and what ends within seven days, as numbers to tap — each opens the
-/// screen that acts on it, or the list of the businesses behind it — then
-/// the month's money, the growth and the health (072's figures).
+/// « Aujourd'hui » (105, folded in 135): « Qu'est-ce qui m'attend ? ».
+/// A greeting, four numbers (a tap: the analyses), then « VOUS ATTEND »:
+/// only the counters that are not zero, the most urgent first, each
+/// opening what acts on it or the list of the businesses behind it. The
+/// counters at zero fold into one green line that opens on a tap. The
+/// month's figures (072) are folded at the foot.
 class TodoSection extends StatefulWidget {
-  const TodoSection({super.key, required this.center, required this.admin});
+  const TodoSection({super.key, required this.center, required this.admin, this.name});
 
   final CommandCenterRepository center;
   final AdminRepository admin;
+
+  /// The admin's name, for « Bonjour … »: its first word.
+  final String? name;
 
   @override
   State<TodoSection> createState() => _TodoSectionState();
@@ -32,9 +37,12 @@ class TodoSection extends StatefulWidget {
 
 class _TodoSectionState extends State<TodoSection> {
   PlatformTodo? _todo;
+  PlatformToday? _today;
+  PlatformOverview? _overview;
   String? _error;
   bool _loading = true;
-  final _today = GlobalKey<ConsoleTodayState>();
+  bool _zerosOpen = false;
+  final _figures = GlobalKey<ConsoleTodayState>();
 
   @override
   void initState() {
@@ -61,6 +69,16 @@ class _TodoSectionState extends State<TodoSection> {
         _loading = false;
       });
     }
+    // The four numbers: what the server has, never a number made up.
+    if (!widget.center.isConfigured) return;
+    try {
+      final today = await widget.center.today();
+      if (mounted) setState(() => _today = today);
+    } catch (_) {}
+    try {
+      final overview = await widget.center.overview();
+      if (mounted) setState(() => _overview = overview);
+    } catch (_) {}
   }
 
   Future<void> _list(String key, String title) => showMaraSheet<void>(
@@ -76,83 +94,95 @@ class _TodoSectionState extends State<TodoSection> {
         ),
       );
 
+  /// Each of the fourteen counters: its words and what a tap opens — the
+  /// same as « À faire » opened before (105).
+  Map<String, _Count> _counts(BuildContext context, PlatformTodo t) {
+    final list = <_Count>[
+      _Count('orders_stuck', context.tr('Commandes bloquées'), Icons.timer_outlined,
+          () => _list('orders_stuck', context.tr('Commandes bloquées')),
+          hint: context.tr('en attente depuis 2 h, ou en route depuis 3 h'), urgent: true),
+      // « Signaler un problème » from the shopper's page (113).
+      _Count('reports_open', context.tr('Signalements'), Icons.flag_outlined, () async {
+        await showReportsSheet(context, center: widget.center);
+        if (mounted) await _load();
+      }, hint: context.tr('des clients, à lire'), urgent: true),
+      _Count('payouts_failed', context.tr('Versements Wave échoués'), Icons.sync_problem_outlined,
+          () => context.go(Routes.consoleWave),
+          hint: context.tr('à relancer dans Paiements'), urgent: true),
+      _Count('pro_paid', context.tr('« J\'ai payé » Mara Pro à confirmer'),
+          Icons.workspace_premium_outlined, () => context.go(Routes.consolePro),
+          hint: context.tr('à vérifier sur Wave'), urgent: true),
+      _Count('spots', context.tr('Mises en avant à traiter'), Icons.campaign_outlined,
+          () => context.go(Routes.consoleFeatured),
+          hint: t['spots_paid'] > 0
+              ? context.tr('dont {n} « J\'ai payé »', {'n': t['spots_paid']})
+              : context.tr('demandées par les boutiques'),
+          urgent: true),
+      _Count('couriers', context.tr('Livreurs à valider'), Icons.sports_motorsports_outlined,
+          () => context.go(Routes.consoleCouriers),
+          hint: context.tr('pièces envoyées')),
+      // Businesses people created themselves, or Mara did (111): no
+      // request waits for approval any more — the new ones to welcome.
+      _Count('new_7', context.tr('Nouvelles activités (7 j)'), Icons.add_business_outlined,
+          () => _list('new_7', context.tr('Nouvelles activités (7 j)')),
+          hint: context.tr('à accueillir')),
+      _Count('silent_30', context.tr('Silencieuses depuis 30 jours'), Icons.bedtime_outlined,
+          () => context.go('${Routes.consoleBusinesses}?activite=silent30'),
+          hint: context.tr('à rappeler')),
+      // A Pro tool a rule hides, back to hidden when its payment ended (104):
+      // its owner was told; Mara may want to call.
+      _Count('features_lapsed', context.tr('Fonctions masquées après la fin d\'un paiement'),
+          Icons.visibility_off_outlined,
+          () => _list('features_lapsed',
+              context.tr('Fonctions masquées après la fin d\'un paiement')),
+          hint: context.tr('le propriétaire est prévenu')),
+      _Count('plans_ending', context.tr('Mara Pro qui se termine'), Icons.event_busy_outlined,
+          () => _list('plans_ending', context.tr('Mara Pro qui se termine')),
+          hint: context.tr('dans les 7 jours')),
+      _Count('unlocks_ending', context.tr('Outils ouverts qui se ferment'),
+          Icons.lock_clock_outlined,
+          () => _list('unlocks_ending', context.tr('Outils ouverts qui se ferment')),
+          hint: context.tr('dans les 7 jours')),
+      _Count('promos_ending', context.tr('Cauris offerts qui expirent'),
+          Icons.hourglass_bottom_outlined,
+          () => _list('promos_ending', context.tr('Cauris offerts qui expirent')),
+          hint: context.tr('dans les 7 jours')),
+      _Count('spots_ending', context.tr('Mises en avant qui finissent'), Icons.campaign_outlined,
+          () => _list('spots_ending', context.tr('Mises en avant qui finissent')),
+          hint: context.tr('dans les 7 jours')),
+      _Count('rules_ending', context.tr('Réglages de fonctions qui expirent'),
+          Icons.toggle_on_outlined,
+          () => _list('rules_ending', context.tr('Réglages de fonctions qui expirent')),
+          hint: context.tr('dans les 7 jours')),
+    ];
+    return {for (final c in list) c.key: c};
+  }
+
+  String _hello(BuildContext context) {
+    final first = (widget.name ?? '').trim().split(RegExp(r'\s+')).first;
+    return first.isEmpty
+        ? context.tr('Bonjour')
+        : context.tr('Bonjour {name}', {'name': first});
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final t = _todo ?? const PlatformTodo({});
-    final spots = t['spots_paid'] + t['spots_asked'];
-    final waiting = <_Count>[
-      // Businesses people created themselves, or Mara did (111): no
-      // request waits for approval any more — the new ones to welcome.
-      _Count('new_7', t['new_7'], context.tr('Nouvelles activités (7 j)'),
-          Icons.add_business_outlined,
-          () => _list('new_7', context.tr('Nouvelles activités (7 j)')),
-          hint: context.tr('à accueillir')),
-      _Count('pro_paid', t['pro_paid'], context.tr('« J\'ai payé » Mara Pro à confirmer'),
-          Icons.workspace_premium_outlined, () => context.go(Routes.consolePro)),
-      _Count('spots', spots, context.tr('Mises en avant à traiter'), Icons.campaign_outlined,
-          () => context.go(Routes.consoleFeatured),
-          hint: t['spots_paid'] > 0
-              ? context.tr('dont {n} « J\'ai payé »', {'n': t['spots_paid']})
-              : null),
-      _Count('couriers', t['couriers'], context.tr('Livreurs à valider'),
-          Icons.sports_motorsports_outlined, () => context.go(Routes.consoleCouriers)),
-      _Count('orders_stuck', t['orders_stuck'], context.tr('Commandes bloquées'),
-          Icons.timer_outlined,
-          () => _list('orders_stuck', context.tr('Commandes bloquées')),
-          hint: context.tr('en attente depuis 2 h, ou en route depuis 3 h')),
-      // « Signaler un problème » from the shopper's page (113).
-      _Count('reports_open', t['reports_open'], context.tr('Signalements'),
-          Icons.flag_outlined,
-          () async {
-            await showReportsSheet(context, center: widget.center);
-            if (mounted) await _load();
-          },
-          hint: context.tr('des clients, à lire')),
-      _Count('payouts_failed', t['payouts_failed'], context.tr('Versements Wave échoués'),
-          Icons.sync_problem_outlined, () => context.go(Routes.consoleWave),
-          warn: true),
-      // A Pro tool a rule hides, back to hidden when its payment ended (104):
-      // its owner was told; Mara may want to call.
-      _Count('features_lapsed', t['features_lapsed'],
-          context.tr('Fonctions masquées après la fin d\'un paiement'),
-          Icons.visibility_off_outlined,
-          () => _list('features_lapsed',
-              context.tr('Fonctions masquées après la fin d\'un paiement'))),
-      _Count('silent_30', t['silent_30'], context.tr('Silencieuses depuis 30 jours'),
-          Icons.bedtime_outlined,
-          () => context.go('${Routes.consoleBusinesses}?activite=silent30'),
-          hint: context.tr('à rappeler')),
-    ];
-    final ending = <_Count>[
-      _Count('plans_ending', t['plans_ending'], context.tr('Mara Pro qui se termine'),
-          Icons.event_busy_outlined,
-          () => _list('plans_ending', context.tr('Mara Pro qui se termine'))),
-      _Count('unlocks_ending', t['unlocks_ending'], context.tr('Outils ouverts qui se ferment'),
-          Icons.lock_clock_outlined,
-          () => _list('unlocks_ending', context.tr('Outils ouverts qui se ferment'))),
-      _Count('promos_ending', t['promos_ending'], context.tr('Cauris offerts qui expirent'),
-          Icons.hourglass_bottom_outlined,
-          () => _list('promos_ending', context.tr('Cauris offerts qui expirent'))),
-      _Count('spots_ending', t['spots_ending'], context.tr('Mises en avant qui finissent'),
-          Icons.campaign_outlined,
-          () => _list('spots_ending', context.tr('Mises en avant qui finissent'))),
-      _Count('rules_ending', t['rules_ending'], context.tr('Réglages de fonctions qui expirent'),
-          Icons.toggle_on_outlined,
-          () => _list('rules_ending', context.tr('Réglages de fonctions qui expirent'))),
-    ];
-    final open = t.waiting;
+    final counts = _counts(context, t);
+    final waiting = t.waitingOrder;
+    final zeros = t.zeroKeys;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('À faire')),
+        title: Text(_hello(context), key: const Key('today-hello')),
         actions: [
           IconButton(
             tooltip: context.tr('Actualiser'),
             onPressed: _loading
                 ? null
                 : () {
-                    _today.currentState?.reload();
+                    _figures.currentState?.reload();
                     _load();
                   },
             icon: const Icon(Icons.refresh),
@@ -163,7 +193,7 @@ class _TodoSectionState extends State<TodoSection> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
           children: [
             if (_loading && _todo == null) const LinearProgressIndicator(minHeight: 2),
             if (_error != null)
@@ -175,14 +205,83 @@ class _TodoSectionState extends State<TodoSection> {
                   trailing: TextButton(onPressed: _load, child: Text(context.tr('Réessayer'))),
                 ),
               ),
-            _Heading(context.tr('À traiter'),
-                trailing: open == 0 ? context.tr('rien n\'attend') : '$open'),
-            _Grid(counts: waiting),
-            const SizedBox(height: 20),
-            _Heading(context.tr('Dans les 7 jours')),
-            _Grid(counts: ending),
-            const SizedBox(height: 24),
-            ConsoleToday(key: _today, admin: widget.admin),
+            _Numbers(
+              today: _today,
+              overview: _overview,
+              newThisWeek: _overview?.newThisWeek ?? t['new_7'],
+              onTap: () => context.go(Routes.platformAnalytics),
+            ),
+            const SizedBox(height: 18),
+            _Label(
+              context.tr('Vous attend · {n}', {'n': waiting.length}),
+              trailing: waiting.isEmpty ? null : context.tr('par urgence'),
+            ),
+            if (_todo != null && waiting.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(context.tr('Rien ne vous attend.'),
+                    key: const Key('today-nothing'),
+                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+              ),
+            if (waiting.isNotEmpty)
+              _Lines(children: [
+                for (final k in waiting) _Line(count: counts[k]!, n: t.count(k)),
+              ]),
+            const SizedBox(height: 12),
+            if (_todo != null && zeros.isNotEmpty) ...[
+              Material(
+                key: const Key('todo-all-good'),
+                color: const Color(0xFFE6F2E8),
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => setState(() => _zerosOpen = !_zerosOpen),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline, color: Color(0xFF2E7D4F)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            zeros.length > 1
+                                ? context.tr('Tout le reste va bien · {n} contrôles à zéro',
+                                    {'n': zeros.length})
+                                : context.tr('Tout le reste va bien · {n} contrôle à zéro',
+                                    {'n': zeros.length}),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF1E5E3A), fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        Icon(_zerosOpen ? Icons.expand_less : Icons.expand_more,
+                            color: const Color(0xFF2E7D4F)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_zerosOpen) ...[
+                const SizedBox(height: 8),
+                _Lines(children: [
+                  for (final k in zeros) _Line(count: counts[k]!, n: 0),
+                ]),
+              ],
+            ],
+            const SizedBox(height: 12),
+            // The month's figures (072): folded, there for whoever wants
+            // them — and « Écrire aux boutiques ».
+            Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                key: const Key('today-figures'),
+                tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                childrenPadding: EdgeInsets.zero,
+                title: Text(context.tr('Les chiffres du mois'),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                subtitle: Text(context.tr('Ce mois, croissance, santé, écrire aux boutiques')),
+                children: [ConsoleToday(key: _figures, admin: widget.admin)],
+              ),
+            ),
           ],
         ),
       ),
@@ -191,20 +290,19 @@ class _TodoSectionState extends State<TodoSection> {
 }
 
 class _Count {
-  const _Count(this.key, this.n, this.label, this.icon, this.onTap,
-      {this.hint, this.warn = false});
+  const _Count(this.key, this.label, this.icon, this.onTap, {this.hint, this.urgent = false});
 
   final String key;
-  final int n;
   final String label;
   final IconData icon;
   final VoidCallback onTap;
   final String? hint;
-  final bool warn;
+  final bool urgent;
 }
 
-class _Heading extends StatelessWidget {
-  const _Heading(this.text, {this.trailing});
+/// The center's small uppercase words over a list.
+class _Label extends StatelessWidget {
+  const _Label(this.text, {this.trailing});
 
   final String text;
   final String? trailing;
@@ -212,106 +310,230 @@ class _Heading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final style = theme.textTheme.labelMedium
+        ?.copyWith(letterSpacing: 0.9, color: maraBrown, fontWeight: FontWeight.w800);
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 10),
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Row(
         children: [
-          Expanded(
-            child: Text(text,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-          ),
-          if (trailing != null)
-            Text(trailing!,
-                style: theme.textTheme.labelLarge?.copyWith(color: maraBrown)),
+          Expanded(child: Text(text.toUpperCase(), key: const Key('today-waiting'), style: style)),
+          if (trailing != null) Text(trailing!, style: style?.copyWith(letterSpacing: 0.3)),
         ],
       ),
     );
   }
 }
 
-/// Numbers first: two to a row on a phone, four on a computer.
-class _Grid extends StatelessWidget {
-  const _Grid({required this.counts});
+/// Lines in one rounded card.
+class _Lines extends StatelessWidget {
+  const _Lines({required this.children});
 
-  final List<_Count> counts;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, color: theme.colorScheme.outlineVariant),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One counter: its number, its words, its hint; a tap opens it. At zero
+/// it is drawn (the green line opened) and is no button.
+class _Line extends StatelessWidget {
+  const _Line({required this.count, required this.n});
+
+  final _Count count;
+  final int n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = count;
+    final zero = n == 0;
+    final tone = zero
+        ? theme.colorScheme.surfaceContainerLow
+        : c.urgent
+            ? theme.colorScheme.errorContainer
+            : const Color(0xFFF6EBDD);
+    final ink = zero
+        ? theme.colorScheme.onSurfaceVariant
+        : c.urgent
+            ? theme.colorScheme.onErrorContainer
+            : maraBrown;
+    return Material(
+      key: Key('todo-${c.key}'),
+      color: theme.colorScheme.surface,
+      child: InkWell(
+        onTap: zero ? null : c.onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: tone, borderRadius: BorderRadius.circular(10)),
+                child: Text('$n',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        color: ink,
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(c.label,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: zero ? theme.colorScheme.onSurfaceVariant : null)),
+                    if (c.hint != null && !zero)
+                      Text(c.hint!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+              if (!zero) const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The four numbers at the top (135): the new businesses of the week, the
+/// week's orders against the week before, the businesses, the ones on Pro.
+/// What the server does not count (new accounts, today's orders) is not
+/// drawn as if it did: each says what it counts. A tap: the analyses.
+class _Numbers extends StatelessWidget {
+  const _Numbers({
+    required this.today,
+    required this.overview,
+    required this.newThisWeek,
+    required this.onTap,
+  });
+
+  final PlatformToday? today;
+  final PlatformOverview? overview;
+  final int newThisWeek;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = NumberFormat.decimalPattern('fr_FR');
+    final t = today;
+    final o = overview;
+    String? change(int now, int before) {
+      if (before <= 0) return now > 0 ? '+${f.format(now)}' : null;
+      // Against the seven days before: « +12 % », as the mockup says it.
+      final pct = ((now - before) * 100 / before).round();
+      return pct == 0 ? context.tr('stable') : '${pct > 0 ? '+' : ''}$pct %';
+    }
+
+    final week = t?.count(t.growth, 'orders_week');
+    final last = t?.count(t.growth, 'orders_last_week');
+    final businesses = t?.count(t.growth, 'businesses') ?? o?.active;
+    final monthNew = t?.count(t.growth, 'new_month');
+    final tiles = [
+      _Number('today-new', context.tr('Nouvelles activités'), f.format(newThisWeek),
+          context.tr('cette semaine')),
+      _Number('today-orders', context.tr('Commandes · 7 j'), week == null ? '—' : f.format(week),
+          week == null || last == null ? null : change(week, last)),
+      _Number('today-businesses', context.tr('Activités'),
+          businesses == null ? '—' : f.format(businesses),
+          monthNew == null || monthNew == 0
+              ? null
+              : context.tr('+{n} ce mois', {'n': monthNew})),
+      _Number('today-pro', context.tr('Abonnés Pro'), o == null ? '—' : f.format(o.pro), null),
+    ];
     return LayoutBuilder(builder: (context, box) {
-      final per = box.maxWidth >= 900 ? 4 : box.maxWidth >= 560 ? 3 : 2;
+      final per = box.maxWidth >= 720 ? 4 : 2;
       final w = (box.maxWidth - (per - 1) * 10) / per;
       return Wrap(
         spacing: 10,
         runSpacing: 10,
         children: [
-          for (final c in counts)
-            SizedBox(
-              width: w,
-              child: Material(
-                key: Key('todo-${c.key}'),
-                color: c.n == 0
-                    ? theme.colorScheme.surfaceContainerLow
-                    : c.warn
-                        ? theme.colorScheme.errorContainer
-                        : maraPaper,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: c.n == 0 ? null : c.onTap,
-                  child: Container(
-                    constraints: const BoxConstraints(minHeight: 112),
-                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: c.n == 0
-                            ? theme.colorScheme.outlineVariant
-                            : c.warn
-                                ? theme.colorScheme.error
-                                : maraCaramel,
-                        width: c.n == 0 ? 1 : 1.5,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              '${c.n}',
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: c.n == 0 ? theme.colorScheme.onSurfaceVariant : maraBlack,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(c.icon,
-                                color: c.n == 0 ? theme.colorScheme.onSurfaceVariant : maraBrown),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(c.label,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: c.n == 0 ? theme.colorScheme.onSurfaceVariant : null)),
-                        if (c.hint != null && c.n > 0)
-                          Text(c.hint!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(color: maraBrown)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          for (final n in tiles) SizedBox(width: w, child: _NumberTile(n: n, onTap: onTap)),
         ],
       );
     });
+  }
+}
+
+class _Number {
+  const _Number(this.key, this.label, this.value, this.note);
+
+  final String key;
+  final String label;
+  final String value;
+  final String? note;
+}
+
+class _NumberTile extends StatelessWidget {
+  const _NumberTile({required this.n, required this.onTap});
+
+  final _Number n;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      key: Key(n.key),
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 92),
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(n.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(n.value,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
+              ),
+              if (n.note != null)
+                Text(n.note!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                        color: const Color(0xFF2E7D4F), fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

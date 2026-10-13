@@ -11,6 +11,7 @@ import '../../../core/storefront/storefront_repository.dart' show whatsappUrl;
 import '../../../core/theme/mara_mark.dart';
 import '../../shopper/report_sheet.dart' show reportTopicLabel;
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../../../core/notify/bell_room.dart';
 
 /// À faire › « Signalements » (113): what shoppers reported, the oldest
 /// open first. Each says who, how to answer them (their WhatsApp or their
@@ -26,12 +27,19 @@ Future<void> showReportsSheet(BuildContext context, {required CommandCenterRepos
     );
 
 class ReportsSheet extends StatefulWidget {
-  const ReportsSheet({super.key, required this.center, required this.outer});
+  const ReportsSheet({super.key, required this.center, required this.outer, this.asPage = false});
+
+  /// La rue › « Signalements » (135): the same list as a page of its own.
+  static Widget page({Key? key, required CommandCenterRepository center}) =>
+      Builder(builder: (context) => ReportsSheet(key: key, center: center, outer: context, asPage: true));
 
   final CommandCenterRepository center;
 
   /// The page under the sheet: a vitrine's fiche opens there.
   final BuildContext outer;
+
+  /// A page (La rue's tab) rather than a sheet: nothing to close first.
+  final bool asPage;
 
   @override
   State<ReportsSheet> createState() => _ReportsSheetState();
@@ -112,11 +120,9 @@ class _ReportsSheetState extends State<ReportsSheet> {
     final theme = Theme.of(context);
     final rows = _rows;
     final day = DateFormat('dd/MM HH:mm');
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    final page = widget.asPage;
+    final column = Column(
+          mainAxisSize: page ? MainAxisSize.max : MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
@@ -124,8 +130,10 @@ class _ReportsSheetState extends State<ReportsSheet> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(context.tr('Signalements'),
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    child: page
+                        ? const SizedBox.shrink()
+                        : Text(context.tr('Signalements'),
+                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   ),
                   SegmentedButton<bool>(
                     key: const Key('reports-filter'),
@@ -162,8 +170,9 @@ class _ReportsSheetState extends State<ReportsSheet> {
               )
             else
               Flexible(
+                fit: page ? FlexFit.tight : FlexFit.loose,
                 child: ListView.separated(
-                  shrinkWrap: true,
+                  shrinkWrap: !page,
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   itemCount: rows.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -215,7 +224,7 @@ class _ReportsSheetState extends State<ReportsSheet> {
                               if (r.orgId != null)
                                 TextButton.icon(
                                   onPressed: () {
-                                    Navigator.of(context).pop();
+                                    if (!widget.asPage) Navigator.of(context).pop();
                                     widget.outer.push(Routes.consoleOrg(r.orgId!));
                                   },
                                   icon: const Icon(Icons.storefront_outlined, size: 16),
@@ -246,7 +255,17 @@ class _ReportsSheetState extends State<ReportsSheet> {
                 ),
               ),
           ],
-        ),
+        );
+    if (page) {
+      return Scaffold(
+        appBar: AppBar(title: Text(context.tr('Signalements des clients')), actions: const [bellRoom]),
+        body: Padding(padding: const EdgeInsets.only(top: 8), child: column),
+      );
+    }
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
+        child: column,
       ),
     );
   }

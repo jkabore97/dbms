@@ -163,7 +163,7 @@ GoRouter _router(_Center center, {required String at, Widget? page, List<String>
     Routes.consoleRequestForm, Routes.consoleFeatured, Routes.consoleShowcase,
     Routes.consoleCouriers, Routes.consolePro, Routes.consoleCaurisGifts, Routes.consoleWave,
     Routes.consoleSettlement, Routes.consolePeople, Routes.trainers, Routes.consoleSettings,
-    Routes.consoleJournal, Routes.consoleAudit, Routes.platformAnalytics,
+    Routes.consoleJournal, Routes.consoleAudit, Routes.platformAnalytics, Routes.consoleReports,
   };
   return GoRouter(
     initialLocation: at,
@@ -280,7 +280,7 @@ void main() {
   });
 
   group('the shell', () {
-    testWidgets('a computer: the rail with the ten sections, the search, a section by tap',
+    testWidgets('a computer: the rail with the five places, the search, a place by tap',
         (tester) async {
       await _size(tester, 1280);
       final center = _Center();
@@ -290,17 +290,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('center-rail')), findsOneWidget);
       expect(find.byKey(const Key('center-bar')), findsNothing);
-      for (final key in ['todo', 'businesses', 'kinds', 'requests', 'street', 'pro', 'payments',
-          'people', 'settings', 'journal']) {
+      for (final key in ['today', 'clients', 'money', 'street', 'settings']) {
         expect(find.byKey(Key('center-section-$key')), findsOneWidget, reason: key);
       }
-      // The badge says what is new: two businesses created this week (111).
-      expect(find.descendant(of: find.byKey(const Key('center-section-requests')),
-          matching: find.text('2')), findsOneWidget);
+      // The badge is the urgent counters' total (135): one « J'ai payé ».
+      expect(find.descendant(of: find.byKey(const Key('center-section-today')),
+          matching: find.text('1')), findsOneWidget);
       await tester.tap(find.byKey(const Key('center-section-settings')));
       await tester.pumpAndSettle();
       expect(find.text('page ${Routes.consoleSettings}'), findsOneWidget);
-      // A section of several pages has them as tabs.
+      // A place of several pages has them as a switcher.
       await tester.tap(find.byKey(const Key('center-section-street')));
       await tester.pumpAndSettle();
       expect(find.text('page ${Routes.consoleFeatured}'), findsOneWidget);
@@ -309,7 +308,7 @@ void main() {
       expect(find.text('page ${Routes.consoleShowcase}'), findsOneWidget);
     });
 
-    testWidgets('a phone: the four most used and « Plus »', (tester) async {
+    testWidgets('a phone: the five places on the bar, no « Plus »', (tester) async {
       await _size(tester, 390);
       await tester.pumpWidget(MaterialApp.router(
           routerConfig: _router(_Center(), at: Routes.consoleBusinesses)));
@@ -317,17 +316,12 @@ void main() {
       expect(find.byKey(const Key('center-rail')), findsNothing);
       final bar = tester.widget<NavigationBar>(find.byKey(const Key('center-bar')));
       expect(bar.destinations, hasLength(5));
-      expect(bar.selectedIndex, 1, reason: 'Entreprises is the open section');
-      await tester.tap(find.text('Plus'));
+      expect(bar.selectedIndex, 1, reason: 'Clients is the open place');
+      expect(find.text('Plus'), findsNothing);
+      await tester.tap(find.byKey(const Key('center-bar-settings')));
       await tester.pumpAndSettle();
-      for (final key in ['kinds', 'street', 'payments', 'people', 'settings', 'journal']) {
-        expect(find.byKey(Key('center-more-$key')), findsOneWidget, reason: key);
-      }
-      await tester.tap(find.byKey(const Key('center-more-journal')));
-      await tester.pumpAndSettle();
-      expect(find.text('page ${Routes.consoleJournal}'), findsOneWidget);
-      expect(tester.widget<NavigationBar>(find.byKey(const Key('center-bar'))).selectedIndex, 4,
-          reason: 'a section under Plus lights Plus');
+      expect(find.text('page ${Routes.consoleSettings}'), findsOneWidget);
+      expect(tester.widget<NavigationBar>(find.byKey(const Key('center-bar'))).selectedIndex, 4);
     });
 
     testWidgets('anybody else at a center address is told so', (tester) async {
@@ -337,25 +331,25 @@ void main() {
       expect(find.text('x'), findsNothing);
     });
 
-    testWidgets('each address lights its own section', (tester) async {
+    testWidgets('each address lights its own place', (tester) async {
       late List<CenterSection> sections;
       await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
         sections = centerSections(context);
         return const SizedBox();
       })));
       String of(String path) => sectionFor(sections, path).key;
-      expect(of(Routes.console), 'todo');
-      expect(of(Routes.platformAnalytics), 'todo');
-      expect(of(Routes.consoleOrg('o1')), 'businesses');
-      expect(of(Routes.consoleKinds), 'kinds');
-      expect(of(Routes.applications), 'requests');
-      expect(of(Routes.consoleRequestForm), 'requests');
-      expect(of(Routes.consoleCouriers), 'street');
-      expect(of(Routes.consoleSettlement), 'payments',
-          reason: 'under /console/livreurs, yet the money is Paiements');
-      expect(of(Routes.consoleCaurisGifts), 'pro');
-      expect(of(Routes.trainers), 'people');
-      expect(of(Routes.consoleAudit), 'journal');
+      expect(of(Routes.console), 'today');
+      expect(of(Routes.platformAnalytics), 'today');
+      expect(of(Routes.consoleOrg('o1')), 'clients');
+      expect(of(Routes.consoleKinds), 'settings');
+      expect(of(Routes.applications), 'clients');
+      expect(of(Routes.consoleRequestForm), 'settings');
+      expect(of(Routes.consoleCouriers), 'clients');
+      expect(of(Routes.consoleSettlement), 'money',
+          reason: 'under /console/livreurs, yet the money is Argent');
+      expect(of(Routes.consoleCaurisGifts), 'money');
+      expect(of(Routes.trainers), 'clients');
+      expect(of(Routes.consoleAudit), 'settings');
     });
   });
 
@@ -397,10 +391,20 @@ void main() {
     testWidgets('what ends in 7 days lists its businesses, each opening its fiche', (tester) async {
       final opened = <String>[];
       final center = await pump(tester, opened);
-      // Zero couriers: drawn, not tappable.
+      // Zero couriers: folded under the green line (135); opened, drawn
+      // and not tappable.
+      expect(find.byKey(const Key('todo-couriers')), findsNothing);
+      await tester.tap(find.byKey(const Key('todo-all-good')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('todo-couriers')));
       await tester.tap(find.byKey(const Key('todo-couriers')));
       await tester.pumpAndSettle();
       expect(opened.last, Routes.console);
+      // Folded again: the waiting lines at the top.
+      await tester.ensureVisible(find.byKey(const Key('todo-all-good')));
+      await tester.tap(find.byKey(const Key('todo-all-good')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('todo-couriers')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('todo-unlocks_ending')));
       await tester.tap(find.byKey(const Key('todo-unlocks_ending')));
       await tester.pumpAndSettle();
@@ -569,7 +573,7 @@ void main() {
           'path_gates_open': const SettingValue(value: 0),
           'admin_two_step': const SettingValue(value: false),
         };
-      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'pro')));
       await tester.pumpAndSettle();
       expect(find.text('Prix de Mara Pro, par mois'), findsOneWidget);
       expect(find.text('Changé par Mara le 01/10/2026'), findsOneWidget);
@@ -588,10 +592,20 @@ void main() {
       expect(center.calls.last, 'undo:act-pro_price_month');
       ScaffoldMessenger.of(tester.element(find.byType(SettingsSection))).clearSnackBars();
       await tester.pumpAndSettle();
+      // Each on its own card's page (135).
+      Future<void> card(String key) async {
+        await tester.pumpWidget(MaterialApp(
+            home: SettingsSection(key: ValueKey(key), center: center, card: key)));
+        await tester.pumpAndSettle();
+      }
+
+      await card('paiements');
       await tester.tap(find.byKey(const Key('setting-wave_checkout')));
       await tester.pumpAndSettle();
+      await card('cauris');
       await tester.tap(find.byKey(const Key('setting-path_gates_open')));
       await tester.pumpAndSettle();
+      await card('securite');
       expect(center.calls, [
         'set:pro_price_month=3000',
         'undo:act-pro_price_month',
@@ -773,7 +787,10 @@ void main() {
           'delivery_share_pct': const SettingValue(value: 10),
           'delivery_per_km': const SettingValue(value: 150),
         };
+      // Typed in Réglages' search (135): the rows of two cards at once.
       await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('settings-search')), 'e');
       await tester.pumpAndSettle();
       Future<void> type(String key, String text) async {
         await tester.ensureVisible(find.byKey(Key('setting-$key')));

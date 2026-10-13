@@ -138,6 +138,10 @@ abstract final class Routes {
   static const consoleKinds = '/console/types';
   static const consoleRequestForm = '/demandes/formulaire';
   static const consoleSettings = '/console/reglages';
+  /// One of Réglages' eight cards (135): `/console/reglages/livraison`…
+  static String consoleSettingsCard(String card) => '/console/reglages/$card';
+  /// La rue › « Signalements » (135): the shoppers' reports as a page.
+  static const consoleReports = '/console/signalements';
   static const consoleJournal = '/console/journal';
   /// The platform's bell (115).
   static const consoleNotifications = '/console/notifications';
@@ -832,6 +836,8 @@ GoRouter buildRouter(SessionController session) {
             return biz.TodoSection(
               center: CommandCenterRepository(scope.auth.client),
               admin: scope.admin,
+              // « Bonjour Jairus » (135): the first word of the name.
+              name: scope.session.identity?.displayName,
             );
           }),
           _centerPage(Routes.consoleBusinesses, (context, state) {
@@ -925,6 +931,22 @@ GoRouter buildRouter(SessionController session) {
             );
           }),
           _centerPage(Routes.consoleSettings, (context, _) => biz.SettingsSection(
+                center: CommandCenterRepository(AppScope.of(context).auth.client),
+              )),
+          // Réglages folded into eight cards (135), each its own short page.
+          GoRoute(
+            path: '${Routes.consoleSettings}/:card',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: biz.SettingsSection(
+                key: ValueKey('settings-${state.pathParameters['card']}'),
+                center: CommandCenterRepository(AppScope.of(context).auth.client),
+                card: state.pathParameters['card'],
+              ),
+            ),
+          ),
+          // La rue › « Signalements » (135).
+          _centerPage(Routes.consoleReports, (context, _) => biz.ReportsSheet.page(
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),
           _centerPage(Routes.consoleJournal, (context, _) => biz.JournalSection(

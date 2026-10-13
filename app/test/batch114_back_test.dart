@@ -516,7 +516,7 @@ void main() {
     expect(find.text('La rue'), findsOneWidget, reason: 'then back leaves it, as before');
   });
 
-  testWidgets('the command center: back closes a dialog and its « Plus » sheet, the section stays',
+  testWidgets('the command center: back closes a dialog and the search, the place stays',
       (tester) async {
     _size(tester, 390, 900);
     final back = BackFirst();
@@ -547,11 +547,14 @@ void main() {
     expect(find.text('Le dialogue'), findsNothing);
     expect(find.text(page), findsOneWidget);
 
-    await tester.tap(find.text('Plus'));
+    // No « Plus » sheet since 135: the five places are all on the bar.
+    // Clients' one field opens the search over the page; back closes it.
+    expect(find.text('Plus'), findsNothing);
+    await tester.tap(find.byKey(const Key('center-clients-search')));
     await _settle(tester);
-    expect(find.byKey(const Key('center-more-journal')), findsOneWidget);
+    expect(find.byKey(const Key('center-search-field')), findsOneWidget);
     await _back(tester);
-    expect(find.byKey(const Key('center-more-journal')), findsNothing);
+    expect(find.byKey(const Key('center-search-field')), findsNothing);
     expect(find.text(page), findsOneWidget);
     expect(router.state.uri.path, Routes.consoleBusinesses);
   });

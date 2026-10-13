@@ -118,7 +118,7 @@ void main() {
         'stripe_on': const SettingValue(value: true),
         'stripe_xof_per_usd': const SettingValue(value: 600),
       };
-    await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+    await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'paiements')));
     await tester.pumpAndSettle();
     expect(find.text('Taux pour la carte : FCFA pour 1 \$'), findsOneWidget);
     expect(find.text('600'), findsOneWidget);

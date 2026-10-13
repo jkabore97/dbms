@@ -97,12 +97,19 @@ void main() {
           'play_store_live': const SettingValue(value: false),
           'app_store_url': const SettingValue(value: ''),
         };
-      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'livraison')));
       await tester.pumpAndSettle();
       expect(find.text('Distance où les livreurs reçoivent une livraison (km, 1 à 100)'), findsOneWidget);
       expect(find.text('10 km'), findsOneWidget);
-      expect(find.text('Applications mobiles'), findsOneWidget);
+      // The apps are on Notifications' page (135), under their own words.
+      await tester.pumpWidget(MaterialApp(
+          home: SettingsSection(key: const ValueKey('n'), center: center, card: 'notifications')));
+      await tester.pumpAndSettle();
+      expect(find.text('APPLICATIONS MOBILES'), findsOneWidget);
       expect(find.text('Mara est publiée sur Google Play (sinon : le fichier APK)'), findsOneWidget);
+      await tester.pumpWidget(MaterialApp(
+          home: SettingsSection(key: const ValueKey('l'), center: center, card: 'livraison')));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('setting-courier_radius_km')));
       await tester.pumpAndSettle();
@@ -129,7 +136,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       final center = _Center()..values = {'app_store_url': const SettingValue(value: '')};
-      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'notifications')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('setting-app_store_url')));
       await tester.pumpAndSettle();
