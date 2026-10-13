@@ -19,6 +19,7 @@ import '../common/attention_banner.dart';
 import 'convert_dialog.dart';
 import 'photo_quota.dart';
 import 'product_photo.dart';
+import 'publish_all_banner.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/barcode_sheet.dart';
 import '../capture/capture_action.dart';
@@ -75,6 +76,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   List<Product> _products = const [];
   bool _loading = true;
+  final _publishBanner = GlobalKey<PublishAllBannerState>();
   String? _error;
 
   /// Each article's picture, product id → photo key (079). Loaded beside
@@ -147,6 +149,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _loading = false;
       });
       unawaited(_loadPhotos());
+      unawaited(_publishBanner.currentState?.reload());
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -488,6 +491,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Text(_error!,
                         style: TextStyle(color: theme.colorScheme.error)),
                   if (_products.isNotEmpty) ...[
+                    // Articles there, vitrine shut: one tap puts them on.
+                    if (widget.access.canEdit('products'))
+                      PublishAllBanner(
+                        key: _publishBanner,
+                        orgId: widget.org.id,
+                        retail: widget.retail,
+                        onPublished: _load,
+                      ),
                     // Why « Articles » has a red number (122), on top.
                     StockAttention(
                       products: _products,

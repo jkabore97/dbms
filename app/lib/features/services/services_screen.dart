@@ -17,6 +17,7 @@ import '../common/step_flow.dart';
 import 'service_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
+import '../retail/publish_all_banner.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
@@ -50,6 +51,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   List<Product> _services = const [];
   Map<String, String> _photos = const {};
   bool _loading = true;
+  final _publishBanner = GlobalKey<PublishAllBannerState>();
   String? _error;
 
   /// A database before 098: no service can be saved as one (it would land
@@ -85,6 +87,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         _photos = photos;
         _loading = false;
       });
+      _publishBanner.currentState?.reload();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -157,6 +160,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
           children: [
+            // Services there, vitrine shut: one tap puts them on.
+            if (_canWrite)
+              PublishAllBanner(
+                key: _publishBanner,
+                orgId: widget.org.id,
+                retail: widget.retail,
+                onPublished: _load,
+              ),
             _Intro(
               association: _association,
               onSettings: widget.org.isAdmin

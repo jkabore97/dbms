@@ -15,6 +15,7 @@ import '../capture/capture_action.dart';
 import '../retail/article_flow.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
+import '../retail/publish_all_banner.dart';
 import '../retail/stock_attention.dart';
 import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -52,6 +53,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
   List<Product> _items = const [];
   Map<String, String> _photos = const {};
   bool _loading = true;
+  final _publishBanner = GlobalKey<PublishAllBannerState>();
   String? _error;
 
   bool get _canWrite => !widget.org.isObserverOnly;
@@ -91,6 +93,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         _photos = photos;
         _loading = false;
       });
+      _publishBanner.currentState?.reload();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -175,6 +178,14 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
           children: [
+            // Products there, vitrine shut: one tap puts them on.
+            if (_canWrite && !_offVitrine)
+              PublishAllBanner(
+                key: _publishBanner,
+                orgId: widget.org.id,
+                retail: widget.retail,
+                onPublished: _load,
+              ),
             // Why « À vendre » has a red number (122), on top.
             if (!_loading && _error == null)
               StockAttention(

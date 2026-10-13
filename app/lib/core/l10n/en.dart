@@ -1652,6 +1652,12 @@ const enStrings = <String, String>{
       'Everyone',
   'Tout publier ({unpublished})':
       'Publish all ({unpublished})',
+  'Déjà {n} prêts pour la vitrine':
+      '{n} already ready for the vitrine',
+  'Ils ont un prix mais ne sont pas encore sur la vitrine. Mettez-les-y en un geste : vous pourrez en retirer un à tout moment.':
+      'They have a price but are not on the vitrine yet. Put them there in one tap: you can take any one off at any time.',
+  'Tout mettre sur la vitrine ({n})':
+      'Put them all on the vitrine ({n})',
   'Toutes':
       'All',
   'Toutes les vitrines':
