@@ -6523,8 +6523,6 @@ const enStrings = <String, String>{
       'No item yet. “＋”: a book, a T-shirt, a ticket for the evening…',
   'Un livre, un t-shirt, un billet…': 'A book, a T-shirt, a ticket…',
   'Le t-shirt de l\'association, taille unique.': 'The association\'s T-shirt, one size.',
-  'Facultatif. Sans nombre, la vitrine le montre épuisé : on ne peut pas le commander.':
-      'Optional. Without a number the shop window shows it sold out: it cannot be ordered.',
   'Commandez ou réservez en ligne': 'Order or book online',
   'place': 'seat',
   'lot': 'lot',
@@ -6541,4 +6539,15 @@ const enStrings = <String, String>{
   'Vendre ou gérer': 'Sell or manage',
   'Boutique, ferme, association': 'Shop, farm, association',
   'Je choisirai plus tard': 'I will choose later',
+  // 134's review: « Suivre le stock » (131), and the carnet's red number
+  // on the place that counts it now.
+  'Suivre le stock': 'Track stock',
+  'Stock non suivi': 'Stock not tracked',
+  'Le stock': 'Stock',
+  'Mara compte ce qu\'il reste ; à zéro, il est épuisé.':
+      'Mara counts what is left; at zero it is sold out.',
+  'Pas de compte : toujours disponible sur la vitrine.':
+      'No count: always available on the shop window.',
+  'Le chiffre rouge sur « {place} » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
+      'The red number on “{place}” stays until these credits are repaid: opening this page does not clear it.',
 };
