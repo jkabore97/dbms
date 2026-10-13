@@ -87,7 +87,7 @@ Future<void> askAccountDeletion(
 /// server's code (128's blocked_code) and the business it names; the
 /// server's own French only for a code this build does not know.
 String deletionBlockedText(BuildContext context, AccountDeletionPlan p) => switch (p.blockedCode) {
-      'platform' => context.tr('Un compte de la plateforme ne se supprime pas ici.'),
+      'platform' => context.tr('Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
       'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
       'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
       'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
@@ -100,7 +100,7 @@ String deletionBlockedText(BuildContext context, AccountDeletionPlan p) => switc
 String accountRefusalText(BuildContext context, AccountRefused e) => switch (e.code) {
       'reauth' => context.tr('Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.'),
       'not_stopped' => context.tr('Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.', {'name': e.name ?? ''}),
-      'platform' => context.tr('Un compte de la plateforme ne se supprime pas ici.'),
+      'platform' => context.tr('Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
       'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
       'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
       'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': e.name ?? ''}),

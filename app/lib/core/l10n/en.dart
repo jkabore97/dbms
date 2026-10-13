@@ -3901,6 +3901,8 @@ const enStrings = <String, String>{
   'Ce signalement est déjà traité.': 'This report is already handled.',
   'Ce signalement a changé depuis.': 'This report has changed since.',
   'Un compte de la plateforme ne se supprime pas ici.': 'A platform account is not deleted here.',
+  'Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.':
+      'This account runs the Mara platform: it cannot be deleted, or nobody could run it any more. To try deletion, use another account.',
   'Vous faites partie d\'une activité sur Mara : votre compte se supprime une fois que vous n\'en faites plus partie.': 'You belong to a business on Mara: your account can be deleted once you no longer belong to it.',
   'Vous êtes livreur sur Mara : écrivez à Mara pour fermer votre compte livreur.': 'You are a courier on Mara: write to Mara to close your courier account.',
   'Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.': 'An order is in progress: wait until it is finished, or cancel it, then delete your account.',
