@@ -109,7 +109,7 @@
   "lowStockOf": "Running low on {names}.",
   "moduleComingSoon": "Your account is attached to this business. The {module} module is coming soon — you will then be able to record your operations here.",
   "weeklySummary": "Weekly summary",
-  "weeklySummarySubtitle": "To send to the pastor, on WhatsApp",
+  "weeklySummarySubtitle": "To send to the group, on WhatsApp",
   "balances": "Balances",
   "balancesSubtitle": "Cash, bank, Mobile Money",
   "givingStatement": "Giving statement",

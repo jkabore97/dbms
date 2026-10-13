@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/core/admin/setup_steps.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/cauris/feature_states.dart';
 import 'package:kaj_app/features/church/church_home_screen.dart';
@@ -110,6 +111,28 @@ void main() {
     expect(find.text('Ouvrir mon association'), findsOneWidget);
     await tester.tap(find.byKey(const Key('setup-enter')));
     expect(opened, isTrue);
+  });
+
+  testWidgets('members start in the association\'s own country (a Dakar association: +221)', (tester) async {
+    tester.view.physicalSize = const Size(480, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final a = _Actions();
+    await tester.pumpWidget(MaterialApp(
+        home: AssociationSetupScreen(org: _org, actions: a, onDone: () {},
+            known: () async => const SetupKnown(phone: '+221771122334', kind: 'tontine'))));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('asetup-next-0')));
+    await settle(tester);
+    expect(find.text('Vos premiers membres'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('asetup-member-phone-0')), matching: find.text('SN')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('asetup-member-0')), 'Le trésorier');
+    await tester.enterText(
+        find.descendant(of: find.byKey(const Key('asetup-member-phone-0')), matching: find.byType(TextField)),
+        '771204501');
+    await tester.tap(find.byKey(const Key('asetup-next-1')));
+    await settle(tester);
+    expect(a.log.sublist(1), ['member Le trésorier +221771204501']);
   });
 
   testWidgets('members and the vitrine may both wait', (tester) async {

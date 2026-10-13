@@ -335,7 +335,7 @@ class StringsDyu extends Strings {
   String get weeklySummary => 'Résumé de la semaine';
 
   @override
-  String get weeklySummarySubtitle => 'À envoyer au pasteur, par WhatsApp';
+  String get weeklySummarySubtitle => 'À envoyer au groupe, par WhatsApp';
 
   @override
   String get balances => 'Soldes';
