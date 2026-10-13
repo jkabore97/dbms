@@ -720,7 +720,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     );
     if (text == null || !mounted) return;
-    final position = parseGoogleMapsLink(text);
+    final position = await resolveGoogleMapsLink(text);
+    if (!mounted) return;
     if (position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
