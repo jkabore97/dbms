@@ -1,10 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../admin/platform_writes.dart';
+import '../admin/spots.dart' show PlatformToday;
 import 'created_businesses.dart';
+import 'models.dart' show PlatformOverview;
 import 'problem_reports.dart';
 
+export '../admin/spots.dart' show PlatformToday;
 export 'created_businesses.dart';
+export 'models.dart' show PlatformOverview;
 export 'problem_reports.dart';
 
 /// Mara's command center, from the server (104, 105): « À faire », the one
@@ -128,6 +132,60 @@ class CommandCenterRepository {
   /// id, for « Annuler », or null when nothing changed.
   Future<String?> setSetting(String key, Object? value) =>
       writePlatformSetting(_requireClient(), key, value);
+
+  /// The month's money, the growth and the health (072's platform_today):
+  /// « Aujourd'hui »'s four numbers and « Argent »'s card (135). Null when
+  /// the server has none to give.
+  Future<PlatformToday?> today() async {
+    final v = await _requireClient().rpc('platform_today');
+    return v is Map ? PlatformToday.fromJson(Map<String, dynamic>.from(v)) : null;
+  }
+
+  /// The businesses in numbers (platform_overview): the active ones, the
+  /// week's new ones, the ones on Pro today (135).
+  Future<PlatformOverview?> overview() async {
+    final v = await _requireClient().rpc('platform_overview');
+    if (v is! List || v.isEmpty || v.first is! Map) return null;
+    return PlatformOverview.fromRow(Map<String, dynamic>.from(v.first as Map));
+  }
+
+  /// « Aujourd'hui »'s new accounts and today's orders (132's
+  /// platform_today_counts). Null when the server has none to give — a
+  /// database without 132 among them: « Aujourd'hui » then draws the new
+  /// businesses and the seven days' orders, as before 132.
+  Future<TodayCounts?> todayCounts() async {
+    try {
+      final v = await _requireClient().rpc('platform_today_counts');
+      return v is Map ? TodayCounts.fromJson(Map<String, dynamic>.from(v)) : null;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return null;
+      rethrow;
+    }
+  }
+}
+
+/// 132's counts: the accounts made in the last seven days and the seven
+/// before; the orders placed today (since Ouagadougou's midnight) and on
+/// the same day last week up to the same hour.
+class TodayCounts {
+  const TodayCounts({
+    required this.accountsWeek,
+    required this.accountsLastWeek,
+    required this.ordersToday,
+    required this.ordersLastWeek,
+  });
+
+  factory TodayCounts.fromJson(Map<String, dynamic> j) => TodayCounts(
+        accountsWeek: _int(j['accounts_week']),
+        accountsLastWeek: _int(j['accounts_last_week']),
+        ordersToday: _int(j['orders_today']),
+        ordersLastWeek: _int(j['orders_last_week']),
+      );
+
+  final int accountsWeek;
+  final int accountsLastWeek;
+  final int ordersToday;
+  final int ordersLastWeek;
 }
 
 int _int(Object? v) => v is num ? v.toInt() : int.tryParse('${v ?? ''}') ?? 0;
@@ -153,7 +211,47 @@ class PlatformTodo {
       this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
       this['features_lapsed'] + this['reports_open'];
+
+  /// One of « Aujourd'hui »'s fourteen counters (135): the spots are the
+  /// paid ones and the asked ones together, as « À faire » drew them.
+  int count(String key) =>
+      key == 'spots' ? this['spots_paid'] + this['spots_asked'] : this[key];
+
+  /// The counters that are not zero, the most urgent first (135).
+  List<String> get waitingOrder => [
+        for (final tier in todoUrgency)
+          for (final k in tier)
+            if (count(k) > 0) k,
+      ];
+
+  /// The counters at zero, folded into one green line (135).
+  List<String> get zeroKeys => [
+        for (final tier in todoUrgency)
+          for (final k in tier)
+            if (count(k) == 0) k,
+      ];
+
+  /// The urgent counters' total (135): stuck orders, reports, failed
+  /// payouts, « J'ai payé » and spots to handle.
+  int get urgent => [for (final k in todoUrgency.first) count(k)].fold(0, (a, b) => a + b);
+
+  /// The bar's badge on « Aujourd'hui » (135 review): the lines « VOUS
+  /// ATTEND · N » draws — the same number on the badge and on the page
+  /// (the mockup's « 4 » on both), never a sum of their counts.
+  int get badge => waitingOrder.length;
 }
+
+/// « Aujourd'hui »'s counters by urgency (135), most urgent first: what
+/// is stuck or failed or reported and the « J'ai payé » to confirm; then
+/// the couriers to validate and the new businesses to welcome; then the
+/// businesses to call; then what ends within seven days. No help-request
+/// table exists: a shopper's « Signaler un problème » is the report.
+const todoUrgency = <List<String>>[
+  ['orders_stuck', 'reports_open', 'payouts_failed', 'pro_paid', 'spots'],
+  ['couriers', 'new_7'],
+  ['silent_30', 'features_lapsed'],
+  ['plans_ending', 'unlocks_ending', 'promos_ending', 'spots_ending', 'rules_ending'],
+];
 
 /// One row behind a count: a business, and what is about it.
 class TodoRow {

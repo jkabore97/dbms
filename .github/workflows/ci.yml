@@ -858,6 +858,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch131.sql
 
+      - name: "Prove « Aujourd'hui »'s new accounts and today's orders — accounts of the last 7 days and the 7 before apart, today's orders since Ouagadougou's midnight against the same day last week up to the same hour, null for an owner and a plain account, closed to anon and PUBLIC, a definer with its path pinned, run twice the same (132)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch132.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

@@ -104,7 +104,7 @@ Future<void> _reglages(WidgetTester tester, CommandCenterRepository center, {Siz
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+  await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'notifications')));
   await tester.pumpAndSettle();
 }
 
@@ -240,7 +240,7 @@ void main() {
     testWidgets('the e-mail, the hours and another text setting save as typed', (tester) async {
       final server = _Server();
       await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)), size: const Size(1280, 2400));
-      expect(find.text('Aide aux clients'), findsOneWidget);
+      expect(find.text('AIDE AUX CLIENTS'), findsOneWidget);
       for (final label in ['Numéro WhatsApp de l\'aide Mara (vide : caché)', 'E-mail de l\'aide Mara',
           'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)']) {
         expect(find.text(label), findsOneWidget, reason: label);
@@ -249,6 +249,10 @@ void main() {
       await _type(tester, '  aide@marakaj.com ');
       await _open(tester, 'support_hours');
       await _type(tester, 'du lundi au samedi, 8 h – 20 h');
+      // Another card's page (135): Paiements › Wave.
+      await tester.pumpWidget(MaterialApp(
+          home: SettingsSection(key: const ValueKey('p'), center: CommandCenterRepository(_client(server.asked, server.answer)), card: 'paiements')));
+      await tester.pumpAndSettle();
       await _open(tester, 'platform_wave');
       await _type(tester, '+226 70 00 00 00');
       expect(server.written, {

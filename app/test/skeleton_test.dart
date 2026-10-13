@@ -131,9 +131,17 @@ void main() {
     await tester.pump();
     expect(find.byType(ShopSkeleton), findsNothing);
     expect(find.text('Boutique Awa'), findsWidgets);
-    // The basket restore writes nothing, but reads the real database.
-    await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 30)));
+    // The basket restore and the pending booking read the real database,
+    // one after the other, each holding a sqflite lock timer in the test's
+    // fake clock until its answer lands. A fixed 30 ms wait for them
+    // failed under load (« A Timer is still pending », on main too): each
+    // round below queues a read of its own behind whatever the screen has
+    // in flight — sqflite answers in order — then lets the screen ask its
+    // next one. No sleep: as long as the machine needs, never longer.
+    for (var i = 0; i < 8; i++) {
+      await tester.runAsync(() => db.readPref('skeleton_test.drain'));
+      await tester.pump();
+    }
   });
 
   testWidgets('the courier board shows rows until the status arrives',

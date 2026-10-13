@@ -642,14 +642,14 @@ void main() {
 
     testWidgets('Réglages: the switch, off, with what must be set up first', (tester) async {
       final center = _Center({'order_phone_verified': const SettingValue(value: false)});
-      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center)));
+      await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'vitrines')));
       await tester.pump();
       await tester.pump();
       final row = find.byKey(const Key('setting-order_phone_verified'));
       await tester.scrollUntilVisible(row, 200);
       await tester.ensureVisible(row);
       await tester.pump();
-      expect(find.text('Commandes de la rue'), findsOneWidget);
+      expect(find.text('COMMANDES'), findsOneWidget, reason: 'Vitrines › Commandes (135)');
       expect(find.text('Numéro WhatsApp vérifié avant de commander'), findsOneWidget);
       expect(find.textContaining('whatsapp-otp'), findsOneWidget);
       expect(tester.widget<SwitchListTile>(row).value, isFalse);

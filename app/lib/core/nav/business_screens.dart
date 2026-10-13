@@ -30,6 +30,7 @@ export '../../features/admin/request_form_screen.dart';
 export '../../features/admin/fiche/business_fiche_screen.dart';
 export '../../features/admin/center/command_center_shell.dart';
 export '../../features/admin/center/journal_section.dart';
+export '../../features/admin/center/reports_sheet.dart' show ReportsSheet;
 export '../../features/admin/center/settings_section.dart';
 export '../../features/admin/center/todo_section.dart';
 export '../../features/admin/create_business_screen.dart';

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/console/command_center.dart';
 import '../../../core/errors.dart';
 import '../../../core/format/money.dart' show parseAmount;
+import '../../../core/l10n/en.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/nav/app_scope.dart';
 import '../../../core/nav/router.dart';
@@ -151,6 +152,187 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('admin_new_user_notify', 'accounts', SettingType.flag),
 ];
 
+/// One of Réglages' eight cards (135): its address, its icon, and the
+/// sub-headings of its short page, each with its settings in order.
+class SettingCard {
+  const SettingCard(this.key, this.icon, this.parts, {this.links = const []});
+
+  /// Also its address: `/console/reglages/<key>`.
+  final String key;
+  final IconData icon;
+
+  /// (sub-heading, keys), in the page's order.
+  final List<(String, List<String>)> parts;
+
+  /// The pages the card opens (Création's types and creation flow,
+  /// Sécurité's journal): (label, route).
+  final List<(String, String)> links;
+
+  String get route => '${Routes.consoleSettings}/$key';
+}
+
+/// Réglages folded (135): « Quelles sont les règles ? » in eight cards,
+/// every setting on exactly one (test/batch135_test.dart proves none is
+/// lost). The sub-headings' names are [settingPartLabel]'s.
+const settingCards = <SettingCard>[
+  SettingCard('pro', Icons.workspace_premium_outlined, [
+    ('prices', ['pro_price_month', 'pro_price_year', 'pro_currency']),
+    ('tools', ['pro_features']),
+    ('free', [
+      'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
+      'free_history_months', 'vitrine_free_basics',
+    ]),
+  ]),
+  SettingCard('vitrines', Icons.storefront_outlined, [
+    ('street', ['vitrine_min_items', 'vitrine_min_items_association', 'progress_street_pct']),
+    ('spots', [
+      'spots_max_live', 'pro_free_spots_month', 'spot_price_article_7', 'spot_price_article_30',
+      'spot_price_shop_7', 'spot_price_shop_30',
+    ]),
+    ('orders', ['order_phone_verified']),
+  ]),
+  SettingCard('livraison', Icons.delivery_dining_outlined, [
+    ('prices', ['delivery_base', 'delivery_per_km', 'delivery_currency', 'delivery_share_pct']),
+    ('distance', ['delivery_max_km', 'delivery_included_km', 'courier_radius_km']),
+    ('couriers', ['courier_licence_required', 'courier_phone_verified']),
+    ('times', ['own_courier_minutes', 'stuck_ready_minutes']),
+  ]),
+  SettingCard('paiements', Icons.payments_outlined, [
+    ('wave', ['wave_checkout', 'wave_card', 'wave_commission_pct', 'platform_wave', 'platform_wave_name']),
+    ('card', ['stripe_on', 'stripe_xof_per_usd']),
+    ('stores', ['store_billing_on', 'store_review_account', 'store_review_orgs']),
+  ]),
+  SettingCard('cauris', Icons.toll_outlined, [
+    ('earn', [
+      'cauris_order_min', 'cauris_orders_per_customer', 'cauris_quick_minutes',
+      'cauris_expire_days', 'cauris_unlock_days',
+    ]),
+    ('prizes', ['cauris_prize_1', 'cauris_prize_2', 'cauris_prize_3']),
+    ('leagues', ['league_small_max', 'league_medium_max', 'path_league_min']),
+    ('path', ['progress_credit_orders', 'path_gates_open']),
+  ]),
+  SettingCard('creation', Icons.add_business_outlined, [
+    ('check', ['create_phone_verified']),
+  ], links: [
+    ('Types d\'activité', Routes.consoleKinds),
+    ('Parcours de création', Routes.consoleRequestForm),
+  ]),
+  SettingCard('notifications', Icons.notifications_outlined, [
+    ('accounts', ['welcome_email_on', 'admin_new_user_notify']),
+    ('help', ['support_whatsapp', 'support_email', 'support_hours']),
+    ('apps', ['play_store_live', 'app_store_url']),
+  ]),
+  SettingCard('securite', Icons.shield_outlined, [
+    ('security', ['admin_two_step']),
+  ], links: [
+    ('Actions de Mara', Routes.consoleJournal),
+    ('Activité', Routes.consoleAudit),
+  ]),
+];
+
+/// The card a setting is on (135), or null for none (a test fails then).
+SettingCard? settingCardOf(String key) {
+  for (final c in settingCards) {
+    for (final p in c.parts) {
+      if (p.$2.contains(key)) return c;
+    }
+  }
+  return null;
+}
+
+SettingCard? settingCardByKey(String? key) {
+  for (final c in settingCards) {
+    if (c.key == key) return c;
+  }
+  return null;
+}
+
+String settingCardTitle(BuildContext context, String card) => switch (card) {
+      'pro' => context.tr('Pro et prix'),
+      'vitrines' => context.tr('Vitrines'),
+      'livraison' => context.tr('Livraison'),
+      'paiements' => context.tr('Paiements'),
+      'cauris' => context.tr('Cauris, Chemin'),
+      'creation' => context.tr('Création'),
+      'notifications' => context.tr('Notifications'),
+      'securite' => context.tr('Sécurité, journal'),
+      _ => card,
+    };
+
+String settingCardHint(BuildContext context, String card) => switch (card) {
+      'pro' => context.tr('Prix, outils, limites sans Pro'),
+      'vitrines' => context.tr('Rue, mises en avant'),
+      'livraison' => context.tr('Prix au km, distance, livreurs'),
+      'paiements' => context.tr('Wave, carte, boutiques d\'applis'),
+      'cauris' => context.tr('Gains, ligues, prix'),
+      'creation' => context.tr('Types d\'activité, parcours'),
+      'notifications' => context.tr('Comptes, aide, applications'),
+      'securite' => context.tr('Deux étapes, actions, activité'),
+      _ => '',
+    };
+
+/// A card page's small uppercase sub-headings (135), in plain words.
+String settingPartLabel(BuildContext context, String part) => switch (part) {
+      'prices' => context.tr('Prix'),
+      'tools' => context.tr('Outils réservés à Pro'),
+      'free' => context.tr('Sans Pro'),
+      'street' => context.tr('Pour paraître dans la rue'),
+      'spots' => context.tr('Mises en avant'),
+      'orders' => context.tr('Commandes'),
+      'distance' => context.tr('Distance'),
+      'couriers' => context.tr('Livreurs'),
+      'times' => context.tr('Délais'),
+      'wave' => context.tr('Wave'),
+      'card' => context.tr('Carte bancaire'),
+      'stores' => context.tr('Boutiques d\'applications'),
+      'earn' => context.tr('Gagner des cauris'),
+      'prizes' => context.tr('Prix de la semaine'),
+      'leagues' => context.tr('Ligues'),
+      'path' => context.tr('Le Chemin'),
+      'check' => context.tr('Vérification'),
+      'accounts' => context.tr('Nouveaux comptes'),
+      'help' => context.tr('Aide aux clients'),
+      'apps' => context.tr('Applications mobiles'),
+      'security' => context.tr('Sécurité'),
+      _ => part,
+    };
+
+/// A card's link, said in the screen's language.
+String settingLinkLabel(BuildContext context, String fr) => switch (fr) {
+      'Types d\'activité' => context.tr('Types d\'activité'),
+      'Parcours de création' => context.tr('Parcours de création'),
+      'Actions de Mara' => context.tr('Actions de Mara'),
+      'Activité' => context.tr('Activité'),
+      _ => fr,
+    };
+
+/// Lower case, no accents: « Délais » is found by « delai ».
+String _fold(String s) {
+  const plain = {
+    'a': 'àâäá', 'c': 'ç', 'e': 'éèêë', 'i': 'îïí', 'o': 'ôöó', 'u': 'ûùüú', 'oe': 'œ',
+  };
+  var out = s.toLowerCase();
+  for (final e in plain.entries) {
+    for (final r in e.value.runes) {
+      out = out.replaceAll(String.fromCharCode(r), e.key);
+    }
+  }
+  return out;
+}
+
+final Map<String, String> _frOfEn = {for (final e in enStrings.entries) e.value: e.key};
+
+/// Whether [query] finds [key] (135): its name in French and in English,
+/// whichever the screen reads, or the key itself.
+bool settingMatches(BuildContext context, String key, String query) {
+  final q = _fold(query.trim());
+  if (q.isEmpty) return true;
+  final shown = settingLabel(context, key);
+  final fr = context.trLanguage == 'en' ? (_frOfEn[shown] ?? shown) : shown;
+  final en = enStrings[fr] ?? fr;
+  return [fr, en, key].any((s) => _fold(s).contains(q));
+}
+
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'pro' => context.tr('Mara Pro'),
       'free' => context.tr('Sans Pro'),
@@ -294,10 +476,17 @@ String settingValueText(BuildContext context, SettingDef def, Object? v) {
 /// Réglages (105): every setting, by group, with who changed it last.
 /// A change is journaled with its « Annuler ». The two-step switch is
 /// shown here and changed in Sécurité, where its explanation is.
+///
+/// Folded (135): with no [card], eight cards and « Chercher un réglage… »,
+/// which finds any setting by its name in French or English; with a
+/// [card], that card's short page under its small uppercase sub-headings.
 class SettingsSection extends StatefulWidget {
-  const SettingsSection({super.key, required this.center});
+  const SettingsSection({super.key, required this.center, this.card});
 
   final CommandCenterRepository center;
+
+  /// One of [settingCards]' keys; null: the cards.
+  final String? card;
 
   @override
   State<SettingsSection> createState() => _SettingsSectionState();
@@ -307,6 +496,13 @@ class _SettingsSectionState extends State<SettingsSection> {
   Map<String, SettingValue>? _values;
   String? _error;
   String? _busy;
+  final _query = TextEditingController();
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -383,17 +579,49 @@ class _SettingsSectionState extends State<SettingsSection> {
     );
   }
 
+  SettingDef? _def(String key) {
+    for (final d in platformSettingDefs) {
+      if (d.key == key) return d;
+    }
+    return null;
+  }
+
+  void _open(String route) {
+    final router = GoRouter.maybeOf(context);
+    if (router != null) router.go(route);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final values = _values;
-    final groups = <String>[];
-    for (final d in platformSettingDefs) {
-      if (!groups.contains(d.group)) groups.add(d.group);
+    final card = settingCardByKey(widget.card);
+    final title = card == null ? context.tr('Réglages') : settingCardTitle(context, card.key);
+    final Widget body;
+    if (_error != null) {
+      body = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+        ),
+      );
+    } else if (values == null) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (card != null) {
+      body = _cardPage(context, card, values);
+    } else {
+      body = _hub(context, values);
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('Réglages')),
+        // A card's page: back to the eight cards (its address is go'd).
+        leading: card == null || GoRouter.maybeOf(context) == null
+            ? null
+            : BackButton(
+                key: const Key('settings-back'),
+                onPressed: () => _open(Routes.consoleSettings),
+              ),
+        title: Text(title),
         actions: [
           IconButton(
             tooltip: context.tr('Actualiser'),
@@ -403,54 +631,172 @@ class _SettingsSectionState extends State<SettingsSection> {
           bellRoom,
         ],
       ),
-      body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-              ),
-            )
-          : values == null
-              ? const Center(child: CircularProgressIndicator())
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                  children: [
-                    Text(
-                      context.tr('Les nombres de toute la plateforme. Chaque changement est écrit dans le Journal, où « Annuler » le reprend.'),
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                    // The bell with the app closed, checked end to end (115).
-                    if (AppScope.maybeOf(context)?.notify case final notify?) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-                        child: Text(context.tr('Notifications'),
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w800)),
-                      ),
-                      PushCheck(notify: notify),
-                    ],
-                    for (final g in groups) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-                        child: Text(settingGroupLabel(context, g),
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w800)),
-                      ),
-                      KajCard(
-                        margin: EdgeInsets.zero,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            for (final d in platformSettingDefs)
-                              if (d.group == g && values.containsKey(d.key))
-                                _row(context, d, values[d.key]!),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+      body: body,
+    );
+  }
+
+  /// Small uppercase words over a group, as the center's other lists.
+  Widget _label(BuildContext context, String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+        child: Text(text.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                letterSpacing: 0.9, color: maraBrown, fontWeight: FontWeight.w800)),
+      );
+
+  Widget _rows(BuildContext context, Iterable<String> keys, Map<String, SettingValue> values) =>
+      KajCard(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            for (final k in keys)
+              if (_def(k) case final d? when values.containsKey(k)) _row(context, d, values[k]!),
+          ],
+        ),
+      );
+
+  /// « Quelles sont les règles ? »: the search, then the eight cards — or,
+  /// a word typed, every setting whose name has it, under its card's name.
+  Widget _hub(BuildContext context, Map<String, SettingValue> values) {
+    final theme = Theme.of(context);
+    final q = _query.text.trim();
+    final found = <SettingCard, List<String>>{};
+    if (q.isNotEmpty) {
+      for (final c in settingCards) {
+        final keys = [
+          for (final p in c.parts)
+            for (final k in p.$2)
+              if (values.containsKey(k) && settingMatches(context, k, q)) k,
+        ];
+        if (keys.isNotEmpty) found[c] = keys;
+      }
+    }
+    return ListView(
+      key: const Key('settings-hub'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      children: [
+        TextField(
+          key: const Key('settings-search'),
+          controller: _query,
+          onChanged: (_) => setState(() {}),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: context.tr('Chercher un réglage…'),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            suffixIcon: q.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: context.tr('Effacer'),
+                    onPressed: () => setState(_query.clear),
+                    icon: const Icon(Icons.close),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        if (q.isEmpty) ...[
+          LayoutBuilder(builder: (context, box) {
+            final per = box.maxWidth >= 900 ? 4 : box.maxWidth >= 560 ? 3 : 2;
+            final w = (box.maxWidth - (per - 1) * 10) / per;
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final c in settingCards)
+                  SizedBox(width: w, child: _cardTile(context, c)),
+              ],
+            );
+          }),
+          const SizedBox(height: 16),
+          Text(
+            context.tr('Chaque changement est écrit dans le Journal, où « Annuler » le reprend.'),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ] else if (found.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(context.tr('Aucun réglage ne porte ce nom.'),
+                key: const Key('settings-none')),
+          )
+        else
+          for (final e in found.entries) ...[
+            _label(context, settingCardTitle(context, e.key.key)),
+            _rows(context, e.value, values),
+          ],
+      ],
+    );
+  }
+
+  Widget _cardTile(BuildContext context, SettingCard c) {
+    final theme = Theme.of(context);
+    return Material(
+      key: Key('settings-card-${c.key}'),
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _open(c.route),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 96),
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(c.icon, color: maraBrown, size: 22),
+              const SizedBox(height: 8),
+              Text(settingCardTitle(context, c.key),
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text(settingCardHint(context, c.key),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cardPage(BuildContext context, SettingCard card, Map<String, SettingValue> values) {
+    return ListView(
+      key: Key('settings-page-${card.key}'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      children: [
+        if (card.links.isNotEmpty) ...[
+          _label(context, context.tr('Pages')),
+          KajCard(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (label, route) in card.links)
+                  ListTile(
+                    key: Key('settings-link-$route'),
+                    minVerticalPadding: 12,
+                    title: Text(settingLinkLabel(context, label),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _open(route),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        // The bell with the app closed, checked end to end (115).
+        if (card.key == 'notifications')
+          if (AppScope.maybeOf(context)?.notify case final notify?) ...[
+            _label(context, context.tr('Sur cet appareil')),
+            PushCheck(notify: notify),
+          ],
+        for (final (part, keys) in card.parts)
+          if (keys.any(values.containsKey)) ...[
+            _label(context, settingPartLabel(context, part)),
+            _rows(context, keys, values),
+          ],
+      ],
     );
   }
 

@@ -6550,4 +6550,160 @@ const enStrings = <String, String>{
       'No count: always available on the shop window.',
   'Le chiffre rouge sur « {place} » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
       'The red number on “{place}” stays until these credits are repaid: opening this page does not clear it.',
+  // 135: the admin center folded into five places.
+  'Abonnés Pro':
+      'Pro subscribers',
+  'Activités':
+      'Businesses',
+  'Aucun réglage ne porte ce nom.':
+      'No setting has that name.',
+  'Bonjour':
+      'Hello',
+  'Bonjour {name}':
+      'Hello {name}',
+  'Carte bancaire':
+      'Bank card',
+  'Cauris, Chemin':
+      'Cauris, Path',
+  'Ce mois, croissance, santé, écrire aux boutiques':
+      'This month, growth, health, write to the shops',
+  'Chaque changement est écrit dans le Journal, où « Annuler » le reprend.':
+      'Every change is written in the Journal, where “Undo” takes it back.',
+  'Chercher un réglage…':
+      'Search a setting…',
+  'Clients':
+      'Clients',
+  'Combien ça rapporte ?':
+      'What does it bring in?',
+  'Commandes · 7 j':
+      'Orders · 7 d',
+  'Comptes, aide, applications':
+      'Accounts, help, apps',
+  'Création':
+      'Creation',
+  'Créées':
+      'Created',
+  'Deux étapes, actions, activité':
+      'Two-step, actions, activity',
+  'Distance':
+      'Distance',
+  'Délais':
+      'Delays',
+  'Exemples':
+      'Examples',
+  'Gagner des cauris':
+      'Earning cauris',
+  'Gains, ligues, prix':
+      'Earnings, leagues, prizes',
+  'Le Chemin':
+      'The Path',
+  'Les chiffres du mois':
+      'The month\'s figures',
+  'Les chiffres du mois ne sont pas arrivés.':
+      'The month\'s figures have not arrived.',
+  'Ligues':
+      'Leagues',
+  'Nouvelles activités':
+      'New businesses',
+  'Outils réservés à Pro':
+      'Tools kept for Pro',
+  'Pages':
+      'Pages',
+  'Pour paraître dans la rue':
+      'To appear on the street',
+  'Prix au km, distance, livreurs':
+      'Price per km, distance, couriers',
+  'Prix de la semaine':
+      'Weekly prizes',
+  'Prix, outils, limites sans Pro':
+      'Prices, tools, limits without Pro',
+  'Pro et prix':
+      'Pro and prices',
+  'Pro {amount}':
+      'Pro {amount}',
+  'Que voient les clients ?':
+      'What do customers see?',
+  'Quelles sont les règles ?':
+      'What are the rules?',
+  'Qui sont mes clients ?':
+      'Who are my clients?',
+  'Revenus de Mara · ce mois':
+      'Mara\'s revenue · this month',
+  'Rien ne vous attend.':
+      'Nothing is waiting for you.',
+  'Rue, mises en avant':
+      'Street, promotions',
+  'Réglages › Création':
+      'Settings › Creation',
+  'Réglages › Sécurité, journal':
+      'Settings › Security, journal',
+  'Signalements des clients':
+      'Customer reports',
+  'Sur cet appareil':
+      'On this device',
+  'Sécurité, journal':
+      'Security, journal',
+  'Tout le reste va bien · {n} contrôle à zéro':
+      'Everything else is fine · {n} check at zero',
+  'Tout le reste va bien · {n} contrôles à zéro':
+      'Everything else is fine · {n} checks at zero',
+  'Un instant…':
+      'One moment…',
+  'Vitrines':
+      'Shop windows',
+  'Voir la rue':
+      'See the street',
+  'Vous attend · {n}':
+      'Waiting for you · {n}',
+  'Vérification':
+      'Verification',
+  'cette semaine':
+      'this week',
+  'dans les 7 jours':
+      'within 7 days',
+  'demandées par les boutiques':
+      'asked by the shops',
+  'le propriétaire est prévenu':
+      'the owner was told',
+  'livraisons {amount}':
+      'deliveries {amount}',
+  'mises en avant {amount}':
+      'promotions {amount}',
+  'par urgence':
+      'by urgency',
+  'pièces envoyées':
+      'documents sent',
+  '{n} abonné Pro':
+      '{n} Pro subscriber',
+  '{n} abonnés Pro':
+      '{n} Pro subscribers',
+  'à relancer dans Paiements':
+      'to retry in Payments',
+  'à vérifier sur Wave':
+      'to check on Wave',
+  'Qu\'est-ce qui m\'attend ?':
+      'What is waiting for me?',
+  'Wave, carte, boutiques d\'applis':
+      'Wave, card, app stores',
+  'Types d\'activité, parcours':
+      'Business types, flow',
+  'Boutiques d\'applications':
+      'App stores',
+  'stable':
+      'steady',
+  // 135 review: one search field per screen; 132's two numbers.
+  'Rechercher partout (Ctrl K)':
+      'Search everything (Ctrl K)',
+  'Rechercher partout (⌘ K)':
+      'Search everything (⌘ K)',
+  'Nouveaux comptes · 7 j':
+      'New accounts · 7 d',
+  'Commandes aujourd\'hui':
+      'Orders today',
+  '{change} vs semaine passée':
+      '{change} vs last week',
+  '{change} vs {day} dernier':
+      '{change} vs last {day}',
+  'payantes':
+      'paying',
 };

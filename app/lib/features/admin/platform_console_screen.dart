@@ -389,6 +389,11 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
               children: [
+                // The search first (135 review): Clients' one field, at the
+                // top as the mockup has it — not under six counts, a screen
+                // down on a small phone at large text.
+                _controls(theme),
+                const SizedBox(height: 16),
                 _StatStrip(
                   overview: _overview,
                   number: _number,
@@ -399,8 +404,6 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                     status: status,
                   ),
                 ),
-                const SizedBox(height: 16),
-                _controls(theme),
                 const SizedBox(height: 8),
                 if (_legacy)
                   KajCard(
@@ -666,7 +669,7 @@ class _StatStrip extends StatelessWidget {
         _StatTile(
           label: context.tr('Mara Pro'),
           value: number.format(overview.pro),
-          hint: overview.pro == 0 ? context.tr('aucune encore') : 'payantes',
+          hint: overview.pro == 0 ? context.tr('aucune encore') : context.tr('payantes'),
           colour: const Color(0xFF2E7D5B),
           selected: activity == 'pro',
           onTap: () => onSelect('pro', 'active'),
