@@ -140,6 +140,11 @@ class _ArticleFlowState extends State<ArticleFlow> {
   String _unit = '';
   bool? _published;
   late bool _isIngredient = widget.ingredient;
+
+  /// « Suivre le stock » (131), for a new article: on for a shop and a
+  /// farm, off for an association (a ticket, a book sold at the door — no
+  /// count, never « épuisé »). An article already there keeps its own.
+  late bool _tracked = !widget.org.isAssociation;
   DateTime? _expiresOn;
   DateTime? _availableFrom;
   PickedPhoto? _photo;
@@ -157,6 +162,18 @@ class _ArticleFlowState extends State<ArticleFlow> {
   /// is counted, how many — no buying price, alert, ingredient or date.
   bool get _simple => widget.org.isAssociation;
   NumberFormat get _money => moneyFormat(widget.org.currency);
+
+  /// The switch is offered once the database has 131 (else every article
+  /// is followed, as before).
+  bool get _trackingOffered => !widget.retail.stockTrackingMissing;
+
+  /// Whether this article's count is kept: an existing one's own answer,
+  /// a new one's switch.
+  bool get _counts {
+    final existing = _existing;
+    if (existing != null) return existing.stockTracked;
+    return _tracked || !_trackingOffered;
+  }
 
   static const _shopUnits = ['pièce', 'kg', 'litre', 'paquet', 'sac', 'carton'];
   static const _farmUnits = ['pièce', 'plateau', 'kg', 'sac', 'tête', 'litre'];
@@ -197,6 +214,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
     _unit = '';
     _published = null;
     _isIngredient = widget.ingredient;
+    _tracked = !widget.org.isAssociation;
     _expiresOn = null;
     _availableFrom = null;
     _photo = null;
@@ -235,6 +253,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
         'low': _low.text,
         'published': _published,
         'ingredient': _isIngredient,
+        'tracked': _tracked,
         'serial': _serial.text,
         'expires': _expiresOn?.toIso8601String(),
         'available': _availableFrom?.toIso8601String(),
@@ -256,6 +275,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
       _published = published is bool ? published : null;
       final ingredient = a['ingredient'];
       _isIngredient = ingredient is bool ? ingredient : widget.ingredient;
+      final tracked = a['tracked'];
+      if (tracked is bool) _tracked = tracked;
       _serial.text = '${a['serial'] ?? ''}';
       _expiresOn = DateTime.tryParse('${a['expires'] ?? ''}');
       _availableFrom = DateTime.tryParse('${a['available'] ?? ''}');
@@ -275,7 +296,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
     final name = existing?.name ?? _name.text.trim();
     final price = _num(_price);
     final cost = _num(_cost);
-    final qty = _num(_quantity) ?? 0;
+    // Not followed (131): no count to add, nothing received.
+    final qty = _counts ? _num(_quantity) ?? 0 : 0.0;
     final retail = widget.retail;
     final orgId = widget.org.id;
 
@@ -308,7 +330,10 @@ class _ArticleFlowState extends State<ArticleFlow> {
       await retail.updateProduct(
         id,
         unit: _unit.isEmpty ? null : _unit,
-        lowStockAt: _num(_low),
+        lowStockAt: _counts ? _num(_low) : null,
+        // Sent only when off: on is the column's default, and a database
+        // before 131 has no column to write.
+        stockTracked: _trackingOffered && !_tracked ? false : null,
         isPublished: _vitrineOffered ? _publishedValue : null,
         isIngredient: _productionOffered ? _isIngredient : null,
         availableFrom: _farm ? _availableFrom : null,
@@ -456,17 +481,22 @@ class _ArticleFlowState extends State<ArticleFlow> {
         ),
         FlowStep(
           id: 'quantity',
-          title: existing == null
-              ? context.tr('Combien en avez-vous ?')
-              : context.tr('Combien arrivent ?'),
+          title: existing != null
+              ? context.tr('Combien arrivent ?')
+              : _counts
+                  ? context.tr('Combien en avez-vous ?')
+                  : context.tr('Le stock'),
           help: existing != null
               ? context.tr('Déjà en stock : {n}', {'n': stockQty(existing.quantity)})
-              : _simple
-                  ? context.tr('Facultatif. Sans nombre, la vitrine le montre épuisé : on ne peut pas le commander.')
-                  : null,
-          optional: _simple,
-          shown: () => sell,
-          isValid: () => _quantity.text.trim().isEmpty || (_num(_quantity) ?? -1) >= 0,
+              : null,
+          optional: _simple || !_counts,
+          // An article already there whose stock is not followed has
+          // nothing to add: no count.
+          shown: () => sell && (existing == null || existing.stockTracked),
+          isValid: () =>
+              !_counts ||
+              _quantity.text.trim().isEmpty ||
+              (_num(_quantity) ?? -1) >= 0,
           builder: _quantityStep,
         ),
         FlowStep(
@@ -474,7 +504,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
           title: context.tr('Prévenir quand il en reste peu ?'),
           help: context.tr('En dessous de ce nombre, Mara vous prévient.'),
           optional: true,
-          shown: () => sell && existing == null && !_simple,
+          shown: () => sell && existing == null && !_simple && _counts,
           isValid: () => _low.text.trim().isEmpty || (_num(_low) ?? -1) >= 0,
           builder: (_) => FlowNumberField(
             key: const Key('article-low'),
@@ -709,13 +739,33 @@ class _ArticleFlowState extends State<ArticleFlow> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FlowNumberField(
-          key: const Key('article-quantity'),
-          controller: _quantity,
-          hint: '0',
-          suffix: unit.isEmpty ? null : unit,
-          onChanged: (_) => setState(() {}),
-        ),
+        // « Suivre le stock » (131): off, no count — on the vitrine it is
+        // always there and is ordered in any number.
+        if (existing == null && _trackingOffered) ...[
+          SwitchListTile(
+            key: const Key('article-tracked'),
+            contentPadding: EdgeInsets.zero,
+            value: _tracked,
+            onChanged: (v) {
+              setState(() => _tracked = v);
+              _flow.keep();
+            },
+            title: Text(context.tr('Suivre le stock'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(_tracked
+                ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (_counts)
+          FlowNumberField(
+            key: const Key('article-quantity'),
+            controller: _quantity,
+            hint: '0',
+            suffix: unit.isEmpty ? null : unit,
+            onChanged: (_) => setState(() {}),
+          ),
         if (existing == null) ...[
           const SizedBox(height: 16),
           Text(context.tr('Compté en'), style: Theme.of(context).textTheme.titleSmall),
@@ -798,7 +848,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   Widget _summary(BuildContext context) {
     final existing = _existing;
-    final qty = _num(_quantity) ?? 0;
+    final qty = _counts ? _num(_quantity) ?? 0 : 0.0;
     final unit = existing?.unit ?? _unit;
     String yes(bool v) => v ? context.tr('Oui') : context.tr('Non');
     return FlowSummary(
@@ -813,14 +863,18 @@ class _ArticleFlowState extends State<ArticleFlow> {
         if (_num(_cost) != null)
           FlowSummaryRow(context.tr('Prix d\'achat'), _money.format(_num(_cost)!),
               step: 'cost'),
-        FlowSummaryRow(
-            existing == null ? context.tr('En stock') : context.tr('Arrivent'),
-            '${stockQty(qty)}${unit.isEmpty ? '' : ' $unit'}',
-            step: 'quantity'),
-        if (existing != null)
+        if (!_counts)
+          FlowSummaryRow(context.tr('En stock'), context.tr('Stock non suivi'),
+              step: 'quantity')
+        else
+          FlowSummaryRow(
+              existing == null ? context.tr('En stock') : context.tr('Arrivent'),
+              '${stockQty(qty)}${unit.isEmpty ? '' : ' $unit'}',
+              step: 'quantity'),
+        if (existing != null && _counts)
           FlowSummaryRow(context.tr('Stock après'),
               stockQty(existing.quantity + qty)),
-        if (existing == null && _num(_low) != null)
+        if (existing == null && _counts && _num(_low) != null)
           FlowSummaryRow(context.tr('Alerte stock bas'), stockQty(_num(_low)!), step: 'alert'),
         if (existing == null && _vitrineOffered)
           FlowSummaryRow(context.tr('Sur la vitrine'), yes(_publishedValue), step: 'vitrine'),
