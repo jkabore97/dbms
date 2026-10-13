@@ -6603,8 +6603,6 @@ const enStrings = <String, String>{
       'The month\'s figures have not arrived.',
   'Ligues':
       'Leagues',
-  'Nom, téléphone, e-mail…':
-      'Name, phone, e-mail…',
   'Nouvelles activités':
       'New businesses',
   'Outils réservés à Pro':
@@ -6693,4 +6691,19 @@ const enStrings = <String, String>{
       'App stores',
   'stable':
       'steady',
+  // 135 review: one search field per screen; 132's two numbers.
+  'Rechercher partout (Ctrl K)':
+      'Search everything (Ctrl K)',
+  'Rechercher partout (⌘ K)':
+      'Search everything (⌘ K)',
+  'Nouveaux comptes · 7 j':
+      'New accounts · 7 d',
+  'Commandes aujourd\'hui':
+      'Orders today',
+  '{change} vs semaine passée':
+      '{change} vs last week',
+  '{change} vs {day} dernier':
+      '{change} vs last {day}',
+  'payantes':
+      'paying',
 };

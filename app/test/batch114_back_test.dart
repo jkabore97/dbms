@@ -548,9 +548,10 @@ void main() {
     expect(find.text(page), findsOneWidget);
 
     // No « Plus » sheet since 135: the five places are all on the bar.
-    // Clients' one field opens the search over the page; back closes it.
+    // The top bar's search (a button over a page with its own field, 135
+    // review) opens the search over the page; back closes it.
     expect(find.text('Plus'), findsNothing);
-    await tester.tap(find.byKey(const Key('center-clients-search')));
+    await tester.tap(find.byKey(const Key('center-search')));
     await _settle(tester);
     expect(find.byKey(const Key('center-search-field')), findsOneWidget);
     await _back(tester);

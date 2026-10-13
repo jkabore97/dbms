@@ -293,9 +293,11 @@ void main() {
       for (final key in ['today', 'clients', 'money', 'street', 'settings']) {
         expect(find.byKey(Key('center-section-$key')), findsOneWidget, reason: key);
       }
-      // The badge is the urgent counters' total (135): one « J'ai payé ».
+      // The badge is the lines « VOUS ATTEND » draws (135 review): the new
+      // businesses, the « J'ai payé », the silent ones, the tool closing —
+      // four, as the page says, not their sum (8).
       expect(find.descendant(of: find.byKey(const Key('center-section-today')),
-          matching: find.text('1')), findsOneWidget);
+          matching: find.text('4')), findsOneWidget);
       await tester.tap(find.byKey(const Key('center-section-settings')));
       await tester.pumpAndSettle();
       expect(find.text('page ${Routes.consoleSettings}'), findsOneWidget);
@@ -859,7 +861,8 @@ void main() {
         ]) {
           debugDefaultTargetPlatformOverride = platform;
           await tester.pumpWidget(MaterialApp.router(
-              routerConfig: _router(_Center(), at: Routes.consoleSettings)));
+              // A page with no field of its own: the top bar's is the field.
+              routerConfig: _router(_Center(), at: Routes.consolePro)));
           await tester.pumpAndSettle();
           final search = find.byKey(const Key('center-search'));
           expect(find.descendant(of: search, matching: find.text(keys)), findsOneWidget,
@@ -889,7 +892,8 @@ void main() {
       Routes.consoleJournal, Routes.consolePro, Routes.consoleCaurisGifts, Routes.consoleWave,
       Routes.consoleSettlement, Routes.consolePeople, Routes.trainers, Routes.consoleAudit,
       Routes.consoleFeatured, Routes.consoleShowcase, Routes.consoleCouriers,
-      Routes.platformAnalytics,
+      Routes.platformAnalytics, Routes.consoleReports, Routes.consoleNotifications,
+      Routes.consoleSettingsCard('livraison'), Routes.consoleCourierFile('u1'),
     ]) {
       final match = router.configuration.findMatch(Uri.parse(path));
       expect(match.isEmpty, isFalse, reason: path);

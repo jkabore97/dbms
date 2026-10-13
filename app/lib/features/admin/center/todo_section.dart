@@ -39,6 +39,7 @@ class _TodoSectionState extends State<TodoSection> {
   PlatformTodo? _todo;
   PlatformToday? _today;
   PlatformOverview? _overview;
+  TodayCounts? _counts132;
   String? _error;
   bool _loading = true;
   bool _zerosOpen = false;
@@ -78,6 +79,12 @@ class _TodoSectionState extends State<TodoSection> {
     try {
       final overview = await widget.center.overview();
       if (mounted) setState(() => _overview = overview);
+    } catch (_) {}
+    // The new accounts and today's orders (132); without 132, null: the
+    // new businesses and the seven days' orders stand in their place.
+    try {
+      final counts = await widget.center.todayCounts();
+      if (mounted) setState(() => _counts132 = counts);
     } catch (_) {}
   }
 
@@ -208,6 +215,7 @@ class _TodoSectionState extends State<TodoSection> {
             _Numbers(
               today: _today,
               overview: _overview,
+              counts: _counts132,
               newThisWeek: _overview?.newThisWeek ?? t['new_7'],
               onTap: () => context.go(Routes.platformAnalytics),
             ),
@@ -419,20 +427,24 @@ class _Line extends StatelessWidget {
   }
 }
 
-/// The four numbers at the top (135): the new businesses of the week, the
-/// week's orders against the week before, the businesses, the ones on Pro.
-/// What the server does not count (new accounts, today's orders) is not
-/// drawn as if it did: each says what it counts. A tap: the analyses.
+/// The four numbers at the top (135): the new accounts of the week against
+/// the week before and today's orders against the same day last week (132,
+/// the owner's two), the businesses, the ones on Pro. A server without 132
+/// counts neither: the new businesses of the week and the seven days'
+/// orders stand in, each saying what it counts — never drawn as if they
+/// were the others. A tap: the analyses.
 class _Numbers extends StatelessWidget {
   const _Numbers({
     required this.today,
     required this.overview,
     required this.newThisWeek,
     required this.onTap,
+    this.counts,
   });
 
   final PlatformToday? today;
   final PlatformOverview? overview;
+  final TodayCounts? counts;
   final int newThisWeek;
   final VoidCallback onTap;
 
@@ -452,11 +464,23 @@ class _Numbers extends StatelessWidget {
     final last = t?.count(t.growth, 'orders_last_week');
     final businesses = t?.count(t.growth, 'businesses') ?? o?.active;
     final monthNew = t?.count(t.growth, 'new_month');
+    final c = counts;
+    // « mardi dernier » / « last Tuesday »: the day the orders are set against.
+    final weekday = DateFormat.EEEE(context.trLocale).format(DateTime.now());
+    String? against(String? delta, String words) =>
+        delta == null ? null : context.tr(words, {'change': delta, 'day': weekday});
     final tiles = [
-      _Number('today-new', context.tr('Nouvelles activités'), f.format(newThisWeek),
-          context.tr('cette semaine')),
-      _Number('today-orders', context.tr('Commandes · 7 j'), week == null ? '—' : f.format(week),
-          week == null || last == null ? null : change(week, last)),
+      if (c != null) ...[
+        _Number('today-accounts', context.tr('Nouveaux comptes · 7 j'), f.format(c.accountsWeek),
+            against(change(c.accountsWeek, c.accountsLastWeek), '{change} vs semaine passée')),
+        _Number('today-orders', context.tr('Commandes aujourd\'hui'), f.format(c.ordersToday),
+            against(change(c.ordersToday, c.ordersLastWeek), '{change} vs {day} dernier')),
+      ] else ...[
+        _Number('today-new', context.tr('Nouvelles activités'), f.format(newThisWeek),
+            context.tr('cette semaine')),
+        _Number('today-orders', context.tr('Commandes · 7 j'), week == null ? '—' : f.format(week),
+            week == null || last == null ? null : change(week, last)),
+      ],
       _Number('today-businesses', context.tr('Activités'),
           businesses == null ? '—' : f.format(businesses),
           monthNew == null || monthNew == 0
@@ -509,8 +533,9 @@ class _NumberTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Two lines at large text on a small phone, never cut (135 review).
               Text(n.label,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
@@ -525,7 +550,7 @@ class _NumberTile extends StatelessWidget {
               ),
               if (n.note != null)
                 Text(n.note!,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
                         color: const Color(0xFF2E7D4F), fontWeight: FontWeight.w700)),

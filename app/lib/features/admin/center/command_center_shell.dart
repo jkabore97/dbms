@@ -185,6 +185,17 @@ String? centerParent(String path) {
   return null;
 }
 
+/// The pages that have their own search field, filtering the page in place
+/// (135 review): the businesses, the people, the cauris gifts' business,
+/// Réglages' « Chercher un réglage… ». On them the top bar's search is a
+/// button — one field per screen — and Ctrl/Cmd+K still opens it.
+const centerOwnSearch = {
+  Routes.consoleBusinesses,
+  Routes.consolePeople,
+  Routes.consoleCaurisGifts,
+  Routes.consoleSettings,
+};
+
 /// From this width the places stand in a rail at the left.
 const centerWideFrom = 900.0;
 
@@ -219,7 +230,7 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
   DateTime? _badgesAt;
   PlatformToday? _today;
   PlatformOverview? _overview;
-  bool _moneyAsked = false;
+  DateTime? _moneyAt;
   bool _moneyDone = false;
 
   @override
@@ -241,10 +252,14 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     } catch (_) {}
   }
 
-  /// « Argent »'s card: asked once, the first time the place is open.
+  /// « Argent »'s card: asked the first time the place is open, and again
+  /// on coming back to it after five minutes — a computer left open for
+  /// days never shows last month's money as this month's.
   Future<void> _loadMoney() async {
-    if (_moneyAsked || !widget.center.isConfigured) return;
-    _moneyAsked = true;
+    final at = _moneyAt;
+    if (!widget.center.isConfigured) return;
+    if (at != null && DateTime.now().difference(at) < const Duration(minutes: 5)) return;
+    _moneyAt = DateTime.now();
     try {
       final today = await widget.center.today();
       if (mounted) setState(() => _today = today);
@@ -260,9 +275,9 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     final b = _badges;
     if (b == null) return 0;
     return switch (section) {
-      // The urgent counters' total (135): stuck orders, reports, failed
-      // payouts, « J'ai payé » to confirm.
-      'today' => b.urgent,
+      // The lines « VOUS ATTEND · N » draws (135 review): one number on
+      // the badge and on the page.
+      'today' => b.badge,
       _ => 0,
     };
   }
@@ -325,8 +340,15 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Header(wide: wide, onSearch: _openSearch, onLeave: () => AdminTrail.leave(context)),
-        if (current.key == 'clients' && !typing) _ClientsSearch(onTap: _openSearch),
+        _Header(
+          wide: wide,
+          // One search field per screen (135 review): a page with its own
+          // field keeps the top bar's search as a button.
+          compact: centerOwnSearch.contains(path),
+          place: current.label,
+          onSearch: _openSearch,
+          onLeave: () => AdminTrail.leave(context),
+        ),
         if (current.key == 'money' && !typing)
           _MoneyCard(
             today: _today,
@@ -451,9 +473,20 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
 /// The graphite band at the top: whose center this is, the one search,
 /// and the way out.
 class _Header extends StatelessWidget {
-  const _Header({required this.wide, required this.onSearch, required this.onLeave});
+  const _Header({
+    required this.wide,
+    required this.onSearch,
+    required this.onLeave,
+    this.compact = false,
+    this.place = '',
+  });
 
   final bool wide;
+
+  /// The page has its own search field: the top bar's is a button, and
+  /// the band says the place.
+  final bool compact;
+  final String place;
   final VoidCallback onSearch;
   final VoidCallback onLeave;
 
@@ -472,63 +505,85 @@ class _Header extends StatelessWidget {
                 const Icon(Icons.shield_outlined, color: maraCaramel, size: 22),
                 const SizedBox(width: 8),
               ],
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 640),
-                    child: Material(
-                      key: const Key('center-search'),
-                      color: maraPaper.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
+              if (compact) ...[
+                Expanded(
+                  child: Text(
+                    place,
+                    key: const Key('center-place'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: maraPaper,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('center-search'),
+                  tooltip: defaultTargetPlatform == TargetPlatform.macOS
+                      ? context.tr('Rechercher partout (⌘ K)')
+                      : context.tr('Rechercher partout (Ctrl K)'),
+                  onPressed: onSearch,
+                  icon: const Icon(Icons.search, color: maraPaper),
+                ),
+              ] else
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 640),
+                      child: Material(
+                        key: const Key('center-search'),
+                        color: maraPaper.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
-                        onTap: onSearch,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.search, color: maraPaper, size: 20),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  wide
-                                      ? context.tr(
-                                          'Rechercher une entreprise, une personne, une commande',
-                                        )
-                                      : context.tr('Rechercher'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: maraPaper.withValues(alpha: 0.85),
-                                  ),
-                                ),
-                              ),
-                              if (wide)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: maraPaper.withValues(alpha: 0.4)),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  // The keys as this keyboard says them.
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: onSearch,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.search, color: maraPaper, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
                                   child: Text(
-                                    defaultTargetPlatform == TargetPlatform.macOS
-                                        ? '⌘ K'
-                                        : context.tr('Ctrl K'),
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: maraPaper.withValues(alpha: 0.8),
+                                    wide
+                                        ? context.tr(
+                                            'Rechercher une entreprise, une personne, une commande',
+                                          )
+                                        : context.tr('Rechercher'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: maraPaper.withValues(alpha: 0.85),
                                     ),
                                   ),
                                 ),
-                            ],
+                                if (wide)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: maraPaper.withValues(alpha: 0.4)),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    // The keys as this keyboard says them.
+                                    child: Text(
+                                      defaultTargetPlatform == TargetPlatform.macOS
+                                          ? '⌘ K'
+                                          : context.tr('Ctrl K'),
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: maraPaper.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(width: 4),
               // The platform's own bell (115): requests, couriers, spots.
               if (AppScope.maybeOf(context)?.notify case final notify?)
@@ -549,50 +604,6 @@ class _Header extends StatelessWidget {
                 icon: const Icon(Icons.close, color: maraPaper),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Clients' one field (135): a name, a phone or an e-mail, through the
-/// center's one search (businesses, people, orders).
-class _ClientsSearch extends StatelessWidget {
-  const _ClientsSearch({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      child: Material(
-        key: const Key('center-clients-search'),
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Icon(Icons.search, size: 20, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    context.tr('Nom, téléphone, e-mail…'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -988,23 +999,30 @@ class _PhoneBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final index = sections.indexWhere((s) => s.key == current.key);
-    return NavigationBar(
-      key: const Key('center-bar'),
-      selectedIndex: index < 0 ? 0 : index,
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      onDestinationSelected: (i) => onTap(sections[i]),
-      destinations: [
-        for (final s in sections)
-          NavigationDestination(
-            key: Key('center-bar-${s.key}'),
-            icon: Badge(
-              isLabelVisible: badge(s.key) > 0,
-              label: Text('${badge(s.key)}'),
-              child: Icon(s.icon),
+    // The business bar's rule (133's B-2): the labels held to 1.15 × large
+    // text, 1.0 on a phone under 360 px — at 1.3 « Aujourd'hui » and
+    // « Réglages » broke mid-word in a fifth of 320 px (135 review).
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: MediaQuery.sizeOf(context).width < 360 ? 1.0 : 1.15,
+      child: NavigationBar(
+        key: const Key('center-bar'),
+        selectedIndex: index < 0 ? 0 : index,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (i) => onTap(sections[i]),
+        destinations: [
+          for (final s in sections)
+            NavigationDestination(
+              key: Key('center-bar-${s.key}'),
+              icon: Badge(
+                isLabelVisible: badge(s.key) > 0,
+                label: Text('${badge(s.key)}'),
+                child: Icon(s.icon),
+              ),
+              label: s.label,
+              tooltip: s.question,
             ),
-            label: s.label,
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
