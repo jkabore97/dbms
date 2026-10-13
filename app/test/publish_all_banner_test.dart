@@ -6,12 +6,11 @@ import 'package:kaj_app/features/retail/publish_all_banner.dart';
 /// A shop with priced articles, none on the vitrine: ELIM's case, told to
 /// « add 5 » while 57 were there.
 class _Shelf extends RetailRepository {
-  _Shelf({required this.published, required this.ready, this.min = 5})
-      : super(null);
+  _Shelf({required this.published, required this.ready}) : super(null);
 
   int published;
   int ready;
-  final int min;
+  final int min = 5;
   int publishes = 0;
 
   @override
