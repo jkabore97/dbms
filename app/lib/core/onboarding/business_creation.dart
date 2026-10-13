@@ -317,8 +317,8 @@ String townCountry(String? e164, {String? deviceRegion}) {
 }
 
 const _townsByCountry = <String, List<String>>{
-  'BF': ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Ouahigouya', 'Banfora',
-      'Kaya', 'Tenkodogo', 'Fada N\'Gourma', 'Dédougou'],
+  // Burkina: Ouagadougou alone (the owner); any other town is typed.
+  'BF': ['Ouagadougou'],
   'CI': ['Abidjan', 'Bouaké', 'Yamoussoukro', 'Daloa', 'San-Pédro', 'Korhogo'],
   'SN': ['Dakar', 'Thiès', 'Saint-Louis', 'Touba', 'Kaolack', 'Ziguinchor'],
   'ML': ['Bamako', 'Sikasso', 'Ségou', 'Mopti', 'Kayes'],

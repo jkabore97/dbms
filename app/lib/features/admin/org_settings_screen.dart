@@ -1568,7 +1568,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
           labelText: context.tr('Adresse'),
-          hintText: context.tr('Ex. : Gounghin près du marché, Le Plateau, Centre-ville'),
+          hintText: context.tr('Ex. : Centre-ville, près du grand marché, avenue principale'),
           hintMaxLines: 2,
           prefixIcon: const Icon(Icons.home_work_outlined),
         ),
