@@ -109,6 +109,7 @@ class _Books extends RetailRepository {
     double? quantity,
     bool? isService,
     bool? priceFrom,
+    bool? stockTracked,
   }) async {
     saved.add({
       'id': productId,

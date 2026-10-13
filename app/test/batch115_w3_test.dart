@@ -70,6 +70,7 @@ class _Retail extends RetailRepository {
     double? quantity,
     bool? isService,
     bool? priceFrom,
+    bool? stockTracked,
   }) async {
     if (salePrice != null) prices[id] = salePrice;
   }
