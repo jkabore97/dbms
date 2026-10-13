@@ -36,6 +36,7 @@
 // never from this file. The publishable key is the one the web app already
 // ships to every browser.
 
+import { mapsLink } from "./maps.js";
 import { legalPage } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
 
@@ -97,6 +98,11 @@ async function serve(request, env) {
         return Response.redirect(`${url.origin}/aide${url.search}`, 301);
       }
       if (url.pathname === "/aide") return helpPage(await supportContacts(env));
+    }
+
+    // A short Google Maps link's position (maps.js).
+    if (url.pathname === "/api/maps-link" && request.method === "GET") {
+      return mapsLink(request);
     }
 
     const shop = url.pathname.match(/^\/s\/([a-z0-9-]+)\/?$/);

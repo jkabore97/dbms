@@ -1567,7 +1567,8 @@ class _OrderSheetState extends State<OrderSheet> {
       ),
     );
     if (text == null || !mounted) return;
-    final position = parseGoogleMapsLink(text);
+    final position = await resolveGoogleMapsLink(text);
+    if (!mounted) return;
     if (position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

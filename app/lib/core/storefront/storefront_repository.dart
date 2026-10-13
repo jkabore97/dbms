@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show Color;
 
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../orders/booking.dart' show BookingCancelTerms;
@@ -1171,20 +1172,35 @@ String? distanceLabel(double? km) {
 /// The coordinates hidden in a Google Maps link, or typed as "lat, lng".
 ///
 /// A shop that is already on Google Maps can paste its own link rather than
-/// hunt for numbers. Full links carry the position in one of three shapes —
-/// `@12.37,-1.52,17z`, `?q=12.37,-1.52`, or `!3d12.37!4d-1.52` — and a bare
-/// "12.37, -1.52" is accepted too. The short `maps.app.goo.gl` links carry
-/// nothing (they redirect), so this returns null for them and the screen says
-/// to open the link and copy the full address. Anything off the world is null.
+/// hunt for numbers. Full links carry the position in one of several shapes —
+/// `@12.37,-1.52,17z`, `?q=12.37,-1.52` (also `query=`, `ll=`, `center=`,
+/// `destination=`, with the comma written `%2C`), `!3d12.37!4d-1.52`,
+/// `/search/12.37,+-1.52`, `geo:12.37,-1.52` — and a bare "12.37, -1.52",
+/// alone or inside the text a share sheet copies, is accepted too. The short
+/// `maps.app.goo.gl` links carry nothing (they redirect): this returns null
+/// for them, and [resolveGoogleMapsLink] asks the site to follow them.
+/// Anything off the world is null.
 ({double lat, double lng})? parseGoogleMapsLink(String text) {
-  final s = text.trim();
+  var s = text.trim();
   if (s.isEmpty) return null;
+  try {
+    s = Uri.decodeFull(s);
+  } catch (_) {
+    // A stray « % »: read the text as it came.
+  }
+  s = s.replaceAll('+', ' ');
   const n = r'(-?\d+(?:\.\d+)?)';
+  const sep = r'\s*,\s*';
   final patterns = [
     RegExp('@$n,$n'),
-    RegExp('[?&]q=$n,$n'),
     RegExp('!3d$n!4d$n'),
-    RegExp('^$n\\s*,\\s*$n\$'),
+    RegExp('[?&](?:q|query|ll|sll|center|daddr|destination)=$n$sep$n'),
+    RegExp('/(?:search|place|dir)/$n$sep$n'),
+    RegExp('geo:$n,$n'),
+    RegExp('^$n$sep$n\$'),
+    // Inside a longer text (« Ma boutique 12.371234, -1.519876 »): only
+    // numbers that look like a position, with decimals.
+    RegExp(r'(?<![\d.])(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})(?![\d.])'),
   ];
   for (final p in patterns) {
     final m = p.firstMatch(s);
@@ -1196,6 +1212,67 @@ String? distanceLabel(double? km) {
     return (lat: lat, lng: lng);
   }
   return null;
+}
+
+/// The first Google Maps link inside [text] (a share sheet copies the
+/// place's name with it), or null.
+Uri? googleMapsLinkIn(String text) {
+  final m = RegExp(r'https?://[^\s<>"]+').allMatches(text);
+  for (final hit in m) {
+    final uri = Uri.tryParse(hit.group(0)!);
+    if (uri == null) continue;
+    final host = uri.host.toLowerCase();
+    final path = uri.path.toLowerCase();
+    if (host == 'maps.app.goo.gl' ||
+        (host == 'goo.gl' && path.startsWith('/maps')) ||
+        (host == 'g.co' && path.startsWith('/kgs')) ||
+        host == 'maps.google.com' ||
+        ((host == 'google.com' || host.endsWith('.google.com') ||
+                RegExp(r'^(www\.)?google\.[a-z.]+$').hasMatch(host)) &&
+            path.startsWith('/maps'))) {
+      return uri;
+    }
+  }
+  return null;
+}
+
+/// [parseGoogleMapsLink], and for a link that carries no position (the
+/// short `maps.app.goo.gl` one a phone's « Partager » gives) the site
+/// follows it (kaj-app Worker, /api/maps-link) and reads the place it
+/// lands on. Null when neither finds a position; never throws.
+Future<({double lat, double lng})?> resolveGoogleMapsLink(
+  String text, {
+  Future<String?> Function(Uri api)? fetch,
+  Uri? base,
+}) async {
+  final local = parseGoogleMapsLink(text);
+  if (local != null) return local;
+  final link = googleMapsLinkIn(text);
+  if (link == null) return null;
+  final here = base ?? Uri.base;
+  final origin = here.scheme.startsWith('http') ? here.origin : siteOrigin;
+  final api = Uri.parse('$origin/api/maps-link')
+      .replace(queryParameters: {'u': link.toString()});
+  try {
+    final body = await (fetch ?? _fetchText)(api)
+        .timeout(const Duration(seconds: 12));
+    if (body == null) return null;
+    final m = RegExp(r'"lat"\s*:\s*(-?[\d.]+)\s*,\s*"lng"\s*:\s*(-?[\d.]+)')
+        .firstMatch(body);
+    if (m == null) return null;
+    final lat = double.tryParse(m.group(1)!);
+    final lng = double.tryParse(m.group(2)!);
+    if (lat == null || lng == null) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return (lat: lat, lng: lng);
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<String?> _fetchText(Uri url) async {
+  final response = await http.get(url);
+  return response.statusCode == 200 ? response.body : null;
 }
 
 /// A vitrine as this phone last saw it (StorefrontRepository.keptVitrine).

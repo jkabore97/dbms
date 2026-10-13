@@ -6,7 +6,7 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
 import '../../core/shopper/shopper_repository.dart';
-import '../../core/storefront/storefront_repository.dart' show parseGoogleMapsLink;
+import '../../core/storefront/storefront_repository.dart' show resolveGoogleMapsLink;
 import '../admin/pin_preview.dart' deferred as pin_map;
 import '../common/owned_controller.dart';
 import '../storefront/shop_style.dart';
@@ -310,7 +310,8 @@ class _AddressSheetState extends State<AddressSheet> {
       ),
     );
     if (text == null || !mounted) return;
-    final at = parseGoogleMapsLink(text);
+    final at = await resolveGoogleMapsLink(text);
+    if (!mounted) return;
     if (at == null) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
         content: Text(context.tr('Ce lien ne contient pas de position. Ouvrez-le dans Google Maps et copiez l\'adresse complète.')),
