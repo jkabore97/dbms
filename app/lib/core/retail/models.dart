@@ -26,6 +26,7 @@ class Product {
     this.availableFrom,
     this.isService = false,
     this.priceFrom = false,
+    this.stockTracked = true,
   });
 
   final String id;
@@ -69,12 +70,21 @@ class Product {
   /// « à partir de » (098): the price is where it starts, not what it is.
   final bool priceFrom;
 
+  /// « Suivre le stock » (131): false for an article whose count is not
+  /// kept — a ticket, a book sold at the door, a shop that does not count.
+  /// It has no count (always 0 server-side), is never « Rupture » or
+  /// « épuisé », and orders and sales move nothing. True before 131.
+  final bool stockTracked;
+
+  /// Whether its count means something: goods, followed.
+  bool get counted => !isService && stockTracked;
+
   /// What the shop makes on one unit at today's prices. Negative means it is
   /// being sold for less than it cost, which is worth seeing.
   double get margin => salePrice - costPrice;
 
   bool get isLow =>
-      !isService && lowStockAt != null && quantity <= lowStockAt!;
+      counted && lowStockAt != null && quantity <= lowStockAt!;
 
   factory Product.fromRow(Map<String, dynamic> row) {
     double parse(Object? v) =>
@@ -108,6 +118,8 @@ class Product {
       // Absent before 098: goods, at their plain price.
       isService: row['is_service'] == true,
       priceFrom: row['price_from'] == true,
+      // Absent before 131: every article is followed.
+      stockTracked: row['stock_tracked'] != false,
     );
   }
 }

@@ -63,6 +63,7 @@ class _Shelf extends RetailRepository {
     double? quantity,
     bool? isService,
     bool? priceFrom,
+    bool? stockTracked,
   }) async {
     saved.add({
       'id': productId,

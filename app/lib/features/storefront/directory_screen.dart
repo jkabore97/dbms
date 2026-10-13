@@ -40,6 +40,13 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// shop's name and hands over an itinerary to the maps app the phone
 /// already has. The map is OpenStreetMap through flutter_map — no key, no
 /// bill; the directions are Google's, by link, for the same reason.
+/// The accounts « Vous êtes ici pour… » was looked up for in this run
+/// (134): the server is asked once a run, the question shown once.
+final Set<String> _arrivalLooked = {};
+
+@visibleForTesting
+void forgetStreetArrival() => _arrivalLooked.clear();
+
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({
     super.key,
@@ -104,6 +111,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   void _onSession() {
     final phase = widget.session.phase;
+    if (phase == SessionPhase.noOrg) unawaited(_maybeAskArrival());
     final inside = phase == SessionPhase.noOrg ||
         phase == SessionPhase.picking ||
         phase == SessionPhase.ready;
@@ -112,9 +120,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     unawaited(_follows.load());
   }
 
+  /// The invite card closed on this device (134): it stays closed here.
+  bool _inviteClosed = true;
+  static const inviteClosedKey = 'street_invite_closed';
+
+  Future<void> _readInvite() async {
+    var closed = false;
+    try {
+      closed = await widget.session.db.readPref(inviteClosedKey) == '1';
+    } catch (_) {}
+    if (mounted) setState(() => _inviteClosed = closed);
+  }
+
+  Future<void> _closeInvite() async {
+    setState(() => _inviteClosed = true);
+    try {
+      await widget.session.db.writePref(inviteClosedKey, '1');
+    } catch (_) {}
+  }
+
+  /// « Vous êtes ici pour… » (134): once per account, for somebody signed
+  /// in with no business — the server says whether it was answered
+  /// (arrival_pending, 131). No server, or a database before 131: nothing.
+  Future<void> _maybeAskArrival() async {
+    final shopper = widget.shopper;
+    final who = widget.session.identity?.userId ?? widget.session.auth.currentUser?.id;
+    if (shopper == null || who == null || !_arrivalLooked.add(who)) return;
+    final pending = await shopper.arrivalPending();
+    if (!pending || !mounted) return;
+    if (widget.session.phase != SessionPhase.noOrg) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    context.push(Routes.arrival);
+  }
+
+  /// « Créer mon activité » from the card: straight to the form — signed
+  /// out, through sign-in first, which gives the form back (the router
+  /// keeps where the person was going).
+  void _create() => widget.session.phase == SessionPhase.signedOut
+      ? context.go(Routes.createBusiness)
+      : context.push(Routes.createBusiness);
+
   @override
   void initState() {
     super.initState();
+    _readInvite();
     _load();
     widget.session.addListener(_onSession);
     _onSession();
@@ -363,6 +412,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : _Street(
+                  // « Créer mon activité » (134), at the top of the list,
+                  // for anybody with no business, signed in or not —
+                  // until closed on this device, or a business is theirs.
+                  invite: ListenableBuilder(
+                    listenable: widget.session,
+                    builder: (context, _) {
+                      final phase = widget.session.phase;
+                      final noBusiness = phase == SessionPhase.signedOut ||
+                          phase == SessionPhase.noOrg;
+                      if (_inviteClosed || !noBusiness) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: StreetInviteCard(
+                            onCreate: _create, onClose: _closeInvite),
+                      );
+                    },
+                  ),
                   entries: _entries,
                   previews: _previews,
                   featured: _featured,
@@ -450,40 +518,64 @@ class _AccountCorner extends StatelessWidget {
               for (final o in [if (home != null) home else ...session.orgs])
                 o.isAssociation ? 'association' : o.profile == 'farm' ? 'farm' : 'retail',
             };
-            return Row(
+            final business = kinds.length > 1
+                ? context.tr('Mes activités')
+                : switch (kinds.firstOrNull) {
+                    'farm' => context.tr('Ma ferme'),
+                    'association' => context.tr('Mon association'),
+                    _ => context.tr('Ma boutique'),
+                  };
+            final narrow = MediaQuery.sizeOf(context).width < 360;
+            const compact = VisualDensity(horizontal: -2, vertical: -2);
+            final padding = EdgeInsets.symmetric(horizontal: narrow ? 10 : 14);
+            // A large text size on a small phone (320 px at 1.3): the
+            // worded button stays one line beside the wordmark, the
+            // wordmark readable (134's review).
+            return MediaQuery.withClampedTextScaling(
+              maxScaleFactor: narrow ? 1.1 : 1.3,
+              child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // « Admin » (104): the command center, for a platform admin.
                 const AdminPill(),
-                IconButton(
-                  tooltip: !member
-                      ? context.tr('Ouvrir ma boutique')
-                      : kinds.length > 1
-                      ? context.tr('Mes activités')
-                      : switch (kinds.firstOrNull) {
-                          'farm' => context.tr('Ma ferme'),
-                          'association' => context.tr('Mon association'),
-                          _ => context.tr('Ma boutique'),
-                        },
-                  icon: Icon(member
-                      ? Icons.store_outlined
-                      : Icons.add_business_outlined),
-                  // `replace`, not `go`: entering the business world takes
-                  // the street's place in history, so back from the picker,
-                  // the console or a store never falls out onto the public
-                  // page — the owner found that jarring, and it was.
-                  onPressed: () => context.replace(member
-                      ? (open != null ? Routes.org(open) : Routes.picker)
-                      : Routes.join),
-                ),
-                IconButton(
-                  tooltip: context.tr('Espace livreur'),
-                  icon: const Icon(Icons.sports_motorsports_outlined),
-                  onPressed: () => context.go(Routes.courier),
-                ),
+                // A word, never a bare picture (134, mockup 1): the owner's
+                // testers did not find the little shop with a plus. A
+                // member's opens their business; everybody else's opens
+                // the creation form itself — not the join-or-create page,
+                // which stays for people invited to a business.
+                if (member)
+                  Tooltip(
+                    message: business,
+                    child: FilledButton.tonalIcon(
+                    key: const Key('street-my-business'),
+                    style: FilledButton.styleFrom(
+                        visualDensity: compact, padding: padding),
+                    // `replace`, not `go`: entering the business world takes
+                    // the street's place in history, so back from the picker,
+                    // the console or a store never falls out onto the public
+                    // page — the owner found that jarring, and it was.
+                    onPressed: () => context
+                        .replace(open != null ? Routes.org(open) : Routes.picker),
+                    icon: const Icon(Icons.store_outlined, size: 18),
+                    label: Text(business),
+                  ))
+                else
+                  FilledButton.icon(
+                    key: const Key('street-sell'),
+                    style: FilledButton.styleFrom(
+                      visualDensity: compact,
+                      padding: padding,
+                      backgroundColor: ShopStyle.ink,
+                      foregroundColor: ShopStyle.paper,
+                    ),
+                    onPressed: () => context.push(Routes.createBusiness),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(context.tr('Vendre sur Mara')),
+                  ),
                 // The shopper's bell (115): their orders and vitrines.
                 const ShopperBell(),
                 PopupMenuButton<String>(
+                  key: const Key('street-account'),
                   tooltip: context.tr('Mon compte'),
                   icon: const Icon(Icons.person_outline),
                   onSelected: (choice) async {
@@ -494,6 +586,14 @@ class _AccountCorner extends StatelessWidget {
                       // keep their Compte, and their names here.
                       case 'profile':
                         context.go(member ? Routes.myProfile : Routes.shopperProfile);
+                      case 'create':
+                        context.push(Routes.createBusiness);
+                      case 'join':
+                        context.push(Routes.join);
+                      // The helmet left the header for here (134): fewer
+                      // pictures at the top.
+                      case 'courier':
+                        context.go(Routes.courier);
                       case 'out':
                         await session.signOut();
                     }
@@ -514,6 +614,35 @@ class _AccountCorner extends StatelessWidget {
                       ),
                     ),
                     const PopupMenuDivider(),
+                    // For somebody with no business (134): the same door as
+                    // the header's, where people look for it.
+                    if (!member) ...[
+                      PopupMenuItem(
+                        key: const Key('menu-create-business'),
+                        value: 'create',
+                        child: ListTile(
+                          leading: const Icon(Icons.add_business_outlined),
+                          title: Text(context.tr('Créer mon activité')),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        key: const Key('menu-join'),
+                        value: 'join',
+                        child: ListTile(
+                          leading: const Icon(Icons.vpn_key_outlined),
+                          title: Text(context.tr('J\'ai un code d\'invitation')),
+                        ),
+                      ),
+                    ],
+                    PopupMenuItem(
+                      key: const Key('menu-courier'),
+                      value: 'courier',
+                      child: ListTile(
+                        leading: const Icon(Icons.sports_motorsports_outlined),
+                        title: Text(context.tr('Espace livreur')),
+                      ),
+                    ),
+                    const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'out',
                       child: ListTile(
@@ -524,7 +653,7 @@ class _AccountCorner extends StatelessWidget {
                   ],
                 ),
               ],
-            );
+            ));
         }
       },
     );
@@ -533,6 +662,7 @@ class _AccountCorner extends StatelessWidget {
 
 class _Street extends StatelessWidget {
   const _Street({
+    this.invite,
     required this.entries,
     required this.previews,
     required this.featured,
@@ -554,6 +684,9 @@ class _Street extends StatelessWidget {
     required this.onClearSearch,
   });
 
+  /// « Créer mon activité » (134), first in the list; null or empty for
+  /// whoever has a business.
+  final Widget? invite;
   final List<DirectoryEntry> entries;
   final Map<String, List<ShopPreview>> previews;
   final List<FeaturedItem> featured;
@@ -706,6 +839,7 @@ class _Street extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ?invite,
               // The paid spots, when there are any: a strip, not the page.
               if (featured.isNotEmpty) ...[
                 const SizedBox(height: 32),
@@ -1391,6 +1525,121 @@ class SponsoredTag extends StatelessWidget {
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,
               color: ShopStyle.ink)),
+    );
+  }
+}
+
+/// « Vous vendez, élevez ou gérez une association ? » (134, mockup 1): the
+/// card at the top of the market's list for anybody with no business,
+/// signed in or not. Its button goes straight to the creation form; its ×
+/// closes it on this device.
+class StreetInviteCard extends StatelessWidget {
+  const StreetInviteCard({super.key, required this.onCreate, required this.onClose});
+
+  final VoidCallback onCreate;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(IconData icon, String label) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: maraPaper.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(99),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 15, color: maraCaramel),
+              const SizedBox(width: 6),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: maraPaper)),
+            ],
+          ),
+        );
+    return Container(
+      key: const Key('street-invite'),
+      padding: const EdgeInsets.fromLTRB(18, 14, 8, 18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [maraEspresso, maraBlack],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    context.tr('GRATUIT · 3 MINUTES'),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w800,
+                        color: maraCaramel),
+                  ),
+                ),
+              ),
+              IconButton(
+                key: const Key('street-invite-close'),
+                tooltip: context.tr('Fermer'),
+                onPressed: onClose,
+                icon: const Icon(Icons.close, color: maraPaper, size: 20),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Text(
+              context.tr('Vous vendez, élevez ou gérez une association ?'),
+              style: const TextStyle(
+                  fontSize: 20,
+                  height: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: maraPaper),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              chip(Icons.storefront_outlined, context.tr('Boutique')),
+              chip(Icons.agriculture_outlined, context.tr('Ferme')),
+              chip(Icons.volunteer_activism_outlined, context.tr('Association')),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                key: const Key('street-invite-create'),
+                onPressed: onCreate,
+                style: FilledButton.styleFrom(
+                  backgroundColor: maraCaramel,
+                  foregroundColor: maraBlack,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26)),
+                ),
+                child: Text(context.tr('Créer mon activité'),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -100,8 +100,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // 134: Vente · Catalogue · Commandes · Argent · Plus.
       expect(_barLabels(tester),
-          ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus']);
+          ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus']);
       // The orders waiting ride on Commandes.
       expect(
           find.descendant(
@@ -133,20 +134,23 @@ void main() {
           .widgetList<ListTile>(find.byType(ListTile))
           .map((t) => (t.title as Text).data)
           .toList();
+      // 134: under its headings — MA VITRINE, MON ÉQUIPE, MOI. « Dépense »
+      // is a button on the home, « Mes services » in Catalogue.
       expect(sheet, [
-        // Money out (115), for whoever records.
-        'Dépense',
-        'Mon chemin',
-        'Mes services',
-        'Production',
-        // Its people (101), as on the farm's and the association's homes.
-        'Équipe',
-        // The administration's hub, for whoever runs it (108).
-        'Administration',
         'Voir ma vitrine',
+        'Mon chemin',
+        'Production',
+        'Équipe',
+        'Administration',
+        'Compte',
         'Voir le marché',
-        'Compte'
       ]);
+      for (final g in ['vitrine', 'team', 'me']) {
+        expect(find.byKey(Key('plus-heading-$g')), findsOneWidget, reason: g);
+      }
+      expect(find.text('MA VITRINE'), findsOneWidget);
+      expect(find.text('MON ÉQUIPE'), findsOneWidget);
+      expect(find.text('MOI'), findsOneWidget);
     });
 
     testWidgets('a tool the owner hid is not on the bar, and it closes up',
@@ -165,7 +169,9 @@ void main() {
       )));
       await tester.pump();
 
-      expect(_barLabels(tester), ['Vente', 'Articles', 'Plus']);
+      // Argent stays for the expenses and the carnet; Catalogue for the
+      // articles.
+      expect(_barLabels(tester), ['Vente', 'Catalogue', 'Argent', 'Plus']);
     });
 
     testWidgets('the alerts question is a card on the page, not a bar icon',
@@ -182,7 +188,7 @@ void main() {
     });
   });
 
-  testWidgets('the farm: Stock, Bandes, Factures on the bar', (tester) async {
+  testWidgets('the farm: Bandes, Stock, Ventes on the bar', (tester) async {
     // Tall enough for the whole Plus sheet.
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
@@ -200,7 +206,7 @@ void main() {
     }
 
     expect(_barLabels(tester),
-        ['Accueil', 'Stock', 'Bandes', 'Factures', 'Plus']);
+        ['Accueil', 'Bandes', 'Stock', 'Ventes', 'Plus']);
     // The three tiles that used to sit mid-page are the bar now.
     expect(find.text('Stock'), findsOneWidget);
     expect(
@@ -214,7 +220,7 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Compte'), findsOneWidget);
   });
 
-  testWidgets('the association: Historique, Rapports, Factures on the bar',
+  testWidgets('the association: Journal, Rapports, Catalogue on the bar',
       (tester) async {
     const org = OrgSummary(
         id: 'ch-1', name: 'Grace Chapel', profile: 'church', roles: ['owner']);
@@ -225,6 +231,7 @@ void main() {
       org: org,
       reports: ReportsRepository(client),
       invoicing: InvoicingRepository(client),
+      retail: _Shop(client),
       onHistory: () {},
     )));
     for (var i = 0; i < 6; i++) {
@@ -234,7 +241,7 @@ void main() {
     }
 
     expect(_barLabels(tester),
-        ['Accueil', 'Historique', 'Rapports', 'Factures', 'Plus']);
+        ['Accueil', 'Journal', 'Rapports', 'Catalogue', 'Plus']);
   });
 
   group('the rule', () {
@@ -287,7 +294,7 @@ void main() {
       expect(find.byType(NavigationRail), findsOneWidget);
       expect(
           find.descendant(
-              of: find.byType(NavigationRail), matching: find.text('Articles')),
+              of: find.byType(NavigationRail), matching: find.text('Catalogue')),
           findsOneWidget);
     });
   });

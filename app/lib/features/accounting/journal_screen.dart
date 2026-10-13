@@ -7,6 +7,7 @@ import '../../core/auth/models.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../home/place_sections.dart';
 
 /// Every entry, newest first, in the words it was written in.
 ///
@@ -23,10 +24,20 @@ class JournalScreen extends StatefulWidget {
     super.key,
     required this.accounting,
     required this.org,
+    this.direction,
+    this.onAdd,
   });
 
   final AccountingRepository accounting;
   final OrgSummary org;
+
+  /// 'out': the money that went out, alone — Argent's « Dépenses » (134),
+  /// from this month. Null: every entry, the association's Journal.
+  final String? direction;
+
+  /// « Dépense » on the page (134): one more expense, one question a
+  /// screen. Null draws no button.
+  final Future<bool> Function()? onAdd;
 
   @override
   State<JournalScreen> createState() => _JournalScreenState();
@@ -39,11 +50,27 @@ class _JournalScreenState extends State<JournalScreen> {
   // we record that", and the entry being looked for is usually older than the
   // period a month-bounded default would have hidden it inside. The page size
   // makes that affordable — 50 rows arrive whatever the range.
-  Period _period = Period.everything;
-  List<JournalRow> _rows = const [];
+  // The expenses (134) open on this month: « où en est mon argent ? » is
+  // asked of the month, as Argent's numbers above them are.
+  late Period _period =
+      widget.direction == null ? Period.everything : Period.thisMonth;
+  List<JournalRow> _all = const [];
+
+  /// What is drawn: every row, or only those going [JournalScreen.direction].
+  List<JournalRow> get _rows => widget.direction == null
+      ? _all
+      : [
+          for (final r in _all)
+            if (r.direction == widget.direction) r,
+        ];
   bool _loading = true;
   bool _loadingMore = false;
   bool _exhausted = false;
+
+  /// The last next page failed (no signal): the expenses' screenful stops
+  /// asking for more by itself — a pull or a scroll asks again — instead
+  /// of asking the server once a frame (134's review).
+  bool _moreFailed = false;
   Object? _error;
 
   @override
@@ -57,6 +84,7 @@ class _JournalScreenState extends State<JournalScreen> {
       _loading = true;
       _error = null;
       _exhausted = false;
+      _moreFailed = false;
     });
     try {
       final range = _period.range;
@@ -68,7 +96,7 @@ class _JournalScreenState extends State<JournalScreen> {
       );
       if (!mounted) return;
       setState(() {
-        _rows = rows;
+        _all = rows;
         _exhausted = rows.length < _pageSize;
         _loading = false;
       });
@@ -95,17 +123,21 @@ class _JournalScreenState extends State<JournalScreen> {
         from: range.from,
         to: range.to,
         limit: _pageSize,
-        offset: _rows.length,
+        offset: _all.length,
       );
       if (!mounted) return;
       setState(() {
-        _rows = [..._rows, ...more];
+        _all = [..._all, ...more];
         _exhausted = more.length < _pageSize;
         _loadingMore = false;
+        _moreFailed = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loadingMore = false);
+      setState(() {
+        _loadingMore = false;
+        _moreFailed = true;
+      });
     }
   }
 
@@ -114,9 +146,37 @@ class _JournalScreenState extends State<JournalScreen> {
     final money = moneyFormat(widget.org.currency);
     final summaryOnly = widget.org.visibility == 'summary';
 
+    final expenses = widget.direction == 'out';
+    // A page of the books holds a few expenses among the sales: the next
+    // pages are read until a screenful of them is here (or none is left).
+    if (expenses &&
+        !_loading &&
+        !_loadingMore &&
+        !_exhausted &&
+        !_moreFailed &&
+        _rows.length < _pageSize) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadMore();
+      });
+    }
+    final onAdd = widget.onAdd;
+
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Journal'))),
-      body: Column(
+      appBar: SectionHost.appBar(context,
+          actions: const [bellRoom],
+          title: Text(expenses ? context.tr('Dépenses') : context.tr('Journal'))),
+      floatingActionButton: onAdd == null
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('expenses-add'),
+              heroTag: 'expenses-add',
+              onPressed: () async {
+                if (await onAdd() && mounted) await _load();
+              },
+              icon: const Icon(Icons.remove),
+              label: Text(context.tr('Dépense')),
+            ),
+      body: SectionHost.body(context, Column(
         children: [
           const SizedBox(height: 12),
           PeriodSelector(
@@ -132,10 +192,12 @@ class _JournalScreenState extends State<JournalScreen> {
               loading: _loading,
               error: _error,
               onRetry: _load,
-              isEmpty: _rows.isEmpty,
+              isEmpty: _rows.isEmpty && (!expenses || _exhausted),
               emptyMessage: summaryOnly
                   ? context.tr('Votre accès porte sur les totaux. Le détail des écritures ne vous est pas communiqué.')
-                  : context.tr('Aucune écriture sur cette période.'),
+                  : expenses
+                      ? context.tr('Aucune dépense sur cette période.')
+                      : context.tr('Aucune écriture sur cette période.'),
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
                   if (notification.metrics.extentAfter < 400) _loadMore();
@@ -153,7 +215,7 @@ class _JournalScreenState extends State<JournalScreen> {
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 

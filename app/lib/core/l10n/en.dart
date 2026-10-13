@@ -6496,4 +6496,58 @@ const enStrings = <String, String>{
   // 133 (UI audit B-2): the bar's short words on a 320 px phone.
   'Cmdes': 'Orders',
   'Histo.': 'History',
+  // 134: the folded bars — Catalogue, Argent, Ventes — and Plus' headings.
+  'Catalogue': 'Catalogue',
+  'Catal.': 'Catalog.',
+  'Argent': 'Money',
+  'Mon équipe': 'My team',
+  'Moi': 'Me',
+  'On me doit': 'Owed to me',
+  'On me doit {amount}': 'Owed to me: {amount}',
+  'Factures impayées': 'Unpaid invoices',
+  'Aucune dépense sur cette période.': 'No expense in this period.',
+  'Un article ou un service ?': 'An item or a service?',
+  'Un service': 'A service',
+  'Ce que vous vendez : il a un prix et un stock.':
+      'What you sell: it has a price and a stock.',
+  'Ce que vous faites : une coupe, une réparation — il se réserve.':
+      'What you do: a haircut, a repair — it is booked.',
+  'Un livre, un t-shirt, un billet : il se commande sur la vitrine.':
+      'A book, a T-shirt, a ticket: it is ordered on the shop window.',
+  'Une adhésion, un cours, la salle : il se réserve.':
+      'A membership, a class, the hall: it is booked.',
+  // 134: an association's articles.
+  'Livres, t-shirts, billets : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les gens commandent et viennent le chercher sur place.':
+      'Books, T-shirts, tickets: what you put here, with its photo and price, is on your shop window. People order and pick it up on site.',
+  'Aucun article pour le moment. « ＋ » : un livre, un t-shirt, un billet pour la soirée…':
+      'No item yet. “＋”: a book, a T-shirt, a ticket for the evening…',
+  'Un livre, un t-shirt, un billet…': 'A book, a T-shirt, a ticket…',
+  'Le t-shirt de l\'association, taille unique.': 'The association\'s T-shirt, one size.',
+  'Commandez ou réservez en ligne': 'Order or book online',
+  'place': 'seat',
+  'lot': 'lot',
+  // 134: « Créer mon activité », easy to find.
+  'Vendre sur Mara': 'Sell on Mara',
+  'J\'ai un code d\'invitation': 'I have an invitation code',
+  'GRATUIT · 3 MINUTES': 'FREE · 3 MINUTES',
+  'Vous vendez, élevez ou gérez une association ?':
+      'Do you sell, farm or run an association?',
+  'Bienvenue !': 'Welcome!',
+  'Vous êtes ici pour…': 'You are here to…',
+  'Acheter': 'Buy',
+  'Les boutiques près de moi': 'The shops near me',
+  'Vendre ou gérer': 'Sell or manage',
+  'Boutique, ferme, association': 'Shop, farm, association',
+  'Je choisirai plus tard': 'I will choose later',
+  // 134's review: « Suivre le stock » (131), and the carnet's red number
+  // on the place that counts it now.
+  'Suivre le stock': 'Track stock',
+  'Stock non suivi': 'Stock not tracked',
+  'Le stock': 'Stock',
+  'Mara compte ce qu\'il reste ; à zéro, il est épuisé.':
+      'Mara counts what is left; at zero it is sold out.',
+  'Pas de compte : toujours disponible sur la vitrine.':
+      'No count: always available on the shop window.',
+  'Le chiffre rouge sur « {place} » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
+      'The red number on “{place}” stays until these credits are repaid: opening this page does not clear it.',
 };

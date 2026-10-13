@@ -32,6 +32,27 @@ class ShopperRepository {
     return url is String && url.startsWith('https://') ? url : null;
   }
 
+  /// « Vous êtes ici pour… » (131) waits for this account: signed in, no
+  /// business, never answered. False with no server, or a database before
+  /// 131 — the question is then simply not asked.
+  Future<bool> arrivalPending() async {
+    if (!isConfigured) return false;
+    try {
+      return await _c.rpc('arrival_pending') == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// The answer (131): 'buy', 'sell', 'deliver' or 'later'. Best-effort:
+  /// not reaching the server never holds the person on the question.
+  Future<void> answerArrival(String intent) async {
+    if (!isConfigured) return;
+    try {
+      await _c.rpc('arrival_answer', params: {'p_intent': intent});
+    } catch (_) {}
+  }
+
   Future<ShopperProfile> profile() async {
     final v = await _c.rpc('my_shopper_profile');
     return ShopperProfile.fromJson(Map<String, dynamic>.from(v as Map));

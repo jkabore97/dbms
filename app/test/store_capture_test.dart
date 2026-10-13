@@ -117,9 +117,10 @@ void main() {
     ));
     await tester.pump();
 
-    // The sale is extended and labelled — the obvious action.
-    expect(find.widgetWithText(FloatingActionButton, 'Vente'), findsOneWidget);
-    expect(find.byIcon(Icons.point_of_sale), findsOneWidget);
+    // The sale is the big worded button under the day (134, « Nouvelle
+    // vente ») — the obvious action, filled in the shop's colour.
+    expect(find.byKey(const Key('home-new-sale')), findsOneWidget);
+    expect(find.text('Nouvelle vente'), findsOneWidget);
 
     // The camera is still there, but now the small icon-only one: no label.
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsNothing);
@@ -133,5 +134,6 @@ void main() {
 
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsNothing);
     expect(find.byIcon(Icons.point_of_sale), findsNothing);
+    expect(find.byIcon(Icons.photo_camera), findsNothing);
   });
 }

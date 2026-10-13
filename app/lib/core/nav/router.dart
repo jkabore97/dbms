@@ -24,6 +24,7 @@ import '../../features/notify/notifications_screen.dart' show NotificationsScree
 import '../../features/notify/push_prompt.dart' show PushPromptQuiet;
 import '../notify/notifications_repository.dart' show NotifyScope;
 import '../../features/shopper/addresses_screen.dart';
+import '../../features/shopper/arrival_screen.dart';
 import '../../features/shopper/favourites_screen.dart';
 import '../../features/shopper/shopper_profile_screen.dart';
 import '../shopper/shopper_repository.dart';
@@ -37,6 +38,7 @@ import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
 import '../accounting/models.dart';
 import '../auth/models.dart';
+import '../access/org_access.dart';
 import '../capture/invoice_reading.dart';
 import '../capture/models.dart';
 import '../retail/models.dart';
@@ -86,6 +88,8 @@ abstract final class Routes {
   /// The request page of before 111 (« Demander une entreprise »): an old
   /// link or bookmark lands on the creation that replaced it.
   static const oldApplyForBusiness = '/demander-une-entreprise';
+  /// « Vous êtes ici pour… » (134): the one question after sign-up.
+  static const arrival = '/bienvenue';
   static const console = '/console';
   static const platformAnalytics = '/console/analyses';
   static const trainers = '/console/formateurs';
@@ -196,6 +200,7 @@ bool _shopperPath(String location) =>
       Routes.terms,
       Routes.faq,
       Routes.directory,
+      Routes.arrival,
     ].any((p) => location == p || location.startsWith('$p/'));
 
 Future<bool>? _businessScreens;
@@ -237,6 +242,7 @@ GoRouter buildRouter(SessionController session) {
   // A sheet or a full-screen flow over a business's pages (108): its bar
   // goes behind it.
   final cover = BusinessCover();
+
 
   /// The one place that decides where a person is allowed to be.
   ///
@@ -349,6 +355,7 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.becomeCourier) ||
             at(Routes.newBusiness) ||
             at(Routes.createBusiness) ||
+            at(Routes.arrival) ||
             at(Routes.console) ||
             at(Routes.applications)) {
           return null;
@@ -601,6 +608,14 @@ GoRouter buildRouter(SessionController session) {
             shopper: ShopperRepository(scope.auth.client),
           ));
         },
+      ),
+
+      // « Vous êtes ici pour… » (134), opened by the market once for a new
+      // account with no business.
+      GoRoute(
+        path: Routes.arrival,
+        builder: (context, state) => ArrivalScreen(
+            shopper: ShopperRepository(AppScope.of(context).auth.client)),
       ),
 
       GoRoute(
@@ -1152,23 +1167,28 @@ GoRouter buildRouter(SessionController session) {
           // The orders customers sent from the vitrine (055).
           GoRoute(
             path: 'commandes',
+            // The farm's are Ventes › Commandes (134), ?commande= kept; the
+            // shop's are a place of their own, the association's Demandes.
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.ShopOrdersScreen(
+              (scope, org) => _placeOr(state, scope, org, () => biz.ShopOrdersScreen(
                   org: org,
                   retail: scope.retail,
                   // The order a notification opened (125).
-                  focusId: state.uri.queryParameters['commande']),
+                  focusId: state.uri.queryParameters['commande'])),
             ),
           ),
           GoRoute(
             path: 'factures',
+            // The list is Argent › Factures (shop) or Ventes › Factures
+            // (farm) since 134; an invoice (`factures/<id>`) stays its own
+            // page. The association's Factures stay a page, under Plus.
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) =>
-                  biz.InvoicesScreen(org: org, invoicing: scope.invoicing),
+              (scope, org) => _placeOr(state, scope, org,
+                  () => biz.InvoicesScreen(org: org, invoicing: scope.invoicing)),
               feature: 'invoices',
             ),
             routes: [
@@ -1413,47 +1433,108 @@ GoRouter buildRouter(SessionController session) {
               ),
             ),
           ),
+          // The folded places (134). Catalogue: the shop's and the
+          // association's articles and services, one tab.
+          GoRoute(
+            path: 'catalogue',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.CatalogueScreen(
+                org: org,
+                retail: scope.retail,
+                capture: scope.capture,
+                access: scope.session.accessFor(org.id),
+                initialPart: state.uri.queryParameters['partie'],
+                initialQuery: state.uri.queryParameters['q'],
+              ),
+              feature: _sectionFeature(state),
+            ),
+          ),
+          // Argent: the shop's invoices, expenses and carnet, under the
+          // month's four numbers.
+          GoRoute(
+            path: 'argent',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.MoneyScreen(
+                org: org,
+                invoicing: scope.invoicing,
+                credit: scope.credit,
+                retail: scope.retail,
+                accounting: scope.accounting,
+                db: scope.db,
+                capture: scope.capture,
+                access: scope.session.accessFor(org.id),
+                initialPart: state.uri.queryParameters['partie'],
+              ),
+              feature: _sectionFeature(state),
+            ),
+          ),
+          // Ventes: the farm's À vendre, orders and invoices, and the carnet.
+          GoRoute(
+            path: 'ventes',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.FarmSalesScreen(
+                org: org,
+                retail: scope.retail,
+                invoicing: scope.invoicing,
+                credit: scope.credit,
+                capture: scope.capture,
+                access: scope.session.accessFor(org.id),
+                initialPart: state.uri.queryParameters['partie'],
+                focusOrder: state.uri.queryParameters['commande'],
+              ),
+              feature: _sectionFeature(state),
+            ),
+          ),
           // What a farm sells on its vitrine (083).
           GoRoute(
             path: 'a-vendre',
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.ForSaleScreen(
+              (scope, org) => _placeOr(state, scope, org, () => biz.ForSaleScreen(
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
-              ),
+              )),
             ),
           ),
           // « Mes services » (098): the shop's, the farm's, the association's.
           GoRoute(
             path: 'services',
+            // Catalogue › Services (134); the farm's stay a page under Plus.
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.ServicesScreen(
+              (scope, org) => _placeOr(state, scope, org, () => biz.ServicesScreen(
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
-              ),
+              )),
               // « Services et réservations » on Mara's switchboard (110).
               feature: 'services',
             ),
           ),
           GoRoute(
             path: 'produits',
+            // Catalogue › Articles (134), the bell's ?q= kept; a farm's
+            // articles are its Ventes › À vendre.
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.ProductsScreen(
+              (scope, org) => _placeOr(state, scope, org, () => biz.ProductsScreen(
                 org: org,
                 retail: scope.retail,
                 capture: scope.capture,
                 access: scope.session.accessFor(org.id),
                 // ?q=Savon: the article a « Stock bas » ring is about.
                 initialQuery: state.uri.queryParameters['q'],
-              ),
+              )),
             ),
           ),
           GoRoute(
@@ -1491,15 +1572,18 @@ GoRouter buildRouter(SessionController session) {
           ),
           GoRoute(
             path: 'credits',
+            // The shop's carnet is Argent › Crédit (134); a customer's page
+            // (`credits/<id>`) stays its own. The farm opens it from Ventes,
+            // the association from Compte, as a page.
             builder: (context, state) => _withOrg(
               context,
               state,
-              (scope, org) => biz.CreditBookScreen(
+              (scope, org) => _placeOr(state, scope, org, () => biz.CreditBookScreen(
                 org: org,
                 credit: scope.credit,
                 retail: scope.retail,
                 access: scope.session.accessFor(org.id),
-              ),
+              )),
               feature: 'credits',
             ),
             routes: [
@@ -1611,6 +1695,101 @@ GoRouter buildRouter(SessionController session) {
       ),
     ],
   );
+}
+
+/// An old page of a business drawn as the place it folded into (134,
+/// [foldedAddress]): `factures` is Argent › Factures for a shop, Ventes ›
+/// Factures for a farm; [own] where it is still its own page (the
+/// association's invoices, a page under it such as `factures/<id>`). Drawn
+/// in place, at the old address — no redirect, so a cold start or a bell
+/// never swaps one page for another — and the bar shows the place there
+/// (HomeDestination.alsoRoutes).
+Widget _placeOr(GoRouterState state, AppScope scope, OrgSummary org, Widget Function() own) {
+  final to = foldedAddress(state.uri, org, scope.session.accessFor(org.id));
+  if (to == null) return own();
+  final uri = Uri.parse(to);
+  final part = uri.queryParameters['partie'];
+  final access = scope.session.accessFor(org.id);
+  return switch (uri.pathSegments.last) {
+    'catalogue' => biz.CatalogueScreen(
+        org: org,
+        retail: scope.retail,
+        capture: scope.capture,
+        access: access,
+        initialPart: part,
+        initialQuery: uri.queryParameters['q'],
+      ),
+    'argent' => biz.MoneyScreen(
+        org: org,
+        invoicing: scope.invoicing,
+        credit: scope.credit,
+        retail: scope.retail,
+        accounting: scope.accounting,
+        db: scope.db,
+        capture: scope.capture,
+        access: access,
+        initialPart: part,
+      ),
+    'ventes' => biz.FarmSalesScreen(
+        org: org,
+        retail: scope.retail,
+        invoicing: scope.invoicing,
+        credit: scope.credit,
+        capture: scope.capture,
+        access: access,
+        initialPart: part,
+        focusOrder: uri.queryParameters['commande'],
+      ),
+    _ => own(),
+  };
+}
+
+/// The switchboard key (104) of the section an address names (134):
+/// `argent?partie=credit` is the carnet's, `catalogue?partie=services` the
+/// services' — hidden by Mara, the address says « pas disponible », as the
+/// old page's did, even when the switchboard is read after the address.
+String? _sectionFeature(GoRouterState state) =>
+    switch (state.uri.queryParameters['partie']) {
+      'factures' => 'invoices',
+      'credit' => 'credits',
+      'services' => 'services',
+      _ => null,
+    };
+
+/// Where an old address of a business's page lands since 134:
+/// `produits` → `catalogue?partie=articles`, `factures` →
+/// `argent?partie=factures` (shop) or `ventes?partie=factures` (farm), and
+/// the rest of the table below, by the business's kind. Only the page
+/// itself moves — a page under it (`factures/<id>`) stays — and its query
+/// is kept (a bell's `?q=`, `?commande=`). Null where the page is still
+/// its own: the association's invoices, the farm's services and carnet, a
+/// business not read yet, and a section Mara's switchboard hid (its old
+/// address then says « pas disponible », as it did).
+String? foldedAddress(Uri uri, OrgSummary? org, [OrgAccess access = OrgAccess.allEdit]) {
+  if (org == null) return null;
+  final base = '${Routes.org(org.id)}/';
+  if (!uri.path.startsWith(base)) return null;
+  final rest = uri.path.substring(base.length);
+  final kind = org.isAssociation ? 'association' : org.profile;
+  final (String, String, String?)? to = switch ((rest, kind)) {
+    ('produits', 'farm') => ('ventes', 'a-vendre', null),
+    ('produits', _) => ('catalogue', 'articles', null),
+    ('a-vendre', 'farm') => ('ventes', 'a-vendre', null),
+    ('a-vendre', _) => ('catalogue', 'articles', null),
+    ('services', 'retail' || 'association') => ('catalogue', 'services', 'services'),
+    ('commandes', 'farm') => ('ventes', 'commandes', null),
+    ('factures', 'retail') => ('argent', 'factures', 'invoices'),
+    ('factures', 'farm') => ('ventes', 'factures', 'invoices'),
+    ('credits', 'retail') => ('argent', 'credit', 'credits'),
+    _ => null,
+  };
+  if (to == null) return null;
+  final feature = to.$3;
+  if (feature != null && access.isHidden(feature)) return null;
+  return Uri(
+    path: Routes.inside(org.id, to.$1),
+    queryParameters: {...uri.queryParameters, 'partie': to.$2},
+  ).toString();
 }
 
 /// The business's frame (108) around the page on screen: its bar or rail,

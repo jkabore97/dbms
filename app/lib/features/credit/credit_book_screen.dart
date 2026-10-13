@@ -21,6 +21,7 @@ import '../common/attention_banner.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// Qui me doit combien — the carnet de crédit.
 ///
@@ -159,7 +160,9 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
     final canEdit = widget.access.canEdit('credits');
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: AppBarTitle(strings.creditBook)),
+      // Argent's Crédit (134, the shop): under the place's name and switch.
+      appBar: SectionHost.appBar(context,
+          actions: const [bellRoom], title: AppBarTitle(strings.creditBook)),
       floatingActionButton: !canEdit
           ? null
           : Column(
@@ -187,7 +190,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                 ),
               ],
             ),
-      body: _loading
+      body: SectionHost.body(context, _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
@@ -270,7 +273,7 @@ class _CreditBookScreenState extends State<CreditBookScreen> {
                             ),
                         ],
                       ),
-                    ),
+                    )),
     );
   }
 

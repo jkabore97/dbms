@@ -6,6 +6,7 @@ import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/invoicing/invoicing_repository.dart';
 import 'package:kaj_app/core/reports/reports_repository.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/church/church_home_screen.dart';
 import 'package:kaj_app/features/home/home_nav.dart';
 import 'package:kaj_app/l10n/strings.dart';
@@ -53,6 +54,7 @@ void main() {
         org: _org,
         reports: ReportsRepository(client),
         invoicing: InvoicingRepository(client),
+        retail: RetailRepository(client),
         onHistory: () {},
         access: access,
       ),
@@ -72,11 +74,17 @@ void main() {
     expect(
         await barFor(tester,
             const OrgAccess.forTier({'reports': 'hidden', 'invoices': 'hidden'})),
+        ['Accueil', 'Catalogue', HomeNav.moreLabel]);
+    // The Catalogue (134) closed too: the bar closes up again.
+    expect(
+        await barFor(tester,
+            const OrgAccess.forTier({'reports': 'hidden', 'products': 'hidden'})),
         ['Accueil', HomeNav.moreLabel]);
   });
 
   testWidgets('with no rule, the member sees the usual five', (tester) async {
+    // 134: Accueil · Journal · Rapports · Catalogue · Plus (Factures under Plus).
     expect(await barFor(tester, const OrgAccess.forTier({})),
-        ['Accueil', 'Historique', 'Rapports', 'Factures', HomeNav.moreLabel]);
+        ['Accueil', 'Journal', 'Rapports', 'Catalogue', HomeNav.moreLabel]);
   });
 }

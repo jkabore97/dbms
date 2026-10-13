@@ -853,6 +853,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch130.sql
 
+      - name: "Prove an association's Catalogue, the arrival question and the backfill — an association's articles beside its services, on its vitrine, ordered and booked on « Ventes » as a shop's, counted when at zero (shop and farm counts unchanged); « Vous êtes ici pour… » once per account, never a business's people, anon neither asks nor answers; old shop, farm and association given their kind's chart and Le Chemin's reached steps, an owner's switched-off account and dial kept, showcases left alone, run twice adds nothing (131)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch131.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

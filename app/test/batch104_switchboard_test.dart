@@ -148,14 +148,19 @@ const _noAddress = <String, String>{
 /// dial's own key (accessTo folds the platform's hidden into it) or
 /// isHidden by name.
 const _drawn = <String, Map<String, List<String>>>{
+  // 134: the shop's invoices and carnet are Argent's sections, the farm's
+  // its Ventes'; the association's invoices stay under Plus.
   'invoices': {
-    'lib/features/retail/store_home_screen.dart': ["canSee('invoices')"],
+    'lib/features/home/home_nav.dart': ["canSee('invoices')"],
+    'lib/features/money/money_screen.dart': ["canSee('invoices')"],
     'lib/features/farm/farm_home_screen.dart': ["canSee('invoices')"],
+    'lib/features/farm/farm_sales_screen.dart': ["canSee('invoices')"],
     'lib/features/church/church_home_screen.dart': ["canSee('invoices')"],
   },
   'credits': {
     'lib/features/account/compte_screen.dart': ["canSee('credits')"],
-    'lib/features/farm/farm_home_screen.dart': ["canSee('credits')"],
+    'lib/features/money/money_screen.dart': ["canSee('credits')"],
+    'lib/features/farm/farm_sales_screen.dart': ["canSee('credits')"],
     // The sale sheet's « À crédit ».
     'lib/features/retail/store_home_screen.dart': ["canEdit('credits')"],
   },
@@ -190,7 +195,8 @@ const _drawn = <String, Map<String, List<String>>>{
     'lib/features/orders/shop_orders_screen.dart': ["isHidden('online_orders')"],
   },
   'services': {
-    'lib/features/retail/store_home_screen.dart': ["isHidden('services')"],
+    // Catalogue's Services (134), the shop's and the association's.
+    'lib/features/retail/catalogue_screen.dart': ["isHidden('services')"],
     'lib/features/farm/farm_home_screen.dart': ["isHidden('services')"],
     'lib/features/church/church_home_screen.dart': ["isHidden('services')"],
     'lib/features/admin/org_settings_screen.dart': ["_hidden('services')"],
@@ -388,8 +394,10 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       final cases = [
-        (store, {'invoices', 'production'}, ['Factures', 'Production']),
-        (farm, {'invoices', 'credits', 'production'}, ['Factures', 'Carnet de crédit', 'Production']),
+        // 134: the shop's and the farm's invoices and carnet are sections
+        // of Argent and Ventes (MoneyScreen, FarmSalesScreen read them).
+        (store, {'production'}, ['Production']),
+        (farm, {'services', 'production'}, ['Mes services', 'Production']),
         (church, {'invoices'}, ['Factures']),
       ];
       for (final (build, hidden, gone) in cases) {
@@ -478,7 +486,9 @@ void main() {
     testWidgets('with no rule the same address opens the tool', (tester) async {
       await bootAt(tester, '/o/org-1/credits', const {});
       expect(find.byKey(const Key('feature-unavailable')), findsNothing);
-      expect(find.text('Carnet de crédit'), findsWidgets);
+      // The shop's carnet is Argent › Crédit since 134.
+      expect(find.byKey(const Key('money-numbers')), findsOneWidget);
+      expect(find.byKey(const Key('section-credit')), findsOneWidget);
     });
 
     test('a refusal for a hidden tool is said in English too, and recognised', () {

@@ -195,16 +195,19 @@ void main() {
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
     expect(find.text('Se connecter'), findsNothing);
 
-    // The three doors the owner asked for: the boutique (to have one),
-    // the livraison, and the person.
-    expect(find.byTooltip('Ouvrir ma boutique'), findsOneWidget);
-    expect(find.byTooltip('Espace livreur'), findsOneWidget);
+    // 134: a worded door to have one (« ＋ Vendre sur Mara », straight to
+    // the creation form), and the person; the delivery helmet moved into
+    // the person's menu as « Espace livreur ».
+    expect(find.text('Vendre sur Mara'), findsOneWidget);
+    expect(find.byTooltip('Espace livreur'), findsNothing);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.person_outline));
     await tester.pumpAndSettle();
     expect(find.text('Mon profil'), findsOneWidget);
     expect(find.text('Mes commandes'), findsOneWidget);
+    expect(find.text('Créer mon activité'), findsWidgets);
+    expect(find.text('Espace livreur'), findsOneWidget);
     expect(find.text('Se déconnecter'), findsOneWidget);
   });
 
@@ -279,7 +282,9 @@ void main() {
     expect(find.text('Récolte'), findsOneWidget);
     expect(find.text('Bandes'), findsOneWidget);
     expect(find.text('Recette'), findsNothing);
-    expect(find.text('Dépense'), findsNothing);
+    // « Dépense » is every kind's button on its home since 134 (a farm's
+    // vet, a day's labour): not the church's alone any more.
+    expect(find.byKey(const Key('home-expense')), findsOneWidget);
   });
 
   testWidgets('two businesses: the street first, then the boutique button '
@@ -315,10 +320,13 @@ void main() {
     await pumpApp(tester);
 
     // No code asked of somebody with no business (108). Home is the
-    // street now; the waiting room is one tap behind the
-    // boutique button, for the employee holding an invitation code.
+    // street now; the waiting room is in the person's menu (« J'ai un
+    // code d'invitation », 134), for the employee holding a code — the
+    // header's button opens the creation form itself.
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
-    await tester.tap(find.byTooltip('Ouvrir ma boutique'));
+    await tester.tap(find.byIcon(Icons.person_outline));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('J\'ai un code d\'invitation'));
     await flush(tester);
 
     expect(find.text('Votre compte est prêt'), findsOneWidget);
@@ -490,7 +498,7 @@ void main() {
       await enterPin(tester, '1379');
 
       // The page's own title (its bar says « Articles » too, 108).
-      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
+      expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget,
           reason: 'a real reload lost the page in the address bar');
     });
 
@@ -568,7 +576,7 @@ void main() {
       await enterPin(tester, '1379');
 
       // The page that was reloaded — not the home the redirect used to pick.
-      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget,
+      expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget,
           reason: 'unlocking forgot the page the refresh was headed to');
       expect(find.text('Recette'), findsNothing);
     });
@@ -585,7 +593,7 @@ void main() {
 
       expect(find.text('Choisissez une activité'), findsNothing,
           reason: 'the reload named a business; the picker is a detour');
-      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget);
     });
 
     testWidgets('reloading a business home lands in it, not the dead-end',
@@ -821,7 +829,7 @@ void main() {
       await flush(tester);
 
       // We are on Articles, a pushed route built by _withOrg — not the home.
-      expect(find.widgetWithText(AppBar, 'Articles'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Catalogue'), findsOneWidget);
 
       final context = tester.element(find.byType(Scaffold).last);
       // The hand-painted parts (hero gradients, tinted chips) read this.

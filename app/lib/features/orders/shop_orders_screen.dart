@@ -28,6 +28,7 @@ import '../common/attention_banner.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/format/money_text.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -323,8 +324,15 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     final waiting = _waiting(context, open);
     final header = [?waiting, ?cash];
 
+    final tabBar = TabBar(controller: tabs, tabs: [
+      Tab(text: '${context.tr('À traiter')}${open.isEmpty ? '' : ' (${open.length})'}'),
+      Tab(text: context.tr('Historique')),
+    ]);
+    // The farm's Ventes › Commandes (134): the tabs under the place's
+    // switch, not above it.
+    final inPlace = SectionHost.of(context) != null;
     return Scaffold(
-        appBar: AppBar(
+        appBar: SectionHost.appBar(context,
           // An association is asked for its services, not sold to (098).
           title: AppBarTitle(widget.org.profile == 'association' ||
                   widget.org.profile == 'church'
@@ -344,12 +352,9 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
             ),
             bellRoom,
           ],
-          bottom: TabBar(controller: tabs, tabs: [
-            Tab(text: '${context.tr('À traiter')}${open.isEmpty ? '' : ' (${open.length})'}'),
-            Tab(text: context.tr('Historique')),
-          ]),
+          bottom: inPlace ? null : tabBar,
         ),
-        body: _loading
+        body: SectionHost.body(context, _withTabs(inPlace ? tabBar : null, _loading
             ? ShopSkeleton.list()
             : _error != null
                 ? Center(
@@ -413,9 +418,17 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       clocks: _clocks,
                       onDeliverSelf: _deliverSelf,
                     ),
-                  ]),
+                  ]))),
     );
   }
+
+  /// The tabs above the list, when they are not in the bar (134).
+  static Widget _withTabs(TabBar? tabs, Widget body) => tabs == null
+      ? body
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [tabs, Expanded(child: body)],
+        );
 }
 
 class _List extends StatelessWidget {

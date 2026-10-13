@@ -96,6 +96,8 @@ GoRouter _router(Widget Function() home, OrgSummary org, {String? at}) {
                   'produits', 'commandes', 'factures', 'compte', 'administration', 'equipe',
                   'stock', 'bandes', 'a-vendre', 'services', 'chemin', 'credits', 'production',
                   'photos', 'journal', 'rapports', 'notifications',
+                  // The folded places (134).
+                  'catalogue', 'argent', 'ventes',
                 ])
                   GoRoute(
                     path: r,
@@ -184,21 +186,21 @@ void main() {
       await tester.pumpWidget(_app(router));
       await _settle(tester);
 
-      expect(_labels(tester), ['Vente', 'Articles', 'Commandes', 'Factures', 'Plus']);
+      expect(_labels(tester), ['Vente', 'Catalogue', 'Commandes', 'Argent', 'Plus']);
       expect(_selected(tester), 'Vente');
       // One bar: the home draws none of its own inside the frame.
       expect(find.byType(NavigationBar), findsOneWidget);
 
-      await tester.tap(find.text('Articles'));
+      await tester.tap(find.text('Catalogue'));
       await _settle(tester);
-      expect(find.text('Page produits'), findsOneWidget);
+      expect(find.text('Page catalogue'), findsOneWidget);
       expect(find.byType(NavigationBar), findsOneWidget);
-      expect(_selected(tester), 'Articles');
+      expect(_selected(tester), 'Catalogue');
       // The orders waiting still ride on Commandes, on another page.
       expect(find.descendant(of: find.byType(NavigationBar), matching: find.text('2')),
           findsOneWidget);
 
-      // Commandes from Articles: a switch, not a pile.
+      // Commandes from Catalogue: a switch, not a pile.
       await tester.tap(find.text('Commandes').last);
       await _settle(tester);
       expect(find.text('Page commandes'), findsOneWidget);
@@ -239,11 +241,12 @@ void main() {
       await tester.pumpWidget(_app(router));
       await _settle(tester);
       expect(find.text('Page factures F-12'), findsOneWidget);
-      expect(_selected(tester), 'Factures');
+      // An invoice is Argent's since 134 (the invoices are its section).
+      expect(_selected(tester), 'Argent');
 
-      // Factures again, from an invoice: the place already selected —
+      // Argent again, from an invoice: the place already selected —
       // nothing (A4), the invoice stays.
-      await tester.tap(find.text('Factures'));
+      await tester.tap(find.text('Argent'));
       await _settle(tester);
       expect(router.state.uri.path, '/o/org-1/factures/F-12');
       expect(find.text('Page factures F-12'), findsOneWidget);
@@ -287,7 +290,7 @@ void main() {
       await _settle(tester);
       expect(find.text('Page saisie'), findsOneWidget);
 
-      await tester.tap(find.text('Articles'));
+      await tester.tap(find.text('Catalogue'));
       await _settle(tester);
       expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('unsaved-stay')));
@@ -305,11 +308,11 @@ void main() {
       await _settle(tester);
       expect(router.state.uri.path, '/o/org-1/saisie');
 
-      await tester.tap(find.text('Articles'));
+      await tester.tap(find.text('Catalogue'));
       await _settle(tester);
       await tester.tap(find.byKey(const Key('unsaved-leave')));
       await _settle(tester);
-      expect(find.text('Page produits'), findsOneWidget);
+      expect(find.text('Page catalogue'), findsOneWidget);
 
       // Nothing typed: no question.
       _dirty = false;
@@ -333,10 +336,11 @@ void main() {
       final first = tester.widgetList<NavigationDestination>(find.byType(NavigationDestination)).first;
       expect((first.selectedIcon as dynamic).toString(), (first.icon as dynamic).toString());
       // A place's page: its indicator back.
+      // The old address of the articles is Catalogue's (134).
       router.go('/o/org-1/produits');
       await _settle(tester);
       expect(tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor, isNull);
-      expect(_selected(tester), 'Articles');
+      expect(_selected(tester), 'Catalogue');
 
       await tester.tap(find.text('Plus'));
       await _settle(tester);
@@ -367,13 +371,15 @@ void main() {
     });
   });
 
-  testWidgets('the farm: its bar on Stock, Bandes, Factures and the rest', (tester) async {
+  testWidgets('the farm: its bar on Bandes, Stock, Ventes and the rest', (tester) async {
     await _size(tester, 390, 1400);
     final router = _router(
-        () => FarmHomeScreen(db: db, org: _farm, invoicing: InvoicingRepository(client)), _farm);
+        () => FarmHomeScreen(
+            db: db, org: _farm, invoicing: InvoicingRepository(client), retail: _Shop(client)),
+        _farm);
     await tester.pumpWidget(_app(router));
     await _settle(tester);
-    expect(_labels(tester), ['Accueil', 'Stock', 'Bandes', 'Factures', 'Plus']);
+    expect(_labels(tester), ['Accueil', 'Bandes', 'Stock', 'Ventes', 'Plus']);
     await tester.tap(find.text('Bandes'));
     await _settle(tester);
     expect(find.text('Page bandes'), findsOneWidget);
@@ -381,16 +387,22 @@ void main() {
     await tester.tap(find.text('Plus'));
     await _settle(tester);
     expect(find.widgetWithText(ListTile, 'Administration'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ListTile, 'À vendre'));
+    await tester.tap(find.widgetWithText(ListTile, 'Mes services'));
     await _settle(tester);
-    expect(find.text('Page a-vendre'), findsOneWidget);
+    expect(find.text('Page services'), findsOneWidget);
     expect(_selected(tester), 'Plus');
+    // À vendre, Commandes and Factures are Ventes' (134).
+    router.go('/o/farm-1/a-vendre');
+    await _settle(tester);
+    expect(_selected(tester), 'Ventes');
+    router.go('/o/farm-1/services');
+    await _settle(tester);
     await tester.binding.handlePopRoute();
     await _settle(tester);
     expect(router.state.uri.path, '/o/farm-1');
   });
 
-  testWidgets('the association: its bar on Rapports, Factures and the rest', (tester) async {
+  testWidgets('the association: its bar on Journal, Rapports, Catalogue and the rest', (tester) async {
     await _size(tester, 390, 1400);
     final router = _router(
         () => ChurchHomeScreen(
@@ -399,18 +411,26 @@ void main() {
               orgName: _asso.name,
               org: _asso,
               invoicing: InvoicingRepository(client),
+              retail: _Shop(client),
+              onHistory: () {},
             ),
         _asso);
     await tester.pumpWidget(_app(router));
     await _settle(tester);
-    expect(_labels(tester), ['Accueil', 'Factures', 'Plus']);
-    await tester.tap(find.text('Factures'));
+    expect(_labels(tester), ['Accueil', 'Journal', 'Catalogue', 'Plus'],
+        reason: 'no reports repository here: Rapports waits for it');
+    await tester.tap(find.text('Catalogue'));
     await _settle(tester);
-    expect(find.text('Page factures'), findsOneWidget);
-    expect(_selected(tester), 'Factures');
+    expect(find.text('Page catalogue'), findsOneWidget);
+    expect(_selected(tester), 'Catalogue');
+    // Factures, rare in an association, under Plus (134).
     await tester.tap(find.text('Plus'));
     await _settle(tester);
     expect(find.widgetWithText(ListTile, 'Administration'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ListTile, 'Factures'));
+    await _settle(tester);
+    expect(find.text('Page factures'), findsOneWidget);
+    expect(_selected(tester), 'Plus');
   });
 
   testWidgets('no places yet (the first setup holds the home): no bar, the page is the screen',

@@ -19,6 +19,8 @@ class HomeDestination {
     this.selectedIcon,
     this.badge = 0,
     this.route,
+    this.alsoRoutes = const [],
+    this.group,
   });
 
   final IconData icon;
@@ -38,6 +40,40 @@ class HomeDestination {
   /// business and shows this place selected there and on every page under
   /// it. Null for a door out (the street, the vitrine).
   final String? route;
+
+  /// Other pages that are this place too (134): Argent is `argent` and the
+  /// invoices, the carnet under it (`factures/…`, `credits/…`); Catalogue
+  /// is `catalogue` and the old `produits`, `services`. The place is shown
+  /// selected on them as on its own page.
+  final List<String> alsoRoutes;
+
+  /// The heading this line stands under in Plus (134); null for none.
+  final PlusGroup? group;
+
+  /// Every page that is this place: [route] first, then [alsoRoutes].
+  List<String> get routes => [?route, ...alsoRoutes];
+}
+
+/// The headings of Plus (134), in their fixed order: a sheet of six lines
+/// under three or four titles, never ten mixed lines.
+enum PlusGroup {
+  /// What the bar had no room for (the association's Factures).
+  tools('Outils'),
+
+  /// The vitrine and what dresses it: voir ma vitrine, photos, Mon chemin,
+  /// production, the farm's services.
+  vitrine('Ma vitrine'),
+
+  /// The people: Équipe, Administration.
+  team('Mon équipe'),
+
+  /// The person: Mon compte, the market.
+  me('Moi');
+
+  const PlusGroup(this.heading);
+
+  /// The French heading, said through `tr` and drawn in capitals.
+  final String heading;
 }
 
 /// The bar's keeper (108): the frame around every page of a business holds
@@ -223,6 +259,8 @@ class HomeNav {
           label: p.label,
           badge: p.badge,
           route: p.route,
+          alsoRoutes: p.alsoRoutes,
+          group: p.group,
           onTap: () => open(p),
         );
     return HomeNav(
@@ -234,12 +272,13 @@ class HomeNav {
 
   /// The places a business's home lays out, before its home has said
   /// them (132) — the first frame of a business, every time on an iPhone
-  /// it came late: the shop's Vente, Articles, Commandes, Factures; the
-  /// farm's Accueil, Stock, Bandes, Factures; the association's Accueil,
-  /// Rapports, Factures — and Plus with what everybody has under it. The
-  /// home's own places replace them at once, the bar's height unchanged.
-  /// Null for a kind this build does not know. [open] is the frame's way
-  /// into a place.
+  /// it came late. Since 134 the three bars are folded — five places at
+  /// most, always a word, in an order that never moves: the shop's Vente,
+  /// Catalogue, Commandes, Argent; the farm's Accueil, Bandes, Stock,
+  /// Ventes; the association's Accueil, Journal, Rapports, Catalogue — and
+  /// Plus last, under its headings. The home's own places replace them at
+  /// once, the bar's height unchanged. Null for a kind this build does not
+  /// know. [open] is the frame's way into a place.
   static HomeNav? defaultsFor(
     BuildContext context,
     OrgSummary org,
@@ -247,29 +286,48 @@ class HomeNav {
     void Function(HomeDestination place) open,
   ) {
     final s = Strings.of(context);
-    HomeDestination at(IconData icon, String label, String route, {IconData? selected}) =>
-        HomeDestination(icon: icon, selectedIcon: selected, label: label, route: route, onTap: () {});
+    HomeDestination at(IconData icon, String label, String route,
+            {IconData? selected, List<String> also = const [], PlusGroup? group}) =>
+        HomeDestination(
+            icon: icon,
+            selectedIcon: selected,
+            label: label,
+            route: route,
+            alsoRoutes: also,
+            group: group,
+            onTap: () {});
     final common = [
-      if (org.isAdmin) at(Icons.groups_outlined, context.tr('Équipe'), 'equipe'),
-      if (org.isAdmin) at(Icons.admin_panel_settings_outlined, context.tr('Administration'), 'administration'),
-      at(Icons.account_circle_outlined, s.account, 'compte'),
+      if (org.isAdmin)
+        at(Icons.groups_outlined, context.tr('Équipe'), 'equipe', group: PlusGroup.team),
+      if (org.isAdmin)
+        at(Icons.admin_panel_settings_outlined, context.tr('Administration'),
+            'administration',
+            group: PlusGroup.team),
+      at(Icons.account_circle_outlined, s.account, 'compte', group: PlusGroup.me),
     ];
     final nav = switch (org.profile) {
       'retail' => HomeNav(
           home: at(Icons.payments_outlined, s.sale, '', selected: Icons.payments),
           primary: [
-            if (access.canSee('products')) at(Icons.sell_outlined, s.productsLabel, 'produits'),
-            if (access.canSee('orders')) at(Icons.inbox_outlined, context.tr('Commandes'), 'commandes'),
-            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+            if (access.canSee('products'))
+              at(Icons.sell_outlined, context.tr('Catalogue'), 'catalogue',
+                  selected: Icons.sell, also: catalogueAlso),
+            if (access.canSee('orders'))
+              at(Icons.inbox_outlined, context.tr('Commandes'), 'commandes'),
+            if (shopMoneyShown(access))
+              at(Icons.account_balance_wallet_outlined, context.tr('Argent'), 'argent',
+                  selected: Icons.account_balance_wallet, also: shopMoneyAlso),
           ],
           more: common,
         ),
       'farm' => HomeNav(
-          home: at(Icons.agriculture_outlined, context.tr('Accueil'), '', selected: Icons.agriculture),
+          home: at(Icons.agriculture_outlined, context.tr('Accueil'), '',
+              selected: Icons.agriculture),
           primary: [
-            at(Icons.inventory_2_outlined, s.stock, 'stock'),
             at(Icons.pets_outlined, s.flocks, 'bandes'),
-            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+            at(Icons.inventory_2_outlined, s.stock, 'stock'),
+            at(Icons.shopping_basket_outlined, context.tr('Ventes'), 'ventes',
+                selected: Icons.shopping_basket, also: farmSalesAlso),
           ],
           more: common,
         ),
@@ -278,21 +336,45 @@ class HomeNav {
               selected: Icons.volunteer_activism),
           primary: [
             if (org.visibility != 'summary' && access.canSee('reports'))
-              at(Icons.history, s.history, 'journal'),
-            if (access.canSee('reports')) at(Icons.assessment_outlined, s.reports, 'rapports'),
-            if (access.canSee('invoices')) at(Icons.receipt_long_outlined, s.invoices, 'factures'),
+              at(Icons.history, context.tr('Journal'), 'journal'),
+            if (access.canSee('reports'))
+              at(Icons.assessment_outlined, s.reports, 'rapports'),
+            if (access.canSee('products'))
+              at(Icons.sell_outlined, context.tr('Catalogue'), 'catalogue',
+                  selected: Icons.sell, also: catalogueAlso),
           ],
-          more: common,
+          more: [
+            if (access.canSee('invoices'))
+              at(Icons.receipt_long_outlined, s.invoices, 'factures',
+                  group: PlusGroup.tools),
+            ...common,
+          ],
         ),
       _ => null,
     };
     return nav?.detached(open);
   }
 
+  /// The old pages that are Catalogue now (134): an address kept from
+  /// before — a bell's `produits?q=…` — selects it.
+  static const catalogueAlso = ['produits', 'services'];
+
+  /// The shop's money pages (134): the invoices and the carnet, each also
+  /// a section of Argent.
+  static const shopMoneyAlso = ['factures', 'credits'];
+
+  /// The farm's selling pages (134), each a section of Ventes.
+  static const farmSalesAlso = ['a-vendre', 'commandes', 'factures', 'credits'];
+
+  /// Whether the shop's Argent has a section for this person (134): the
+  /// invoices, the expenses (read in the books) or the carnet.
+  static bool shopMoneyShown(OrgAccess access) =>
+      access.canSee('invoices') || access.canSee('credits') || access.canSee('reports');
+
   /// What the bar shows, as one string: the frame redraws when it changes.
   String get signature => [
         for (final p in [home, ...primary, ...more])
-          '${p.label}|${p.route}|${p.badge}|${p.icon.codePoint}',
+          '${p.label}|${p.route}|${p.badge}|${p.icon.codePoint}|${p.group?.name}',
       ].join(';');
 
   bool _wide(BuildContext context) =>
@@ -371,39 +453,71 @@ class HomeNav {
         child: Icon(icon),
       );
 
+  /// Plus' lines in the order they are drawn (134): those with no heading
+  /// first, then each heading's in [PlusGroup]'s order — the order the
+  /// home gave kept inside each.
+  static List<HomeDestination> ordered(List<HomeDestination> items) => [
+        for (final g in <PlusGroup?>[null, ...PlusGroup.values])
+          for (final item in items)
+            if (item.group == g) item,
+      ];
+
   /// Plus: every remaining tool as a line with its name, never a grid of
-  /// pictures — the point of the change. [onPick] is the frame's way into a
-  /// place (108); [here] marks the line of the page on screen.
+  /// pictures — the point of the change — under its heading (134: « MA
+  /// VITRINE », « MON ÉQUIPE », « MOI »). [onPick] is the frame's way into
+  /// a place (108); [here] marks the line of the page on screen.
   static Future<void> showMore(
     BuildContext context,
     List<HomeDestination> items, {
     void Function(HomeDestination item)? onPick,
     HomeDestination? here,
   }) {
+    final lines = ordered(items);
     return showMaraSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (sheet) => SafeArea(
-        // The owner (122): « In the 3 dot list … an animated arrow showing
-        // the list continues at the bottom ».
-        child: ScrollHint(child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.only(bottom: 8),
-          children: [
-            for (final item in items)
-              ListTile(
-                leading: placeIcon(item, item.icon),
-                title: Text(item.label),
-                selected: identical(item, here),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(sheet).pop();
-                  (onPick ?? (i) => i.onTap())(item);
-                },
+      builder: (sheet) {
+        final theme = Theme.of(sheet);
+        PlusGroup? last;
+        final children = <Widget>[];
+        for (final (i, item) in lines.indexed) {
+          final g = item.group;
+          if (g != null && (i == 0 || g != last)) {
+            children.add(Padding(
+              key: Key('plus-heading-${g.name}'),
+              padding: EdgeInsets.fromLTRB(20, i == 0 ? 0 : 14, 20, 4),
+              child: Text(
+                sheet.tr(g.heading).toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-          ],
-        )),
-      ),
+            ));
+          }
+          last = g;
+          children.add(ListTile(
+            leading: placeIcon(item, item.icon),
+            title: Text(item.label),
+            selected: identical(item, here),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(sheet).pop();
+              (onPick ?? (i) => i.onTap())(item);
+            },
+          ));
+        }
+        return SafeArea(
+          // The owner (122): « In the 3 dot list … an animated arrow showing
+          // the list continues at the bottom ».
+          child: ScrollHint(child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.only(bottom: 8),
+            children: children,
+          )),
+        );
+      },
     );
   }
 }

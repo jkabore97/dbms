@@ -392,52 +392,25 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
       // deliveries, but as the smaller companion above it rather than the
       // headline: a sale's value is known the moment it happens, so the button
       // that records it should be the obvious one.
-      floatingActionButton: (widget.retail == null && !canPhotograph)
+      // The camera stays a small round button in the corner; the sale and
+      // the expense are the two big buttons under the day (134). On a shop
+      // with no sale button (a pure capture business) the camera stays the
+      // big labelled one, so that shop still has a clear primary action.
+      floatingActionButton: !canPhotograph
           ? null
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // The camera sits above the till button when both are here, as
-                // a small round secondary. On a shop with no sale button (a
-                // pure capture business) it stays the big labelled one, so that
-                // shop still has a clear primary action.
-                if (canPhotograph)
-                  widget.retail != null
-                      ? FloatingActionButton.small(
-                          heroTag: 'photo',
-                          onPressed: _photograph,
-                          tooltip: Strings.of(context).photo,
-                          child: const Icon(Icons.photo_camera),
-                        )
-                      : FloatingActionButton.extended(
-                          heroTag: 'photo',
-                          onPressed: _photograph,
-                          icon: const Icon(Icons.photo_camera),
-                          label: Text(Strings.of(context).photo),
-                        ),
-                if (canPhotograph && widget.retail != null)
-                  const SizedBox(height: 12),
-                if (widget.retail != null)
-                  FloatingActionButton.extended(
-                    heroTag: 'sell',
-                    onPressed: _sell,
-                    // Filled in the shop's own brand colour rather than the
-                    // softer container tint an extended FAB takes by default,
-                    // so the one button she reaches for most stands out from
-                    // the aurora behind it. onPrimary keeps the label legible
-                    // on it — the palette is WCAG-checked for exactly this pair.
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    icon: const Icon(Icons.point_of_sale),
-                    label: Text(
-                      Strings.of(context).sale,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-              ],
-            ),
+          : widget.retail != null
+              ? FloatingActionButton.small(
+                  heroTag: 'photo',
+                  onPressed: _photograph,
+                  tooltip: Strings.of(context).photo,
+                  child: const Icon(Icons.photo_camera),
+                )
+              : FloatingActionButton.extended(
+                  heroTag: 'photo',
+                  onPressed: _photograph,
+                  icon: const Icon(Icons.photo_camera),
+                  label: Text(Strings.of(context).photo),
+                ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -657,6 +630,54 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             ),
             const SizedBox(height: 16),
 
+            // The two acts of the counter (134), big and worded, right under
+            // the day: selling — what a till does all day, filled in the
+            // shop's own colour (onPrimary on primary is WCAG-checked) — and
+            // noting money out (rent, transport, a repair). They are acts,
+            // not places: the bar holds the places.
+            // An observer (a trainer, a read-only member) only watches.
+            if (!widget.org.isObserverOnly) ...[
+              _Acts(
+                sale: widget.retail == null
+                    ? null
+                    : FilledButton.icon(
+                        key: const Key('home-new-sale'),
+                        onPressed: _sell,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Icon(Icons.add, size: 20),
+                        label: Text(context.tr('Nouvelle vente'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
+                      ),
+                expense: FilledButton.icon(
+                  key: const Key('home-expense'),
+                  onPressed: _openExpense,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    foregroundColor: theme.colorScheme.onSurface,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.remove, size: 20),
+                  label: Text(context.tr('Dépense'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             if (_lossesAvoided > 0)
               _Panel(
                 colour: theme.colorScheme.secondaryContainer,
@@ -724,8 +745,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     if (saved == true && mounted) await _load();
   }
 
-  /// The shop's five: Vente (this screen), Articles, Commandes, Factures,
-  /// and Plus for what is consulted rather than worked in.
+  /// The shop's five (134): Vente (this screen), Catalogue, Commandes,
+  /// Argent — always in that order, whatever is used most — and Plus, under
+  /// its headings. Selling and noting an expense are the big buttons on
+  /// this screen, not places.
   HomeNav _nav(bool cameraReady) {
     final s = Strings.of(context);
     final slug = widget.org.slug;
@@ -738,14 +761,17 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         route: '',
       ),
       primary: [
+        // Articles and services (098) in one place, one ＋.
         if (widget.retail != null && widget.access.canSee('products'))
           HomeDestination(
             icon: Icons.sell_outlined,
-            label: s.productsLabel,
+            selectedIcon: Icons.sell,
+            label: context.tr('Catalogue'),
             // Articles at zero or under their alert level (115).
             badge: homeCount('articles'),
-            route: 'produits',
-            onTap: () => _openThenReload('produits'),
+            route: 'catalogue',
+            alsoRoutes: HomeNav.catalogueAlso,
+            onTap: () => _openThenReload('catalogue'),
           ),
         // Orders sent from the vitrine (055), with how many are waiting.
         if (widget.retail != null && widget.access.canSee('orders'))
@@ -760,61 +786,62 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             route: 'commandes',
             onTap: () => _openThenReload('commandes'),
           ),
-        if (widget.invoicing != null && widget.access.canSee('invoices'))
+        // « Où en est mon argent ? » (134): the invoices, the expenses and
+        // the carnet, under the month's four numbers. Factures' lock (089)
+        // is asked inside, on Factures, as the bar asked it before.
+        if (HomeNav.shopMoneyShown(widget.access))
           HomeDestination(
-            icon: Icons.receipt_long_outlined,
-            label: s.invoices,
-            // Invoices past their due date and not paid (115).
-            badge: homeCount('invoices'),
-            route: 'factures',
-            onTap: () => PathGate.open(context, widget.org, 'invoices',
-                () => context.push(Routes.inside(widget.org.id, 'factures'))),
+            icon: Icons.account_balance_wallet_outlined,
+            selectedIcon: Icons.account_balance_wallet,
+            label: context.tr('Argent'),
+            // Invoices past their due date and not paid (115) — and the
+            // carnet's credits past theirs (117), which counted on Compte
+            // while the carnet opened from there: it is in Argent now.
+            // Each counted only for somebody who may open its section
+            // (Argent shows for the books alone too).
+            badge: (widget.access.canSee('invoices') ? homeCount('invoices') : 0) +
+                (widget.access.canSee('credits') ? homeCount('credit') : 0),
+            route: 'argent',
+            alsoRoutes: HomeNav.shopMoneyAlso,
+            onTap: () => _openThenReload('argent'),
           ),
       ],
       more: [
-        // Money out (115): rent, transport, a repair — one question a
-        // screen, kept on the phone like a sale.
-        if (!widget.org.isObserverOnly)
+        // MA VITRINE: the window and what dresses it.
+        if (slug != null && slug.isNotEmpty)
           HomeDestination(
-            icon: Icons.north_east,
-            label: context.tr('Dépense'),
-            onTap: _openExpense,
-          ),
-        if (widget.org.isAdmin)
-          HomeDestination(
-            icon: Icons.route_outlined,
-            label: context.tr('Mon chemin'),
-            route: 'chemin',
-            onTap: _openChemin,
-          ),
-        // What the shop does rather than sells (098), on the vitrine —
-        // unless Mara's switchboard hid the services (110).
-        if (widget.retail != null &&
-            widget.access.canSee('products') &&
-            !widget.access.isHidden('services'))
-          HomeDestination(
-            icon: Icons.event_available_outlined,
-            label: context.tr('Mes services'),
-            route: 'services',
-            onTap: () => _openThenReload('services'),
-          ),
-        if (widget.access.canSee('production'))
-          HomeDestination(
-            icon: Icons.precision_manufacturing_outlined,
-            label: s.production,
-            route: 'production',
-            onTap: () => PathGate.open(context, widget.org, 'production',
-                () => _openThenReload('production')),
+            icon: Icons.visibility_outlined,
+            label: context.tr('Voir ma vitrine'),
+            group: PlusGroup.vitrine,
+            onTap: () => context.go(Routes.storefront(slug)),
           ),
         if (cameraReady && widget.access.canSee('photos'))
           HomeDestination(
             icon: Icons.photo_library_outlined,
             label: s.photos,
             route: 'photos',
+            group: PlusGroup.vitrine,
             onTap: _openGallery,
           ),
-        // The business's people (100), as on the farm's and the
-        // association's homes.
+        if (widget.org.isAdmin)
+          HomeDestination(
+            icon: Icons.route_outlined,
+            label: context.tr('Mon chemin'),
+            route: 'chemin',
+            group: PlusGroup.vitrine,
+            onTap: _openChemin,
+          ),
+        if (widget.access.canSee('production'))
+          HomeDestination(
+            icon: Icons.precision_manufacturing_outlined,
+            label: s.production,
+            route: 'production',
+            group: PlusGroup.vitrine,
+            onTap: () => PathGate.open(context, widget.org, 'production',
+                () => _openThenReload('production')),
+          ),
+        // MON ÉQUIPE: the business's people (100) and its administration
+        // (108), for whoever runs it.
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.groups_outlined,
@@ -822,38 +849,31 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             // Invitations not claimed yet (115).
             badge: homeCount('invitations'),
             route: 'equipe',
+            group: PlusGroup.team,
             onTap: () => context.push(Routes.inside(widget.org.id, 'equipe')),
           ),
-        // The administration's hub (108), for whoever runs the business.
         if (widget.org.isAdmin)
           HomeDestination(
             icon: Icons.admin_panel_settings_outlined,
             label: context.tr('Administration'),
             route: 'administration',
+            group: PlusGroup.team,
             onTap: () => _openThenReload('administration'),
           ),
-        // The doors out to the public side, said in words: going to the
-        // street is a choice, never something to fall into backwards.
-        if (slug != null && slug.isNotEmpty)
-          HomeDestination(
-            icon: Icons.visibility_outlined,
-            label: context.tr('Voir ma vitrine'),
-            onTap: () => context.go(Routes.storefront(slug)),
-          ),
-        HomeDestination(
-          icon: Icons.storefront_outlined,
-          label: context.tr('Voir le marché'),
-          onTap: () => context.go(Routes.directory),
-        ),
+        // MOI: the person's own, and the door out to the street — said in
+        // words: going there is a choice, never something to fall into.
         HomeDestination(
           icon: Icons.account_circle_outlined,
           label: s.account,
-          // The carnet's credits past their date (115, 117's due date):
-          // the shop's carnet is opened from Compte — counted only for
-          // somebody who may see the carnet.
-          badge: widget.access.canSee('credits') ? homeCount('credit') : 0,
           route: 'compte',
+          group: PlusGroup.me,
           onTap: () => context.push(Routes.inside(widget.org.id, 'compte')),
+        ),
+        HomeDestination(
+          icon: Icons.storefront_outlined,
+          label: context.tr('Voir le marché'),
+          group: PlusGroup.me,
+          onTap: () => context.go(Routes.directory),
         ),
       ],
     );
@@ -931,6 +951,38 @@ class _DiscreetState extends State<_Discreet> {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// The home's two acts (134): « Nouvelle vente » and « Dépense », side by
+/// side — or one above the other when their words would not fit side by
+/// side (a 320 px phone, a large text size: « Nouvelle … », « Dép… »).
+class _Acts extends StatelessWidget {
+  const _Acts({required this.sale, required this.expense});
+
+  final Widget? sale;
+  final Widget expense;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final stacked = MediaQuery.sizeOf(context).width / scale < 350;
+    Widget tall(Widget b) => SizedBox(height: 56, child: b);
+    final sale = this.sale;
+    if (sale == null) return tall(expense);
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [tall(sale), const SizedBox(height: 10), tall(expense)],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(flex: 3, child: tall(sale)),
+        const SizedBox(width: 12),
+        Expanded(flex: 2, child: tall(expense)),
+      ],
     );
   }
 }

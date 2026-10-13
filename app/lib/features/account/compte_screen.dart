@@ -156,13 +156,19 @@ class CompteScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          // Why « Compte » has a red number on a shop's or an association's
-          // bar (122): the carnet's credits past their date — the carnet
-          // opens from here, folded under Outils.
+          // The carnet's credits past their date (122), and where the bar
+          // counts them: « Compte » on an association's, « Argent » on a
+          // shop's, « Ventes » on a farm's since 134 — the carnet opens
+          // from there too.
           if (live && tools.contains('credits') && scope.notify.isConfigured)
             _LateCredits(
               bell: scope.notify.bell,
               orgId: org.id,
+              place: org.isAssociation
+                  ? Strings.of(context).account
+                  : org.profile == 'farm'
+                      ? context.tr('Ventes')
+                      : context.tr('Argent'),
               onOpen: () => PathGate.open(context, org, 'credits',
                   () => context.push(inside('credits'))),
             ),
@@ -544,10 +550,14 @@ class CompteScreen extends StatelessWidget {
 /// « 2 crédits ont dépassé leur date de remboursement », with « Ouvrir le
 /// carnet » — live with the bar's own number.
 class _LateCredits extends StatelessWidget {
-  const _LateCredits({required this.bell, required this.orgId, required this.onOpen});
+  const _LateCredits(
+      {required this.bell, required this.orgId, required this.place, required this.onOpen});
 
   final Bell bell;
   final String orgId;
+
+  /// The bar's place whose red number counts them (134).
+  final String place;
   final VoidCallback onOpen;
 
   @override
@@ -563,7 +573,8 @@ class _LateCredits extends StatelessWidget {
             title: n == 1
                 ? context.tr('1 crédit a dépassé sa date de remboursement')
                 : context.tr('{n} crédits ont dépassé leur date de remboursement', {'n': n}),
-            stays: context.tr('Le chiffre rouge sur « Compte » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.'),
+            stays: context.tr('Le chiffre rouge sur « {place} » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.',
+                {'place': place}),
             items: [
               AttentionItem(
                 id: 'credits',

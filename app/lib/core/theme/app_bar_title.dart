@@ -41,7 +41,9 @@ class AppBarTitle extends StatelessWidget {
         // A word wider than the room: a smaller size, down to 13, so it is
         // not cut in the middle — still on two lines.
         final size = box.maxWidth.isFinite && widest > box.maxWidth
-            ? (17 * box.maxWidth / widest).clamp(13.0, 17.0)
+            // (a hair under the room: text width does not scale exactly
+            // with its size — « Catalogue » broke as « Catalogu|e », 134)
+            ? (17 * box.maxWidth / widest * 0.94).clamp(13.0, 17.0)
             : 17.0;
         return Text(text,
             maxLines: 2,

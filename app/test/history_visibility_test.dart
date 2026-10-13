@@ -84,7 +84,8 @@ void main() {
       (tester) async {
     await pumpHome(tester, visibility: 'full');
 
-    expect(find.byTooltip('Historique'), findsOneWidget);
+    // « Journal » on the bar since 134 (mockup: Accueil · Journal · Rapports).
+    expect(find.byTooltip('Journal'), findsOneWidget);
   });
 
   testWidgets('an observer on summary visibility is not', (tester) async {
@@ -92,7 +93,7 @@ void main() {
     // theirs, and this is the same grant said consistently in both places.
     await pumpHome(tester, visibility: 'summary');
 
-    expect(find.byTooltip('Historique'), findsNothing);
+    expect(find.byTooltip('Journal'), findsNothing);
   });
 
   testWidgets('nor is anyone once the session has expired', (tester) async {
@@ -101,6 +102,6 @@ void main() {
     // an empty history would read as a lost one.
     await pumpHome(tester, visibility: 'full', liveSession: false);
 
-    expect(find.byTooltip('Historique'), findsNothing);
+    expect(find.byTooltip('Journal'), findsNothing);
   });
 }

@@ -30,6 +30,7 @@ import '../../core/notify/bell_room.dart';
 import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
+import '../home/place_sections.dart';
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -245,7 +246,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   String _details(Product p) => [
-        context.tr('{n} en stock', {'n': _trim(p.quantity)}),
+        // « Suivre le stock » off (131): no count to say.
+        p.stockTracked
+            ? context.tr('{n} en stock', {'n': _trim(p.quantity)})
+            : context.tr('Stock non suivi'),
         if (p.isIngredient) context.tr('ingrédient'),
         if (p.salePrice > 0) _money.format(p.salePrice),
         if (p.expiresOn != null)
@@ -319,7 +323,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           title: Text(p.name),
-          subtitle: p.quantity <= 0 && _canRestock
+          subtitle: p.counted && p.quantity <= 0 && _canRestock
               // At zero, its own way back on the shelf (122).
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +405,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                     ),
-                    if (p.quantity <= 0 && _canRestock)
+                    if (p.counted && p.quantity <= 0 && _canRestock)
                       IconButton(
                         key: ValueKey('product-restock-${p.id}'),
                         tooltip: context.tr('Ajouter du stock'),
@@ -430,7 +434,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final visible = _visible;
 
     return Scaffold(
-      appBar: AppBar(
+      // Catalogue's Articles (134): under the place's name and its switch.
+      appBar: SectionHost.appBar(context,
         title: AppBarTitle(context.tr('Articles')),
         // On a small phone the view switch stays, the rest fold into one
         // menu (B-3).
@@ -458,7 +463,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
           bellRoom,
         ],
       ),
-      floatingActionButton: widget.access.canEdit('products')
+      floatingActionButton: widget.access.canEdit('products') &&
+              !SectionHost.ownsAddOf(context)
           ? FloatingActionButton.extended(
               onPressed: _addStock,
               key: const Key('products-add'),
@@ -466,7 +472,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               label: Text(context.tr('Ajouter un article')),
             )
           : null,
-      body: RefreshIndicator(
+      body: SectionHost.body(context, RefreshIndicator(
         onRefresh: _load,
         // Slivers, so a shop of two hundred articles builds — and fetches
         // the pictures of — only the ones on screen.
@@ -485,7 +491,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     // Why « Articles » has a red number (122), on top.
                     StockAttention(
                       products: _products,
-                      place: context.tr('Articles'),
+                      // The bar's word for the place (134: « Catalogue »).
+                      place: SectionHost.of(context)?.title ?? context.tr('Articles'),
                       onRestock: _canRestock ? _restock : null,
                     ),
                     Row(
@@ -579,7 +586,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 96)),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -782,6 +789,15 @@ class _EditProductSheetState extends State<_EditProductSheet> {
       AppScope.maybeOf(context)?.session.accessFor(widget.org.id).isHidden('production') ??
       false;
   late bool _isPublished = widget.product.isPublished;
+
+  /// « Suivre le stock » (131): off, the article has no count. Offered on
+  /// a database with 131, and — to stop following — only at zero: the
+  /// count here moves by entries and sales, never by hand, so goods on
+  /// the shelf are not wiped from this sheet.
+  late bool _tracked = widget.product.stockTracked;
+  bool get _trackingOffered =>
+      !widget.retail.stockTrackingMissing &&
+      (!widget.product.stockTracked || widget.product.quantity <= 0);
   late final _description =
       TextEditingController(text: widget.product.description ?? '');
 
@@ -905,7 +921,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
         name: _name.text,
         salePrice: _parse(_price),
         costPrice: _parse(_cost),
-        lowStockAt: _parse(_low),
+        lowStockAt: _tracked ? _parse(_low) : null,
+        stockTracked:
+            _tracked != widget.product.stockTracked ? _tracked : null,
         expiresOn: _expiresOn,
         isIngredient: _isIngredient,
         isPublished: _isPublished,
@@ -963,10 +981,23 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             Text(widget.product.name, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
-                  {'n': _EditProductSheetState._plain(widget.product.quantity)}),
+              widget.product.stockTracked
+                  ? context.tr('{n} en stock — le stock bouge par les entrées, les ventes et la production',
+                      {'n': _EditProductSheetState._plain(widget.product.quantity)})
+                  : context.tr('Stock non suivi'),
               style: theme.textTheme.bodySmall,
             ),
+            if (_trackingOffered)
+              SwitchListTile(
+                key: const Key('product-tracked'),
+                contentPadding: EdgeInsets.zero,
+                value: _tracked,
+                onChanged: _busy ? null : (v) => setState(() => _tracked = v),
+                title: Text(context.tr('Suivre le stock')),
+                subtitle: Text(_tracked
+                    ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                    : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: _name,
@@ -1037,16 +1068,18 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
-            const SizedBox(height: 12),
-            TextField(
-              controller: _low,
-              enabled: !_busy,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.tr('Seuil d\'alerte stock bas (facultatif)'),
-                border: const OutlineInputBorder(),
+            if (_tracked) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _low,
+                enabled: !_busy,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: context.tr('Seuil d\'alerte stock bas (facultatif)'),
+                  border: const OutlineInputBorder(),
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _busy
