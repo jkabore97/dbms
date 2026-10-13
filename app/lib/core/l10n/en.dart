@@ -1658,6 +1658,20 @@ const enStrings = <String, String>{
       'All settled.',
   'Tout le monde':
       'Everyone',
+  'Déjà en avant':
+      'Already featured',
+  'Déjà en avant jusqu\'au {date}':
+      'Already featured until {date}',
+  'Paiement signalé : Mara le vérifie':
+      'Payment reported: Mara is checking it',
+  'Déjà demandée, en attente du paiement':
+      'Already requested, waiting for payment',
+  'Une seule mise en avant à la fois pour la même place. Vous pourrez la prolonger quand elle se termine.':
+      'One promotion at a time for the same place. You can extend it when it ends.',
+  'Une seule demande à la fois pour la même place.':
+      'One request at a time for the same place.',
+  'Reprendre le paiement':
+      'Resume payment',
   'Tout publier ({unpublished})':
       'Publish all ({unpublished})',
   'Déjà {n} prêts pour la vitrine':

@@ -314,6 +314,10 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   SpotTerms _terms = const SpotTerms();
   List<Product> _articles = const [];
 
+  /// This business's spots, to say before the tap what is already asked
+  /// or running (the server refuses a second one for the same place).
+  List<Promotion> _mine = const [];
+
   /// The whole shop rather than one article.
   late bool _shop = widget.vitrineOnly;
   String? _productId;
@@ -349,9 +353,11 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       final products = widget.retail == null
           ? const <Product>[]
           : await widget.retail!.products(widget.orgId);
+      final mine = await widget.admin.myPromotions(widget.orgId);
       if (!mounted) return;
       setState(() {
         _terms = terms;
+        _mine = mine;
         _articles = products
             .where((p) =>
                 p.isPublished &&
@@ -372,6 +378,65 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   String _money(double v) => moneyFormat(_terms.currency).format(v);
 
   bool get _proFree => widget.isPro && !_shop && _days == 7;
+
+  /// The spot already asked or running for what is chosen (the vitrine, or
+  /// this article): the server's « déjà demandé ou en cours », said first.
+  Promotion? get _existing {
+    final now = DateTime.now();
+    final product = _shop ? null : _productId;
+    for (final p in _mine) {
+      if (p.productId != product) continue;
+      if (p.status == 'requested' || p.status == 'paid_claimed') return p;
+      if (p.status == 'approved' && (p.endsAt == null || p.endsAt!.isAfter(now))) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  String _day(DateTime d) {
+    final l = d.toLocal();
+    return '${l.day.toString().padLeft(2, '0')}/${l.month.toString().padLeft(2, '0')}';
+  }
+
+  /// What the sheet says instead of the price and the button when a spot
+  /// for this place already exists — and the one gesture that goes on.
+  List<Widget> _existingView(ThemeData theme, Promotion e) {
+    final running = e.status == 'approved';
+    final title = running
+        ? (e.endsAt == null
+            ? context.tr('Déjà en avant')
+            : context.tr('Déjà en avant jusqu\'au {date}', {'date': _day(e.endsAt!)}))
+        : e.status == 'paid_claimed'
+            ? context.tr('Paiement signalé : Mara le vérifie')
+            : context.tr('Déjà demandée, en attente du paiement');
+    return [
+      KajCard(
+        key: const Key('spot-existing'),
+        elevation: 0,
+        color: theme.colorScheme.primaryContainer,
+        child: ListTile(
+          leading: Icon(running ? Icons.campaign_outlined : Icons.hourglass_top),
+          title: Text(title),
+          subtitle: Text(running
+              ? context.tr('Une seule mise en avant à la fois pour la même place. Vous pourrez la prolonger quand elle se termine.')
+              : context.tr('Une seule demande à la fois pour la même place.')),
+        ),
+      ),
+      if (e.status == 'requested') ...[
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            key: const Key('spot-resume-pay'),
+            onPressed: _busy ? null : () => setState(() => _asked = e),
+            child: Text(context.tr('Reprendre le paiement'),
+                style: const TextStyle(fontSize: 16)),
+          ),
+        ),
+      ],
+    ];
+  }
 
   Future<void> _ask() async {
     setState(() {
@@ -526,16 +591,21 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             _busy ? null : (v) => setState(() => _days = v.first),
       ),
       const SizedBox(height: 16),
+      if (_existing != null)
+        ..._existingView(theme, _existing!)
+      else ...[
       Text(
         _proFree
             ? context.tr('Offert : Mara Pro inclut une mise en avant de 7 jours par mois.')
             : context.tr('Prix : {price}', {'price': _money(price)}),
         style: theme.textTheme.titleMedium,
       ),
-      Text(
-        context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
-        style: theme.textTheme.bodySmall,
-      ),
+      // The cap is on « À la une »'s articles, not on the vitrines' list.
+      if (!shop)
+        Text(
+          context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
+          style: theme.textTheme.bodySmall,
+        ),
       const SizedBox(height: 14),
       SizedBox(
         height: 52,
@@ -545,6 +615,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
               style: const TextStyle(fontSize: 16)),
         ),
       ),
+      ],
     ];
   }
 

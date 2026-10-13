@@ -225,6 +225,75 @@ void main() {
     expect(find.textContaining('Offert'), findsNothing);
   });
 
+  testWidgets('a vitrine already featured says so and until when, '
+      'instead of a refusal after the tap', (tester) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final admin = _Admin()
+      ..mine = [
+        Promotion(
+            id: 'pv',
+            kind: 'shop',
+            days: 7,
+            status: 'approved',
+            free: true,
+            endsAt: DateTime.now().add(const Duration(days: 5))),
+      ];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => SpotSheet.open(context,
+                orgId: 'o1', admin: admin, retail: _Retail(), isPro: true),
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('spot-existing')), findsNothing,
+        reason: 'an article is still free to ask for');
+    await tester.tap(find.text('La vitrine'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('spot-existing')), findsOneWidget);
+    expect(find.textContaining('Déjà en avant jusqu'), findsOneWidget);
+    expect(find.text('Continuer vers le paiement'), findsNothing);
+    expect(admin.asked, isEmpty);
+  });
+
+  testWidgets('a vitrine spot asked but not paid: « Reprendre le paiement »',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final admin = _Admin()
+      ..mine = [
+        const Promotion(
+            id: 'pq', kind: 'shop', days: 7, price: 2500, status: 'requested'),
+      ];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => SpotSheet.open(context,
+                orgId: 'o1', admin: admin, retail: _Retail()),
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('La vitrine'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('spot-resume-pay')));
+    await tester.pumpAndSettle();
+    expect(find.text('J\'ai payé'), findsOneWidget);
+    expect(admin.asked, isEmpty);
+  });
+
   testWidgets('the console validates a paid spot', (tester) async {
     final admin = _Admin()
       ..queue = const [
