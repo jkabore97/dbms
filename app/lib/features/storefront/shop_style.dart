@@ -638,7 +638,12 @@ class ShopScroll extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [footer],
+            children: [
+              footer,
+              // Clear of the phone's own bar (gesture line, buttons): drawn
+              // edge to edge, the footer's last line was cut off under it.
+              SizedBox(height: MediaQuery.paddingOf(context).bottom),
+            ],
           ),
         ),
       ],

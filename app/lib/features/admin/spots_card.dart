@@ -11,6 +11,7 @@ import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../pay/wave_buttons.dart';
+import '../account/support.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 
@@ -331,6 +332,9 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     _productId = widget.productId;
     _asked = widget.asked;
     _load();
+    // The number to write to for paying, asked ahead of the tap (a browser
+    // opens a chat only straight from the gesture).
+    Support.warm(AppScope.maybeOf(context)?.auth.client);
   }
 
   @override
@@ -583,9 +587,32 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ),
         )
       else
-        Text(
-            context.tr('Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.'),
-            style: muted),
+        // No payment number set: « contactez Mara » with no way to was a
+        // dead end. One tap opens Mara's WhatsApp, the message written.
+        ValueListenableBuilder<SupportContacts>(
+          valueListenable: Support.contacts,
+          builder: (context, c, _) => c.whatsapp == null
+              ? Text(
+                  context.tr('Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.',
+                      {'email': c.email}),
+                  style: muted)
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                        context.tr('Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.'),
+                        style: muted),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      key: const Key('spot-pay-whatsapp'),
+                      onPressed: () => Support.openWhatsApp(context,
+                          text: _payMessage(spot)),
+                      icon: const Icon(Icons.chat_outlined),
+                      label: Text(context.tr('Demander le numéro sur WhatsApp')),
+                    ),
+                  ],
+                ),
+        ),
       const SizedBox(height: 12),
       Text(
           context.tr('Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.'),
@@ -614,6 +641,26 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         child: Text(context.tr('Payer plus tard')),
       ),
     ];
+  }
+
+  /// What the owner sends Mara to pay for [spot]: what, how long, how
+  /// much, and which business — enough for Mara to answer with the number.
+  String _payMessage(Promotion spot) {
+    final name = AppScope.maybeOf(context)
+            ?.session
+            .orgs
+            .where((o) => o.id == widget.orgId)
+            .firstOrNull
+            ?.name ??
+        '';
+    return context.tr(
+        'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?',
+        {
+          'label': spot.label,
+          'days': spot.days,
+          'amount': moneyFormat(spot.currency).format(spot.price),
+          'org': name.isEmpty ? '' : ' ($name)',
+        });
   }
 
   List<Widget> _doneView(ThemeData theme) {

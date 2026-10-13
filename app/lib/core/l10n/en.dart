@@ -1306,6 +1306,14 @@ const enStrings = <String, String>{
       '2 kg free-range chickens, fed on maize.',
   'Pour ceux qui liront ce plan dans deux ans':
       'For whoever reads this plan in two years',
+  'Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.':
+      'To pay, write to Mara: {email}. The payment number will be given to you directly.',
+  'Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.':
+      'Ask Mara for the payment number on WhatsApp: the message is already written.',
+  'Demander le numéro sur WhatsApp':
+      'Ask for the number on WhatsApp',
+  'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?':
+      'Hello Mara, I want to pay for a promotion: {label} · {days} days · {amount}{org}. Which number should I pay?',
   'Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.':
       'To pay, contact Mara: the payment number will be given to you directly.',
   'Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.':
