@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/nav/parent_route.dart';
 import '../../core/theme/scroll_hint.dart';
 import '../../core/auth/models.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/nav/router.dart';
 import '../help/help_contact.dart';
 import 'support.dart';
 
@@ -31,6 +33,7 @@ class _DocScaffold extends StatelessWidget {
     required this.title,
     required this.blocks,
     this.header,
+    this.footer,
     this.legal = false,
   });
 
@@ -44,6 +47,9 @@ class _DocScaffold extends StatelessWidget {
 
   /// Drawn above the text (the FAQ's « Aide Mara » card).
   final Widget? header;
+
+  /// Drawn under the text (the FAQ's « Pas trouvé ? Écrire à Mara »).
+  final Widget? footer;
 
   /// Alternating (heading, body) is not assumed; each entry is a paragraph, and
   /// a heading is just a paragraph rendered bold via the leading '#'.
@@ -84,6 +90,7 @@ class _DocScaffold extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w700))
                   : Text(b, style: theme.textTheme.bodyMedium),
             ),
+          if (footer case final footer?) ...[const SizedBox(height: 8), footer],
         ],
       ),
     ));
@@ -268,14 +275,24 @@ class FaqScreen extends StatelessWidget {
     return _DocScaffold(
       title: context.tr('Questions fréquentes'),
       // How to reach Mara first (126): the site's /aide says the same.
+      // A business reaches Mara from its Aide page only: here the Pro
+      // banner on top (Basic), and at the foot one line that leads there.
+      // Someone with no business keeps the contact card itself.
       header: business == null
           ? const SupportCard()
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (FaqProBanner.shownFor(business)) FaqProBanner(org: business),
-                SupportCard(org: business, page: context.tr('Questions fréquentes')),
-              ],
+          : FaqProBanner.shownFor(business)
+              ? FaqProBanner(org: business)
+              : null,
+      footer: business == null
+          ? null
+          : OutlinedButton.icon(
+              key: const Key('faq-write-mara'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () => context.push(Routes.inside(business.id, 'aide')),
+              icon: const Icon(Icons.chat_outlined),
+              label: Text(context.tr('Pas trouvé ? Écrire à Mara')),
             ),
       blocks: [
         context.tr('# L\'application fonctionne-t-elle sans internet ?'),
@@ -295,7 +312,7 @@ class FaqScreen extends StatelessWidget {
         context.tr('# J\'ai oublié mon code (PIN).'),
         context.tr('Reconnectez-vous avec votre mot de passe pour définir un nouveau code.'),
         context.tr('# Comment contacter quelqu\'un ?'),
-        context.tr('Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.'),
+        context.tr('Depuis la page Aide de votre entreprise (Compte › Aide), ou Mon profil › Aide : par WhatsApp ou par e-mail.'),
       ],
     );
   }

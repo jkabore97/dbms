@@ -436,7 +436,7 @@ void main() {
       expect(find.byKey(const Key('support-whatsapp')), findsOneWidget);
       expect(tester.getTopLeft(find.byKey(const Key('support-card'))).dy,
           lessThan(tester.getTopLeft(find.text('L\'application fonctionne-t-elle sans internet ?')).dy));
-      final answer = find.text('Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.');
+      final answer = find.text('Depuis la page Aide de votre entreprise (Compte › Aide), ou Mon profil › Aide : par WhatsApp ou par e-mail.');
       await tester.scrollUntilVisible(answer, 300, scrollable: find.byType(Scrollable).first);
       expect(answer, findsOneWidget);
     });

@@ -55,9 +55,9 @@ export const FAQ = [
   ],
   [
     "Comment contacter quelqu'un ?",
-    "Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.",
+    "Depuis la page Aide de votre entreprise (Compte › Aide), ou Mon profil › Aide : par WhatsApp ou par e-mail.",
     "How do I reach someone?",
-    "From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.",
+    "From your business's Help page (Account › Help), or My profile › Help: on WhatsApp or by e-mail.",
   ],
 ];
 

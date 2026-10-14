@@ -899,9 +899,9 @@ void main() {
     // « Aide Mara » (126): the same card in a shop's, a farm's and an
     // association's Compte — WhatsApp only once the platform set a number.
     for (final profile in ['retail', 'farm', 'association']) {
-      testWidgets('Compte of a $profile: « Aide » holds the support card', (tester) async {
+      testWidgets('Compte of a $profile: « Aide » leads to the Aide page (143)', (tester) async {
         final session = await shopper(tester);
-        final org = OrgSummary(id: 'o1', name: 'Awa', profile: profile, roles: const ['owner']);
+        final org = OrgSummary(id: 'o1', name: 'Maison Élégance', profile: profile, roles: const ['owner']);
         await pump(tester, session, at: '/compte', routes: [
           GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org)),
         ]);
@@ -909,15 +909,12 @@ void main() {
             scrollable: find.byType(Scrollable).first);
         await tester.tap(find.byKey(const Key('group-Aide')));
         await settle(tester);
-        expect(find.byKey(const Key('support-card')), findsOneWidget);
-        expect(find.byKey(const Key('support-email')), findsOneWidget);
-        expect(find.byKey(const Key('support-whatsapp')), findsNothing, reason: 'no number set');
-        Support.reset(const SupportContacts(
-            email: Support.defaultEmail, whatsapp: '18623354492', hours: Support.defaultHours));
-        addTearDown(Support.reset);
-        await settle(tester);
-        expect(find.byKey(const Key('support-whatsapp')), findsOneWidget);
-        expect(find.text('Questions fréquentes'), findsOneWidget);
+        // One way to Mara: the Aide page holds WhatsApp and e-mail; Compte
+        // only leads there.
+        expect(find.byKey(const Key('compte-help')), findsOneWidget);
+        expect(find.byKey(const Key('support-card')), findsNothing);
+        expect(find.byKey(const Key('support-whatsapp')), findsNothing);
+        expect(find.byKey(const Key('support-email')), findsNothing);
       });
     }
 
