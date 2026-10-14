@@ -2044,6 +2044,8 @@ const enStrings = <String, String>{
       'A name and a price.',
   'Un prénom et un nom de famille sont requis.':
       'A first name and a family name are required.',
+  'Vitrine enregistrée. La présentation « {layout} » vient avec Mara Pro : votre vitrine reste en grille.':
+      'Vitrine saved. The « {layout} » layout comes with Mara Pro: your vitrine stays a grid.',
   'Vitrine enregistrée. Ouvrez-la pour voir le résultat.':
       'Vitrine saved. Open it to see the result.',
   'Vos commandes n\'ont pas pu être chargées. Vérifiez le réseau.':
@@ -5069,10 +5071,6 @@ const enStrings = <String, String>{
       'Unlimited',
   'Complet':
       'Full',
-  'Mise en avant offerte':
-      'Free featuring',
-  '1 par mois':
-      '1 a month',
   'Pointages et paie du personnel':
       'Staff time and pay',
   'Accès de l\'équipe : qui voit quoi, qui modifie quoi':

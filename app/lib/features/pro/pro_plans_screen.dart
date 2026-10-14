@@ -521,7 +521,6 @@ class ProPlansScreenRows {
             PlanRow('Factures par mois', '${t.freeMaxInvoicesMonth}', 'Illimité'),
             PlanRow('Articles en photo', '${t.freePhotoItems}', 'Illimité'),
             PlanRow('Historique', translate(trCurrent, '{n} mois', {'n': t.freeHistoryMonths}), 'Complet'),
-            const PlanRow('Mise en avant offerte', null, '1 par mois'),
           ],
         ),
       ];
