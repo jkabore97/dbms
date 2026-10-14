@@ -236,6 +236,12 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
         if (_phone.text.isEmpty && phone != null) {
           _country = countryOfNumber(phone) ?? _country;
           _phone.text = _country.localPart(phone);
+          // The members' numbers start in the association's own country
+          // (a Dakar association's members are +221, not Burkina's +226);
+          // a number already typed keeps the country it was typed in.
+          for (final m in _members) {
+            if (m.phone.text.trim().isEmpty) m.country = _country;
+          }
         }
       });
     });

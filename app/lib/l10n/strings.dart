@@ -704,7 +704,7 @@ abstract class Strings {
   /// No description provided for @weeklySummarySubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'À envoyer au pasteur, par WhatsApp'**
+  /// **'À envoyer au groupe, par WhatsApp'**
   String get weeklySummarySubtitle;
 
   /// No description provided for @balances.

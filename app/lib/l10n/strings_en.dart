@@ -333,7 +333,7 @@ class StringsEn extends Strings {
   String get weeklySummary => 'Weekly summary';
 
   @override
-  String get weeklySummarySubtitle => 'To send to the pastor, on WhatsApp';
+  String get weeklySummarySubtitle => 'To send to the group, on WhatsApp';
 
   @override
   String get balances => 'Balances';

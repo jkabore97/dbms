@@ -136,7 +136,7 @@
   "moduleComingSoon": "Votre compte est bien rattaché à cette activité. Le module {module} arrive bientôt — vous pourrez alors enregistrer vos opérations ici.",
   "@moduleComingSoon": {"placeholders": {"module": {"type": "String"}}},
   "weeklySummary": "Résumé de la semaine",
-  "weeklySummarySubtitle": "À envoyer au pasteur, par WhatsApp",
+  "weeklySummarySubtitle": "À envoyer au groupe, par WhatsApp",
   "balances": "Soldes",
   "balancesSubtitle": "Espèces, banque, Mobile Money",
   "givingStatement": "Relevé de dons",
