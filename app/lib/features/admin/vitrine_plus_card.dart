@@ -191,12 +191,21 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         _style(plus: !_locked && !_plusHidden),
       );
       if (!mounted) return;
+      // A layout tried without Pro is not saved: say so, rather than a
+      // « Vitrine enregistrée » that left a shop waiting for its list.
+      final layoutNotSaved = _layout != VitrineLayout.grid && (_locked || _plusHidden);
       setState(() {
         _saving = false;
-        _message = context.tr(
-          'Vitrine enregistrée. Ouvrez-la pour voir le résultat.',
-        );
+        _message = layoutNotSaved
+            ? context.tr(
+                'Vitrine enregistrée. La présentation « {layout} » vient avec Mara Pro : votre vitrine reste en grille.',
+                {'layout': _LayoutChoice.label(context, _layout)},
+              )
+            : context.tr(
+                'Vitrine enregistrée. Ouvrez-la pour voir le résultat.',
+              );
       });
+      if (layoutNotSaved && !_plusHidden) _openPro();
     } catch (error) {
       if (!mounted) return;
       setState(() {
