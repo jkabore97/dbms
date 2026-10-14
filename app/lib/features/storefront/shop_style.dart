@@ -257,14 +257,10 @@ class _ShopPageState extends State<ShopPage> {
         if (widget.announcements.isNotEmpty)
           ShopAnnouncement(lines: widget.announcements),
         // An AppBar sizes itself only inside a Scaffold's slot; here, in a
-        // column, it is given its height: the toolbar, the hairline, and the
-        // status bar when no strip above has taken it.
+        // column, it is given its height: the toolbar and the hairline. The
+        // status bar has its own strip above (laid out by build).
         SizedBox(
-          height: kToolbarHeight +
-              1 +
-              (widget.announcements.isEmpty
-                  ? MediaQuery.paddingOf(context).top
-                  : 0),
+          height: kToolbarHeight + 1,
           child: AppBar(
           primary: widget.announcements.isEmpty,
           leading: widget.leading,
@@ -295,6 +291,7 @@ class _ShopPageState extends State<ShopPage> {
       ],
     );
     final reduced = KajMotion.reduced(context);
+    final top = MediaQuery.paddingOf(context).top;
     return Theme(
       data: ShopStyle.theme(context, accent: widget.accent),
       child: Scaffold(
@@ -304,13 +301,26 @@ class _ShopPageState extends State<ShopPage> {
           children: [
             Column(
           children: [
+            // The status bar's own strip, always there: hidden on scroll,
+            // the header took it along and the page slid under the clock
+            // (Android 15 draws edge to edge). The header below is laid
+            // out as if the strip were not its own.
+            ColoredBox(
+              color: widget.announcements.isNotEmpty
+                  ? maraDeep
+                  : ShopStyle.theme(context, accent: widget.accent)
+                      .scaffoldBackgroundColor,
+              child: SizedBox(
+                  height: top, width: double.infinity),
+            ),
             ClipRect(
               child: AnimatedAlign(
                 alignment: Alignment.bottomCenter,
                 heightFactor: _shown ? 1 : 0,
                 duration: reduced ? Duration.zero : KajMotion.page,
                 curve: KajMotion.ease,
-                child: header,
+                child: MediaQuery.removePadding(
+                    context: context, removeTop: true, child: header),
               ),
             ),
             Expanded(
@@ -638,7 +648,12 @@ class ShopScroll extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [footer],
+            children: [
+              footer,
+              // Clear of the phone's own bar (gesture line, buttons): drawn
+              // edge to edge, the footer's last line was cut off under it.
+              SizedBox(height: MediaQuery.paddingOf(context).bottom),
+            ],
           ),
         ),
       ],

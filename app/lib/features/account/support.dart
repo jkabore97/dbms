@@ -112,13 +112,15 @@ class Support {
 
   /// Opens the chat in WhatsApp (or a browser tab on the web) — only when
   /// the platform set a number; callers draw no button without one.
-  static Future<void> openWhatsApp(BuildContext context) async {
+  /// [text] is the first message, written for the person; the general
+  /// « j'ai besoin d'aide » otherwise.
+  static Future<void> openWhatsApp(BuildContext context, {String? text}) async {
     final number = contacts.value.whatsapp;
     if (number == null) return;
     await _launch(
       context,
       Uri.parse('https://wa.me/$number?text='
-          '${Uri.encodeComponent(context.tr('Bonjour, j\'ai besoin d\'aide avec Mara.'))}'),
+          '${Uri.encodeComponent(text ?? context.tr('Bonjour, j\'ai besoin d\'aide avec Mara.'))}'),
       context.tr('Impossible d\'ouvrir WhatsApp sur cet appareil.'),
     );
   }

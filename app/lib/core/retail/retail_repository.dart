@@ -468,6 +468,29 @@ class RetailRepository {
     return (v as num?)?.toInt() ?? 0;
   }
 
+  /// The vitrine's shelf against its minimum (070, 092): on it, priced and
+  /// ready but not on it, and how many open it. Null when it can't be read
+  /// (no network, no member, an older database).
+  Future<({int published, int ready, int min})?> vitrineShelf(
+      String orgId) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client
+          .rpc('vitrine_checklist', params: {'p_org_id': orgId});
+      if (v is! Map) return null;
+      int n(Object? x) => x is num ? x.toInt() : int.tryParse('$x') ?? 0;
+      final min = n(v['min_items']);
+      return (
+        published: n(v['published']),
+        ready: n(v['unpublished']),
+        min: min < 1 ? 1 : min,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ----------------------------------------------------------------
   // Corrections (042). Undoing a transaction the honest way: a reversal that
   // cancels it in both the stock count and the ledger, so accounting and

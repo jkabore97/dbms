@@ -1620,19 +1620,24 @@ class StreetInviteCard extends StatelessWidget {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
+            // At least 52 high, taller with large text: a fixed 52 cut
+            // « Créer mon activité » in half at the phone's big font.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                  minWidth: double.infinity, minHeight: 52),
               child: FilledButton(
                 key: const Key('street-invite-create'),
                 onPressed: onCreate,
                 style: FilledButton.styleFrom(
                   backgroundColor: maraCaramel,
                   foregroundColor: maraBlack,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(26)),
                 ),
                 child: Text(context.tr('Créer mon activité'),
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w800)),
               ),

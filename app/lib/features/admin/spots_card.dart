@@ -11,6 +11,7 @@ import '../../core/format/money.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../pay/wave_buttons.dart';
+import '../account/support.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 
@@ -313,6 +314,10 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   SpotTerms _terms = const SpotTerms();
   List<Product> _articles = const [];
 
+  /// This business's spots, to say before the tap what is already asked
+  /// or running (the server refuses a second one for the same place).
+  List<Promotion> _mine = const [];
+
   /// The whole shop rather than one article.
   late bool _shop = widget.vitrineOnly;
   String? _productId;
@@ -331,6 +336,9 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     _productId = widget.productId;
     _asked = widget.asked;
     _load();
+    // The number to write to for paying, asked ahead of the tap (a browser
+    // opens a chat only straight from the gesture).
+    Support.warm(AppScope.maybeOf(context)?.auth.client);
   }
 
   @override
@@ -345,9 +353,11 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       final products = widget.retail == null
           ? const <Product>[]
           : await widget.retail!.products(widget.orgId);
+      final mine = await widget.admin.myPromotions(widget.orgId);
       if (!mounted) return;
       setState(() {
         _terms = terms;
+        _mine = mine;
         _articles = products
             .where((p) =>
                 p.isPublished &&
@@ -368,6 +378,65 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   String _money(double v) => moneyFormat(_terms.currency).format(v);
 
   bool get _proFree => widget.isPro && !_shop && _days == 7;
+
+  /// The spot already asked or running for what is chosen (the vitrine, or
+  /// this article): the server's « déjà demandé ou en cours », said first.
+  Promotion? get _existing {
+    final now = DateTime.now();
+    final product = _shop ? null : _productId;
+    for (final p in _mine) {
+      if (p.productId != product) continue;
+      if (p.status == 'requested' || p.status == 'paid_claimed') return p;
+      if (p.status == 'approved' && (p.endsAt == null || p.endsAt!.isAfter(now))) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  String _day(DateTime d) {
+    final l = d.toLocal();
+    return '${l.day.toString().padLeft(2, '0')}/${l.month.toString().padLeft(2, '0')}';
+  }
+
+  /// What the sheet says instead of the price and the button when a spot
+  /// for this place already exists — and the one gesture that goes on.
+  List<Widget> _existingView(ThemeData theme, Promotion e) {
+    final running = e.status == 'approved';
+    final title = running
+        ? (e.endsAt == null
+            ? context.tr('Déjà en avant')
+            : context.tr('Déjà en avant jusqu\'au {date}', {'date': _day(e.endsAt!)}))
+        : e.status == 'paid_claimed'
+            ? context.tr('Paiement signalé : Mara le vérifie')
+            : context.tr('Déjà demandée, en attente du paiement');
+    return [
+      KajCard(
+        key: const Key('spot-existing'),
+        elevation: 0,
+        color: theme.colorScheme.primaryContainer,
+        child: ListTile(
+          leading: Icon(running ? Icons.campaign_outlined : Icons.hourglass_top),
+          title: Text(title),
+          subtitle: Text(running
+              ? context.tr('Une seule mise en avant à la fois pour la même place. Vous pourrez la prolonger quand elle se termine.')
+              : context.tr('Une seule demande à la fois pour la même place.')),
+        ),
+      ),
+      if (e.status == 'requested') ...[
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            key: const Key('spot-resume-pay'),
+            onPressed: _busy ? null : () => setState(() => _asked = e),
+            child: Text(context.tr('Reprendre le paiement'),
+                style: const TextStyle(fontSize: 16)),
+          ),
+        ),
+      ],
+    ];
+  }
 
   Future<void> _ask() async {
     setState(() {
@@ -522,16 +591,21 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             _busy ? null : (v) => setState(() => _days = v.first),
       ),
       const SizedBox(height: 16),
+      if (_existing != null)
+        ..._existingView(theme, _existing!)
+      else ...[
       Text(
         _proFree
             ? context.tr('Offert : Mara Pro inclut une mise en avant de 7 jours par mois.')
             : context.tr('Prix : {price}', {'price': _money(price)}),
         style: theme.textTheme.titleMedium,
       ),
-      Text(
-        context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
-        style: theme.textTheme.bodySmall,
-      ),
+      // The cap is on « À la une »'s articles, not on the vitrines' list.
+      if (!shop)
+        Text(
+          context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
+          style: theme.textTheme.bodySmall,
+        ),
       const SizedBox(height: 14),
       SizedBox(
         height: 52,
@@ -541,6 +615,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
               style: const TextStyle(fontSize: 16)),
         ),
       ),
+      ],
     ];
   }
 
@@ -583,9 +658,32 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ),
         )
       else
-        Text(
-            context.tr('Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.'),
-            style: muted),
+        // No payment number set: « contactez Mara » with no way to was a
+        // dead end. One tap opens Mara's WhatsApp, the message written.
+        ValueListenableBuilder<SupportContacts>(
+          valueListenable: Support.contacts,
+          builder: (context, c, _) => c.whatsapp == null
+              ? Text(
+                  context.tr('Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.',
+                      {'email': c.email}),
+                  style: muted)
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                        context.tr('Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.'),
+                        style: muted),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      key: const Key('spot-pay-whatsapp'),
+                      onPressed: () => Support.openWhatsApp(context,
+                          text: _payMessage(spot)),
+                      icon: const Icon(Icons.chat_outlined),
+                      label: Text(context.tr('Demander le numéro sur WhatsApp')),
+                    ),
+                  ],
+                ),
+        ),
       const SizedBox(height: 12),
       Text(
           context.tr('Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.'),
@@ -614,6 +712,26 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         child: Text(context.tr('Payer plus tard')),
       ),
     ];
+  }
+
+  /// What the owner sends Mara to pay for [spot]: what, how long, how
+  /// much, and which business — enough for Mara to answer with the number.
+  String _payMessage(Promotion spot) {
+    final name = AppScope.maybeOf(context)
+            ?.session
+            .orgs
+            .where((o) => o.id == widget.orgId)
+            .firstOrNull
+            ?.name ??
+        '';
+    return context.tr(
+        'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?',
+        {
+          'label': spot.label,
+          'days': spot.days,
+          'amount': moneyFormat(spot.currency).format(spot.price),
+          'org': name.isEmpty ? '' : ' ($name)',
+        });
   }
 
   List<Widget> _doneView(ThemeData theme) {

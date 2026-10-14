@@ -540,6 +540,10 @@ class _HelpScreenState extends State<HelpScreen> {
             Text(
               out
                   ? '${helpWhenAnswered(context, s.hours.nextOpen!)}.'
+                  // Open the whole day (0–24): asked at any hour, the
+                  // promise is the 48 h, not « quelques minutes, 00:00–24:00 ».
+                  : s.hours.open <= 0 && s.hours.close >= 24
+                  ? context.tr('Demande à toute heure · réponse sous 48 h au plus')
                   : context.tr('Réponse en quelques minutes, {hours}', {
                       'hours': helpHoursText(s.hours.open, s.hours.close),
                     }),

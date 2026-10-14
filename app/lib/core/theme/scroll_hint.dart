@@ -188,15 +188,14 @@ class _ScrollHintState extends State<ScrollHint> {
               // Never inside the home indicator's band (UI audit B-5).
               bottom: (at.gap < MediaQuery.paddingOf(context).bottom
                       ? MediaQuery.paddingOf(context).bottom
-                      : at.gap) +
-                  10,
+                      : at.gap),
               child: IgnorePointer(
                 child: ExcludeSemantics(
                   child: AnimatedSwitcher(
                     duration: reduced ? Duration.zero : const Duration(milliseconds: 220),
                     child: _shown == null
                         ? const SizedBox.shrink()
-                        : Center(child: _Arrow(key: const Key('scroll-hint'), still: reduced)),
+                        : _Arrow(key: const Key('scroll-hint'), still: reduced),
                   ),
                 ),
               ),
@@ -207,8 +206,11 @@ class _ScrollHintState extends State<ScrollHint> {
   }
 }
 
-/// The arrow itself: a small round chip with a double chevron, bouncing
-/// three times as it appears.
+/// The hint itself, discreet (the owner: « make the arrow more discrete
+/// … it seems to point to the tab »): the list fading into the page over
+/// its last few pixels, and a small pale chevron in the fade — no chip, no
+/// shadow, nothing that reads as a button over the bar. It drifts down a
+/// little three times as it appears.
 class _Arrow extends StatefulWidget {
   const _Arrow({super.key, required this.still});
 
@@ -235,27 +237,35 @@ class _ArrowState extends State<_Arrow> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final chip = DecoratedBox(
+    final theme = Theme.of(context);
+    final ground = theme.scaffoldBackgroundColor;
+    final chevron = Icon(Icons.expand_more,
+        size: 20,
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.55));
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.94),
-        shape: BoxShape.circle,
-        border: Border.all(color: scheme.outlineVariant),
-        boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 2))],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [ground.withValues(alpha: 0), ground.withValues(alpha: 0.85)],
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(Icons.keyboard_double_arrow_down, size: 22, color: scheme.onSurface),
+      child: SizedBox(
+        height: 30,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: widget.still
+              ? chevron
+              : AnimatedBuilder(
+                  animation: _bounce,
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(0, 3 * Curves.easeInOut.transform(_bounce.value)),
+                    child: child,
+                  ),
+                  child: chevron,
+                ),
+        ),
       ),
-    );
-    if (widget.still) return chip;
-    return AnimatedBuilder(
-      animation: _bounce,
-      builder: (_, child) => Transform.translate(
-        offset: Offset(0, 6 * Curves.easeInOut.transform(_bounce.value)),
-        child: child,
-      ),
-      child: chip,
     );
   }
 }

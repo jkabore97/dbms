@@ -289,7 +289,9 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   double? _num(TextEditingController c) => FlowNumberField.read(c);
 
-  bool get _publishedValue => _published ?? (_farm || _simple);
+  // On the vitrine unless the owner says no — for a shop too: off by
+  // default, a shop of 57 priced articles was still told to « add 5 ».
+  bool get _publishedValue => _published ?? true;
 
   Future<bool> _record() async {
     final existing = _existing;

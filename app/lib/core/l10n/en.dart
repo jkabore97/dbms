@@ -1306,6 +1306,14 @@ const enStrings = <String, String>{
       '2 kg free-range chickens, fed on maize.',
   'Pour ceux qui liront ce plan dans deux ans':
       'For whoever reads this plan in two years',
+  'Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.':
+      'To pay, write to Mara: {email}. The payment number will be given to you directly.',
+  'Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.':
+      'Ask Mara for the payment number on WhatsApp: the message is already written.',
+  'Demander le numéro sur WhatsApp':
+      'Ask for the number on WhatsApp',
+  'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?':
+      'Hello Mara, I want to pay for a promotion: {label} · {days} days · {amount}{org}. Which number should I pay?',
   'Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.':
       'To pay, contact Mara: the payment number will be given to you directly.',
   'Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.':
@@ -1650,8 +1658,28 @@ const enStrings = <String, String>{
       'All settled.',
   'Tout le monde':
       'Everyone',
+  'Déjà en avant':
+      'Already featured',
+  'Déjà en avant jusqu\'au {date}':
+      'Already featured until {date}',
+  'Paiement signalé : Mara le vérifie':
+      'Payment reported: Mara is checking it',
+  'Déjà demandée, en attente du paiement':
+      'Already requested, waiting for payment',
+  'Une seule mise en avant à la fois pour la même place. Vous pourrez la prolonger quand elle se termine.':
+      'One promotion at a time for the same place. You can extend it when it ends.',
+  'Une seule demande à la fois pour la même place.':
+      'One request at a time for the same place.',
+  'Reprendre le paiement':
+      'Resume payment',
   'Tout publier ({unpublished})':
       'Publish all ({unpublished})',
+  'Déjà {n} prêts pour la vitrine':
+      '{n} already ready for the vitrine',
+  'Ils ont un prix mais ne sont pas encore sur la vitrine. Mettez-les-y en un geste : vous pourrez en retirer un à tout moment.':
+      'They have a price but are not on the vitrine yet. Put them there in one tap: you can take any one off at any time.',
+  'Tout mettre sur la vitrine ({n})':
+      'Put them all on the vitrine ({n})',
   'Toutes':
       'All',
   'Toutes les vitrines':
@@ -3887,6 +3915,8 @@ const enStrings = <String, String>{
   'Ce signalement est déjà traité.': 'This report is already handled.',
   'Ce signalement a changé depuis.': 'This report has changed since.',
   'Un compte de la plateforme ne se supprime pas ici.': 'A platform account is not deleted here.',
+  'Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.':
+      'This account runs the Mara platform: it cannot be deleted, or nobody could run it any more. To try deletion, use another account.',
   'Vous faites partie d\'une activité sur Mara : votre compte se supprime une fois que vous n\'en faites plus partie.': 'You belong to a business on Mara: your account can be deleted once you no longer belong to it.',
   'Vous êtes livreur sur Mara : écrivez à Mara pour fermer votre compte livreur.': 'You are a courier on Mara: write to Mara to close your courier account.',
   'Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.': 'An order is in progress: wait until it is finished, or cancel it, then delete your account.',
@@ -6850,6 +6880,8 @@ const enStrings = <String, String>{
       'A trainer helps you',
   'Votre demande est gardée.':
       'Your request is kept.',
+  'Demande à toute heure · réponse sous 48 h au plus':
+      'Ask at any hour · answer within 48 h at most',
   'Réponse en quelques minutes, {hours}':
       'An answer within minutes, {hours}',
   'C\'est à propos de…':

@@ -2008,15 +2008,23 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           color: theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
+        // A column: in a row a long « Suivant : La position de ma boutique »
+        // at large text squeezed « Enregistré » to one letter a line.
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 30),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(context.tr('Enregistré'),
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 30),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(context.tr('Enregistré'),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+              ],
             ),
+            const SizedBox(height: 12),
             FilledButton.icon(
               key: const Key('settings-next-go'),
               onPressed: () => setState(() {
