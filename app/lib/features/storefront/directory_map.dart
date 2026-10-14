@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/storefront/storefront_repository.dart';
+import '../common/osm_credit.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -82,6 +83,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
 
   @override
   void dispose() {
+    _map.dispose();
     _strip.dispose();
     super.dispose();
   }
@@ -286,7 +288,7 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                       TileLayer(
                         urlTemplate:
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.kaj.app',
+                        userAgentPackageName: 'bf.kaj.app',
                       ),
                     MarkerLayer(markers: _markers()),
                   ],
@@ -339,6 +341,30 @@ class _DirectoryMapPageState extends State<DirectoryMapPage> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              // OpenStreetMap's credit, as its tile policy asks (145): at the
+              // right edge, just above the cards, so none covers it.
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  left: false,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: _placed.isEmpty ? 0 : 148 + 4,
+                    ),
+                    child: OsmCredit(
+                      radius: _placed.isEmpty
+                          ? const BorderRadius.only(
+                              topLeft: Radius.circular(6),
+                            )
+                          : const BorderRadius.horizontal(
+                              left: Radius.circular(6),
+                            ),
+                    ),
                   ),
                 ),
               ),

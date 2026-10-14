@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
+import '../common/osm_credit.dart';
+
 /// Whether a pin sits far outside where a business using [currency] is.
 ///
 /// The audit: both open shops were pinned in Newark, New Jersey — "Utiliser
@@ -67,7 +69,7 @@ class PinPreview extends StatelessWidget {
                   TileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.kaj.app',
+                    userAgentPackageName: 'bf.kaj.app',
                   ),
                 MarkerLayer(markers: [
                   Marker(
@@ -79,6 +81,12 @@ class PinPreview extends StatelessWidget {
                         size: 40, color: theme.colorScheme.primary),
                   ),
                 ]),
+                // OpenStreetMap's tiles carry its credit (145: it was
+                // missing here).
+                const Align(
+                  alignment: Alignment.bottomRight,
+                  child: OsmCredit(),
+                ),
               ],
             ),
           ),

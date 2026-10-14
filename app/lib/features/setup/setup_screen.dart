@@ -13,7 +13,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../admin/admin_pill.dart';
-import '../admin/pin_preview.dart';
+import '../admin/pin_picker.dart';
 import '../common/phone_field.dart';
 import '../notify/push_prompt.dart' show PushPromptQuiet;
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -97,9 +97,14 @@ class SetupScreen extends StatefulWidget {
     required this.onDone,
     this.stepsOff,
     this.known,
+    this.mapTiles = true,
   });
 
   final OrgSummary org;
+
+  /// The position step's map draws OpenStreetMap's tiles; off in widget
+  /// tests, which have no network.
+  final bool mapTiles;
   final SetupActions actions;
   final VoidCallback onDone;
 
@@ -289,7 +294,20 @@ class _SetupScreenState extends State<SetupScreen> {
         address: _address.text.trim()));
   }
 
+  /// Only « Utiliser ma position » spins the map's locate button, not a
+  /// save (145).
+  bool _locating = false;
+
   Future<void> _locate() async {
+    setState(() => _locating = true);
+    try {
+      await _locateNow();
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _locateNow() async {
     await _run(() async {
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -567,6 +585,20 @@ class _SetupScreenState extends State<SetupScreen> {
       ];
 
   List<Widget> _positionStep(ThemeData theme) => [
+        // The same map as Paramètres › position (145): a tap places the
+        // pin, a finger drags it to the door.
+        PinPicker(
+          lat: _pin?.$1,
+          lng: _pin?.$2,
+          currency: widget.org.currency,
+          phone: _country.dial,
+          enabled: !_busy,
+          tiles: widget.mapTiles,
+          locating: _locating,
+          onLocate: _locate,
+          onMove: (lat, lng) => setState(() => _pin = (lat, lng)),
+        ),
+        const SizedBox(height: 16),
         if (_pin == null)
           OutlinedButton.icon(
             key: const Key('setup-locate'),
@@ -575,17 +607,9 @@ class _SetupScreenState extends State<SetupScreen> {
             icon: const Icon(Icons.my_location),
             label: Text(context.tr('Utiliser ma position')),
           )
-        else ...[
-          PinPreview(
-            lat: _pin!.$1,
-            lng: _pin!.$2,
-            currency: widget.org.currency,
-            onMove: (lat, lng) => setState(() => _pin = (lat, lng)),
-          ),
-          const SizedBox(height: 16),
+        else
           _primary(context.tr('Terminer'), _savePosition,
               key: const Key('setup-next-3'), icon: Icons.check),
-        ],
         const SizedBox(height: 12),
         TextButton(
           key: const Key('setup-later'),
