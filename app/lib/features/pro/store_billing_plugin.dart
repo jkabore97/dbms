@@ -1,12 +1,13 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart' show PurchaseStateWrapper;
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart' show SK2Transaction;
 
 import 'store_billing.dart';
 
-/// The plugin, for real.
-class PluginStoreBilling implements StoreBilling {
+/// The plugin, for real: Mara Pro (130) and the spots (142).
+class PluginStoreBilling implements StoreBilling, SpotStoreBilling {
   PluginStoreBilling(this.platform);
 
   @override
@@ -77,6 +78,8 @@ class PluginStoreBilling implements StoreBilling {
       errorDetails: p.error?.details?.toString(),
       needsCompletion: p.pendingCompletePurchase,
       orgId: orgId == null || orgId.isEmpty ? null : orgId.toLowerCase(),
+      // A spot's promotion, on Google (142).
+      profileId: p is GooglePlayPurchaseDetails ? _org(p.billingClientPurchase.obfuscatedProfileId) : null,
       native: p,
     );
   }
@@ -104,10 +107,87 @@ class PluginStoreBilling implements StoreBilling {
   Future<void> restore() => _iap.restorePurchases();
 
   @override
+  Future<List<StorePurchase>> unfinishedSpots() async {
+    if (platform == 'apple') {
+      // StoreKit 2's Transaction.unfinished: a consumable paid but never
+      // finished (the Worker never said yes) — « Vérifier un achat déjà
+      // payé » on the iPhone, where restorePurchases hands back no
+      // consumable. Finished by [complete] on the Worker's word.
+      final left = await SK2Transaction.unfinishedTransactions();
+      return [
+        for (final t in left)
+          if (appleSpotProducts.containsKey(t.productId))
+            StorePurchase(
+              status: StorePurchaseStatus.restored,
+              productId: t.productId,
+              transactionId: t.id,
+              needsCompletion: true,
+              orgId: _org(t.appAccountToken),
+              native: t,
+            ),
+      ];
+    }
+    final addition = _iap.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+    final past = await addition.queryPastPurchases();
+    return [
+      for (final p in past.pastPurchases)
+        if (googleSpotProducts.containsKey(p.productID) && p.status != PurchaseStatus.pending &&
+            p.billingClientPurchase.purchaseState == PurchaseStateWrapper.purchased)
+          _of(p..status = PurchaseStatus.restored),
+    ];
+  }
+
+  @override
+  Future<List<SpotStoreProduct>> spotProducts() async {
+    final ids = platform == 'apple' ? appleSpotProducts : googleSpotProducts;
+    final response = await _iap.queryProductDetails(ids.keys.toSet());
+    return [
+      for (final p in response.productDetails)
+        if (ids[p.id] case final kind?)
+          SpotStoreProduct(
+            id: p.id,
+            kind: kind,
+            price: p.price,
+            rawPrice: p.rawPrice,
+            currencyCode: p.currencyCode,
+            native: p,
+          ),
+    ];
+  }
+
+  @override
+  Future<void> buySpot(SpotStoreProduct product,
+      {required String orgId, required String promotionId}) async {
+    final details = product.native as ProductDetails;
+    if (platform == 'apple') {
+      // StoreKit 2: the spot rides as the appAccountToken (a UUID). A
+      // consumable is finished (« consumed ») when the app completes it,
+      // after the Worker's yes.
+      await _iap.buyConsumable(
+          purchaseParam: Sk2PurchaseParam(productDetails: details, applicationUserName: promotionId));
+    } else {
+      // Google: the business and the spot ride with the purchase. Not
+      // consumed here: the Worker consumes it once the spot is programmed
+      // (a purchase consumed before would be lost if the check failed).
+      await _iap.buyConsumable(
+          purchaseParam: GooglePlayPurchaseParam(
+            productDetails: details as GooglePlayProductDetails,
+            applicationUserName: orgId,
+            obfuscatedProfileId: promotionId,
+          ),
+          autoConsume: false);
+    }
+  }
+
+  @override
   Future<void> complete(StorePurchase purchase) async {
     final native = purchase.native;
     if (native is PurchaseDetails && native.pendingCompletePurchase) {
       await _iap.completePurchase(native);
+    } else if (native is SK2Transaction) {
+      // An unfinished spot read by [unfinishedSpots].
+      final id = int.tryParse(native.id);
+      if (id != null) await SK2Transaction.finish(id);
     }
   }
 

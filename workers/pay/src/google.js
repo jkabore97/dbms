@@ -72,6 +72,12 @@ export async function googleToken(env, io = { fetch: callFetch }) {
   return data.access_token;
 }
 
+/// One call to the Play Developer API for bf.kaj.app (exported for the
+/// spots, 139: src/spots.js).
+export async function googlePlay(env, method, path, io, body) {
+  return play(env, method, path, io, body);
+}
+
 async function play(env, method, path, io, body) {
   const token = await googleToken(env, io);
   const response = await io.fetch(`${API}/${GOOGLE_PACKAGE}/${path}`, {
@@ -176,6 +182,23 @@ export function googleNotification(body) {
   }
   if (decoded.packageName && decoded.packageName !== GOOGLE_PACKAGE) return { foreign: true };
   if (decoded.testNotification) return { test: true };
+  // A one-time purchase taken back (139: a spot) — refunded, charged back
+  // or revoked. productType 2 is a one-time product; 1 a subscription,
+  // which Mara Pro's own notifications already re-read.
+  // A one-time product bought (139: a spot) — a pending purchase that
+  // completed while the app was closed is heard here (type 1, PURCHASED).
+  const ot = decoded.oneTimeProductNotification;
+  if (ot?.purchaseToken) {
+    return Number(ot.notificationType) === 1 && ot.sku
+      ? { oneTime: { token: ot.purchaseToken, sku: ot.sku } }
+      : { ignored: true };
+  }
+  const vp = decoded.voidedPurchaseNotification;
+  if (vp?.purchaseToken) {
+    return Number(vp.productType) === 2
+      ? { voided: { token: vp.purchaseToken, orderId: vp.orderId || null, refundType: vp.refundType ?? null } }
+      : { ignored: true };
+  }
   const sn = decoded.subscriptionNotification;
   if (!sn?.purchaseToken) return { ignored: true };
   return {

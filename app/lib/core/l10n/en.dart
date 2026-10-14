@@ -14,8 +14,6 @@ const enStrings = <String, String>{
       '1 min',
   '15 min':
       '15 min',
-  '30 jours':
-      '30 days',
   '5 min (conseillé)':
       '5 min (recommended)',
   '7 jours':
@@ -2270,8 +2268,6 @@ const enStrings = <String, String>{
       'Never',
   'Journée déjà clôturée — vous pouvez la revalider.':
       'Day already closed — you can confirm it again.',
-  'L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé ». Il lui faut une photo, un prix et du stock.':
-      'The item appears at the top of “Featured” on the home page, marked “Sponsored”. It needs a photo, a price and stock.',
   'L\'envoi de photos n\'est pas disponible sur cette installation.':
       'Sending photos is not available on this installation.',
   'La course commence.':
@@ -2338,8 +2334,6 @@ const enStrings = <String, String>{
       'We are waiting for Wave\'s confirmation.',
   'Nouvelle facture':
       'New invoice',
-  'Offert : Mara Pro inclut une mise en avant de 7 jours par mois.':
-      'Included: Mara Pro includes a 7-day featured spot every month.',
   'Ouverte':
       'Open',
   'Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.':
@@ -2913,7 +2907,6 @@ const enStrings = <String, String>{
   'Boutiques': 'Shops',
   '{amount} dépensé': '{amount} spent',
   'corrigé': 'corrected',
-  'Votre vitrine en haut de la liste des vitrines, pour 7 ou 30 jours.': 'Your shop window at the top of the list, for 7 or 30 days.',
   // Batch 100 (app): the picker, the tones.
   'Nom ou propriétaire': 'Name or owner',
   'Aucune activité ne correspond.': 'No business matches.',
@@ -3365,7 +3358,6 @@ const enStrings = <String, String>{
   'Jours d\'ouverture d\'un outil acheté en cauris': 'Days a tool bought with cauris stays open',
   'Jours sans mouvement avant que les cauris expirent': 'Days without movement before cauris expire',
   'Kilomètres offerts avec Pro': 'Kilometres included with Pro',
-  'La boutique à la une, 30 jours': 'The shop featured, 30 days',
   'La boutique à la une, 7 jours': 'The shop featured, 7 days',
   'Les nombres de toute la plateforme. Chaque changement est écrit dans le Journal, où « Annuler » le reprend.': 'The whole platform\'s numbers. Every change is written in the Journal, where “Undo” takes it back.',
   'Ligue moyenne : moins de … commandes en 30 jours': 'Medium league: fewer than … orders in 30 days',
@@ -3375,7 +3367,6 @@ const enStrings = <String, String>{
   'Minutes pour une commande acceptée vite': 'Minutes for a quickly accepted order',
   'Minutes réservées aux livreurs de la boutique': 'Minutes reserved for the shop\'s own couriers',
   'Mises en avant en même temps': 'Featured spots at the same time',
-  'Mises en avant offertes chaque mois avec Pro': 'Free featured spots each month with Pro',
   'Mois d\'historique': 'Months of history',
   'Monnaie des prix de Mara Pro': 'Currency of Mara Pro prices',
   'Monnaie des prix de livraison': 'Currency of delivery prices',
@@ -3388,12 +3379,9 @@ const enStrings = <String, String>{
   'Personnes dans l\'équipe': 'People on the team',
   'Petite ligue : moins de … commandes en 30 jours': 'Small league: fewer than … orders in 30 days',
   'Photos en tout': 'Photos in all',
-  'Prix de Mara Pro, par an': 'Mara Pro price, per year',
-  'Prix de Mara Pro, par mois': 'Mara Pro price, per month',
   'Sans Pro': 'Without Pro',
   'Sécurité de la plateforme': 'Platform security',
   'Trois lettres, comme XOF.': 'Three letters, like XOF.',
-  'Un article à la une, 30 jours': 'One item featured, 30 days',
   'Un article à la une, 7 jours': 'One item featured, 7 days',
   'Un nombre entier, zéro ou plus.': 'A whole number, zero or more.',
   'Un nombre, zéro ou plus.': 'A number, zero or more.',
@@ -4691,8 +4679,6 @@ const enStrings = <String, String>{
       'Device token obtained',
   'L\'enregistrement n\'a pas abouti : voyez la ligne marquée « non » ci-dessus.':
       'The registration did not go through: see the line marked “no” above.',
-  'La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé ».':
-      'The vitrine appears at the top of the list of vitrines, marked “Sponsored”.',
   'Les notifications de Mara sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.':
       'Mara\'s notifications are blocked on this phone. Open the settings, tap “Notifications” and allow them: you will get your orders, deliveries and messages even with the app closed.',
   'Ma ferme':
@@ -4715,8 +4701,6 @@ const enStrings = <String, String>{
       'Service worker active',
   'Téléphone de la ferme':
       'Farm\'s phone',
-  'Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 ou 30 jours.':
-      'An article at the top of “Featured” on the home page, or the whole vitrine at the top of the list, for 7 or 30 days.',
   'Un mot pour l\'association (facultatif)':
       'A word for the association (optional)',
   'Un mot pour la ferme (facultatif)':
@@ -4753,8 +4737,6 @@ const enStrings = <String, String>{
       '≈ {usd} a month, paid in dollars',
   '≈ {usd} par an, payé en dollars':
       '≈ {usd} a year, paid in dollars',
-  'Taux pour la carte : FCFA pour 1 \$':
-      'Card rate: FCFA for \$1',
   'Un nombre entier plus grand que zéro.':
       'A whole number above zero.',
   'Déverrouiller avec l\'empreinte / Face ID':
@@ -5551,8 +5533,6 @@ const enStrings = <String, String>{
       'Scheduled',
   'En cours':
       'Running',
-  'offerte par Mara Pro':
-      'given by Mara Pro',
   'Prix : {price}':
       'Price: {price}',
   'À payer : {amount}':
@@ -7565,4 +7545,161 @@ const enStrings = <String, String>{
       'Zoom out',
   'Centrer sur ma position':
       'Centre on my position',
+  // ---- 142: « Mettre en avant » in the stores, zone prices (migration 139) ----
+  'Votre vitrine en haut de la liste des vitrines, pour 7 jours.':
+      'Your vitrine at the top of the list of vitrines, for 7 days.',
+  'Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.':
+      'An item at the head of “Featured” on the home page, or the whole vitrine at the top of the list, for 7 days.',
+  'offerte':
+      'offered',
+  'La ferme à la une, 7 jours':
+      'The farm featured, 7 days',
+  'L\'association à la une, 7 jours':
+      'The association featured, 7 days',
+  'La mise en avant n\'a pas pu être demandée.':
+      'The promotion could not be requested.',
+  'Paiement en cours avec {store}…':
+      'Payment in progress with {store}…',
+  'Masquer l\'aperçu':
+      'Hide the preview',
+  'Voir à quoi ça ressemble':
+      'See what it looks like',
+  'La ferme':
+      'The farm',
+  'L\'association':
+      'The association',
+  'La boutique':
+      'The shop',
+  'La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé », pendant 7 jours.':
+      'The vitrine appears at the top of the list of vitrines, marked “Sponsored”, for 7 days.',
+  'L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé », pendant 7 jours. Il lui faut une photo, un prix et du stock.':
+      'The item appears at the head of “Featured” on the home page, marked “Sponsored”, for 7 days. It needs a photo, a price and stock.',
+  'La mise en avant n\'est pas disponible pour le moment.':
+      'Promotion is not available for the moment.',
+  'Prix : …':
+      'Price: …',
+  'Acheter · {price}':
+      'Buy · {price}',
+  'Paiement par l\'App Store. La mise en avant est programmée dès que Mara a reçu la confirmation.':
+      'Paid through the App Store. The promotion is scheduled as soon as Mara has the confirmation.',
+  'Paiement par Google Play. La mise en avant est programmée dès que Mara a reçu la confirmation.':
+      'Paid through Google Play. The promotion is scheduled as soon as Mara has the confirmation.',
+  'Visa, Mastercard. Paiement unique et sécurisé par Stripe : la mise en avant est programmée dès que le paiement est reçu.':
+      'Visa, Mastercard. A single payment, secured by Stripe: the promotion is scheduled as soon as the payment is received.',
+  'Le paiement par carte n\'est pas encore ouvert. Revenez bientôt : votre demande est gardée.':
+      'Payment by card is not open yet. Come back soon: your request is kept.',
+  'Vérifier un achat déjà payé':
+      'Check a purchase already paid',
+  'C\'est payé.':
+      'It is paid.',
+  'Votre vitrine est programmée en tête de la liste pour 7 jours. Ses vues et commandes s\'affichent dans « Mettre en avant ».':
+      'Your vitrine is scheduled at the top of the list for 7 days. Its views and orders show in “Feature”.',
+  'Votre article est programmé à la une pour 7 jours, dès qu\'une place se libère. Ses vues et commandes s\'affichent dans « Mettre en avant ».':
+      'Your item is scheduled in “Featured” for 7 days, as soon as a place is free. Its views and orders show in “Feature”.',
+  'Aperçu : {name} en tête de la liste des vitrines, marqué Sponsorisé':
+      'Preview: {name} at the top of the list of vitrines, marked Sponsored',
+  'Aperçu : {name} en tête de « À la une », marqué Sponsorisé':
+      'Preview: {name} at the head of “Featured”, marked Sponsored',
+  'Votre ferme apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
+      'Your farm comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
+  'Votre association apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
+      'Your association comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
+  'Votre boutique apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
+      'Your shop comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
+  'Votre article apparaît en premier dans « À la une », en haut de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
+      'Your item comes first in “Featured”, at the top of Mara\'s home page, with the “Sponsored” badge.',
+  'Pendant 7 jours, pour tous ceux qui ouvrent Mara, sur le site et dans l\'application. Vous voyez ses vues et ses commandes dans « Mettre en avant ».':
+      'For 7 days, for everyone who opens Mara, on the website and in the app. You see its views and orders in “Feature”.',
+  'Votre article':
+      'Your item',
+  'Prix de Mara Pro, par mois — FCFA (zone franc CFA)':
+      'Mara Pro price, per month — FCFA (CFA franc zone)',
+  'Prix de Mara Pro, par an — FCFA (zone franc CFA)':
+      'Mara Pro price, per year — FCFA (CFA franc zone)',
+  'Prix de Mara Pro, par mois — euros (zone euro)':
+      'Mara Pro price, per month — euros (euro area)',
+  'Prix de Mara Pro, par an — euros (zone euro)':
+      'Mara Pro price, per year — euros (euro area)',
+  'Prix de Mara Pro, par mois — dollars (reste du monde)':
+      'Mara Pro price, per month — dollars (rest of the world)',
+  'Prix de Mara Pro, par an — dollars (reste du monde)':
+      'Mara Pro price, per year — dollars (rest of the world)',
+  'Un article à la une, 7 jours — FCFA (zone franc CFA)':
+      'An item featured, 7 days — FCFA (CFA franc zone)',
+  'La boutique à la une, 7 jours — FCFA (zone franc CFA)':
+      'The shop featured, 7 days — FCFA (CFA franc zone)',
+  'Un article à la une, 7 jours — euros (zone euro)':
+      'An item featured, 7 days — euros (euro area)',
+  'La boutique à la une, 7 jours — euros (zone euro)':
+      'The shop featured, 7 days — euros (euro area)',
+  'Un article à la une, 7 jours — dollars (reste du monde)':
+      'An item featured, 7 days — dollars (rest of the world)',
+  'La boutique à la une, 7 jours — dollars (reste du monde)':
+      'The shop featured, 7 days — dollars (rest of the world)',
+  'Sur Android et iPhone, le prix payé est celui de Google Play et de l\'App Store — mettez les mêmes prix dans Play Console et App Store Connect.':
+      'On Android and iPhone, the price paid is Google Play\'s and the App Store\'s — set the same prices in Play Console and App Store Connect.',
+  'Mise en avant payée sur Google Play : elle commence le {date}.':
+      'Promotion paid on Google Play: it starts on {date}.',
+  'Mise en avant payée sur l\'App Store : elle commence le {date}.':
+      'Promotion paid on the App Store: it starts on {date}.',
+  'Mise en avant payée par carte : elle commence le {date}.':
+      'Promotion paid by card: it starts on {date}.',
+  'S\'abonner par carte · {price} / an':
+      'Subscribe by card · {price} / year',
+  'S\'abonner par carte · {price} / mois':
+      'Subscribe by card · {price} / month',
+  'Cet achat a déjà servi à une autre mise en avant.':
+      'This purchase already paid for another promotion.',
+  'Cette mise en avant n\'existe plus : écrivez à l\'aide de Mara pour le remboursement.':
+      'This promotion no longer exists: write to Mara\'s help for the refund.',
+  'Cet achat n\'est pas cette mise en avant.':
+      'This purchase is not this promotion.',
+  'Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Mara.':
+      'Test purchase refused: a purchase made with a test account schedules a promotion only for Mara\'s test accounts.',
+  'Cet achat a été remboursé : la mise en avant n\'est pas programmée.':
+      'This purchase was refunded: the promotion is not scheduled.',
+  'Achat en attente : {store} doit encore le confirmer. La mise en avant sera programmée dès qu\'il sera confirmé.':
+      'Purchase pending: {store} still has to confirm it. The promotion will be scheduled as soon as it is confirmed.',
+  'Seul un administrateur de l\'entreprise peut la mettre en avant.':
+      'Only an administrator of the business can promote it.',
+  'Votre session a expiré : reconnectez-vous, puis touchez « Vérifier un achat déjà payé ». Rien ne sera prélevé deux fois.':
+      'Your session has expired: sign in again, then tap “Check a purchase already paid”. Nothing will be charged twice.',
+  'Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Mara could not check it yet. Stay connected and tap “Check a purchase already paid”: nothing will be charged twice.',
+  'Un achat précédent de cette mise en avant n\'est pas encore vérifié : touchez « Vérifier un achat déjà payé ».':
+      'An earlier purchase of this promotion is not checked yet: tap “Check a purchase already paid”.',
+  'Merci ! Votre mise en avant est payée et programmée.':
+      'Thank you! Your promotion is paid and scheduled.',
+  'Au moins 300 FCFA : le paiement par carte (Stripe) ne prend pas moins.':
+      'At least 300 FCFA: card payment (Stripe) takes no less.',
+  'Au moins 0,50 : le paiement par carte (Stripe) ne prend pas moins.':
+      'At least 0.50: card payment (Stripe) takes no less.',
+  'Cette mise en avant a été refusée par Mara : le paiement sera remboursé.':
+      'Mara declined this promotion: the payment will be refunded.',
+  'Cette mise en avant ne peut plus être programmée (vitrine fermée, ou article sans photo, prix ou stock) : le paiement sera remboursé.':
+      'This promotion can no longer be scheduled (shop window closed, or the item has no photo, price or stock): the payment will be refunded.',
+  'Cette mise en avant n\'existe plus : Mara rembourse le paiement.':
+      'This promotion no longer exists: Mara refunds the payment.',
+  'Paiements de mise en avant à rembourser':
+      'Promotion payments to refund',
+  'dans Play Console ou auprès d\'Apple':
+      'in Play Console or with Apple',
+  'la mise en avant n\'existe plus':
+      'the promotion no longer exists',
+  'mise en avant refusée':
+      'promotion declined',
+  'vitrine fermée':
+      'shop window closed',
+  'fonction masquée pour l\'activité':
+      'feature hidden for the business',
+  'article plus prêt (photo, prix, stock)':
+      'item no longer ready (photo, price, stock)',
+  'autre produit':
+      'another product',
+  'Payés dans une boutique, ils n\'ont rien programmé. Remboursez-les dans Play Console (Commandes) ou demandez-le à Apple, puis touchez « Remboursé ».':
+      'Paid in a store, they scheduled nothing. Refund them in Play Console (Orders) or ask Apple, then tap “Refunded”.',
+  'Rien à rembourser.':
+      'Nothing to refund.',
+  'Remboursé':
+      'Refunded',
 };

@@ -797,8 +797,10 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
 4. **Developers › Webhooks** › Add endpoint `<PAY_URL>/v1/stripe`, with
    events `checkout.session.completed`, `invoice.paid`,
    `invoice.payment_failed`, `customer.subscription.updated` and
-   `customer.subscription.deleted`. Put its signing secret in
-   `STRIPE_WEBHOOK_SECRET`.
+   `customer.subscription.deleted` — and, for « Mettre en avant » paid by
+   card (139), `checkout.session.async_payment_succeeded`,
+   `charge.refunded` and `charge.dispute.created`. Put its signing secret
+   in `STRIPE_WEBHOOK_SECRET`.
 5. **Deploy**: run the "Deploy the payments Worker" workflow. Either Stripe
    or Wave alone is enough to deploy it. Make sure `PAY_URL` is set, then
    re-run *Deploy to Cloudflare*.
@@ -899,6 +901,52 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
    les applications (App Store, Google Play) » (`store_billing_on`). Until
    then the iPhone app sells no Pro and the Play app sells it by card and
    Wave, exactly as before.
+
+### « Mettre en avant » in the stores and by card (139)
+
+A spot lasts 7 days; two products, the same for a shop, a farm and an
+association (an association buys only its vitrine's). The Android (Play)
+app sells them through Google Play, the iPhone app through Apple's
+In-App Purchase — the store's own localized price, nothing else beside
+it; the website (and the GitHub APK) by card through Stripe Checkout, at
+the business's zone price from Réglages › Vitrines (FCFA for XOF and XAF,
+euros, dollars for the rest), plus Wave and « J'ai payé » in francs. A
+spot is programmed only once the payments Worker has verified the
+payment with the store or Stripe (`/store/spot-verify`, the webhook), once
+per payment. A payment the store or Stripe takes back (Apple's REFUND,
+Google's voided purchase, Stripe's refund or dispute) is written on the
+payment and ends its spot — even when the refund is heard first. A
+payment that can program nothing (the spot refused by Mara or gone, the
+article no longer on the vitrine, the vitrine closed) is written too:
+by card, Stripe refunds it at once; in the stores it appears in the
+console's « Aujourd'hui » as « Paiements de mise en avant à rembourser »
+— refund it in Play Console › Order management (an unacknowledged Google
+purchase is also refunded by Google after three days) or ask Apple, then
+touch « Remboursé ». A spot asked for 30 days before 139 keeps its 30
+days when paid.
+
+One-time setup, on top of Mara Pro's above (no new secret, no new key):
+
+1. **Play Console › Monetize › Products › One-time products**: create
+   `mara_spot_article_7` and `mara_spot_shop_7`, priced like Réglages
+   (5 000 F / 14,99 € / $14.99 and 15 000 F / 39,99 € / $39.99), and
+   activate them. The service account already has « View financial data »
+   and « Manage orders and subscriptions », which is what reading,
+   acknowledging and consuming them takes. **Real-time developer
+   notifications › Notification content**: choose « Get subscriptions,
+   voided purchases, and all one-time product notifications » — a pending
+   spot purchase completed while the app is closed is then programmed
+   (and acknowledged) by the Worker; voided purchases end their spot.
+2. **App Store Connect › the app › In-App Purchases**: two
+   **Consumable** purchases, `bf.kaj.app.spot.article7` and
+   `bf.kaj.app.spot.shop7`, the same prices, a review screenshot of the
+   « Mettre en avant » sheet; submit them with the next build. The
+   In-App Purchase key and the Server Notifications URL are Mara Pro's.
+3. **Stripe**: the webhook's three extra events (step 4 above). The
+   Worker's existing secret key creates refunds (a restricted key would
+   need « Refunds: write »).
+4. **Apply 139 live**, then deploy the Worker and the app. Before 139 the
+   stores sell no spot and the card path is the old one.
 
 ### Deleting an account (« Supprimer mon compte »)
 
@@ -1250,7 +1298,7 @@ like this on a phone, and it is not a bug in the app:
 
 To bring a database anywhere between `005` and `141` up to date, paste
 `database/apply_006_to_141.sql` into the Supabase SQL editor and run it once.
-It is `006` through `141` concatenated (114, 116 and 120 are unused numbers; 137, 139 and 140 are other batches', on their own branches) inside one transaction, so it either
+It is `006` through `141` concatenated (114, 116 and 120 are unused numbers; 137 is unused; 140 is another batch's, on its own branch) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal

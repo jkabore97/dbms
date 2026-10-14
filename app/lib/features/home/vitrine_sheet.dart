@@ -93,7 +93,7 @@ class VitrineSheet extends StatefulWidget {
             orgId: org.id,
             admin: scope.admin,
             retail: scope.retail,
-            isPro: org.isPro,
+            org: org,
             vitrineOnly: org.profile == 'association' || org.profile == 'church');
     }
   }

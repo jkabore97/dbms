@@ -1,4 +1,6 @@
 import 'package:kaj_app/core/l10n/tr.dart';
+
+import '../pay/price_zone.dart';
 /// The line between Kaj and Kaj Pro, as the platform draws it (066).
 ///
 /// Read once per session from `plan_terms()`. Nothing here is a secret: the
@@ -25,6 +27,7 @@ class PlanTerms {
     this.stripeUsdYearCents,
     this.kinds = const {},
     this.storeBillingOn = false,
+    this.proZones = const {},
   });
 
   /// What 066 seeds, so a build ahead of its database badges the same tools.
@@ -86,6 +89,19 @@ class PlanTerms {
   /// (128): the platform's switch, off until both stores answer.
   final bool storeBillingOn;
 
+  /// Mara Pro's month and year per zone (139): 'XOF', 'EUR', 'USD'. Empty
+  /// on a database before 139, which charges the FCFA prices.
+  final Map<String, ({double month, double year})> proZones;
+
+  /// What the card charges a business of [currency] for Mara Pro (139):
+  /// its zone's price, in the zone's currency (an XAF business: the FCFA
+  /// number, in XAF). Before 139: [priceMonth] / [priceYear] in FCFA.
+  ({double amount, String currency}) proPriceFor(String? currency, {required bool year}) {
+    final z = proZones[zoneKey(priceZoneOf(currency))];
+    if (z == null) return (amount: (year ? priceYear : priceMonth).toDouble(), currency: 'XOF');
+    return (amount: year ? z.year : z.month, currency: zoneCurrencyOf(currency));
+  }
+
   bool get hasWave => wave.trim().isNotEmpty;
 
   /// A kind's own free numbers, set by Mara (107's kind_settings), keyed
@@ -117,6 +133,7 @@ class PlanTerms {
       stripeUsdYearCents: stripeUsdYearCents,
       kinds: kinds,
       storeBillingOn: storeBillingOn,
+      proZones: proZones,
     );
   }
 
@@ -155,6 +172,15 @@ class PlanTerms {
       stripeUsdMonthCents: cents('stripe_usd_month'),
       stripeUsdYearCents: cents('stripe_usd_year'),
       storeBillingOn: json['store_billing_on'] == true,
+      proZones: {
+        if (json['pro_zones'] is Map)
+          for (final e in (json['pro_zones'] as Map).entries)
+            if (e.value is Map)
+              '${e.key}': (
+                month: _num((e.value as Map)['month']),
+                year: _num((e.value as Map)['year']),
+              ),
+      },
       kinds: {
         if (json['kinds'] is Map)
           for (final e in (json['kinds'] as Map).entries)
@@ -166,6 +192,8 @@ class PlanTerms {
       },
     );
   }
+
+  static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 
   /// What a Pro tool is called on the paywall, in the words of the screens
   /// that carry it. An unknown key reads as itself rather than crashing a

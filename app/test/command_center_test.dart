@@ -550,7 +550,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: JournalSection(center: center)));
       await tester.pumpAndSettle();
       final n = NumberFormat.decimalPattern('fr_FR');
-      expect(find.text('Prix de Mara Pro, par mois : ${n.format(2500)} → ${n.format(3000)}'),
+      expect(find.text('Prix de Mara Pro, par mois — FCFA (zone franc CFA) : ${n.format(2500)} → ${n.format(3000)}'),
           findsOneWidget,
           reason: 'a setting is named, its values written as numbers');
       expect(find.byKey(const Key('journal-undo-a1')), findsOneWidget);
@@ -577,7 +577,7 @@ void main() {
         };
       await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'pro')));
       await tester.pumpAndSettle();
-      expect(find.text('Prix de Mara Pro, par mois'), findsOneWidget);
+      expect(find.text('Prix de Mara Pro, par mois — FCFA (zone franc CFA)'), findsOneWidget);
       expect(find.text('Changé par Mara le 01/10/2026'), findsOneWidget);
       await tester.tap(find.byKey(const Key('setting-pro_price_month')));
       await tester.pumpAndSettle();

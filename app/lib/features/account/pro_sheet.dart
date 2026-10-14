@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/pay/price_zone.dart';
 import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
@@ -153,8 +154,15 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 if (widget.showFeatures) ...[
                 const SizedBox(height: 16),
                 Text(
-                  context.tr('{month} par mois, ou {year} par an.',
-                      {'month': _money(terms.priceMonth), 'year': _money(terms.priceYear)}),
+                  context.tr('{month} par mois, ou {year} par an.', terms.proZones.isEmpty
+                      ? {'month': _money(terms.priceMonth), 'year': _money(terms.priceYear)}
+                      // The business's zone price (139), as the card charges it.
+                      : {
+                          'month': zonePriceText(terms.proPriceFor(widget.org.currency, year: false).amount,
+                              terms.proPriceFor(widget.org.currency, year: false).currency, language: context.trLanguage),
+                          'year': zonePriceText(terms.proPriceFor(widget.org.currency, year: true).amount,
+                              terms.proPriceFor(widget.org.currency, year: true).currency, language: context.trLanguage),
+                        }),
                   style: theme.textTheme.titleMedium,
                 ),
                 ],

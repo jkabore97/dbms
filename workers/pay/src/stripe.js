@@ -1,14 +1,16 @@
-// Stripe's side of kaj-pay: Kaj Pro by card, as a subscription (082).
+// Stripe's side of kaj-pay: Kaj Pro by card, as a subscription (082), and
+// since 139 a spot (« Mettre en avant ») by card, as one payment.
 //
-// Stripe is for the subscription only — an order is paid by Wave. The
-// price is the platform's (pro_price_month / pro_price_year, set from the
-// console, in FCFA), sent to Stripe as the line's own price on each new
+// An order is paid by Wave. The price is the platform's, read by the
+// database and sent to Stripe as the line's own price on each new
 // checkout, so there is no product to keep in step on Stripe's dashboard.
-// Since 121 Mara's Stripe account charges dollars: stripe_begin() converts
-// the FCFA price at the platform's rate (stripe_xof_per_usd) and answers
-// the cents and 'usd' — the Worker sends them as they are and never
-// converts — and the FCFA price, which the line's name says
-// (« Mara Pro · Mensuel · 15 000 FCFA · <business> »).
+// 121 charged dollars converted from the FCFA price at stripe_xof_per_usd;
+// since 139 stripe_begin() and spot_stripe_begin() answer the business's
+// zone price in the zone's own currency — FCFA (XOF, or XAF at the same
+// number: zero-decimal at Stripe, 2 900 F is 2900), euros or dollars (in
+// cents) — and the Worker sends the amount and currency as they are and
+// never converts. The line's name says the price as the app shows it
+// (« Mara Pro · Mensuel · 2 900 FCFA · <business> »).
 
 import { constantTimeEqual, hmacHex } from "./wave.js";
 
@@ -40,15 +42,53 @@ export async function createCheckout(env, args, fetchImpl = fetch) {
   return stripeCall(env, "POST", "/v1/checkout/sessions", params, fetchImpl);
 }
 
-/// The price as the app shows it: « 15 000 FCFA ». Nothing without one
-/// (a database before 121 sends none).
+/// The price as the app shows it: « 15 000 FCFA », « 4,99 EUR ». Nothing
+/// without one (a database before 121 sends none).
 export function priceLabel(amount, currency) {
   const n = Number(amount);
   if (!Number.isFinite(n) || n <= 0) return "";
   const code = String(currency || "").toUpperCase();
-  const unit = code === "XOF" || code === "XAF" ? "FCFA" : code;
-  const digits = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${digits} ${unit}`.trim();
+  const cfa = code === "XOF" || code === "XAF";
+  const unit = cfa ? "FCFA" : code;
+  const whole = cfa ? Math.round(n) : Math.trunc(n);
+  const digits = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const cents = cfa ? 0 : Math.round((n - whole) * 100);
+  return `${digits}${cents ? `,${String(cents).padStart(2, "0")}` : ""} ${unit}`.trim();
+}
+
+/// A Checkout Session for one payment (139: a spot). Returns { id, url }.
+/// [amount] is in Stripe's minor units, as the database answered it.
+export async function createPaymentCheckout(env, args, fetchImpl = fetch) {
+  const params = {
+    mode: "payment",
+    locale: "fr",
+    client_reference_id: args.reference,
+    success_url: args.successUrl,
+    cancel_url: args.cancelUrl,
+    "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": String(args.currency || "xof").toLowerCase(),
+    "line_items[0][price_data][unit_amount]": String(Math.round(Number(args.amount))),
+    "line_items[0][price_data][product_data][name]": args.name,
+    "payment_method_types[0]": "card",
+  };
+  for (const [k, v] of Object.entries(args.metadata || {})) {
+    params[`metadata[${k}]`] = v;
+    params[`payment_intent_data[metadata][${k}]`] = v;
+  }
+  if (args.email) params.customer_email = args.email;
+  return stripeCall(env, "POST", "/v1/checkout/sessions", params, fetchImpl);
+}
+
+/// A Checkout Session as Stripe holds it now.
+export async function getCheckoutSession(env, id, fetchImpl = fetch) {
+  return stripeCall(env, "GET", `/v1/checkout/sessions/${encodeURIComponent(id)}`, null, fetchImpl);
+}
+
+/// A PaymentIntent as Stripe holds it now, with its latest charge (139: a
+/// spot's refund or dispute is read here, never from the event).
+export async function getPaymentIntent(env, id, fetchImpl = fetch) {
+  return stripeCall(env, "GET",
+    `/v1/payment_intents/${encodeURIComponent(id)}?expand%5B%5D=latest_charge`, null, fetchImpl);
 }
 
 /// Stripe's own page where the owner changes the card or cancels.
@@ -126,10 +166,26 @@ export async function verifyStripeSignature(header, rawBody, secret,
   return signatures.some((s) => constantTimeEqual(s, expected));
 }
 
-async function stripeCall(env, method, path, params, fetchImpl) {
+/// A spot's payment refunded at once (139): the spot it was for is gone,
+/// refused or no longer eligible. One refund per PaymentIntent, whatever
+/// the retries (Stripe's idempotency key); one already refunded is done.
+export async function refundPaymentIntent(env, paymentIntent, reason, fetchImpl = fetch) {
+  try {
+    return await stripeCall(env, "POST", "/v1/refunds", {
+      payment_intent: paymentIntent,
+      "metadata[kind]": "spot",
+      "metadata[why]": reason || "",
+    }, fetchImpl, { "Idempotency-Key": `mara-spot-refund-${paymentIntent}` });
+  } catch (error) {
+    if (/already been refunded|already refunded/i.test(error.message || "")) return { already: true };
+    throw error;
+  }
+}
+
+async function stripeCall(env, method, path, params, fetchImpl, headers = {}) {
   const init = {
     method,
-    headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+    headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, ...headers },
   };
   if (params) {
     init.headers["Content-Type"] = "application/x-www-form-urlencoded";

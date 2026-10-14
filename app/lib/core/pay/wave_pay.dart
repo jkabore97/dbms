@@ -242,6 +242,75 @@ class WavePay {
     throw StateError('${body['error'] ?? 'La vérification de l\'achat n\'a pas abouti.'}');
   }
 
+  /// A spot (« Mettre en avant », 142) bought in the App Store or on
+  /// Google Play: the Worker asks the store itself (/store/spot-verify),
+  /// and programs the spot the purchase names once. [promotionId] is the
+  /// spot the purchase itself names (StorePurchase.spotId), or null — the
+  /// Worker then reads it from the store. No price is sent: the amount
+  /// written is the store's own, or Mara's zone price. Throws [StoreVerifyRefused] with
+  /// the Worker's code (« pending » too, a 202), or a [StateError] when it
+  /// could not be reached — the purchase is then left open.
+  Future<SpotVerdict> verifySpot({
+    required String platform,
+    String? promotionId,
+    required String productId,
+    String? transactionId,
+    String? token,
+  }) async {
+    if (!compiledIn) throw StateError('Pas de connexion au serveur de Mara.');
+    final session = _client?.auth.currentSession?.accessToken;
+    if (session == null) {
+      throw const StoreVerifyRefused('Connectez-vous pour payer.', 'session', status: 401);
+    }
+    final http.Response response;
+    try {
+      response = await _http.post(
+        Uri.parse('${_url.replaceAll(RegExp(r'/$'), '')}/store/spot-verify'),
+        headers: {
+          'Authorization': 'Bearer $session',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'platform': platform,
+          'promotion_id': ?promotionId,
+          'product_id': productId,
+          'transaction_id': ?transactionId,
+          'token': ?token,
+        }),
+      );
+    } catch (_) {
+      throw StateError('Pas de connexion au serveur de Mara.');
+    }
+    Map<String, dynamic> body;
+    try {
+      body = Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    } catch (_) {
+      body = const {};
+    }
+    if (response.statusCode == 200 && body['ok'] == true) {
+      return SpotVerdict(
+        promotionId: body['promotion_id'] is String ? body['promotion_id'] as String : promotionId,
+        granted: body['granted'] == true,
+        startsAt: DateTime.tryParse('${body['starts_at'] ?? ''}'),
+        endsAt: DateTime.tryParse('${body['ends_at'] ?? ''}'),
+      );
+    }
+    if (response.statusCode >= 202 && response.statusCode < 500) {
+      throw StoreVerifyRefused(
+        '${body['error'] ?? 'Achat refusé.'}',
+        response.statusCode == 401 ? 'session' : '${body['code'] ?? ''}',
+        status: response.statusCode,
+      );
+    }
+    throw StateError('${body['error'] ?? 'La vérification de l\'achat n\'a pas abouti.'}');
+  }
+
+  /// A spot by card on the website (142): Stripe's one-time Checkout page
+  /// for [promotionId]. The amount and currency are the database's (the
+  /// business's zone price).
+  Future<String> spotByCard(String promotionId) =>
+      _postForUrl('/v1/stripe/spot', {'promotion_id': promotionId});
+
   /// Where this business's store subscription stands, and whether the
   /// caller's own store purchase already pays for another business (128).
   Future<StoreStanding?> storeStanding(String orgId) async {
@@ -328,6 +397,19 @@ class StoreVerdict {
 
   /// The business the purchase was settled for.
   final String? orgId;
+}
+
+/// The payments Worker's word on a spot's store purchase (142).
+class SpotVerdict {
+  const SpotVerdict({this.promotionId, this.granted = true, this.startsAt, this.endsAt});
+
+  /// The spot it programmed.
+  final String? promotionId;
+
+  /// False when the same purchase was shown again: already programmed.
+  final bool granted;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
 }
 
 /// The Worker refused a purchase, in its own French words; [code] says why

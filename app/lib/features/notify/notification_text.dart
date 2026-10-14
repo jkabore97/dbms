@@ -222,6 +222,20 @@ String notificationLine(BuildContext context, NotificationRow n) {
           ? context.tr('Paiement reçu par {shop} : merci !', {'shop': s('shop')})
           : context.tr('Votre paiement chez {shop} est confirmé', {'shop': s('shop')});
     case 'spot_approved':
+      // 139: paid in a store or by card, verified by the Worker. The
+      // store's own name every build may say; « par carte » not in the
+      // iPhone app (125).
+      if (s('store') == 'google' || s('store') == 'apple' || s('store') == 'stripe') {
+        final start = DateTime.tryParse(s('starts_at'))?.toLocal();
+        final when = start == null ? '' : DateFormat('dd/MM, HH:mm', 'en').format(start);
+        return switch (s('store')) {
+          'google' => context.tr('Mise en avant payée sur Google Play : elle commence le {date}.', {'date': when}),
+          'apple' => context.tr('Mise en avant payée sur l\'App Store : elle commence le {date}.', {'date': when}),
+          _ => sellsDigitalInApp
+              ? context.tr('Mise en avant payée par carte : elle commence le {date}.', {'date': when})
+              : context.tr('Votre mise en avant est programmée.'),
+        };
+      }
       if (yes('wave')) {
         // The iPhone app names no way of paying for a spot (125).
         return sellsDigitalInApp

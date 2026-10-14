@@ -116,6 +116,13 @@ insert into cauris_unlocks (org_id, feature, until, note, gifted_by) values
 update orgs set wave_allowed = true, wave_merchant = 'M110ASSO'
  where id = '11100000-0000-0000-0000-0000000000a4';
 
+-- The owner's own spot prices, set in Réglages before 110: a price is
+-- the owner's, not the code's, so both phases read the same ones — and
+-- 139's move of 071's seed (1 000 / 2 500 → 5 000 / 15 000) must leave
+-- a price the owner already set alone.
+update platform_settings set value = '1200' where key = 'spot_price_article_7';
+update platform_settings set value = '3500' where key = 'spot_price_shop_7';
+
 -- The spots: on the Pro shop an article spot and a shop spot running; on
 -- the Basic shop a spot asked for, and an article Mara put « À la une ».
 insert into promotions (id, org_id, product_id, kind, days, price, currency, free, status,
@@ -254,7 +261,9 @@ begin
     end loop;
     perform set_config('request.jwt.claim.sub', v_shop::text, true);
     execute 'set local role authenticated';
-    acc := acc || jsonb_build_object('spot_terms', spot_terms())
+    -- 139 adds days, zones, stripe_on and version to spot_terms: added,
+    -- every key an older app reads unchanged.
+    acc := acc || jsonb_build_object('spot_terms', spot_terms() - 'days' - 'zones' - 'stripe_on' - 'version')
                || jsonb_build_object('wave_terms none', wave_terms(null));
     execute 'reset role';
 

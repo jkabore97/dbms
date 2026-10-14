@@ -19,8 +19,9 @@ import '../update/update_check.dart' show installStore;
 ///   « Cette fonction fait partie de Mara Pro. », a business already on
 ///   Pro shows « Active » with every tool open;
 /// * cauris unlocks stay: cauris are earned, never bought;
-/// * the « Mettre en avant » entry is gone; a spot already running still
-///   shows as sponsored in the street.
+/// * (until 142) the « Mettre en avant » entry was gone; since 142 the
+///   iPhone app sells a spot through Apple's in-app purchase only
+///   ([spotChannel]);
 ///
 /// What is not touched: shoppers paying shops for orders and delivery
 /// (Wave, cash, card) — physical goods and services, which Apple allows to
@@ -32,7 +33,8 @@ import '../update/update_check.dart' show installStore;
 /// Since 130 the stores may sell Mara Pro themselves: once the platform
 /// turns `store_billing_on` on, [sellsProThroughStore] — App Store In-App
 /// Purchase in the iPhone app, Google Play Billing in the Play app — and
-/// every « Passer à Pro » asks [sellsProInApp]. The spots stay as above.
+/// every « Passer à Pro » asks [sellsProInApp]. Since 142 the spots are
+/// sold through the stores too: [spotChannel].
 bool get sellsDigitalInApp =>
     debugSellsDigitalInApp ?? installStore != 'appstore';
 
@@ -63,11 +65,31 @@ bool storeBillingOn = false;
 
 /// Mara Pro is sold here through the store's own purchase — App Store
 /// In-App Purchase, Google Play Billing (130): never Stripe or Wave beside
-/// it. The spots (« Mettre en avant ») are not sold through the stores:
-/// they keep [sellsDigitalInApp].
+/// it. The spots (« Mettre en avant ») follow [spotChannel] since 142,
+/// whatever store_billing_on says.
 bool get sellsProThroughStore => storeBillingPlatform != null && storeBillingOn;
 
 /// Whether this build may offer Mara Pro at all: through the store when
 /// [sellsProThroughStore], by card and Wave where [sellsDigitalInApp].
 /// Every « Passer à Pro » asks here.
 bool get sellsProInApp => sellsProThroughStore || sellsDigitalInApp;
+
+/// How this build sells a spot (« Mettre en avant », 139 / batch 142):
+///
+/// * 'apple' — the iPhone app: an App Store consumable, and nothing else
+///   (no Wave, no « J'ai payé », no link out: guideline 3.1.1);
+/// * 'google' — the Play app: a Google Play consumable, and nothing else
+///   (Play's payments policy);
+/// * 'web' — the website (and the GitHub APK, which Google Play does not
+///   bill): Stripe Checkout by card, and Wave and « J'ai payé » where they
+///   work today and the platform has them on.
+///
+/// A spot is programmed only once the payments Worker has verified the
+/// payment with the store or Stripe. Unlike Mara Pro, the spots do not
+/// wait for `store_billing_on`: their products are their own, and a store
+/// that does not know them yet simply offers nothing.
+String get spotChannel => storeBillingPlatform ?? 'web';
+
+/// Whether this build offers « Mettre en avant » at all: every build now
+/// (the iPhone app through Apple's in-app purchase).
+bool get sellsSpotsInApp => storeBillingPlatform != null || sellsDigitalInApp;

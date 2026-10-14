@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/access/plan_terms.dart';
-import 'package:kaj_app/core/console/command_center.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'package:kaj_app/core/pay/wave_pay.dart';
 import 'package:kaj_app/features/admin/center/settings_section.dart';
@@ -16,26 +15,6 @@ class _Pay extends WavePay {
 
   @override
   bool get compiledIn => true;
-}
-
-class _Center extends CommandCenterRepository {
-  _Center() : super(null);
-
-  final calls = <String>[];
-  Map<String, SettingValue> values = const {};
-
-  @override
-  bool get isConfigured => true;
-
-  @override
-  Future<Map<String, SettingValue>> settings() async => values;
-
-  @override
-  Future<String?> setSetting(String key, Object? value) async {
-    calls.add('set:$key=$value');
-    values = {...values, key: SettingValue(value: value)};
-    return 'act-$key';
-  }
 }
 
 void main() {
@@ -73,7 +52,6 @@ void main() {
         '≈ \$25.00 a month, paid in dollars');
     expect(translate('en', '≈ {usd} par an, payé en dollars', {'usd': '\$250.00'}),
         '≈ \$250.00 a year, paid in dollars');
-    expect(translate('en', 'Taux pour la carte : FCFA pour 1 \$'), 'Card rate: FCFA for \$1');
     expect(translate('en', 'Un nombre entier plus grand que zéro.'), 'A whole number above zero.');
   });
 
@@ -109,41 +87,12 @@ void main() {
     expect(none.stripeUsdYearCents, isNull);
   });
 
-  testWidgets('Réglages: the card\'s rate by its name, a whole number above zero', (tester) async {
-    tester.view.physicalSize = const Size(1280, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    final center = _Center()
-      ..values = {
-        'stripe_on': const SettingValue(value: true),
-        'stripe_xof_per_usd': const SettingValue(value: 600),
-      };
-    await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'paiements')));
-    await tester.pumpAndSettle();
-    expect(find.text('Taux pour la carte : FCFA pour 1 \$'), findsOneWidget);
-    expect(find.text('600'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('setting-stripe_xof_per_usd')));
-    await tester.pumpAndSettle();
-    for (final text in ['0', '-600', '600,5', 'six cents']) {
-      await tester.enterText(find.byKey(const Key('setting-field')), text);
-      await tester.tap(find.byKey(const Key('setting-save')));
-      await tester.pumpAndSettle();
-      expect(find.text('Un nombre entier plus grand que zéro.'), findsOneWidget, reason: text);
-    }
-    expect(center.calls, isEmpty);
-    await tester.enterText(find.byKey(const Key('setting-field')), '610');
-    await tester.tap(find.byKey(const Key('setting-save')));
-    await tester.pumpAndSettle();
-    expect(center.calls, ['set:stripe_xof_per_usd=610']);
-    expect(find.text('610'), findsOneWidget);
-  });
-
-  test('the rate is listed once, in the Pro group, as a whole number', () {
-    final defs = platformSettingDefs.where((d) => d.key == 'stripe_xof_per_usd').toList();
-    expect(defs, hasLength(1));
-    expect(defs.single.group, 'pro');
-    expect(defs.single.type, SettingType.count);
+  // 139 (batch 142): the card charges each zone's own price in its own
+  // currency; nothing converts, and the rate left Réglages (inert in the
+  // database). batch142_test.dart proves the zone prices instead.
+  test('the rate is no longer in Réglages since 139', () {
+    expect(platformSettingDefs.where((d) => d.key == 'stripe_xof_per_usd'), isEmpty);
+    expect(settingCardOf('stripe_xof_per_usd'), isNull);
     expect(decimalSettings.contains('stripe_xof_per_usd'), isFalse);
   });
 }

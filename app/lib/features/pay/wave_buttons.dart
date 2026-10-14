@@ -116,6 +116,10 @@ class _WaveButtonsState extends State<WaveButtons> {
     if (widget.kind != 'order' && !sellsDigitalInApp) {
       return const SizedBox.shrink();
     }
+    // A spot in the store apps is the store's alone (142): no Wave beside it.
+    if (widget.kind == 'spot' && storeBillingPlatform != null) {
+      return const SizedBox.shrink();
+    }
     if (_terms == null) return const SizedBox.shrink();
     if (!_offered) return widget.onUnavailable ?? const SizedBox.shrink();
     final theme = Theme.of(context);

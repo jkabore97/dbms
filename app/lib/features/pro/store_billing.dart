@@ -103,8 +103,22 @@ class StorePurchase {
     this.errorDetails,
     this.needsCompletion = false,
     this.orgId,
+    this.profileId,
     this.native,
   });
+
+  /// Google's obfuscatedProfileId (142): a spot bought in the Play app
+  /// names its promotion there, beside the business in [orgId]. Apple has
+  /// one appAccountToken: a spot's is its promotion, read from [orgId].
+  final String? profileId;
+
+  /// A spot (« Mettre en avant », 142), not Mara Pro.
+  bool get isSpot => isSpotProduct(productId);
+
+  /// The spot this purchase was made for (142): Google's profile id,
+  /// Apple's appAccountToken. Null for Mara Pro or when the store does
+  /// not say.
+  String? get spotId => !isSpot ? null : (googleSpotProducts.containsKey(productId) ? profileId : orgId);
 
   final StorePurchaseStatus status;
   final String productId;
@@ -140,3 +154,80 @@ const appleProducts = {
 };
 const googleProduct = 'mara_pro';
 const googleBasePlans = {'monthly': 'month', 'yearly': 'year'};
+
+/// « Mettre en avant » in the stores (142), 7 days each: an article at the
+/// head of « À la une », the whole vitrine at the top of the street — the
+/// product ids the owner creates (Play Console: one-time consumable
+/// products; App Store Connect: Consumable in-app purchases), their value
+/// the spot's kind.
+const googleSpotProducts = {
+  'mara_spot_article_7': 'article',
+  'mara_spot_shop_7': 'shop',
+};
+const appleSpotProducts = {
+  'bf.kaj.app.spot.article7': 'article',
+  'bf.kaj.app.spot.shop7': 'shop',
+};
+
+bool isSpotProduct(String id) =>
+    googleSpotProducts.containsKey(id) || appleSpotProducts.containsKey(id);
+
+/// The spot's product in [platform]'s store, for a spot of [kind].
+String spotProductId(String platform, String kind) => platform == 'apple'
+    ? (kind == 'shop' ? 'bf.kaj.app.spot.shop7' : 'bf.kaj.app.spot.article7')
+    : (kind == 'shop' ? 'mara_spot_shop_7' : 'mara_spot_article_7');
+
+/// One of the two spots, as this store sells it here (142).
+class SpotStoreProduct {
+  const SpotStoreProduct({
+    required this.id,
+    required this.kind,
+    required this.price,
+    this.rawPrice,
+    this.currencyCode,
+    this.native,
+  });
+
+  final String id;
+
+  /// 'article' or 'shop'.
+  final String kind;
+
+  /// The store's localized price — what is shown and charged on Android
+  /// and iPhone (ProductDetails.price), never a Mara price.
+  final String price;
+
+  /// The same, as a number and its currency (shown only: the Worker never
+  /// takes a price from the app).
+  final double? rawPrice;
+  final String? currencyCode;
+  final Object? native;
+}
+
+/// The spots through the store (142): beside [StoreBilling], so Mara Pro's
+/// fakes in the tests need nothing new.
+abstract class SpotStoreBilling {
+  /// 'apple' or 'google'.
+  String get platform;
+
+  /// The two spots as this store sells them; empty when the store does
+  /// not know them (not yet created, not yet approved).
+  Future<List<SpotStoreProduct>> spotProducts();
+
+  /// Buys [product] for the spot [promotionId] of [orgId]: Google keeps
+  /// the business as obfuscatedAccountId and the spot as
+  /// obfuscatedProfileId; Apple keeps the spot as appAccountToken. A
+  /// consumable: Google's is consumed by the Worker once the spot is
+  /// programmed, Apple's finished by the app.
+  Future<void> buySpot(SpotStoreProduct product, {required String orgId, required String promotionId});
+
+  /// What the store still holds unfinished (Google: an unconsumed spot),
+  /// handed back to the listener to be verified again.
+  Future<void> restore();
+
+  /// The spots bought but never finished: Google's unconsumed purchases,
+  /// Apple's unfinished transactions (StoreKit 2) — what a connection lost
+  /// after paying left behind, verified again at the next start and on
+  /// « Vérifier un achat déjà payé ».
+  Future<List<StorePurchase>> unfinishedSpots();
+}

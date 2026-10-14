@@ -32,6 +32,19 @@
 //                             (?secret=GOOGLE_NOTIFY_SECRET)
 //   cron 17 3 * * *           store_due(), asked again
 //
+// And « Mettre en avant » (139, src/spots.js): a 7-day spot bought in
+// the store apps (Google Play and App Store consumables) or by card on
+// the website (one Stripe Checkout payment), programmed once the store or
+// Stripe said so —
+//
+//   POST /store/spot-verify   the app, with the owner's token
+//   POST /v1/stripe/spot      the website, with the owner's token:
+//                             { promotion_id } → { url }
+//   POST /v1/stripe           the same webhook: a session whose metadata
+//                             says kind = spot programs its spot; a spot's
+//                             charge.refunded / charge.dispute.created
+//                             ends it (spot_refund)
+//
 // What it holds, and why (secrets set by deploy-pay.yml):
 //
 //   WAVE_API_KEY               Kaj's Wave Business key — never in an app
@@ -43,11 +56,12 @@
 //                              (the .p8's text) for the App Store Server API
 //   PLAY_SERVICE_ACCOUNT_JSON  the Google Play service account
 //   GOOGLE_NOTIFY_SECRET       the secret in Google's Pub/Sub push URL
-//   SUPABASE_SERVICE_ROLE_KEY  used for exactly eight functions granted to
+//   SUPABASE_SERVICE_ROLE_KEY  used for exactly ten functions granted to
 //                              the service role alone: wave_attach,
 //                              wave_settle, wave_payout_done,
-//                              wave_payout_queue, stripe_settle, and
-//                              128's store_settle, store_org_of, store_due
+//                              wave_payout_queue, stripe_settle, 128's
+//                              store_settle, store_org_of, store_due, and
+//                              139's spot_settle and spot_refund
 //
 // The amount is never the app's: wave_begin() (called with the person's
 // own token, so under their identity) reads it from the order, the plan or
@@ -63,6 +77,9 @@ import {
 } from "./store.js";
 import { appleConfigured } from "./apple.js";
 import { googleConfigured } from "./google.js";
+import {
+  isSpotEvent, isSpotRefundEvent, onStripeSpotEvent, onStripeSpotRefund, spotVerify, stripeSpotCheckout,
+} from "./spots.js";
 
 // The global fetch, called as a plain function: a Worker throws « Illegal
 // invocation » when it is called as io.fetch(…) with io as `this` (the
@@ -94,7 +111,8 @@ export default {
     }
 
     if (request.method === "POST"
-        && (url.pathname === "/v1/stripe/checkout" || url.pathname === "/v1/stripe/portal")) {
+        && (url.pathname === "/v1/stripe/checkout" || url.pathname === "/v1/stripe/portal"
+            || url.pathname === "/v1/stripe/spot")) {
       if (!env.STRIPE_SECRET_KEY) {
         return json({ error: "Le paiement par carte n'est pas encore configuré." }, 503, cors);
       }
@@ -109,7 +127,9 @@ export default {
       try {
         const result = url.pathname.endsWith("/portal")
           ? await stripePortal(body, token, env)
-          : await stripeCheckout(body, token, env);
+          : url.pathname.endsWith("/spot")
+            ? await stripeSpotCheckout(body, token, env, storeIo())
+            : await stripeCheckout(body, token, env);
         return json(result, 200, cors);
       } catch (error) {
         return json({ error: error.message || "Le paiement n'a pas pu commencer." },
@@ -202,6 +222,11 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
       const token = bearer(request);
       if (!token) return json({ error: "Connectez-vous pour vous abonner." }, 401, cors);
       return json(await storeVerify(body, token, env, io), 200, cors);
+    }
+    if (url.pathname === "/store/spot-verify") {
+      const token = bearer(request);
+      if (!token) return json({ error: "Connectez-vous pour payer." }, 401, cors);
+      return json(await spotVerify(body, token, env, io), 200, cors);
     }
     if (url.pathname === "/store/apple-notify") {
       return json(await appleNotify(body, env, io), 200, {});
@@ -303,8 +328,17 @@ export async function stripePortal(body, userToken, env, io = { fetch: callFetch
 
 /// Stripe says something about a subscription. Whatever the event, the
 /// subscription is read again from Stripe, so events out of order or twice
-/// write the same truth.
+/// write the same truth. A spot's one payment (139) is read again the same
+/// way, and programs its spot once.
 export async function onStripeEvent(event, env, io = { fetch: callFetch }) {
+  if (isSpotEvent(event)) {
+    return onStripeSpotEvent(event, env, { rpcAs, rpcService, ...io });
+  }
+  // A spot's payment refunded or disputed (139): its spot ends. Mara Pro's
+  // charges are subscriptions', which the events below re-read.
+  if (isSpotRefundEvent(event)) {
+    return onStripeSpotRefund(event, env, { rpcAs, rpcService, ...io });
+  }
   const ref = subscriptionOf(event);
   if (!ref || !ref.id) return { ignored: event?.type || "" };
   const sub = readSubscription(await getSubscription(env, ref.id, io.fetch));

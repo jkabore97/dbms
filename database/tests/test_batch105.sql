@@ -741,10 +741,13 @@ declare
     -- The app's list: app/lib/features/admin/center/settings_section.dart
     -- (test/command_center_test.dart checks the two lists are the same).
     v_keys text[] := array[
-        'pro_price_month', 'pro_price_year', 'pro_currency', 'platform_wave', 'platform_wave_name',
+        'pro_price_month', 'pro_price_year',
+        -- 139: read by pro_zone_price(), which stripe_begin and plan_terms
+        -- ask. (121's stripe_xof_per_usd left Réglages with 139: the card
+        -- charges the zone's own price, nothing converts any more.)
+        'pro_price_month_eur', 'pro_price_year_eur', 'pro_price_month_usd', 'pro_price_year_usd',
+        'pro_currency', 'platform_wave', 'platform_wave_name',
         'stripe_on',
-        -- 121: read by stripe_usd_cents(), which stripe_begin and plan_terms ask.
-        'stripe_xof_per_usd',
         -- 128: read by store_billing_on(), which plan_terms asks.
         'store_billing_on',
         -- 128: read by store_sandbox_allowed(), which store_settle asks.
@@ -755,8 +758,12 @@ declare
         'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
         'free_history_months', 'vitrine_free_basics',
         'vitrine_min_items', 'vitrine_min_items_association', 'progress_street_pct',
-        'spots_max_live', 'pro_free_spots_month', 'spot_price_article_7', 'spot_price_article_30',
-        'spot_price_shop_7', 'spot_price_shop_30',
+        -- 139: 7 days only, Pro pays too — the 30-day prices and
+        -- pro_free_spots_month stay in platform_settings, inert, out of
+        -- Réglages; the zone prices are read by spot_zone_price().
+        'spots_max_live', 'spot_price_article_7', 'spot_price_shop_7',
+        'spot_price_article_7_eur', 'spot_price_shop_7_eur',
+        'spot_price_article_7_usd', 'spot_price_shop_7_usd',
         'delivery_base', 'delivery_per_km', 'delivery_currency', 'delivery_max_km',
         'delivery_included_km', 'delivery_share_pct', 'own_courier_minutes', 'stuck_ready_minutes',
         -- 112: read by courier_rules(), which the courier's dossier asks.
