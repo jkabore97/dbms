@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
+import '../../core/onboarding/business_creation.dart' show currencyOfCountry, townCountry;
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/storefront/storefront_repository.dart' show resolveGoogleMapsLink;
 import '../admin/pin_preview.dart' deferred as pin_map;
@@ -467,7 +469,10 @@ class _AddressSheetState extends State<AddressSheet> {
                 pin_map.PinPreview(
                   lat: lat,
                   lng: lng,
-                  currency: 'XOF',
+                  // The shopper's own country's money (144): a door in
+                  // Paris is not « far from the franc CFA zone ».
+                  currency: currencyOfCountry(
+                      townCountry(AppScope.read(context)?.session.identity?.phone)),
                   tiles: widget.tiles,
                   onMove: _pinAt,
                 )

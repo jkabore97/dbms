@@ -542,7 +542,8 @@ void main() {
       expect(currencyOfCountry('CM'), 'XAF');
       expect(currencyOfCountry('GH'), 'GHS');
       expect(currencyOfCountry('FR'), 'EUR');
-      expect(currencyOfCountry('JP'), 'XOF');
+      // 144: Japan has its yen, never the franc CFA by default.
+      expect(currencyOfCountry('JP'), 'JPY');
     });
   });
 

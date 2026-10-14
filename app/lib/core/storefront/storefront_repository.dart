@@ -375,11 +375,29 @@ class StorefrontRepository {
   /// Three articles per shop for the directory's cards (070), photographed
   /// first. Keyed by slug; a shop with nothing to preview is simply absent.
   /// A database before 070 has no previews: the cards fall back quietly.
+  ///
+  /// Each preview carries its shop's money (140's storefront_currencies,
+  /// asked beside it): a Paris shop's menu board reads « 12,50 EUR », not
+  /// « 12 F ». A database before 140 says no money: the preview's
+  /// [ShopPreview.currency] stays null.
   Future<Map<String, List<ShopPreview>>> previews(List<String> slugs) async {
     if (slugs.isEmpty) return const {};
     try {
-      final rows = await _rows('previews', () async => await _requireClient()
-          .rpc('storefront_previews', params: {'p_slugs': slugs}) as List<dynamic>);
+      final rows = await _rows('previews', () async {
+        final client = _requireClient();
+        final results = await Future.wait<Object?>([
+          client.rpc('storefront_previews', params: {'p_slugs': slugs}),
+          _currencies(client, slugs),
+        ]);
+        final money = results[1] as Map<String, String>;
+        return [
+          for (final r in results[0] as List<dynamic>)
+            {
+              ...Map<String, dynamic>.from(r as Map),
+              if (money['${r['slug']}'] != null) 'currency': money['${r['slug']}'],
+            },
+        ];
+      });
       final out = <String, List<ShopPreview>>{};
       for (final r in rows) {
         final p = ShopPreview.fromRow(Map<String, dynamic>.from(r as Map));
@@ -389,6 +407,20 @@ class StorefrontRepository {
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST202' || e.code == '42883') return const {};
       rethrow;
+    }
+  }
+
+  /// Each open vitrine's money (140), by slug; empty on a database
+  /// before 140, or when it cannot be read — never in the way of the cards.
+  Future<Map<String, String>> _currencies(SupabaseClient client, List<String> slugs) async {
+    try {
+      final rows = await client.rpc('storefront_currencies', params: {'p_slugs': slugs}) as List<dynamic>;
+      return {
+        for (final r in rows)
+          if ((r as Map)['slug'] != null && r['currency'] != null) '${r['slug']}': '${r['currency']}',
+      };
+    } catch (_) {
+      return const {};
     }
   }
 
@@ -877,6 +909,7 @@ class ShopPreview {
     required this.name,
     required this.price,
     this.photoKey,
+    this.currency,
   });
 
   factory ShopPreview.fromRow(Map<String, dynamic> row) => ShopPreview(
@@ -885,6 +918,7 @@ class ShopPreview {
         name: row['name'] as String,
         price: _num(row['sale_price']) ?? 0.0,
         photoKey: row['photo_key'] as String?,
+        currency: row['currency'] as String?,
       );
 
   final String slug;
@@ -892,6 +926,9 @@ class ShopPreview {
   final String name;
   final double price;
   final String? photoKey;
+
+  /// The shop's money (140); null on a database before 140.
+  final String? currency;
 }
 
 /// What delivery_check() says about one pinned door (069).

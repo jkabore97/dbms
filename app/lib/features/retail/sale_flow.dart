@@ -130,18 +130,22 @@ class SaleFlow extends StatefulWidget {
 
 /// A line of the basket while it is being made.
 class _Line {
-  _Line({this.productId, required this.name, double quantity = 1, double? price})
+  _Line({this.productId, required this.name, double quantity = 1, double? price, this.currency})
       : quantity = TextEditingController(text: stockQty(quantity)),
         price = TextEditingController(
             text: price == null || price <= 0 ? '' : _plain(price));
 
   final String? productId;
   final String name;
+
+  /// The money of the price (144); null reads it as before.
+  final String? currency;
   final TextEditingController quantity;
   final TextEditingController price;
 
   double get qty => FlowNumberField.read(quantity) ?? 0;
-  double? get unitPrice => FlowNumberField.read(price);
+  // In the shop's money (144): no centimes of a franc.
+  double? get unitPrice => currency == null ? FlowNumberField.read(price) : parseAmount(price.text, currency: currency);
   double get total => qty * (unitPrice ?? 0);
 
   SaleLineDraft get draft => SaleLineDraft(
@@ -234,7 +238,7 @@ class _SaleFlowState extends State<SaleFlow> {
     super.initState();
     _customer.text = widget.customerName?.trim() ?? '';
     for (final l in widget.initialLines) {
-      _lines.add(_Line(
+      _lines.add(_Line(currency: widget.currency,
           productId: l.productId,
           name: l.name,
           quantity: l.quantity,
@@ -336,7 +340,7 @@ class _SaleFlowState extends State<SaleFlow> {
       if (lines is List) {
         for (final raw in lines) {
           if (raw is! Map) continue;
-          final line = _Line(
+          final line = _Line(currency: widget.currency,
               productId: raw['id'] as String?, name: '${raw['name'] ?? ''}');
           line.quantity.text = '${raw['q'] ?? '1'}';
           line.price.text = '${raw['p'] ?? ''}';
@@ -412,7 +416,7 @@ class _SaleFlowState extends State<SaleFlow> {
       if (i >= 0) {
         _later(_lines.removeAt(i));
       } else {
-        _lines.add(_Line(productId: p.id, name: p.name, price: p.salePrice));
+        _lines.add(_Line(currency: widget.currency, productId: p.id, name: p.name, price: p.salePrice));
       }
     });
     _flow.keep();
@@ -420,10 +424,10 @@ class _SaleFlowState extends State<SaleFlow> {
 
   void _addTyped() {
     final name = _typedName.text.trim();
-    final price = FlowNumberField.read(_typedPrice);
+    final price = parseAmount(_typedPrice.text, currency: widget.currency);
     if (name.isEmpty || price == null || price < 0) return;
     setState(() {
-      _lines.add(_Line(name: name, price: price));
+      _lines.add(_Line(currency: widget.currency, name: name, price: price));
       _typedName.clear();
       _typedPrice.clear();
       _typing = false;
@@ -458,7 +462,7 @@ class _SaleFlowState extends State<SaleFlow> {
         return;
       }
       final price = row['sale_price'];
-      setState(() => _lines.add(_Line(
+      setState(() => _lines.add(_Line(currency: widget.currency,
             name: (row['name'] as String?) ?? code,
             price: price is num ? price.toDouble() : double.tryParse('$price'),
           )));
@@ -1015,7 +1019,9 @@ class _SaleFlowState extends State<SaleFlow> {
               ),
               const Spacer(),
               if (p.salePrice > 0)
-                Text(_money.format(p.salePrice), style: theme.textTheme.bodyMedium),
+                // Whole on one line, shrunk rather than wrapped out of the
+                // tile (144: « 1 249,99 USD » at 320 px × 1.3).
+                MoneyText(_money.format(p.salePrice), style: theme.textTheme.bodyMedium),
               if (!p.isService)
                 Text(
                   empty
@@ -1273,7 +1279,7 @@ class _SaleFlowState extends State<SaleFlow> {
             spacing: 8,
             children: [
               ChoiceChip(
-                label: Text(widget.currency == 'XOF' ? 'FCFA' : widget.currency),
+                label: Text(currencySymbol(widget.currency)),
                 selected: _tender == null,
                 onSelected: (_) => setState(() => _tender = null),
               ),

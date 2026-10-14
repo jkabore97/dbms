@@ -1034,7 +1034,12 @@ void main() {
         'Appointment requested by Fati — Tuesday 13 Oct, 10:00: ${lines.last.split(': ').last}',
       ]);
       expect(lines.last, contains('3'));
-      expect(fr, everyElement('m'));
+      // French as the server wrote it — but the bell with an amount, which
+      // the app writes from its facts in French too since 144 (an older
+      // row said « 3,000.00 XOF »).
+      expect(fr.take(4), everyElement('m'));
+      expect(fr.last.replaceAll(RegExp(r'[\u00A0\u202F]'), ' '),
+          'Rendez-vous demandé par Fati — mardi 13 oct., 10:00 : 3 000 FCFA');
     });
 
     test('a tap opens that booking: the customer\'s card, the business\'s step', () {

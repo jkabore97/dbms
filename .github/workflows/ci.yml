@@ -895,6 +895,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch142.sql
+      - name: "Prove a business's money follows where it is — ISO 4217's decimals (XOF, XAF, JPY none; EUR, USD, BRL two, and the three-decimal dinars two as the books keep); the street's cards say each open vitrine's money signed out (Paris EUR, São Paulo BRL, New York USD, Ouagadougou XOF, Douala XAF) and nothing of a closed one; a delivery rounded to 25 F in francs CFA as before and to the cent in euros, the platform's franc tariff never offered in euros; one basket one vitrine one money, another vitrine's article refused; every bell with an amount as the app writes it (« 12 000 FCFA », « 12,50 EUR », never « 12,000.00 XOF » or « F » for euros), its function's signature and definer unchanged; « Prix en baisse » with its cents; no business's money changed; helpers closed to anon, the street's door open, a pinned definer; run twice the same (140)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch140.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

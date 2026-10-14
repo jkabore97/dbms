@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/access/plan_terms.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
+import '../../core/format/money.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 
@@ -105,9 +106,17 @@ class _SettlementScreenState extends State<SettlementScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final money = NumberFormat.decimalPattern('fr_FR');
     final monthLabel = DateFormat('MMMM yyyy', intlLocale()).format(_month);
-    final owed = _rows.fold<double>(0, (sum, r) => sum + r.share);
+    // What is owed, per money (144): a part in euros is never added to
+    // francs. Francs CFA first, as before; « 0 FCFA » when nothing is.
+    final owedBy = <String, double>{};
+    for (final r in [..._rows]..sort((a, b) => (a.currency != 'XOF' ? 1 : 0) - (b.currency != 'XOF' ? 1 : 0))) {
+      owedBy[r.currency] = (owedBy[r.currency] ?? 0) + r.share;
+    }
+    if (owedBy.isEmpty) owedBy['XOF'] = 0;
+    final owed = [
+      for (final e in owedBy.entries) moneyFormat(e.key).format(e.value),
+    ].join(' + ');
     final now = DateTime.now();
     final isCurrent = _month.year == now.year && _month.month == now.month;
 
@@ -171,7 +180,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
               color: theme.colorScheme.primaryContainer,
               child: ListTile(
                 leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(context.tr('{amount} F CFA dus à Mara', {'amount': money.format(owed)}),
+                title: Text(context.tr('{amount} dus à Mara', {'amount': owed}),
                     style: theme.textTheme.titleMedium),
                 subtitle: Text(context.tr(
                     _rows.length > 1 ? '{n} livreurs · {c} courses' : '{n} livreur · {c} courses',
@@ -194,14 +203,14 @@ class _SettlementScreenState extends State<SettlementScreen> {
                   subtitle: Text([
                     if (r.phone != null) r.phone!,
                     r.courses > 1 ? context.tr('{n} courses', {'n': r.courses}) : context.tr('{n} course', {'n': r.courses}),
-                    context.tr('encaissé {amount} F', {'amount': money.format(r.fees)}),
-                    context.tr('gardé {amount} F', {'amount': money.format(r.net)}),
+                    context.tr('encaissé {amount}', {'amount': moneyFormat(r.currency).format(r.fees)}),
+                    context.tr('gardé {amount}', {'amount': moneyFormat(r.currency).format(r.net)}),
                   ].join(' · ')),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('${money.format(r.share)} F',
+                      Text(moneyFormat(r.currency).format(r.share),
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
                       Text(context.tr('à régler'),

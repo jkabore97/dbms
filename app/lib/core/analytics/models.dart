@@ -137,7 +137,12 @@ class BusinessPerformance {
     required this.margin,
     required this.units,
     required this.lastSale,
+    this.currency = 'XOF',
   });
+
+  /// The business's money (140's platform_business_currencies); francs CFA
+  /// on a database before 140.
+  final String currency;
 
   final String orgId;
   final String orgName;
@@ -160,6 +165,7 @@ class BusinessPerformance {
         lastSale: r['last_sale'] == null
             ? null
             : DateTime.parse(r['last_sale'] as String),
+        currency: (r['currency'] as String?) ?? 'XOF',
       );
 }
 
@@ -171,7 +177,12 @@ class PlatformHeadline {
     required this.saleCount,
     required this.revenue,
     required this.margin,
+    this.currency = 'XOF',
   });
+
+  /// The money of these businesses' books (140: one headline per money,
+  /// never one added to another); francs CFA before 140.
+  final String currency;
 
   final int businesses;
   final int activeBusinesses;
@@ -185,6 +196,7 @@ class PlatformHeadline {
         saleCount: _i(r['sale_count']),
         revenue: _d(r['revenue']),
         margin: _d(r['margin']),
+        currency: (r['currency'] as String?) ?? 'XOF',
       );
 
   static const empty = PlatformHeadline(

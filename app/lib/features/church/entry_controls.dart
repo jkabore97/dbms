@@ -149,20 +149,26 @@ class _NamePromptState extends State<_NamePrompt> {
 /// Drawn rather than borrowed from the OS for the same reason as the PIN pad:
 /// the targets are always large, they never cover the amount they are
 /// entering, and they do not change shape between phones. `000` is there
-/// because these are CFA francs and most amounts end in three zeros.
+/// because CFA francs have no cents and most amounts end in three zeros;
+/// a money with cents (144: the euro, the dollar, the real) has the
+/// decimal comma in its place ([decimal]).
 class AmountKeypad extends StatelessWidget {
   const AmountKeypad({
     super.key,
     required this.onDigit,
     required this.onBackspace,
+    this.decimal = false,
   });
 
   final ValueChanged<String> onDigit;
   final VoidCallback onBackspace;
 
+  /// The money has cents: ',' instead of '000' (handed to [onDigit]).
+  final bool decimal;
+
   @override
   Widget build(BuildContext context) {
-    const keys = [
+    final keys = [
       '1',
       '2',
       '3',
@@ -172,7 +178,7 @@ class AmountKeypad extends StatelessWidget {
       '7',
       '8',
       '9',
-      '000',
+      if (decimal) ',' else '000',
       '0',
       '<',
     ];

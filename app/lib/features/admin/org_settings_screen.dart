@@ -11,6 +11,8 @@ import '../../core/admin/admin_repository.dart';
 import '../account/pro_sheet.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/capture/capture_repository.dart';
+import '../../core/format/currencies.dart';
+import '../../core/format/money.dart' show currencySymbol, isFrancCfa;
 import '../../core/rates/currency_rates.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/capture_action.dart';
@@ -180,7 +182,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// WhatsApp status.
   String get _storefrontUrl => publicShopUrl(_slug);
 
-  static const _currencies = ['XOF', 'XAF', 'EUR', 'USD', 'GHS', 'NGN'];
+  /// The platform's delivery tariff (061) is written in francs CFA; only a
+  /// business in that money falls back on it when it sets no price.
+  bool get _platformDeliveryApplies => _currency == 'XOF';
 
   @override
   void initState() {
@@ -285,8 +289,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _nameController.text = (org['name'] as String?) ?? '';
         _waveController.text = wave ?? '';
         _rates = rates;
-        final currency = (org['default_currency'] as String?) ?? 'XOF';
-        _currency = _currencies.contains(currency) ? currency : 'XOF';
+        // The business's own, whatever it is (144): a list of six used to
+        // read a business in reais as XOF here — and save it so.
+        _currency = (org['default_currency'] as String?) ?? 'XOF';
         _slug = (org['slug'] as String?) ?? '';
         _profile = (org['profile'] as String?) ?? 'generic';
         _theme = org['theme'] as String?;
@@ -1195,10 +1200,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     Text(context.tr('Monnaie'), style: theme.textTheme.labelLarge),
     const SizedBox(height: 8),
     DropdownButtonFormField<String>(
+      key: const Key('settings-currency'),
       initialValue: _currency,
+      isExpanded: true,
       decoration: const InputDecoration(border: OutlineInputBorder()),
       items: [
-        for (final c in _currencies) DropdownMenuItem(value: c, child: Text(c)),
+        for (final c in currencyChoices(_currency))
+          DropdownMenuItem(
+              value: c,
+              child: Text('$c — ${currencyName(c, context.trLanguage)}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis)),
       ],
       onChanged: _saving ? null : (v) => setState(() => _currency = v!),
     ),
@@ -1282,7 +1293,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     const SizedBox(height: 4),
     Text(
       context.tr('Pour encaisser une vente dans une autre monnaie. Les livres restent en {currency}.',
-          {'currency': _currency == 'XOF' ? 'FCFA' : _currency}),
+          {'currency': currencySymbol(_currency)}),
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
@@ -1293,7 +1304,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.currency_exchange),
         title: Text(rateLabel(r.currency, r.rate, _currency)),
-        subtitle: Text(context.tr(knownCurrencies[r.currency] ?? '')),
+        subtitle: Text(currencyName(r.currency, context.trLanguage)),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
           tooltip: context.tr('Retirer'),
@@ -1615,6 +1626,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               admin: widget.admin,
               retail: widget.retail,
               capture: widget.capture,
+              currency: _currency,
               shopName: _nameController.text.trim().isEmpty
                   ? null
                   : _nameController.text.trim(),
@@ -1691,7 +1703,13 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     ),
     const SizedBox(height: 8),
     Text(
-      _deliveryMinimum
+      !_platformDeliveryApplies
+          // 144: a business in another money than the platform's tariff
+          // (francs CFA) reads no « 500 + 150 F/km » it cannot get.
+          ? (_deliveryMinimum
+              ? context.tr('Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : le prix de la course est à convenir. Le montant est annoncé au client avant qu\'il commande.')
+              : context.tr('Une base pour la course, plus un prix par kilomètre jusqu\'à la porte du client. Vide : le prix de la course est à convenir. Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.'))
+          : _deliveryMinimum
           ? context.tr('Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande.')
           : _profile == 'farm'
           ? context.tr('Une base pour la course, plus un prix par kilomètre entre votre ferme et la porte du client. Vide : les tarifs de la plateforme (500 + 150 F/km). Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.')
@@ -1711,6 +1729,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               labelText: _deliveryMinimum ? context.tr('Minimum') : context.tr('Base'),
+              suffixText: currencySymbol(_currency),
             ),
           ),
         ),
@@ -1723,6 +1742,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               labelText: context.tr('Par km'),
+              suffixText: currencySymbol(_currency),
             ),
           ),
         ),
@@ -2099,7 +2119,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
   /// One line under each row: where that part stands, so the index alone
   /// answers most questions.
   String _stateOf(_Part part) {
-    final money = _currency == 'XOF' ? 'FCFA' : _currency;
+    final money = currencySymbol(_currency);
     final c = _checklist;
     switch (part) {
       case _Part.articles:
@@ -2146,10 +2166,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         return [
           if (widget.plan != 'pro') 'Mara Pro',
           base.isEmpty && perKm.isEmpty
-              ? context.tr('Tarifs de la plateforme')
+              // The platform's tariff is in francs CFA (061's
+              // delivery_currency): a business in another money has none.
+              ? (_platformDeliveryApplies
+                  ? context.tr('Tarifs de la plateforme')
+                  : context.tr('Course : prix à convenir'))
               : _deliveryMinimum && included.isNotEmpty
-                  ? context.tr('{base} F jusqu\'à {km} km, puis {perKm} F/km', {'base': base, 'km': included, 'perKm': perKm.isEmpty ? '0' : perKm})
-                  : '${base.isEmpty ? '0' : base} F + ${perKm.isEmpty ? '0' : perKm} F/km',
+                  ? context.tr('{base} {money} jusqu\'à {km} km, puis {perKm} {money}/km',
+                      {'base': base, 'km': included, 'perKm': perKm.isEmpty ? '0' : perKm, 'money': money})
+                  : '${base.isEmpty ? '0' : base} $money + ${perKm.isEmpty ? '0' : perKm} $money/km',
           '${reach.isEmpty ? '15' : reach} km',
         ].join(' · ');
       case _Part.team:
@@ -2818,8 +2843,9 @@ class _RateDialogState extends State<RateDialog> {
     setState(() {
       _code = code;
       // The peg, offered not imposed: only into an empty field.
+      // Both francs CFA hold the same peg (144).
       if (code == 'EUR' &&
-          widget.homeCurrency == 'XOF' &&
+          isFrancCfa(widget.homeCurrency) &&
           _rateController.text.trim().isEmpty) {
         _rateController.text = '$eurXofPeg';
       }
@@ -2828,7 +2854,7 @@ class _RateDialogState extends State<RateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final home = widget.homeCurrency == 'XOF' ? 'FCFA' : widget.homeCurrency;
+    final home = currencySymbol(widget.homeCurrency);
     return AlertDialog(
       // The keyboard up on a small phone: the dialog scrolls (A6).
       scrollable: true,
@@ -2850,7 +2876,8 @@ class _RateDialogState extends State<RateDialog> {
                 for (final code in _choices)
                   DropdownMenuItem(
                     value: code,
-                    child: Text('$code — ${context.tr(knownCurrencies[code] ?? '')}'),
+                    child: Text('$code — ${currencyName(code, context.trLanguage)}',
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
               ],
               onChanged: _pick,
@@ -2860,7 +2887,7 @@ class _RateDialogState extends State<RateDialog> {
               alignment: Alignment.centerLeft,
               child: Text(
                 '${widget.existing!.currency} — '
-                '${context.tr(knownCurrencies[widget.existing!.currency] ?? '')}',
+                '${currencyName(widget.existing!.currency, context.trLanguage)}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -2873,7 +2900,7 @@ class _RateDialogState extends State<RateDialog> {
               labelText: context.tr('Taux'),
               prefixText: _code == null ? null : context.tr('1 {_code} = ', {'_code': _code}),
               suffixText: home,
-              helperText: _code == 'EUR' && widget.homeCurrency == 'XOF'
+              helperText: _code == 'EUR' && isFrancCfa(widget.homeCurrency)
                   ? context.tr('Taux fixe officiel : 655,957')
                   : context.tr('Le taux que vous obtenez réellement.'),
               border: const OutlineInputBorder(),

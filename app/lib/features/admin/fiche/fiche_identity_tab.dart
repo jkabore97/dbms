@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/console/command_center.dart';
 import '../../../core/console/fiche_repository.dart';
 import '../../../core/errors.dart';
+import '../../../core/format/currencies.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../create_business_screen.dart';
@@ -28,8 +29,6 @@ class FicheIdentityTab extends StatefulWidget {
   final FicheRepository fiche;
   final CommandCenterRepository center;
   final VoidCallback onChanged;
-
-  static const currencies = ['XOF', 'XAF', 'EUR', 'USD', 'GHS', 'NGN'];
 
   @override
   State<FicheIdentityTab> createState() => _FicheIdentityTabState();
@@ -147,7 +146,8 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
           prefixText: prefix,
           border: const OutlineInputBorder(),
         );
-    final currencies = {...FicheIdentityTab.currencies, _o.currency}.toList();
+    // Every money of currencies.dart, the business's own first (144).
+    final currencies = currencyChoices(_o.currency);
     // On a phone the three kinds keep their words, not their pictures.
     final icons = MediaQuery.sizeOf(context).width >= 520;
     return ListView(
@@ -230,9 +230,14 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
               DropdownButtonFormField<String>(
                 key: const Key('identity-currency'),
                 initialValue: _currency,
+                isExpanded: true,
                 decoration: field(context.tr('Monnaie')),
                 items: [
-                  for (final c in currencies) DropdownMenuItem(value: c, child: Text(c)),
+                  for (final c in currencies)
+                    DropdownMenuItem(
+                        value: c,
+                        child: Text('$c — ${currencyName(c, context.trLanguage)}',
+                            maxLines: 1, overflow: TextOverflow.ellipsis)),
                 ],
                 onChanged: _saving ? null : (v) => setState(() => _currency = v ?? _currency),
               ),

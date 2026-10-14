@@ -221,7 +221,7 @@ class _ReceiveFlowState extends State<_ReceiveFlow> {
   bool get _isNew => _item == _newItem;
   String get _itemName => (_isNew ? _name.text : (_item ?? '')).trim();
   double get _qty => FlowNumberField.read(_quantity) ?? 0;
-  double get _unitCost => FlowNumberField.read(_price) ?? 0;
+  double get _unitCost => FlowNumberField.readAmount(_price, widget.org.currency) ?? 0;
   NumberFormat get _money => moneyFormat(widget.org.currency);
 
   _Supply? get _supply {
@@ -376,7 +376,8 @@ class _ReceiveFlowState extends State<_ReceiveFlow> {
               FlowNumberField(
                 key: const Key('farm-price'),
                 controller: _price,
-                suffix: widget.org.currency,
+                suffix: currencySymbol(widget.org.currency),
+                currency: widget.org.currency,
                 decimal: false,
                 onChanged: (_) => setState(() {}),
               ),

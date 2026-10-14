@@ -11,6 +11,7 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/format/money.dart' show amountFieldIn;
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/invoicing/models.dart';
 import '../../core/nav/app_scope.dart';
@@ -400,7 +401,8 @@ class _PaymentDialog extends StatefulWidget {
 
 class _PaymentDialogState extends State<_PaymentDialog> {
   late final _controller =
-      TextEditingController(text: widget.outstanding.round().toString());
+      // In the invoice's own decimals (144): 12,50 € is « 12,50 », not « 13 ».
+      TextEditingController(text: amountFieldIn(widget.outstanding, widget.money.decimalDigits ?? 0));
 
   double get _amount =>
       double.tryParse(_controller.text.trim().replaceAll(',', '.')) ?? 0;

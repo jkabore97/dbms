@@ -56,16 +56,33 @@ class KpiCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: emphasis ? scheme.onPrimaryContainer : scheme.onSurface,
-            ),
-          ),
+          if (!value.contains('\n'))
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: emphasis ? scheme.onPrimaryContainer : scheme.onSurface,
+              ),
+            )
+          else
+            // One figure per money (144), each whole on its line.
+            for (final line in value.split('\n'))
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  line,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: emphasis ? scheme.onPrimaryContainer : scheme.onSurface,
+                  ),
+                ),
+              ),
           if (hint != null)
             Text(
               hint!,

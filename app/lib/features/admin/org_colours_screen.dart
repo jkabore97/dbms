@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart';
+import '../../core/format/money.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -30,9 +31,13 @@ class OrgColoursScreen extends StatefulWidget {
     required this.profile,
     this.current,
     this.onSaved,
+    this.currency = 'XOF',
   });
 
   final AdminRepository admin;
+
+  /// The business's money (144), for the figure on each preview.
+  final String currency;
   final String orgId;
 
   /// What this business would look like if it never chose: the default option
@@ -51,6 +56,8 @@ class OrgColoursScreen extends StatefulWidget {
 }
 
 class _OrgColoursScreenState extends State<OrgColoursScreen> {
+  String get _figure => moneyFormat(widget.currency).format(12500);
+
   /// The name being previewed. Null is "the profile's own colour", which is a
   /// real choice here and not merely the absence of one.
   String? _selected;
@@ -125,6 +132,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
                 palette: paletteFor(widget.profile),
                 title: context.tr('Couleur par défaut'),
                 subtitle: context.tr(_profileLabel(widget.profile)),
+                figure: _figure,
                 selected: _selected == null,
                 onTap: _saving ? null : () => setState(() => _selected = null),
               ),
@@ -136,6 +144,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
                 _PaletteCard(
                   palette: palette,
                   title: context.tr(palette.label),
+                  figure: _figure,
                   selected: _selected == palette.name,
                   onTap: _saving
                       ? null
@@ -201,12 +210,14 @@ class _PaletteCard extends StatelessWidget {
   const _PaletteCard({
     required this.palette,
     required this.title,
+    required this.figure,
     required this.selected,
     required this.onTap,
     this.subtitle,
   });
 
   final KajPalette palette;
+  final String figure;
   final String title;
   final String? subtitle;
   final bool selected;
@@ -238,7 +249,7 @@ class _PaletteCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _MiniHome(palette: palette),
+              _MiniHome(palette: palette, figure: figure),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                 child: Row(
@@ -281,9 +292,12 @@ class _PaletteCard extends StatelessWidget {
 /// tinted tiles. Small enough that eight of them fit in a scroll, faithful
 /// enough that what somebody picks is what they get.
 class _MiniHome extends StatelessWidget {
-  const _MiniHome({required this.palette});
+  const _MiniHome({required this.palette, required this.figure});
 
   final KajPalette palette;
+
+  /// The day's figure, in the business's money (« 12 500 FCFA »).
+  final String figure;
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +320,7 @@ class _MiniHome extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '12 500 F',
+            figure,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,

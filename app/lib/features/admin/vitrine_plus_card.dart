@@ -7,6 +7,8 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/models.dart';
 import '../../core/errors.dart';
+import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
@@ -38,9 +40,13 @@ class VitrinePlusCard extends StatefulWidget {
     this.retail,
     this.capture,
     this.shopName,
+    this.currency = 'XOF',
   });
 
   final String orgId;
+
+  /// The business's money (144), for the prices in the preview.
+  final String currency;
   final AdminRepository admin;
 
   /// For the pinned-article picker and the preview; null with no server.
@@ -328,6 +334,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             items: _products,
             capture: widget.capture,
             lang: lang,
+            currency: widget.currency,
           ),
           const SizedBox(height: 18),
           _SectionTitle(text: context.tr('POUR TOUTES LES VITRINES')),
@@ -830,9 +837,13 @@ class VitrinePreview extends StatelessWidget {
     this.capture,
     this.lang = 'fr',
     this.proBand = false,
+    this.currency = 'XOF',
   });
 
   final String name;
+
+  /// The shop's money (144): « 12,50 EUR », not « 13 F ».
+  final String currency;
   final StorefrontStyle style;
   final List<Product> items;
   final bool? openNow;
@@ -893,7 +904,8 @@ class VitrinePreview extends StatelessWidget {
         ),
       ),
     );
-    String price(double p) => '${p.toStringAsFixed(0)} F';
+    final money = moneyFormat(currency);
+    String price(double p) => money.format(p);
 
     final Widget shelf = switch (style.layout) {
       VitrineLayout.grid => GridView.count(
@@ -916,7 +928,8 @@ class VitrinePreview extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 11, color: _ink),
                 ),
-                Text(
+                // Whole on one line, shrunk rather than cut (144: « 1 249,99 EUR »).
+                MoneyText(
                   price(p),
                   style: const TextStyle(fontSize: 10, color: _mist),
                 ),
@@ -941,9 +954,12 @@ class VitrinePreview extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  price(p),
-                  style: const TextStyle(fontSize: 11, color: _mist),
+                Flexible(
+                  child: MoneyText(
+                    price(p),
+                    alignment: Alignment.centerRight,
+                    style: const TextStyle(fontSize: 11, color: _mist),
+                  ),
                 ),
               ],
             ),
@@ -966,12 +982,15 @@ class VitrinePreview extends StatelessWidget {
                       style: const TextStyle(fontSize: 12, color: _ink),
                     ),
                   ),
-                  Text(
-                    price(p),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: _ink,
+                  Flexible(
+                    child: MoneyText(
+                      price(p),
+                      alignment: Alignment.centerRight,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _ink,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -988,7 +1007,12 @@ class VitrinePreview extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  Text(n, style: const TextStyle(fontSize: 12, color: _ink)),
+                  Flexible(
+                    child: Text(n,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: _ink)),
+                  ),
                   const Expanded(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4),
@@ -1000,12 +1024,15 @@ class VitrinePreview extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    price(p),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
+                  Flexible(
+                    child: MoneyText(
+                      price(p),
+                      alignment: Alignment.centerRight,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                      ),
                     ),
                   ),
                 ],

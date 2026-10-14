@@ -70,9 +70,19 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
     super.dispose();
   }
 
+  /// The money's cents (144): none for the franc CFA, two for the euro.
+  int get _decimals => currencyDecimals(widget.currency);
+
   void _tapDigit(String d) {
     if (_digits.length >= 12) return;
-    setState(() => _digits = (_digits + d).replaceFirst(RegExp(r'^0+'), ''));
+    if (d == ',') {
+      if (_decimals == 0 || _digits.contains('.')) return;
+      setState(() => _digits = '${_digits.isEmpty ? '0' : _digits}.');
+      return;
+    }
+    final dot = _digits.indexOf('.');
+    if (dot >= 0 && _digits.length - dot > _decimals) return;
+    setState(() => _digits = (_digits + d).replaceFirst(RegExp(r'^0+(?=\d)'), ''));
   }
 
   void _backspace() {
@@ -219,7 +229,7 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
-            AmountKeypad(onDigit: _tapDigit, onBackspace: _backspace),
+            AmountKeypad(onDigit: _tapDigit, onBackspace: _backspace, decimal: _decimals > 0),
             const SizedBox(height: 8),
             Center(
               child: Text(

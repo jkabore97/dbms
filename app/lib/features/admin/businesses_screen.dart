@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/format/currencies.dart';
 import 'create_business_screen.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
@@ -457,8 +458,9 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
       TextEditingController(text: widget.org.name);
   late final TextEditingController _slug =
       TextEditingController(text: widget.org.slug);
-  late final TextEditingController _currency =
-      TextEditingController(text: widget.org.currency);
+  /// The business's money, kept as it is unless picked (144: the same
+  /// picker as everywhere, never a code typed by hand).
+  late String _currency = widget.org.currency;
   late String _profile = widget.org.profile;
 
   bool _saving = false;
@@ -474,7 +476,6 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
   void dispose() {
     _name.dispose();
     _slug.dispose();
-    _currency.dispose();
     super.dispose();
   }
 
@@ -496,7 +497,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
         name: _name.text.trim(),
         slug: _slug.text.trim(),
         profile: _profile,
-        currency: _currency.text.trim(),
+        currency: _currency,
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -581,12 +582,22 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
               onChanged: (v) => setState(() => _profile = v ?? _profile),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _currency,
+            DropdownButtonFormField<String>(
+              key: const Key('edit-business-currency'),
+              initialValue: _currency,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: context.tr('Monnaie'),
                 border: const OutlineInputBorder(),
               ),
+              items: [
+                for (final c in currencyChoices(_currency))
+                  DropdownMenuItem(
+                      value: c,
+                      child: Text('$c — ${currencyName(c, context.trLanguage)}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: _saving ? null : (c) => setState(() => _currency = c ?? _currency),
             ),
       ],
     );

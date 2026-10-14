@@ -124,7 +124,7 @@ class _CurrencyConvertDialogState extends State<CurrencyConvertDialog> {
                           DropdownMenuItem(
                             value: r,
                             child: Text(
-                                '${r.currency} — ${knownCurrencies[r.currency] ?? ''}'),
+                                '${r.currency} — ${currencyName(r.currency, context.trLanguage)}'),
                           ),
                       ],
                       onChanged: (r) => setState(() => _picked = r),

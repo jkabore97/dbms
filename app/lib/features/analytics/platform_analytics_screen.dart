@@ -14,9 +14,9 @@ import '../../core/notify/bell_room.dart';
 /// the console it lives beside, this screen assumes its reader is entitled and
 /// lets the server be the guard.
 ///
-/// Money crosses currencies here. The platform's own home currency (XOF) is
-/// used for the totals, because a single comparable number across businesses is
-/// the point; per-business rows show each business's figure in that same unit.
+/// Money crosses currencies here, and is never added across them (144): the
+/// totals are said once per money the businesses keep their books in —
+/// « 1 250 000 FCFA · 340,50 EUR » — and each business's row in its own.
 class PlatformAnalyticsScreen extends StatefulWidget {
   const PlatformAnalyticsScreen({super.key, required this.analytics});
 
@@ -38,12 +38,15 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
   int _windowIndex = 1;
   bool _loading = true;
   String? _error;
-  PlatformHeadline _headline = PlatformHeadline.empty;
+  List<PlatformHeadline> _headlines = const [PlatformHeadline.empty];
   List<BusinessPerformance> _businesses = const [];
 
   int? get _days => _windows[_windowIndex].$2;
-  // The platform reports in the franc, the shared unit across businesses.
-  final NumberFormat _money = moneyFormat('XOF');
+
+  /// Each money's figure, one under the other: « 1 250 000 FCFA »,
+  /// « 340,50 EUR ».
+  String _each(double Function(PlatformHeadline) f) =>
+      [for (final h in _headlines) moneyFormat(h.currency).format(f(h))].join('\n');
 
   @override
   void initState() {
@@ -58,13 +61,23 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
     });
     try {
       final results = await Future.wait([
-        widget.analytics.platformHeadline(days: _days),
+        widget.analytics.platformHeadlines(days: _days),
         widget.analytics.platformBusinesses(days: _days),
       ]);
       if (!mounted) return;
       setState(() {
-        _headline = results[0] as PlatformHeadline;
-        _businesses = results[1] as List<BusinessPerformance>;
+        final heads = results[0] as List<PlatformHeadline>;
+        _headlines = heads.isEmpty ? const [PlatformHeadline.empty] : heads;
+        // Grouped by money, francs CFA first, each ranked as the server
+        // ranked it: a ranking across moneys means nothing.
+        final rows = results[1] as List<BusinessPerformance>;
+        final order = {for (var i = 0; i < rows.length; i++) rows[i]: i};
+        _businesses = [...rows]..sort((a, b) {
+            final ka = a.currency == 'XOF' ? '' : a.currency;
+            final kb = b.currency == 'XOF' ? '' : b.currency;
+            final c = ka.compareTo(kb);
+            return c != 0 ? c : order[a]!.compareTo(order[b]!);
+          });
         _loading = false;
       });
     } catch (e) {
@@ -106,9 +119,15 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
 
   Widget _body(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final marginPct = _headline.revenue == 0
-        ? 0
-        : (_headline.margin / _headline.revenue * 100).round();
+    // The margin's share of the takings, per money (a ratio, so it may
+    // be said for each).
+    final marginPct = [
+      for (final h in _headlines)
+        '${h.revenue == 0 ? 0 : (h.margin / h.revenue * 100).round()}',
+    ].join(' · ');
+    final sales = _headlines.fold<int>(0, (s, h) => s + h.saleCount);
+    final active = _headlines.fold<int>(0, (s, h) => s + h.activeBusinesses);
+    final all = _headlines.fold<int>(0, (s, h) => s + h.businesses);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -131,24 +150,24 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
           children: [
             KpiCard(
               label: context.tr('Chiffre d\'affaires'),
-              value: _money.format(_headline.revenue),
+              value: _each((h) => h.revenue),
               icon: Icons.payments_outlined,
               emphasis: true,
             ),
             KpiCard(
               label: context.tr('Bénéfice'),
-              value: _money.format(_headline.margin),
+              value: _each((h) => h.margin),
               hint: context.tr('{pct} % du CA', {'pct': marginPct}),
               icon: Icons.trending_up,
             ),
             KpiCard(
               label: context.tr('Ventes'),
-              value: '${_headline.saleCount}',
+              value: '$sales',
               icon: Icons.receipt_long_outlined,
             ),
             KpiCard(
               label: context.tr('Entreprises actives'),
-              value: '${_headline.activeBusinesses} / ${_headline.businesses}',
+              value: '$active / $all',
               icon: Icons.storefront_outlined,
             ),
           ],
@@ -165,7 +184,8 @@ class _PlatformAnalyticsScreenState extends State<PlatformAnalyticsScreen> {
                 )
               : Column(
                   children: [
-                    for (final b in _businesses) _BusinessRow(b: b, money: _money),
+                    for (final b in _businesses)
+                      _BusinessRow(b: b, money: moneyFormat(b.currency)),
                   ],
                 ),
         ),

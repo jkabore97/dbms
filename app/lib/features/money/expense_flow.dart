@@ -71,7 +71,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
   String? _photoNote;
 
   NumberFormat get _money => moneyFormat(widget.currency);
-  double get _value => parseAmount(_amount.text) ?? 0;
+  double get _value => parseAmount(_amount.text, currency: widget.currency) ?? 0;
   bool get _photos => widget.capture?.isConfigured ?? false;
 
   @override
@@ -249,7 +249,8 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
           builder: (_) => FlowNumberField(
             key: const Key('expense-amount'),
             controller: _amount,
-            suffix: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
+            suffix: currencySymbol(widget.currency),
+            currency: widget.currency,
             onChanged: (_) => setState(() {}),
           ),
         ),

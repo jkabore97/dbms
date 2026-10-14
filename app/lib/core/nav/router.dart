@@ -1242,6 +1242,7 @@ GoRouter buildRouter(SessionController session) {
                         orgId: org.id,
                         profile: org.profile,
                         current: org.theme,
+                        currency: org.currency,
                         onSaved: scope.session.resolveOrgs,
                       ),
                       allow: _admins,

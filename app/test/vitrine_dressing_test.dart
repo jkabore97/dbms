@@ -217,7 +217,8 @@ void main() {
     );
     expect(find.byKey(const Key('preview-tagline')), findsOneWidget);
     expect(find.text('Ouvert maintenant'), findsOneWidget);
-    expect(find.text('1000 F'), findsOneWidget);
+    // In the shop's money, as the street writes it (144).
+    expect(find.textContaining(RegExp(r'^1.000.FCFA$')), findsOneWidget);
     await tester.pumpWidget(
       preview(const StorefrontStyle(layout: VitrineLayout.list)),
     );

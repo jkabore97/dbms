@@ -82,15 +82,57 @@ class AnalyticsRepository {
         : PlatformHeadline.fromRow(Map<String, dynamic>.from(rows.first as Map));
   }
 
-  /// Every business, ranked by revenue, for the platform console.
+  /// The platform's totals, one per money its businesses keep their books
+  /// in (140), francs CFA first: a euro is never added to a franc. A
+  /// database before 140 answers the one headline, in francs.
+  Future<List<PlatformHeadline>> platformHeadlines({int? days = 30}) async {
+    final client = _requireClient();
+    final since = _since(days);
+    try {
+      final rows = await client.rpc('platform_analytics_by_currency',
+          params: {'p_since': ?since}) as List<dynamic>;
+      if (rows.isNotEmpty) {
+        return rows
+            .map((r) => PlatformHeadline.fromRow(Map<String, dynamic>.from(r as Map)))
+            .toList();
+      }
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+    }
+    return [await platformHeadline(days: days)];
+  }
+
+  /// Every business, ranked by revenue, for the platform console — each
+  /// with its money (140's platform_business_currencies; francs CFA on a
+  /// database before 140).
   Future<List<BusinessPerformance>> platformBusinesses({int? days = 30}) async {
     final client = _requireClient();
     final since = _since(days);
-    final rows = await client.rpc('platform_business_performance',
-        params: {'p_since': ?since}) as List<dynamic>;
-    return rows
-        .map((r) => BusinessPerformance.fromRow(Map<String, dynamic>.from(r as Map)))
-        .toList();
+    final results = await Future.wait<Object?>([
+      client.rpc('platform_business_performance', params: {'p_since': ?since}),
+      _businessCurrencies(client),
+    ]);
+    final money = results[1] as Map<String, String>;
+    return [
+      for (final r in results[0] as List<dynamic>)
+        BusinessPerformance.fromRow({
+          ...Map<String, dynamic>.from(r as Map),
+          if (money['${r['org_id']}'] != null) 'currency': money['${r['org_id']}'],
+        }),
+    ];
+  }
+
+  Future<Map<String, String>> _businessCurrencies(SupabaseClient client) async {
+    try {
+      final rows = await client.rpc('platform_business_currencies') as List<dynamic>;
+      return {
+        for (final r in rows)
+          if ((r as Map)['org_id'] != null) '${r['org_id']}': '${r['currency'] ?? 'XOF'}',
+      };
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const {};
+      rethrow;
+    }
   }
 
   SupabaseClient _requireClient() {

@@ -416,12 +416,14 @@ class _CourierScreenState extends State<CourierScreen>
                                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 16)),
                                 // What today paid (062): the one strip on the
                                 // page a courier reads before anything else.
-                                if (_earnings.isNotEmpty)
+                                // One strip per money (144): a run for a
+                                // Paris shop is never added to francs.
+                                for (final g in earningsByCurrency(_earnings,
+                                    _mine.isNotEmpty ? _mine.first.currency : 'XOF').entries)
                                   _EarningsStrip(
-                                      earnings: _earnings,
-                                      currency: _mine.isNotEmpty
-                                          ? _mine.first.currency
-                                          : 'XOF'),
+                                      key: Key('courier-earnings-${g.key}'),
+                                      earnings: g.value,
+                                      currency: g.key),
                                 if (_cash.isNotEmpty) _CashStrip(cash: _cash),
                               ],
                             ),
@@ -556,7 +558,7 @@ class _PinnedTabs extends SliverPersistentHeaderDelegate {
 /// stone band the street uses for what matters most. Today is written
 /// large; the week and the month sit beside it in small type.
 class _EarningsStrip extends StatelessWidget {
-  const _EarningsStrip({required this.earnings, required this.currency});
+  const _EarningsStrip({super.key, required this.earnings, required this.currency});
 
   final List<CourierEarnings> earnings;
   final String currency;
@@ -664,6 +666,25 @@ class _EarningsStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The courier's tally by money (144), francs CFA first: a row with no
+/// money (062's tally, before 140) is in [fallback], the courier's own.
+Map<String, List<CourierEarnings>> earningsByCurrency(
+    List<CourierEarnings> earnings, String fallback) {
+  final out = <String, List<CourierEarnings>>{};
+  for (final e in earnings) {
+    (out[e.currency ?? fallback] ??= []).add(e);
+  }
+  final keys = out.keys.toList()
+    ..sort((a, b) => a == b
+        ? 0
+        : a == 'XOF'
+            ? -1
+            : b == 'XOF'
+                ? 1
+                : a.compareTo(b));
+  return {for (final k in keys) k: out[k]!};
 }
 
 /// What being a livreur is, for somebody who is not one yet.
@@ -1026,12 +1047,16 @@ class _CashStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = moneyFormat(cash.first.currency);
-    final total = cash.fold<double>(0, (s, c) => s + c.total);
-    final shops = <String, double>{};
+    // Per money (144): a Paris shop's euros are never added to francs.
+    final totals = <String, double>{};
+    final shops = <(String, String), double>{};
     for (final c in cash) {
-      shops[c.shopName] = (shops[c.shopName] ?? 0) + c.total;
+      totals[c.currency] = (totals[c.currency] ?? 0) + c.total;
+      shops[(c.shopName, c.currency)] = (shops[(c.shopName, c.currency)] ?? 0) + c.total;
     }
+    final total = [
+      for (final t in totals.entries) moneyFormat(t.key).format(t.value),
+    ].join(' + ');
     return Material(
       color: ShopStyle.paper,
       child: InkWell(
@@ -1051,8 +1076,8 @@ class _CashStrip extends StatelessWidget {
                 ),
                 for (final e in shops.entries)
                   ListTile(
-                    title: Text(e.key),
-                    trailing: Text(money.format(e.value),
+                    title: Text(e.key.$1),
+                    trailing: Text(moneyFormat(e.key.$2).format(e.value),
                         style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 Padding(
@@ -1073,7 +1098,7 @@ class _CashStrip extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                    context.tr('À remettre aux boutiques : {amount}', {'amount': money.format(total)}),
+                    context.tr('À remettre aux boutiques : {amount}', {'amount': total}),
                     style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
