@@ -448,22 +448,20 @@ class CompteScreen extends StatelessWidget {
           _Group(
             title: context.tr('Aide'),
             children: [
-              // « Aide Mara » (126): the hours, WhatsApp once the platform
-              // set a number, the e-mail always — the same for a shop, a
-              // farm and an association.
-              // 143: the plan's words — « Réponse sous 48 h » on Basic,
-              // never « 24 h/24 » — and the WhatsApp naming the business.
-              SupportCard(framed: false, org: org, page: context.tr('Compte')),
-              // 136: the business's help page — the trainers' « Besoin
-              // d'aide » for a Pro business, the guides and Mara's contacts
-              // for a free one — as on the home's top bar.
-              if (!org.isObserverOnly)
+              // One way in (143): the business's Aide page holds Mara's
+              // WhatsApp and e-mail, the trainers and the guides. Someone
+              // who only watches a business (an observer) cannot ask there,
+              // so keeps the contact card itself.
+              if (org.isObserverOnly)
+                SupportCard(framed: false, org: org, page: context.tr('Compte'))
+              else
                 _Tile(
                   key: const Key('compte-help'),
-                  icon: org.isPro ? Icons.support : Icons.menu_book_outlined,
-                  title: org.isPro
-                      ? context.tr('Besoin d\'aide — un formateur')
-                      : context.tr('Guides et aide'),
+                  icon: Icons.support,
+                  title: context.tr('Aide'),
+                  subtitle: org.isPro
+                      ? context.tr('WhatsApp 24/7 · un formateur')
+                      : context.tr('WhatsApp · questions fréquentes · guides'),
                   onTap: () => context.push(Routes.inside(org.id, 'aide')),
                 ),
               // 136: a trainer's inbox, on their account.
@@ -471,10 +469,10 @@ class CompteScreen extends StatelessWidget {
                 builder: (waiting) => _Tile(
                   key: const Key('compte-trainer-inbox'),
                   icon: Icons.support_agent_outlined,
-                  title: context.tr('Demandes d\'aide'),
+                  title: context.tr('Demandes reçues · formateurs'),
                   subtitle: waiting > 0
                       ? context.tr('{n} en attente', {'n': waiting})
-                      : context.tr('L\'équipe de formation de Mara'),
+                      : context.tr('Ce que les entreprises demandent aux formateurs'),
                   onTap: () => context.push(Routes.trainerInbox),
                 ),
               ),

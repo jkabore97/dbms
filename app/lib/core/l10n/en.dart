@@ -6093,8 +6093,13 @@ const enStrings = <String, String>{
       'Sign in again with your password to set a new code.',
   '# Comment contacter quelqu\'un ?':
       '# How do I reach someone?',
-  'Depuis Compte › Aide (ou Mon profil › Aide) : par e-mail, ou sur WhatsApp quand le bouton est affiché.':
-      'From Account › Help (or My profile › Help): by e-mail, or on WhatsApp when the button is shown.',
+  'Depuis la page Aide de votre entreprise (Compte › Aide), ou Mon profil › Aide : par WhatsApp ou par e-mail.':
+      'From your business\'s Help page (Account › Help), or My profile › Help: on WhatsApp or by e-mail.',
+  'Pas trouvé ? Écrire à Mara': 'Not found? Write to Mara',
+  'Demandes reçues · formateurs': 'Requests received · trainers',
+  'Ce que les entreprises demandent aux formateurs': 'What businesses ask the trainers',
+  'WhatsApp 24/7 · un formateur': 'WhatsApp 24/7 · a trainer',
+  'WhatsApp · questions fréquentes · guides': 'WhatsApp · FAQ · guides',
   '1 visiteur': '1 visitor',
   '{n} visiteurs': '{n} visitors',
   '1 vitrine sur la carte':

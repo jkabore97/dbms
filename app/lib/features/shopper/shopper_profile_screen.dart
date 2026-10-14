@@ -361,10 +361,10 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           builder: (waiting) => _Row(
             key: const Key('shopper-trainer-inbox'),
             icon: Icons.support_agent_outlined,
-            title: context.tr('Demandes d\'aide'),
+            title: context.tr('Demandes reçues · formateurs'),
             subtitle: waiting > 0
                 ? context.tr('{n} en attente', {'n': waiting})
-                : context.tr('L\'équipe de formation de Mara'),
+                : context.tr('Ce que les entreprises demandent aux formateurs'),
             onTap: () => context.push(Routes.trainerInbox),
           ),
         ),
