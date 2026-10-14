@@ -7963,4 +7963,92 @@ const enStrings = <String, String>{
       'A service at the top of « À la une », or your vitrine at the top of the list of vitrines, for 7 days.',
   'Un article ou un service en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.':
       'An item or a service at the top of « À la une » on the home page, or the whole vitrine at the top of the list, for 7 days.',
+  // 144 (batch 148): « Mettre en avant » by area.
+  'Mises en avant en même temps, par zone (rayon ci-dessous)':
+      'Promotions at the same time, per area (radius below)',
+  'Rayon d\'une zone de mises en avant : vue par les clients à moins de … km (5 à 200)':
+      'Radius of a promotion area: seen by customers within … km (5 to 200)',
+  'Complet autour de vous cette semaine : votre mise en avant commencera dès qu\'une place se libère.':
+      'Full around you this week: your promotion will start as soon as a place frees up.',
+  'Complet autour de vous cette semaine : votre mise en avant commencera le {date}.':
+      'Full around you this week: your promotion will start on {date}.',
+  '1 place libre sur {places} autour de vous cette semaine':
+      '1 place free out of {places} around you this week',
+  '{free} places libres sur {places} autour de vous cette semaine':
+      '{free} places free out of {places} around you this week',
+  'Montrée aux clients à moins de {km} km de chez vous.':
+      'Shown to customers within {km} km of you.',
+  'Votre activité n\'est pas sur la carte': 'Your business is not on the map',
+  'Placez d\'abord votre boutique sur la carte : une mise en avant se montre aux clients autour d\'elle.':
+      'First place your shop on the map: a promotion is shown to customers around it.',
+  'Placez d\'abord votre ferme sur la carte : une mise en avant se montre aux clients autour d\'elle.':
+      'First place your farm on the map: a promotion is shown to customers around it.',
+  'Placez d\'abord votre association sur la carte : une mise en avant se montre aux clients autour d\'elle.':
+      'First place your association on the map: a promotion is shown to customers around it.',
+  'Dans les réglages : « {where} ». Rien n\'est payé avant.':
+      'In the settings: « {where} ». Nothing is paid before that.',
+  'Placez d\'abord votre boutique sur la carte (« La position de ma boutique », dans les réglages) : une mise en avant se montre autour d\'elle.':
+      'First place your shop on the map (« My shop\'s location », in the settings): a promotion is shown around it.',
+  'Placez d\'abord votre ferme sur la carte (« La position de ma ferme », dans les réglages) : une mise en avant se montre autour d\'elle.':
+      'First place your farm on the map (« My farm\'s location », in the settings): a promotion is shown around it.',
+  'Placez d\'abord votre association sur la carte (« La position de mon association », dans les réglages) : une mise en avant se montre autour d\'elle.':
+      'First place your association on the map (« My association\'s location », in the settings): a promotion is shown around it.',
+  'Un nombre de kilomètres de 5 à 200, s\'il vous plaît.': 'A number of kilometres from 5 to 200, please.',
+  'Seul un administrateur met la boutique en avant': 'Only an administrator can promote the business',
+  'Cet emplacement est déjà demandé ou en cours': 'This place is already requested or running',
+  'Entreprise introuvable': 'Business not found',
+  // 144 (batch 148): a business fixes its own promotion.
+  'Mise en avant introuvable': 'Promotion not found',
+  'Annuler cette demande ?': 'Cancel this request?',
+  'Rien n\'a été payé : la demande est retirée. Vous pourrez en faire une autre.':
+      'Nothing has been paid: the request is withdrawn. You can make another one.',
+  'Garder la demande': 'Keep the request',
+  'Annuler la demande': 'Cancel the request',
+  'Demande annulée.': 'Request cancelled.',
+  'Arrêter la mise en avant ?': 'Stop the promotion?',
+  'Elle s\'arrête tout de suite et ne reprend pas. Aucun remboursement : une mise en avant déjà montrée n\'est pas remboursée (Conditions d\'utilisation).':
+      'It stops right away and does not resume. No refund: a promotion already shown is not refunded (Terms of use).',
+  'Arrêter sans remboursement': 'Stop with no refund',
+  'Arrêter': 'Stop',
+  'Mise en avant arrêtée.': 'Promotion stopped.',
+  'Article ou service changé.': 'Item or service changed.',
+  'Changer l\'article ou le service': 'Change the item or service',
+  'Changer l\'article': 'Change the item',
+  'Changer : un autre article ou service, une fois.':
+      'Change: another item or service, once.',
+  'Changer : un autre article ou service, une fois, dans les 24 h après le début ; les jours qui restent passent au nouveau.':
+      'Change: another item or service, once, within 24 h of the start; the remaining days go to the new one.',
+  'Changer : un autre article ou service, une fois, sans frais ; le paiement reste le même.':
+      'Change: another item or service, once, free; the payment stays the same.',
+  'Annuler : la demande est retirée, rien n\'est payé.':
+      'Cancel: the request is withdrawn, nothing is paid.',
+  'Arrêter : la mise en avant s\'arrête tout de suite, sans remboursement.':
+      'Stop: the promotion ends right away, with no refund.',
+  'Aucun autre article ou service prêt : il faut une photo, un prix, et du stock pour un article.':
+      'No other item or service ready: it needs a photo, a price, and stock for an item.',
+  'Une seule fois. Rien ne change au prix.': 'Once only. The price does not change.',
+  'Une seule fois, jusqu\'au {date}. Les jours qui restent passent au nouvel article ou service ; pas de remboursement.':
+      'Once only, until {date}. The remaining days go to the new item or service; no refund.',
+  'Une seule fois, sans frais : le paiement et les dates restent les mêmes.':
+      'Once only, free: the payment and the dates stay the same.',
+  'Changé par la plateforme : les dates et le prix restent, l\'entreprise est prévenue, c\'est inscrit au journal.':
+      'Changed by the platform: the dates and the price stay, the business is told, it is written in the log.',
+  'Elle s\'arrête tout de suite (programmée, elle n\'aura pas lieu). Un remboursement passe par « à rembourser ». L\'entreprise est prévenue, c\'est inscrit au journal.':
+      'It stops right away (if scheduled, it will not take place). A refund goes through « à rembourser ». The business is told, it is written in the log.',
+  'Mara a changé l\'article de votre mise en avant : {name}.':
+      'Mara changed the item of your promotion: {name}.',
+  'Mara a arrêté votre mise en avant.': 'Mara stopped your promotion.',
+  'La vitrine entière n\'a pas d\'article à changer': 'The whole vitrine has no item to change',
+  'Cette mise en avant est terminée': 'This promotion is over',
+  'L\'article ou le service ne se change qu\'une fois': 'The item or service can be changed only once',
+  'L\'article ou le service se change seulement dans les 24 h après le début':
+      'The item or service can be changed only within 24 h of the start',
+  'C\'est déjà cet article ou ce service': 'It is already this item or service',
+  'Paiement signalé : Mara le vérifie, la demande ne s\'annule plus':
+      'Payment reported: Mara is checking it, the request can no longer be cancelled',
+  'Seule une demande pas encore payée s\'annule': 'Only a request not yet paid can be cancelled',
+  'Un paiement Wave est en cours pour cette demande : réessayez dans une heure':
+      'A Wave payment is in progress for this request: try again in an hour',
+  'Seule une mise en avant en cours s\'arrête': 'Only a running promotion can be stopped',
+  'Seule une mise en avant en cours ou programmée s\'arrête': 'Only a running or scheduled promotion can be stopped',
 };

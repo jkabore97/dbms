@@ -74,6 +74,11 @@ class _SpotsCardState extends State<SpotsCard> {
   List<Promotion> _spots = const [];
   bool _loaded = false;
 
+  /// The fixes of a spot (144) exist on this database: cancel, change the
+  /// item, stop. Off before 144 is live.
+  bool _fixesOn = false;
+  String? _busyId;
+
   @override
   void initState() {
     super.initState();
@@ -83,9 +88,11 @@ class _SpotsCardState extends State<SpotsCard> {
   Future<void> _load() async {
     try {
       final spots = await widget.admin.myPromotions(widget.orgId);
+      final area = await widget.admin.spotArea(widget.orgId, 'article');
       if (!mounted) return;
       setState(() {
         _spots = spots;
+        _fixesOn = area != null;
         _loaded = true;
       });
     } catch (_) {
@@ -104,6 +111,108 @@ class _SpotsCardState extends State<SpotsCard> {
         pay: widget.pay,
         photo: widget.photo);
     if (changed == true) await _load();
+  }
+
+  void _say(String text) => ScaffoldMessenger.maybeOf(context)
+      ?.showSnackBar(SnackBar(content: Text(text)));
+
+  /// One fix at a time, the card reloaded after; a refusal said as such.
+  Future<void> _fix(Promotion spot, Future<void> Function() run, String done) async {
+    if (_busyId != null) return;
+    setState(() => _busyId = spot.id);
+    try {
+      await run();
+      if (mounted) _say(done);
+      await _load();
+    } catch (error) {
+      if (mounted) _say(describeError(error));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  Future<bool> _confirm({
+    required Key key,
+    required String title,
+    required String body,
+    required String keep,
+    required String go,
+    bool danger = false,
+  }) async {
+    final theme = Theme.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: key,
+        scrollable: true,
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(keep)),
+          FilledButton(
+            key: const Key('spot-fix-confirm'),
+            style: danger
+                ? FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.error,
+                    foregroundColor: theme.colorScheme.onError)
+                : null,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(go, textAlign: TextAlign.center),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
+  Future<void> _cancel(Promotion spot) async {
+    final ok = await _confirm(
+      key: const Key('spot-cancel-dialog'),
+      title: context.tr('Annuler cette demande ?'),
+      body: context.tr('Rien n\'a été payé : la demande est retirée. Vous pourrez en faire une autre.'),
+      keep: context.tr('Garder la demande'),
+      go: context.tr('Annuler la demande'),
+    );
+    if (!ok || !mounted) return;
+    await _fix(spot, () => widget.admin.cancelPromotion(spot.id), context.tr('Demande annulée.'));
+  }
+
+  Future<void> _stop(Promotion spot) async {
+    final ok = await _confirm(
+      key: const Key('spot-stop-dialog'),
+      title: context.tr('Arrêter la mise en avant ?'),
+      body: context.tr('Elle s\'arrête tout de suite et ne reprend pas. Aucun remboursement : une mise en avant déjà montrée n\'est pas remboursée (Conditions d\'utilisation).'),
+      keep: context.tr('Continuer'),
+      go: context.tr('Arrêter sans remboursement'),
+      danger: true,
+    );
+    if (!ok || !mounted) return;
+    await _fix(spot, () => widget.admin.stopPromotion(spot.id), context.tr('Mise en avant arrêtée.'));
+  }
+
+  Future<void> _change(Promotion spot) async {
+    if (_busyId != null) return;
+    PromotionOptions options;
+    try {
+      options = await widget.admin.promotionOptions(spot.id);
+    } catch (error) {
+      if (mounted) _say(describeError(error));
+      return;
+    }
+    if (!mounted) return;
+    if (!options.canChange) {
+      _say(options.changed
+          ? context.tr('L\'article ou le service ne se change qu\'une fois')
+          : context.tr('L\'article ou le service se change seulement dans les 24 h après le début'));
+      return;
+    }
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (_) => SpotChangeDialog(options: options, line: spotChangeLine(context, spot, options)),
+    );
+    if (picked == null || !mounted) return;
+    await _fix(spot, () => widget.admin.changePromotionProduct(spot.id, picked),
+        context.tr('Article ou service changé.'));
   }
 
   Future<void> _claim(Promotion spot) async {
@@ -150,7 +259,15 @@ class _SpotsCardState extends State<SpotsCard> {
             if (_loaded && _spots.isNotEmpty) ...[
               const SizedBox(height: 10),
               for (final s in _spots.take(5))
-                _SpotRow(spot: s, onPay: () => _claim(s)),
+                _SpotRow(
+                  spot: s,
+                  onPay: () => _claim(s),
+                  fixes: _fixesOn ? spotFixes(s) : null,
+                  busy: _busyId == s.id,
+                  onCancel: () => _cancel(s),
+                  onChange: () => _change(s),
+                  onStop: () => _stop(s),
+                ),
             ],
             if (sellsSpotsInApp) ...[
               const SizedBox(height: 10),
@@ -168,10 +285,73 @@ class _SpotsCardState extends State<SpotsCard> {
 }
 
 class _SpotRow extends StatelessWidget {
-  const _SpotRow({required this.spot, required this.onPay});
+  const _SpotRow({
+    required this.spot,
+    required this.onPay,
+    this.fixes,
+    this.busy = false,
+    this.onCancel,
+    this.onChange,
+    this.onStop,
+  });
 
   final Promotion spot;
   final VoidCallback onPay;
+
+  /// What may be fixed (144); null before 144 is live.
+  final ({bool cancel, bool change, bool stop})? fixes;
+  final bool busy;
+  final VoidCallback? onCancel;
+  final VoidCallback? onChange;
+  final VoidCallback? onStop;
+
+  /// The fixes allowed now (144), each with what it does in one line.
+  List<Widget> _fixPart(BuildContext context, ThemeData theme) {
+    final f = fixes;
+    if (f == null || !(f.cancel || f.change || f.stop)) return const [];
+    final lines = [
+      if (f.change)
+        spot.status == 'requested' || spot.status == 'paid_claimed'
+            ? context.tr('Changer : un autre article ou service, une fois.')
+            : f.stop
+                ? context.tr('Changer : un autre article ou service, une fois, dans les 24 h après le début ; les jours qui restent passent au nouveau.')
+                : context.tr('Changer : un autre article ou service, une fois, sans frais ; le paiement reste le même.'),
+      if (f.cancel) context.tr('Annuler : la demande est retirée, rien n\'est payé.'),
+      if (f.stop) context.tr('Arrêter : la mise en avant s\'arrête tout de suite, sans remboursement.'),
+    ];
+    return [
+      const SizedBox(height: 4),
+      Wrap(
+        spacing: 4,
+        children: [
+          if (f.change)
+            TextButton.icon(
+              key: Key('spot-change-${spot.id}'),
+              onPressed: busy ? null : onChange,
+              icon: const Icon(Icons.swap_horiz, size: 18),
+              label: Text(context.tr('Changer l\'article ou le service')),
+            ),
+          if (f.cancel)
+            TextButton.icon(
+              key: Key('spot-cancel-${spot.id}'),
+              onPressed: busy ? null : onCancel,
+              icon: const Icon(Icons.close, size: 18),
+              label: Text(context.tr('Annuler')),
+            ),
+          if (f.stop)
+            TextButton.icon(
+              key: Key('spot-stop-${spot.id}'),
+              onPressed: busy ? null : onStop,
+              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              icon: const Icon(Icons.stop_circle_outlined, size: 18),
+              label: Text(context.tr('Arrêter')),
+            ),
+        ],
+      ),
+      for (final l in lines)
+        Text(l, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +382,9 @@ class _SpotRow extends StatelessWidget {
                       style: theme.textTheme.titleSmall),
                 ),
                 const SizedBox(width: 8),
-                _StateChip(label: state),
+                // At 320 px and text ×1.3 « En attente de paiement » is
+                // wider than the room left: the chip takes two lines.
+                Flexible(child: _StateChip(label: state)),
               ],
             ),
             const SizedBox(height: 2),
@@ -229,11 +411,91 @@ class _SpotRow extends StatelessWidget {
                   label: Text(context.tr('Payer et confirmer')),
                 ),
               ),
+            ..._fixPart(context, theme),
           ],
         ),
       ),
     );
   }
+}
+
+/// The items a spot may change to (144's promotion_options), one picked.
+/// Shared with the console (featured_screen.dart).
+class SpotChangeDialog extends StatefulWidget {
+  const SpotChangeDialog({super.key, required this.options, required this.line});
+
+  final PromotionOptions options;
+
+  /// What the change does, for this spot.
+  final String line;
+
+  @override
+  State<SpotChangeDialog> createState() => _SpotChangeDialogState();
+}
+
+class _SpotChangeDialogState extends State<SpotChangeDialog> {
+  String? _picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final items = widget.options.items;
+    return AlertDialog(
+      key: const Key('spot-change-dialog'),
+      scrollable: true,
+      title: Text(context.tr('Changer l\'article ou le service')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.line, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 8),
+          if (items.isEmpty)
+            Text(context.tr('Aucun autre article ou service prêt : il faut une photo, un prix, et du stock pour un article.'),
+                key: const Key('spot-change-none'))
+          else
+            RadioGroup<String>(
+              groupValue: _picked,
+              onChanged: (v) => setState(() => _picked = v),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final i in items)
+                    RadioListTile<String>(
+                      key: Key('spot-change-item-${i.id}'),
+                      value: i.id,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(i.name),
+                      subtitle: i.service ? Text(context.tr('Service')) : null,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('Fermer'))),
+        FilledButton(
+          key: const Key('spot-change-go'),
+          onPressed: _picked == null ? null : () => Navigator.of(context).pop(_picked),
+          child: Text(context.tr('Changer')),
+        ),
+      ],
+    );
+  }
+}
+
+/// What a change does for [spot], in one line (144).
+String spotChangeLine(BuildContext context, Promotion spot, PromotionOptions options) {
+  final until = options.changeUntil;
+  if (spot.status == 'requested' || spot.status == 'paid_claimed') {
+    return context.tr('Une seule fois. Rien ne change au prix.');
+  }
+  if (until != null) {
+    return context.tr('Une seule fois, jusqu\'au {date}. Les jours qui restent passent au nouvel article ou service ; pas de remboursement.',
+        {'date': DateFormat('dd/MM HH:mm', intlLocale()).format(until.toLocal())});
+  }
+  return context.tr('Une seule fois, sans frais : le paiement et les dates restent les mêmes.');
 }
 
 class _StateChip extends StatelessWidget {
@@ -254,6 +516,7 @@ class _StateChip extends StatelessWidget {
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
       child: Text(context.tr(label),
+          textAlign: TextAlign.center,
           style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
@@ -391,6 +654,16 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   /// or running (the server refuses a second one for the same place).
   List<Promotion> _mine = const [];
 
+  /// The places around the business this week (144), per kind: null on a
+  /// database before 144 (the sheet says what it said before).
+  SpotArea? _areaArticle;
+  SpotArea? _areaShop;
+
+  SpotArea? get _area => _shop ? _areaShop : _areaArticle;
+
+  /// The business is not on the map (144): no spot can be bought.
+  bool get _noPosition => _area != null && !_area!.positioned;
+
   /// The whole shop rather than one article.
   late bool _shop = widget.vitrineOnly;
   String? _productId;
@@ -464,10 +737,16 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ? const <String, String>{}
           : await widget.retail!.photoKeys(widget.orgId);
       final mine = await widget.admin.myPromotions(widget.orgId);
+      final areas = await Future.wait([
+        widget.admin.spotArea(widget.orgId, 'article'),
+        widget.admin.spotArea(widget.orgId, 'shop'),
+      ]);
       if (!mounted) return;
       setState(() {
         _terms = terms;
         _mine = mine;
+        _areaArticle = areas[0];
+        _areaShop = areas[1];
         _photoKeys = photos;
         _articles = products
             .where((p) =>
@@ -896,6 +1175,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       const SizedBox(height: 8),
       if (_existing != null)
         ..._existingView(theme, _existing!)
+      else if (_noPosition)
+        _noPositionCard(theme)
       else if (storeMissing)
         Text(
           context.tr('La mise en avant n\'est pas disponible pour le moment.'),
@@ -910,12 +1191,14 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           key: const Key('spot-price'),
           style: theme.textTheme.titleMedium,
         ),
-        // The cap is on « À la une »'s articles, not on the vitrines' list.
-        if (!shop)
+        // Before 144: one cap for the street, on « À la une »'s articles.
+        if (_area == null && !shop)
           Text(
             context.tr('Au plus {maxLive} articles à la une en même temps : si la place est prise, votre période commence dès qu\'une se libère.', {'maxLive': _terms.maxLive}),
             style: theme.textTheme.bodySmall,
           ),
+        // Since 144: the places around the business, this week.
+        if (_area != null && !_noPosition) ..._areaLine(theme, _area!),
         const SizedBox(height: 14),
         // As tall as its words at the reader's text size: never cut.
         ConstrainedBox(
@@ -950,6 +1233,16 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
 
   List<Widget> _payView(ThemeData theme, TextStyle? muted) {
     final spot = _asked!;
+    // No pin (144): nothing is paid for a spot no shopper would see.
+    if (_area != null && _noPositionFor(spot)) {
+      return [
+        _noPositionCard(theme),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(context.tr('Fermer')),
+        ),
+      ];
+    }
     if (_viaStore) return _storePayView(theme, muted, spot);
     // Wave and « J'ai payé » in West African francs only: Wave takes no
     // XAF (an XAF business pays by card).
@@ -1083,7 +1376,107 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
 
   /// The spot asked, bought through the store (142): nothing else is
   /// offered in the apps — no Wave, no « J'ai payé », no link out.
+  bool _noPositionFor(Promotion spot) {
+    final area = spot.isShop ? _areaShop : _areaArticle;
+    return area != null && !area.positioned;
+  }
+
+  /// « 3 places libres sur 8 autour de vous cette semaine », or, the area
+  /// full, the day the next place frees (144).
+  List<Widget> _areaLine(ThemeData theme, SpotArea area) {
+    final km = NumberFormat.decimalPattern(intlLocale()).format(area.areaKm);
+    final text = area.full
+        ? (area.nextAt == null
+            ? context.tr('Complet autour de vous cette semaine : votre mise en avant commencera dès qu\'une place se libère.')
+            : context.tr('Complet autour de vous cette semaine : votre mise en avant commencera le {date}.',
+                {'date': _day(area.nextAt!)}))
+        : area.free == 1
+            ? context.tr('1 place libre sur {places} autour de vous cette semaine', {'places': area.places})
+            : context.tr('{free} places libres sur {places} autour de vous cette semaine',
+                {'free': area.free, 'places': area.places});
+    return [
+      const SizedBox(height: 2),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(area.full ? Icons.hourglass_top : Icons.place_outlined,
+              size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(text,
+                key: Key(area.full ? 'spot-area-full' : 'spot-area-free'),
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+      const SizedBox(height: 2),
+      Text(
+        context.tr('Montrée aux clients à moins de {km} km de chez vous.', {'km': km}),
+        style: theme.textTheme.bodySmall,
+      ),
+    ];
+  }
+
+  /// No pin (144): the way to the setting that places the business.
+  Widget _noPositionCard(ThemeData theme) {
+    final (where, line) = switch (_profile) {
+      'farm' => (
+          context.tr('La position de ma ferme'),
+          context.tr('Placez d\'abord votre ferme sur la carte : une mise en avant se montre aux clients autour d\'elle.'),
+        ),
+      'association' || 'church' => (
+          context.tr('La position de mon association'),
+          context.tr('Placez d\'abord votre association sur la carte : une mise en avant se montre aux clients autour d\'elle.'),
+        ),
+      _ => (
+          context.tr('La position de ma boutique'),
+          context.tr('Placez d\'abord votre boutique sur la carte : une mise en avant se montre aux clients autour d\'elle.'),
+        ),
+    };
+    // A plain card, never revealed on scroll: the refusal is there at once.
+    return Card(
+      key: const Key('spot-no-position'),
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_off_outlined, color: theme.colorScheme.onErrorContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(context.tr('Votre activité n\'est pas sur la carte'),
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: theme.colorScheme.onErrorContainer)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(line, style: TextStyle(color: theme.colorScheme.onErrorContainer)),
+            const SizedBox(height: 4),
+            Text(context.tr('Dans les réglages : « {where} ». Rien n\'est payé avant.', {'where': where}),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onErrorContainer, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<Widget> _storePayView(ThemeData theme, TextStyle? muted, Promotion spot) {
+    if (_noPositionFor(spot)) {
+      return [
+        _noPositionCard(theme),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(context.tr('Fermer')),
+        ),
+      ];
+    }
     final product = _storeProduct;
     final loading = _storeProducts == null;
     return [

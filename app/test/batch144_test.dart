@@ -198,7 +198,7 @@ class _Street extends StorefrontRepository {
       ];
 
   @override
-  Future<List<FeaturedItem>> featured() async => const [];
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async => const [];
 
   @override
   Future<Map<String, List<ShopPreview>>> previews(List<String> slugs) async => {

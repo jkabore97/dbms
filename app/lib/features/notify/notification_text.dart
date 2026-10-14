@@ -259,6 +259,11 @@ String notificationLine(BuildContext context, NotificationRow n) {
       });
     case 'spot_refused':
       return context.tr('Votre demande de mise en avant n\'a pas été retenue.');
+    // 144: the platform's hand on a spot.
+    case 'spot_changed':
+      return context.tr('Mara a changé l\'article de votre mise en avant : {name}.', {'name': s('name')});
+    case 'spot_stopped':
+      return context.tr('Mara a arrêté votre mise en avant.');
     case 'new_device':
       return context.tr(
           'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.',
@@ -570,7 +575,7 @@ String? notificationTarget(
       return inside('classement');
     case 'pro_active' || 'feature_lapsed':
       return inside('kaj-pro');
-    case 'spot_approved' || 'spot_refused':
+    case 'spot_approved' || 'spot_refused' || 'spot_changed' || 'spot_stopped':
       return Routes.orgSettings(org, part: 'vitrine');
     // What Mara changed, where the owner sees it (106).
     case 'mara_edited' || 'mara_undone':

@@ -91,6 +91,9 @@ class _Street extends StorefrontRepository {
 
   final seen = <List<String>>[];
 
+  /// Where À la une and the spotlights were asked from (144).
+  final askedFrom = <String>[];
+
   @override
   bool get isConfigured => true;
 
@@ -102,7 +105,9 @@ class _Street extends StorefrontRepository {
       ];
 
   @override
-  Future<List<FeaturedItem>> featured() async => const [
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async {
+    askedFrom.add('featured:$lat,$lng');
+    return const [
         FeaturedItem(
             id: 'p1',
             name: 'Pagne',
@@ -111,9 +116,13 @@ class _Street extends StorefrontRepository {
             shopName: 'Boutique Awa',
             shopSlug: 'awa'),
       ];
+  }
 
   @override
-  Future<Set<String>> spotlights() async => {'awa'};
+  Future<Set<String>> spotlights({double? lat, double? lng}) async {
+    askedFrom.add('spotlights:$lat,$lng');
+    return {'awa'};
+  }
 
   @override
   Future<void> recordSeen(List<String> productIds) async => seen.add(productIds);
@@ -357,5 +366,8 @@ void main() {
     expect(street.seen, [
       ['p1']
     ]);
+    // 144: no « près de moi » yet — asked with no position (the server
+    // then takes the shopper's saved pin, or shows no spot).
+    expect(street.askedFrom, ['featured:null,null', 'spotlights:null,null']);
   });
 }

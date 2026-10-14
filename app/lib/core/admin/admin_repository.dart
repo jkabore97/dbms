@@ -1080,6 +1080,56 @@ class AdminRepository {
     return '$v';
   }
 
+  /// The places around the business for a spot of [kind] ('article' or
+  /// 'shop') this week (144): null on a database before 144, or when it
+  /// cannot be read — the sheet then says what it said before.
+  Future<SpotArea?> spotArea(String orgId, String kind) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final v = await client.rpc('spot_area_status', params: {'p_org_id': orgId, 'p_kind': kind});
+      if (v is! Map) return null;
+      return SpotArea.fromJson(Map<String, dynamic>.from(v));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// What may be done with a spot now and the items it may change to
+  /// (144). The business's admins' and the platform's.
+  Future<PromotionOptions> promotionOptions(String promotionId) async {
+    final v = await _requireClient()
+        .rpc('promotion_options', params: {'p_promotion_id': promotionId});
+    return PromotionOptions.fromJson(Map<String, dynamic>.from(v as Map));
+  }
+
+  /// Withdraws a spot asked and not paid (144).
+  Future<void> cancelPromotion(String promotionId) async {
+    await _requireClient().rpc('cancel_promotion', params: {'p_promotion_id': promotionId});
+  }
+
+  /// Puts another article or service in the spot, once (144).
+  Future<void> changePromotionProduct(String promotionId, String productId) async {
+    await _requireClient().rpc('change_promotion_product',
+        params: {'p_promotion_id': promotionId, 'p_product_id': productId});
+  }
+
+  /// Ends a running spot now, with no refund (144).
+  Future<void> stopPromotion(String promotionId) async {
+    await _requireClient().rpc('stop_promotion', params: {'p_promotion_id': promotionId});
+  }
+
+  /// The platform's change of a spot's item (144), journaled.
+  Future<void> platformChangePromotionProduct(String promotionId, String productId) async {
+    await _requireClient().rpc('platform_change_promotion_product',
+        params: {'p_promotion_id': promotionId, 'p_product_id': productId});
+  }
+
+  /// The platform stops any spot (144), journaled.
+  Future<void> platformStopPromotion(String promotionId) async {
+    await _requireClient().rpc('platform_stop_promotion', params: {'p_promotion_id': promotionId});
+  }
+
   /// "J'ai payé" for a spot.
   Future<void> claimPromotionPaid(String promotionId, {String? note}) async {
     await _requireClient().rpc('claim_promotion_paid', params: {

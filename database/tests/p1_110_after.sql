@@ -12,8 +12,9 @@
 -- a church, a spot asked for and paid, a vitrine dressed on Pro and on
 -- Basic, the delivery numbers and the Wave payout changed, a service
 -- created. And with no rule written, none of the vitrine's switches hides
--- anything for any business. One answer changes on purpose, set aside
--- below: since 141 the Basic dressing keeps the layout it was sent.
+-- anything for any business. Two answers change on purpose, set aside
+-- below: since 141 the Basic dressing keeps the layout it was sent; since
+-- 144 À la une and the spotlights show a spot only around its business.
 -- ============================================================
 \set ON_ERROR_STOP on
 
@@ -56,6 +57,25 @@ begin
      where s.phase = 'after'
        and s.what = 'dress basic'
        and s.v ->> 'layout' = 'menu';
+    -- 144 (batch 148): a spot is shown only around its business. The
+    -- photograph asks À la une and the spotlights from nowhere — since 144
+    -- that shows no spot at all, on purpose (Mara's own pick stays). Asked
+    -- from where the vitrines are (Gounghin, the photograph's « near »
+    -- point), the street must show exactly the spots it showed before.
+    if to_regprocedure('storefront_featured(double precision, double precision)') is not null then
+        if exists (select 1 from storefront_spotlights())
+           or (select count(*) from storefront_featured()) <> 1 then
+            raise exception 'FAIL: asked from nowhere, the street still shows a spot (144)';
+        end if;
+        update p110_snap
+           set v = (select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text), '[]')
+                      from storefront_featured(12.36, -1.53) x)
+         where phase = 'after' and what = 'featured';
+        update p110_snap
+           set v = (select coalesce(jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text), '[]')
+                      from storefront_spotlights(12.36, -1.53) x)
+         where phase = 'after' and what = 'spotlights';
+    end if;
     select string_agg(coalesce(b.what, a.what), '; ' order by coalesce(b.what, a.what)), count(*)
       into v_diff, v_count
       from (select * from p110_snap where phase = 'before') b

@@ -761,7 +761,11 @@ declare
         -- 139: 7 days only, Pro pays too — the 30-day prices and
         -- pro_free_spots_month stay in platform_settings, inert, out of
         -- Réglages; the zone prices are read by spot_zone_price().
-        'spots_max_live', 'spot_price_article_7', 'spot_price_shop_7',
+        'spots_max_live',
+        -- 144: read by spot_in_area(), which the street's spots and the
+        -- area's queue ask.
+        'spot_area_km',
+        'spot_price_article_7', 'spot_price_shop_7',
         'spot_price_article_7_eur', 'spot_price_shop_7_eur',
         'spot_price_article_7_usd', 'spot_price_shop_7_usd',
         'delivery_base', 'delivery_per_km', 'delivery_currency', 'delivery_max_km',

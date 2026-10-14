@@ -865,6 +865,8 @@ begin
                          'platform_set_setting', 'spot_refund', 'spot_ineligible', 'next_spot_start',
                          'decide_promotion', 'spot_refunds_todo', 'platform_spot_refunds',
                          'platform_spot_refund_done')
+       -- 139's own next_spot_start(text); 144's (text, uuid) is test_batch144's.
+       and (p.proname <> 'next_spot_start' or p.pronargs = 1)
        and (has_function_privilege('anon', p.oid, 'execute')
             or not coalesce((select true from unnest(p.proconfig) c where c like 'search_path=%'), false));
     if v is not null then raise exception 'FAIL: open to anon, or no pinned path: %', v; end if;

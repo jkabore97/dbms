@@ -99,6 +99,9 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('vitrine_min_items_association', 'street', SettingType.count),
   SettingDef('progress_street_pct', 'street', SettingType.pct),
   SettingDef('spots_max_live', 'street', SettingType.count),
+  // 144: a spot shows only to shoppers this close to its business, and
+  // spots_max_live is counted among the businesses this close.
+  SettingDef('spot_area_km', 'street', SettingType.km),
   // 139: 7 days only, and Pro pays too — the 30-day prices and
   // pro_free_spots_month stay in the database, inert, out of Réglages.
   // The FCFA prices (the XOF zone, XAF the same number), then the euro
@@ -224,7 +227,7 @@ const settingCards = <SettingCard>[
   SettingCard('vitrines', Icons.storefront_outlined, [
     ('street', ['vitrine_min_items', 'vitrine_min_items_association', 'progress_street_pct']),
     ('spots', [
-      'spots_max_live', 'spot_price_article_7', 'spot_price_shop_7', 'spot_price_article_7_eur',
+      'spots_max_live', 'spot_area_km', 'spot_price_article_7', 'spot_price_shop_7', 'spot_price_article_7_eur',
       'spot_price_shop_7_eur', 'spot_price_article_7_usd', 'spot_price_shop_7_usd',
     ]),
     ('orders', ['order_phone_verified', 'booking_cancel_hours']),
@@ -429,7 +432,8 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'vitrine_min_items_association' =>
         context.tr('Articles ou services pour paraître dans la rue (association)'),
       'progress_street_pct' => context.tr('Vitrine remplie à … % pour paraître dans la rue'),
-      'spots_max_live' => context.tr('Mises en avant en même temps'),
+      'spots_max_live' => context.tr('Mises en avant en même temps, par zone (rayon ci-dessous)'),
+      'spot_area_km' => context.tr('Rayon d\'une zone de mises en avant : vue par les clients à moins de … km (5 à 200)'),
       'spot_price_article_7' => context.tr('Un article à la une, 7 jours — FCFA (zone franc CFA)'),
       'spot_price_shop_7' => context.tr('La boutique à la une, 7 jours — FCFA (zone franc CFA)'),
       'spot_price_article_7_eur' => context.tr('Un article à la une, 7 jours — euros (zone euro)'),
@@ -554,6 +558,8 @@ const cardMinimumSettings = <String, double>{
 /// 100 km (122's platform_set_setting refuses the rest) — said here first.
 const rangedSettings = {
   'courier_radius_km': (1, 100),
+  // 144: the spots' area (144's platform_set_setting refuses the rest).
+  'spot_area_km': (5, 200),
   // 133: the help hours, its minutes and its daily limit (133's trigger
   // refuses the rest, and an opening after the closing).
   'help_hours_open': (0, 23),

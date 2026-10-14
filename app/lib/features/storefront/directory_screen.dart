@@ -93,6 +93,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// Where the shopper is, once they said so. Null until "près de moi".
   LatLng? _here;
 
+  /// Where the phone is, read without asking (144): only when location was
+  /// already allowed for Mara. It places the paid spots — shown only around
+  /// their business — and changes nothing else: the list keeps its order
+  /// until « près de moi ».
+  LatLng? _quiet;
+
   /// Ouagadougou's centre: where the map opens with nothing better to show.
   static const _ouaga = LatLng(12.3714, -1.5197);
 
@@ -166,6 +172,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.initState();
     _readInvite();
     _load();
+    unawaited(_quietPosition());
     widget.session.addListener(_onSession);
     _onSession();
   }
@@ -249,14 +256,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
     try {
       final here = _here;
+      final spot = _here ?? _quiet;
       // The paid spots are a strip, not the page: if they fail to load the
       // shops still show, and the strip is simply absent.
       final results = await Future.wait([
         widget.storefront.directory(lat: here?.latitude, lng: here?.longitude),
+        // Since 144 a spot shows only around its business: asked from
+        // here when « près de moi » said where that is, or the phone
+        // already allowed it (else the server takes the shopper's saved
+        // pin, or shows none).
         widget.storefront
-            .featured()
+            .featured(lat: spot?.latitude, lng: spot?.longitude)
             .catchError((_) => const <FeaturedItem>[]),
-        widget.storefront.spotlights(),
+        widget.storefront.spotlights(lat: spot?.latitude, lng: spot?.longitude),
         widget.storefront.showcaseSlugs(),
       ]);
       if (!mounted) return;
@@ -314,6 +326,30 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) setState(() => _previews = previews);
     } catch (_) {
       // The cards keep their names; the goods simply do not show.
+    }
+  }
+
+  /// The phone's position when location is already allowed — never a
+  /// prompt — then the spots asked again from there. Any failure leaves
+  /// the street as it is.
+  Future<void> _quietPosition() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted || _here != null) return;
+      _quiet = LatLng(position.latitude, position.longitude);
+      await _load();
+    } catch (_) {
+      // No position: the server's saved pin, or no spot.
     }
   }
 

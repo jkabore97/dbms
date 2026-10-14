@@ -193,7 +193,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'phone_verified' => Icons.verified_user_outlined,
         'test_push' => Icons.send_outlined,
         'platform_message' => Icons.campaign_outlined,
-        'spot_approved' || 'spot_refused' => Icons.campaign_outlined,
+        'spot_approved' || 'spot_refused' || 'spot_changed' || 'spot_stopped' => Icons.campaign_outlined,
         'vitrine_news' => Icons.favorite_border,
         'report_handled' => Icons.flag_outlined,
         final k when k.startsWith('courier_') || k.startsWith('delivery_') =>
