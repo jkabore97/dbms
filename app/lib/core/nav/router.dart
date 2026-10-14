@@ -496,7 +496,11 @@ GoRouter buildRouter(SessionController session) {
       // and can be linked from anywhere, signed in or not.
       GoRoute(path: Routes.privacy, builder: (_, _) => const PrivacyScreen()),
       GoRoute(path: Routes.terms, builder: (_, _) => const TermsScreen()),
-      GoRoute(path: Routes.faq, builder: (_, _) => const FaqScreen()),
+      // ?org=<id>: opened from a business (143) — its Pro banner and its
+      // plan's words; an id that is not one of the person's own is none.
+      GoRoute(
+          path: Routes.faq,
+          builder: (_, state) => FaqScreen(orgId: state.uri.queryParameters['org'])),
 
       // A shop's public vitrine. Top-level and never redirected — see the
       // redirect above — because the person opening it is a shopper with no
@@ -1267,8 +1271,9 @@ GoRouter buildRouter(SessionController session) {
               (scope, org) => biz.CompteScreen(org: org),
             ),
           ),
-          // « Besoin d'aide » / « Aide » (136): the request's status for a
-          // Pro business, the guides and Mara's contacts for a free one.
+          // « Aide » (136, 143): WhatsApp, « Demander un formateur » and the
+          // FAQ — Pro's or Basic's; under it « Mes demandes », every request
+          // of the business (?demande=<id>: a bell opens that one).
           GoRoute(
             path: 'aide',
             builder: (context, state) => _withOrg(
@@ -1276,6 +1281,19 @@ GoRouter buildRouter(SessionController session) {
               state,
               (scope, org) => biz.HelpScreen(org: org),
             ),
+            routes: [
+              GoRoute(
+                path: 'demandes',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) => biz.HelpRequestsScreen(
+                    org: org,
+                    focus: state.uri.queryParameters['demande'],
+                  ),
+                ),
+              ),
+            ],
           ),
           // Kaj and Kaj Pro side by side: the « Pro » strip, every badged
           // tool and Compte open it.

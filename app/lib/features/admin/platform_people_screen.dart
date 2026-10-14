@@ -8,6 +8,9 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/admin/models.dart' show roleLabel;
+import '../../core/help/help_repository.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/phone/country_codes.dart' show displayPhone;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
@@ -26,10 +29,14 @@ class PlatformPeopleScreen extends StatefulWidget {
     required this.admin,
     this.initialQuery,
     this.openUserId,
+    this.help,
   });
 
   final ConsoleRepository console;
   final AdminRepository admin;
+
+  /// « Formateur Mara » (143); the app's own server unless a test gives one.
+  final HelpRepository? help;
 
   /// What the command center's search found (104): the search to start
   /// with, and the person to open at once when the list has them.
@@ -196,10 +203,12 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => _PersonSheet(
+      builder: (_) => PersonSheet(
         person: person,
         console: widget.console,
         admin: widget.admin,
+        help: widget.help ??
+            HelpRepository(AppScope.maybeOf(context)?.auth.client),
       ),
     );
     if (changed == true) await _load();
@@ -207,24 +216,30 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
 }
 
 /// One person, opened: their businesses and roles, and the actions a platform
-/// admin may take on the account.
-class _PersonSheet extends StatefulWidget {
-  const _PersonSheet({
+/// admin may take on the account — since 143 « Formateur Mara » too.
+class PersonSheet extends StatefulWidget {
+  const PersonSheet({
+    super.key,
     required this.person,
     required this.console,
     required this.admin,
+    required this.help,
   });
 
   final PlatformPerson person;
   final ConsoleRepository console;
   final AdminRepository admin;
+  final HelpRepository help;
 
   @override
-  State<_PersonSheet> createState() => _PersonSheetState();
+  State<PersonSheet> createState() => _PersonSheetState();
 }
 
-class _PersonSheetState extends State<_PersonSheet> {
+class _PersonSheetState extends State<PersonSheet> {
   List<PersonOrg>? _orgs;
+
+  /// « Formateur Mara » (143): null while it is asked, or when it cannot be.
+  TrainerSwitch? _trainer;
   late bool _isPlatformAdmin = widget.person.isPlatformAdmin;
   bool _busy = false;
   String? _error;
@@ -237,6 +252,118 @@ class _PersonSheetState extends State<_PersonSheet> {
   void initState() {
     super.initState();
     _loadOrgs();
+    _loadTrainer();
+  }
+
+  Future<void> _loadTrainer() async {
+    if (!widget.help.isConfigured) return;
+    try {
+      final t = await widget.help.trainerState(widget.person.userId);
+      if (mounted) setState(() => _trainer = t);
+    } catch (_) {}
+  }
+
+  /// What turning a trainer off does, said true (138): the requests stop,
+  /// the 48 h accesses end and the businesses they are assigned to (038)
+  /// are taken from them — how many said. Before 138 the server keeps the
+  /// assignments: only the first two are promised.
+  static String _offWords(BuildContext context, TrainerSwitch? t) {
+    final n = t?.assigned ?? 0;
+    if (t == null || !t.installed || n == 0) {
+      return context.tr('Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent.');
+    }
+    return n == 1
+        ? context.tr('Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent, et elle ne verra plus l\'entreprise qui lui est confiée.')
+        : context.tr('Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent, et elle ne verra plus les {n} entreprises qui lui sont confiées.', {'n': n});
+  }
+
+  /// A trainer is 038's profiles.is_trainer: rung for the requests of the
+  /// businesses they are assigned to, and every one once escalated (133).
+  Future<void> _toggleTrainer(bool on) async {
+    final label = widget.person.label;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        title: Text(on
+            ? context.tr('Faire de {label} un formateur Mara ?', {'label': label})
+            : context.tr('{label} n\'est plus formateur ?', {'label': label})),
+        content: Text(on
+            ? context.tr('Cette personne recevra les demandes d\'aide des entreprises Mara Pro, dans l\'app et sur WhatsApp, au numéro de son profil.')
+            : _offWords(context, _trainer)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.tr('Annuler'))),
+          FilledButton(
+              key: const Key('trainer-confirm'),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(context.tr('Confirmer'))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await _run(() async {
+      final t = await widget.help.setTrainer(widget.person.userId, on,
+          phone: widget.person.phone);
+      if (mounted) setState(() => _trainer = t);
+    }, on ? context.tr('Formateur ajouté') : context.tr('Formateur retiré'));
+  }
+
+  Widget _trainerSwitch(BuildContext context) {
+    final theme = Theme.of(context);
+    final t = _trainer;
+    if (t == null) return const SizedBox.shrink();
+    final phone = t.phone ?? widget.person.phone;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SwitchListTile(
+          key: const Key('trainer-switch'),
+          contentPadding: EdgeInsets.zero,
+          value: t.isTrainer,
+          onChanged: _busy ? null : _toggleTrainer,
+          secondary: const Icon(Icons.support_agent_outlined),
+          title: Text(context.tr('Formateur Mara')),
+          subtitle: Text(t.isTrainer
+              ? context.tr('Reçoit les demandes d\'aide des entreprises Mara Pro.')
+              : context.tr('Aide les entreprises Mara Pro qui le demandent.')),
+        ),
+        if (t.isTrainer && (phone == null || phone.trim().isEmpty))
+          Container(
+            key: const Key('trainer-no-phone'),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: theme.colorScheme.onErrorContainer),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.tr('Pas de numéro sur son profil : les demandes ne pourront pas le joindre par WhatsApp ni par appel. Ajoutez-en un à son compte.'),
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (t.isTrainer)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              context.tr('Joint au {phone}', {'phone': displayPhone(phone!)}),
+              key: const Key('trainer-phone'),
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _loadOrgs() async {
@@ -470,6 +597,9 @@ class _PersonSheetState extends State<_PersonSheet> {
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               const SizedBox(height: 12),
             ],
+
+            // 143: « Formateur Mara », chosen here by the platform.
+            _trainerSwitch(context),
 
             // Platform access — never on oneself.
             if (!_isSelf)

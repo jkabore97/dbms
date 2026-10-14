@@ -249,3 +249,20 @@ bool countryMatches(CountryCode country, String query) {
       country.iso.toLowerCase().contains(q) ||
       (digits.isNotEmpty && country.dial.substring(1).startsWith(digits));
 }
+
+/// A stored number as it is read out (143): « +226 70 00 00 00 » — its `+`,
+/// the dialling code ([countryOfNumber]), then the rest in pairs, so a
+/// narrow screen breaks it between groups, never inside one. Digits alone
+/// (« 22670000000 ») or E.164 alike; an unknown code keeps its first three
+/// digits as the code. Display only: never what is stored or dialled.
+String displayPhone(String number) {
+  final digits = number.replaceAll(RegExp(r'\D'), '');
+  if (digits.length <= 4) return number.trim();
+  final dial = countryOfNumber('+$digits')?.dial.substring(1) ?? digits.substring(0, 3);
+  final rest = digits.substring(dial.length);
+  final pairs = [
+    for (var i = 0; i < rest.length; i += 2)
+      rest.substring(i, i + 2 > rest.length ? rest.length : i + 2),
+  ];
+  return ['+$dial', ...pairs].join(' ');
+}

@@ -3,6 +3,9 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/nav/parent_route.dart';
 import '../../core/theme/scroll_hint.dart';
+import '../../core/auth/models.dart';
+import '../../core/nav/app_scope.dart';
+import '../help/help_contact.dart';
 import 'support.dart';
 
 /// The three static pages the app must carry to be publishable: a privacy
@@ -242,15 +245,38 @@ class TermsScreen extends StatelessWidget {
   }
 }
 
+/// « Questions fréquentes ». Opened from a business (`/aide?org=<id>`,
+/// 143) it is that business's: a Basic one sees the Pro banner at the top
+/// (FaqProBanner — closable, back the next day) and « Réponse sous 48 h »
+/// on Mara's card; a Pro one no banner. Opened from anywhere else — signed
+/// out, a shopper, an id that is not one of this person's businesses —
+/// neither: the questions and Mara's card, as 126 had them.
 class FaqScreen extends StatelessWidget {
-  const FaqScreen({super.key});
+  const FaqScreen({super.key, this.orgId, this.org});
+
+  /// The business it was opened from (the address's ?org=).
+  final String? orgId;
+
+  /// The business itself (tests); else looked up by [orgId] in the
+  /// person's own list — an id in an address grants nothing.
+  final OrgSummary? org;
 
   @override
   Widget build(BuildContext context) {
+    final business = org ??
+        (orgId == null ? null : AppScope.maybeOf(context)?.session.orgById(orgId));
     return _DocScaffold(
       title: context.tr('Questions fréquentes'),
       // How to reach Mara first (126): the site's /aide says the same.
-      header: const SupportCard(),
+      header: business == null
+          ? const SupportCard()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (FaqProBanner.shownFor(business)) FaqProBanner(org: business),
+                SupportCard(org: business, page: context.tr('Questions fréquentes')),
+              ],
+            ),
       blocks: [
         context.tr('# L\'application fonctionne-t-elle sans internet ?'),
         context.tr('Oui. Vous pouvez enregistrer des ventes et des dépenses hors ligne ; elles sont envoyées au serveur dès que la connexion revient. Certains écrans (rapports, historique) ont besoin de la connexion.'),

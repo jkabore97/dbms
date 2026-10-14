@@ -207,7 +207,7 @@ class _HelpConsoleScreenState extends State<HelpConsoleScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${w.org} · ${helpSubjectLabel(context, w.subject)}'
+                        '${w.org} · ${helpSubjectLabel(context, w.subject, profile: w.profile)}'
                         '${w.escalated ? ' · ${context.tr('remontée à vous')}' : ''}',
                         style: theme.textTheme.bodySmall,
                       ),
@@ -311,9 +311,33 @@ class _HelpConsoleScreenState extends State<HelpConsoleScreen> {
                           ),
                         ],
                       ),
+                      // 143: the number they are reached on is their
+                      // profile's — none, nobody can ring them.
+                      if (!t.hasPhone)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            context.tr('Pas de numéro sur son profil'),
+                            key: Key('help-console-no-phone-${t.userId ?? t.name}'),
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
+              const SizedBox(height: 8),
+              Text(
+                context.tr(
+                  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Mara ».',
+                ),
+                key: const Key('help-console-how-trainers'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: 14),
               Text(
                 context.tr(

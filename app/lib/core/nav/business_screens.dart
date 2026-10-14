@@ -56,6 +56,7 @@ export '../../features/analytics/platform_analytics_screen.dart';
 export '../../features/admin/trainers_screen.dart';
 export '../../features/help/help_console_screen.dart';
 export '../../features/help/help_screen.dart';
+export '../../features/help/help_requests_screen.dart';
 export '../../features/help/trainer_inbox_screen.dart';
 export '../../features/account/compte_screen.dart';
 export '../../features/admin/structure_screen.dart';

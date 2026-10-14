@@ -14,7 +14,9 @@
 --   4. routing: the assigned, on-duty trainer is rung (bell + WhatsApp
 --      row), nobody else; the bell's words are plain (no tag, link or
 --      control character);
---   5. limits: one active request per business, N a day;
+--   5. limits: one active request per business, N a day — 133's own rule,
+--      tested on 133 as this suite re-applies it; 138 lifts the first
+--      (several at once) and keeps the second: test_batch138;
 --   6. escalation after the open minutes: every on-duty trainer and the
 --      admins (under admin_help_notify), an off-duty one never; no
 --      assigned trainer: at once;

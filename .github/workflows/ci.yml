@@ -879,6 +879,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch136.sql
+      - name: "Prove the help, Basic and Pro — several requests open at once for one business with the day's limit still holding; help_state lists them all (active first), says version 138, who may buy Pro (the owner, not an employee) and the business's reference (its id's first eight, capitals); each kind's subjects (a shop's catalogue and livraison, a farm's bandes and stock, an association's evenements and contributions); « Quand ? » — a chosen time queued and routed 30 minutes before it, a past or far one refused; two requests through the inbox, the escalation, the console and « Aujourd'hui », one access per request; the command center's search finds the reference; a platform admin alone makes and unmakes a trainer (journaled, its number read, its grants ended); definer doors pinned and closed to anon and PUBLIC; RLS unchanged; run twice the same (138)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch138.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

@@ -42,6 +42,13 @@ class HelpRepository {
   }
 
   /// « Envoyer la demande ».
+  ///
+  /// [preferredAt] is « Quand ? » (null: now), carried in the context (138
+  /// kept 133's signature). [server] is what help_state said: on a database
+  /// before 138 a subject 133 does not know (catalogue, livraison,
+  /// evenements) goes as « autre » with its name before the words
+  /// ([subjectWords]), and the chosen time is written in the words
+  /// ([whenWords]) — nothing is lost, nothing refused for being new.
   Future<HelpRequest> create({
     required String orgId,
     required String subject,
@@ -49,21 +56,79 @@ class HelpRepository {
     String? message,
     String? phone,
     String? photoDocumentId,
+    DateTime? preferredAt,
+    String? subjectWords,
+    String? whenWords,
+    int server = HelpState.current,
     Map<String, String> context = const {},
   }) async {
     final v = await _c().rpc(
       'help_request_create',
-      params: {
-        'p_org_id': orgId,
-        'p_subject': subject,
-        'p_message': message,
-        'p_contact': contact,
-        'p_phone': phone,
-        'p_photo': photoDocumentId,
-        'p_context': context,
-      },
+      params: createParams(
+        orgId: orgId,
+        subject: subject,
+        contact: contact,
+        message: message,
+        phone: phone,
+        photoDocumentId: photoDocumentId,
+        preferredAt: preferredAt,
+        subjectWords: subjectWords,
+        whenWords: whenWords,
+        server: server,
+        context: context,
+      ),
     );
     return HelpRequest.fromJson(_map(v));
+  }
+
+  /// What [create] sends to help_request_create, for this [server].
+  static Map<String, Object?> createParams({
+    required String orgId,
+    required String subject,
+    required String contact,
+    String? message,
+    String? phone,
+    String? photoDocumentId,
+    DateTime? preferredAt,
+    String? subjectWords,
+    String? whenWords,
+    int server = HelpState.current,
+    Map<String, String> context = const {},
+  }) {
+    final old = server < HelpState.current;
+    final unknown = old && !helpSubjects133.contains(subject);
+    final prefix = [
+      if (unknown && subjectWords != null) '[$subjectWords]',
+      if (old && preferredAt != null && whenWords != null) '($whenWords)',
+    ].join(' ');
+    var typed = message?.trim() ?? '';
+    if (old && prefix.isNotEmpty && typed.isNotEmpty) {
+      // 133 takes 500 characters in all: the prefix's words come out of
+      // the person's (counted as Postgres counts, by code point).
+      final room = maxMessage133 - prefix.runes.length - 1;
+      if (typed.runes.length > room) {
+        typed = String.fromCharCodes(
+          typed.runes.take(room < 0 ? 0 : room),
+        ).trimRight();
+      }
+    }
+    final words = [
+      if (prefix.isNotEmpty) prefix,
+      if (typed.isNotEmpty) typed,
+    ].join(' ');
+    return {
+      'p_org_id': orgId,
+      'p_subject': unknown ? 'autre' : subject,
+      'p_message': words.isEmpty ? null : words,
+      'p_contact': contact,
+      'p_phone': phone,
+      'p_photo': photoDocumentId,
+      'p_context': {
+        ...context,
+        if (!old && preferredAt != null)
+          'preferred_at': preferredAt.toUtc().toIso8601String(),
+      },
+    };
   }
 
   Future<HelpRequest> reopen(String id) async => HelpRequest.fromJson(
@@ -152,6 +217,61 @@ class HelpRepository {
     }
   }
 
+  /// One account's « Formateur Mara » (138's platform_trainer_state). On a
+  /// database before 138, 038's list_trainers says whether they are one.
+  Future<TrainerSwitch?> trainerState(String userId) async {
+    try {
+      final v = await _c().rpc(
+        'platform_trainer_state',
+        params: {'p_user_id': userId},
+      );
+      return v is Map ? TrainerSwitch.fromJson(_map(v)) : null;
+    } catch (e) {
+      if (!isSchemaOutOfDate(e)) rethrow;
+    }
+    final rows = await _c().rpc('list_trainers');
+    for (final r in (rows is List ? rows : const [])) {
+      if (r is Map && '${r['user_id']}' == userId) {
+        return TrainerSwitch(
+          isTrainer: true,
+          phone: _digits(r['phone']),
+          assigned: _int(r['assignments']),
+          installed: false,
+        );
+      }
+    }
+    return const TrainerSwitch(isTrainer: false, installed: false);
+  }
+
+  /// Makes this account a trainer, or not (138's platform_set_trainer).
+  /// Before 138: 038's set_trainer_by_phone, with the account's number —
+  /// without one it cannot, and says so.
+  Future<TrainerSwitch> setTrainer(
+    String userId,
+    bool on, {
+    String? phone,
+  }) async {
+    try {
+      final v = await _c().rpc(
+        'platform_set_trainer',
+        params: {'p_user_id': userId, 'p_on': on},
+      );
+      return TrainerSwitch.fromJson(_map(v));
+    } catch (e) {
+      if (!isSchemaOutOfDate(e)) rethrow;
+    }
+    if (phone == null || phone.trim().isEmpty) {
+      throw StateError(
+        'Ce compte n\'a pas de numéro : il pourra devenir formateur une fois le serveur à jour.',
+      );
+    }
+    await _c().rpc(
+      'set_trainer_by_phone',
+      params: {'p_phone': phone.trim(), 'p_is_trainer': on},
+    );
+    return TrainerSwitch(isTrainer: on, phone: _digits(phone), installed: false);
+  }
+
   /// The console; null for a non-admin or without 133.
   Future<HelpConsole?> console() async {
     try {
@@ -164,6 +284,66 @@ class HelpRepository {
       rethrow;
     }
   }
+}
+
+String? _digits(Object? v) {
+  final d = '${v ?? ''}'.replaceAll(RegExp(r'\D'), '');
+  return d.isEmpty ? null : d;
+}
+
+/// The longest message 133's help_request_create takes, in characters.
+const maxMessage133 = 500;
+
+/// The subjects 133 knows: a database before 138 refuses any other.
+const helpSubjects133 = {
+  'ventes',
+  'stock',
+  'factures',
+  'vitrine',
+  'commandes',
+  'equipe',
+  'autre',
+  'bandes',
+  'contributions',
+  'rapports',
+  'membres',
+};
+
+/// The business's short reference in a message to Mara (138): its id's
+/// first eight characters in capitals — the command center's search finds
+/// it (platform_search, 138). Stable: a slug can change, an id never does.
+String helpRef(String orgId) {
+  final hex = orgId.replaceAll('-', '');
+  return (hex.length >= 8 ? hex.substring(0, 8) : hex).toUpperCase();
+}
+
+/// « Formateur Mara » on one account, as the command center's fiche draws
+/// it (138).
+class TrainerSwitch {
+  const TrainerSwitch({
+    required this.isTrainer,
+    this.phone,
+    this.onDuty = true,
+    this.assigned = 0,
+    this.installed = true,
+  });
+
+  factory TrainerSwitch.fromJson(Map<String, dynamic> j) => TrainerSwitch(
+    isTrainer: j['is_trainer'] == true,
+    phone: _digits(j['phone']),
+    onDuty: j['on_duty'] != false,
+    assigned: _int(j['assigned']),
+  );
+
+  final bool isTrainer;
+
+  /// The profile's number, digits: what WhatsApp and a call reach.
+  final String? phone;
+  final bool onDuty;
+  final int assigned;
+
+  /// 138 is on the database.
+  final bool installed;
 }
 
 int _int(Object? v) => v is num ? v.toInt() : int.tryParse('${v ?? ''}') ?? 0;
@@ -205,22 +385,68 @@ class HelpState {
     this.pro = false,
     this.hours = const HelpHours(),
     this.request,
+    this.listed,
     this.left = 0,
     this.installed = true,
+    this.version = current,
+    this.canUpgrade,
+    this.ref,
   });
 
-  /// A database without 133: the basic « Aide ».
-  static const missing = HelpState(available: true, installed: false);
+  /// The server this app is written for: 138.
+  static const current = 138;
 
-  factory HelpState.fromJson(Map<String, dynamic> j) => HelpState(
-    available: j['available'] == true,
-    pro: j['pro'] == true,
-    hours: HelpHours.fromJson(j['hours']),
-    request: j['request'] is Map
-        ? HelpRequest.fromJson(Map<String, dynamic>.from(j['request'] as Map))
-        : null,
-    left: _int(j['left']),
+  /// A database without 133: the basic « Aide ».
+  static const missing = HelpState(
+    available: true,
+    installed: false,
+    version: 0,
   );
+
+  factory HelpState.fromJson(Map<String, dynamic> j) {
+    final one = j['request'] is Map
+        ? HelpRequest.fromJson(Map<String, dynamic>.from(j['request'] as Map))
+        : null;
+    final list = j['requests'];
+    return HelpState(
+      available: j['available'] == true,
+      pro: j['pro'] == true,
+      hours: HelpHours.fromJson(j['hours']),
+      request: one,
+      // 133 says one request; 138 every one of the business's.
+      listed: list is List
+          ? [
+              for (final r in list)
+                if (r is Map)
+                  HelpRequest.fromJson(Map<String, dynamic>.from(r)),
+            ]
+          : null,
+      left: _int(j['left']),
+      version: j['version'] == null ? 133 : _int(j['version']),
+      canUpgrade: j['can_upgrade'] is bool ? j['can_upgrade'] as bool : null,
+      ref: _text(j['ref']),
+    );
+  }
+
+  /// The server's help: 0 without 133, 133, or 138 and after.
+  final int version;
+
+  /// The owner or an admin by a real membership (138); null before it —
+  /// the app then asks the business's own roles.
+  final bool? canUpgrade;
+
+  /// The business's reference as the server says it (138).
+  final String? ref;
+
+  /// The business's requests as 138 lists them; null before 138.
+  final List<HelpRequest>? listed;
+
+  /// Every request of the business the server lists (138: the active, the
+  /// resolved, the closed of 30 days); before 138 the one it says.
+  List<HelpRequest> get requests => listed ?? [?request];
+
+  /// The requests still going (open or taken).
+  List<HelpRequest> get active => requests.where((r) => r.active).toList();
 
   /// This person may ask here (a member who is not an observer).
   final bool available;
@@ -229,7 +455,8 @@ class HelpState {
   final bool pro;
   final HelpHours hours;
 
-  /// The active request (or the last resolved, not closed yet).
+  /// The active request (or the last resolved, not closed yet) — 133's
+  /// one; [requests] holds them all.
   final HelpRequest? request;
 
   /// Requests left today.
@@ -308,6 +535,8 @@ class HelpRequest {
     this.events = const [],
     this.hasPhoto = false,
     this.mine = false,
+    this.preferredAt,
+    this.closedAt,
   });
 
   factory HelpRequest.fromJson(Map<String, dynamic> j) => HelpRequest(
@@ -343,6 +572,8 @@ class HelpRequest {
     ],
     hasPhoto: j['photo_document_id'] != null,
     mine: j['mine'] == true,
+    preferredAt: _date(j['preferred_at']),
+    closedAt: _date(j['closed_at']),
   );
 
   final String id;
@@ -377,6 +608,10 @@ class HelpRequest {
 
   /// The caller asked it (else one of the business's admins reads it).
   final bool mine;
+
+  /// « Quand ? »: the time chosen (138), or null for now.
+  final DateTime? preferredAt;
+  final DateTime? closedAt;
 
   bool get active => status == 'open' || status == 'taken';
 
@@ -419,6 +654,7 @@ class InboxRequest {
     this.closedAt,
     this.rating,
     this.accessUntil,
+    this.preferredAt,
   });
 
   factory InboxRequest.fromJson(Map<String, dynamic> j) {
@@ -451,6 +687,7 @@ class InboxRequest {
       accessUntil: access is Map && access['live'] != false
           ? _date(access['expires_at'])
           : null,
+      preferredAt: _date(j['preferred_at']),
     );
   }
 
@@ -487,6 +724,9 @@ class InboxRequest {
 
   /// The temporary access lives until then.
   final DateTime? accessUntil;
+
+  /// The time the business chose (138), or null: now.
+  final DateTime? preferredAt;
 
   bool get open => status == 'open';
   bool get inProgress => status == 'taken' && mine;
@@ -531,6 +771,7 @@ class HelpInbox {
 class ConsoleTrainer {
   const ConsoleTrainer({
     required this.name,
+    this.userId,
     this.onDuty = true,
     this.assigned = 0,
     this.taken = 0,
@@ -540,6 +781,7 @@ class ConsoleTrainer {
 
   factory ConsoleTrainer.fromJson(Map<String, dynamic> j) => ConsoleTrainer(
     name: _text(j['name']) ?? 'Formateur',
+    userId: _text(j['user_id']),
     onDuty: j['on_duty'] != false,
     assigned: _int(j['assigned']),
     taken: _int(j['taken']),
@@ -548,6 +790,7 @@ class ConsoleTrainer {
   );
 
   final String name;
+  final String? userId;
   final bool onDuty;
   final int assigned;
   final int taken;
