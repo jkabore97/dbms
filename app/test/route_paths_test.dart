@@ -50,6 +50,17 @@ void main() {
     ];
     expect(missing, isEmpty, reason: 'no page for: $missing');
     expect(Routes.orgSettings('o1'), '/o/o1/administration/parametres');
+    // « Personnaliser ma vitrine » (146) and Le Chemin's vitrine steps.
+    expect(Routes.vitrineSettings('o1'), '/o/o1/administration/parametres/vitrine');
+    expect(
+      router.configuration.findMatch(Uri.parse(Routes.vitrineSettings('o1'))).isEmpty,
+      isFalse,
+      reason: 'the vitrine settings page is a real page',
+    );
+    expect(Routes.pathStep('o1', 'administration/parametres?partie=vitrine'),
+        Routes.vitrineSettings('o1'));
+    expect(Routes.pathStep('o1', 'administration/parametres?partie=position'),
+        '/o/o1/administration/parametres?partie=position');
     expect(
       router.configuration.findMatch(Uri.parse('/o/o1/parametres')).isEmpty,
       isTrue,

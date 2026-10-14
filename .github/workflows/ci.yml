@@ -883,6 +883,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch138.sql
+      - name: "Prove a Basic business keeps the Pro choices of its vitrine — a shop, a farm and an association each save the layout, articles en tête and « Masquer les épuisés »; storefront() for anon strips them (no layout, pins, épuisés nor « Ouvert maintenant ») and the basics stay; an older app's save carries them over, « grid », [] and false clear them; seven pinned, another business's article, twice, not an id and a bad layout refused on Basic and on Pro; the day vitrine_plus comes (the plan or a cauris unlock) the street shows them with no save, the day it goes they are stripped and kept; hidden by Mara, none taken; the kind's default look stays under kept choices, and the console counts those vitrines as never dressed; an employee and a stranger refused; definer and pinned, closed to anon and PUBLIC (141)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch141.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

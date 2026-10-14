@@ -178,6 +178,21 @@ abstract final class Routes {
   static String orgSettings(String id, {String? part}) =>
       inside(id, 'administration/parametres') +
       (part == null ? '' : '?partie=$part');
+
+  /// « Personnaliser ma vitrine » (146): the settings' Vitrine rubrique on
+  /// its own page — the opening, the words, the cover, the colour, the
+  /// hours and the Pro options — reached from « Ma vitrine », from the
+  /// vitrine itself and from Le Chemin. Paramètres › Vitrine stays.
+  static String vitrineSettings(String id) =>
+      inside(id, 'administration/parametres/vitrine');
+
+  /// Le Chemin's address for a step (146): the vitrine rubrique's
+  /// (`administration/parametres?partie=vitrine`, 097) is its own page
+  /// now; every other one as written.
+  static String pathStep(String id, String go) =>
+      go == 'administration/parametres?partie=vitrine'
+          ? vitrineSettings(id)
+          : inside(id, go);
 }
 
 /// Builds the router. Called once, from `main()`.
@@ -1190,6 +1205,29 @@ GoRouter buildRouter(SessionController session) {
                   allow: _admins,
                 ),
                 routes: [
+                  // « Personnaliser ma vitrine » (146): the Vitrine
+                  // rubrique alone, back to where it was opened from.
+                  GoRoute(
+                    path: 'vitrine',
+                    builder: (context, state) => _withOrg(
+                      context,
+                      state,
+                      (scope, org) => biz.OrgSettingsScreen(
+                        admin: scope.admin,
+                        orgId: org.id,
+                        onSaved: scope.session.resolveOrgs,
+                        canSuspend: scope.session.isPlatformAdmin,
+                        suspended: org.suspended,
+                        canSetPlan: scope.session.isPlatformAdmin,
+                        plan: org.plan,
+                        retail: scope.retail,
+                        capture: scope.capture,
+                        initialPart: 'vitrine',
+                        vitrineOnly: true,
+                      ),
+                      allow: _admins,
+                    ),
+                  ),
                   GoRoute(
                     path: 'couleurs',
                     builder: (context, state) => _withOrg(

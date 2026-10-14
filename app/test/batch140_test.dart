@@ -1080,7 +1080,7 @@ void main() {
       expect(find.byKey(const Key('home-vitrine')), findsNothing);
     });
 
-    testWidgets('the tap opens the business\'s own vitrine', (tester) async {
+    testWidgets('the tap opens « Ma vitrine », whose first line opens the business\'s own vitrine', (tester) async {
       await _size(tester, const Size(390, 800));
       final went = <String>[];
       final router = GoRouter(initialLocation: '/o/${_assocOrg.id}', routes: [
@@ -1099,7 +1099,12 @@ void main() {
         routerConfig: router,
       ));
       await _settle(tester);
+      // Since 146 the tap opens « Ma vitrine »'s sheet; « Voir ma vitrine »
+      // there opens the vitrine as the tap did.
       await tester.tap(find.byKey(const Key('home-vitrine')));
+      await _settle(tester);
+      expect(went, isEmpty);
+      await tester.tap(find.byKey(const Key('vitrine-sheet-view')));
       await _settle(tester);
       expect(went, ['atelier-lumiere']);
       expect(Routes.storefront('atelier-lumiere'), '/s/atelier-lumiere');

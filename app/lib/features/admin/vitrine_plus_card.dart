@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/capture/models.dart';
@@ -13,6 +14,7 @@ import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../account/pro_sheet.dart';
 import '../storefront/open_badge.dart';
+import 'vitrine_pro_dialog.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// « Habiller ma vitrine » (093), under « Vitrine avancée ». The basics
@@ -22,6 +24,12 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// à la une, out-of-stock left off, and the live « Ouvert maintenant »
 /// banner. A preview at the top draws the window as the street will.
 /// The server decides regardless of the drawing.
+///
+/// On Basic (146) the Pro options are all there, each with its « PRO »
+/// seal, to try: the preview shows them under « Aperçu — avec Mara Pro »,
+/// and « Enregistrer la vitrine » says first what Pro would add
+/// ([VitrineProDialog]). Since 141 the server keeps them for the day the
+/// business is on Pro; before 141 the card says they are not kept.
 class VitrinePlusCard extends StatefulWidget {
   const VitrinePlusCard({
     super.key,
@@ -89,6 +97,10 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
   bool _saving = false;
   String? _message;
 
+  /// The server keeps a Basic business's Pro choices (141). False until
+  /// it says so — and so « Vos choix sont gardés » is never said early.
+  bool _keepsPro = false;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +126,10 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
       try {
         products = await widget.retail?.products(widget.orgId) ?? const [];
       } catch (_) {}
+      var keepsPro = false;
+      try {
+        keepsPro = await widget.admin.storefrontKeepsProChoices();
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _tagline.text = style.tagline ?? '';
@@ -132,6 +148,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
         }
         _photos = photos;
         _products = products.where((p) => p.isPublished).toList();
+        _keepsPro = keepsPro;
         _loading = false;
       });
     } catch (error) {
@@ -180,32 +197,70 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
     );
   }
 
+  /// Pro choices made on a Basic business (146): what it keeps, and what
+  /// the street shows only with Mara Pro.
+  bool get _tryingPro =>
+      _locked && !_plusHidden && _style(plus: true).hasProChoices;
+
+  /// The person may buy Pro for this business: its owner or an admin, as
+  /// the Pro sheet and batch 143's help ask it.
+  bool get _canBuy =>
+      AppScope.maybeOf(context)?.session.orgById(widget.orgId)?.isAdmin ?? true;
+
   Future<void> _save() async {
+    // Basic with Pro choices (146): said plainly before saving — this
+    // replaces #204's word after the save and its Pro sheet opened unasked.
+    if (_tryingPro) {
+      final answer = await VitrineProDialog.show(
+        context,
+        choices: vitrineProChoicesLine(context, _style(plus: true)),
+        canBuy: _canBuy,
+        sellsPro: sellsProInApp,
+        kept: _keepsPro,
+      );
+      if (!mounted) return;
+      if (answer == VitrineProAnswer.pro) {
+        _openPro();
+        return;
+      }
+      if (answer != VitrineProAnswer.save) return;
+    }
+    final trying = _tryingPro;
+    // Every choice sent unless Mara hid Vitrine Plus (110): 141 keeps them
+    // on Basic, the street shows them with Pro.
+    final style = _style(plus: !_plusHidden);
     setState(() {
       _saving = true;
       _message = null;
     });
     try {
-      await widget.admin.setStorefrontStyle(
-        widget.orgId,
-        _style(plus: !_locked && !_plusHidden),
-      );
+      await widget.admin.setStorefrontStyle(widget.orgId, style);
+      // Kept or not: read back, so « gardés » is said only where they are
+      // (a database before 141 drops them).
+      var kept = false;
+      if (trying) {
+        try {
+          kept = style.sameProChoices(
+              await widget.admin.storefrontStyle(widget.orgId));
+        } catch (_) {}
+      }
       if (!mounted) return;
-      // A layout tried without Pro is not saved: say so, rather than a
-      // « Vitrine enregistrée » that left a shop waiting for its list.
-      final layoutNotSaved = _layout != VitrineLayout.grid && (_locked || _plusHidden);
       setState(() {
         _saving = false;
-        _message = layoutNotSaved
-            ? context.tr(
-                'Vitrine enregistrée. La présentation « {layout} » vient avec Mara Pro : votre vitrine reste en grille.',
-                {'layout': _LayoutChoice.label(context, _layout)},
-              )
-            : context.tr(
-                'Vitrine enregistrée. Ouvrez-la pour voir le résultat.',
-              );
+        if (trying) _keepsPro = kept;
+        _message = !trying
+            ? context.tr('Vitrine enregistrée. Ouvrez-la pour voir le résultat.')
+            : kept
+                // No invitation to Pro where the build does not sell it
+                // (the iPhone app before App Store billing, 125).
+                ? sellsProInApp
+                    ? context.tr(
+                        'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils s\'activent dès que vous passez à Pro.')
+                    : context.tr(
+                        'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Mara Pro.')
+                : context.tr(
+                    'Vitrine enregistrée, en grille. Vos choix Pro n\'ont pas pu être gardés pour le moment.');
       });
-      if (layoutNotSaved && !_plusHidden) _openPro();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -261,12 +316,12 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
           VitrinePreview(
             key: const Key('vitrine-preview'),
             name: widget.shopName ?? context.tr('Ma vitrine'),
-            style: _style(plus: !locked && !plusHidden).copyWith(
-              // The preview shows the Pro layout being tried, even locked:
-              // seeing it is how a shop decides it wants it. Hidden by Mara
-              // (110), there is nothing to try.
-              layout: plusHidden ? VitrineLayout.grid : _layout,
-            ),
+            // The preview shows the Pro choices being tried, even on Basic:
+            // seeing them is how a business decides it wants them (146) —
+            // under the band that says so. Hidden by Mara (110), there is
+            // nothing to try.
+            style: _style(plus: !plusHidden),
+            proBand: _tryingPro,
             openNow: _schedule == null || locked || plusHidden
                 ? null
                 : _openAt(DateTime.now()),
@@ -408,37 +463,66 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             style: muted,
           ),
           const SizedBox(height: 22),
-          // Locked: one card that says so plainly — what Pro adds, in three
-          // lines, and the layouts to try in the preview above. Not the
-          // greyed form: a shop read it as settings it had and could not use.
+          // The Pro options, on Basic as on Pro (146): each with its seal,
+          // each to try — the preview shows the result under its band, and
+          // the save says first what Pro adds. Not a locked card that let a
+          // shop try the layout alone and silently kept the grid.
           if (plusHidden)
             const SizedBox.shrink(key: Key('vitrine-plus-hidden'))
-          else if (locked)
-            _ProLocked(
-              layout: _layout,
-              onLayout: _saving ? null : (l) => setState(() => _layout = l),
-              onPro: _openPro,
-            )
           else ...[
             Row(
               children: [
-                _SectionTitle(text: context.tr('AVEC MARA PRO')),
+                Flexible(child: _SectionTitle(text: context.tr('AVEC MARA PRO'))),
                 const SizedBox(width: 8),
                 const _ProSeal(),
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              context.tr(
-                'La présentation, les articles à la une et « Ouvert maintenant ».',
+            if (locked) ...[
+              Container(
+                key: const Key('dressing-pro-intro'),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: maraCaramel.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.workspace_premium, size: 20, color: maraDeep),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        context.tr(
+                          'Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.',
+                        ),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              style: muted,
-            ),
+              // Where Pro is sold: its page, from here too.
+              if (sellsProInApp)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const Key('dressing-pro-go'),
+                    onPressed: _openPro,
+                    icon: const Icon(Icons.workspace_premium, size: 18),
+                    label: Text(context.tr('Voir Mara Pro')),
+                  ),
+                ),
+            ] else
+              Text(
+                context.tr(
+                  'La présentation, les articles à la une et « Ouvert maintenant ».',
+                ),
+                style: muted,
+              ),
             const SizedBox(height: 10),
-            Text(
-              context.tr('Présentation des articles'),
-              style: theme.textTheme.labelLarge,
-            ),
+            _ProLabel(text: context.tr('Présentation des articles')),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -458,11 +542,11 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.tr('Articles en tête ({length}/6)', {
+                _ProLabel(
+                  key: const Key('dressing-pinned-label'),
+                  text: context.tr('Articles en tête ({length}/6)', {
                     'length': _pinned.length,
                   }),
-                  style: theme.textTheme.labelLarge,
                 ),
                 const SizedBox(height: 4),
                 if (_products.isEmpty)
@@ -497,14 +581,30 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                     ],
                   ),
                 SwitchListTile(
+                  key: const Key('dressing-hide-out'),
                   contentPadding: EdgeInsets.zero,
                   value: _hideOut,
                   onChanged: _saving
                       ? null
                       : (v) => setState(() => _hideOut = v),
-                  title: Text(
-                    context.tr('Ne pas afficher les articles épuisés'),
+                  title: _ProLabel(
+                    text: context.tr('Ne pas afficher les articles épuisés'),
+                    style: theme.textTheme.bodyLarge,
                   ),
+                ),
+                // « Ouvert maintenant » is no choice to keep: the hours above
+                // (every plan) say it, on a Pro vitrine. Explained, not a
+                // switch that would save nothing.
+                _ProLabel(
+                  key: const Key('dressing-open-now'),
+                  text: context.tr('« Ouvert maintenant »'),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.tr(
+                    'Votre vitrine dit « Ouvert maintenant » ou « Fermé » d\'après vos jours et vos heures.',
+                  ),
+                  style: muted,
                 ),
               ],
             ),
@@ -558,135 +658,26 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
       : const ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][d - 1];
 }
 
-/// « Vitrine avancée · Mara Pro », locked: a dark card with the seal, what
-/// it adds, the three layouts to try in the preview, and the way to Pro.
-class _ProLocked extends StatelessWidget {
-  const _ProLocked({
-    required this.layout,
-    required this.onLayout,
-    required this.onPro,
-  });
+/// A Pro option's name and its « PRO » seal (146), on Basic as on Pro.
+class _ProLabel extends StatelessWidget {
+  const _ProLabel({super.key, required this.text, this.style});
 
-  final VitrineLayout layout;
-  final ValueChanged<VitrineLayout>? onLayout;
-  final VoidCallback onPro;
+  final String text;
+  final TextStyle? style;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final soft = theme.textTheme.bodyMedium
-        ?.copyWith(color: maraPaper.withValues(alpha: 0.85));
-    Widget line(IconData icon, String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: maraCaramel),
-              const SizedBox(width: 10),
-              Expanded(child: Text(context.tr(text), style: soft)),
-            ],
-          ),
-        );
-    return Container(
-      key: const Key('dressing-pro'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: maraDeep,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => Row(
         children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 16,
-                backgroundColor: maraCaramel,
-                child: Icon(Icons.lock, size: 17, color: maraDeep),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  context.tr('Vitrine avancée'),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                      color: maraPaper, fontWeight: FontWeight.w800),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: maraCaramel,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  context.tr('MARA PRO'),
-                  style: const TextStyle(
-                      color: maraDeep,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            context.tr('Verrouillé : vos clients ne le voient qu\'avec Mara Pro.'),
-            key: const Key('dressing-pro-locked'),
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: maraPaper.withValues(alpha: 0.7)),
-          ),
-          const SizedBox(height: 14),
-          line(Icons.view_list, 'Vos articles en liste ou en menu'),
-          line(Icons.push_pin, 'Six articles à la une, en tête'),
-          line(Icons.schedule, '« Ouvert maintenant » et les épuisés cachés'),
-          const SizedBox(height: 6),
-          Text(
-            context.tr('Essayez dans l\'aperçu :'),
-            style: theme.textTheme.labelLarge?.copyWith(color: maraPaper),
-          ),
-          const SizedBox(height: 8),
-          Theme(
-            data: theme.copyWith(
-              colorScheme: theme.colorScheme.copyWith(
-                surface: maraPaper,
-                onSurface: maraBlack,
-              ),
-            ),
-            child: Row(
-              children: [
-                for (final l in VitrineLayout.values) ...[
-                  Expanded(
-                    child: Material(
-                      color: maraPaper,
-                      borderRadius: BorderRadius.circular(12),
-                      child: _LayoutChoice(
-                        layout: l,
-                        selected: layout == l,
-                        onTap: onLayout == null ? null : () => onLayout!(l),
-                      ),
-                    ),
-                  ),
-                  if (l != VitrineLayout.values.last) const SizedBox(width: 8),
-                ],
-              ],
+          Flexible(
+            child: Text(
+              text,
+              style: style ?? Theme.of(context).textTheme.labelLarge,
             ),
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              key: const Key('dressing-pro-go'),
-              style: FilledButton.styleFrom(
-                  backgroundColor: maraCaramel, foregroundColor: maraDeep),
-              onPressed: onPro,
-              icon: const Icon(Icons.workspace_premium),
-              label: Text(context.tr('Voir Mara Pro')),
-            ),
-          ),
+          const SizedBox(width: 8),
+          const _ProSeal(),
         ],
-      ),
-    );
-  }
+      );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -777,12 +768,8 @@ class _LayoutChoice extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
 
-  static String label(BuildContext context, VitrineLayout l) => switch (l) {
-    VitrineLayout.grid => context.tr('Grille'),
-    VitrineLayout.large => context.tr('Grandes photos'),
-    VitrineLayout.list => context.tr('Liste'),
-    VitrineLayout.menu => context.tr('Menu'),
-  };
+  static String label(BuildContext context, VitrineLayout l) =>
+      vitrineLayoutLabel(context, l);
 
   @override
   Widget build(BuildContext context) {
@@ -842,6 +829,7 @@ class VitrinePreview extends StatelessWidget {
     this.openNow,
     this.capture,
     this.lang = 'fr',
+    this.proBand = false,
   });
 
   final String name;
@@ -851,6 +839,27 @@ class VitrinePreview extends StatelessWidget {
   final CaptureRepository? capture;
   final String lang;
 
+  /// Pro choices tried on Basic (146): « Aperçu — avec Mara Pro » across
+  /// the window, over the shelf they change.
+  final bool proBand;
+
+  /// The articles as the street would order them (146): pinned first in
+  /// their order, the sold-out left off when asked — 131's rule.
+  static List<Product> arranged(List<Product> items, StorefrontStyle style,
+      {DateTime? today}) {
+    final day = DateUtils.dateOnly(today ?? DateTime.now());
+    bool inStock(Product p) =>
+        p.isService ||
+        p.quantity > 0 ||
+        (p.availableFrom != null && DateUtils.dateOnly(p.availableFrom!).isAfter(day));
+    final kept = style.hideOutOfStock ? items.where(inStock).toList() : items;
+    if (style.pinned.isEmpty) return kept;
+    final rank = {for (var i = 0; i < style.pinned.length; i++) style.pinned[i]: i};
+    final first = kept.where((p) => rank.containsKey(p.id)).toList()
+      ..sort((a, b) => rank[a.id]!.compareTo(rank[b.id]!));
+    return [...first, ...kept.where((p) => !rank.containsKey(p.id))];
+  }
+
   static const _ink = Color(0xFF14161C);
   static const _stone = Color(0xFFF6F2EA);
   static const _mist = Color(0xFF6E6E6B);
@@ -858,12 +867,13 @@ class VitrinePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = style.accent ?? _ink;
-    final shown = items.isEmpty
+    final ordered = arranged(items, style);
+    final shown = ordered.isEmpty
         ? [
             for (var i = 1; i <= 4; i++)
               (translate(lang, 'Article {n}', {'n': i}), 1000.0),
           ]
-        : [for (final p in items.take(4)) (p.name, p.salePrice)];
+        : [for (final p in ordered.take(4)) (p.name, p.salePrice)];
     final hours = style.schedule?.label(lang) ?? style.hours;
 
     Widget square(String n, {double size = 0}) => Container(
@@ -1109,6 +1119,31 @@ class VitrinePreview extends StatelessWidget {
                 ],
               ),
             ),
+            if (proBand)
+              Container(
+                key: const Key('preview-pro-band'),
+                color: maraDeep,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.workspace_premium, size: 14, color: maraCaramel),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        translate(lang, 'Aperçu — avec Mara Pro'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: maraPaper,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Padding(padding: const EdgeInsets.all(10), child: shelf),
           ],
         ),

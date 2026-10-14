@@ -183,8 +183,11 @@ Future<void> openPathStep(BuildContext context, OrgSummary org, PathStep s,
     return;
   }
   final part = pathCheminPart(s);
-  await context.push(Routes.inside(
-      org.id, part == null ? s.go : pathCheminRest(part: part)));
+  // The vitrine's steps (open it, the phone and address, the phrase) go
+  // to « Personnaliser ma vitrine », its own page since 146.
+  await context.push(part == null
+      ? Routes.pathStep(org.id, s.go)
+      : Routes.inside(org.id, pathCheminRest(part: part)));
   await session?.reloadFeatures(org.id);
 }
 
