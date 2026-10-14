@@ -333,6 +333,9 @@ void main() {
       // 7. The charter, accepted.
       expect(find.text('La charte du livreur'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.byKey(const Key('courier-next'))).onPressed, isNull);
+      // Nine lines since 147: the box further down.
+      await tester.ensureVisible(find.byKey(const Key('courier-charter')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('courier-charter')));
       await tester.pump();
       await _next(tester);

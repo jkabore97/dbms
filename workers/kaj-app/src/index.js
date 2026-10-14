@@ -16,7 +16,8 @@
 //
 //  3. /confidentialite and /conditions are plain pages (legal.js), readable
 //     with no JavaScript — what Google's verification of the sign-in screen
-//     reads.
+//     reads. ?lang=en gives their English translation (147); the terms name
+//     the support e-mail support_contacts says.
 //
 //  3b. /aide is « Aide Mara » (help.js), the App Store's Support URL: the
 //     support e-mail, WhatsApp number and hours read live (126's
@@ -37,7 +38,7 @@
 // ships to every browser.
 
 import { mapsLink } from "./maps.js";
-import { legalPage } from "./legal.js";
+import { isLegalPath, legalPage } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
 
 const SITE = "https://marakaj.com";
@@ -87,8 +88,13 @@ async function serve(request, env) {
     }
 
     // The privacy policy and the terms, as plain pages (legal.js).
-    if (request.method === "GET") {
-      const legal = legalPage(url.pathname);
+    // The terms name the platform's support e-mail (147): read as /aide
+    // reads it, the installed one when Supabase does not answer.
+    if (request.method === "GET" && isLegalPath(url.pathname)) {
+      const email = url.pathname.startsWith("/conditions")
+        ? (await supportContacts(env)).email
+        : undefined;
+      const legal = legalPage(url.pathname, { email, lang: url.searchParams.get("lang") });
       if (legal) return legal;
     }
 

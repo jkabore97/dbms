@@ -51,6 +51,8 @@ import 'core/theme/kaj_theme.dart';
 import 'core/site/server_url.dart';
 import 'core/update/update_banner.dart';
 import 'core/update/update_check.dart';
+import 'core/terms/terms.dart';
+import 'features/account/terms_gate.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -259,6 +261,7 @@ class KajApp extends StatefulWidget {
     required this.onboarding,
     this.sync,
     this.twoStep,
+    this.terms,
   });
 
   /// Null in tests that do not care about language; the app then behaves
@@ -282,6 +285,10 @@ class KajApp extends StatefulWidget {
   /// The platform admin's second step (077). Built from [auth] when not
   /// given; tests give a fake.
   final TwoStep? twoStep;
+
+  /// What the person still has to accept (142); built from [auth] when
+  /// not given; tests give a fake.
+  final TermsApi? terms;
 
   @override
   State<KajApp> createState() => _KajAppState();
@@ -312,6 +319,27 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       SecurityRepository(widget.auth.client);
   late final WavePay _wavePay = WavePay(widget.auth.client);
 
+  /// The Conditions d'utilisation to accept before anything else (142,
+  /// batch 147): followed from the session, drawn by TermsGate over the
+  /// whole app.
+  late final TermsController _terms = TermsController(
+    api: widget.terms ?? SupabaseTermsApi(widget.auth.client),
+    platform: TermsController.platformName(),
+    appVersion: buildSha.isEmpty
+        ? appVersion
+        : '$appVersion+${buildSha.length > 7 ? buildSha.substring(0, 7) : buildSha}',
+    // A few seconds of « loading » at most before the business screens,
+    // while the server says whether the gate is due (fails open).
+    holdFor: widget.terms != null || widget.auth.isConfigured
+        ? const Duration(seconds: 3)
+        : Duration.zero,
+  );
+
+  /// The gate's own navigator: Android's back closes what it opened, and
+  /// never the router's pages hidden under it (147).
+  final _termsNavigator = GlobalKey<NavigatorState>(debugLabel: 'terms-gate');
+  Future<bool?> _termsBack() => TermsGate.handleBack(_terms, _termsNavigator);
+
   /// The store builds' purchase listener (130, review S3): every purchase
   /// the App Store or Google Play reports from the app's start — not only
   /// while the Pro page is open — verified for the business it was bought
@@ -341,6 +369,12 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       _session.phase == SessionPhase.ready;
 
   void _onSession() {
+    // The terms: asked of whoever is in, forgotten at sign-out (142).
+    if (_session.phase == SessionPhase.signedOut) {
+      _terms.clear();
+    } else {
+      unawaited(_terms.track(_signedIn ? _session.identity?.userId : null));
+    }
     if (_session.phase == SessionPhase.signedOut) _pushPrompt.signedOut();
     _pushPrompt.phase(signedIn: _signedIn);
     if (_session.phase == SessionPhase.ready) unawaited(_storeWatcher?.recoverSpots());
@@ -382,10 +416,12 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     // From a page with nothing under it, back goes to its parent (122):
     // a business's home to the picker for someone with several.
     BackFirst.instance.attach(_router, businesses: () => _session.orgs.length);
+    BackFirst.instance.cover = _termsBack;
     // A tapped push on Android opens what it is about (115).
     _pushTaps = PushClient.opened.listen((path) => _router.push(path));
     // Kicks the state machine off. The router is already listening, so the
     // first phase it settles on is the first address the person sees.
+    TermsController.current = _terms;
     _session.addListener(_onSession);
     _session.boot();
     WidgetsBinding.instance.addObserver(this);
@@ -456,6 +492,8 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       }
       unawaited(_session.refresh());
       unawaited(_update.check());
+      // A new version of the terms reaches an open app (142's bump).
+      if (_signedIn) unawaited(_terms.track(_session.identity?.userId));
       if (_signedIn) unawaited(PushSetup.ensure(_notify));
       if (away != null) _pushPrompt.resumed(DateTime.now().difference(away));
       unawaited(() async {
@@ -471,11 +509,13 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     _pushPrompt.dispose();
     _notify.bell.dispose();
     BackFirst.instance.detach(_router);
+    if (BackFirst.instance.cover == _termsBack) BackFirst.instance.cover = null;
     _refreshTimer?.cancel();
     _updateTimer?.cancel();
     _update.dispose();
     _session.removeListener(_onSession);
     _session.dispose();
+    _terms.dispose();
     _security.dispose();
     _storeWatcher?.dispose();
     super.dispose();
@@ -538,9 +578,19 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
             key: ValueKey(trCurrent = Localizations.localeOf(context).languageCode),
             child: KajBackground(
               palette: kajPalette,
-              child: UpdateBanner(
-                check: _update,
-                child: child ?? const SizedBox.shrink(),
+              // The Conditions d'utilisation first (142): over every page,
+              // for whoever is signed in and has not accepted them.
+              child: TermsScope(
+                controller: _terms,
+                child: TermsGate(
+                  controller: _terms,
+                  navigatorKey: _termsNavigator,
+                  onSignOut: _session.signOut,
+                  child: UpdateBanner(
+                    check: _update,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
           ),

@@ -891,6 +891,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch139.sql
+      - name: "Prove the new Conditions d'utilisation are accepted and enforced — terms_acceptances one row per person, document and version (RLS: one's own rows, no write, nothing for anon); my_terms_state asks a new account the terms and the privacy policy, an owner the seller's commitments, an approved courier the courier's charter; accept_terms the current version only, once, with its platform and app version; an order refused without the terms, a business (create_my_business for a shop, a farm and an association, create_org) without the seller's commitments, a courier's application without the charter, each in French, and taken once accepted; the charter step is the courier's acceptance; an account from before the version let through in its grace and refused after, owners and approved couriers working, no caller never asked; a new version the platform's alone (journaled), everyone asked again; definer doors pinned and closed to anon and PUBLIC; run twice the same (142)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch142.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

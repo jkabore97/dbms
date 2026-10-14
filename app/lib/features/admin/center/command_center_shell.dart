@@ -125,6 +125,7 @@ List<CenterSection> centerSections(BuildContext context) => [
       Routes.consoleRequestForm,
       Routes.consoleJournal,
       Routes.consoleAudit,
+      Routes.consoleTerms,
     ],
   ),
 ];
@@ -181,7 +182,7 @@ String? centerParent(String path) {
   }
   // « Aide · Console » (136) opens beneath Formateurs.
   if (path == Routes.consoleHelp) return Routes.trainers;
-  if (path == Routes.consoleJournal || path == Routes.consoleAudit) {
+  if (path == Routes.consoleJournal || path == Routes.consoleAudit || path == Routes.consoleTerms) {
     return Routes.consoleSettingsCard('securite');
   }
   return null;

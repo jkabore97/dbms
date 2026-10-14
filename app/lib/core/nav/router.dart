@@ -148,6 +148,9 @@ abstract final class Routes {
   /// La rue › « Signalements » (135): the shoppers' reports as a page.
   static const consoleReports = '/console/signalements';
   static const consoleJournal = '/console/journal';
+  /// Réglages › Sécurité › « Conditions d'utilisation » (142, batch 147):
+  /// the documents' versions, who accepted them, a new version.
+  static const consoleTerms = '/console/conditions';
   /// The platform's bell (115).
   static const consoleNotifications = '/console/notifications';
   static const language = '/langue';
@@ -987,6 +990,7 @@ GoRouter buildRouter(SessionController session) {
           _centerPage(Routes.consoleReports, (context, _) => biz.ReportsSheet.page(
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),
+          _centerPage(Routes.consoleTerms, (_, _) => biz.TermsAdminScreen()),
           _centerPage(Routes.consoleJournal, (context, _) => biz.JournalSection(
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),

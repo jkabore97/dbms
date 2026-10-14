@@ -9,6 +9,8 @@ import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import '../../core/admin/models.dart' show roleLabel;
 import '../../core/help/help_repository.dart';
+import '../../core/terms/terms.dart';
+import '../account/terms_words.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/phone/country_codes.dart' show displayPhone;
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -224,12 +226,17 @@ class PersonSheet extends StatefulWidget {
     required this.console,
     required this.admin,
     required this.help,
+    this.terms,
   });
 
   final PlatformPerson person;
   final ConsoleRepository console;
   final AdminRepository admin;
   final HelpRepository help;
+
+  /// The documents this person accepted (142); the app's server unless a
+  /// test gives one.
+  final TermsApi? terms;
 
   @override
   State<PersonSheet> createState() => _PersonSheetState();
@@ -253,6 +260,60 @@ class _PersonSheetState extends State<PersonSheet> {
     super.initState();
     _loadOrgs();
     _loadTrainer();
+    _loadTerms();
+  }
+
+  /// What this person accepted (142): null while asked, or before 142.
+  List<TermsAcceptance>? _accepted;
+  bool _termsKnown = false;
+
+  Future<void> _loadTerms() async {
+    final api = widget.terms ?? SupabaseTermsApi(AppScope.read(context)?.auth.client);
+    try {
+      final rows = await api.of(widget.person.userId);
+      if (mounted) {
+        setState(() {
+          _accepted = rows;
+          _termsKnown = rows != null;
+        });
+      }
+    } catch (_) {
+      // Not a platform admin's line, or no signal: the section stays away.
+    }
+  }
+
+  Widget _termsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final rows = _accepted ?? const <TermsAcceptance>[];
+    return Column(
+      key: const Key('person-terms'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(context.tr('Conditions acceptées'), style: theme.textTheme.titleMedium),
+        const SizedBox(height: 4),
+        if (rows.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(context.tr('Aucune acceptation enregistrée.'), style: theme.textTheme.bodySmall),
+          )
+        else
+          for (final a in rows)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(a.current ? Icons.verified_outlined : Icons.history,
+                  color: a.current ? const Color(0xFF3F7A52) : theme.colorScheme.outline),
+              title: Text(context.tr('{doc} · version {n}', {'doc': termsDocName(context, a.document), 'n': a.version})),
+              subtitle: Text([
+                termsDateTime(context, a.acceptedAt),
+                if (a.platform != null) termsPlatformName(context, a.platform!),
+                if (a.appVersion != null) a.appVersion!,
+                if (!a.current) context.tr('ancienne version'),
+              ].join(' · ')),
+            ),
+        const Divider(height: 28),
+      ],
+    );
   }
 
   Future<void> _loadTrainer() async {
@@ -597,6 +658,9 @@ class _PersonSheetState extends State<PersonSheet> {
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               const SizedBox(height: 12),
             ],
+
+            // 147 (142): the documents this person accepted, version and date.
+            if (_termsKnown) _termsSection(context),
 
             // 143: « Formateur Mara », chosen here by the platform.
             _trainerSwitch(context),

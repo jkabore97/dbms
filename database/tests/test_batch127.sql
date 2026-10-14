@@ -901,7 +901,7 @@ declare
     v_shop  uuid := '12700000-0000-0000-0000-000000000001';
     v_farm  uuid := '12700000-0000-0000-0000-000000000002';
     v_assoc uuid := '12700000-0000-0000-0000-000000000003';
-    v_code text; v_m uuid; v_p uuid; v_e uuid; v_d uuid; v_debt uuid; v_o uuid := '127aaaaa-0000-0000-0000-000000000001';
+    v_code text; v_pin text; v_m uuid; v_p uuid; v_e uuid; v_d uuid; v_debt uuid; v_o uuid := '127aaaaa-0000-0000-0000-000000000001';
     v_out jsonb;
 begin
     -- The shop: an invitation claimed, a role, a photo, the logo, a sale,
@@ -932,9 +932,12 @@ begin
     execute 'set local role authenticated';
     perform set_membership_role(v_m, 'supervisor');
     execute 'reset role';
+    -- The shopper's code, given at the door (the courier no longer reads
+    -- the order's row, 142).
+    v_pin := (select handover_code from orders where id = v_o);
     perform pg_temp.as127('12712712-0000-0000-0000-000000000008');
     execute 'set local role authenticated';
-    perform courier_deliver(v_o, (select handover_code from orders where id = v_o));
+    perform courier_deliver(v_o, v_pin);
     execute 'reset role';
     -- The farm: an invitation claimed, a sale at the market, a receipt on
     -- it, a sale on credit and its payment, the cashier's entry.

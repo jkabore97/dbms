@@ -31,6 +31,8 @@ void main() {
       await tester.pumpWidget(host(const TermsScreen()));
       await tester.pumpAndSettle();
       expect(find.text("Conditions d'utilisation"), findsOneWidget);
+      // Further down since the terms' version 2 (147).
+      await tester.scrollUntilVisible(find.text('Votre compte'), 200);
       expect(find.text('Votre compte'), findsOneWidget);
     });
 

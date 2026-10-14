@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -60,7 +62,12 @@ class _DocScaffold extends StatelessWidget {
     final theme = Theme.of(context);
     final english = legal && context.trLanguage != 'fr';
     // The French paragraphs are the keys of their English (en.dart).
-    final shown = english ? [for (final b in blocks) context.tr(b)] : blocks;
+    // « {email} » (the terms, 147) is the platform's support address, as
+    // the app's « Aide » reads it (126's support_contacts).
+    final email = {'email': Support.contacts.value.email};
+    final shown = [
+      for (final b in blocks) english ? context.tr(b, email) : translate('fr', b, email),
+    ];
     return ScrollHint(child: Scaffold(
       appBar: AppBar(leading: parentBack(context), actions: const [bellRoom], title: Text(title)),
       body: ListView(
@@ -106,6 +113,7 @@ class PrivacyScreen extends StatelessWidget {
       title: context.tr('Politique de confidentialité'),
       legal: true,
       blocks: [
+        'Version 2 — en vigueur le 14 octobre 2026.',
         'Mara enregistre les informations que vous saisissez pour faire '
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
             'photos de pièces justificatives, et les personnes de votre équipe.',
@@ -115,22 +123,42 @@ class PrivacyScreen extends StatelessWidget {
             'vous entrez dans l\'application, et les photos que vous prenez '
             'pour vos reçus et livraisons.',
         '# Connexion avec Google',
-        'Si vous vous connectez avec Google, nous recevons de Google votre nom, '
-            'votre adresse e-mail et votre photo de profil. Ils servent '
+        'Si vous vous connectez avec Google, nous recevons de Google votre '
+            'nom, votre adresse e-mail et votre photo de profil. Ils servent '
             'uniquement à vous identifier et à afficher votre nom dans '
-            'l\'application. Nous ne lisons rien d\'autre de votre compte Google '
-            'et ne transmettons ces informations à personne.',
+            'l\'application. Nous ne lisons rien d\'autre de votre compte '
+            'Google ; votre nom ne va qu\'aux personnes que décrit « Qui '
+            'voit vos informations ».',
         '# Connexion avec Apple',
         'Si vous vous connectez avec Apple (sur iPhone), nous recevons '
             'd\'Apple une adresse e-mail — la vôtre, ou une adresse relais '
             'privée qu\'Apple crée pour vous — et, la première fois '
-            'seulement, votre nom. Ils servent uniquement à vous identifier. '
-            'Nous ne transmettons ces informations à personne.',
+            'seulement, votre nom. Ils servent uniquement à vous identifier '
+            '; votre nom ne va qu\'aux personnes que décrit « Qui voit vos '
+            'informations ».',
         '# Comment elles sont utilisées',
         'Uniquement pour vous fournir le service : afficher vos livres, vos '
             'rapports et vos stocks à vous et aux personnes que vous autorisez. '
             'Nous ne vendons pas vos données et ne les partageons pas à des fins '
             'publicitaires.',
+        '# Qui voit vos informations',
+        'Quand vous commandez ou réservez, l\'entreprise reçoit ce qu\'il '
+            'lui faut pour vous servir : votre nom, votre numéro de '
+            'téléphone (celui que WhatsApp a vérifié, quand Mara le '
+            'demande), votre adresse et le point de livraison sur la carte, '
+            'et votre message. Les membres de l\'entreprise qui gèrent les '
+            'commandes les voient, et elle les garde dans ses comptes, comme '
+            'une boutique garde ses ventes.',
+        'Pour une livraison, les livreurs proches voient l\'adresse et le '
+            'point de livraison, sans votre nom ni votre numéro ; le livreur '
+            'qui prend la course reçoit ensuite votre nom et votre numéro, '
+            'pour vous joindre pendant la livraison, et s\'engage par sa '
+            'charte à ne pas s\'en servir pour autre chose.',
+        'Un formateur Mara ne voit les données d\'une entreprise qu\'à sa '
+            'demande, en lecture seule et pour un temps limité. En dehors de '
+            'ces cas et des prestataires ci-dessous, Mara ne transmet vos '
+            'informations à personne, sauf sur une demande légale des '
+            'autorités.',
         '# Où elles sont stockées',
         'Sur des serveurs sécurisés (Supabase et Cloudflare). Chaque activité '
             'ne voit que ses propres données ; l\'isolement entre activités est '
@@ -179,6 +207,20 @@ class PrivacyScreen extends StatelessWidget {
             'livraisons proches et de vous prévenir de celles-ci. Après 24 '
             'heures, elle n\'est plus utilisée ; après 30 jours, elle est '
             'effacée.',
+        '# Vérifications contre la fraude',
+        'Pour protéger les clients et les entreprises, Mara peut vérifier '
+            'votre numéro de téléphone (un code envoyé sur WhatsApp) et, '
+            'pour une entreprise ou un livreur, demander une pièce '
+            'd\'identité ou des documents sur l\'activité. Ces pièces '
+            'servent seulement à cette vérification ; seule l\'équipe Mara '
+            'les voit.',
+        '# Ce que Mara garde',
+        'Mara garde la trace de votre acceptation des conditions (le '
+            'document, sa version, la date, l\'application utilisée) tant '
+            'que votre compte existe. Mara garde aussi les informations que '
+            'la loi exige ou permet de conserver pour régler un litige ou '
+            'prouver une fraude, et peut les transmettre aux autorités sur '
+            'une demande légale.',
         '# Vos droits',
         'Vous pouvez demander la correction ou la suppression de vos '
             'données en contactant le support. Vous pouvez aussi télécharger '
@@ -206,47 +248,228 @@ class PrivacyScreen extends StatelessWidget {
   }
 }
 
-class TermsScreen extends StatelessWidget {
+/// The Conditions d'utilisation, version 2 (147): who runs Mara, its role,
+/// accounts, businesses, customers, payments, couriers, cauris, trainers,
+/// Mara's rights, reporting, liability, data, changes, the law (« [à valider
+/// par un avocat] ») and the language. The version is [termsTextVersion]:
+/// a new text is a new version in 142's terms_versions, accepted again by
+/// everyone (the gate, terms_gate.dart).
+class TermsScreen extends StatefulWidget {
   const TermsScreen({super.key});
 
   @override
+  State<TermsScreen> createState() => _TermsScreenState();
+}
+
+/// The version of the words below; 142's terms_versions.terms says which
+/// version the server asks to accept.
+const termsTextVersion = 2;
+
+class _TermsScreenState extends State<TermsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // The e-mail the terms name is the platform's: asked once, ahead.
+    final client = AppScope.read(context)?.auth.client;
+    if (client != null) unawaited(Support.warm(client));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: Support.contacts,
+      builder: (context, _, _) => _terms(context),
+    );
+  }
+
+  Widget _terms(BuildContext context) {
     return _DocScaffold(
       title: context.tr('Conditions d\'utilisation'),
       legal: true,
       blocks: [
-        'En utilisant Mara, vous acceptez ces conditions.',
+        'Version 2 — en vigueur le 14 octobre 2026.',
+        'Ces conditions s\'appliquent à toute personne qui utilise Mara : '
+            'l\'application, le site marakaj.com et les vitrines. En créant '
+            'un compte, ou en continuant à utiliser Mara, vous les acceptez.',
+        '# Qui exploite Mara',
+        'Mara (« propulsé par Kaj ») est un service exploité par KAJ '
+            'Consulting LLC, une société des États-Unis. Dans ces '
+            'conditions, « Mara » et « nous » désignent KAJ Consulting LLC ; '
+            '« vous » désigne la personne qui utilise Mara.',
+        '# Le rôle de Mara',
+        'Mara est une plateforme et un intermédiaire : elle aide des '
+            'entreprises (boutiques, fermes, associations) à tenir leurs '
+            'comptes, à montrer leurs articles et à recevoir des commandes, '
+            'et elle les met en relation avec des clients et des livreurs.',
+        'Chaque entreprise est le vendeur. Elle seule répond de ses articles '
+            'et de ses services, de ses prix, de ses livraisons, de ses '
+            'reçus, de ses impôts et de ses taxes. Mara n\'est pas partie à '
+            'la vente entre une entreprise et son client : Mara n\'achète '
+            'pas, ne revend pas et ne garantit pas ce qui est vendu.',
         '# Votre compte',
-        'Vous êtes responsable de l\'exactitude des informations que vous '
-            'saisissez et de la confidentialité de votre code (PIN). Ne '
-            'partagez pas votre accès avec une personne qui ne devrait pas voir '
-            'vos données.',
-        '# Utilisation correcte',
-        'Mara est un outil de gestion pour votre activité. N\'utilisez pas '
-            'l\'application pour enregistrer des activités illégales ou pour '
-            'nuire à autrui.',
-        '# Disponibilité',
-        'Nous faisons de notre mieux pour que le service reste disponible, mais '
-            'nous ne pouvons pas le garantir sans interruption. L\'application '
-            'continue de fonctionner hors ligne et synchronise dès que la '
-            'connexion revient.',
-        '# Responsabilité',
-        'Mara vous aide à tenir vos comptes, mais la responsabilité finale de '
-            'vos décisions commerciales et de vos obligations légales vous '
-            'revient.',
+        'Vous donnez des informations vraies et à jour : votre nom, votre '
+            'numéro de téléphone. Un compte appartient à une seule personne '
+            ': ne le prêtez pas, ne le vendez pas, et n\'ouvrez pas de '
+            'compte au nom de quelqu\'un d\'autre.',
+        'Âge minimum : 16 ans pour commander ; 18 ans pour ouvrir une '
+            'entreprise ou devenir livreur. Avant 18 ans, utilisez Mara avec '
+            'l\'accord d\'un parent ou d\'un tuteur.',
+        'Gardez secrets votre mot de passe, votre code (PIN) et les codes '
+            'que vous recevez par SMS ou WhatsApp : Mara ne vous les '
+            'demandera jamais. Ce qui est fait avec votre compte est réputé '
+            'fait par vous ; si quelqu\'un d\'autre y a accès, prévenez-nous '
+            'tout de suite.',
+        'Mara peut vous demander de vérifier votre numéro de téléphone (un '
+            'code envoyé sur WhatsApp), notamment avant de commander, de '
+            'créer une entreprise ou de devenir livreur.',
+        '# Les entreprises',
+        'Une entreprise sur Mara doit exister vraiment et avoir une activité '
+            'légale là où elle vend. La personne qui la crée en répond, et '
+            'accepte les « Engagements du vendeur », qui résument cette '
+            'partie.',
+        'Vous publiez seulement des photos et des textes qui sont à vous, ou '
+            'que vous avez le droit d\'utiliser. Vos prix, vos stocks et vos '
+            'délais sont exacts et tenus à jour. Une commande acceptée est '
+            'honorée ; si ce n\'est pas possible, vous prévenez le client '
+            'tout de suite et vous l\'annulez dans Mara.',
+        'Il est interdit de vendre ou de proposer sur Mara : armes, '
+            'munitions et explosifs ; drogues ; médicaments sans '
+            'l\'autorisation que la loi exige ; contrefaçons ; objets volés '
+            'ou d\'origine douteuse ; contenus pour adultes et services '
+            'sexuels ; animaux sauvages vivants, espèces protégées et leurs '
+            'parties ; produits dangereux (produits chimiques, pesticides '
+            'interdits, gaz) ; faux documents ; montages financiers (« '
+            'doublement d\'argent », ventes pyramidales, loteries ou prêts '
+            'sans autorisation) ; et tout ce que la loi du pays interdit.',
+        'Il est interdit de se faire passer pour une marque, une entreprise '
+            'ou une personne, d\'utiliser leur nom ou leur logo sans en '
+            'avoir le droit, ou de copier la vitrine d\'une autre entreprise.',
+        'Pour une commande passée sur Mara, ne demandez jamais au client de '
+            'payer autrement que par les moyens convenus dans la commande '
+            '(par exemple sur un autre numéro, ou un acompte en dehors de '
+            'Mara).',
+        'Mara peut vérifier l\'identité d\'une personne ou l\'existence '
+            'd\'une entreprise, et demander des pièces : pièce d\'identité, '
+            'registre de commerce, autorisation, justificatif d\'adresse. '
+            'Sans réponse, ou si les pièces ne suffisent pas, Mara peut '
+            'limiter, suspendre ou fermer l\'entreprise.',
+        '# Les clients',
+        'Vous commandez de bonne foi, pour vous ou pour quelqu\'un qui vous '
+            'l\'a demandé. Vous êtes présent, ou joignable, pour recevoir la '
+            'commande et la payer comme convenu. Les fausses commandes, les '
+            'commandes pour rire et les commandes passées pour nuire à une '
+            'entreprise sont interdites.',
+        'Une réclamation sur un article (qualité, quantité, retour, '
+            'remboursement) se règle d\'abord avec l\'entreprise, qui en '
+            'répond. Si cela ne s\'arrange pas, signalez-le à Mara.',
+        '# Les paiements',
+        'En espèces : le client paie l\'entreprise, ou son livreur, à la '
+            'remise. Cet argent ne passe pas par Mara, qui n\'en répond pas.',
+        'Par Wave ou par carte, quand l\'entreprise le propose : le client '
+            'paie en ligne, par Mara et son prestataire de paiement, puis '
+            'Mara reverse le montant à l\'entreprise, moins la commission '
+            'annoncée. Un remboursement est décidé par l\'entreprise, sauf '
+            'erreur de Mara.',
+        'Mara Pro et « Mettre en avant » sont des services numériques que '
+            'Mara vend aux entreprises. Ils se paient dans l\'application '
+            '(Google Play ou App Store), par carte (Stripe) ou par les '
+            'autres moyens que Mara indique. Achetés sur Google Play ou '
+            'l\'App Store, ils suivent les règles de remboursement du store.',
+        'Une mise en avant déjà montrée, même en partie, n\'est pas '
+            'remboursée, sauf si la loi l\'exige ou si Mara n\'a pas pu la '
+            'montrer.',
         '# Mara Pro',
         'Mara Pro est un abonnement, au mois ou à l\'année, pour une '
             'activité : il vaut pour celle pour laquelle il a été pris. Pris '
-            'dans l\'application iPhone ou Android, il est facturé et géré par '
-            'l\'App Store ou Google Play : le prix est celui que le store '
-            'affiche, le paiement est débité sur votre compte du store à la '
-            'confirmation de l\'achat, l\'abonnement se renouvelle '
-            'automatiquement sauf s\'il est annulé au moins 24 heures avant la '
-            'fin de la période en cours, et il s\'annule dans les réglages de '
-            'votre compte du store, selon ses règles.',
+            'dans l\'application iPhone ou Android, il est facturé et géré '
+            'par l\'App Store ou Google Play : le prix est celui que le '
+            'store affiche, le paiement est débité sur votre compte du store '
+            'à la confirmation de l\'achat, l\'abonnement se renouvelle '
+            'automatiquement sauf s\'il est annulé au moins 24 heures avant '
+            'la fin de la période en cours, et il s\'annule dans les '
+            'réglages de votre compte du store, selon ses règles.',
+        '# Les livreurs',
+        'Les livreurs sont indépendants : ils ne sont employés ni par Mara '
+            'ni par les entreprises. Avant d\'être acceptés, ils acceptent '
+            'la charte du livreur.',
+        'L\'argent encaissé à la porte appartient à l\'entreprise : le '
+            'livreur le lui remet le jour même, sans rien garder d\'autre '
+            'que ce que Mara affiche comme lui revenant.',
+        'Le code de livraison prouve que la commande a été remise. Le client '
+            'le donne au livreur à la remise, et seulement à ce moment-là : '
+            'ne le donnez jamais avant d\'avoir reçu votre commande. Un '
+            'livreur ne le demande jamais à l\'avance.',
+        '# Cauris, ligues, prix et parrainage',
+        'Les cauris sont des points de Mara. Ils n\'ont aucune valeur en '
+            'argent : ils ne s\'achètent pas, ne se vendent pas, ne '
+            's\'échangent pas contre de l\'argent et ne se transfèrent pas.',
+        'Mara peut annuler des cauris, un classement, un prix ou un '
+            'parrainage obtenus par la fraude : faux comptes ou comptes '
+            'multiples, fausses commandes, commandes entre proches pour '
+            'gagner des points, ou tout autre contournement des règles. Ces '
+            'règles peuvent changer ; l\'application montre toujours celles '
+            'du moment.',
+        '# Formateurs et aide',
+        'Un formateur Mara ne voit les données d\'une entreprise qu\'avec '
+            'l\'accord de son propriétaire ou d\'un administrateur, en '
+            'lecture seule et pour une durée limitée. Il ne peut rien '
+            'modifier ni rien vendre au nom de l\'entreprise.',
+        '# Les droits de Mara',
+        'Mara peut retirer un contenu (photo, texte, article) contraire à '
+            'ces conditions ou à la loi.',
+        'Mara peut suspendre ou fermer une entreprise ou un compte qui ne '
+            'respecte pas ces conditions. En cas de fraude, de risque pour '
+            'd\'autres personnes ou de plainte sérieuse, Mara peut le faire '
+            'tout de suite ; sinon, Mara prévient d\'abord et dit pourquoi, '
+            'quand c\'est possible.',
+        'Mara garde les informations dont la loi exige ou permet la '
+            'conservation pour régler un litige ou prouver une fraude '
+            '(commandes, paiements, signalements, échanges avec l\'aide), y '
+            'compris après la fermeture d\'une entreprise ou d\'un compte.',
+        'Mara coopère avec les autorités : sur une demande légale, ou pour '
+            'protéger une personne, Mara peut leur transmettre les '
+            'informations utiles.',
+        '# Signaler un problème',
+        'Une vitrine, un article, une commande ou une personne vous semble '
+            'frauduleux ? Touchez « Signaler un problème » sur la vitrine, '
+            'ou écrivez à {email}. Mara examine chaque signalement.',
+        '# Responsabilité',
+        'Nous faisons de notre mieux pour que le service reste disponible, '
+            'mais nous ne pouvons pas le garantir sans interruption. '
+            'L\'application continue de fonctionner hors ligne et '
+            'synchronise dès que la connexion revient.',
+        'Mara ne garantit aucune vente, aucun nombre de visiteurs et aucun '
+            'revenu. Mara ne répond pas des articles, des services, des prix '
+            'ni du comportement des entreprises, des clients ou des '
+            'livreurs, ni des pertes indirectes (manque à gagner, perte de '
+            'clientèle).',
+        'Si la responsabilité de Mara est engagée, elle est limitée, dans la '
+            'mesure où la loi le permet, à ce que vous avez payé à Mara '
+            'pendant les 12 derniers mois. Rien dans ces conditions ne vous '
+            'retire un droit que la loi vous donne et qu\'un contrat ne peut '
+            'pas écarter.',
+        'Mara vous aide à tenir vos comptes, mais la responsabilité finale '
+            'de vos décisions commerciales et de vos obligations légales '
+            'vous revient.',
+        '# Vos données',
+        'Ce que Mara fait de vos données est expliqué dans la Politique de '
+            'confidentialité, qui fait partie de ces conditions.',
         '# Modifications',
-        'Ces conditions peuvent évoluer. Les changements importants vous seront '
-            'signalés dans l\'application.',
+        'Mara peut modifier ces conditions. Une nouvelle version porte un '
+            'nouveau numéro et une nouvelle date ; l\'application vous la '
+            'montre, avec ce qui a changé, et vous demande de l\'accepter '
+            'pour continuer à utiliser Mara. Si vous ne l\'acceptez pas, '
+            'vous pouvez supprimer votre compte.',
+        '# Droit applicable et litiges',
+        '[à valider par un avocat] Le droit qui s\'applique à ces conditions '
+            'et le tribunal compétent en cas de litige seront précisés ici. '
+            'En cas de désaccord, écrivez-nous d\'abord à {email} : nous '
+            'cherchons toujours une solution amiable.',
+        '# Langue et contact',
+        'Ces conditions sont écrites en français, et la version française '
+            'fait foi ; la traduction anglaise est donnée pour information. '
+            'Pour toute question : {email}, ou l\'aide de l\'application '
+            '(Compte › Aide, ou Mon profil › Aide).',
       ],
     );
   }

@@ -13,6 +13,8 @@ import '../../core/onboarding/application_form.dart';
 import '../../core/onboarding/business_creation.dart';
 import '../../core/phone/country_codes.dart';
 import '../../core/rates/currency_rates.dart' show knownCurrencies;
+import '../../core/terms/terms.dart';
+import '../account/terms_gate.dart' show SellerCommitmentsCard;
 import '../../core/theme/mara_mark.dart';
 import '../admin/create_business_screen.dart' show CreateBusinessScreen;
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk;
@@ -55,9 +57,14 @@ class CreateMyBusinessScreen extends StatefulWidget {
     this.whatsApp,
     this.onCreated,
     this.previewForm,
+    this.terms,
   });
 
   final BusinessCreation api;
+
+  /// The seller's commitments to accept before the business exists (142):
+  /// the app's (TermsScope) unless a test gives one.
+  final TermsController? terms;
 
   /// Where the answers wait; none: nothing is kept (a test, the preview).
   final DraftStore? drafts;
@@ -133,6 +140,15 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
 
   bool _busy = false;
   String? _error;
+
+  /// « J'accepte les engagements du vendeur » ticked (142).
+  bool _seller = false;
+
+  /// The seller's commitments are still to accept: asked on the summary,
+  /// for a shop, a farm and an association alike. Never before 142, nor
+  /// when the server's answer is not known (it refuses itself).
+  bool get _asksSeller =>
+      (widget.terms ?? TermsScope.maybeOf(context))?.needs(TermsDoc.seller) ?? false;
 
   @override
   void initState() {
@@ -351,7 +367,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         'activity' => _draft.activity != null,
         'place' => _city.text.trim().isNotEmpty,
         'phone' => _phoneE164 != null && (!(_start?.phoneRequired ?? false) || _phoneProved),
-        'summary' => !_busy && !widget.preview,
+        'summary' => !_busy && !widget.preview && (!_asksSeller || _seller),
         _ => _answered(_questions[int.parse(_stepKey.substring(1))]),
       };
 
@@ -486,6 +502,11 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
       _error = null;
     });
     try {
+      // 142: the seller's commitments first — the server refuses the
+      // creation without them.
+      if (_asksSeller) {
+        await (widget.terms ?? TermsScope.read(context))?.accept(const [TermsDoc.seller]);
+      }
       final id = await widget.api.create(
         profile: profile,
         name: _name.text.trim(),
@@ -515,6 +536,11 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
       // creation and the list must not lose what was typed.
       if (seen) await drafts?.write(null);
     } catch (e) {
+      // The server asked for the seller's commitments the app did not know
+      // were due: read again, so the card shows.
+      if (TermsController.refusedFor(e) && mounted) {
+        unawaited((widget.terms ?? TermsScope.read(context))?.refresh());
+      }
       if (mounted) setState(() => _error = describeError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -726,8 +752,14 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
                                 height: 22,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: maraPaper),
                               )
-                            : Text(last ? context.tr('Créer mon activité') : context.tr('Suivant'),
-                                style: const TextStyle(fontSize: 17)),
+                            // One line, made smaller when it must: « Create
+                            // my business » beside « Back » at 320 px × 1.3
+                            // was cut (147's review).
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(last ? context.tr('Créer mon activité') : context.tr('Suivant'),
+                                    maxLines: 1, style: const TextStyle(fontSize: 17)),
+                              ),
                       ),
                     ),
                   ),
@@ -1215,6 +1247,15 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           ],
         ),
       ),
+      // 142: the seller's commitments, before « Créer mon activité » —
+      // shown in Mara's preview too, its box not to tick.
+      if (_asksSeller || widget.preview) ...[
+        const SizedBox(height: 20),
+        SellerCommitmentsCard(
+          checked: _seller,
+          onChanged: widget.preview || _busy ? null : (v) => setState(() => _seller = v),
+        ),
+      ],
       const SizedBox(height: 16),
       Text(
         widget.preview

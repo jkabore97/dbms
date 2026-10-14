@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../orders/booking.dart' show BookingCancelTerms;
 import '../orders/orders.dart';
 import '../site/site.dart';
+import '../terms/terms.dart' show TermsController;
 import '../theme/kaj_theme.dart' show paletteNamed;
 import 'street_cache.dart';
 
@@ -173,21 +174,32 @@ class StorefrontRepository {
     double? dropLat,
     double? dropLng,
   }) async {
-    final id = await _requireClient().rpc('place_order', params: {
-      'p_slug': slug,
-      'p_lines': [
-        for (final e in lines.entries)
-          {'product_id': e.key, 'quantity': e.value},
-      ],
-      'p_fulfilment': fulfilment,
-      'p_note': note,
-      'p_address': address,
-      'p_phone': phone,
-      'p_payment': payment,
-      'p_drop_lat': dropLat,
-      'p_drop_lng': dropLng,
-    });
-    return id as String;
+    try {
+      final id = await _requireClient().rpc('place_order', params: {
+        'p_slug': slug,
+        'p_lines': [
+          for (final e in lines.entries)
+            {'product_id': e.key, 'quantity': e.value},
+        ],
+        'p_fulfilment': fulfilment,
+        'p_note': note,
+        'p_address': address,
+        'p_phone': phone,
+        'p_payment': payment,
+        'p_drop_lat': dropLat,
+        'p_drop_lng': dropLng,
+      });
+      return id as String;
+    } catch (e) {
+      _termsRefused(e);
+      rethrow;
+    }
+  }
+
+  /// The server refused an order for want of the terms (142): the gate
+  /// is asked again, and shows over the basket.
+  static void _termsRefused(Object e) {
+    if (TermsController.refusedFor(e)) unawaited(TermsController.current?.refresh());
   }
 
   /// « Réserver » (125): one service, its day and time (Ouagadougou's
@@ -214,6 +226,7 @@ class StorefrontRepository {
       return id as String;
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST202' || e.code == '42883') throw const BookingUnavailable();
+      _termsRefused(e);
       rethrow;
     }
   }
