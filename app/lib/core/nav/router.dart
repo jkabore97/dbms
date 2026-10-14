@@ -291,6 +291,16 @@ GoRouter buildRouter(SessionController session) {
     // static help and legal pages are the same — reachable from Compte while
     // signed in, and from the sign-in page before; a phase-based redirect must
     // not bounce them back to a business the way it does app screens.
+    // A platform admin waiting on the second step (077) is refused every
+    // call by the server's gate, the street's included: the vitrines read
+    // « n'a pas pu être chargée ». The code screen first, then the page.
+    // Only a platform admin is ever in this phase; a shopper never is.
+    if (session.phase == SessionPhase.twoStep &&
+        !at(Routes.twoStep) &&
+        (at(Routes.directory) || here.startsWith('/s/'))) {
+      session.stashReturnTo(here);
+      return Routes.twoStep;
+    }
     if (at(Routes.language) ||
         at(Routes.faq) ||
         at(Routes.privacy) ||

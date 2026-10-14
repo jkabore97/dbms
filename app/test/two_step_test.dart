@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/access/plan_terms.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
@@ -399,5 +400,77 @@ void main() {
     await flush();
     expect(find.text('Code de votre application'), findsNothing);
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
+  });
+  testWidgets('the real app: a vitrine opened before the second step waits for it', (
+    tester,
+  ) async {
+    tester.platformDispatcher.localesTestValue = [const Locale('fr')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.runAsync(() async {
+      final salt = PinCodec.newSalt();
+      await db.saveIdentity(
+        LocalIdentity(
+          userId: 'admin-1',
+          displayName: 'Plateforme',
+          pinSalt: salt,
+          pinHash: PinCodec.hash('1379', salt),
+          orgsRefreshedAt: DateTime.now(),
+        ),
+      );
+    });
+    final step = _Step(enrolled: true);
+    await tester.pumpWidget(
+      KajApp(
+        db: db,
+        auth: _Server(),
+        admin: _Admin(),
+        reports: ReportsRepository(null),
+        accounting: AccountingRepository(null),
+        console: ConsoleRepository(null),
+        farm: FarmRepository(null),
+        invoicing: InvoicingRepository(null),
+        retail: RetailRepository(null),
+        staff: StaffRepository(null),
+        capture: CaptureRepository(null, db: db),
+        onboarding: OnboardingRepository(null),
+        twoStep: step,
+      ),
+    );
+    Future<void> flush() async {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+      }
+      await tester.pump();
+    }
+
+    await flush();
+    expect(
+      find.text('Code de votre application'),
+      findsOneWidget,
+      reason: 'a live admin session opens on the second step',
+    );
+
+    // A vitrine link, opened while the second step waits: the server
+    // refuses this account every call, so the vitrine would only say it
+    // could not be loaded. The code screen stays, the vitrine comes after.
+    GoRouter.of(tester.element(find.byType(TwoStepScreen)))
+        .go('/s/maison-elegance');
+    await flush();
+    expect(find.text('Code de votre application'), findsOneWidget,
+        reason: 'the street is not a way round the second step');
+
+    await tester.enterText(find.byKey(const Key('two-step-code')), '123456');
+    await tester.tap(find.text('Valider'));
+    await flush();
+    expect(find.text('Code de votre application'), findsNothing);
+    expect(
+      GoRouter.of(tester.element(find.byType(Scaffold).first))
+          .routeInformationProvider.value.uri.path,
+      '/s/maison-elegance',
+      reason: 'the vitrine is given back once the code has passed',
+    );
   });
 }
